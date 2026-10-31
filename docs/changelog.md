@@ -8,6 +8,10 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-10-31 — The homepage returns to its 4 October form
+
+- The documentation homepage is again the page of 4 October 2026: the hero with the isometric loop on the left and the text on the right, and the properties band below it with the second loop. The market video, the field of modules and the six photographs of the decisions the language models, added on 18 October, are withdrawn with their eight files under `docs/_assets/home/` (AAS, 31 October 2026, on seeing the page served from the public repository). `docs/_overrides/home.html` and `docs/_stylesheets/home.css` are the files of 4 October.
+
 ### 2026-10-31 — One repository becomes three: the development repository, the public repository and the backup
 
 - The repository is renamed `econ-ark/bellman-dev` on GitHub and stays private and whole: the toolkit, the internal folder, the team's branches and pull requests and the history since 29 December 2024. A new public repository, `econ-ark/bellman`, holds the toolkit alone, `packages/bellman`, `packages/asva`, `packages/bellman-workbench`, `packages/bellman-desktop`, `packages/bellman-matsya-client`, the applications, the documentation, the lessons and the editor extension; every commit on its `main` is the public subset of one development commit, written by an export script of the development repository and named in the commit message, and its first commit is a root commit. The Matsya service and the measurement harness stay in the development repository. A pull request merged on the public repository is applied to the development repository as a patch and returns in the next export. The documentation site at econ-ark.github.io/bellman is served by the public repository. Decided by AAS on 31 October 2026.
@@ -16,6 +20,7 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ### 2026-10-31 — The buffer-stock application names its quadrature and its asset grid
 
+- A methods file may hold one entry of each kind on one target, a solution method, a representation and a marginal block, since each kind has its own place; `!egm` on `policy` and `!Linear` on `policy` now stand together in one file, the second at the Evaluation that closes the policy builder ([Methodization](Bellman-Sym/04-methodization.md) §4). The buffer-stock application binds that pair: the consumption function is read between the pairs the endogenous grid method stores by linear interpolation, as the published HARK solution does, and neither the decision value nor its derivative takes a representation of its own.
 - The methods file of `applications/buffer-stock/` binds `!gauss-hermite` on the arrival builder's expectation over the two income shocks, with the node counts the new settings file names, seven for each shock, and `!Linear` on the stated derivative of the arrival value, `D_{k}V[<]`, represented on the grid of 960 asset points from 0.001 to 20; the counts and the grid follow the published HARK solution of the model in the QuantEcon community library, whose equiprobable discretization and exponentially nested grid the method table does not name ([Methodization](Bellman-Sym/04-methodization.md) §4.1; [Method types](Bellman-Sym/reference/methods.md)).
 
 ### 2026-10-28 — One cons-port folder

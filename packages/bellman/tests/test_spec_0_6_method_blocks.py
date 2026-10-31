@@ -381,6 +381,23 @@ def test_item_4_a_marginal_block_shares_its_builder_with_another_method():
         elaborate_stage(load_stage(folder / "tenure.bl")).methodize({"methods": [entry, entry]})
 
 
+def test_item_4_one_entry_of_each_kind_stands_on_one_target_in_one_source():
+    """A methods source may hold a solution method and a representation on one
+    builder, since each kind has its own place: `!egm` on `policy` stands on
+    the builder and `!Linear` on `policy` at the Evaluation that closes it, the
+    consumption function read between the pairs the endogenous grid method
+    stores; a second entry of one kind on one target is refused (MB-U53)."""
+    folder = ROOT / "applications/buffer-stock/declaration"
+    stage = elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl"))
+    stage.methodize(folder / "methods/buffer_stock.yml")
+    printed = [line.split()[:2] for line in str(stage.methods).splitlines()]
+    assert ["policy", "!egm"] in printed
+    assert ["policy:Evaluation", "!Linear"] in printed
+    twice = {"methods": [{"on": "policy", "method": "!Linear"}, {"on": "policy", "method": "!pchip"}]}
+    with pytest.raises(ValueError, match="Duplicate methodization target 'policy'"):
+        elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl")).methodize(twice)
+
+
 def test_item_4_a_method_choice_on_a_builder_keeps_the_marginal_block_bound_there():
     """A recipe merges a method choice into a methods list entry by entry,
     matching an entry of the same method kind on the same target: the
