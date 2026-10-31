@@ -508,7 +508,8 @@ body:has(.bellman-home) .md-top {
   @keyframes pm-copy { from { opacity: 0; transform: translateY(-46%); } to { opacity: 1; transform: translateY(-50%); } }
 }
 @media (max-width: 900px) { .pm-dis__copy { left: 16px; right: 16px; width: auto; top: auto; bottom: 48px; transform: none; } .pm-figure { display: none; } }
-/* The photographic sequence. */
+/* The photographic sequence. The .pm-img of a slot is a photograph or, in the second slot, a video loop; the rules
+   select by class, so the cover fit and the settle animation apply to the video as to the photographs. */
 .pm-sequence { position: relative; background: #172a52; }
 .pm-slot { position: relative; height: 300vh; view-timeline-name: --slot; view-timeline-axis: block; }
 .pm-slot + .pm-slot { margin-top: -100vh; }
