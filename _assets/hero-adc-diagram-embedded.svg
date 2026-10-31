@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 480 300"
+  class="bc-adc-svg"
+  role="img"
+  aria-label="Three-perch stage: forward kernels and backward builders"
+>
+  <defs>
+    <!-- Inline the homepage CSS so this renders standalone. -->
+    <style><![CDATA[
+      .bc-adc-svg {
+        color: #1a1a1a; /* used by SVG arrowheads via currentColor */
+      }
+
+      .bc-dot {
+        fill: currentColor;
+      }
+
+      .bc-edge--line {
+        stroke: #1a1a1a;
+        stroke-width: 1.35;
+        fill: none;
+        stroke-linecap: round;
+      }
+
+      .bc-label--sm {
+        font: italic 14px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+        fill: #1a1a1a;
+      }
+
+      .bc-label--eq {
+        font: italic 13px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+        fill: #1a1a1a;
+      }
+
+      .bc-ripple {
+        fill: none;
+        stroke: #1a1a1a;
+        stroke-width: 1.0;
+        stroke-dasharray: 4 3;
+        stroke-linecap: round;
+      }
+    ]]></style>
+
+    <marker
+      id="arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="6"
+      markerHeight="6"
+      orient="auto"
+    >
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <g transform="translate(0,35)">
+    <!-- Forward kernels (curved arrows along the top) -->
+    <path
+      d="M128,146 C161,106 178,106 233,112"
+      class="bc-edge--line"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M241,112 C275,79 293,66 340,83"
+      class="bc-edge--line"
+      marker-end="url(#arrow)"
+    />
+
+    <!-- Backward builders (curved arrows along the bottom) -->
+    <path
+      d="M342,92 C357,161 263,134 241,112"
+      class="bc-edge--line"
+      marker-end="url(#arrow)"
+    />
+    <path
+      d="M237,116 C253,185 162,176 128,154"
+      class="bc-edge--line"
+      marker-end="url(#arrow)"
+    />
+
+    <!-- Uncertainty ripples around ? (on g_ad) -->
+    <circle cx="175" cy="122" r="10" class="bc-ripple" opacity="0.35"/>
+    <circle cx="175" cy="122" r="16" class="bc-ripple" opacity="0.22"/>
+    <circle cx="175" cy="122" r="22" class="bc-ripple" opacity="0.12"/>
+    <text x="175" y="128" text-anchor="middle" class="bc-label--sm">&#x03B5;</text>
+
+    <!-- Nodes (filled dots) -->
+    <circle cx="128" cy="150" r="5.2" class="bc-dot"/>
+    <circle cx="237" cy="112" r="5.2" class="bc-dot"/>
+    <circle cx="346" cy="92" r="5.2" class="bc-dot"/>
+
+    <!-- Node labels -->
+    <text x="112" y="174" class="bc-label--eq">
+      <tspan>x</tspan><tspan baseline-shift="sub" font-size="80%">a</tspan>
+    </text>
+    <text x="220" y="92" class="bc-label--eq">
+      <tspan>x</tspan><tspan baseline-shift="sub" font-size="80%">d</tspan>
+    </text>
+    <text x="356" y="98" class="bc-label--eq">
+      <tspan>x</tspan><tspan baseline-shift="sub" font-size="80%">e</tspan>
+    </text>
+
+    <!-- Backward operator labels -->
+    <text x="212" y="202" class="bc-label--eq">
+      <tspan>T</tspan><tspan baseline-shift="super" font-size="80%">da</tspan>
+    </text>
+    <text x="316" y="170" class="bc-label--eq">
+      <tspan>T</tspan><tspan baseline-shift="super" font-size="80%">ed</tspan>
+    </text>
+  </g>
+</svg>

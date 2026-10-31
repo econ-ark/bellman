@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pulse 4/4 — full chain: 320 → 540 → 720 → 950 → 1150.
+     New node (320, arrival) bright; entire backward chain visible, fading right. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 480"
+  preserveAspectRatio="xMidYMid slice">
+  <!-- Oldest edge: 950 → 1150 (faintest) -->
+  <line x1="950" y1="140" x2="1150" y2="240"
+    stroke="#1a1a1a" stroke-width="0.5" opacity="0.10"/>
+  <!-- Oldest node: 1150 -->
+  <circle cx="1150" cy="240" r="2.5" fill="#1a1a1a" opacity="0.08"/>
+  <!-- Edge: 720 → 950 -->
+  <line x1="720" y1="210" x2="950" y2="140"
+    stroke="#1a1a1a" stroke-width="0.6" opacity="0.16"/>
+  <!-- Node: 950 -->
+  <circle cx="950" cy="140" r="3" fill="#1a1a1a" opacity="0.14"/>
+  <!-- Edge: 540 → 720 -->
+  <line x1="540" y1="95" x2="720" y2="210"
+    stroke="#1a1a1a" stroke-width="0.7" opacity="0.28"/>
+  <!-- Node: 720 -->
+  <circle cx="720" cy="210" r="3" fill="#1a1a1a" opacity="0.22"/>
+  <!-- New edge: 320 → 540 (bright) -->
+  <line x1="320" y1="185" x2="540" y2="95"
+    stroke="#1a1a1a" stroke-width="0.9" opacity="0.55"/>
+  <!-- Previous node: 540 -->
+  <circle cx="540" cy="95" r="3.5" fill="#1a1a1a" opacity="0.30"/>
+  <circle cx="540" cy="95" r="11" fill="none" stroke="#1a1a1a"
+    stroke-width="0.5" stroke-dasharray="3 2" opacity="0.12"/>
+  <!-- Branch edges -->
+  <line x1="320" y1="185" x2="260" y2="360"
+    stroke="#1a1a1a" stroke-width="0.6" opacity="0.18"/>
+  <line x1="540" y1="95" x2="620" y2="330"
+    stroke="#1a1a1a" stroke-width="0.5" opacity="0.12"/>
+  <!-- Active node: 320 (arrival) -->
+  <circle cx="320" cy="185" r="5.5" fill="#1a1a1a" opacity="0.85"/>
+  <g fill="none" stroke="#1a1a1a" stroke-width="0.7"
+     stroke-dasharray="3 2" stroke-linecap="round">
+    <circle cx="320" cy="185" r="13" opacity="0.45"/>
+    <circle cx="320" cy="185" r="22" opacity="0.30"/>
+    <circle cx="320" cy="185" r="32" opacity="0.15"/>
+  </g>
+</svg>

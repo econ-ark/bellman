@@ -1,0 +1,83 @@
+name: ConsIndShock
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    XP: "@def R++"
+    Xm: "@def R+"
+    Xa: "@def R+"
+
+  prestate:
+    k: "@in Xk"
+    P_prev: "@in XP"
+
+  exogenous:
+    PermShk:
+      - "@in R++"
+      - "@dist LogNormal(0, sigma_psi)"
+    TranShk:
+      - "@in R+"
+      - "@dist LogNormal(0, sigma_theta)"
+
+  states:
+    m: "@in Xm"
+    P: "@in XP"
+
+  poststates:
+    a: "@in Xa"
+
+  controls:
+    c: "@in R+"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    beta: "@in (0,1)"
+    rho: "@in (1, Inf)"
+    Rfree: "@in R++"
+    PermGroFac: "@in R++"
+    LivPrb: "@in (0,1]"
+    sigma_psi: "@in R+"
+    sigma_theta: "@in R+"
+
+equations:
+  arvl_to_dcsn_transition: |
+    G = PermGroFac * PermShk
+    P = P_prev * G
+    b = Rfree * k[<] / G
+    y = TranShk
+    m = b + y
+
+  dcsn_to_cntn_transition: |
+    a[>] = m - c
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      V = max_c{c^(1-rho)/(1-rho) + beta * LivPrb * V[>]}
+    InvEuler: |
+      c = (beta * LivPrb * dV[>])^(-1/rho)
+    ShadowBellman: |
+      dV = c^(-rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{PermShk, TranShk}[G^(1-rho) * V]
+    ShadowBellman: |
+      dV[<] = Rfree * E_{PermShk, TranShk}[G^(-rho) * dV]
+
+calibration:
+  beta: 0.96
+  rho: 2.0
+  Rfree: 1.03
+  PermGroFac: 1.01
+  LivPrb: 0.98
+  sigma_psi: 0.1
+  sigma_theta: 0.1

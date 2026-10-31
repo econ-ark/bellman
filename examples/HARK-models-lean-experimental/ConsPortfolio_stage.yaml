@@ -1,0 +1,111 @@
+name: ConsPortfolio
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    XP: "@def R++"
+    Xm: "@def R+"
+    Xa: "@def R+"
+    Pi: "@def [0,1]"
+
+  prestate:
+    k: "@in Xk"
+    P_prev: "@in XP"
+    varsigma_prev: "@in Pi"
+
+  exogenous:
+    PermShk:
+      - "@in R++"
+      - "@dist LogNormal(0, sigma_perm)"
+    TranShk:
+      - "@in R+"
+      - "@dist LogNormal(0, sigma_tran)"
+    Risky:
+      - "@in R++"
+      - "@dist LogNormal(mu_risky, sigma_risky)"
+    Adjust:
+      - "@in {0, 1}"
+      - "@dist Bernoulli(AdjustPrb)"
+    live:
+      - "@in {0, 1}"
+      - "@dist Bernoulli(LivPrb)"
+
+  states:
+    m: "@in Xm"
+    P: "@in XP"
+    varsigma_prev_d: "@in Pi"
+    Adjust_d: "@in {0, 1}"
+
+  poststates:
+    a: "@in Xa"
+    P_nxt: "@in XP"
+    varsigma: "@in Pi"
+
+  controls:
+    c: "@in R+"
+    varsigma_choice: "@in Pi"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    beta: "@in (0,1)"
+    rho: "@in R+"
+    Rfree: "@in R++"
+    PermGroFac: "@in R++"
+    LivPrb: "@in [0,1]"
+    AdjustPrb: "@in [0,1]"
+    sigma_perm: "@in R+"
+    sigma_tran: "@in R+"
+    mu_risky: "@in R"
+    sigma_risky: "@in R+"
+
+equations:
+  arvl_to_dcsn_transition: |
+    G = PermGroFac * PermShk
+    P = P_prev * G
+    Rport = Rfree + (Risky - Rfree) * varsigma_prev
+    b = Rport * k / G
+    y = TranShk
+    m = b + y
+    varsigma_prev_d = varsigma_prev
+    Adjust_d = Adjust
+
+  dcsn_to_cntn_transition: |
+    varsigma = Adjust_d * varsigma_choice + (1 - Adjust_d) * varsigma_prev_d
+    a = m - c
+    P_nxt = P
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u = (c^(1-rho))/(1-rho)
+      V = max_{c, varsigma_choice}(u + beta * LivPrb * V[>])
+    InvEuler: |
+      c = (beta * LivPrb * dV[>])^(-1/rho)
+    MarginalBellman: |
+      dV = c^(-rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{PermShk, TranShk, Risky, Adjust}[V]
+    ShadowBellman: |
+      dV[<] = E_{PermShk, TranShk, Risky, Adjust}[Rport / G * dV]
+
+calibration:
+  beta: 0.96
+  rho: 2.0
+  Rfree: 1.03
+  PermGroFac: 1.01
+  LivPrb: 0.98
+  AdjustPrb: 0.25
+  sigma_perm: 0.1
+  sigma_tran: 0.2
+  mu_risky: 0.06
+  sigma_risky: 0.15

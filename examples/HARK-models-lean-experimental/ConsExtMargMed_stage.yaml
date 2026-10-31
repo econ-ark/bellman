@@ -1,0 +1,99 @@
+name: ConsExtMargMed
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    Xp: "@def R++"
+    Xm: "@def R+"
+    Xb: "@def R+"
+    Xa: "@def R+"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+
+  exogenous:
+    PermShk:
+      - "@in R++"
+      - "@dist LogNormal(mu_perm, sigma_perm)"
+    TranShk:
+      - "@in R+"
+      - "@dist LogNormal(mu_tran, sigma_tran)"
+    MedCost:
+      - "@in R+"
+      - "@dist Discrete"
+    MedShk:
+      - "@in R+"
+      - "@dist Discrete"
+
+  states:
+    m: "@in Xm"
+    p: "@in Xp"
+    mu: "@in R+"
+    zeta: "@in R+"
+
+  poststates:
+    a: "@in Xa"
+    p_post: "@in Xp"
+
+  controls:
+    Care: "@in {0,1}"
+    c: "@in R+"
+
+  values:
+    V[<]: "@in R"
+    V_care: "@in R"
+    V_no_care: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  parameters:
+    Rfree: "@in R++"
+    LivPrb: "@in (0,1]"
+    rho: "@in R+"
+    G: "@in R++"
+    mu_perm: "@in R"
+    sigma_perm: "@in R+"
+    mu_tran: "@in R"
+    sigma_tran: "@in R+"
+
+equations:
+  arvl_to_dcsn_transition: |
+    p_temp = G * p_prev
+    p = p_temp * PermShk
+    y = TranShk * p
+    w = Rfree * k
+    m = w + y
+    mu = MedCost
+    zeta = MedShk
+
+  dcsn_to_cntn_transition: |
+    MedLvl = Care * mu
+    b = m - MedLvl
+    a = b - c
+    p_post = p
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u_c = (c^(1-rho))/(1-rho)
+      b_if_care = m - mu
+      V_care = max_{c}(u_c + LivPrb * V[>]) | b = b_if_care
+      V_no_care = max_{c}(u_c + LivPrb * V[>] - zeta) | b = m
+      Care = 1 if V_care > V_no_care else 0
+      V = Care * V_care + (1 - Care) * V_no_care
+    InvEuler: |
+      c = (LivPrb * dV[>])^(-1/rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{PermShk, TranShk, MedCost, MedShk}[V]
+
+calibration:
+  Rfree: 1.03
+  LivPrb: 0.98
+  rho: 2.0
+  G: 1.01
+  mu_perm: 0.0
+  sigma_perm: 0.1
+  mu_tran: 0.0
+  sigma_tran: 0.1

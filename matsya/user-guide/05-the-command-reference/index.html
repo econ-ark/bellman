@@ -1,0 +1,8633 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Build rich, dynamic heterogeneous agent models from reusable stages—in a language both humans and AI can understand.">
+      
+      
+      
+        <link rel="canonical" href="https://econ-ark.github.io/bellman/matsya/user-guide/05-the-command-reference/">
+      
+      
+        <link rel="prev" href="../04-the-service-by-http/">
+      
+      
+        <link rel="next" href="../06-the-python-module/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../_assets/brand/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.2">
+    
+    
+      
+        <title>The command reference - Project Bellman</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../../_stylesheets/extra.css?v=20260930a">
+    
+      <link rel="stylesheet" href="../../../_stylesheets/rosetta.css?v=20260622q">
+    
+      <link rel="stylesheet" href="../../../_stylesheets/bellman.css?v=20261031a">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script src="../../../assets/javascripts/toggle-sidebar.js"></script></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="bellman" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#the-command-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+  <div class="bl-parent">
+  <div class="bl-parent__inner">
+    <a class="bl-parent__link" href="https://econ-ark.org/">
+      <img src="../../../_assets/econ-ark-logo-white.png" width="32" height="22" alt="">
+      <span>An Econ-ARK project</span>
+    </a>
+  </div>
+</div>
+  
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Project Bellman" class="md-header__button md-logo" aria-label="Project Bellman" data-md-component="logo">
+      
+  <img src="../../../_assets/brand/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Project Bellman
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              The command reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="bellman" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/econ-ark/bellman" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    econ-ark/bellman
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../overview/00-install/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Install
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Overview
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../Bellman-Sym/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Language
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../bellman-calculus/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Foundations
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../examples/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../asva/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Asva
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../wiki/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Wiki
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Matsya
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../about/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  About us
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Project Bellman" class="md-nav__button md-logo" aria-label="Project Bellman" data-md-component="logo">
+      
+  <img src="../../../_assets/brand/logo.svg" alt="logo">
+
+    </a>
+    Project Bellman
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/econ-ark/bellman" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    econ-ark/bellman
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/00-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../overview/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Overview
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/01-concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core concepts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/02-stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The stage
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/03-language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Bellman-SYM language
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/04-periods-and-trellis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Periods and trellis
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/05-semantics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantics
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/06-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/07-workbench/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bellman Workbench
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/08-fields-evaluation-and-methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fields, evaluation and methods
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../Bellman-Sym/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Language
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Language
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/01-stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage tutorial
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft — 7 September 2026"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/03-field-equations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Field equations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/04-methodization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/05-branching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Branching
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft — 7 September 2026"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/06-period/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Periods
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft — revised 2 October 2026"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/07-trellis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trellises
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft — rewritten 2 October 2026"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/08-bellman-factory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Bellman factory
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft — rewritten 2 October 2026"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/09-from-syntax-to-formal-problem-definition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From source to functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/10-constraints/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constraints
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/11-solutions-at-the-perches/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solutions at the perches
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../Bellman-Sym/API/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../Bellman-Sym/API/factory/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bellman factory API
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4_3_2" id="__nav_4_3_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Bellman factory API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/factory/stage-factory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/factory/spec-factory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipe functions
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/factory/period-factory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Period functions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/factory/trellis-factory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The trellis factory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_3" id="__nav_4_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The stage object
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    The stage object
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/01-the-stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/02-initial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The initial diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/03-build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The builders graphs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/04-builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/05-piece/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    A piece
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/06-par-and-settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameters and settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/07-methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods and places
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/08-definitions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The definitions table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/09-binding-verbs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The binding verbs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/API/stage/10-model-explorer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The view in Model Explorer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendices
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Appendices
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/appendices/12-equation-parsing-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Equation parsing rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/appendices/13-perch-tagging-rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Perch tagging rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix C — From source to semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/appendices/15-appendix-d-node-tag-and-field-indexing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix D — Nodes and field indexing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/operations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/laws/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Laws
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/forms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/refusals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Refusals
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--Draft — 20 September 2026"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/symbols-conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Symbol conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/model-directory-layout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model directory layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../bellman-calculus/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Foundations
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/01-Introduction%20to%20T-calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01. Introduction
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/02-Illustrative%20example/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02. Illustrative example
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/03-Stages%20and%20perches/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    03. Stages and perches
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/04-fields%2C%20functions%20and%20types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    04. Fields, functions and types
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/05-Operators%20and%20builders/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    05. Operators and builders
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--stub notes only"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/06-Methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    06. Methods
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--not yet drafted — stub notes only"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/07-stage-composition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    07. Stage composition
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--not yet drafted — stub notes only"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/08-periods-and-trellis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    08. Periods and trellis
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--not yet drafted — stub notes only"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/09-branching/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    09. Branching
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--not yet drafted — stub notes only"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/10-semi-conjugacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. Semi-conjugacy
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--not yet drafted — stub notes only"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/11-abstract-grammar/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Abstract grammar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/ingredients/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ingredients (glossary)
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--stub — symbol reference remains incomplete"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-A-SEMANTICS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix A: Semantics
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-B-INITIAL-ALGEBRA/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix B: Initial algebra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-C-STAGE-TERM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix C: Stage term
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-D-KINDS-AND-SORTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix D: Kinds and sorts
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_18" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../bellman-calculus/catalogues/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix E: Catalogues
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — reference catalogues"></span>
+  
+
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5_18" id="__nav_5_18_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_18_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_18">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Appendix E: Catalogues
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/catalogues/fields/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E.1 Field types
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/catalogues/functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E.2 Function types
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/catalogues/operators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E.3 Operators
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/catalogues/parameters-settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E.4 Parameters and settings
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted — Phase 1"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-F-OPERATOR-ALGEBRA/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix F: Operator algebra
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--drafted"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../examples/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_2" id="__nav_6_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumption-Savings IID
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Consumption-Savings IID
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-iid/consumption_savings_iid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML Spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/formal-mdps/cons_savings_iid_mdp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formal MDP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/buffer-stock/buffer_stock/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Buffer Stock (Normalized)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_4" id="__nav_6_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Housing Owner
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Housing Owner
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/housing_owner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    YAML Spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/housing_choice_mdp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formal MDP (housing)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/housing_cons_choice_mdp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formal MDP (cons)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/retirement/retirement_choice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retirement Choice (DCEGM)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/smooth-ambiguity/smooth_ambiguity_savings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Smooth-Ambiguity Savings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../examples/housing_renting/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Housing Tenure-Choice
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Housing Tenure-Choice
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/stages/tenure_choice/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tenure_choice
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/stages/owner_housing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    owner_housing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/stages/owner_cons/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    owner_cons
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/stages/renter_housing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    renter_housing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/stages/renter_cons/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    renter_cons
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/housing_renting/period_and_nest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Period & Trellis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/durables/durables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Housing Investment with Frictions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_9" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../examples/unemployment/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unemployment Branching
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6_9" id="__nav_6_9_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Unemployment Branching
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/unemployment/unemployment_branching_mdp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formal MDP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_10" id="__nav_6_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Portfolio-Consumption
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Portfolio-Consumption
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-port-stages/port_with_shocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Period Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-port-stages/cons_stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cons_stage (YAML)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/formal-mdps/cons_stage_mdp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cons_stage (MDP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-port-stages/port_stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    port_stage (YAML)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-port-stages/port_stage_mdp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    port_stage (MDP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-port-stages/noport_stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    noport_stage (YAML)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-port-stages/noport_stage_mdp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    noport_stage (MDP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/cons-port-stages/solving-conjugates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solving via Conjugation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../asva/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Asva
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Asva
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../asva/01-numerical-steps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Numerical steps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../asva/02-the-runner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The runner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../asva/03-parameter-sweeps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameter sweeps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../asva/04-saving-solutions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Saving solutions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../asva/05-estimation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../asva/06-cross-entropy-method/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The cross-entropy method
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wiki
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Wiki
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../wiki/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/abstract_decision_process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Abstract dynamic program (ADP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/accretion-modules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/adequacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    adequacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/aggregation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aggregation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/asdl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ASDL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/backward_builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    backward builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/banach_contraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Banach contraction theorem
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/bellman_algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bellman algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/bellman_calculus/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bellman calculus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/bellman_operator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bellman operator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/sym/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bellman-SYM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/bellman_sym_writer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bellman-SYM writer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/blackwell_conditions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blackwell's sufficient conditions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/branch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    branch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/calibration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/connector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/declarative_language/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    declarative language
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/elaborated_stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    elaborated stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/expression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expression
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/field/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Field
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/forward_builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    forward builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/functional_form/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functional form
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/ffp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functional programming and FFP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/handler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/initial_algebra/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Initial algebra
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/judge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Judge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/lawvere_theory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lawvere theory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/matsya_collection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matsya collection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/matsya_handler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matsya handler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/matsya_instructions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matsya instructions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methodization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/operator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/ordering_conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ordering conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/parameters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parameters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/perch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Perch and information set
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/period/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Period
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/prose_writer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prose writer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/rank/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rank
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/recursive_decision_process/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    recursive decision process (RDP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/reference-guides-matsya/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference guides in Matsya
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/referential_transparency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referential transparency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/semantics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/semgraph/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    semgraph
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/semiconjugacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    semiconjugacy (strong / order)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/settings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/signature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signature
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/sort/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sort
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/source_span/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Source span
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/spec_factory/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification factory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/specified_stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specified stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/statement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    statement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/sub_builder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sub-builder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/symbolic_stage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Symbolic stage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/syntax/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Syntax
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/term_address/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Term address
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/term_json_encoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Term JSON encoding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/trellis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trellis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/rho/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ρ — numerical representation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/upsilon/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Υ — meaning construction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matsya
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_9" id="__nav_9_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Matsya
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User guide
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_9_2" id="__nav_9_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-for-a-local-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    For an assistant using Matsya
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-the-roles-and-the-work-of-a-job/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The roles and the work of a job
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-working-from-the-command-line/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Working with Matsya from the command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-working-on-a-project-folder/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Working on a project folder
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-the-service-by-http/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reaching the service by HTTP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The command reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The command reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-reading-a-commands-answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 Reading a command's answer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-orientation-configuration-and-the-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 Orientation, configuration and the guide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2 Orientation, configuration and the guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-orientation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Orientation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-the-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 The guide
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-retrieval-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 The retrieval index
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3 The retrieval index">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-index-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Index information
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-jobs-that-write-and-check-a-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4 Jobs that write and check a declaration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4 Jobs that write and check a declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-submit-a-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Submit a job
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-inspect-wait-for-save-or-cancel-a-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Inspect, wait for, save or cancel a job
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-sessions-and-their-entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5 Sessions and their entries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-ask-one-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6 Ask one question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-a-models-project-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7 A model's project folder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-fields-in-json-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8 Fields in JSON answers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8 Fields in JSON answers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-index-and-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Index and search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Jobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-turns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 Turns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-project-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 Project commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9 Configurations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-the-python-module/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Python module and the files the client writes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-collections-and-weights/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collections and weights
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../dev-guide/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer guide
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_9_3" id="__nav_9_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev-guide/01-the-retrieval-index/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The retrieval index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev-guide/02-what-matsya-reads/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What Matsya reads
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev-guide/03-matsya-handlers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Matsya handlers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dev-guide/04-updating-configurations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Updating Matsya configurations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About us
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-reading-a-commands-answer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 Reading a command's answer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-orientation-configuration-and-the-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 Orientation, configuration and the guide
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2 Orientation, configuration and the guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-orientation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Orientation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-the-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 The guide
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-the-retrieval-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3 The retrieval index
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3 The retrieval index">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-index-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Index information
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-jobs-that-write-and-check-a-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4 Jobs that write and check a declaration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4 Jobs that write and check a declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-submit-a-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Submit a job
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-inspect-wait-for-save-or-cancel-a-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Inspect, wait for, save or cancel a job
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-sessions-and-their-entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5 Sessions and their entries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-ask-one-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6 Ask one question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-a-models-project-folder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7 A model's project folder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-fields-in-json-answers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8 Fields in JSON answers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8 Fields in JSON answers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-index-and-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Index and search
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#82-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.2 Jobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#83-sessions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.3 Sessions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#84-turns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.4 Turns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#85-project-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.5 Project commands
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9 Configurations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Matsya
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    User guide
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="the-command-reference">The command reference<a class="headerlink" href="#the-command-reference" title="Permanent link">&para;</a></h1>
+<div class="admonition abstract">
+<p class="admonition-title">Summary</p>
+<p>This page gives the commands of matsya-client, the program you run on your machine to use Matsya. It states their arguments, options, printed answers and exit statuses. It also names the fields returned by <code>--json</code>, so an assistant can read an answer without interpreting the printed prose.</p>
+</div>
+<details class="info">
+<summary>Relationship with other documents</summary>
+<p><strong>Builds on</strong> — <a href="../02-working-from-the-command-line/">Working with Matsya from the command line</a>, which follows a session and a job, and <a href="../03-working-on-a-project-folder/">Working on a project folder</a>, which follows a model in its own folder.
+<strong>Continued by</strong> — <a href="../06-the-python-module/">The Python module and the files the client writes</a>, which gives the corresponding Python calls.
+<strong>See also</strong> — <a href="../../../overview/">Matsya in three parts</a>, which defines a session, a job, a turn, a target and a job's label.</p>
+</details>
+<h2 id="1-reading-a-commands-answer">1 Reading a command's answer<a class="headerlink" href="#1-reading-a-commands-answer" title="Permanent link">&para;</a></h2>
+<p><code>bellman-matsya --help</code> lists the commands. For one command's options, run its own help, for example <code>bellman-matsya job submit --help</code> or <code>bellman-matsya project pull --help</code>. In the forms below, angle brackets stand for a value you supply; square brackets enclose an optional argument. A job or session identifier is the value printed when it is created.</p>
+<p>Every service command accepts <code>--json</code> <strong>except</strong> <code>bellman-matsya configure</code> and <code>bellman-matsya docs</code>. The four <code>bellman-matsya project</code> commands accept it too. For ordinary service commands, <code>--json</code> prints the service's final JSON answer unchanged. For project commands, it prints one JSON object assembled from the folder and the service's answers, and <code>bellman-matsya job submit-prepared</code> (§4.1) and <code>bellman-matsya configuration effective</code> (§9) likewise print an object that the client assembles. <code>bellman-matsya job files --json</code> prints the job's answer, although it also writes files. <code>bellman-matsya ask --follow ... --json</code> prints the turn's answer, not the followed job's answer; progress goes to standard error. <code>bellman-matsya ask --no-wait --json</code> prints the answer that the service gives when it accepts the question. Section 8 gives the fields.</p>
+<table>
+<thead>
+<tr>
+<th>Exit status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code></td>
+<td>The command completed. For <code>job wait</code>, inspect the returned job state: <code>needs_input</code>, <code>not_converged</code> and <code>failed</code> are final states too. For <code>turn wait</code>, inspect the returned turn state: <code>failed</code> and <code>interrupted</code> are final states too.</td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>The service refused a request, a local file could not be read or written, the service could not be reached, an online guide page could not be read, or the client refused a personal Anthropic key (§2.2), the address it would be sent to (§4.1), a prepared-inputs file or a service that does not name a capability the submission needs (§4.1). A command that sent the key also ends with <code>1</code> when the service accepted its work under the service's own key (§4.1). The error is printed on standard error.</td>
+</tr>
+<tr>
+<td><code>2</code></td>
+<td>The arguments were refused before a request, or a project command's conditions were not met, as are those of <code>configuration effective</code> in a project folder (§9). Argument errors include a usage line; project refusals give one sentence on standard error.</td>
+</tr>
+<tr>
+<td><code>130</code></td>
+<td>You interrupted a waiting command. Its message says how to inspect a job or turn that may still be running on the service.</td>
+</tr>
+</tbody>
+</table>
+<p>On a machine with no saved configuration and no <code>BELLMAN_MATSYA_TOKEN</code>, any command other than <code>docs</code> or bare <code>bellman-matsya</code> first prints two lines directing an assistant to <code>bellman-matsya docs --all</code>. Those lines precede even a JSON answer. Run <code>bellman-matsya configure</code> first if a program needs standard output to contain JSON alone. The Matsya token itself is never printed.</p>
+<h2 id="2-orientation-configuration-and-the-guide">2 Orientation, configuration and the guide<a class="headerlink" href="#2-orientation-configuration-and-the-guide" title="Permanent link">&para;</a></h2>
+<h3 id="21-orientation">2.1 Orientation<a class="headerlink" href="#21-orientation" title="Permanent link">&para;</a></h3>
+<p><code>bellman-matsya</code> with no arguments prints Markdown: what Matsya does; the installed guide's folder and the commands that print or update it; the client version; whether a token is saved or supplied by <code>BELLMAN_MATSYA_TOKEN</code>; and how to list the commands. In a project folder it also prints the session identifier, the latest job's label and any questions awaiting a reply. If the session cannot be read, it gives the reason. This form makes no change and has no <code>--json</code> option.</p>
+<p>After the line on the Matsya token, the orientation prints one line, which never contains a key, that names the key the next job, question or reply will use; of three sentences, it prints the first whose condition holds. When <code>BELLMAN_MATSYA_ANTHROPIC_KEY</code> is set and not empty, the line is <code>The environment variable `BELLMAN_MATSYA_ANTHROPIC_KEY` is set; new jobs, questions and replies that continue a job use its value in place of any saved key, and the Anthropic account of that key is charged.</code> Otherwise, when a key is saved (§2.2), it is <code>A personal Anthropic key is saved on this machine, in `&lt;file&gt;`; new jobs, questions and replies that continue a job use it, and the Anthropic account of that key is charged.</code>, with the saved file's path in place of <code>&lt;file&gt;</code>. Otherwise it is <code>No personal Anthropic key is selected; new jobs and questions use the service's key, and a reply that would continue a job run with a personal key is refused until one is selected.</code> When a key is selected and the service address is neither an HTTPS address nor an <code>http</code> address whose host is <code>localhost</code>, <code>127.0.0.1</code> or <code>::1</code>, the line adds <code>The service address &lt;address&gt; uses plain HTTP, so the client refuses to send a job, a question or a reply with this key.</code></p>
+<h3 id="22-configuration">2.2 Configuration<a class="headerlink" href="#22-configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>bellman-matsya configure
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>bellman-matsya configure --set-anthropic-key
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>bellman-matsya configure --clear-anthropic-key
+</code></pre></div>
+<p><code>bellman-matsya configure</code>, without an option, asks only for a Matsya token beginning <code>msy_</code>. It saves the token in the user's configuration file without sending a request and retains any custom service address already saved there. Otherwise the client uses <code>http://45.55.225.169:8710</code>. It prints the file's path, explains that the service keeps session entries and job records, and suggests <code>bellman-matsya index</code> to check access. <code>BELLMAN_MATSYA_TOKEN</code> and <code>BELLMAN_MATSYA_SERVER</code> override saved values for later commands. This interactive command has no <code>--json</code> option; an invalid token or saved address ends with status <code>1</code>.</p>
+<p>The two options, which cannot be combined, manage the optional personal Anthropic key that a registered holder may add after the Matsya token is configured (<a href="../../../overview/">Matsya in three parts</a> §1); neither asks for the Matsya token, and the key is never an argument of a command. The help of <code>configure</code> and the set-up lines of <code>bellman-matsya --help</code> name them, with <code>BELLMAN_MATSYA_ANTHROPIC_KEY</code>, as optional additions made after the Matsya token is configured. <code>--set-anthropic-key</code> requires a configured Matsya token, saved by <code>configure</code> or set in <code>BELLMAN_MATSYA_TOKEN</code>. Without one it prints <code>Error: no Matsya token is configured. A personal Anthropic key is an addition to a Matsya token, not a substitute for it: save the Matsya token the service's administrator gave you with bellman-matsya configure, or set BELLMAN_MATSYA_TOKEN.</code> on standard error, asks for nothing, writes nothing and exits with status <code>1</code>; an unreadable saved service address is reported as <code>configure</code> without an option reports it. With a Matsya token, it asks for the key without echoing the characters, removes the whitespace around it, and refuses a key that is then empty or contains a character other than the visible ASCII characters <code>!</code> to <code>~</code> with <code>Error: the key you entered is empty or contains a space, a line break or another character that an HTTP header does not allow; nothing was saved.</code> and status <code>1</code>. Otherwise it saves the key, followed by one line feed, in <code>~/.config/bellman-matsya/anthropic-key</code> with the owner-only mode 0600, replacing a key saved before, and prints the file's path, that the jobs and questions you start are then charged to the Anthropic account of that key, and how to remove it. <code>--clear-anthropic-key</code>, which needs no Matsya token, deletes that file and prints whether a saved key was removed; with no key in the environment, later work then uses the service's key. <code>configure</code> without an option rewrites <code>config.toml</code> and leaves a saved key in place.</p>
+<p>A nonempty <code>BELLMAN_MATSYA_ANTHROPIC_KEY</code> supplies a key without saving it, and every command uses it in place of a saved key. Every command that contacts the service removes the whitespace around the selected key and checks it in the same way before it sends a request; a key that fails the check is refused with one sentence that names its source, and the command exits with status <code>1</code> and prints no traceback. For the variable the sentence is <code>Error: the personal Anthropic key in BELLMAN_MATSYA_ANTHROPIC_KEY is empty or contains a space, a line break or another character that an HTTP header does not allow; set the variable to the key alone, or unset it to use the service's key.</code>, and for the saved file <code>Error: the personal Anthropic key in the saved file &lt;path&gt; is empty or contains a space, a line break or another character that an HTTP header does not allow; set it again with bellman-matsya configure --set-anthropic-key, or remove it with bellman-matsya configure --clear-anthropic-key.</code>, with the file's path in place of <code>&lt;path&gt;</code>. A selected key is sent, in the header <code>Bellman-Matsya-Anthropic-Key</code>, with a job's submission, a question and a reply named with <code>--replies-to</code>, and with no other request (§§4–7). No command prints it, and a message the client composes shows <code>&lt;Anthropic API key&gt;</code> in its place, as it shows <code>&lt;Matsya token&gt;</code> in place of the Matsya token. <code>bellman-matsya configuration effective</code> (§9) prints the address, the configuration and the session that the next job or question would use, and where the address, the Matsya token and the key come from, without either secret.</p>
+<h3 id="23-the-guide">2.3 The guide<a class="headerlink" href="#23-the-guide" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it prints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bellman-matsya docs</code></td>
+<td>Each installed page's name and title, one per line.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya docs &lt;page&gt;</code></td>
+<td>That page in Markdown, without its front matter. The name may omit <code>.md</code>; <code>dev-guide/index</code> names a developer-guide page.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya docs --all</code></td>
+<td>All installed pages in order, each preceded by a <code>&lt;!-- page: ... --&gt;</code> line naming its file.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya docs --path</code></td>
+<td>The folder in which the guide is installed.</td>
+</tr>
+</tbody>
+</table>
+<p><code>--online</code> with a named page or <code>--all</code> reads its current text over HTTPS from the public Matsya client repository. The page list and titles still come from the installed client, so a newly added online page requires a client update before this command can name it. <code>bellman-matsya docs --online</code> without a page or <code>--all</code> only lists the installed pages. <code>--path</code> cannot be combined with <code>--online</code>, and a page cannot be combined with <code>--all</code> or <code>--path</code>. These argument errors end with status <code>2</code>; a failure to read an online page ends with status <code>1</code> and tells you how to read the installed guide. <code>docs</code> has no <code>--json</code> option.</p>
+<h2 id="3-the-retrieval-index">3 The retrieval index<a class="headerlink" href="#3-the-retrieval-index" title="Permanent link">&para;</a></h2>
+<h3 id="31-index-information">3.1 Index information<a class="headerlink" href="#31-index-information" title="Permanent link">&para;</a></h3>
+<p><code>bellman-matsya index [--json]</code> prints <code>Index digest</code>, <code>Embedding model</code>, <code>Configuration ID</code> and <code>Configuration version</code>. The digest identifies the version of the retrieval index the service is reading. The configuration ID and version name the service's current default. Its JSON fields are <code>index_digest</code>, <code>embedding_model_id</code>, <code>configuration_id</code> and <code>configuration_version</code> and, from a service that names them, <code>service_version</code> and <code>capabilities</code>, the service's version and the features it names (§8.1), which <code>configuration effective</code> prints (§9).</p>
+<h3 id="32-search">3.2 Search<a class="headerlink" href="#32-search" title="Permanent link">&para;</a></h3>
+<p><code>bellman-matsya search &lt;query&gt; [--collections NAMES] [--limit N] [--json]</code> searches for passages related to the query. <code>--collections</code> takes comma-separated names from <code>repository</code>, <code>literature</code>, <code>articles</code>, <code>hark</code> and <code>buffer_stock</code>; it may be repeated. Without it, the service searches every collection your Matsya token may read and ranks passages by their match to the query, with the collection weights applied. Use the option to restrict the search to named collections. <code>--limit</code> asks for 1 to 20 passages; the service's default is 8. The command prints the index digest and passage count, then each passage's path, heading and page when present, collection, score, identifier and a shortened text excerpt. The JSON answer has <code>index_digest</code> and <code>passages</code>; each passage includes its full <code>text</code>, <code>passage_id</code>, <code>corpus</code>, <code>path</code>, <code>location</code> and <code>score</code>, together with its source metadata. <a href="../07-collections-and-weights/">Collections and weights</a> explains the collections and search weights.</p>
+<h2 id="4-jobs-that-write-and-check-a-declaration">4 Jobs that write and check a declaration<a class="headerlink" href="#4-jobs-that-write-and-check-a-declaration" title="Permanent link">&para;</a></h2>
+<p>A <strong>target</strong> is the level of declaration a job is asked to return: <code>stage</code>, <code>period</code>, <code>trellis</code> or <code>recipe</code>. A stage is one stage file; a period includes its stages and period file; a trellis includes its periods and trellis file; a recipe adds the files needed to solve it. The target is required for <code>job submit</code>.</p>
+<h3 id="41-submit-a-job">4.1 Submit a job<a class="headerlink" href="#41-submit-a-job" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>bellman-matsya job submit &lt;file&gt; --target {stage,period,trellis,recipe} [--paper]
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    [--name NAME | --session &lt;session&gt; | --no-session]
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    [--max-cycles N] [--force] [--configuration-id ID]
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    [--model-key KEY --source-cluster CLUSTER] [--formulation TEXT] [--json]
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>bellman-matsya job submit --session &lt;session&gt; --target {stage,period,trellis,recipe}
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    [--max-cycles N] [--force] [--configuration-id ID] [--formulation TEXT] [--json]
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>bellman-matsya job submit-prepared &lt;file&gt; [--delivery-id ID] [--json]
+</code></pre></div>
+<p>The file of <code>job submit</code> must contain UTF-8 text. By default its text is a model description. <code>--paper</code> marks the text of a paper, whether Markdown, LaTeX or plain text; a PDF is refused before any request with the instruction to convert it first. Without <code>--session</code> or <code>--no-session</code>, the client creates a session named after the file without its extension; <code>--name</code> replaces that name. <code>--session</code> appends the file to an existing session, or, without a file, submits a job from the entries already in that session, which the job reads as they stand when it starts. <code>--no-session</code> sends the file directly; the job's questions then remain in its record. The three session options cannot be combined. <code>--paper</code> requires a file.</p>
+<p><code>--max-cycles</code> is a positive integer limiting iterations after the initial declaration; when omitted, the service uses its configured limit, subject to its maximum. <code>--force</code> continues to writing if preparation ends with questions and records the writer's assumptions. <code>--configuration-id</code> names the published configuration the job runs under, 64 lowercase hexadecimal characters (§9); without it the service's default runs the job, and either way the service's answer names the ID resolved. An ID of another form is refused with status <code>2</code> before any request, and an ID the service has not published is the service's 404. <code>--model-key</code> and <code>--source-cluster</code>, given together or not at all, name the groups of indexed sources the job must not read. <code>--formulation</code> names which model to write when the source states several; its text must be nonblank and at most 500 characters. With a file and a session, the command prints the session and entry numbers, the queued job identifier, the <code>job wait</code> line and where to see the session. Without a session it prints where to see questions in the job record. The JSON answer is the queued job object: <code>id</code>, <code>state</code>, <code>configuration_id</code>, <code>credential_source</code> and <code>status_url</code>. Creating a session and appending an entry are separate requests; if the later job request is refused, the error names what the session retained.</p>
+<p>With a personal Anthropic key selected (§2.2), the job's request includes it in the header <code>Bellman-Matsya-Anthropic-Key</code>; the requests that create a session and append the file do not. Before its first request the command checks the address the key would be sent to. At a service address that is neither an HTTPS address nor an <code>http</code> address whose host is <code>localhost</code>, <code>127.0.0.1</code> or <code>::1</code>, it creates no session, appends no entry and sends no job, prints <code>Error: A personal Anthropic key is sent only over HTTPS or to localhost, 127.0.0.1 or ::1, and the service address is &lt;address&gt;; use an HTTPS address, or stop selecting the key: unset BELLMAN_MATSYA_ANTHROPIC_KEY, run bellman-matsya configure --clear-anthropic-key, or omit anthropic_api_key.</code>, and exits with status <code>1</code>; it never sends the job without the key. When the service answers that the job's calls are made with that key, with <code>credential_source</code> <code>client</code>, the command prints <code>Credential: your Anthropic API key</code> among its lines. When the answer names <code>service</code>, or holds no <code>credential_source</code> because the service was built before personal keys and ignores the header, the command prints its usual lines, then on standard error <code>Error: the service at &lt;address&gt; accepted job &lt;id&gt; under its own Anthropic key, not yours.</code> and <code>Cancel it with: bellman-matsya job cancel &lt;id&gt;</code>, and exits with status <code>1</code>; the job remains on the service until it ends or is cancelled.</p>
+<p><code>job submit-prepared</code> submits a job from a <strong>prepared-inputs file</strong>, a JSON object in UTF-8 that holds the exact inputs of one job as you reviewed them, and sends those inputs as the file holds them, reading no file of the model folder. The file's fields are <code>session</code>, required, the identifier of the session the job is submitted from, 32 lowercase hexadecimal characters; <code>reviewed_through</code>, required, the number of the session's last entry when you reviewed it, an integer from 1; <code>target</code>, required, <code>stage</code>, <code>period</code>, <code>trellis</code> or <code>recipe</code>; <code>starting_declaration</code>, optional, the files the job's first cycle starts from, each file's text under the name the service reads it by, such as <code>example.bl</code>; <code>paths</code>, optional and only with <code>starting_declaration</code>, the same names, each mapped to the file's path in the model folder, such as <code>declaration/stages/example/example.bl</code>, which the client prints and never sends; and <code>configuration_id</code>, <code>max_cycles</code>, <code>force</code>, <code>formulation</code>, and <code>model_key</code> with <code>source_cluster</code>, optional, sent as <code>job submit</code> sends the options of those names. A file that is not such an object, that lacks a required field, or that holds a malformed value or a field of another name is refused before any request with a sentence that names the field, and the command exits with status <code>1</code>. With a personal Anthropic key selected, the command checks the address the key would be sent to before its first request, as <code>job submit</code> does.</p>
+<p>The command first reads the service's index answer (§3.1). When that answer does not name the capability <code>capture_at_acceptance</code>, the service would build the job from the session as it stands when the job starts, and the command sends no job request: it prints <code>Error: The service at &lt;address&gt; does not name the capability capture_at_acceptance in its index answer, so it would build the job from the session's text as it stands when the job starts, not from the history reviewed through entry &lt;N&gt;; the prepared inputs were not submitted. bellman-matsya job submit --session &lt;session&gt; --target &lt;target&gt; submits a job that reads the session as it stands.</code> and exits with status <code>1</code>. With <code>--delivery-id</code>, an answer that does not name <code>job_delivery_id</code> is refused in the same way, with <code>Error: The service at &lt;address&gt; does not name the capability job_delivery_id in its index answer, so it would refuse a job request that names a delivery identifier; the prepared inputs were not submitted.</code> Otherwise the job is submitted from the session with its <code>reviewed_through</code>, and the service fixes the job's source material when it accepts the job (<a href="../04-the-service-by-http/">Reaching the service by HTTP</a> §6): a session that has received an entry after <code>reviewed_through</code> is refused by the service with 409 and a sentence that names each later entry, which the command prints before it exits with status <code>1</code>, and no job is created.</p>
+<p>The command prints <code>Prepared inputs of &lt;file&gt;: session &lt;session&gt;, reviewed through entry &lt;N&gt;, target &lt;target&gt;</code>; <code>Starting declaration:</code> with the number of files, then one line for each file, <code>&lt;path&gt; as &lt;name&gt;, SHA-256 &lt;digest&gt;</code>, with the file's path in the model folder, or its name where <code>paths</code> names none, the name the service reads, and the digest of the text sent; <code>Job &lt;job&gt;: &lt;state&gt;</code>; <code>The service fixed session &lt;session&gt; through entry &lt;N&gt; at acceptance: version &lt;revision&gt; of its text, entries &lt;numbers&gt;.</code>; and the <code>job wait</code> line; with a personal key selected, it reports the key the service used as <code>job submit</code> does. <code>--delivery-id</code> names the request, a name of at most 64 characters. When the answer to a submission is lost, as when the connection fails after the request was sent, run the same command again with the same identifier: the service returns the job it holds and creates no second one, and the command adds <code>The service already holds delivery &lt;ID&gt; as this job; nothing was submitted again.</code> A different request under the same identifier is refused by the service with 409. <code>job status &lt;job&gt;</code> reads the job at any later time (§4.2). The JSON answer is the object that the client assembles: <code>session</code>, <code>reviewed_through</code> and <code>target</code>, from the file; <code>files</code>, one object for each file sent, with <code>name</code>, <code>path</code>, which is <code>null</code> where <code>paths</code> names none, and <code>sha256</code>; <code>capabilities</code>, those the service's index answer named; and <code>job</code>, the service's answer to the job request (§8.2).</p>
+<h3 id="42-inspect-wait-for-save-or-cancel-a-job">4.2 Inspect, wait for, save or cancel a job<a class="headerlink" href="#42-inspect-wait-for-save-or-cancel-a-job" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Options and printed answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bellman-matsya job status &lt;job&gt; [--json]</code></td>
+<td>Prints the job's label, identifier and state. While it runs, it adds the current step and any cancellation request. An ended job with a record has the label and status from the first two report headings, its questions when present, the available file names and a <code>job files</code> command. An ended job without a record has its error and detail when present. A job whose <code>credential_source</code> is <code>client</code> adds the line <code>Credential: your Anthropic API key</code>; a job run under the service's key adds nothing.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya job wait &lt;job&gt; [--interval SECONDS] [--json]</code></td>
+<td>Requests the job's state until it ends. The interval defaults to 5 seconds and cannot be negative. While waiting, it prints a time-stamped line when the state, step or cycle changes; with <code>--json</code>, these progress lines go to standard error. Its final answer is the same as <code>job status</code>.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya job files &lt;job&gt; &lt;folder&gt; [--all-iterates] [--overwrite] [--json]</code></td>
+<td>Writes a new or empty model folder, then prints its file count and each relative path. It writes <code>report.md</code> and <code>record.json</code>, plus <code>economics.md</code> with the prose paired with the most recent available declaration files under <code>declaration/</code>, including for a <code>not_converged</code> job. The report retains that status: these files are proposals for review. <code>--all-iterates</code> also writes the initial declaration, then each iteration's declaration and its input prose under <code>iterates/</code>, with the full record. <code>--overwrite</code> permits a nonempty folder, replacing files of the same names while retaining others. A job without a record cannot be written.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya job export &lt;job&gt; &lt;folder&gt; [--overwrite] [--json]</code></td>
+<td>Saves the job's full answer, the record as the service keeps it with every iteration and call, as <code>job.json</code> in the folder, which is created when it does not exist, for any state of the job: a cancelled or failed job without a record is saved with its state, its error, its configuration ID and its digests. Prints the path written, the job's state and its configuration ID. An existing <code>job.json</code> is refused before any request unless <code>--overwrite</code> is given. The file is written whole under a temporary name, then made visible as <code>job.json</code> in one operation. With <code>--json</code>, prints the full answer while still writing the file. A local comparison of two configurations reads this file, not the products-only <code>record.json</code> of <code>job files</code>.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya job cancel &lt;job&gt; [--json]</code></td>
+<td>Cancels a queued job at once or requests cancellation of a running job, then prints its state and, if still running, the <code>job wait</code> line. A call already sent to the language-model provider completes before cancellation takes effect. An ended job cannot be cancelled.</td>
+</tr>
+</tbody>
+</table>
+<p>For <code>status</code>, <code>wait</code>, <code>files</code> and <code>cancel</code>, <code>--json</code> prints the job object defined in §8.2, and for <code>export</code> the same object in the full view. In an ordinary model folder, an open writer note is placed beside its single stage as <code>declaration/stages/&lt;key&gt;/&lt;key&gt;.md</code>, or at <code>declaration/notes.md</code> otherwise. <code>job files</code> checks the folder before requesting the job, and refuses a path through a symbolic link rather than writing through it. The job state, not the command's exit status, tells you whether the writing and checking converged.</p>
+<h2 id="5-sessions-and-their-entries">5 Sessions and their entries<a class="headerlink" href="#5-sessions-and-their-entries" title="Permanent link">&para;</a></h2>
+<p>A <strong>session</strong> keeps the entries written by the user and Matsya, the jobs submitted from that text, and the turns that answer questions. Its <strong>revision</strong> is the number of its latest user, paper or acceptance entry. The commands below print session and entry identifiers so the next command can name them.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Options and printed answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bellman-matsya session new &lt;name&gt; [--json]</code></td>
+<td>Creates an empty session. Prints its identifier and name, then the commands to add an entry and ask a question.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya session add &lt;session&gt; &lt;file&gt; [--kind user\|paper] [--replies-to N] [--delivery-id ID] [--json]</code></td>
+<td>Appends the file's UTF-8 text; <code>-</code> reads standard input. The default kind is <code>user</code>; <code>paper</code> marks paper text. <code>--replies-to</code> names the numbered question this entry answers. <code>--delivery-id</code> is a name of at most 64 characters; a repeated delivery appends nothing. Prints the entry number and revision, or says that delivery was already held. If a reply starts the next job, it prints its identifier and the <code>job wait</code> line.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya session add &lt;session&gt; --kind acceptance --replies-to N [--delivery-id ID] [--json]</code></td>
+<td>Appends an acceptance of numbered answer entry <code>N</code>, with no file or text. It prints the same entry and revision lines as other additions.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya session show &lt;session&gt; [--json]</code></td>
+<td>Prints the session's identifier, name and revision; any job awaiting an answer or selected for questions; jobs by label; turn identifiers; and numbered entries with their kinds and text.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya session select &lt;session&gt; &lt;job&gt; [--json]</code> or <code>bellman-matsya session select &lt;session&gt; --none [--json]</code></td>
+<td>Selects a job of this session that holds a record, or clears the selection. Prints the selected job and explains which job's outputs later questions read. The job and <code>--none</code> cannot be combined.</td>
+</tr>
+</tbody>
+</table>
+<p>An ordinary reply is sent with <code>session add</code>, not with a project-specific reply command. A reply to a question of the job currently awaiting an answer starts its next job automatically, which reads the session's text as it stands when it starts, the reply included; <code>session show</code> or <code>project status</code> prints the entry number needed by <code>--replies-to</code>. When the answer to a reply is lost, send the reply again with the same <code>--delivery-id</code>: the service appends nothing and starts no second attempt, the command prints that the session already holds the delivery, and <code>session show</code> lists the attempt that the first delivery started among the session's jobs.</p>
+<p>An entry of the kind <code>user</code> with <code>--replies-to</code> is sent with a selected personal Anthropic key (§2.2), since it may start a job's next attempt, and at a service address that would not receive the key it is refused before its request, as <code>job submit</code> is (§4.1). When the reply starts a job and the entry is not a repeated delivery, the command prints <code>Credential: your Anthropic API key</code> for an attempt that the service runs with that key; for an attempt that the service accepted under its own key it prints its usual lines, then the sentence of §4.1 for that job and the <code>job cancel</code> line, and exits with status <code>1</code>. A job that ran under a personal key, with <code>credential_source</code> <code>client</code>, is continued only by a reply that includes a key. Without one the service answers 422 with <code>The job awaiting this reply ran under a personal Anthropic key; send the reply with a personal Anthropic key</code>, the session is left unchanged, and the command adds to that sentence <code>Supply one with bellman-matsya configure --set-anthropic-key, BELLMAN_MATSYA_ANTHROPIC_KEY, or MatsyaClient(..., anthropic_api_key=...).</code> The key of a reply may differ from the one the earlier job used, and a reply to a job run under the service's key may select a key for the next attempt.</p>
+<h2 id="6-ask-one-question">6 Ask one question<a class="headerlink" href="#6-ask-one-question" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>bellman-matsya ask &lt;session&gt; &lt;question&gt; [--stage-file PATH] [--index-digest DIGEST]
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    [--follow FOLDER | --no-wait] [--delivery-id ID] [--interval SECONDS]
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    [--configuration-id ID] [--json]
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>bellman-matsya turn status &lt;session&gt; &lt;turn&gt; [--json]
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>bellman-matsya turn wait &lt;session&gt; &lt;turn&gt; [--interval SECONDS] [--json]
+</code></pre></div>
+<p>The question is one turn in the session. <code>--stage-file</code> sends a stage file whose elaborated account the answer can read. <code>--index-digest</code> names a stored version of the retrieval index. <code>--configuration-id</code> names the published configuration whose conversation role answers (§9); without it the default answers, and a job the turn starts runs under the same configuration as the turn. A configuration without the conversation role refuses the question before anything is appended. <code>--delivery-id</code> names the question's delivery, a name of at most 64 characters: the same question sent again under it returns the turn already asked and appends nothing, and another question under it is refused by the service with 409. <code>--interval</code> sets the time between requests while waiting: by default 2 seconds for the turn and 5 seconds for a job followed with <code>--follow</code>; it cannot be negative. Unless <code>--no-wait</code> is given, the command waits for the turn: while the turn runs, it prints time-stamped state and step changes, and it then prints the answer, any source quotations and their locations, questions needing your reply, or the reason an incomplete turn stopped. If the turn read a job's outputs, it names that job. If it started a job, it prints the job identifier and the command to follow it.</p>
+<p><code>--follow FOLDER</code> checks that <code>FOLDER</code> is new or empty before sending the question. When the turn starts a job, the command waits for it and writes its model folder there if it holds a record. If no job starts, it says so and writes nothing. With <code>--json</code>, the final standard output is the turn object defined in §8.4, even when a followed job has also ended and its files were written. Progress lines go to standard error. A turn that finishes with a request for input or as incomplete still completes this command with exit status <code>0</code>; read <code>record.result.status</code>.</p>
+<p><code>--no-wait</code> prints the turn as soon as the service accepts the question, without waiting for its answer: <code>Turn &lt;turn&gt;: &lt;state&gt;, question entry &lt;n&gt; of session &lt;session&gt;</code>, to which a repeated delivery adds <code>; this delivery was received before</code>, then <code>Read its state with: bellman-matsya turn status &lt;session&gt; &lt;turn&gt;</code> and <code>Wait for its answer with: bellman-matsya turn wait &lt;session&gt; &lt;turn&gt;</code>. It cannot be combined with <code>--follow</code>, and the two together are refused with status <code>2</code>. <code>turn status</code> reads a turn once by its identifier: before the turn has finished it prints <code>Turn &lt;turn&gt;: &lt;state&gt;</code>, with the turn's error and its detail when the turn failed or was interrupted, and once it has finished it prints the answer as <code>ask</code> does. <code>turn wait</code> requests the turn's state every <code>--interval</code> seconds, 2 by default, printing a time-stamped line when its state or step changes, on standard error with <code>--json</code>, until the turn has finished, failed or been interrupted, and then prints it as <code>turn status</code> does; when you stop it, it prints how to wait again and exits with status <code>130</code>. Both commands read the turn from any terminal or later process, and both print <code>Credential: your Anthropic API key</code> for a turn whose <code>credential_source</code> is <code>client</code>.</p>
+<p>With a personal Anthropic key selected (§2.2), the question is sent with it, and the command checks the address it would be sent to before it sends anything, as <code>job submit</code> does (§4.1): at an address that would not receive the key, nothing is appended and the command exits with status <code>1</code>. When the service answers that the turn's calls are made with that key, the command prints <code>Credential: your Anthropic API key</code>. When the answer names <code>service</code>, or holds no <code>credential_source</code>, the command prints its usual lines, then on standard error <code>Error: the service at &lt;address&gt; accepted turn &lt;id&gt; under its own Anthropic key, not yours.</code>, and exits with status <code>1</code>. A job that the turn starts uses the turn's key. A turn whose key Anthropic refuses ends <code>incomplete</code> with the reason <code>provider_rejected_credential</code> and the answer <code>Matsya could not answer, because the language-model provider refused the Anthropic API key used for this turn.</code> When the turn's <code>credential_source</code> is <code>client</code>, replace your key or remove it (§2.2); when it is <code>service</code>, tell the service's administrator.</p>
+<h2 id="7-a-models-project-folder">7 A model's project folder<a class="headerlink" href="#7-a-models-project-folder" title="Permanent link">&para;</a></h2>
+<p>A <strong>project folder</strong> can hold the author's <code>economics.md</code> and current files under <code>declaration/</code>. Its <code>.bellman-matsya/project.json</code> remembers the session and service address. Run <code>submit</code>, <code>status</code> and <code>pull</code> from that folder. These commands take <code>--json</code>, which returns the fields in §8.5. <a href="../03-working-on-a-project-folder/">Working on a project folder</a> follows their use in order.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Options, default and printed answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bellman-matsya project init [folder] [--json]</code></td>
+<td>Makes <code>folder</code> a project; the default is the current folder, and a missing folder is created. It creates a session named after the folder, appends nonempty <code>economics.md</code> when present, writes <code>.bellman-matsya/project.json</code> and <code>.bellman-matsya/README.md</code>, and creates <code>AGENTS.md</code> with a paragraph for an assistant when no such file exists. It prints the folder and session, any entry, files written and the <code>project submit</code> line. If <code>AGENTS.md</code> exists, it leaves it unchanged and prints the paragraph for you to add.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya project submit [--target {stage,period,trellis,recipe}] [--max-cycles N] [--configuration-id ID] [--json]</code></td>
+<td>Appends <code>economics.md</code> only if its bytes changed since the last submission. It sends recognized files under <code>declaration/</code> as the starting declaration and prints which files were sent or left out, the target, the job's label and identifier, and the <code>job wait</code> line. Without <code>--target</code>, a recipe file, methods, calibration or settings selects <code>recipe</code>; otherwise <code>trellis.yml</code> selects <code>trellis</code>, a period file selects <code>period</code>, and no such file selects <code>stage</code>. <code>--max-cycles</code> is a positive integer; without it the service uses its configured limit. <code>--configuration-id</code> is forwarded to the job as <code>job submit</code> sends it.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya project status [--json]</code></td>
+<td>Prints the folder's session identifier, service and revision, its entries and jobs, any selected job, questions awaiting a reply and their exact <code>bellman-matsya session add ... --replies-to N</code> lines, a <code>bellman-matsya ask</code> line and whether <code>economics.md</code> changed.</td>
+</tr>
+<tr>
+<td><code>bellman-matsya project pull [&lt;job&gt;] [--replace \| --into [SUBFOLDER]] [--json]</code></td>
+<td>By default chooses the latest ended job in the session that holds a record and writes its complete model folder to <code>bellman-matsya-output/job-&lt;number&gt;/</code>. <code>--into</code> selects another new or empty subfolder within the project; without a value it uses that default. This output folder holds the job's model prose as <code>economics.md</code>. <code>--replace</code> instead writes declaration files into the project folder, replacing matching files while keeping declaration files the job did not produce. When a writer leaves a question open, it writes that note to <code>.bellman-matsya/writer-note.md</code>, preserving an existing stage note. It writes <code>report.md</code> and, when model prose exists, <code>model-prose.md</code>; it leaves the author's <code>economics.md</code> unchanged and prints the paths written, replaced and kept. <code>--replace</code> and <code>--into</code> cannot be combined.</td>
+</tr>
+</tbody>
+</table>
+<p>The project file contains the session identifier, service address and digest of the last submitted <code>economics.md</code>. The client sends a project's requests only to its configured service when that address matches the project file. A project command in a folder with no readable project file, or a pull of a job with no record, is refused with status <code>2</code>. A service refusal still ends with status <code>1</code>.</p>
+<p>With a personal Anthropic key selected (§2.2), <code>project submit</code> sends it with the job's request and not with the entry of <code>economics.md</code>. At a service address that would not receive the key, the command is refused before its first request with the sentence of §4.1 and status <code>1</code>, so that no entry is appended and no new digest of <code>economics.md</code> is recorded. Its credential line, and its error for a job that the service accepted under its own key, are those of <code>job submit</code> (§4.1).</p>
+<h2 id="8-fields-in-json-answers">8 Fields in JSON answers<a class="headerlink" href="#8-fields-in-json-answers" title="Permanent link">&para;</a></h2>
+<p>The client preserves the service's JSON field names. A field described as optional below is absent until the related event occurs; a value described as <code>null</code> is present with no value. The project commands instead compose their own objects, and so do <code>job submit-prepared</code> and <code>configuration effective</code>, whose fields §§4.1 and 9 give. <code>configure</code>, <code>docs</code> and bare <code>bellman-matsya</code> have no JSON form.</p>
+<h3 id="81-index-and-search">8.1 Index and search<a class="headerlink" href="#81-index-and-search" title="Permanent link">&para;</a></h3>
+<p><code>index --json</code> has <code>index_digest</code> (the index version), <code>embedding_model_id</code> (the model used to represent passages for search), <code>configuration_id</code> (the ID of the service's default configuration) and <code>configuration_version</code> (its readable version), and the printed answer has one line for each of the four. From a service that names them, it also has <code>service_version</code> (the service's version) and <code>capabilities</code> (the features the service names, <code>capture_at_acceptance</code> and <code>job_delivery_id</code>, on which <code>job submit-prepared</code> depends, §4.1), which the printed answer does not show. <code>search --json</code> has <code>index_digest</code> and <code>passages</code>, an array. A passage has these fields:</p>
+<table>
+<thead>
+<tr>
+<th>Fields</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>passage_id</code>, <code>passage_sha256</code>, <code>text</code></td>
+<td>Passage identifier, digest of its full text, and that text. The printed search excerpt is shorter.</td>
+</tr>
+<tr>
+<td><code>corpus</code>, <code>source_root</code>, <code>source_id</code>, <code>path</code>, <code>file_sha256</code></td>
+<td>Collection, root and identifier of the source, its path and file digest.</td>
+</tr>
+<tr>
+<td><code>access</code>, <code>kind</code>, <code>authority</code>, <code>version</code>, <code>title</code>, <code>source_cluster</code>, <code>model_prompt</code></td>
+<td>Source access and descriptive metadata. Some values may be <code>null</code>.</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td><code>page</code>, <code>page_basis</code>, <code>printed_page_label</code>, <code>heading</code>, <code>line_start</code>, <code>line_end</code>, <code>char_start</code> and <code>char_end</code>; when applicable, also <code>cell_number</code>, <code>cell_type</code>, <code>stage_name</code>, <code>block_id</code>, <code>section</code> and <code>formula_continues</code>.</td>
+</tr>
+<tr>
+<td><code>index_digest</code>, <code>manifest_digest</code>, <code>corpus_revision</code></td>
+<td>Versions of the index, source manifest and collection.</td>
+</tr>
+<tr>
+<td><code>score</code>, <code>raw_score</code>, <code>retrieval_weight</code>, <code>lexical_score</code>, <code>dense_score</code></td>
+<td>Weighted search score, score before weighting, weight applied, word-match score and representation-match score.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-jobs">8.2 Jobs<a class="headerlink" href="#82-jobs" title="Permanent link">&para;</a></h3>
+<p><code>job submit --json</code> has <code>id</code> (job identifier), <code>state</code> (<code>queued</code>), <code>configuration_id</code> (the configuration the job runs under), <code>credential_source</code> (the key used for the job's language-model calls) and <code>status_url</code>. Under <code>job</code>, the answer of <code>job submit-prepared --json</code> (§4.1) holds the same fields with <code>reviewed_through</code>, <code>revision</code> and <code>entry_numbers</code> and, for a request named with <code>--delivery-id</code>, <code>repeated</code>, <code>state</code> then being the job's present state when <code>repeated</code> is <code>true</code>. <code>status</code>, <code>wait</code>, <code>files</code>, <code>export</code> and <code>cancel</code> return a job object. <code>status</code>, <code>wait</code> and <code>files</code> use the service's <strong>products view</strong>, the final products and report material rather than every writing cycle; <code>cancel</code> returns the service's job state at cancellation; <code>export</code> returns the <strong>full view</strong>, the record with every iteration and call. <code>job files --all-iterates</code> writes the full record to disk but still prints the products view with <code>--json</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code>, <code>state</code></td>
+<td>Job identifier and current state. States are <code>queued</code>, <code>running</code>, <code>converged</code>, <code>not_converged</code>, <code>needs_input</code>, <code>cancelled</code>, <code>failed</code> or <code>interrupted</code>.</td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td>Object with <code>model</code>, <code>target</code>, <code>revision</code>, <code>number</code>, <code>state</code>, <code>overtaken</code> and the one-line <code>text</code> printed for a reader. A job without a session has no model, revision or number.</td>
+</tr>
+<tr>
+<td><code>cancel_requested</code>, <code>progress</code>, <code>events</code></td>
+<td>Whether cancellation was requested; current step, cycle and cycle limit when reported; and the service's call events.</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>updated_at</code></td>
+<td>Times recorded by the service.</td>
+</tr>
+<tr>
+<td><code>result</code></td>
+<td>Present when the job holds a record. Its products-view fields are listed below.</td>
+</tr>
+<tr>
+<td><code>error</code>, <code>error_detail</code></td>
+<td>Present when a job ends with an error. The code <code>provider_rejected_credential</code> means that Anthropic refused the Anthropic API key that <code>credential_source</code> names, after its first such answer and with no request under another key.</td>
+</tr>
+<tr>
+<td><code>session</code>, <code>revision</code>, <code>entry_numbers</code>, <code>current</code></td>
+<td>Present for a job started from a session as each value becomes known: session identifier, version of its text, source entry numbers and whether it was current when it ended. For a job whose request named <code>reviewed_through</code>, the version and the entry numbers are those fixed at acceptance and are present from then on.</td>
+</tr>
+<tr>
+<td><code>reviewed_through</code></td>
+<td>For a job whose request named it, the number of the session's last entry when its user reviewed it.</td>
+</tr>
+<tr>
+<td><code>delivery_id</code></td>
+<td>The delivery identifier that the job's request named, when it named one.</td>
+</tr>
+<tr>
+<td><code>started_by</code></td>
+<td>Turn identifier when a question submitted this job.</td>
+</tr>
+<tr>
+<td><code>configuration_id</code></td>
+<td>The ID of the configuration the job runs under, fixed when the service accepted the job; <code>null</code> for a job recorded before the service kept it.</td>
+</tr>
+<tr>
+<td><code>credential_source</code></td>
+<td><code>client</code> when the job's language-model calls are made with the personal Anthropic key sent with its request, <code>service</code> when they are made with the service's own key; fixed when the service accepted the job, kept when the job fails or is interrupted, and <code>service</code> for a job recorded before the service kept it. It names a key and never holds one, and neither <code>configuration_id</code> nor <code>request_sha256</code> depends on it.</td>
+</tr>
+<tr>
+<td><code>request_sha256</code>, <code>source_sha256</code>, <code>index_digest</code></td>
+<td>The digest of the accepted request without its <code>configuration_id</code>, fixed at acceptance; the digest of the source text the job reads, a description stripped of surrounding whitespace and a paper unchanged, fixed at acceptance for a source sent with the request and for a session's text fixed then, and otherwise when the job starts; and the digest of the retrieval index the job selected when it began. Each is <code>null</code> until fixed.</td>
+</tr>
+</tbody>
+</table>
+<p>In <code>result</code>, <code>schema</code> identifies the form of the job record; <code>target</code> names the requested level; <code>structure</code> is the form named in the model prose; <code>status</code> and <code>reason</code> state the outcome; <code>description</code> holds the prepared model prose; <code>questions</code> holds requested clarifications; and <code>paper_source_check</code> and <code>paper_form_check</code> hold checks of that prose against the source. <code>cycles_run</code> counts the iterations after the initial declaration. <code>available_writing</code> is <code>null</code> if no writing produced parsed files; otherwise it gives its <code>cycle</code> number, <code>files</code>, and the <code>description</code> from which those files were written. Cycle 0 is the initial writing from the prepared model prose. <code>last_cycle</code> is <code>null</code> if no iteration began; otherwise it describes the final iteration, with <code>files</code>, <code>judging</code>, <code>comparison</code> (with <code>equal</code> and <code>first_difference</code>), <code>citations_supported</code> and <code>unresolved_note</code>. <code>last_completed_comparison</code> gives the latest completed adjacent comparison, its left and right cycle numbers, its <code>equal</code> verdict and its first difference; it is <code>null</code> if no comparison completed. <code>reading</code> gives the <code>index_digest</code> and <code>guides</code> consulted. <code>usage</code> gives <code>charged</code>, <code>calls_by_role</code> and <code>refusal</code>, including any token-ceiling refusal. <code>captured_source</code>, present for a job whose request named <code>reviewed_through</code>, gives <code>reviewed_through</code>, <code>revision</code> and <code>entries</code>, the history the job was built from. A field the service's record does not hold is omitted from the products view. Older records keep their original field meanings and output layout.</p>
+<h3 id="83-sessions">8.3 Sessions<a class="headerlink" href="#83-sessions" title="Permanent link">&para;</a></h3>
+<p><code>session new --json</code>, <code>session show --json</code> and <code>session select --json</code> return a session object. <code>session add --json</code> returns that same object with three additional fields: <code>entry</code> (the entry appended or previously delivered), <code>repeated</code> (whether a delivery identifier was already used) and <code>scheduled</code> (<code>null</code> or an object with <code>id</code>, <code>status_url</code> and <code>credential_source</code> for the next job).</p>
+<table>
+<thead>
+<tr>
+<th>Session field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code>, <code>name</code></td>
+<td>Session identifier and name.</td>
+</tr>
+<tr>
+<td><code>entries</code></td>
+<td>Numbered entries. Each has <code>number</code>, <code>kind</code>, <code>text</code>, <code>origin</code>, <code>replies_to</code> and <code>created_at</code>; <code>origin</code> names a job or turn when Matsya wrote the entry, otherwise it is <code>null</code>.</td>
+</tr>
+<tr>
+<td><code>revision</code></td>
+<td>Number of the latest user, paper or acceptance entry.</td>
+</tr>
+<tr>
+<td><code>awaiting_answer</code>, <code>selected_job</code></td>
+<td>Identifier of a job awaiting a reply, and identifier of the job selected for later questions; either may be <code>null</code>.</td>
+</tr>
+<tr>
+<td><code>jobs</code>, <code>turns</code></td>
+<td>Jobs in submission order and turn identifiers. Each listed job has <code>id</code>, <code>state</code>, <code>revision</code>, <code>current</code> and <code>label</code>.</td>
+</tr>
+<tr>
+<td><code>created_at</code>, <code>updated_at</code></td>
+<td>Times recorded by the service.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="84-turns">8.4 Turns<a class="headerlink" href="#84-turns" title="Permanent link">&para;</a></h3>
+<p><code>ask --json</code> and <code>turn wait --json</code> return the final turn object, and <code>turn status --json</code> the turn object as it stands; <code>ask --no-wait --json</code> returns instead the service's answer to the question, with <code>id</code>, <code>state</code>, <code>question</code>, <code>repeated</code>, <code>configuration_id</code>, <code>credential_source</code> and <code>status_url</code>. The turn object has <code>id</code>, <code>session</code>, <code>state</code>, <code>question</code> (the session entry number), <code>configuration_id</code> (the configuration whose conversation role answered), <code>credential_source</code> (<code>client</code> when the turn's language-model calls are made with the personal Anthropic key sent with its question, <code>service</code> otherwise), <code>progress</code>, <code>events</code>, <code>created_at</code> and <code>updated_at</code>; <code>record</code> is present when a turn has a record, while <code>error</code> and <code>error_detail</code> may be present after failure. The record has <code>schema</code>, <code>turn</code>, <code>session</code>, <code>question</code>, <code>index_digest</code>, <code>versions</code>, <code>stage_file</code>, <code>fields</code>, <code>calls</code>, <code>reading</code>, <code>retained</code>, <code>decisions</code>, <code>dropped_decisions</code>, <code>usage</code> and <code>result</code>. These record the source versions, any stage file supplied, material read, calls and decisions as well as the answer. In <code>record.result</code>, <code>turn</code> identifies the turn; <code>status</code> is <code>answered</code>, <code>needs_input</code> or <code>incomplete</code>; <code>answer</code>, <code>citations</code>, <code>questions</code> and <code>reason</code> give the response and any reason it stopped, the reason <code>provider_rejected_credential</code> when Anthropic refused the Anthropic API key that <code>credential_source</code> names. <code>passages</code> names material supplied to the turn; <code>index_digest</code> names the index it read; <code>current</code> says whether the session's text remained current; <code>job</code> names the job whose outputs it read, if any; and <code>job_started</code> names a job it submitted, if any. A citation has <code>quote</code>, <code>identity</code>, <code>path</code>, <code>heading</code>, <code>location</code>, <code>authority</code> and <code>index_digest</code>. Both job fields are <code>null</code> when no job applies, or objects with <code>id</code> and <code>label</code> when one does.</p>
+<h3 id="85-project-commands">8.5 Project commands<a class="headerlink" href="#85-project-commands" title="Permanent link">&para;</a></h3>
+<p>Each project answer includes <code>folder</code>, the resolved project-folder path, and <code>project</code>, the contents of <code>.bellman-matsya/project.json</code>: <code>session</code>, <code>server</code> and <code>economics_sha256</code> (the digest of the description at its last submission, or <code>null</code>). The remaining fields depend on the command:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Additional JSON fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project init</code></td>
+<td><code>session</code>: the new service session; <code>entry</code>: the first entry or <code>null</code>; <code>written</code>: paths written; <code>agents</code>: <code>created</code> or <code>kept</code> for <code>AGENTS.md</code>; <code>agents_paragraph</code>: the paragraph written or offered to the user.</td>
+</tr>
+<tr>
+<td><code>project submit</code></td>
+<td><code>economics</code>: <code>appended</code>, <code>unchanged</code> or <code>absent</code>; <code>entry</code>: the new entry or <code>null</code>; <code>target</code>: requested level; <code>target_named</code>: whether <code>--target</code> supplied it; <code>starting_declaration</code>: file names sent; <code>left_out</code>: paths under <code>declaration/</code> not sent; <code>job</code>: the service's job object.</td>
+</tr>
+<tr>
+<td><code>project status</code></td>
+<td><code>session</code>: current service session; <code>awaiting</code>: objects with <code>number</code>, <code>text</code> and the exact <code>reply</code> command; <code>ask</code>: command to ask a question; <code>economics_changed</code>: <code>true</code>, <code>false</code> or <code>null</code> if the folder has no readable nonempty description.</td>
+</tr>
+<tr>
+<td><code>project pull</code></td>
+<td><code>job</code>: selected job in the products view; <code>into</code>: output subfolder or <code>null</code> with <code>--replace</code>; <code>written</code>: paths written; <code>replaced</code>: paths that replaced files; <code>kept</code>: declaration paths the job did not write.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-configurations">9 Configurations<a class="headerlink" href="#9-configurations" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>bellman-matsya configuration publish &lt;folder&gt; [--json]
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>bellman-matsya configuration set-default &lt;id&gt; [--json]
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>bellman-matsya configuration effective [--session &lt;session&gt;] [--configuration-id ID] [--json]
+</code></pre></div>
+<p>A <strong>configuration</strong> is the checked folder of instruction texts, settings, Matsya handlers and saved guides that a job or a question runs under; its <strong>configuration ID</strong> is the SHA-256 digest of its <code>manifest.json</code>. The service keeps every published configuration unchanged under its ID and one <strong>default</strong>, which a job or a question that names no ID runs under. <code>configuration publish</code> and <code>configuration set-default</code> are refused by the service with 403 for a Matsya token whose holder the service's operator has not named as an administrator; any Matsya token may select a published ID with <code>--configuration-id</code>.</p>
+<p><code>configuration publish</code> sends the folder's files, by their paths relative to the folder and without bytecode caches, as a ZIP archive, and prints the ID and the version the service answered with; the same folder published again prints the same ID. A folder that holds a symbolic link is refused with status <code>1</code> before any request. The service checks every file against the manifest before and after it imports the Matsya handler module, and refuses an archive that escapes its folder, holds a duplicate name or a file the manifest does not list, or expands beyond 24 MiB. Publication leaves the default as it is. The JSON answer has <code>configuration_id</code> and <code>version</code>.</p>
+<p><code>configuration set-default</code> makes a published ID the default and prints the new default with its version and the former default. The change takes effect for the next job or question, without a restart; a job or a question already accepted keeps the configuration pinned to it. An ID of another form than 64 lowercase hexadecimal characters is refused with status <code>2</code> before any request, and an unpublished ID is the service's 404. The JSON answer has <code>previous_configuration_id</code>, <code>configuration_id</code> and <code>version</code>.</p>
+<p><code>configuration effective</code> prints the settings that a new job or question sent from this terminal would use, without the Matsya token or the key: <code>Service: &lt;address&gt; (from &lt;source&gt;)</code>, followed by <code>, bellman-matsya &lt;version&gt;</code> when the service names its version, where the source is <code>BELLMAN_MATSYA_SERVER</code>, the path of the configuration file or <code>the client's built-in address</code>; <code>Matsya token: set (from &lt;source&gt;)</code>, where the source is <code>BELLMAN_MATSYA_TOKEN</code> or the path of the configuration file; <code>Configuration: &lt;id&gt;, version &lt;version&gt;, the service's default</code>, or <code>Configuration: &lt;id&gt;, named with --configuration-id</code> when that option names an ID; <code>Session: &lt;session&gt; (from --session)</code>, or, in a project folder (§7) without that option, <code>Session: &lt;session&gt; (from .bellman-matsya/project.json)</code>, and otherwise <code>Session: none</code>; <code>Anthropic key: none; the service's own key is used</code>, or <code>Anthropic key: your personal key (from &lt;source&gt;)</code>, where the source is <code>BELLMAN_MATSYA_ANTHROPIC_KEY</code> or the path of the saved key file (§2.2), which at an address that would not receive the key (§4.1) reads <code>Anthropic key: your personal key (from &lt;source&gt;), which the client does not send to &lt;address&gt;, so new work is refused before any request</code>; and <code>Capabilities: capture_at_acceptance, job_delivery_id</code>, the capabilities that the service's index answer names (§3.1), or <code>Capabilities: none named by the service</code>. It sends one request, for the index, which carries no key. In a project folder whose project file names another service than the one the client is configured for, the command is refused with <code>Error: This folder's session is kept by the service at &lt;folder's address&gt;, and the client is configured for the service at &lt;address&gt;; the client sends a folder's requests only to the service it is configured for.</code> and status <code>2</code>, and a configuration ID of another form than 64 lowercase hexadecimal characters is refused with status <code>2</code> before any request. The JSON answer, which the client assembles, has <code>server</code> and <code>server_source</code>; <code>token_source</code>; <code>configuration_id</code>, <code>configuration_version</code>, which is <code>null</code> for an ID named with <code>--configuration-id</code>, and <code>configuration_source</code>, <code>named</code> or <code>the service's default</code>; <code>session</code> and <code>session_source</code>; <code>key_source</code> and <code>credential</code>, which is <code>client</code> for a key the client sends to this address, <code>refused</code> for a key it does not send there and <code>service</code> without a key; <code>service_version</code>; and <code>capabilities</code>.</p>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../04-the-service-by-http/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Reaching the service by HTTP">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Reaching the service by HTTP
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../06-the-python-module/" class="md-footer__link md-footer__link--next" aria-label="Next: The Python module and the files the client writes">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                The Python module and the files the client writes
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../_javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="../../../_javascripts/meaning_map.js"></script>
+      
+        <script src="../../../_javascripts/figure_sequences.js"></script>
+      
+        <script src="../../../_javascripts/rosetta-card-nav.js"></script>
+      
+    
+  </body>
+</html>

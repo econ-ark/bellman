@@ -1,0 +1,1732 @@
+/* ── Byline (author + caveat, shown under page title) ── */
+.bc-byline {
+  color: #999;
+  font-size: 0.72rem;
+  font-style: italic;
+  margin-top: -0.4rem;
+  margin-bottom: 1.4rem;
+}
+
+/* Hide byline on custom homepage (hero already has its own content) */
+html.bc-home .bc-byline {
+  display: none;
+}
+
+/* Site colours, typography and Material navigation are in bellman.css. */
+
+/* ── Obsidian inline tags (editor-level, hidden in docs) ── */
+strong.hash {
+  display: none;
+}
+
+/* ── Tags below title ── */
+.md-content__inner {
+  display: flex;
+  flex-direction: column;
+}
+
+.md-content__inner > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.md-content__inner > .md-tags {
+  order: 1;
+  margin-bottom: 1em;
+}
+
+.md-content__inner > h1 {
+  order: 0;
+}
+
+.md-content__inner > *:not(.md-tags):not(h1) {
+  order: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Homepage intro two-column layout
+   ═══════════════════════════════════════════════════════════════════ */
+.bc-home .md-sidebar--primary,
+.bc-home .md-sidebar--secondary {
+  display: none !important;
+}
+
+/* Make homepage content span full width without sidebars */
+.bc-home .md-main__inner {
+  grid-template-columns: 1fr !important;
+}
+
+.bc-home .md-content {
+  grid-column: 1 / -1 !important;
+}
+
+.bc-intro-row {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+  align-items: start;
+  margin: 1rem 0 1.5rem;
+}
+
+.bc-intro-aside-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bc-intro-aside {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #00897B;
+  border-radius: 0 6px 6px 0;
+  padding: 1rem 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.bc-intro-aside strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #00897B;
+  margin-bottom: 0.4rem;
+}
+
+.bc-intro-aside em {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  color: #78909C;
+}
+
+.bc-intro-aside--compact {
+  padding: 0.85rem 1rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.bc-intro-aside--compact strong {
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.bc-intro-aside--compact p {
+  margin: 0.4rem 0;
+}
+
+.bc-intro-meta {
+  margin-top: 0.55rem;
+  font-size: 0.82rem;
+  color: #78909C;
+}
+
+[data-md-color-scheme="slate"] .bc-intro-meta {
+  color: rgba(176, 190, 197, 0.78);
+}
+
+/* ── Small badge "icons" used in homepage cards ── */
+.bc-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45em;
+  height: 1.45em;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.85em;
+  line-height: 1;
+  margin-right: 0.45em;
+  border: 1.5px solid currentColor;
+  background: transparent;
+  transform: translateY(-0.06em);
+}
+
+.bc-badge--upsilon,
+.bc-badge--arrival {
+  color: #00897B;
+  background: rgba(0, 137, 123, 0.08);
+}
+
+.bc-badge--rho {
+  color: #005b8f;
+  background: rgba(0, 91, 143, 0.08);
+}
+
+.bc-badge--decision {
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.10);
+}
+
+.bc-badge--cont {
+  color: #00aeef;
+  background: rgba(0, 174, 239, 0.10);
+}
+
+[data-md-color-scheme="slate"] .bc-badge {
+  background: transparent;
+  border-width: 1.25px;
+}
+
+[data-md-color-scheme="slate"] .bc-badge--upsilon,
+[data-md-color-scheme="slate"] .bc-badge--arrival {
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-badge--rho {
+  color: #00aeef;
+}
+
+[data-md-color-scheme="slate"] .bc-badge--decision {
+  color: #f97316;
+}
+
+[data-md-color-scheme="slate"] .bc-badge--cont {
+  color: #00aeef;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Υ walkthrough: meaning-map animation (homepage)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.bc-meaning-map {
+  margin: 1.4rem 0 1.8rem;
+}
+
+.bc-meaning-map__code {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.bc-meaning-map__panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.bc-mm-kicker {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #00897B;
+  font-weight: 700;
+}
+
+.bc-mm-title {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #06111a;
+  margin: 0;
+}
+
+.bc-mm-body {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.bc-mm-body a {
+  font-weight: 650;
+}
+
+.bc-mm-controls {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(2, 6, 23, 0.08);
+}
+
+.bc-mm-controls__btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bc-mm-btn {
+  appearance: none;
+  border: 1px solid rgba(0, 137, 123, 0.35);
+  background: #ffffff;
+  color: #00897B;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bc-mm-btn:hover {
+  background: rgba(0, 137, 123, 0.06);
+}
+
+.bc-mm-step {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.bc-mm-pre {
+  margin: 0;
+  padding: 0.75rem 0;
+  overflow: auto;
+  max-height: none;
+}
+
+.bc-mm-code {
+  display: block;
+  padding: 0.25rem 0;
+  font-family: var(--md-code-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.bc-mm-line {
+  display: block;
+  padding: 0.1rem 0.75rem;
+  border-left: 3px solid transparent;
+  border-radius: 6px;
+}
+
+.bc-mm-lno {
+  color: #94a3b8;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bc-mm-line.is-active {
+  background: rgba(0, 137, 123, 0.08);
+  border-left-color: #00897B;
+}
+
+.bc-mm-line.is-active .bc-mm-lno {
+  color: #0f172a;
+}
+
+/* Typed YAML comments (GitHub-style) */
+.bc-mm-cmt {
+  color: #64748b;
+}
+
+.bc-mm-cmt.is-typing::after {
+  content: "▍";
+  margin-left: 2px;
+  color: #00897B;
+  animation: bc-mm-blink 1s steps(1) infinite;
+}
+
+/* When we render inside a normal fenced code block, avoid per-line padding/borders. */
+.bc-mm-live .bc-mm-line {
+  display: inline;
+  padding: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+
+/* Hide the (JSON) steps source block on the page. JS also removes it. */
+.bc-mm-steps-src {
+  display: none !important;
+}
+
+/* Attr-list markers often become empty <p> nodes; hide the following code block too. */
+p.bc-mm-steps-src + div.highlight {
+  display: none !important;
+}
+
+/* Attr-lists currently attach to a wrapping <p> around code blocks. */
+p.bc-mm-target {
+  margin: 0;
+}
+
+.bc-mm-line--comment {
+  border-left-color: transparent;
+}
+
+.bc-mm-line--comment .bc-mm-txt {
+  color: #64748b;
+}
+
+.bc-mm-line--comment.is-typing .bc-mm-txt::after {
+  content: "▍";
+  margin-left: 2px;
+  color: #00897B;
+  animation: bc-mm-blink 1s steps(1) infinite;
+}
+
+@keyframes bc-mm-blink {
+  50% { opacity: 0; }
+}
+
+/* Hide the raw source block once JS has initialized */
+.bc-meaning-map[data-initialized="true"] .bc-mm-src {
+  display: none;
+}
+
+[data-md-color-scheme="slate"] .bc-meaning-map__code,
+[data-md-color-scheme="slate"] .bc-meaning-map__panel {
+  border-color: rgba(100, 255, 218, 0.10);
+}
+
+[data-md-color-scheme="slate"] .bc-meaning-map__code {
+  background: rgba(31, 31, 53, 0.55);
+}
+
+[data-md-color-scheme="slate"] .bc-meaning-map__panel {
+  background: rgba(31, 31, 53, 0.75);
+}
+
+[data-md-color-scheme="slate"] .bc-mm-kicker {
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-title {
+  color: #F3FBFF;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-body {
+  color: #B0BEC5;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-controls {
+  border-top-color: rgba(100, 255, 218, 0.10);
+}
+
+[data-md-color-scheme="slate"] .bc-mm-btn {
+  background: rgba(13, 17, 23, 0.55);
+  border-color: rgba(100, 255, 218, 0.25);
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-btn:hover {
+  background: rgba(100, 255, 218, 0.08);
+}
+
+[data-md-color-scheme="slate"] .bc-mm-step {
+  color: #94a3b8;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-lno {
+  color: rgba(176, 190, 197, 0.6);
+}
+
+[data-md-color-scheme="slate"] .bc-mm-line.is-active {
+  background: rgba(100, 255, 218, 0.08);
+  border-left-color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-line.is-active .bc-mm-lno {
+  color: #F3FBFF;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-cmt {
+  color: rgba(176, 190, 197, 0.78);
+}
+
+[data-md-color-scheme="slate"] .bc-mm-cmt.is-typing::after {
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-mm-line--comment .bc-mm-txt {
+  color: rgba(176, 190, 197, 0.78);
+}
+
+[data-md-color-scheme="slate"] .bc-mm-line--comment.is-typing .bc-mm-txt::after {
+  color: #64FFDA;
+}
+
+@media (max-width: 960px) {
+  .bc-meaning-map {
+    display: block;
+  }
+  .bc-mm-pre {
+    max-height: none;
+  }
+}
+[data-md-color-scheme="slate"] .bc-intro-aside {
+  background: rgba(100, 255, 218, 0.04);
+  border-color: rgba(100, 255, 218, 0.1);
+  border-left-color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-intro-aside strong {
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-intro-aside em {
+  color: #78909C;
+}
+
+.bc-ai-box {
+  background: rgba(124, 58, 237, 0.05);
+  border-color: rgba(124, 58, 237, 0.14);
+  border-left-color: #7c3aed;
+}
+
+.bc-ai-box strong {
+  color: #7c3aed;
+}
+
+[data-md-color-scheme="slate"] .bc-ai-box {
+  background: rgba(167, 139, 250, 0.07);
+  border-color: rgba(167, 139, 250, 0.16);
+  border-left-color: #c4b5fd;
+}
+
+[data-md-color-scheme="slate"] .bc-ai-box strong {
+  color: #c4b5fd;
+}
+
+/* "For AI" admonition: machine-oriented notes, collapsed by default */
+:root {
+  --md-admonition-icon--ai: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M320 0c17.7 0 32 14.3 32 32V96H472c39.8 0 72 32.2 72 72V440c0 39.8-32.2 72-72 72H168c-39.8 0-72-32.2-72-72V168c0-39.8 32.2-72 72-72H288V32c0-17.7 14.3-32 32-32zM208 384c-8.8 0-16 7.2-16 16s7.2 16 16 16h32c8.8 0 16-7.2 16-16s-7.2-16-16-16H208zm96 0c-8.8 0-16 7.2-16 16s7.2 16 16 16h32c8.8 0 16-7.2 16-16s-7.2-16-16-16H304zm96 0c-8.8 0-16 7.2-16 16s7.2 16 16 16h32c8.8 0 16-7.2 16-16s-7.2-16-16-16H400zM264 256a40 40 0 1 0 -80 0 40 40 0 1 0 80 0zm152 40a40 40 0 1 0 0-80 40 40 0 1 0 0 80zM48 224H64V416H48c-26.5 0-48-21.5-48-48V272c0-26.5 21.5-48 48-48zm544 0c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H576V224h16z"/></svg>');
+}
+.md-typeset .admonition.ai,
+.md-typeset details.ai { border-color: #7e57c2; }
+.md-typeset .ai > .admonition-title,
+.md-typeset .ai > summary { background-color: rgba(126, 87, 194, .1); }
+.md-typeset .ai > .admonition-title::before,
+.md-typeset .ai > summary::before {
+  background-color: #7e57c2;
+  -webkit-mask-image: var(--md-admonition-icon--ai);
+          mask-image: var(--md-admonition-icon--ai);
+}
+
+/* ── Embedded chatbot (below YAML example) ── */
+.bc-chat-embed {
+  margin-top: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 6px;
+}
+
+.bc-chat-embed__frame {
+  /* Streamlit reserves ~80px top padding even with header hidden.
+     Sidebar toggle hidden via app CSS, so no left crop needed. */
+  --bc-chat-crop-top: 0px;
+  --bc-chat-crop-left: 0px;
+  margin-top: calc(-1 * var(--bc-chat-crop-top));
+  margin-left: calc(-1 * var(--bc-chat-crop-left));
+  width: calc(100% + var(--bc-chat-crop-left));
+  height: calc(800px + var(--bc-chat-crop-top));
+  border: none;
+  border-radius: 0;
+  background: #1a1a2e;
+  display: block;
+}
+
+[data-md-color-scheme="slate"] .bc-chat-embed {
+  border-color: rgba(100, 255, 218, 0.08);
+}
+
+[data-md-color-scheme="slate"] .bc-chat-embed__frame {
+  background: #1a1a2e;
+}
+
+@media (max-width: 960px) {
+  .bc-chat-embed__frame {
+    height: calc(500px + var(--bc-chat-crop));
+  }
+}
+
+@media (max-width: 960px) {
+  .bc-intro-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Homepage content styling (below hero)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Indent main content for breathing room */
+.md-content .md-typeset {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 0.5rem;
+}
+
+/* ── Full-bleed section bands (homepage) ── */
+.bc-section {
+  position: relative;
+  /* More top padding so section headings don't hug the band edge */
+  padding: 3.0rem 0 2.5rem;
+  margin: 0;
+  z-index: 0;
+}
+
+.bc-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background: var(--bc-section-bg, transparent);
+  z-index: -1;
+}
+
+.bc-section > :first-child {
+  margin-top: 0;
+}
+
+.bc-section > :last-child {
+  margin-bottom: 0;
+}
+
+.bc-section--a {
+  --bc-section-bg: #ffffff;
+}
+
+.bc-section--b {
+  --bc-section-bg: #f8fafc;
+}
+
+[data-md-color-scheme="slate"] .bc-section--a {
+  --bc-section-bg: #17172a;
+}
+
+[data-md-color-scheme="slate"] .bc-section--b {
+  --bc-section-bg: #1f1f35;
+}
+
+/* ── Network background: backward nest traversal ──
+   As the reader scrolls, each section reveals one more stage in a
+   nest being iterated backward (right → left).  The "active" node
+   (the one just reached) carries uncertainty ripples; earlier nodes
+   fade.  Four progressive SVGs cycle across the eight sections.    */
+
+.bc-section[class*="bc-section--net"]::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -1;
+  /* Start invisible; fade in when section is revealed */
+  opacity: 0;
+  transition: opacity 1.2s ease 0.15s;
+}
+
+/* Fade the network in when the section scrolls into view */
+html.bc-home .bc-section[class*="bc-section--net"].bc-reveal--in::after {
+  opacity: 1;
+}
+
+/* Ensure network is visible if reveal JS hasn't run or is disabled */
+html:not(.bc-reveal-init) .bc-section[class*="bc-section--net"]::after {
+  opacity: 1;
+  transition: none;
+}
+
+/* Step 1 — single continuation node (right side) */
+.bc-section--net-1::after {
+  background:
+    radial-gradient(ellipse 400px 300px at 77% 50%,
+      rgba(0,191,165,0.04) 0%, transparent 100%),
+    url('../_assets/bg-net-1.svg') center / cover no-repeat;
+}
+
+/* Step 2 — two nodes connected, new one centre */
+.bc-section--net-2::after {
+  background:
+    radial-gradient(ellipse 380px 280px at 57% 48%,
+      rgba(0,174,239,0.035) 0%, transparent 100%),
+    url('../_assets/bg-net-2.svg') center / cover no-repeat;
+}
+
+/* Step 3 — three nodes, branch hint, new node left-of-centre */
+.bc-section--net-3::after {
+  background:
+    radial-gradient(ellipse 400px 300px at 37% 44%,
+      rgba(0,191,165,0.04) 0%, transparent 100%),
+    url('../_assets/bg-net-3.svg') center / cover no-repeat;
+}
+
+/* Step 4 — full nest with branches, arrival node highlighted */
+.bc-section--net-4::after {
+  background:
+    radial-gradient(ellipse 420px 320px at 20% 47%,
+      rgba(0,174,239,0.04) 0%, transparent 100%),
+    url('../_assets/bg-net-4.svg') center / cover no-repeat;
+}
+
+/* Dark theme — filter only; opacity is controlled by the reveal animation */
+[data-md-color-scheme="slate"] .bc-section[class*="bc-section--net"]::after {
+  filter: invert(1) brightness(1.1);
+}
+
+/* Dark theme revealed state caps at 0.7 so the inverted SVG isn't too bright */
+[data-md-color-scheme="slate"] html.bc-home .bc-section[class*="bc-section--net"].bc-reveal--in::after {
+  opacity: 0.7;
+}
+
+[data-md-color-scheme="slate"] html:not(.bc-reveal-init) .bc-section[class*="bc-section--net"]::after {
+  opacity: 0.7;
+}
+
+/* ── Network pulse: highlighted node + edges flash on scroll-in ──
+   Uses ::before as a second layer over the base ::after network.
+   On reveal the pulse layer appears at ~65 % then fades to 0 over
+   ~1.8 s, leaving only the resting-state elements in the base SVG.  */
+
+@keyframes bc-net-pulse {
+  0%   { opacity: 0.65; }
+  100% { opacity: 0; }
+}
+
+.bc-section[class*="bc-section--net"]::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+}
+
+/* Trigger pulse when section scrolls into view */
+html.bc-home .bc-section[class*="bc-section--net"].bc-reveal--in::before {
+  animation: bc-net-pulse 1.8s ease-out 0.2s forwards;
+}
+
+/* No pulse if JS hasn't loaded or reduced-motion */
+html:not(.bc-reveal-init) .bc-section[class*="bc-section--net"]::before {
+  display: none;
+}
+
+/* Pulse SVGs per step */
+.bc-section--net-1::before {
+  background: url('../_assets/bg-net-1-pulse.svg') center / cover no-repeat;
+}
+.bc-section--net-2::before {
+  background: url('../_assets/bg-net-2-pulse.svg') center / cover no-repeat;
+}
+.bc-section--net-3::before {
+  background: url('../_assets/bg-net-3-pulse.svg') center / cover no-repeat;
+}
+.bc-section--net-4::before {
+  background: url('../_assets/bg-net-4-pulse.svg') center / cover no-repeat;
+}
+
+/* Dark theme: invert the pulse layer too */
+[data-md-color-scheme="slate"] .bc-section[class*="bc-section--net"]::before {
+  filter: invert(1) brightness(1.1);
+}
+
+/* ── Supporters strip (homepage bottom) ── */
+.bc-supporters {
+  margin-top: 2.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(2, 6, 23, 0.10);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  column-gap: 1.25rem;
+  row-gap: 0.25rem;
+}
+
+.bc-supporters__copy {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #64748b;
+}
+
+.bc-supporters__right {
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* label aligns with logos' left edge */
+  gap: 0.35rem;
+}
+
+.bc-supporters__label {
+  font-size: 0.72rem;
+  color: #64748b;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.bc-supporters__logos {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.bc-supporters__logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.bc-supporter-logo {
+  height: 24px;
+  width: auto;
+  opacity: 0.9;
+  display: inline-block;
+}
+
+.bc-supporters__logo--econark .bc-supporter-logo {
+  height: 24px;
+}
+
+.bc-supporters__logo--sloane .bc-supporter-logo {
+  height: 24px;
+}
+
+.bc-supporter-logo--dark {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .bc-supporters {
+    grid-template-columns: 1fr;
+    align-items: start;
+    row-gap: 0.6rem;
+  }
+  .bc-supporters__right { justify-self: start; }
+  .bc-supporter-logo,
+  .bc-supporters__logo--econark .bc-supporter-logo,
+  .bc-supporters__logo--sloane .bc-supporter-logo {
+    height: 20px;
+  }
+}
+
+[data-md-color-scheme="slate"] .bc-supporters {
+  border-top-color: rgba(100, 255, 218, 0.10);
+}
+
+[data-md-color-scheme="slate"] .bc-supporters__copy {
+  color: #B0BEC5;
+}
+
+[data-md-color-scheme="slate"] .bc-supporters__label {
+  color: #B0BEC5;
+}
+
+[data-md-color-scheme="slate"] .bc-supporter-logo--light {
+  display: none;
+}
+
+[data-md-color-scheme="slate"] .bc-supporter-logo--dark {
+  display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Notebook pages: keep content narrow with generous side margins,
+   even when sidebars are hidden by toggle-sidebar plugin.
+   ═══════════════════════════════════════════════════════════════════ */
+.jupyter-wrapper {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Notebook typography — QuantEcon-inspired
+   Notebook (.jupyter-wrapper) typography inherits the site theme fonts
+   (Inter + JetBrains Mono via CSS vars) for consistent branding.
+   ═══════════════════════════════════════════════════════════════════ */
+@import url("https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,700;1,400&family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500&display=swap");
+
+/* ── Base prose ── */
+.jupyter-wrapper {
+  font-family: var(--md-text-font-family, "Inter"), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Headings ── */
+.jupyter-wrapper h1,
+.jupyter-wrapper h2,
+.jupyter-wrapper h3 {
+  font-family: var(--md-text-font-family, "Inter"), Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.jupyter-wrapper h1 { font-size: 1.35rem; margin: 1.2rem 0 0.6rem; }
+.jupyter-wrapper h2 { font-size: 1.1rem; margin: 1.4rem 0 0.5rem; }
+.jupyter-wrapper h3 { font-size: 0.95rem; margin: 1.1rem 0 0.4rem; }
+
+.jupyter-wrapper h4,
+.jupyter-wrapper h5,
+.jupyter-wrapper h6 {
+  font-family: var(--md-text-font-family, "Inter"), sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin: 1rem 0 0.3rem;
+}
+
+/* ── Paragraphs & lists ── */
+.jupyter-wrapper p {
+  margin: 0 0 0.6rem;
+}
+
+.jupyter-wrapper li {
+  margin: 0.2rem 0;
+}
+
+/* ── Inline code ── */
+.jupyter-wrapper :not(pre) > code {
+  font-family: var(--md-code-font-family, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8em;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="slate"] .jupyter-wrapper :not(pre) > code {
+  background: rgba(100, 255, 218, 0.06);
+  border-color: rgba(100, 255, 218, 0.1);
+  color: #b2dfdb;
+}
+
+/* ── Code cells (input) ── */
+.jupyter-wrapper {
+  --jp-code-font-family: var(--md-code-font-family, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --jp-code-font-size: 12px;
+  --jp-code-line-height: 1.45;
+}
+
+.jupyter-wrapper pre,
+.jupyter-wrapper .highlight pre,
+.jupyter-wrapper .jp-InputArea-editor,
+.jupyter-wrapper .CodeMirror {
+  font-family: var(--md-code-font-family, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+/* ── Code cell chrome ── */
+.jupyter-wrapper .jp-Cell {
+  margin-bottom: 0.4rem;
+}
+
+.jupyter-wrapper .jp-InputPrompt,
+.jupyter-wrapper .jp-OutputPrompt {
+  font-family: var(--md-code-font-family, "JetBrains Mono"), monospace;
+  font-size: 11px;
+  opacity: 0.4;
+  min-width: 4.5em;
+}
+
+/* ── Code cell output ── */
+.jupyter-wrapper .jp-OutputArea-output pre,
+.jupyter-wrapper .jp-RenderedText pre {
+  font-family: var(--md-code-font-family, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 11.5px !important;
+  line-height: 1.4 !important;
+}
+
+/* ── Output images (plots) ── */
+.jupyter-wrapper .jp-OutputArea-output img {
+  display: block;
+  margin: 0.4rem auto;
+  max-width: 100%;
+}
+
+/* ── Tables ── */
+.jupyter-wrapper table {
+  font-size: 0.78rem;
+  border-collapse: collapse;
+}
+
+.jupyter-wrapper table th {
+  font-weight: 600;
+}
+
+.jupyter-wrapper table td,
+.jupyter-wrapper table th {
+  padding: 0.3rem 0.6rem;
+}
+
+/* ── Blockquotes ── */
+.jupyter-wrapper blockquote {
+  font-size: 0.78rem;
+  border-left: 3px solid var(--md-primary-fg-color);
+  padding: 0.3rem 0.8rem;
+  margin: 0.8rem 0;
+}
+
+/* ── Figcaptions ── */
+.jupyter-wrapper figcaption {
+  font-size: 0.72rem;
+  opacity: 0.6;
+  margin-top: 0.25rem;
+}
+
+/* ── Links ── */
+.jupyter-wrapper a {
+  text-decoration: none;
+}
+
+.jupyter-wrapper a:hover {
+  text-decoration: underline;
+}
+
+/* ── Strong / em ── */
+.jupyter-wrapper strong {
+  font-weight: 700;
+}
+
+/* ── Dark theme: code cell backgrounds ── */
+[data-md-color-scheme="slate"] .jupyter-wrapper .jp-InputArea-editor,
+[data-md-color-scheme="slate"] .jupyter-wrapper .highlight {
+  background-color: #0d1117 !important;
+  border-radius: 4px;
+}
+
+[data-md-color-scheme="slate"] .jupyter-wrapper .jp-OutputArea-output pre {
+  color: #c9d1d9;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Notebook callout boxes — styled from [!note]/[!info] blockquotes.
+   The mkdocs callouts plugin does NOT process content inside
+   jupyter-wrapper, so a small JS transform + these CSS rules
+   provide the visual treatment.
+   ═══════════════════════════════════════════════════════════════════ */
+.jupyter-wrapper .nb-callout {
+  border-left: 3px solid;
+  border-radius: 4px;
+  padding: 0.45rem 0.75rem;
+  margin: 0.8rem 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.jupyter-wrapper .nb-callout .nb-callout__title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.jupyter-wrapper .nb-callout--note {
+  border-left-color: #448aff;
+  background: rgba(68, 138, 255, 0.06);
+}
+.jupyter-wrapper .nb-callout--note .nb-callout__title {
+  color: #448aff;
+}
+
+.jupyter-wrapper .nb-callout--info {
+  border-left-color: #00b0ff;
+  background: rgba(0, 176, 255, 0.06);
+}
+.jupyter-wrapper .nb-callout--info .nb-callout__title {
+  color: #00b0ff;
+}
+
+.jupyter-wrapper .nb-callout--tip {
+  border-left-color: #00bfa5;
+  background: rgba(0, 191, 165, 0.06);
+}
+.jupyter-wrapper .nb-callout--tip .nb-callout__title {
+  color: #00bfa5;
+}
+
+.jupyter-wrapper .nb-callout--warning {
+  border-left-color: #ff9100;
+  background: rgba(255, 145, 0, 0.06);
+}
+.jupyter-wrapper .nb-callout--warning .nb-callout__title {
+  color: #ff9100;
+}
+
+/* summary (Material's abstract) and example, in the colors of Material's own admonitions */
+.jupyter-wrapper .nb-callout--abstract {
+  border-left-color: #00b0ff;
+  background: rgba(0, 176, 255, 0.06);
+}
+.jupyter-wrapper .nb-callout--abstract .nb-callout__title {
+  color: #00b0ff;
+}
+
+.jupyter-wrapper .nb-callout--example {
+  border-left-color: #7c4dff;
+  background: rgba(124, 77, 255, 0.06);
+}
+.jupyter-wrapper .nb-callout--example .nb-callout__title {
+  color: #7c4dff;
+}
+
+/* a folded callout: a <details> whose <summary> is the title */
+.jupyter-wrapper details.nb-callout > summary.nb-callout__title {
+  cursor: pointer;
+  margin-bottom: 0;
+}
+.jupyter-wrapper details.nb-callout[open] > summary.nb-callout__title {
+  margin-bottom: 0.25rem;
+}
+.jupyter-wrapper .nb-callout table {
+  margin: 0.25rem 0;
+}
+
+/* Dark theme */
+[data-md-color-scheme="slate"] .jupyter-wrapper .nb-callout--note {
+  background: rgba(68, 138, 255, 0.08);
+}
+[data-md-color-scheme="slate"] .jupyter-wrapper .nb-callout--info {
+  background: rgba(0, 176, 255, 0.08);
+}
+[data-md-color-scheme="slate"] .jupyter-wrapper .nb-callout--tip {
+  background: rgba(0, 191, 165, 0.08);
+}
+[data-md-color-scheme="slate"] .jupyter-wrapper .nb-callout--warning {
+  background: rgba(255, 145, 0, 0.08);
+}
+[data-md-color-scheme="slate"] .jupyter-wrapper .nb-callout--abstract {
+  background: rgba(0, 176, 255, 0.08);
+}
+[data-md-color-scheme="slate"] .jupyter-wrapper .nb-callout--example {
+  background: rgba(124, 77, 255, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Theme-switched images: show light version by default,
+   dark version when slate scheme is active.
+   Usage in markdown/HTML:
+     <img class="nb-plot nb-plot--light" src="plot_light.png">
+     <img class="nb-plot nb-plot--dark"  src="plot_dark.png">
+   ═══════════════════════════════════════════════════════════════════ */
+.nb-plot { max-width: 100%; height: auto; display: block; margin: 0.6rem auto; }
+.nb-plot--dark { display: none !important; }
+[data-md-color-scheme="slate"] .nb-plot--light { display: none !important; }
+[data-md-color-scheme="slate"] .nb-plot--dark  { display: block !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Homepage hero (Material-style full-bleed)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hero section ── */
+.bc-hero {
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.bc-hero__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 3rem 1.2rem 5rem;
+}
+
+/* Note: do not zero-out `.md-main` top offset on homepage.
+   It can cause the Material tabs/header to be overlapped by the hero. */
+
+.bc-hero__title {
+  font: 700 3.2rem/1.1 var(--md-text-font-family, "Inter"), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  color: #06111a;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+/* Bold fat T in the hero title */
+.bc-hero__T {
+  font-weight: 900;
+  font-size: 4rem;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  vertical-align: baseline;
+}
+
+.bc-hero__tagline {
+  font: 500 1.25rem/1.4 var(--md-text-font-family, "Inter"), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  color: #00897B;
+  margin: 0 0 1rem;
+}
+
+.bc-hero__sub {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #37474f;
+  margin: 0 0 1.8rem;
+  max-width: 520px;
+}
+
+.bc-hero__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.bc-hero__buttons .md-button {
+  font-size: 0.85rem;
+  padding: 0.5em 1.4em;
+  border: 2px solid #005b8f;
+  color: #005b8f;
+  background: none;
+  border-radius: 4px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.bc-hero__buttons .md-button:hover {
+  background: #005b8f;
+  color: #ffffff;
+}
+
+.bc-hero__buttons .md-button--primary {
+  border-color: #f97316;
+  color: #f97316;
+  background: none;
+}
+
+.bc-hero__buttons .md-button--primary:hover {
+  background: #f97316;
+  color: #ffffff;
+}
+
+.bc-hero__buttons .md-button--lightblue {
+  border-color: #00aeef;
+  color: #00aeef;
+}
+
+.bc-hero__buttons .md-button--lightblue:hover {
+  background: #00aeef;
+  color: #ffffff;
+}
+
+/* Rosetta Stone hero box — a small solid registry-coloured box beside Examples.
+   Filled (not outlined like its neighbours) so it reads as a distinct "card". */
+.bc-hero__buttons .md-button--rosetta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: 0.78rem;
+  padding: 0.42em 1em;
+  border-color: #0f766e;
+  background: #0f766e;
+  color: #ffffff;
+}
+.bc-hero__buttons .md-button--rosetta:hover {
+  background: #0c5d56;
+  border-color: #0c5d56;
+  color: #ffffff;
+}
+/* The two-tone mark: the registry's cool/warm taxonomy (abstract teal · concrete amber). */
+.bc-rosetta-mark {
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: 1.5px;
+  background: linear-gradient(135deg, #5eead4 0 50%, #f59e0b 50% 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  flex: none;
+}
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button--rosetta {
+  border-color: #14b8a6;
+  background: #0d9488;
+  color: #ffffff;
+}
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button--rosetta:hover {
+  background: #14b8a6;
+  border-color: #14b8a6;
+}
+
+/* Small button utility (for dense link rows) */
+a.md-button.bc-button--sm {
+  font-size: 0.78rem;
+  padding: 0.35em 0.9em;
+  margin-right: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.bc-hero__diagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bc-adc-svg {
+  width: 100%;
+  max-width: 648px;
+  height: auto;
+  /* The diagram is an external SVG loaded via <img>, so theme it via filters. */
+  filter: none;
+}
+
+[data-md-color-scheme="slate"] .bc-adc-svg {
+  /* Make the black-on-transparent SVG visible on dark hero backgrounds. */
+  filter: invert(1) brightness(1.05) contrast(0.95);
+}
+
+/* ── Econ-ARK membership eyebrow (home hero) ── */
+.bc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.1rem;
+  padding: 0.3rem 0.8rem 0.3rem 0.6rem;
+  border: 1px solid rgba(0, 91, 143, 0.4);
+  border-radius: 999px;
+  background: rgba(0, 91, 143, 0.07);
+  font: 600 0.72rem/1 var(--md-text-font-family, "Inter"), sans-serif;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #005b8f;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.bc-eyebrow:hover {
+  background: rgba(0, 91, 143, 0.14);
+  border-color: rgba(0, 91, 143, 0.7);
+  transform: translateY(-1px);
+}
+.bc-eyebrow__logo { height: 15px; width: auto; display: block; }
+.bc-eyebrow__logo--dark { display: none; }
+[data-md-color-scheme="slate"] .bc-eyebrow {
+  color: #7fd1f0;
+  border-color: rgba(127, 209, 240, 0.4);
+  background: rgba(127, 209, 240, 0.1);
+}
+[data-md-color-scheme="slate"] .bc-eyebrow:hover {
+  background: rgba(127, 209, 240, 0.18);
+  border-color: rgba(127, 209, 240, 0.7);
+}
+[data-md-color-scheme="slate"] .bc-eyebrow__logo--light { display: none; }
+[data-md-color-scheme="slate"] .bc-eyebrow__logo--dark { display: block; }
+
+/* ── Hero tabs (inline navigation) ── */
+.bc-hero__tabs {
+  /* Material may hide .md-tabs outside the header; force visible on homepage. */
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  /* Keep the top menu visible while scrolling (homepage). */
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: var(--md-header-height, 0px);
+  z-index: 20;
+  margin: 0;
+  padding: 0.15rem 0;
+  /* No separator line on homepage tabs */
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+.bc-hero__tabs .md-tabs__list {
+  display: flex !important;
+  flex-wrap: wrap;
+}
+
+.bc-hero__tabs .md-tabs__link {
+  color: #37474f;
+  opacity: 0.8;
+  font-size: 0.82rem;
+}
+
+.bc-hero__tabs .md-tabs__item--active .md-tabs__link {
+  color: #00897B;
+  opacity: 1;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__tabs .md-tabs__link {
+  color: #B0BEC5;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__tabs .md-tabs__item--active .md-tabs__link {
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__tabs {
+  background: rgba(26, 26, 46, 0.92) !important;
+  border-bottom: 0;
+}
+
+/* Homepage only: do not autohide the Material header */
+html.bc-home .md-header[data-md-state="hidden"] {
+  transform: none !important;
+}
+html.bc-home .md-header {
+  top: 0 !important;
+}
+
+@keyframes bc-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}
+
+/* ── SVG diagram: math-paper style (black & white) ── */
+.bc-dot {
+  fill: currentColor;
+}
+
+.bc-nd {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 1.4;
+}
+
+.bc-nd-label {
+  font: 600 14px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+  fill: #1a1a1a;
+  letter-spacing: 0.3px;
+}
+
+.bc-nd-var {
+  font: italic 13px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+  fill: #333333;
+}
+
+.bc-arc {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bc-arc--back {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.bc-arc--fwd {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+.bc-edge--line {
+  stroke: #1a1a1a;
+  stroke-width: 1.35;
+  fill: none;
+  stroke-linecap: round;
+}
+
+.bc-label--it {
+  font: italic 12px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+  fill: #333333;
+}
+
+.bc-label--sm {
+  font: italic 14px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+  fill: #1a1a1a;
+}
+
+.bc-label--filt {
+  font: italic 12px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+  fill: #555555;
+}
+
+.bc-label--eq {
+  font: italic 13px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+  fill: #1a1a1a;
+}
+
+.bc-ripple {
+  fill: none;
+  stroke: #1a1a1a;
+  stroke-width: 1.0;
+  stroke-dasharray: 4 3;
+  stroke-linecap: round;
+}
+
+/* ── DARK THEME ── */
+[data-md-color-scheme="slate"] .bc-hero {
+  background: #1a1a2e;
+  min-height: 100vh;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__title {
+  color: #F3FBFF;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__T {
+  color: #F3FBFF;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__tagline {
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__sub {
+  color: #B0BEC5;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__more {
+  color: #64FFDA;
+}
+
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button {
+  border-color: #00aeef;
+  color: #00aeef;
+}
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button:hover {
+  background: #00aeef;
+  color: #0b1b27;
+}
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button--primary {
+  border-color: #FCB040;
+  color: #FCB040;
+}
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button--primary:hover {
+  background: #FCB040;
+  color: #0b1b27;
+}
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button--lightblue {
+  border-color: #64FFDA;
+  color: #64FFDA;
+}
+[data-md-color-scheme="slate"] .bc-hero__buttons .md-button--lightblue:hover {
+  background: #64FFDA;
+  color: #0b1b27;
+}
+
+[data-md-color-scheme="slate"] .bc-nd {
+  stroke: #d0d0d0;
+}
+
+[data-md-color-scheme="slate"] .bc-nd-label {
+  fill: #e0e0e0;
+}
+
+[data-md-color-scheme="slate"] .bc-nd-var {
+  fill: #b0b0b0;
+}
+
+[data-md-color-scheme="slate"] .bc-arc--back,
+[data-md-color-scheme="slate"] .bc-arc--fwd,
+[data-md-color-scheme="slate"] .bc-edge--line {
+  stroke: #d0d0d0;
+}
+
+[data-md-color-scheme="slate"] .bc-label--it,
+[data-md-color-scheme="slate"] .bc-label--sm,
+[data-md-color-scheme="slate"] .bc-label--eq {
+  fill: #c0c0c0;
+}
+
+[data-md-color-scheme="slate"] .bc-label--filt {
+  fill: #909090;
+}
+
+[data-md-color-scheme="slate"] .bc-ripple {
+  stroke: #d0d0d0;
+}
+
+/* ── Scroll indicator (pinned to bottom of hero viewport) ── */
+.bc-hero__more {
+  display: block;
+  text-align: center;
+  color: #00897B;
+  opacity: 0.6;
+  animation: bc-bounce 2s ease-in-out infinite;
+  cursor: pointer;
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.2s ease;
+}
+.bc-hero__more:hover {
+  opacity: 1;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Homepage: delayed (scroll) reveal of sections
+   ═══════════════════════════════════════════════════════════════════ */
+html.bc-home.bc-reveal-init .md-content__inner > * {
+  opacity: 0;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition:
+    opacity 560ms ease,
+    transform 560ms cubic-bezier(0.2, 0.65, 0.2, 1);
+  transition-delay: var(--bc-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+html.bc-home.bc-reveal-init .md-content__inner > *.bc-reveal--in {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.bc-home.bc-reveal-init .md-content__inner > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    pointer-events: auto !important;
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .bc-hero {
+    min-height: 100vh;
+    min-height: 100dvh; /* dynamic viewport height for mobile browsers */
+  }
+
+  .bc-hero__inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 1.5rem 1rem 4rem;
+  }
+
+  .bc-hero__sub {
+    max-width: 100%;
+  }
+
+  .bc-hero__buttons {
+    justify-content: center;
+  }
+
+  .bc-hero__diagram {
+    order: -1;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  .bc-hero__title {
+    font-size: 2.4rem;
+  }
+
+  .bc-hero__T {
+    font-size: 3rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Journey cards (landing page)
+   ═══════════════════════════════════════════════════════════════════ */
+.bc-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.bc-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #f8fafc;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bc-card:hover {
+  border-color: #00897B;
+  box-shadow: 0 4px 12px rgba(0,137,123,0.1);
+}
+
+.bc-card strong {
+  font-size: 1.05rem;
+  color: #06111a;
+}
+
+.bc-card p {
+  font-size: 0.92rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+[data-md-color-scheme="slate"] .bc-card {
+  background: #1f1f35;
+  border-color: rgba(100, 255, 218, 0.1);
+}
+
+[data-md-color-scheme="slate"] .bc-card:hover {
+  border-color: #64FFDA;
+  box-shadow: 0 4px 12px rgba(100,255,218,0.08);
+}
+
+[data-md-color-scheme="slate"] .bc-card strong {
+  color: #F3FBFF;
+}
+
+[data-md-color-scheme="slate"] .bc-card p {
+  color: #B0BEC5;
+}
+
+@media (max-width: 960px) {
+  .bc-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Captions of inlined SVG figures (docs/overview, 19 Sep 2026) ──
+   The theme centres a figure at its own width and sets figcaption italic, centred and 24rem wide.
+   A figure inlined as an <svg> is centred at 92% of the measure, with a little air on both sides
+   (AAS, 19 Sep 2026), and its caption is upright, smaller, muted and left-aligned under the figure's
+   left edge. Scoped with :has() so that image figures keep the theme's style. */
+.md-typeset figure:has(> svg) {
+  width: 92%;
+  max-width: 58rem;
+  margin: 0.5rem auto 0.25rem;
+  padding-top: 2rem;             /* lifted parts of an assembly rise into this room */
+  overflow-x: auto;              /* in a narrow window the figure keeps its least width and scrolls sideways */
+  text-align: left;
+}
+.md-typeset figure:has(> svg) > svg {
+  display: block;
+  width: 100%;
+  min-width: 48rem;              /* so that the figure's lettering never falls below the caption's size */
+  height: auto;
+  overflow: visible;
+}
+.md-typeset figure:has(> svg) > br {
+  display: none;                 /* the line break Markdown leaves between the drawing and its caption */
+}
+.md-typeset figure:has(> svg) > figcaption {
+  font-style: normal;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--bf-muted);
+  max-width: 24rem;
+  margin: 1rem 0 1.6rem;
+  text-align: left;
+}
+
+/* A subhead that follows a section heading's tag chips sits closer to them (docs/overview, 19 Sep 2026). */
+.md-typeset .obsidian-tags + h3 {
+  margin-top: 0.6em;
+}
+
+/* The labelled box that opens the home page's first section (AAS, 19 Sep 2026). */
+.bc-intro-aside--lead {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 1.6rem;
+  max-width: 60rem;
+}
+.bc-intro-aside--lead strong {
+  margin-bottom: 0.5rem;
+}
+
+/* Concept figure colours are assigned in bellman.css. */

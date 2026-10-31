@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 230"
+  role="img"
+  aria-label="Two stages composed into a period: the continuation perch of the first stage is joined by a double line to the arrival perch of the second; each stage carries its pre-decision shock on its arrival -> decision (f) leg">
+<defs>
+  <style><![CDATA[
+    .bc-dot { fill: #1a1a1a; }
+
+    .bc-edge--fwd {
+      stroke: #1a1a1a; stroke-width: 1.2;
+      fill: none; stroke-linecap: round;
+    }
+    .bc-edge--bwd {
+      stroke: #1a1a1a; stroke-width: 1.0;
+      fill: none; stroke-linecap: round;
+      stroke-dasharray: 5 4;
+    }
+
+    .bc-ring {
+      fill: none; stroke: #1a1a1a;
+      stroke-width: 0.8; stroke-dasharray: 3 3;
+    }
+    .bc-join { stroke: #1a1a1a; stroke-width: 1.1; }
+
+    .bc-tag {
+      font: 13px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-arrow {
+      font: italic 15px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-builder {
+      font: bold 15px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-shock {
+      font: italic 11px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-sup {
+      font: 10px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+  ]]></style>
+
+  <marker id="head" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="5.5" markerHeight="5.5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+  </marker>
+  <marker id="head-d" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="5" markerHeight="5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a" opacity="0.7"/>
+  </marker>
+</defs>
+
+<!-- forward transitions (solid, arcing over the top) -->
+<path d="M76,134  C100,100 160,100 184,133" class="bc-edge--fwd" marker-end="url(#head)"/>
+<path d="M196,133 C220,100 280,100 304,134" class="bc-edge--fwd" marker-end="url(#head)"/>
+<path d="M386,134 C410,100 470,100 494,133" class="bc-edge--fwd" marker-end="url(#head)"/>
+<path d="M506,133 C530,100 590,100 614,134" class="bc-edge--fwd" marker-end="url(#head)"/>
+
+<!-- backward builders (dashed, arcing under the bottom) -->
+<path d="M184,147 C160,180 100,180 76,148"  class="bc-edge--bwd" marker-end="url(#head-d)"/>
+<path d="M304,146 C280,180 220,180 196,148" class="bc-edge--bwd" marker-end="url(#head-d)"/>
+<path d="M494,147 C470,180 410,180 386,146" class="bc-edge--bwd" marker-end="url(#head-d)"/>
+<path d="M614,147 C590,180 530,180 506,148" class="bc-edge--bwd" marker-end="url(#head-d)"/>
+
+<!-- pre-decision shock on each arrival -> decision (f) leg -->
+<circle cx="130" cy="108" r="5"  class="bc-ring" opacity="0.30"/>
+<circle cx="130" cy="108" r="9"  class="bc-ring" opacity="0.18"/>
+<circle cx="130" cy="108" r="13" class="bc-ring" opacity="0.10"/>
+<circle cx="440" cy="108" r="5"  class="bc-ring" opacity="0.30"/>
+<circle cx="440" cy="108" r="9"  class="bc-ring" opacity="0.18"/>
+<circle cx="440" cy="108" r="13" class="bc-ring" opacity="0.10"/>
+
+<!-- shared boundary: double line identifying continuation^0 with arrival^1 -->
+<line x1="317" y1="137" x2="373" y2="137" class="bc-join"/>
+<line x1="317" y1="143" x2="373" y2="143" class="bc-join"/>
+
+<!-- perch dots -->
+<circle cx="70"  cy="140" r="5.2" class="bc-dot"/>
+<circle cx="190" cy="140" r="5.2" class="bc-dot"/>
+<circle cx="310" cy="140" r="5.2" class="bc-dot"/>
+<circle cx="380" cy="140" r="5.2" class="bc-dot"/>
+<circle cx="500" cy="140" r="5.2" class="bc-dot"/>
+<circle cx="620" cy="140" r="5.2" class="bc-dot"/>
+
+<!-- perch tag labels (with stage superscripts as plain digits) -->
+<text x="70"  y="180" text-anchor="middle" class="bc-tag">[&lt;]<tspan dy="-5" class="bc-sup">0</tspan></text>
+<text x="190" y="186" text-anchor="middle" class="bc-tag">[&#183;]<tspan dy="-5" class="bc-sup">0</tspan></text>
+<text x="310" y="180" text-anchor="middle" class="bc-tag">[&gt;]<tspan dy="-5" class="bc-sup">0</tspan></text>
+<text x="380" y="180" text-anchor="middle" class="bc-tag">[&lt;]<tspan dy="-5" class="bc-sup">1</tspan></text>
+<text x="500" y="186" text-anchor="middle" class="bc-tag">[&#183;]<tspan dy="-5" class="bc-sup">1</tspan></text>
+<text x="620" y="180" text-anchor="middle" class="bc-tag">[&gt;]<tspan dy="-5" class="bc-sup">1</tspan></text>
+
+<!-- forward-transition labels (above the solid arcs) -->
+<text x="130" y="84" text-anchor="middle" class="bc-arrow">f</text>
+<text x="250" y="84" text-anchor="middle" class="bc-arrow">g</text>
+<text x="440" y="84" text-anchor="middle" class="bc-arrow">f</text>
+<text x="560" y="84" text-anchor="middle" class="bc-arrow">g</text>
+
+<!-- shock labels on the two f legs -->
+<text x="130" y="134" text-anchor="middle" class="bc-shock">shock</text>
+<text x="440" y="134" text-anchor="middle" class="bc-shock">shock</text>
+
+<!-- backward-builder labels (below the dashed arcs); identically styled I and B -->
+<text x="130" y="204" text-anchor="middle" class="bc-builder">I</text>
+<text x="250" y="204" text-anchor="middle" class="bc-builder">B</text>
+<text x="440" y="204" text-anchor="middle" class="bc-builder">I</text>
+<text x="560" y="204" text-anchor="middle" class="bc-builder">B</text>
+</svg>

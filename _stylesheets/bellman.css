@@ -1,0 +1,320 @@
+/* Project Bellman — Material for MkDocs
+   Ice ground, ultramarine voice, navy ink, one orange piece. No radii. */
+
+@font-face{font-family:"PP Monument Extended";src:url("../_assets/brand/fonts/PPMonumentExtended-Regular.otf") format("opentype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"PP Monument";src:url("../_assets/brand/fonts/PPMonumentNormal-Light.otf") format("opentype");font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"PP Monument";src:url("../_assets/brand/fonts/PPMonumentNormal-Regular.otf") format("opentype");font-weight:400 500;font-style:normal;font-display:swap}
+@font-face{font-family:"PP Monument";src:url("../_assets/brand/fonts/PPMonumentNormal-Black.otf") format("opentype");font-weight:600 900;font-style:normal;font-display:swap}
+
+:root{
+  --bl-ultramarine:#214EDA;--bl-ultramarine-dark:#163CB0;--bl-ultramarine-light:#5F86F2;
+  --bl-navy:#172A52;--bl-navy-2:#22397A;
+  --bl-ice:#EDF7FC;--bl-ice-2:#C5E5F1;--bl-ice-3:#91BED7;
+  --bl-periwinkle:#8FA9F5;--bl-slate:#4B5A7A;--bl-orange:#ED762D;
+  --bl-display:"PP Monument Extended","Archivo",Helvetica,Arial,sans-serif;
+  --bl-statement:"PP Monument","Archivo",Helvetica,Arial,sans-serif;
+  --md-text-font:"Archivo",Helvetica,Arial,sans-serif;
+  --md-code-font:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+[data-md-color-scheme="bellman"]{
+  --md-primary-fg-color:var(--bl-ultramarine);
+  --md-primary-fg-color--light:var(--bl-ultramarine-light);
+  --md-primary-fg-color--dark:var(--bl-ultramarine-dark);
+  --md-primary-bg-color:#FFFFFF;
+  --md-accent-fg-color:var(--bl-navy);
+  --md-accent-fg-color--transparent:rgba(23,42,82,.08);
+  --md-default-bg-color:#FFFFFF;
+  --md-default-fg-color:var(--bl-navy);
+  --md-default-fg-color--light:var(--bl-slate);
+  --md-default-fg-color--lighter:var(--bl-periwinkle);
+  --md-default-fg-color--lightest:var(--bl-ice-2);
+  --md-typeset-color:var(--bl-navy);
+  --md-typeset-a-color:var(--bl-ultramarine);
+  --md-typeset-mark-color:rgba(237,118,45,.35);
+  --md-typeset-table-color:var(--bl-ice-2);
+  --md-typeset-table-color--light:var(--bl-ice);
+  --md-code-bg-color:var(--bl-ice);
+  --md-code-fg-color:var(--bl-navy);
+  --md-code-hl-color:rgba(237,118,45,.28);
+  --md-code-hl-color--light:rgba(237,118,45,.12);
+  --md-admonition-fg-color:var(--bl-navy);
+  --md-admonition-bg-color:#FFFFFF;
+  --md-footer-bg-color:var(--bl-navy);
+  --md-footer-bg-color--dark:var(--bl-navy);
+  --md-footer-fg-color:#FFFFFF;
+  --md-footer-fg-color--light:var(--bl-ice-2);
+  --md-footer-fg-color--lighter:var(--bl-periwinkle);
+  --md-shadow-z1:none;--md-shadow-z2:none;--md-shadow-z3:none;
+}
+
+::selection{background:var(--bl-ice-2);color:var(--bl-navy)}
+.md-grid{max-width:66rem}
+
+/* Header: ice bar with a navy rule, as on the site */
+.md-header,.md-header--shadow{background:var(--bl-ice);color:var(--bl-navy);border-bottom:2px solid var(--bl-navy);box-shadow:none}
+.md-header__button{color:var(--bl-navy)}
+.md-header__button.md-logo{padding:.3rem}
+.md-header__button.md-logo img,.md-header__button.md-logo svg{height:1.6rem;width:auto}
+.md-header__title{font-weight:700;letter-spacing:-.01em;font-size:.8rem}
+.md-header__source{color:var(--bl-navy)}
+.md-search__form,.md-search__form:hover{background:#FFFFFF;border:1px solid var(--bl-ice-2);border-radius:0}
+[data-md-toggle=search]:checked~.md-header .md-search__form{border-color:var(--bl-navy)}
+.md-search__input{color:var(--bl-navy)}
+.md-search__input::placeholder,.md-search__icon{color:var(--bl-slate)}
+.md-search__output,.md-search__scrollwrap{border-radius:0}
+
+/* Tabs */
+.md-tabs{background:var(--bl-ice);color:var(--bl-navy);border-bottom:1px solid var(--bl-ice-2)}
+.md-tabs__link{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500;opacity:1;margin-top:.7rem}
+.md-tabs__link:hover,.md-tabs__item--active .md-tabs__link{color:var(--bl-ultramarine)}
+
+/* Sidebars */
+.md-nav{font-size:.7rem}
+.md-nav__title,.md-nav__item--section>.md-nav__link{font-family:var(--md-code-font);font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--bl-slate);font-weight:500}
+.md-nav__link{color:var(--bl-navy)}
+.md-nav__link:hover,.md-nav__link--active{color:var(--bl-ultramarine)}
+.md-nav__link--active{font-weight:600;border-inline-start:2px solid currentColor;padding-inline-start:.45rem}
+
+/* Type */
+.md-typeset h1{font-family:var(--bl-display);font-weight:400;font-size:2.4em;line-height:1.02;letter-spacing:-.03em;color:var(--bl-ultramarine);margin:0 0 1em}
+.md-typeset h2{font-family:var(--bl-statement);font-weight:400;font-size:1.5em;line-height:1.2;letter-spacing:-.02em;color:var(--bl-navy);border-top:1px solid var(--bl-navy);padding-top:.9em;margin:2.2em 0 .8em}
+.md-typeset h3{font-family:var(--bl-statement);font-weight:400;font-size:1.15em;letter-spacing:-.01em;margin:1.8em 0 .6em}
+.md-typeset h4,.md-typeset h5,.md-typeset h6{font-family:var(--md-code-font);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--bl-slate);font-weight:500}
+.md-typeset .headerlink{color:var(--bl-ice-2)}
+.md-typeset a{color:var(--bl-ultramarine)}
+.md-typeset a:hover{color:var(--bl-navy)}
+.md-typeset hr{border-color:var(--bl-navy)}
+.md-typeset strong{font-weight:600}
+
+/* Code: inline on ice, blocks on navy */
+.md-typeset code{border-radius:0;padding:.1em .35em;background:var(--bl-ice);color:var(--bl-navy)}
+.md-typeset pre>code{background:var(--bl-navy);color:var(--bl-ice);padding:1em 1.2em;border-radius:0;font-size:.7rem;line-height:1.65}
+.md-typeset .highlight span.filename{background:var(--bl-navy-2);color:var(--bl-periwinkle);border-radius:0;border-bottom:none;font-size:.6rem;letter-spacing:.06em}
+.md-typeset .highlight{
+  --md-code-hl-keyword-color:#8FA9F5;--md-code-hl-name-color:#EDF7FC;--md-code-hl-function-color:#FFFFFF;
+  --md-code-hl-string-color:#C5E5F1;--md-code-hl-number-color:#F5A46F;--md-code-hl-constant-color:#F5A46F;--md-code-hl-special-color:#F5A46F;
+  --md-code-hl-operator-color:#C5E5F1;--md-code-hl-punctuation-color:#91BED7;--md-code-hl-comment-color:rgba(255,255,255,.5);
+  --md-code-hl-generic-color:#C5E5F1;--md-code-hl-variable-color:#EDF7FC;
+}
+.md-clipboard{color:rgba(255,255,255,.45)}
+.md-clipboard:hover{color:#FFFFFF}
+
+/* ── Paper register ──────────────────────────────────────────────────
+   The calculus chapters and appendices are long mathematical documents:
+   numbered §-headings, Obsidian callouts (summary, info-, note-, example,
+   warning, objection, ast, ai), display equations, wide operator tables,
+   footnotes, inlined SVG figures, a byline under the title, #tag chips.
+   Everything below styles those as one quiet family. */
+
+/* Measure: 72ch for reading, but tables, figures and equations may run to the column */
+.md-typeset{font-size:.8rem;line-height:1.62}
+.md-typeset p,.md-typeset li,.md-typeset dd{max-width:72ch}
+.md-typeset table,.md-typeset figure,.md-typeset .arithmatex,.md-typeset mjx-container,.md-typeset .admonition,.md-typeset details,.md-typeset pre{max-width:none}
+.md-typeset p{margin:.75em 0}
+.md-typeset li{margin-bottom:.25em}
+.md-typeset li>p{margin:.35em 0}
+.md-typeset em{font-style:italic}
+.md-typeset sup{font-size:.7em;line-height:0;color:var(--bl-ultramarine)}
+
+/* Section numbers: "## 1. The general stage" — the number sits in mono, the title in Monument */
+.md-typeset h2{padding-top:1em;margin:2.6em 0 .9em}
+.md-typeset h3{margin:2em 0 .6em;font-size:1.15em}
+.md-typeset h4{font-family:var(--bl-statement);font-size:.95em;letter-spacing:0;text-transform:none;color:var(--bl-navy);font-weight:500;margin:1.6em 0 .5em}
+.md-typeset h5,.md-typeset h6{font-family:var(--md-code-font);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--bl-slate);font-weight:500}
+
+/* Byline (the main.html hook inserts it after h1) */
+.md-typeset .bc-byline{font-family:var(--md-code-font);font-size:.6rem;letter-spacing:.04em;font-style:normal;color:var(--bl-slate);margin:-.6rem 0 1.8rem;padding-bottom:.8rem;border-bottom:1px solid var(--bl-ice-2)}
+.md-typeset .bc-byline em{font-style:normal}
+
+/* Obsidian tag chips (obsidian_tags.py) and Material's own tag row */
+.md-typeset .obsidian-tags,.md-typeset .md-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin:-.2rem 0 1.2rem}
+.md-typeset .obsidian-tag,.md-typeset .md-tag{font-family:var(--md-code-font);font-size:.55rem;font-weight:500;letter-spacing:.04em;line-height:1.7;color:var(--bl-slate);background:transparent;border:1px solid var(--bl-ice-2);border-radius:0;padding:0 .45rem;white-space:nowrap}
+.md-typeset .obsidian-tag:hover,.md-typeset .md-tag:hover{border-color:var(--bl-navy);color:var(--bl-navy)}
+
+/* Admonitions and callouts: hairline box, ice title bar, kind named by its title, no icon.
+   A thin rule under the title carries the kind's colour; the body is always plain. */
+.md-typeset .admonition,.md-typeset details{border:1px solid var(--bl-navy) !important;border-left-width:1px !important;border-radius:0;box-shadow:none;font-size:.72rem;line-height:1.6;background:#FFFFFF;margin:1.4em 0;padding:0 1rem .2rem}
+.md-typeset .admonition-title,.md-typeset summary{background:var(--bl-ice) !important;color:var(--bl-navy);font-weight:600;border-radius:0;margin:0 -1rem .6em;padding:.55rem 1rem .5rem !important;border-bottom:1px solid var(--bl-ultramarine)}
+.md-typeset details:not(.r-meta-block)>summary{padding-inline-end:2rem !important}
+.md-typeset .admonition-title::before,.md-typeset summary::before{display:none !important;content:none !important}
+.md-typeset summary::after{color:var(--bl-slate)}
+.md-typeset details[open]>summary{margin-bottom:.6em}
+.md-typeset .admonition>:last-child,.md-typeset details>:last-child{margin-bottom:.9em}
+.md-typeset .admonition p,.md-typeset details p{max-width:none}
+/* Kind → rule colour. Summary/abstract and note are ultramarine; example periwinkle; info navy;
+   warning and objection orange (the one accent, used here for "stop and read");
+   ast (abstract grammar) and ai are recessed in muted blue. */
+.md-typeset .admonition.summary>.admonition-title,.md-typeset .admonition.abstract>.admonition-title,.md-typeset details.summary>summary,.md-typeset details.abstract>summary{border-bottom-color:var(--bl-ultramarine);font-family:var(--bl-statement);font-weight:500}
+.md-typeset .admonition.summary,.md-typeset .admonition.abstract{font-size:.78rem;font-weight:300}
+.md-typeset .admonition.info>.admonition-title,.md-typeset details.info>summary{border-bottom-color:var(--bl-navy)}
+.md-typeset .admonition.example>.admonition-title,.md-typeset details.example>summary{border-bottom-color:var(--bl-periwinkle)}
+.md-typeset .admonition.warning>.admonition-title,.md-typeset details.warning>summary,.md-typeset .admonition.objection>.admonition-title,.md-typeset details.objection>summary{border-bottom-color:var(--bl-orange)}
+.md-typeset .admonition.ast>.admonition-title,.md-typeset details.ast>summary,.md-typeset .admonition.ai>.admonition-title,.md-typeset details.ai>summary{border-bottom-color:var(--bl-ice-3);font-family:var(--md-code-font);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase}
+/* A closed box shows only its title, with no body gap or inner dividing rule. */
+.md-typeset details:not([open]){padding-bottom:0}
+.md-typeset details:not([open])>summary{margin-bottom:0;border-bottom:0}
+.md-typeset .admonition table,.md-typeset details table{font-size:.68rem}
+
+/* Display equations: room above and below, sideways scroll on narrow screens, never boxed */
+.md-typeset div.arithmatex,.md-typeset .MathJax_Display{margin:1.4em 0;padding:0;background:transparent;border:0;overflow-x:auto;overflow-y:hidden}
+.md-typeset mjx-container[display="true"]{margin:0;padding:.15em 0;max-width:100%;overflow-x:auto;overflow-y:hidden}
+.md-typeset span.arithmatex{margin:0;overflow:visible}
+.md-typeset mjx-container{color:var(--bl-navy)}
+.md-typeset span.arithmatex{display:inline-block;max-width:100%;overflow-x:auto;overflow-y:hidden;vertical-align:middle}
+.md-typeset .admonition div.arithmatex,.md-typeset details div.arithmatex{margin:.9em 0}
+
+/* Definition / theorem-style paragraphs: a bold lead-in term, as the chapters write them */
+.md-typeset p>strong:first-child{font-weight:600;color:var(--md-typeset-color)}
+
+/* Footnotes */
+.md-typeset .footnote{font-size:.66rem;color:var(--bl-slate);border-top:1px solid var(--bl-navy);margin-top:3em;padding-top:1em}
+.md-typeset .footnote::before{display:none}
+.md-typeset .footnote ol{margin-left:1.2em}
+.md-typeset .footnote li{max-width:none}
+.md-typeset .footnote-ref{font-family:var(--md-code-font);font-size:.6em;color:var(--bl-ultramarine)}
+.md-typeset .footnote-backref{color:var(--bl-ice-3)}
+
+/* Figures: inlined SVG or image, left-aligned caption in mono under the figure's left edge */
+.md-typeset figure{margin:1.8em 0;text-align:left;max-width:100%}
+.md-typeset figure>img{display:block;max-width:100%;height:auto;margin:0}
+/* These two monochrome diagrams use the text colour; other images retain their colours. */
+.md-typeset figure>img:is([src$="/stage-adc-diagram.svg"],[src$="/stage-period-diagram.svg"]){filter:brightness(0) saturate(100%) invert(13%) sepia(31%) saturate(2200%) hue-rotate(203deg) brightness(93%)}
+[data-md-color-scheme="slate"] .md-typeset figure>img:is([src$="/stage-adc-diagram.svg"],[src$="/stage-period-diagram.svg"]){filter:brightness(0) invert(92%) sepia(6%) saturate(500%) hue-rotate(175deg)}
+.md-typeset figure>br{display:none}
+.md-typeset figcaption{font-family:var(--md-code-font);font-style:normal;font-size:.62rem;line-height:1.55;letter-spacing:.02em;color:var(--bl-slate);max-width:36rem;margin:.9rem 0 0;text-align:left}
+.md-typeset figcaption mjx-container{font-size:1em}
+/* The concept-page figures read the --bf-* palette: assign it from the brand */
+:root{--bf-ink:#172A52;--bf-face:#FFFFFF;--bf-face-2:#EDF7FC;--bf-plate-dark:#172A52;--bf-shade:#22397A;--bf-ink-2:#214EDA;--bf-shade-2:#214EDA;--bf-ink-3:#5F86F2;--bf-shade-3:#5F86F2;--bf-ink-4:#163CB0;--bf-shade-4:#163CB0;--bf-ink-5:#3D66E3;--bf-shade-5:#3D66E3;--bf-ink-6:#8FA9F5;--bf-shade-6:#8FA9F5;--bf-ramp-lo:#172A52;--bf-ramp-hi:#8FA9F5;--bf-ramp-ink-lo:#172A52;--bf-ramp-ink-hi:#5F86F2;--bf-cntn-line:#214EDA;--bf-accent:#ED762D;--bf-accent-line:#C45C1D;--bf-tint:#FDEBDD;--bf-muted:#4B5A7A;--bf-line:#91BED7;--bf-ai:#214EDA;--bf-ai-text:#163CB0;--bf-region:#EDF7FC;--bf-band:#F6FBFE;--bf-band-line:#C5E5F1;--bf-arvl:#172A52;--bf-dcsn:#ED762D;--bf-cntn:#214EDA;--bf-ups:#214EDA}
+
+/* Wide tables (operator catalogues): scroll inside the column, header row pinned in mono */
+.md-typeset .md-typeset__scrollwrap{margin:1.4em 0}
+.md-typeset .md-typeset__table{display:block;min-width:0}
+.md-typeset table:not([class]) td{vertical-align:top;line-height:1.5}
+.md-typeset table:not([class]) td mjx-container{margin:0}
+
+/* Perch marks in prose, as the home page badges */
+.md-typeset .bc-badge{display:inline-flex;align-items:center;justify-content:center;min-width:1.4em;height:1.4em;padding:0 .3em;font-family:var(--md-code-font);font-size:.85em;border:1px solid var(--bl-navy);border-radius:0;color:var(--bl-navy);background:transparent;vertical-align:-.15em;margin-right:.25em}
+.md-typeset .bc-badge--decision{border-color:var(--bl-orange);color:var(--bl-orange)}
+.md-typeset .bc-badge--cont,.md-typeset .bc-badge--rho,.md-typeset .bc-badge--upsilon{border-color:var(--bl-ultramarine);color:var(--bl-ultramarine)}
+
+/* Grid cards (used on section indexes): hairline tiles, no shadow */
+.md-typeset .grid.cards>ul>li,.md-typeset .grid>.card{border:1px solid var(--bl-ice-2);border-radius:0;box-shadow:none;padding:1rem 1.1rem;background:#FFFFFF;transition:border-color .15s}
+.md-typeset .grid.cards>ul>li:hover{border-color:var(--bl-navy);box-shadow:none}
+.md-typeset .grid.cards>ul>li>hr{border-color:var(--bl-ice-2)}
+.md-typeset .grid.cards>ul>li>p>strong:first-child{font-family:var(--bl-statement);font-weight:500;font-size:1.05em;color:var(--md-typeset-a-color)}
+
+/* Sidebar for deep trees (Bellman-Sym/API, appendices): sections as mono kickers, nested items indented by a hairline */
+.md-nav--primary .md-nav__item--section>.md-nav__link{margin-top:1.2rem;padding-bottom:.35rem}
+.md-nav__item--nested>.md-nav__link{font-weight:500}
+.md-nav__item .md-nav__item .md-nav__list{border-left:1px solid var(--bl-ice-2);margin-left:.15rem;padding-left:.45rem}
+.md-nav__link{margin-top:.35em;line-height:1.35}
+.md-nav__item--active>.md-nav__link:not(.md-nav__link--active){color:var(--md-typeset-color)}
+.md-sidebar--secondary .md-nav__link{font-size:.65rem;color:var(--bl-slate)}
+.md-sidebar--secondary .md-nav__link--active{color:var(--bl-ultramarine)}
+.md-sidebar--secondary .md-nav__title{margin-bottom:.4rem}
+
+/* Tables */
+.md-typeset table:not([class]){border:none;border-top:1px solid var(--bl-navy);border-radius:0;box-shadow:none;font-size:.7rem}
+.md-typeset table:not([class]) th{font-family:var(--md-code-font);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--bl-slate);background:transparent;border-bottom:1px solid var(--bl-navy);padding:.7em .8em}
+.md-typeset table:not([class]) td{border-top:1px solid var(--bl-ice-2);padding:.8em}
+.md-typeset table:not([class]) tbody tr:hover{background:var(--bl-ice)}
+
+/* Buttons */
+.md-typeset .md-button{border:1px solid var(--bl-navy);color:var(--bl-navy);border-radius:0;font-weight:500;padding:.6em 1.2em}
+.md-typeset .md-button:hover{background:var(--bl-navy);color:#FFFFFF;border-color:var(--bl-navy)}
+.md-typeset a.md-button--primary{background:var(--bl-ultramarine);border-color:var(--bl-ultramarine);color:#FFFFFF}
+.md-typeset a.md-button--primary:hover{background:var(--bl-navy);border-color:var(--bl-navy)}
+
+/* No radii anywhere */
+.md-typeset img,.md-typeset .tabbed-set,.md-typeset .tabbed-content,.md-tooltip,.md-typeset .md-annotation__index{border-radius:0}
+.md-typeset .tabbed-set>.tabbed-labels>label{font-family:var(--md-code-font);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase}
+.md-top{background:var(--bl-navy);color:#FFFFFF;border-radius:0;box-shadow:none}
+
+/* Footer */
+.md-footer{background:var(--bl-navy);color:#FFFFFF}
+.md-footer__title{font-family:var(--bl-statement);font-weight:400}
+.md-footer__direction{font-family:var(--md-code-font);font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;opacity:1;color:var(--bl-periwinkle)}
+.md-footer-meta{background:var(--bl-navy);border-top:1px solid rgba(255,255,255,.35)}
+.md-copyright{font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bl-ice-2)}
+.md-copyright__highlight{color:#FFFFFF}
+
+/* ── Slate (dark) scheme: navy ground, ice type, same rules ── */
+[data-md-color-scheme="slate"]{
+  --md-primary-fg-color:var(--bl-ultramarine-light);
+  --md-default-bg-color:#0F1B36;--md-default-bg-color--light:#172A52;--md-default-bg-color--lighter:#22397A;--md-default-bg-color--lightest:#2C4A8A;
+  --md-default-fg-color:#EDF7FC;--md-default-fg-color--light:#C5E5F1;--md-default-fg-color--lighter:#8FA9F5;--md-default-fg-color--lightest:#22397A;
+  --md-typeset-color:#EDF7FC;--md-typeset-a-color:#8FA9F5;--md-accent-fg-color:#FFFFFF;
+  --md-code-bg-color:#172A52;--md-code-fg-color:#EDF7FC;
+  --md-typeset-table-color:#22397A;--md-typeset-table-color--light:#172A52;
+  --md-admonition-fg-color:#EDF7FC;--md-admonition-bg-color:#0F1B36;
+  --md-footer-bg-color:#0B1428;--md-footer-bg-color--dark:#0B1428;
+  --bf-ink:#C5E5F1;--bf-face:#172A52;--bf-face-2:#22397A;--bf-plate-dark:#0B1428;--bf-shade:#0F1B36;
+  --bf-ink-2:#8FA9F5;--bf-shade-2:#163CB0;--bf-ink-3:#8FA9F5;--bf-shade-3:#214EDA;--bf-ink-4:#8FA9F5;--bf-shade-4:#163CB0;--bf-ink-5:#C5E5F1;--bf-shade-5:#214EDA;--bf-ink-6:#C5E5F1;--bf-shade-6:#3D66E3;
+  --bf-ramp-lo:#172A52;--bf-ramp-hi:#3D66E3;--bf-ramp-ink-lo:#8FA9F5;--bf-ramp-ink-hi:#C5E5F1;--bf-cntn-line:#8FA9F5;--bf-accent:#ED762D;--bf-accent-line:#F5A46F;--bf-tint:#463125;--bf-muted:#8FA9F5;--bf-line:#3D66E3;--bf-ai:#8FA9F5;--bf-ai-text:#C5E5F1;--bf-region:#172A52;--bf-band:#122040;--bf-band-line:#22397A;--bf-arvl:#C5E5F1;--bf-dcsn:#ED762D;--bf-cntn:#8FA9F5;--bf-ups:#8FA9F5;
+}
+[data-md-color-scheme="slate"] .md-header,[data-md-color-scheme="slate"] .md-tabs{background:#0F1B36;color:#EDF7FC;border-color:#C5E5F1}
+[data-md-color-scheme="slate"] .md-header__button,[data-md-color-scheme="slate"] .md-header__source,[data-md-color-scheme="slate"] .md-tabs__link{color:#EDF7FC}
+[data-md-color-scheme="slate"] .md-tabs__link:hover,[data-md-color-scheme="slate"] .md-tabs__item--active .md-tabs__link{color:#8FA9F5}
+[data-md-color-scheme="slate"] .md-search__form,[data-md-color-scheme="slate"] .md-search__form:hover{background:#172A52;border-color:#22397A}
+[data-md-color-scheme="slate"] .md-search__input{color:#EDF7FC}
+[data-md-color-scheme="slate"] .md-search__input::placeholder,[data-md-color-scheme="slate"] .md-search__icon{color:#C5E5F1}
+[data-md-color-scheme="slate"] .md-typeset h1{color:#8FA9F5}
+[data-md-color-scheme="slate"] .md-typeset h2,[data-md-color-scheme="slate"] .md-typeset h4{color:#EDF7FC;border-color:#C5E5F1}
+[data-md-color-scheme="slate"] .md-typeset a{color:#8FA9F5}
+[data-md-color-scheme="slate"] .md-typeset a:hover{color:#FFFFFF}
+[data-md-color-scheme="slate"] .md-typeset hr,[data-md-color-scheme="slate"] .md-typeset .footnote,[data-md-color-scheme="slate"] .md-typeset table:not([class]),[data-md-color-scheme="slate"] .md-typeset table:not([class]) th{border-color:#C5E5F1}
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) td{border-color:#22397A}
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) tbody tr:hover{background:#172A52}
+[data-md-color-scheme="slate"] .md-typeset .admonition,[data-md-color-scheme="slate"] .md-typeset details{background:#0F1B36;border-color:#C5E5F1 !important}
+[data-md-color-scheme="slate"] .md-typeset .admonition-title,[data-md-color-scheme="slate"] .md-typeset summary{background:#172A52 !important;color:#EDF7FC}
+[data-md-color-scheme="slate"] .md-typeset code{background:#172A52;color:#EDF7FC}
+[data-md-color-scheme="slate"] .md-typeset pre>code{background:#0B1428}
+[data-md-color-scheme="slate"] .md-typeset .highlight span.filename{background:#122040}
+[data-md-color-scheme="slate"] .md-typeset mjx-container{color:#EDF7FC}
+[data-md-color-scheme="slate"] .md-typeset .bc-byline,[data-md-color-scheme="slate"] .md-typeset figcaption,[data-md-color-scheme="slate"] .md-typeset .obsidian-tag,[data-md-color-scheme="slate"] .md-typeset .md-tag{color:#8FA9F5;border-color:#22397A}
+[data-md-color-scheme="slate"] .md-typeset h5,[data-md-color-scheme="slate"] .md-typeset h6,[data-md-color-scheme="slate"] .md-typeset table:not([class]) th,[data-md-color-scheme="slate"] .md-typeset .footnote{color:#C5E5F1}
+[data-md-color-scheme="slate"] .md-typeset .bc-badge{color:#C5E5F1;border-color:currentColor}
+[data-md-color-scheme="slate"] .md-typeset .bc-badge--decision{color:#F5A46F}
+[data-md-color-scheme="slate"] .md-typeset .bc-badge--cont,[data-md-color-scheme="slate"] .md-typeset .bc-badge--rho,[data-md-color-scheme="slate"] .md-typeset .bc-badge--upsilon{color:#8FA9F5}
+[data-md-color-scheme="slate"] .md-typeset .grid.cards>ul>li{background:#172A52;border-color:#22397A}
+[data-md-color-scheme="slate"] .md-nav__link{color:#EDF7FC}
+[data-md-color-scheme="slate"] .md-nav__link:hover,[data-md-color-scheme="slate"] .md-nav__link--active,[data-md-color-scheme="slate"] .md-sidebar--secondary .md-nav__link--active{color:#8FA9F5}
+[data-md-color-scheme="slate"] .md-nav__title,[data-md-color-scheme="slate"] .md-nav__item--section>.md-nav__link,[data-md-color-scheme="slate"] .md-sidebar--secondary .md-nav__link{color:#C5E5F1}
+[data-md-color-scheme="slate"] .md-nav__item .md-nav__item .md-nav__list{border-color:#22397A}
+[data-md-color-scheme="slate"] .md-typeset .md-button{border-color:#EDF7FC;color:#EDF7FC}
+[data-md-color-scheme="slate"] .md-typeset .md-button:hover{background:#EDF7FC;color:#0F1B36}
+
+/* A wire mark needs a matching ground in the dark header and mobile drawer. */
+[data-md-color-scheme="slate"] .md-logo img{content:url("../_assets/brand/logo-on-navy.svg")}
+
+/* Keyboard focus remains visible on both the pale header and dark code blocks. */
+:where(a,button,input,summary,label[tabindex]):focus-visible{outline:2px solid var(--md-typeset-a-color);outline-offset:3px}
+.md-typeset .highlight :where(a,button):focus-visible{outline-color:var(--bl-periwinkle)}
+
+/* Material's edge controls must remain inside the flex content column. */
+.md-content__inner.md-typeset>.tabbed-set .tabbed-labels~.tabbed-control--prev{margin-left:0}
+.md-content__inner.md-typeset>.tabbed-set .tabbed-labels~.tabbed-control--next{margin-right:0}
+
+@media(max-width:59.984375em){
+  .md-nav--primary .md-nav__title[for="__drawer"]{background:var(--bl-ice);color:var(--bl-navy);border-bottom:1px solid var(--bl-ice-2)}
+  [data-md-color-scheme="slate"] .md-nav--primary .md-nav__title[for="__drawer"]{background:#0F1B36;color:#EDF7FC;border-color:#22397A}
+}
+@media(max-width:44.984375em){
+  .md-typeset h1{font-size:clamp(1.75em,7vw,2.4em);overflow-wrap:anywhere}
+  .md-typeset .md-typeset__scrollwrap{margin-right:0;margin-left:0}
+}
+@media(prefers-reduced-motion:reduce){
+  .md-typeset a,.md-nav__link{transition:none}
+}
+
+/* The parent organization's line above the header, on every page (AAS, 31 October 2026):
+   a navy band of one line, the Econ-ARK mark and "An Econ-ARK project" linking to econ-ark.org,
+   as the foundation's wordmark stands above a project's own header on Mozilla's and the Eclipse
+   Foundation's project sites. On the homepage it takes the homepage's padding. */
+.bl-parent{background:var(--bl-navy);color:var(--bl-ice);font-family:"Archivo",Helvetica,Arial,sans-serif;font-size:.55rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;line-height:1}
+.bl-parent__inner{display:flex;align-items:center;min-height:1.7rem;max-width:66rem;margin:0 auto;padding:0 .7rem}
+.bl-parent__link{display:inline-flex;align-items:center;gap:.5rem;color:inherit;text-decoration:none}
+.bl-parent__link:hover,.bl-parent__link:focus-visible{color:#fff;text-decoration:underline;text-underline-offset:.25em;outline:none}
+.bl-parent__link img{display:block;height:1.1rem;width:auto}
+body:has(.bellman-home) .bl-parent__inner{max-width:none;padding:0 var(--bellman-home-pad)}
