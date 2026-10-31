@@ -8,6 +8,10 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-11-01 — The sculls in motion
+
+- The second slot of the homepage's sequence shows a video loop in place of the still: a single scull on the river Oria at Orio, filmed from directly above, the rings of its oars spreading on the water (Wikimedia Commons, Xabier Cañas, CC BY-SA 4.0, 2023), cut to 10.4 s, duotone navy to ice, 3.6 MB; the still stays as the fallback. The acknowledgments at the end of `README.md`, in §4 of the about page and in the brand folder's table name the video (AAS, 1 November 2026).
+
 ### 2026-11-01 — The homepage's sequence without captions
 
 - The homepage's photographs carry no captions; the acknowledgments of their sources and licenses stand at the end of `README.md` and in §4 of the about page. The sequence runs the half-built Harbour Bridge, the sculls, the Owatonna bank, the houses and the vegetable seller; the photograph of the finished bridge is withdrawn. The market loop is re-encoded under 4 MB (AAS, 1 November 2026).
