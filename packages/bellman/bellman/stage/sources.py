@@ -24,6 +24,7 @@ from typing import Any, Optional, Union
 import yaml
 
 from bellman.refusals import FactoryError
+from bellman.stage.method_table import METHOD_TYPES
 
 __all__ = ["load_calibration", "load_settings", "load_methods", "read_yaml_mapping"]
 
@@ -163,13 +164,20 @@ _MARGINALS = ("!marginals", "marginals")
 
 def entry_key(entry):
     """The key that tells the entries of a methods source apart: the target
-    the entry's `on` names, and whether its method is `!marginals`. A
-    `!marginals` entry adds a marginal block's lines to the builder its target
-    names, so it shares that target with one entry of another method, such as
-    `!vfi` or a representation on the same builder (decision MB-U4)."""
+    the entry's `on` names and the kind of its method, a solution method, a
+    representation or a marginal block, the `kind` of the method's row in the
+    method table, `solution` where the row names none or the entry names a
+    handler alone. One entry of each kind may stand on one target in one
+    source, as the binding rule admits, since each kind has its own place:
+    `!egm` on `policy` stands on the builder, `!Linear` on `policy` at the
+    Evaluation that closes it, and `!marginals` on `policy` adds its lines
+    (decision MB-U4, extended on 31 October 2026, MB-U53)."""
     method = entry.get("method")
     name = method.get("__yaml_tag__") if isinstance(method, Mapping) else method
-    return entry["on"], name in _MARGINALS
+    tag = name[1:] if isinstance(name, str) and name.startswith("!") else name
+    rule = METHOD_TYPES.get(tag) if isinstance(tag, str) else None
+    kind = (rule.kind if rule is not None else None) or "solution"
+    return entry["on"], kind
 
 
 def _copy_authored(value, active=frozenset()):

@@ -112,7 +112,7 @@ The listing `method_types`, which `bellman.stage` exports, gives the registered 
 
 ## 4 Writing the methodization file
 
-Every entry requires one `on:` address. A method tag is optional: an entry containing only `on` records recognition without attaching a numerical method, and a handler may be given when the operator family determines the method. Separate targets require separate entries. Do not put a comma-separated list in `on:` or write a nested `schemes:` list.
+Every entry requires one `on:` address. A method tag is optional: an entry containing only `on` records recognition without attaching a numerical method, and a handler may be given when the operator family determines the method. Separate targets require separate entries. Two entries may name one target when their methods are of different kinds, a solution method, a representation and a marginal block, since each kind has a place of its own: a solution method such as `!egm` stands on the builder, a representation such as `!Linear` at the Evaluation that closes it, and a marginal block adds its lines to the builder; a second entry of one kind on one target is refused. Do not put a comma-separated list in `on:` or write a nested `schemes:` list.
 
 The available entry fields are:
 
