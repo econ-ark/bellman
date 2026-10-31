@@ -46,3 +46,7 @@ For a model example, include the equations and the behaviour you expect.
 
 The software is available under the
 [Apache License 2.0](https://github.com/econ-ark/bellman/blob/main/LICENSE).
+
+## 4 Photographs
+
+The homepage's photographs and its video are from Wikimedia Commons, shown as duotones from navy to ice: [the two halves of the Sydney Harbour Bridge from Lavender Bay, about 1931](https://commons.wikimedia.org/wiki/File:Construction_of_Sydney_Harbour_Bridge_-_looking_from_Lavender_Bay_c._1931_(13752175293).jpg), Royal Australian Historical Society, no known copyright restrictions; [a quadruple scull at dawn, 2023](https://commons.wikimedia.org/wiki/File:Fluidesign_Quad_Rowing_Team_At_Dawn.jpg), TudorTulok, CC0; [the National Farmers' Bank, Owatonna, Minnesota, by Louis H. Sullivan, 1908](https://commons.wikimedia.org/wiki/File:Louis_H._Sullivan_-_National_Farmer%27s_Bank_Interior_(A),_Owatonna,_MN.jpg), photograph by Bmzuckerman, CC BY 4.0; [Glendora Avenue from the air, 2022](https://commons.wikimedia.org/wiki/File:Aerial_View_of_Glendora_Ave_-_geograph.org.uk_-_7187713.jpg), John Shorten, CC BY-SA 2.0; [a vegetable seller's boat on Dal Lake, Srinagar, 2013](https://commons.wikimedia.org/wiki/File:Vegetable_seller_on_Dal_Lake..JPG), Rudolph A. Furtado, CC0; and [a market from the air, 2025](https://commons.wikimedia.org/wiki/File:Market_Movements.webm), the video, Ayorinde Ogundele, CC BY-SA 4.0. The adapted share-alike images are shared under their sources' licenses.

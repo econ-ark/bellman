@@ -494,7 +494,6 @@ body:has(.bellman-home) .md-top {
 .pm-field--frame { z-index: 1; } .pm-field--frame .pm-plane { --cell: 260px; --block: 190px; }
 /* The figure: the triangle the modules line up into, and the triangle of triangles it belongs to. */
 .pm-dis__copy { position: absolute; z-index: 3; left: var(--bellman-home-pad, 48px); top: 50%; transform: translateY(-50%); width: min(560px, 44vw); padding: 28px 32px; background: #172a52; color: #fff; }
-.pm-dis .pm-band-caption { position: absolute; z-index: 3; right: 0; bottom: 0; margin: 0; padding: 10px 16px; background: #172a52; color: #91bed7; font: 11px/1.5 "IBM Plex Mono", monospace; letter-spacing: .02em; }
 @supports (animation-timeline: view()) {
   .pm-dis .pm-plane { animation: pm-flyback linear both; animation-timeline: --dis; animation-range: contain 0% contain 100%; }
   .pm-dis .pm-plane i { animation: pm-lift linear both; animation-timeline: --dis; animation-range: contain calc(var(--j) * 2%) contain calc(52% + var(--j) * 1.5%); }
@@ -518,7 +517,6 @@ body:has(.bellman-home) .md-top {
 @supports (animation-timeline: view()) { .pm-img { animation: pm-settle linear both; animation-timeline: --slot; animation-range: entry 0% contain 50%; } @keyframes pm-settle { from { transform: scale(1.16); } to { transform: scale(1); } } }
 .pm-panel { position: absolute; z-index: 2; left: var(--bellman-home-pad, 48px); bottom: var(--bellman-home-pad, 48px); max-width: 560px; padding: 28px 32px 30px; background: #172a52; color: #fff; }
 .pm-kicker { margin: 0 0 14px; color: #8fa9f5; font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: .08em; line-height: 1.5; text-transform: uppercase; }
-.pm-statement { margin: 0 0 20px; font-family: "PP Monument", Archivo, Helvetica, Arial, sans-serif; font-size: clamp(26px, 2.6vw, 36px); font-weight: 300; line-height: 1.2; letter-spacing: -.01em; text-wrap: balance; color: #fff; }
+.pm-statement { margin: 0 0 20px; font-family: "PP Monument", Archivo, Helvetica, Arial, sans-serif; font-size: clamp(19px, 1.7vw, 25px); font-weight: 300; line-height: 1.35; letter-spacing: -.01em; text-wrap: balance; color: #fff; }
 .pm-link { color: #c5e5f1; font-family: Archivo, Helvetica, Arial, sans-serif; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
-.pm-caption { position: absolute; z-index: 2; right: 0; bottom: 0; max-width: 46ch; padding: 10px 16px; background: #172a52; color: #91bed7; font: 11px/1.5 "IBM Plex Mono", monospace; letter-spacing: .02em; }
-@media (max-width: 720px) { .pm-panel { left: 16px; right: 16px; bottom: 56px; max-width: none; padding: 20px; } .pm-caption { left: 0; max-width: none; } }
+@media (max-width: 720px) { .pm-panel { left: 16px; right: 16px; bottom: 56px; max-width: none; padding: 20px; } }
