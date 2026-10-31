@@ -1,8 +1,8 @@
 # Project Bellman
 
-Bellman-SYM is a declarative language for dynamic programming models in economics. A model is written as stage files, one `.bl` file for each stage of a period's problem. A stage file declares the states, controls and shocks, the laws of motion and the value equations. The Python package `bellman` parses stage files and builds each stage as an object. The object prints its equations next to the operators they denote, draws the operators, compiles the equations to Python functions, binds parameter values, numerical methods and settings, joins stages into periods, and assembles periods into the model's trellis, backwards from the last period. The mathematics is documented under the Bellman calculus.
+A dynamic programming model in economics is usually written twice, as mathematics and as solver code, and its meaning, which operators it composes and under which assumptions, stays implicit in the code. So a new model starts again, and another person's is hard to read, check or reuse.
 
-Two more packages are in this repository. `asva` holds numerical routines, such as the endogenous grid step, and does not depend on `bellman`. `bellman-workbench` is a local web page, also packaged as a desktop application, that reads a stage file as you type and draws its operators.
+Project Bellman provides the language Bellman-SYM. A model is written in it once, as stages; a stage is one self-contained decision problem in a `.bl` file that both people and AI can read. The package `bellman` builds each stage as an object that prints its equations beside the operators they denote; their meaning is fixed by the Bellman calculus, the project's mathematics, with no solver attached. Stages written separately join into models, and a new model reuses them; parameter values and numerical methods are bound afterwards. The package does not solve or simulate a model.
 
 ## Install
 
