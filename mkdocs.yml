@@ -106,7 +106,7 @@ extra_css:
   # Query string is a cache-buster; bump when CSS changes substantially.
   - _stylesheets/extra.css?v=20260930a
   - _stylesheets/rosetta.css?v=20260622q   # Rosetta Stone registry "Lexicon" styling
-  - _stylesheets/bellman.css?v=20261003a
+  - _stylesheets/bellman.css?v=20261031a
 
 extra_javascript:
   - _javascripts/mathjax.js

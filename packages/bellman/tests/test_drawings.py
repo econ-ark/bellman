@@ -45,7 +45,7 @@ DRAWINGS = ([("initial", direction, "builder") for direction in ("backward", "fo
 MODELS = ("cons", "cons_savings_iid", "sa_savings")
 WIDTH_LIMIT, HEIGHT_LIMIT = 7.0, 13.5
 # the drawings that stand taller than a page on main, each with the height in
-# inches that the WebAssembly build of Graphviz the root package.json pins
+# inches that the WebAssembly build of Graphviz the package's package.json pins
 # (Graphviz 14.1.3) gives it. A listed drawing that grows taller fails as an
 # unlisted one does, and one that comes to fit fails until its entry is
 # deleted, so that the list shrinks with the work that redraws them. The three
@@ -161,13 +161,13 @@ def test_every_drawing_of_the_three_models_fits_a_notebook_cell_and_a_page(
     up to their recorded heights, and none is scaled: the drawing sets no
     `size` and no `ratio`, so a 10-point label is 10 points (the acceptance
     check of P21-1, items 2 and 3). Where the Node package that the root
-    package.json pins is installed, the drawings are measured with it and not
+    package.json of packages/bellman/ pins is installed, the drawings are measured with it and not
     with a `dot` on the PATH, whose version the repository does not fix, so
     that every machine measures as the lessons are drawn."""
     if node_program() is not None and node_package_root() is not None:
         monkeypatch.setattr(graphviz_layout, "dot_program", lambda: None)
     if layout_command() is None:
-        pytest.skip("no Graphviz layout program: neither `dot` on the PATH nor the Node package the root package.json names")
+        pytest.skip("no Graphviz layout program: neither `dot` on the PATH nor the Node package that packages/bellman/package.json names")
     over, fitting = [], []
     smallest = None
     for stage in (cons, cons_savings_iid, sa_savings):

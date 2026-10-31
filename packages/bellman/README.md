@@ -263,8 +263,8 @@ the labels of its operators and ports those that the drawing prints
 
 A drawing is laid out by Graphviz, which the package does not install: either
 Graphviz's `dot` is on the PATH, or Node.js runs the WebAssembly build of
-Graphviz that `npm install` at the repository root installs from the root
-`package.json` into the gitignored `node_modules/`; with neither, `svg()`
+Graphviz that `npm install` in this folder installs from its `package.json`
+into the gitignored `node_modules/`; with neither, `svg()`
 refuses and names both, and a notebook cell shows the drawing's short form.
 
 ## 6 The order of the folders

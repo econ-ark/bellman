@@ -2,9 +2,12 @@
 # The endogenous grid method as the method block of the policy builder, whose
 # stage file states the maximization alone. The candidate line reads the
 # derivative of the continuation value by the term D_{a}V[>].
+# The last line reads the consumption function at the resources m between the
+# candidate pairs (m[>], c[>]) by the operator evaluate; the methods file binds
+# the interpolation method on that operator occurrence, policy.cons_choice.evaluate.
 
 [id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
     c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=endoggrid]
-    c    = c[>]                     :: [id=cons_choice]
+    c    = evaluate(m[>], c[>], m)  :: [id=cons_choice]
 }

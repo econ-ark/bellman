@@ -8,8 +8,9 @@ so a drawing of a graph, of a period or of a trellis answers its picture
 wherever one of the two programs is installed, and refuses with the sentence
 of `layout_refusal` where neither is.
 
-The Node package is installed by `npm install` at the repository root, whose
-`package.json` pins its version, into the root folder `node_modules/`, which
+The Node package is installed by `npm install` in the package's folder
+`packages/bellman/`, whose `package.json` pins its version, into `node_modules/`
+there, which
 git ignores; no other folder is read. The Node executable is the one on the
 PATH, else the newest one nvm installed, else Homebrew's: a kernel started by
 an application rather than by a shell has no nvm path.
@@ -21,8 +22,10 @@ import shutil
 import subprocess
 from pathlib import Path
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
-# the folder of the Node package under the repository root
+# the folder packages/bellman/, which holds package.json and, once `npm install`
+# has run there, node_modules/
+PACKAGE_FOLDER = Path(__file__).resolve().parents[2]
+# the folder of the Node package under it
 NODE_PACKAGE = Path("node_modules") / "@viz-js" / "viz"
 LAYOUT_SCRIPT = Path(__file__).with_name("graphviz_layout.mjs")
 # the Node executables read after the PATH: nvm's installations,
@@ -58,10 +61,10 @@ def _release(folder_name: str) -> list[int]:
 
 
 def node_package_root() -> Path | None:
-    """The repository root when its `node_modules` holds the WebAssembly build
+    """The folder packages/bellman/ when its `node_modules` holds the WebAssembly build
     of Graphviz; None when it does not."""
-    if (REPOSITORY_ROOT / NODE_PACKAGE).is_dir():
-        return REPOSITORY_ROOT
+    if (PACKAGE_FOLDER / NODE_PACKAGE).is_dir():
+        return PACKAGE_FOLDER
     return None
 
 
@@ -86,8 +89,8 @@ def layout_refusal() -> str:
         missing.append("Node.js on the PATH, or installed by nvm or Homebrew")
     if node_package_root() is None:
         missing.append(
-            f"the Node package @viz-js/viz, installed by `npm install` at the repository root, "
-            f"{REPOSITORY_ROOT}"
+            f"the Node package @viz-js/viz, installed by `npm install` in packages/bellman/, "
+            f"{PACKAGE_FOLDER}"
         )
     return (
         "No Graphviz layout program is available: install Graphviz's dot, or supply "
