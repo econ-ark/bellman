@@ -1,0 +1,18 @@
+# The recipe of the durables model: the trellis file and each stage's file,
+# by their paths from this folder, and for each stage and each kind the
+# ordered sources; `$fill` and the three methods slots are bound by keyword of
+# `load_recipe`. Each stage has its own methods slot, `$tenure_method`,
+# `$keeper_method` and `$adjuster_method`, so that a method choice reaches one
+# stage. The bequest's one methods file binds the marginal blocks of its
+# derivatives, and it is active in the terminal period alone,
+# `periods: [0, 0]`. The income level Y and the retirement income y_R of tenure
+# vary with age and are written per period by wage_schedule.py after every
+# load_recipe, since a recipe holds the values common to every period.
+trellis: trellis.yml
+stages:
+  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods, $tenure_method]}}
+  keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods, $keeper_method]}}
+  adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods, $adjuster_method]}}
+  bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods]}, periods: [0, 0]}
+registry:
+  calibration: [calibration/wage_schedule]

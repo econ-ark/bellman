@@ -1,0 +1,10 @@
+!trellis
+name: portfolio_life_cycle
+# Six equal periods, counted back from the last: periods[0] is the terminal
+# period. Each is the period template beside this file; the one inter-period
+# mapping stands for every adjacent pair: the savings that leave a period are
+# the next period's capital.
+periods:
+  - {template: period.yml, repeat: 6}
+inter_connectors:
+  - {disc.a: k}

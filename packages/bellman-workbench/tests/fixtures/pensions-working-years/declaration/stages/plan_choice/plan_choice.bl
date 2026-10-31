@@ -1,0 +1,47 @@
+@stage: plan_choice
+
+Plan := {DB, DC}
+
+u_p : ℝ₊         :: ["utility cost of switching to the DC plan, the first line of equation (4) at the enrollment age"]
+
+[id=arvl_to_dcsn, (a_s : ℝ₊, y_s : ℝ₊, adc_s : ℝ₊, h_s : ℝ₊, m_s : ℝ₊, P_s : ℝ₊₊, ξ_s : ℝ, α_s : (0,1), β_s : (0,1), π_s : [0,1]) : !arvl -> (a_d : ℝ₊, y_d : ℝ₊, adc_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), π_d : [0,1]) : !dcsn] {
+    a_d   = a_s
+    y_d   = y_s
+    adc_d = adc_s
+    h_d   = h_s
+    m_d   = m_s
+    P_d   = P_s
+    ξ_d   = ξ_s
+    α_d   = α_s
+    β_d   = β_s
+    π_d   = π_s
+}
+
+[id=dcsn_to_cntn, (a_d, y_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, π_d, p_choice : !ctrl @ Plan) : !dcsn -> (a_sv : ℝ₊, y_sv : ℝ₊, adc_sv : ℝ₊, h_sv : ℝ₊, m_sv : ℝ₊, P_sv : ℝ₊₊, ξ_sv : ℝ, α_sv : (0,1), β_sv : (0,1), plan_sv : Plan, π_sv : [0,1]) : !cntn] {
+    plan_sv = p_choice                           :: [id=plan_chosen]
+    a_sv    = a_d
+    y_sv    = y_d
+    adc_sv  = adc_d
+    h_sv    = h_d
+    m_sv    = m_d
+    P_sv    = P_d
+    ξ_sv    = ξ_d
+    α_sv    = α_d
+    β_sv    = β_d
+    π_sv    = π_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, p_choice) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = (0, -u_p)[p_choice] + V[>]        :: [id=value]
+    D_{a_d}V = D_{a_sv}V[>]                      :: [id=marginal_liquid]
+    D_{h_d}V = D_{h_sv}V[>]                      :: [id=marginal_housing]
+    D_{m_d}V = D_{m_sv}V[>]                      :: [id=marginal_mortgage]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                     :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (p_choice : Plan @ !ctrl) : !dcsn] {
+    p_choice = argmax_{p_choice}((0, -u_p)[p_choice] + V[>])   :: [id=choice]
+}

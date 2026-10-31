@@ -1,0 +1,8 @@
+@methods: bellman
+# The derivative of the decision value of the within-life stage in wealth,
+# stated as the marginal block of the decision value builder (AMD-MB-001
+# §4.3): the envelope condition, the marginal utility in closed form.
+
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{m}V = c^(-σ)                    :: [id=marginal]
+}

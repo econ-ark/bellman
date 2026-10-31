@@ -1,0 +1,60 @@
+!stage
+# Stage name
+name: noport_stage
+
+# Symbol declarations
+symbols:
+  spaces:
+    Xk: "@def R++"
+    Xm: "@def R++"
+    Θ:  "@def R++"
+
+  prestate:
+    k: "@in Xk"
+
+  exogenous:
+    θ:
+      - "@in Θ"
+      - "@dist LogNormal(μ_θ, σ_θ)"
+
+  states:
+    k_d: "@in Xk"
+
+  poststates:
+    m: "@in Xm"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  parameters:
+    R: "@in R++"
+    μ_θ: "@in R"
+    σ_θ: "@in R+"
+
+  settings:
+    n_m: "@in Z+"
+    m_min: "@in R+"
+    m_max: "@in R+"
+    n_θ_nodes: "@in Z+"
+    n_sim: "@in Z+"
+    sim_seed: "@in Z+"
+
+# Stage equations
+equations:
+  # Arrival to decision transition
+  arvl_to_dcsn:
+    - k_d = k
+
+  # Decision to continuation transition
+  dcsn_to_cntn:
+    - m = k_d*R + θ
+
+  # Continuation to decision backward evaluation (expectation, no max)
+  cntn_to_dcsn:
+    - V = E_{θ}(V[>])
+
+  # Decision to arrival backward evaluation
+  dcsn_to_arvl:
+    - V[<] = V

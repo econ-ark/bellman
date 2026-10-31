@@ -1,0 +1,13 @@
+@methods: worker_cons
+# The endogenous grid method as the method block of the worker's policy
+# builder, whose stage file states the maximization alone. The candidate line
+# reads the derivative of the continuation value by the term D_{b}V[>]; the
+# worker's continuation value need not be concave, so the block selects among
+# the candidates by their values with an upper envelope.
+
+[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>] <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])                 :: [id=InvEuler]
+    w[>] = b + c[>]                            :: [id=endoggrid]
+    v[>] = 𝑢(c[>]) + β*V[>]                    :: [id=cand_value]
+    c    = upper_env(w[>], c[>], v[>])          :: [id=envelope]
+}

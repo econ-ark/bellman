@@ -1,0 +1,2434 @@
+---
+audience: user
+type: changelog
+---
+# Changelog
+
+The one changelog of the project, published as the Changelog page of the documentation site. Each entry is a dated heading followed by bullets that state what changed and where; the newest entry stands first. An entry of the release names the lane whose work it records, and an entry of the work before the release names its subject. The entries of the release 0.01 stand under its heading, and the entries of the work before it under the heading "Before the release".
+
+## After the release 0.02
+
+### 2026-10-31 — One repository becomes three: the development repository, the public repository and the backup
+
+- The repository is renamed `econ-ark/bellman-dev` on GitHub and stays private and whole: the toolkit, the internal folder, the team's branches and pull requests and the history since 29 December 2024. A new public repository, `econ-ark/bellman`, holds the toolkit alone, `packages/bellman`, `packages/asva`, `packages/bellman-workbench`, `packages/bellman-desktop`, `packages/bellman-matsya-client`, the applications, the documentation, the lessons and the editor extension; every commit on its `main` is the public subset of one development commit, written by an export script of the development repository and named in the commit message, and its first commit is a root commit. The Matsya service and the measurement harness stay in the development repository. A pull request merged on the public repository is applied to the development repository as a patch and returns in the next export. The documentation site at econ-ark.github.io/bellman is served by the public repository. Decided by AAS on 31 October 2026.
+- The root test of the repository's housekeeping keeps every exported file free of internal paths: ten test docstrings and one comment of the Workbench's editor that cited internal records by path now cite them by name, and the check of the simple-set-expressions acceptance record moved from the package's tests to a root test that only the development repository runs.
+- `.githooks/pre-commit`, enabled once per clone by `git config core.hooksPath .githooks`, refuses a staged file over 5 MB or a text that looks like a credential.
+
+### 2026-10-31 — The buffer-stock application names its quadrature and its asset grid
+
+- The methods file of `applications/buffer-stock/` binds `!gauss-hermite` on the arrival builder's expectation over the two income shocks, with the node counts the new settings file names, seven for each shock, and `!Linear` on the stated derivative of the arrival value, `D_{k}V[<]`, represented on the grid of 960 asset points from 0.001 to 20; the counts and the grid follow the published HARK solution of the model in the QuantEcon community library, whose equiprobable discretization and exponentially nested grid the method table does not name ([Methodization](Bellman-Sym/04-methodization.md) §4.1; [Method types](Bellman-Sym/reference/methods.md)).
+
+### 2026-10-28 — One cons-port folder
+
+- The portfolio–consumption model is one folder, `applications/cons-port/`, holding its stages written with the maximization alone, `declaration/stages/{cons,disc,noport,port}/`, the block files their methods files bind, `declaration/methods/cons_egm.bl`, `port_foc.bl` and `noport_envelope.bl`, the two recipes of its two orders with their trellis files, and the trellis files of records of its fixed reference ([Model directory layout](Bellman-Sym/reference/model-directory-layout.md) §2; [Trellises](Bellman-Sym/07-trellis.md) §3). The demonstration folder of 21 October, `applications/cons-port-demonstration/`, is folded into it: its adjuster stage, bound by nothing, is removed; its tests stand under `tests/`, its notebook `notebooks/declared-and-operative.ipynb`, executed again on the derivative term of 26 October, under `notebooks/`. The explicit way of writing is not wanted (AAS, 28 October 2026): the stage without a portfolio choice is written the method way, its derivative line `D_{k}V = E_{θ}(D_{m}V[>]*R)` in a marginal block bound by `!marginals`; the five reference trellis files bind the folder's own stages, with the reference's handlers on the block route, and the forward law of the portfolio and no-portfolio stages carries `!monte-carlo` with the settings `n_sim` and `sim_seed`. `applications/portfolio-choice/` stays in place, superseded and marked for deletion, its readers listed for the deletion's own step.
+- The two orders are read from the recipes: the lessons `tutorials/models/cons-port/02` and `03` and `tutorials/getting-started/05` call `load_recipe`, the Workbench's stage templates `port`, `cons` and `disc` come from `cons-port/declaration/spec.port-cons.yml`, and the documentation's API examples of a trellis file of records read `trellis.port-cons-vfi.yml`. The five lessons that read the folder are recorded again; the corpus recordings of its stage files stand under `packages/bellman/tests/snapshot/corpus/cons-port/`; the pages of the methodization, the forms catalogue, the example of the earlier YAML stages and the READMEs name the one folder.
+### 2026-10-28 — The applications are written the method way, and the trivial arrival builders go
+
+- Every application's stage file states its values and its maximizations alone. A derivative line stands in a **marginal block** of a block file under `declaration/methods/`, bound on the value builder by an entry `method: !marginals` whose `block` names the file from the methods file's folder, `../../methods/<file>` from a per-stage methods file; the inverse Euler, endogenous-grid, candidate-value and upper-envelope lines stand in a **method block** bound on the policy builder by `!egm`, and a first-order condition in one bound by `!time-iteration`. Line ids are kept, so a representation bound on a derivative line's id keeps its address. Rewritten so: buffer-stock, retirement-choice, consumption-savings-iid, benhabib-2019, housing-renting, pension-retirement, durables, housing-frictions and housing-owner.
+- The degenerate arrival builders, a forward builder whose only lines are identities between the arrival states and the decision states and a backward builder writing `V[<] = V`, are removed from the stages that had them; such a stage is entered at its decision perch, and a connector of a period or a trellis names its decision states. A terminal stage whose states are typed in its arrival block alone keeps it, and cagetti-denardi-2006 keeps its arrival builders, which its branching connectors name.
+- The package: a method block may call `upper_env` and `evaluate`; a `!marginals` entry may share its builder with another method's entry; a maximization binder is in scope in the feasible sets written after it; the model explorer draws reading ports at a stage's entry perch; three refusal examples follow the moved lines of consumption-savings-iid.
+- The cons-port demonstration's portfolio stage names its continuation state `w` in place of `m_next`, and portfolio-choice's block file moves to `applications/portfolio-choice/declaration/methods/`, since the test corpus reads every `.bl` file under `declaration/stages/` as a stage file.
+- The pages and the lessons that quote these files quote them as they now stand. The decisions are the files MB-R, MB-S, MB-U and MB-V of specification 0.6, with the rows marked For AAS: the entry perch's typing where a stage has no forward block, the connector list of a trellis admitting no default, and the Workbench's remaining reads of the arrival perch.
+### 2026-10-26 — Matsya's composer is a text area sized by its text or by a handle
+
+- The field of the Matsya column's composer is a text area: Enter sends the question, Shift+Enter begins a new line, text pasted into it keeps its line breaks, and a question of several lines is listed with its breaks. Empty, the field is one line of 26 px with the line centered in it; it grows with its text by 18 px a line to eight lines, 152 px, and then scrolls ([The Workbench](overview/07-workbench.md) §5).
+- The top edge of the composer's box is a handle: a drag upward enlarges the field while the conversation gives up the space down to 80 px, a drag downward stops at one line, a double click returns the field to the height of its text, and the browser keeps the height dragged with the window's other sizes for the folder, writing nothing in the model folder. Escape in the field moves the focus to the conversation and keeps the text; Enter that confirms an input method's candidate sends nothing.
+- Built on 26 October 2026 on the branch `amd-07/composer` under amendment 07 of model interface specification 0.4, `AI/build-areas/model-interface/spec_0.4/amendments/amd-07-the-composer-of-the-matsya-column.md`, merge pending AAS: `field.vue`'s property `grows`, the handle `composer` of `window.vue`, the composer of `matsya_window.py` and its rules in `brand.css`; the tests read the composer as a text area again, and `packages/bellman-workbench/tests/test_amd_07.py` checks the amendment's six cases. The record is `AI/operations/verification/model-interface/2026-10-26-amd-07/report.md` and the decisions `AI/road-map/issues-to-be-addressed/model-interface-decisions-made-by-ai/amd-07-the-composer-decisions.md`.
+
+### 2026-10-26 — The value wire carries its derivatives
+
+- A marginal value is no longer a field of a backward header or a wire of the builders graph. The derivative of a value is read where a line needs it by the **derivative term** `D_{a}V[>]`, the operator `D` applied to the value field written with its perch mark, the subscript a state coordinate of the perch at which the value is read, written without its mark; a backward header lists value fields and the controls at which its lines are read, and nothing else. The roles `!mrgnvl` and `!sndmrgnvl`, the naming convention `dV`, `d_<coordinate><value>` and the refusal `marginal-value-pairing` are retired, and a header that writes a retired role word is refused with a sentence naming the term ([Stages](Bellman-Sym/01-stage.md); [Field equations](Bellman-Sym/03-field-equations.md) §2; [Expression forms](Bellman-Sym/reference/forms.md); [Refusals](Bellman-Sym/reference/refusals.md)).
+- A **derivative line**, `D_{m_d}V = 𝑑𝑢(c)`, in a value builder's block of the stage file or in a marginal block bound with `!marginals`, states the derivative of the value the builder writes. `methodize` records it at the builder's Evaluation beside the representation method, by coordinate with its id and source; the graph gains no wire and no box, the builder's signature is unchanged, the value's record lists the coordinate under `derivatives`, and `stage.obligations()` lists the reading under `marginal-reading`. How a derivative is evaluated is a property of the value fixed where it is built, by the stated line, by the value's representation, or by a representation of the stated derivative bound on the derivative line's id, `on: cntn_to_dcsn.envelope`; a block that reads `D_{a}V[>]` declares nothing about it. No derivative line is written on an arrival builder whose law between the perches is the identity, where the stored derivative values pass through; where the law is not the identity, the author writes the arrival derivative line with the law's factor ([Methodization](Bellman-Sym/04-methodization.md) §4.1).
+- The method table loses the column "reads a marginal value" and gains **derivatives it evaluates**, stated for `!Linear`, `!Cartesian` and `!pchip`, and the condition `marginal-reading` of `!marginals` reads as the derivative line's assertion under the envelope conditions ([Method types](Bellman-Sym/reference/methods.md)). `bellman.trellis.derivative_missing(trellis)` replaces `marginal_missing` and answers one `derivative-missing` diagnostic for each derivative reading no route meets, naming the stage, the value and the coordinate; the join check compares value fields alone ([Trellises](Bellman-Sym/07-trellis.md) §2.1). A row that reads a derivative term compiles to no kernel and is refused under `kernel-form`.
+- The explicit way of writing stays, with derivative terms in place of marginal fields, and a stage file may define `dV = D_{a}V[>]` and read the name. The canonical example, `applications/cons-port-demonstration/`, writes its states unindexed by perch, `m` at the decision perch, and declares no arrival perch: its decision value is the value the stage exports, and the trellis joins the stage before it at its decision state. The Bellman Workbench draws a value as one wire, whose port's hover lists the derivatives the value carries, prints the stated derivative on a card at the Evaluation beside the representation, and shows `derivative-missing` under the Problems mark ([The Workbench](overview/07-workbench.md)). The pages of the documentation, the catalogues of the calculus and the example pages state the amended language.
+- Matsya's configuration 0.3.32, ID `fe160391c16327681b3f564f423898ead4254f47331eed7985c2095568603356`, revises the instruction texts of the Bellman-SYM writer, the source preparer, the paper-form reader and the typed-form writer for the derivative term in place of the marginal field and regenerates the three saved guides from the pages of this entry; the Matsya handler, the settings and the retrieval index are unchanged.
+- Built on 26 October 2026 by the units of the plan `AI/build-areas/Bellman-Sym/spec_0.6/2026-10-26-amd-mb-001-implementation-plan.md`, the language, methodization and the trellis, the applications, the pages and the Workbench, Matsya's texts and guides, and the tests, and merged into `main` the same day by the merge commit that carries this entry; the cons-port demonstration reproduces its reference in both orders to 1e-13, and the Workbench draws its consumption stage with values alone and its operative builders with the stated derivative at the Evaluation. The retrieval index is not rebuilt and the writer job of the amendment's item 6 is not run; both wait for AAS.
+
+### 2026-10-22 — The Workbench finds the Matsya client in its own environment
+
+- The Matsya column runs the client `bellman-matsya` found beside the Python interpreter that runs the Workbench, its own environment, before the one on the command search path, so that a desktop launch, whose search path lacks that environment, and a search path holding an older client both run the client installed with the Workbench; `BELLMAN_WORKBENCH_MATSYA` still names another command or turns the column off ([The Workbench](overview/07-workbench.md)).
+
+### 2026-10-22 — Matsya configuration 0.3.31 for method blocks and marginal blocks (specification 0.6, unit H)
+
+- The configuration 0.3.31, ID `16bcb5781bab092101e94551e290282e853c9f996946493d41485d3de4f9617c`, regenerates the three saved guides from the published pages of the merged build of specification 0.6, so that the writer's pages hold the method block and the marginal block of a block file, the key `block`, the method `!marginals`, the methods page's columns and the trellis page's marginal value a method reads. Its writer text `texts/BellmanStageProse-to-BellmanSYMDeclaration.md` states that a policy block writes the maximization alone where the description states the policy by its maximization, also where the description computes it by the endogenous grid method, and the explicit way with the Euler equation where the description states that equation; it states the keys of a methods entry, and that the files of a job hold no block file, so that the writer writes no `block` key and names in the note a method that needs one. The preparer text `texts/SourceMaterial-to-BellmanStageProse.md` states the maximization as the condition that determines the policy where the source computes it by a method. The distribution check, the Matsya handler, the settings and the retrieval index are unchanged; publication on the service and the default are separate steps (`AI/operations/matsya/configuration-revisions/register.md`).
+
+### 2026-10-22 — The specification 0.6 build installed on the Matsya service
+
+- The Bellman Matsya service runs Bellman 0.1.6, meaning-map-training 0.1.9 and bellman-matsya 0.1.13, built from the merged build of specification 0.6 and installed in place with the job database kept; the index answer names the service's version and its capabilities `capture_at_acceptance` and `job_delivery_id`. Configuration 0.3.31, whose guides and texts describe method blocks and marginal blocks, is published; the default configuration stays 0.3.20.
+
+### 2026-10-22 — Method blocks and marginal blocks
+
+- A methods file may name a block file under the new key `block`, a path from the methods file's folder, and `methodize` reads it. A **method block**, whose header carries the signature of a builder of the stage, becomes that builder's operations, as the block of `!egm` does on the policy builder of a stage file that writes the maximization alone; a **marginal block**, bound by the new method `!marginals` on a backward value builder, appends the author's marginal lines to that builder, whose Evaluation then writes the marginal value beside the value. Nothing is differentiated, and the stage file is not changed ([Methodization](Bellman-Sym/04-methodization.md) §4.1; [Expression forms](Bellman-Sym/reference/forms.md) §4).
+- The binding verbs `calibrate`, `methodize` and `configure` add their binding to the stage they are called on and return it; nothing is copied. `stage.declared` reads the builders as the stage file states them and `stage.builder` the operative ones, the same builders until a block is bound, and the initial diagrams and the declared builders are the same objects before and after every binding. A target holds one binding of each kind, a solution method, a representation or a marginal block, and a later binding of a kind replaces the earlier ([The binding verbs](Bellman-Sym/API/stage/09-binding-verbs.md)).
+- Each method type of the package's method table states whether it takes a block, whether it reads a marginal value, and the condition its construction requires, which `stage.obligations()` lists and nothing checks, `egm-eligibility` for `!egm` and `marginal-reading` for `!marginals`. `!time-iteration` takes a block and reads a marginal value, and `!vfi` reads the setting `n_c`, the number of points of the finite feasible set its search uses ([Method types](Bellman-Sym/reference/methods.md)).
+- `bellman.trellis.marginal_missing(trellis)` reports a marginal value that a method reads and the stage supplying the continuation does not export, as a `marginal-missing` diagnostic naming the stage and the field; nothing is refused ([Trellises](Bellman-Sym/07-trellis.md) §2.1).
+- A block file stands at `declaration/methods/<name>.bl` of a model folder ([Model directory layout](Bellman-Sym/reference/model-directory-layout.md) §4). The folder `applications/cons-port-demonstration/` binds the consumption stage's block file `cons_egm.bl` and the portfolio stage's `port_foc.bl` in both orders of its trellis.
+- The encoding schema admits the key `block` in a method entry, so that the encoding of a stage bound with a block file passes `validate_encoding`. The notebook `applications/cons-port-demonstration/notebooks/declared-and-operative.ipynb` shows the declared and the operative builders of the demonstration's two stages, and the marginal value each order of its trellis requires, met and then unmet.
+- The demonstration `applications/cons-port-demonstration/` writes the consumption and portfolio stages with their maximization alone and binds the endogenous grid method as a method block, with the marginal utility and its inverse written in closed form in the block file; its two orders, consumption first and portfolio first, reproduce the cons-port reference to 1e-12 (`tests/test_reference_solve.py`). The cons-port application's own recipes bind that consumption stage, and lessons 01, 03 and 04 of the cons-port tutorials are recorded again on it.
+- Bellman Workbench: the button `Operative builders` at the foot of a stage's graph, beside `Perch overlays`, switches the builders shown and the sections of Details between the declared builders and the builders a method opens, off when a folder opens (design pass 15, [Workbench](overview/07-workbench.md)); a node names every method its box holds.
+- Bellman Workbench: the Matsya column stands on the page's ground behind one hairline, with a composer box of context chips, the text field and a foot row holding the kind of request, its output level or collection and the send control (design pass 16); a question from a connected folder is a turn of its project session, a build shows its prepared material before it is sent and its result in five parts, citations open their file and line, their saved copy or their passage, and returned files are downloaded into keyed copies, inspected read-only under their own root and adopted through a recorded, recoverable plan (amendment 06 of the model-interface specification).
+- The client `bellman-matsya` sends a delivery identifier with `job submit-prepared`, refuses one longer than 64 characters with a sentence, and the user-guide pages 04 and 05 describe `reviewed_through`, the capabilities and the new commands.
+
+### 2026-10-21 — Matsya fixes a job's source material at acceptance, and the client's four additions (specification 0.6, unit G1)
+
+- A job from a session may name `reviewed_through`, the number of the last session entry its user reviewed. The job store checks the session in the transaction that accepts the job: entries after that number refuse it with 409 and a sentence naming each entry by its number and kind, a number beyond the last entry refuses it with 422, and neither creates a job. Otherwise the store fixes the job's source material, its kind, the revision, the entries' numbers and the earlier job it continues, the session's latest job at acceptance; the worker reads them in place of the session and passes that earlier job's record to the processor, so that neither an entry added nor a job ended while the job waits changes what it reads; the job's answer names `reviewed_through`; and the record names the history it was built from under `captured_source`, which the products view keeps (`packages/matsya/matsya_service/jobs.py`, `check_reviewed_history`; `processor.py`, `check_request`). A job submitted without the field is built as before. A job request may name a `delivery_id`: the same request sent again under it returns the job held, its present state and `repeated` true, and creates nothing, and a different request under it is refused with 409. A repeated `delivery_id` on a reply or a turn already returned the entry or the turn held, with no `scheduled` value and no new work (AMD-MAT-006 §8 rule 3), and is unchanged.
+- The migration adds to the `jobs` table the columns `reviewed_through INTEGER`, `captured_source TEXT`, `continues_job TEXT` and `delivery_id TEXT`, with an index that keeps a `delivery_id` unique among one principal's jobs, `NULL` in every row written before it, so that every earlier job reads as a job submitted without either field; no other table changes, and the record schemas `matsya-model-iteration/7` and `/6` are unchanged, `captured_source` being an optional entry of a captured job's record. The answer of `GET /v1/index` names `capabilities`, `["capture_at_acceptance", "job_delivery_id"]`, and `service_version`, so that a client claims either only of a service that names it. The Matsya service is version 0.1.13. A client released before this change sends no `reviewed_through`, and every answer it reads keeps its fields.
+- The client `bellman-matsya` is version 0.13.0: `job submit-prepared <file> [--delivery-id ID]` submits a job from a prepared-inputs file (the session, the last entry reviewed, the target, the starting declaration as `submit_job` takes it and each file's path in the model folder; `bellman_matsya.client.read_prepared_inputs` defines it) and is refused, before the job request, by a service whose index answer does not name the capability; `configuration effective` prints the service address, the configuration, the session and the sources of the Matsya token and the personal key, without either secret, and reports a key the client does not send to the address as refused; `ask --no-wait` prints a turn's identifier at once and `ask --delivery-id` names its delivery; and `turn status` and `turn wait` read a turn by its identifier from any later process (`packages/bellman-matsya-client/src/bellman_matsya/`).
+- Built and tested locally on the branch `spec06/matsya-service` (`packages/matsya/tests/test_spec_0_6_unit_g1.py`, `packages/bellman-matsya-client/tests/test_spec_0_6_unit_g1_client.py`; decisions in `AI/road-map/issues-to-be-addressed/spec-06-decisions-made-by-ai/SG1-unit-g1-the-service-and-the-client.md`). The installed service on DigitalOcean is unchanged; installing 0.1.13 there is a separate operation.
+
+### 2026-10-21 — Bellman Workbench: one line per bundle, the vertical layout, and the trellis's Initial view (design pass 14)
+
+- Design pass 14 (`AI/operations/verification/model-interface/2026-10-21-design-pass-14/design-pass-14-one-line-per-bundle.md`), after AAS's words of 21 October 2026 on the page merged as unit Q, in ten rules, built as unit S on `codex/model-interface-s`. In a stage's builders graph the wires that carry a value and its marginal values from one box to another are one line with the count of its wires at its plug, as the trellis draws a cable, the port of its first wire at each end, whose hover lists the wires drawn at it, and its wires' labels in its own hover; a measure, a control or a field wire stays a line of its own. Every graph opens laid out from top to bottom, and the direction turned with the foot button holds for every graph of every stage and of the trellis while the page is open and is remembered by the browser under `bellman-workbench layout`; the automatic turn of a wide field diagram is withdrawn. Laid out downward, the markers of one side of a period frame stand apart by their widest label and 8 px, so that no label runs over another. An unnamed result wire is spelled without its mark `:result` wherever the package prints an expression or a type, `dcsn_to_arvl.value:Expectation:1`, the identities and the ids unchanged; six stage snapshots are recorded again for that spelling alone. Matsya's composer is a text field of one line at the page's control height, its text and its button `Ask` on one axis, its empty words `Matsya query?`. The trellis offers the select `Graph` as a stage's view does: `Initial` shows the trellis's initial diagram of the direction, each occurrence's fields in their perch layers with its blocks, and every connection drawn as a wire from the field it reads to the field it supplies, carrying the route's record; the view is read, not written; the two diagrams are computed when `Initial` is chosen and kept while the view shows one of them, since those of a long trellis are large (S-D30). The `add` glyph beside `Stage` and `Period` is 12 px on the word's cap height. A card's strip segment is orange for the builder that joins the continuation perch and mint for the one that joins the arrival perch, the policy's tint of ice kept. The toggles of `Files` and `Inspector` stand at the left end of the main bar after `Forward`, where those regions open, and those of `Details` and `Matsya` at the right after `Go to`. The decisions are in `AI/road-map/issues-to-be-addressed/model-interface-decisions-made-by-ai/model-interface-s-decisions.md`; the package's test suites `test_behaviour.py`, `test_snapshot.py` and `cat/test_model_explorer.py` fail at `main` before this unit (101 failures and 28 errors at `b3df18733`, the methods binding of `cons.bl` refused), which the unit records as S-D17 and does not repair. Merged into `main` on 21 October 2026 after the delegated acceptance (`AI/build-areas/model-interface/spec_0.4/reviews/2026-10-21-unit-s-delegated-acceptance.md`); the fix wave of the same day repaired the Problems mark, which emptied the page of a model whose backward graph is refused by asking the package for the joins of the trellis's initial diagram (S-D22), and gave Details the nodes of the trellis's Initial view (S-D21).
+### 2026-10-21 — The comparator integrates a uniform law
+
+- The comparator of `packages/meaning-map-training` integrates `Uniform(a, b)` by Gauss–Legendre nodes on [a, b], the weights summing to one and a polynomial of the draw exact up to degree 2n − 1 at n nodes, so that an expectation over a uniform shock is evaluated at its test points as one over a normal or a lognormal shock is; endpoints equal, reversed or infinite are refused as outside the domain, and `TruncatedNormal` and `TypeIExtremeValue` are still not integrated (`compare.py`, `_Evaluator.law_nodes`). CDC asked for it on 20 October 2026, after the cross-toolkit schemas' converter wrote `Uniform(0.6, 1.4)` and the comparator reported the law not integrated. The list of law families the comparator keeps apart from the names of a stage now names `Uniform`, `TruncatedNormal` and `TypeIExtremeValue`, the families of pull request 17, as the package's table of families does. Tests: `tests/test_stage_compare.py`, the uniform's nodes and moments, an identity that holds under a declared uniform law only, and a pair that differs by the family.
+
+### 2026-10-21 — The comparator installed on the Matsya service
+
+- The DigitalOcean service runs meaning-map-training 0.1.8 and bellman-matsya 0.1.12, built from the merge commit `d6f2cf85e` and installed in place at 03:12 UTC on 21 October 2026, so that Matsya's comparator evaluates stages with finite index sets, indexed data and category codes; Bellman 0.1.5, the job database, the default configuration 0.3.20 and the retrieval index are unchanged (`AI/operations/matsya/docs/current-installation.md`; the record under `AI/operations/verification/matsya/2026-10-21-comparator-upgrade/`).
+
+### 2026-10-21 — The comparator evaluates finite index sets, indexed data and category codes
+
+- The comparator of the meaning-map training evaluates at its test points the kernels that read the forms of pull requests 14 and 16, which it did not evaluate before, so that two writings differing in such a kernel, `dist[i_d][j]` for `dist[j][i_d]`, ended `undecided` and not `differ` (`packages/meaning-map-training/meaning_map_training/compare.py`, `_draw` and the functions it calls). A name declared on an integer range, `i : {1, …, J}`, is drawn as an integer between the bounds of the range at the point, a parameter that a bound reads, `J`, being drawn first from its own declared set where the point lacks it; a name declared on a listed set, `{0, θ} ⊂ ℤ`, takes one of its members; and a name declared on a comprehension over the integers, the category-coded `{i : ℤ | i >= 0, i <= 1}`, takes an integer between the bounds its conditions write, drawn again until every condition holds, so that the code 0 is drawn as well as the code 1.
+- A name declared on a set of functions, `δ : L_J → ℝ` or `dist : L_J × L_J → ℝ₊`, is drawn as a table with one entry drawn from the codomain for each member of the index set, each entry drawn on its own, so that a table on pairs is in general not symmetric; the table on a product is nested by its factors, and a table on a set of labels is keyed by the positions at which a field on that set is drawn. The selections `δ[j]` and `dist[j][i_d]` read the entry at the integer key nearest the selector, a missing key making the point invalid; the selection from a tuple is unchanged (`_Evaluator.value`). A table whose index set cannot be listed at a point, among them a listed set whose parameter member is drawn as no integer, makes the point invalid for a statement that reads it and is left out of the point for a statement that does not (`_points`). A table lies in its set of functions and in no other set (`_within`), and a witness writes a drawn table with its keys as text (`_rounded`).
+- The items print the three set forms as a stage file spells them, `{1, …, J}`, `L_J × L_J → ℝ₊` and `{0, θ} ⊂ ℤ`, where before they printed the fields of the term, `IntegerRange(lower=1, upper=J)` (`packages/meaning-map-training/meaning_map_training/items.py`, `term_text`).
+- Six tests of `packages/meaning-map-training/tests/test_stage_compare.py` check the change on the location stage of `packages/bellman/tests/test_finite_indexed_data.py` with `J : ℤ, >= 1`, on its writing with the outside option `I_J := {0, …, J}`, on the household stage of `packages/bellman/tests/test_category_codes.py` and on the stage with listed integer keys; at the base `b3df18733` five of them fail, four ending `undecided` where `differ` is required and one on the printed text. The harness suite gives 510 passed and 36 skipped, with one failure that stands at the base, `test_round_trip.py::test_anonymise_hides_the_name_and_the_path_of_the_portfolio_cons_dossier`, whose stage file of commit `a8b484899` the compiler now refuses under `input-perch-state`. The 80 stage files that elaborate under `applications/`, `packages/bellman/tests/corpus/` and the harness's fixtures, each compared with itself and with its mutations, 918 comparisons in all, give the same profiles as at the base. An expectation over a shock with one of the three laws of pull request 17 is still not evaluated, since the quadrature integrates the normal and lognormal laws and their mixtures only.
+- The package `meaning-map-training` is version 0.1.8, and the Matsya service is 0.1.12 and requires it. `mutate.py`, the round-trip programs and the Bellman package are unchanged.
+
+### 2026-10-21 — The proposer's classification rule
+
+- The configuration proposer of the meaning-map training (`AI/operations/meaning-map-training/epoch-template/proposer-instructions.md`) calls a form a fault of the language only where a refusal of the pass, classified `language`, met it and no admitted spelling of the same mathematics stands in the documentation, in `applications/` or in the pass's own files; a writer's note naming a missing construct, or a preparer's description calling a stage a branching stage, is a claim to check. The branching clause of item 1 and item 3 of the forms the meaning-map training found missing had entered that list without such a refusal (AAS, 21 October 2026). The rule applies from the next epoch's copy of the text; no epoch in progress is changed.
+
+### 2026-10-21 — Matsya configuration 0.3.30 for the October builds
+
+- The configuration 0.3.30, ID `55e3d1c5cec4d496ed6d7d0e5fa804180bcdadef7a4a81b5cc5b8aec0677135c`, regenerates the three saved guides from the published pages at commit `8a55aaad9`, so that the writer's pages hold the finite index sets, the category codes, the ten shock families and the rule that alternatives with one successor stage are one block with an integer state. Its writer text `texts/BellmanStageProse-to-BellmanSYMDeclaration.md` states that form of a choice among `J` alternatives, prescribes for a branch on which the model ends the retained state and a listed continuation value that the user supplies, zero where the description gives no bequest value, in place of the field joined to nothing of 0.3.29, lists the ten families with the spellings of the three new ones, and no longer names the type-I extreme-value law among the constructs the language lacks; the preparer text and the distribution check name the ten families. The test fixture's copy of the texts and the version assertion are brought to 0.3.30, and the 399 service tests pass. The handler, the settings and the retrieval index are unchanged (`AI/operations/matsya/configuration/README.md`). It was published to the service at 01:29 UTC on 21 October 2026 as a registered alternative, the default staying 0.3.20 (`AI/operations/matsya/configuration-revisions/register.md`).
+
+### 2026-10-21 — One block for alternatives with one successor, and the death branch's value
+
+- [Branching](Bellman-Sym/05-branching.md) §1 and [Stages §2.1](Bellman-Sym/01-stage.md#21-indexed-data) state that alternatives which all lead to the same successor stage are not branches: the choice is an integer control over the index set, and one block retains the chosen alternative as the integer continuation state, `i_n = j`, so that the number of alternatives stays a parameter; an alternative with a continuation problem of its own is a branch of a separate stage. [Branching](Bellman-Sym/05-branching.md) §4 states that a branch on which the model ends keeps the state its terminal value reads, and that the stage supplying that value lists `V[>]`, which the user supplies at realization, zero where the paper gives no bequest value (AAS, 21 October 2026). No compiler code changed.
+
+### 2026-10-21 — The October builds installed on the Matsya service
+
+- The DigitalOcean service runs Bellman 0.1.5, meaning-map-training 0.1.7 and bellman-matsya 0.1.11, built from commit `84e14a597` and installed in place at 23:03 UTC on 20 October 2026, 21 October in Sydney, so that Matsya's compiler admits the finite index sets, the category codes and the three continuous shock distributions; the job database kept every record, and the default configuration 0.3.20, the saved guides and the retrieval index are unchanged (`AI/operations/matsya/docs/current-installation.md`; the record under `AI/operations/verification/matsya/2026-10-21-october-builds-upgrade/`). The writer is not yet instructed in the new forms: the guides and the instruction texts of the configuration are a separate refresh.
+
+### 2026-10-21 — Bellman, comparison and Matsya package versions for the installation of the October builds
+
+- Bellman is version 0.1.5, the compiler with the finite index sets of pull request 14, the category codes of pull request 16 and the continuous shock distributions of pull request 17; the comparison package `meaning-map-training` is 0.1.7, the harness code committed since 0.1.6, and requires Bellman 0.1.5; the Matsya service is 0.1.11, unchanged in its code, and requires the two. The three are built together for the in-place installation on DigitalOcean, since changed package code is never installed under its installed version.
+
+### 2026-10-21 Terminal continuation values
+
+- [Trellis Syntax](Bellman-Sym/07-trellis.md#2-inter-period-connectors) states that a terminal stage retains an explicit continuation-value input. The user supplies its value function, including zero where appropriate; a terminal date or death branch supplies no automatic zero value. This clarification changes no compiler code.
+
+### 2026-10-21 — Continuous shock distributions marked done
+
+- AAS marked the brief `additional-continuous-shock-distributions.md` done on 21 October 2026, and with it item 5(a) and the extreme-value law of item 1 of the forms the meaning-map training found missing (`AI/road-map/issues-to-be-addressed/bellman-sym-forms-the-meaning-map-training-found-missing.md`); the specification 0.5 index and its status row record the same, and the issue stays open for its remaining forms. The package is unchanged.
+
+### 2026-10-20 — The truncated lognormal law, and the condition `law-support`
+
+- A shock's distribution may be declared by `TruncatedLogNormal(μ, σ, l, u)`: the lognormal law whose logarithm has mean μ and standard deviation σ > 0, conditional on the interval [l, u] of the draw itself, with 0 ≤ l < u, `0` for no lower bound and `inf` for no upper, so that `TruncatedLogNormal(μ, σ, 0, inf)` is `LogNormal(μ, σ)` ([Shock distributions](Bellman-Sym/reference/laws.md#2-the-families)). CDC requested the family on 18 October 2026 for the cross-toolkit schemas and on 20 October spelled it as `TruncatedNormal(μ, σ, l, u)` is spelled, location first, the endpoints in the draw's units and no defaults; the schemas' convention, bounds in standard deviations of the logarithm and a mean pinned at one, is a conversion a file's writer makes, `exp(μ + k·σ)` for a bound of k standard deviations. The family is the fourth real-parameter family of `distributions/families.py`, so its arguments are checked, retained as `distribution-parameters-in-domain` where they name parameters, and admitted as a mixture's component and on a collection subject as the other three are.
+- The family has a definition in the table of definitions, a probability measure on (0, ∞): the standard normal density integrated over the z with exp(μ + σ·z) in the event and in [l, u], divided by its integral over the z with exp(μ + σ·z) in [l, u], the normalizing mass a symbolic denominator as the truncated normal's is. A declaration denotes the law as written and its measure at the written arguments, and its forward and backward builders are constructed; a truncated component of a `Mixture` is pushed forward from (0, ∞) into ℝ as a lognormal component is.
+- Refused under `distribution-domain` at the declaration: σ zero or negative, a negative lower endpoint, `-inf` included, since the draw is positive, endpoints equal, reversed or both infinite, an infinite μ or σ and a tuple argument; a call of another number of arguments under `readable-form`.
+- The condition `law-support-and-provider` is renamed `law-support`, "The distribution of ψ gives probability only to values in the declared shock set": the numerical routine that provides a law to a solver is no condition of the stage (CDC, 19 October 2026). `calibrate` decides the condition where the package knows the law's support and reads the bounds of the declared set, which it does for the truncated lognormal, whose support is [l, u], open at a lower endpoint 0 and at an upper endpoint inf: established with the values and the support as evidence, or the calibration refused when the support lies outside the set; for every other family it stays required (`stage/binding_verbs.py`, `calibrated_supports`; `distributions/families.py`, `law_support`).
+- The encoding schema admits the primitive `TruncatedLogNormal`; the comparator of `packages/meaning-map-training` lists the family and integrates it by the lognormal's Gauss–Hermite nodes where every node lies in the window [(ln l − μ)/σ, (ln u − μ)/σ], and otherwise by Gauss–Legendre nodes in the standard-normal variable over the window, weighted by the normal density; `distributions/truncation.py` holds the window, the normal mass of it and the support. The word lists of the Workbench's editor bundle and of the VS Code grammar name the four real-parameter families and `Categorical`.
+- Tests: `tests/test_amd_sg_036.py`, one test per acceptance item of AMD-SG-036; the family's list in `tests/test_continuous_distributions.py`; a pair of laws in the comparator's `test_stage_compare.py`. The recording `retiree_death` is re-recorded for the renamed condition and the family list of its `not-constructed` message; the stored corpus encodings and the two death stages' notes carry the new name and the eleven families by text. Documentation: [Shock distributions](Bellman-Sym/reference/laws.md), whose table, the `laws` row of [Forms](Bellman-Sym/reference/forms.md#laws) and [Operations](Bellman-Sym/reference/operations.md) are written again by `docs/_hooks/reference_pages.py`.
+
+### 2026-10-20 — Additional continuous shock distributions
+
+- A shock's distribution may be declared by three more families: `Uniform(a, b)`, the uniform law on [a, b] with finite a < b; `TruncatedNormal(μ, σ, l, u)`, the normal law of mean μ and standard deviation σ > 0 conditional on [l, u], with extended-real endpoints l < u, `-inf` and `inf` admitted; and `TypeIExtremeValue(μ, s)`, the maximum type-I extreme-value law of location μ and scale s > 0, whose cumulative distribution is exp(−exp(−(x − μ)/s)) (`distributions/families.py`, `FAMILY_ARGUMENTS`; [Shock distributions](Bellman-Sym/reference/laws.md#2-the-families)). AAS requested the three together, for items 1 and 5(a) of the forms the meaning-map training found missing (`AI/road-map/issues-to-be-addressed/bellman-sym-forms-the-meaning-map-training-found-missing.md`); the parameter conventions and the checks are decisions of the brief `additional-continuous-shock-distributions.md`, not rulings of AAS.
+- Each family has a definition in the table of definitions, a measure on ℝ written with the real exponential and the Lebesgue measure and with no function the package does not define: the density 1/(b − a) on [a, b]; the standard normal density integrated over the part of the event in [l, u], divided by its integral over [l, u], so that the normalizing mass stands as a symbolic denominator and nothing is clipped or censored; and the density exp(−z − exp(−z)) of the standardized draw z = (x − μ)/s. A positive scale is the domain (0, ∞) of the definition's variable, and the orders a < b and l < u are requirements of the definitions under `distribution-parameters-in-domain` (`typing/primitive_definitions.py`). `N`, `LogNormal` and `TruncatedNormal` share one standard normal density.
+- A declaration of one real shock by `N`, `LogNormal` or one of the three denotes two objects: the law as written and its measure at the written arguments, the family's definition with the arguments in place of its variables, a bound letter of the definition primed where a written argument, or the name a conditional law is a function of, ν in `P_{Ψ|ν}`, is spelled the same, `z′` for `y ~ N(z, 1)`. `definition_measure` of `stage/defining_expressions.py` gives the measure, `_distribution_denoted` of `stage/denotations.py` answers it as a second `Denoted` under the symbol `P_y`, or `P_{Ψ|ν}` for a law conditional on ν, and the card prints it on the row under the law, `P_y = measure on ℝ given by B ↦ …` (`display/cards.py`; [The definitions table](Bellman-Sym/API/stage/08-definitions.md#3-the-card-of-a-record)). The declarations of `N` and `LogNormal` gain the row; the cards of the expectations and distribution extensions that read a declaration print the law as written alone, and the supporting definitions of every other record list the declaration by its law alone; a `Mixture`, a tuple subject and the other families denote one object as before.
+- A call of `LogNormal` or of one of the three with real arguments, declared for a shock on the functions from a finite index set, `ε : I_J → ℝ`, is the law of each component, and the declaration denotes the finite product of that law over the index set, printed `⊗_{i ∈ I_J} TypeIExtremeValue(0, 1)`: the probability measure on the functions e from `I_J` to ℝ whose value at the set of the e with e(i) in B_i for every i is the product of the components' probabilities of the B_i. The product is the new semantic constructor `ProductMeasure(binding binding, expr body)`, whose binding's domain lies outside its scope and whose body may read the index, parents and parameters but no other component (`syntax/grammars/semantic.asdl`; `typing/typed_expressions.py`, regenerated by `gen_semantic_types.py`, with its binding, substitution, comparison and printing). The measure of such a declaration is the product of the scalar measures, and the sentence of `joint-distribution-factorization` adds `the components of ε are independent, each with the law TypeIExtremeValue(0, 1)`, or `conditionally independent given η` for `ε ~ TypeIExtremeValue(η, 1)` (`distributions/edges.py`, `factorization_obligation`). A scalar `LogNormal` on such a shock, admitted before without a product meaning, takes the product. `N` there is the joint normal law of the components as before, and a scalar `N(0, 1)` there is still refused at calibration; a `Mixture` there is not a product. An expectation that integrates a parent inside an expectation conditioned on the indexed shock is refused under `conditional-not-declared`, as any posterior is.
+- Elaboration, and calibration where an argument names a parameter, refuse under `distribution-domain`, at the declaration's file position, the arguments of the three outside their domains: endpoints not in order, `Uniform(1, 1)` and `TruncatedNormal(0, 1, inf, inf)` among them; a standard deviation or a scale that is not positive; an infinite argument other than an endpoint of a truncation; an argument whose names all have values and whose arithmetic has no number, `0/0`, or is not a number, `inf - inf`; a tuple argument; a parameter declared on a collection, `μ : I_J → ℝ`, or on a product set, `b : ℝ × ℝ`; and a tuple subject (`distributions/families.py`, `check_family_conditions` and `check_real_parameter_shapes`; `fold/stage_fold.py`, `_distribution_obligations`). Every component of a `Mixture` that is a call of `N`, `LogNormal` or one of the three is checked as its declaration would be, and the refusal names the component, so that `Mixture((0.5, 0), (0.5, N(0, -1)))`, admitted before, is refused. The package computes no normalizing mass, and `TruncatedNormal(0, 1, 9, 10)`, whose mass is about 1.13 · 10⁻¹⁹, is admitted. The claim of the rule in `refusals.py` names the new conditions, and so does its row on [Refusals](Bellman-Sym/reference/refusals.md#distribution-domain).
+- An argument of the three that reads a parameter without a value keeps the family's condition as the new obligation `distribution-parameters-in-domain` of `refusals.CONDITIONS`, decided at calibration. A declaration has one such obligation, holding the clause of each of its components, and its sentence states the condition in the written terms: `the parameters of the Uniform declaration two_nodes:distribution:y of y lie in the family's domain: a < b, with a = a_y and b = b_y, both finite`. A condition of `N` or `LogNormal` that reads a parameter is decided at calibration as before and is not listed, and a mixture keeps its obligation `distribution-weights-are-a-probability-vector`.
+- An encoded answer writes the product as a node `semantic.ProductMeasure` with one binding, the binding's domain and one body; the schema `stage-encoding/2.6` is extended in place with the kind, its fields and the three family names among the primitive names, as it was for `records.CategoryCodes` (`display/answer_encoding.py`; `display/encoding_checks.py`; `display/stage-encoding-2.6.schema.json`).
+- The kernel lines of an expectation or a distribution extension write a component of a mixture as a point mass only where the component is a number; before, the last argument of `TruncatedNormal(0, 1, -1, 1)` inside a mixture would have been written `point mass at 1` (`stage/kernels.py`, `_point_masses`).
+- The forward and backward builders of a stage that declares one of the three are constructed, and a period of two such stages certifies its connection. No routine for integration, sampling or optimization is added: a numerical routine must provide the distribution, the condition `law-support-and-provider` that every declaration records. The checks of undefined arithmetic and of NaN are made for the three families alone, so that `N(0/0, 1)` is still admitted. Symbolic branching, log-sum choice formulas, piecewise functions and terminal stages, which Almagro's model also needs, are not part of this change.
+- The tests are `packages/bellman/tests/test_continuous_distributions.py`, with one test for each of the brief's acceptance items 1 to 6, 28 cases in all, of which the file's first version failed 24 of its 26 at the base `b047e23fe`, the sixth checking the executed notebook of the verification folder `2026-10-20-continuous-distributions`; `test_behaviour.py`'s test of a declared law reads the second object of `ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)`. Documentation: [Shock distributions](Bellman-Sym/reference/laws.md), the `laws` row of [Forms](Bellman-Sym/reference/forms.md#laws), the `distribution-domain` row of [Refusals](Bellman-Sym/reference/refusals.md#distribution-domain) and the card section of [The definitions table](Bellman-Sym/API/stage/08-definitions.md#3-the-card-of-a-record).
+- The parsed terms of the 638 stage files of the repository are unchanged, and of the 48 under `applications/` the 42 that elaborate print the same stage cards, their definitions cards differing only on the rows of their scalar `N` and `LogNormal` declarations. Of the recordings under `packages/bellman/tests/snapshot/`, `ez_savings`, `sa_savings` and `tenure` are re-recorded for the second denoted object of those declarations and `retiree_death` for the family list of its `not-constructed` message; `cons`, which differs from its recording since 16 October, is left as it stands. The corpus encodings of `buffer_stock`, `tenure`, `ez_savings` and `worker_saving` differ from their recordings only in the record of the declaration, whose denoted objects are two, and the two Cagetti–De Nardi encodings by the family list; those recordings, which already differ from the package at the base, are not re-recorded.
+- The change was merged into `main` in pull request 17 at `d1d45f559`.
+
+### 2026-10-20 — Category meanings and indexed data in the language guide
+
+- [Stages](Bellman-Sym/01-stage.md#21-indexed-data) now gives separate examples for parameter-defined integer indices and integer states with recorded category meanings. The [reference](Bellman-Sym/reference/symbols-conventions.md#921-finite-indexed-data) explains calibration order, numerical keys and admitted index domains; [Periods](Bellman-Sym/06-period.md#2-connectors) explains category-preserving connections and collection order. The guide distinguishes category domains from the forms currently admitted as collection index sets.
+
+### 2026-10-20 — Named integer domains with category codes
+
+- A set may be defined by name as a comprehension after `:=`, `HouseholdStatus := {i : ℤ | i >= 0, i <= 1}`, a form refused under `syntax` before; a field declared on the name has the set as its domain, and `to_source` writes the assignment back in that spelling (`syntax/grammars/stage.lark`, rule `assigned_value`; `syntax/lower.py`; `syntax/source.py`; [Symbols and conventions](Bellman-Sym/reference/symbols-conventions.md)). AAS requested such named domains on 19 October 2026, with the meanings of their members given by an annotation, for a field whose values are categories.
+- The marker `!categories`, alone or followed by one identifier, gives each member of such a set one category: `HouseholdStatus := {i : ℤ | i >= 0, i <= 1} :: [!categories household_status, newborn=0, old=1]` is the set {0, 1} with the category map 0 ↦ newborn, 1 ↦ old. Every other entry but an `id=` entry and a double-quoted description is `name=code`, a stage identifier and an integer, so that `0`, `-0` and `00` are one code. The set is a comprehension over ℤ or ℕ whose conditions compare its one binder with integer literals by inequalities; both bounds are required, the range is not empty, under ℕ the lower bound is at least 1, and each member has one category. The new module `typing/category_codes.py` makes these checks where the fold builds the set's record; the marker's spelling and the checks are decisions of the brief `named-integer-domains-and-category-meanings.md`, not rulings of AAS.
+- Elaboration refuses under the rule `category-codes`, at the set's file position and naming every failed check, a marked set that fails one, as the entry `old=2` does by giving a code outside the set and leaving the member 1 without a category; the marker written as a key, twice or without codes; a bare or single-quoted tag; a code given to two categories, `old=-0` beside `newborn=0` among them; and a marked set that is ℤ, an interval, `{0, …, 1}`, `{0, 1}`, a set of names, a restriction of a coded set, a range bounded by a parameter, or a range with an equality condition, `i = 1`, which a comprehension may hold since the entry below. It also refuses the marker on any item but a top-level named set, at that item, and a field declared on a coded set at one site and on another set at another ([Refusals](Bellman-Sym/reference/refusals.md#category-codes)). Double-quoted entries, `["!categories household_status"]`, and a tag that only begins with the marker, `[!categories_status]`, mark nothing.
+- The set's record keeps the map as `Definition.categories`, a frozen `records.CategoryCodes` of the identifier, or None, and the (code, name) pairs in increasing code order (`native/records.py`; `fold/stage_fold.py`). The marked set's definition denotes the set and the map, the second a `Denoted` whose expression is the record; the supporting definitions that `denote()` answers for the stage and for a builder hold both, and the set's card prints the map on the row under the set, `0 ↦ newborn, 1 ↦ old (categories household_status)` (`stage/denotations.py`; `display/cards.py`; [The definitions table](Bellman-Sym/API/stage/08-definitions.md)).
+- The stage's encoding writes `categories`, the identifier and the pairs, on the stored entry of a marked set and on no other entry, and an encoded answer writes the map as a node `records.CategoryCodes`; the schema `stage-encoding/2.6` is extended in place with both, as it was for `unread_inputs` on 17 October 2026 (`stage/encoding.py`; `display/answer_encoding.py`; `display/encoding_checks.py`; `display/stage-encoding-2.6.schema.json`).
+- Two connected fields on coded domains are compatible exactly when each code the writing domain may hold is a member of the reading domain and stands there for the same category, factor by factor for a product. A coded domain and an uncoded one are incompatible, a restriction of a coded set is compatible into the set but the set is not compatible into the restriction, and a restriction keeps the codes within the bounds its literal conditions, inequalities or equalities such as `j = 1`, place on its binder. Where another condition leaves its members undetermined, the pair is not established where the answer depends on them, as it is for a pair out of a restriction by a parameter into a set whose codes disagree, since the restriction may hold no member; the same restriction by a parameter on both sides of a pair within one period is one set, but not one whose condition calls a function, whose value the names alone do not fix. The category named c is (κ, c), κ the identifier or, without one, the stage text's SHA-256 digest with the set's name, so that one text joined to its occurrence in the next period is compatible and two texts with equal maps and no identifier are not; a stage made by `make_stage` from a syntax tree holds no digest, and the pairs of its local categories are not established. `_Types.checked` of `factory/connections.py` decides authored, inferred and inter-period pairs alike from the codes, read before any name is resolved, and the reason given for an incompatible pair names both maps ([Period syntax](Bellman-Sym/06-period.md)).
+- A connector converts no code. A stage whose authored transition writes one set's codes as another's recodes them: with `Recoded := {i : ℤ | i >= 0, i <= 1} :: [!categories household_status, newborn=1, old=0]` and `n_next : Recoded`, the line `n_next = 1 - n` recodes the status, and the pairs into and out of that stage are compatible, whereas the direct pair into the opposite codes is not. The package does not check that such a transition preserves the categories.
+- A named comprehension without the marker defines its set alone, with no category map, and two fields on such domains are compared as uncoded domains are, by the comparison of sets, which reads the binder as a parameter, so that the pair is not established; where the stages declare a parameter of the binder's name, that parameter is read in the binder's place, and a pair within one period is then compatible while a pair between periods is not established. A bare category constant is still refused: `n_next = old` is refused under `name-in-scope`, whether `old` names a category of a coded set or a label of `Nb := {newborn, old}`.
+- `validate_encoding` refuses a stored `categories` on an entry that is no set, and a map, stored or in an answer, whose codes do not increase strictly or whose names repeat, the checks `records.CategoryCodes` makes (`display/encoding_checks.py`). Bellman Workbench lists a marked set once among the definitions a box uses, since the set denotes two objects under one identity (`bellman_workbench/model.py`, `_definitions_named`); before this, the Details panel of every box that read such a set failed to render.
+- The parsed terms of the 48 stage files under `applications/` are unchanged, and the encodings of the 42 that elaborate differ from their encodings before this change only in the digest of `stage.lark` under `provenance.versions.grammar`; their printed cards are unchanged. The tests are `packages/bellman/tests/test_category_codes.py`, with one test for each of the brief's acceptance items 1 to 6, 37 cases in all, the sixth checking the executed notebook of the verification folder `2026-10-20-category-codes`; the example of `category-codes` in `refusal_examples.py`; and a test of the Workbench's rows in `packages/bellman-workbench/tests/test_model.py`.
+- The change was merged into `main` in pull request 16 at `aee75f198`.
+
+### 2026-10-20 — Products and equality conditions in feasible sets
+
+- A feasibility correspondence may have a product body, `Γ(z : ℝ₊) := [0, z] × ℝ₊`, preserving factor order and dependence on the argument ([Constraints](Bellman-Sym/10-constraints.md#1-three-kinds-of-constraint-and-where-each-is-written) §1).
+- A set comprehension may contain equality alongside inequalities, `Γ(z : ℝ₊) := {q : ℝ₊ × ℝ₊ × ℝ₊ | q[1] + q[2] = z}`. Its member is one product-valued quantity, and the policy retains the complete coupled feasible set for its joint choice ([Equation parsing rules](Bellman-Sym/appendices/12-equation-parsing-rules.md#2-types-and-definitions) §2).
+- Source writing, definitions, policy denotations and structured exports preserve product coordinates and the complete relation. Applying the correspondence replaces its formal arguments throughout the set, with the comprehension's member remaining bound.
+
+### 2026-10-19 — Finite index sets and the collections declared on them
+
+- A stage file may define a finite set of integers whose bounds name parameters, `L_J := {1, …, J}`, and a listed finite set of integer keys whose members name parameters, `S_θ := {0, θ} ⊂ ℤ`; a bare `{a, b}` still lists two labels. Integer literals are retained without a floating-point conversion ([Symbols and conventions](Bellman-Sym/reference/symbols-conventions.md)).
+- A parameter, a field or a shock may be declared on the functions from such a set, `δ : L_J → ℝ`, `dist : L_J × L_J → ℝ₊`, `ε : I_J → ℝ`; `δ[j]` selects the entry at a key declared on the index set, and `dist[j][i]` the entry at the ordered pair, the first key on the first factor. A parameter the index set reads is among the arguments of every kernel that selects on it, so one kernel compiled before binding serves every calibration.
+- `calibrate` takes such a collection as a sequence in the members' order, nested for a product, or as a mapping keyed by the members' integers or labels; it refuses a wrong count, a missing or surplus key and an entry outside the entries' set, naming the declaration and the key or pair, and a value for a fixed product is checked entry by entry ([Binding verbs](Bellman-Sym/API/stage/09-binding-verbs.md) §2). Entries may be real-valued. A `Categorical` whose rows are named parameters, `(Q_h, Q_m, Q_l)[e_c]` or `Π[e_c]`, has each row checked at the values, one entry per member, in the unit interval and summing to one; a written weight vector has one weight per member.
+- The obligations `index-set-bounds` and `index-set-members` retain, until calibration, that a range's bounds are integers in order and that listed members are distinct integers in their declared set. AAS restricted numerical indexing to integer keys; noninteger members, bounds and supplied keys are refused without rounding or truncation. Integral floating values identify their exact integer, and distinct large integers remain distinct through calibration, connections and compiled selection.
+- A selection by a position that is no whole number, `x[2.5]`, which was read as the second position, is refused ([Equation parsing rules](Bellman-Sym/appendices/12-equation-parsing-rules.md)).
+- A set of functions on a set that is no finite index set, `δ : ℝ → ℝ`, a range or a listed set whose written numbers already break its conditions, `{1, …, 2.5}`, `{0, 2.5} ⊂ ℝ` or `{0, 0.0} ⊂ ℤ`, and a selection by a key declared on no finite set are refused at construction; a member or a bound that a calibration makes a boolean, infinite or undefined, and two mapping keys identifying the same integer, refuse the calibration.
+- Two connected fields on finite label sets are compatible when the writing set's labels lie in the reading set, and fields valued in collections only when their index sets list the same members in the same order.
+- Compiled numerical selection uses machine integers and refuses unsupported parameter-dependent division in index expressions, with a separately declared integer parameter as the alternative. [Symbols and conventions](Bellman-Sym/reference/symbols-conventions.md#92-domains) states the compilation rules.
+
+### 2026-10-18 — The documentation homepage: photographs of the decisions the language models
+
+- The hero holds both of the brand's loops, the arrival loop at the left and the decision loop at the right.
+- The properties stand on a looping overhead video of a market. Over it a field of the brand's modules, drawn as wire frames, starts scattered, settles into a floating grid, packs into bullets and recedes to the horizon as the reader scrolls.
+- Six photographs follow, each held on screen while its own field of modules does the same: the Sydney Harbour Bridge half built (stages joined into one model), a railroad roundhouse (work and retirement), a street of houses (housing), a vegetable seller's boat on Dal Lake (consumption and saving), Sydney Harbour from the air (heterogeneous agents) and a bank's hall (interest rates). Each names the decision its model solves and links to the model; each caption credits the photograph. The page carries no script.
+
+### 2026-10-17 — Bellman Workbench: the page made clean (design pass 13)
+
+- After five independent reviews of the page and an adversarial check of their synthesis, the graph and the chrome share one system. In both graphs every port is one 6-px square in one ink, a plug filled and a socket hollow, centered on the edge and on its wire; a cable, a stub and a wire are 1.3 px in one color, and a stroke never draws thinner than a pixel on the screen; the bus mark is a slash in the port ink with its count above the cable, or below it for the lower cable of a stage with two plugs; a marker stands 24 px outside the period's frame, an outside marker drawing the far stage's port (§8).
+- A stage's card is 32 px, its name, chevron, socket and plug on one axis, its builders a 3-px strip under the name in the tints of their signatures, every card of a column of one width; the chevron opens the occurrence with its builders, and the selected card unfolds to a band naming each builder; the period frame has a 24-px head and one top edge with its neighbors, and the drawing stands at the region's top in the opening and fitted views (§7).
+- The chrome returns to the five type styles and the grid of its design system: Code name for a stage's key wherever it heads a row, card or selection, the path in the interface face, the Recipe's heads in Small and its rows in 16-px lines with the trash at the row's end, Details' keys in sentence case, the editor's line numbers on the text's baseline, no outer margin at the window's right edge, and one mark for each state: an accent edge for an active control or tab, the selection wash with a 3-px bar for a selected row, the hover wash alone for hover; the problems count in the refusal's orange; destructive acts as text buttons after Details' rows (§§2, 4, 7).
+- On 18 October a second round of the five reviews read the built page, and a fix wave answered its findings. In both graphs each stage keeps one row, in the order of the recipe's list, in every period, and no two cables share a run or cross. A plug from which a cable leaves is filled. Edges and marks keep at least one pixel on the screen at every zoom and take no width from the layout. A hovered or selected cable draws no label: its branch stands first in its hover text and in Details, and a selected cable rings its two movable ports. Stubs bend outside the period's frame, closed periods share the frames' top edge, and `+ Stage` and `+ Period` are drawn at the view's scale. Selecting a card pans the view when the unfolded card would leave it, and the opening view begins at the column's text edge.
+- In the chrome, the Recipe's rows are 48 px, so four stand whole at the panel's default height. The graph bar keeps one row: in a narrow column its visible name is withdrawn and remains the region's heading for screen readers. Details' blocks stand 8 px apart, with the removal buttons last. The bars and the perch tables stand on whole pixels. Details' heads print the identifier in Code name and the kind of piece in Small, the labels are in sentence case, and a stage's path reads `durables › spec.yml › tenure › periods[0]`. Lists, menus and the editor's lint tooltip share one form for hover, selection and overlays.
+- The chrome and the fix wave were merged into `main` on 21 October 2026 from `codex/model-interface-q`, after the continuous-distribution work of 19 to 21 October had been merged into the branch; the graph had been merged on 17 October at `687b123fd`.
+
+### 2026-10-17 — The comparator reads two spellings the elaborator reads alike as one
+
+- `_normalised` of `packages/meaning-map-training/meaning_map_training/compare.py` writes a single tuple argument of `max` or `min` as the argument list, `max((x, 0))` as `max(x, 0)`, and restricts a backward block's inputs to those its lines read, the bodies of called definitions included, removing the wire of an input left out from the block's builder; a forward block's listing is kept, since it fixes the perch at which a shock is drawn. Bloom and Deaton of EPOCH-005 pass-v0 and Gourinchas–Parker of EPOCH-006 pass-v1, re-compared from their saved declarations, come out equal where they were recorded undecided; the records stay as written. Three tests on the toy stage (commit 4d9c5e37a; brief `AI/road-map/AI-todos/briefs-for-agents/comparator-two-small-fixes-brief.md`).
+
+### 2026-10-17 — The joint search of the trellis comparison reads the per-stage results
+
+- `compare_trellises` visits only the stage pairings whose every pair compared equal on its own and, within them, only the renamings under which those pairs compare equal (`_stage_name_maps`, from the renaming search with every group of names the colours cannot tell apart permuted, each verified once), and checks the inter-period joins on each; a pair that compared undecided leaves the verdict undecided, `candidates_tried` counts the renamings verified and the joint candidates checked, so its values are not comparable with earlier profiles, and `DEFAULT_BOUND` and the profile's fields are unchanged. FUES of EPOCH-005 pass-v0, whose six stage pairs were equal and whose search exhausted the bound on the wrong pairing of its two consumption stages, comes out equal in 12 candidates under either keying of the right-hand files; a trellis whose only pairing holds an unequal pair is now different, not undecided. Two tests (commit 2e7586c17).
+
+### 2026-10-17 — Bellman Workbench: a backward header that lists an input no line reads is a problem to review
+
+- The list under the error mark holds one line for each value input a backward header of the stage shown lists and no line of its block reads, the package's diagnostic `unread-input` (`stage.diagnostics()["unread_inputs"]`; AAS, 17 October 2026): the package's sentence, "the header lists `dV[>]`, which no line of the block reads", with the file and the line of the block's header, counted among the problems to review and not among the errors, under the heading `Headers to check`, a group of its own beside `Connections to check`. The stage is elaborated and drawn as before, since the package refuses nothing. A line of the list carries the rule the package names (`Refusal.rule`), a connection's rule for a connection to check and `unread-input` for a header (`app.py`, `standing_refusals`, `ErrorMark`, `UNREAD_INPUT_RULE`).
+- The portfolio model's `cons.bl` lists `dV[>]` on its policy header and its one line reads `V[>]` alone, so the model shows one such line at `declaration/stages/cons/cons.bl:29`. Tests: `tests/test_unread_input.py`, the brief's acceptance item 4; three tests of `test_app.py` and `test_model.py` on that model expect the line, and the backward graph's inputs `𝑉≻` alone. `test_model.py`'s comparison of the classification table read from a text with the one read from its construction fails on `cons.bl`, since the text lists `dV[>]` at the continuation perch and the construction's fields leave it out; how the table is to show a listed field the block does not take is a decision for the Workbench and is named in the brief's report.
+
+### 2026-10-17 — A value input a backward header lists and no line reads is left out of the builder and recorded as a diagnostic
+
+- A value input a backward block's header lists and no line of the block reads is admitted, and the block's box leaves it out: the block's signature, its builder and the formal arguments of the builder's kernels are the same whether or not the header lists it, so two declarations of one model that differ by such a listing elaborate to the same block signatures and builders (AAS's ruling of 17 October 2026, following the issue on the trellis comparison; the brief `elaborator-unread-listed-input-brief.md`). The listing counts as the field's consumption for the check that every field of a complete stage is consumed, so a file that elaborated before still elaborates, and a decision-perch value such a listing alone consumed stands among `unused_outputs`. A block whose lines read no value input keeps its listed inputs as the formal input of its kernels, since the header must list one (rule `value-input-role`). A value input a line reads and the header omits is refused under `signature-complete` as before; forward headers and controls are unchanged. (`typing/declarations.py`, `Declarations.unread_value_inputs`; `stage/construction.py`; `native/records.py`, `BlockData.unread_inputs` and `BlockHeader.unread`; `fold/block_lines.py`, `unread_inputs_of`.)
+- The elaboration records each such listing as a diagnostic in the form of the connection diagnostics, now the record `bellman.refusals.Diagnostic`, which `factory/connections.py` imports: the rule `unread-input`, the block as its address, the input's identity as its one candidate and the sentence "the header lists `dV[>]`, which no line of the block reads". `stage.diagnostics()` answers nine questions, the ninth `unread_inputs`, carried across versions, printed one line per diagnostic as `<block>: <sentence>`, and written in the encoding under `diagnostics.unread_inputs` as records of their five fields, which the schema `stage-encoding/2.6` admits and requires; the training's items and the Matsya export copy the encoding's diagnostics and need no change. The corpus stage `cons.bl` carries one such diagnostic, its policy header listing `dV[>]` that its one line does not read, and its policy builder now reads 𝑉≻ alone.
+- The copier of the native objects (`native/hypergraphs.py`, `copy_native`) copies a named tuple as its own class, since a version made by a binding verb carries the kept diagnostics and refused the `Diagnostic` inside them.
+- Tests: `tests/test_unread_listed_input.py`, one test per acceptance item of the brief and three on what follows. Four tests pinned what the stale listing of `cons.bl` gave and now state the rule's result: `test_behaviour.py`'s test of the diagnostics asks the nine questions and expects `cons`'s one diagnostic, its test of the direction entries expects the policy chain `∼ c ← ≻ V≻`, its test of the stage screen expects `dV at the arrival, decision perches`, and `cat/test_model_explorer.py`'s test of a joined wire no primitive reads, whose stage is the brief's case, expects no port and no join for the listed input and the diagnostic in its place, and `test_behaviour.py`'s test of the GRAPHS section expects the backward builders graph `𝑉≻ ↦ (𝑉≺, 𝑑𝑉≺), 𝑐(m_d)`. The recordings of the snapshot guard and of the corpus are not written again: the recording of `cons` has differed from the package since the rewrite of `cons.bl`'s policy block on 16 October, and two tests read it as it stands; every corpus recording differed before this change. Five tests of `cat/test_model_explorer.py` on the cons–port trellis expected the join of `disc`'s arrival marginal value into `cons`'s policy, which `cons` no longer takes; they fail now, are named in the brief's report, and wait on a decision about `cons.bl`'s header or the model explorer's own revision.
+- Documentation: the stage tutorial's paragraph on block headers, the `signature-complete` row of the refusals reference (the claim in `refusals.py` with it) and the API pages' description of the nine diagnostics.
+
+### 2026-10-17 — The training documents name the two client texts
+
+- The training README's terms, role table, headless-call note and tree, the record guide's tree and file descriptions, the plan's paragraph on what may change, the project map and the phase-3 page say that the client policy is the general skill, copied into the epoch as `client-policy.md` and kept before a change as `revisions/<round>-client-policy-before.md`, and that the training client's own text, `responder-instructions.md`, comes from `epoch-template/training-client.md` and changes only between epochs; `pass-inputs.json` records both digests. Both pages stay within their word counts.
+
+### 2026-10-17 — The skill is general, the training's text is separate
+
+- The skill `answering-matsya-questions` is version `1.1.0`: it says only how to answer Matsya's questions from a paper, for any assistant acting for any user, since a skill that reads the training's records cannot serve a user's assistant outside the training (AAS, 17 October 2026; section 6 of the brief). It names no epoch, pass, case folder, answer file or training record; the consistency rule is with the earlier replies of the same session. The training's mechanics move to the frozen epoch text `epoch-template/training-client.md`, copied into the epoch as `responder-instructions.md` like the proposer's text: the client follows the epoch's frozen copy of the skill, `client-policy.md` beside it, and not the hub's version; where the paper, the questions and the earlier replies stand in the case folder; the rule that the client reads this case's answer files in the epoch's earlier passes and keeps their choices unless the paper contradicts them; the answer file `answers/<job id>.json` in the form `meaning-map-source-agent-answer/1`; and that other cases' folders, the configuration folder and the proposer's text are not read.
+- `meaning-map-epoch new` copies the skill to `<epoch>/client-policy.md` and the training text to `<epoch>/responder-instructions.md`; `revise --client-version` replaces `client-policy.md` and keeps `revisions/<round>-client-policy-before.md`, and `responder-instructions.md` changes only between epochs. The runner takes `--client-policy <file>` beside `--responder-instructions`, keeps both texts in the pass folder and records both digests in `pass-inputs.json`, `client_policy_sha256` for the skill copy and `responder_instructions_sha256` for the training text; `--responder-instructions` alone is refused, and `--client-policy` alone keeps its earlier meaning, the JSON policy of the client that calls the provider directly. `meaning-map-epoch pass` passes both paths; the headless call's `{instructions}` stays the epoch's `responder-instructions.md`. `revisions.yaml`'s `client_policy`, the pair's `client_policy` field and `end-of-epoch.md` name the skill copy's version and digest as before, the pairer reading the skill copy under either name so that EPOCH-006 and earlier stay readable without the new field.
+
+### 2026-10-17 — The training's two pages rewritten for clarity
+
+- The training README states the method in five terms (Matsya's configuration, the client policy, an epoch, a pass, a round), the roles, the four causes a review uses, the loop as one numbered step per command with the headless call written once, the tree an epoch leaves behind, where the harness, the corpus and the briefs are, and one line per epoch with its configurations and equal counts; the dated attributions it had accreted are left to the changelog. The record guide says what each file of an epoch folder is, in the order of the tree, and nothing the README says. Both pages are shorter than before (AAS, 17 October 2026: everything documented and the structure transparent, with clarity and not more words).
+
+### 2026-10-17 — The training documents name the client policy as a configuration of its own
+
+- The training README's role table says the training client follows the skill `answering-matsya-questions`, copied into the epoch and replaced by a revision that changes it, with the hub link that points at its folder; its step 3 says the headless launch names the epoch's frozen copy and that the client keeps the same case's earlier choices; its step 7 gives `revise --client-version`, the commit that must hold the new policy and the pass of a round that changed the policy alone; its tree of what an epoch leaves behind lists `revisions/<round>-responder-instructions-before.md`, the pair's client policy and the end-of-epoch sections. The record guide states the four causes, the `client_policy` field of `revisions.yaml` and the two texts' different standing: the proposer's changed only between epochs, the client's revisable by the method. The plan's section "What may change, and what stays fixed" admits the client policy as a configuration of its own, and its status names the policy's consistency rule. The project map and the phase-3 page say the template holds the proposer's text alone and the client's text is the skill.
+
+### 2026-10-17 — A revision may change the training client's policy
+
+- A proposal's patch may touch the client policy, `AI/operations/meaning-map-training/client-policy/SKILL.md`, as well as the files under `AI/operations/matsya/configuration/`; `meaning-map-epoch revise` reads what a patch touches from its `diff --git` headers, which no content line begins with, and refuses any other path. `revise --version <next>` applies the whole patch and, where it changes the policy, `--client-version <x.y.z>` raises the skill's version in its front matter, copies the new text into the epoch as `responder-instructions.md` for the next pass, keeps the previous copy as `revisions/<round>-responder-instructions-before.md` and records `client_policy: {version, sha256}` in the round. Each option is required where the patch touches its text and refused where it does not; a version that does not rise, an uncommitted change to a touched text, and a repository policy that differs from the epoch's copy are refused before anything is applied. `revise --checked <commit>` requires the commit to hold the new `SKILL.md` at the recorded digest, as it holds the configuration paths, and records the commit under `client_policy.source_commit` (AAS, 17 October 2026).
+- A round that changes the client policy alone has no child configuration, no check and no publication, and Matsya's configuration register is untouched: the parent's configuration ID and version stand for the next pass, which `meaning-map-epoch pass` runs without the publication check, its revision reference naming the proposed patch and the policy; `compare` pairs the two passes under the one configuration; the next round's parent is that configuration. The record (`epoch.record_revision`) admits the round's `child_pass` and `paired_report` once the policy's commit is recorded, and `measured_configuration` names what a round's next pass measures.
+- `pair.json` gains `client_policy`, the version and digest each pass ran under, read from the pass folder's frozen copy and `pass-inputs.json`, and whether they differ; no field is removed or renamed. Two passes under different policies are compared: the environment check `pass.client_policy_sha256` says `differs` in place of a refusal, since the policy is now a configuration of its own and its change is the round's revision; a pass without the recorded digest leaves the check unverified. `end-of-epoch.md` names each pass's client policy beside the configuration versions and, for a round that changed the policy, its versions before and after.
+
+### 2026-10-17 — The cause `client` in a pass review
+
+- A pass review has a fourth cause beside `configuration`, `language` and `paper`: `client`, a fault of the training client's answer, when it departed from the paper, from the case's earlier answers or from what the question admitted, or supplied a value the paper does not state; a refusal or an undecided comparison that follows from such an answer has that cause (AAS, 17 October 2026). The proposer's template names it, its review form admits it for a refusal and for the comparison, and its summary gains a `client` list; `meaning-map-epoch review` checks and counts it, reading a review of EPOCH-006's form, whose summary lists the first three causes, with an empty client list, and the first form as before. `end-of-epoch.md` gains the section "What the training client answered wrongly", after "What the configuration changes did not fix", listing the items of that cause by pass, and its summaries list the four causes.
+- A proposal answers the patterns of the causes `configuration` and `client`: a change that answers a `client` pattern carries `cause: client` and changes the client policy's text, a change without `cause` answers a `configuration` pattern; `meaning-map-epoch propose` admits the field, and `end-of-epoch.md` names the client policy before such a change. Takes effect from the next epoch made from the template.
+
+### 2026-10-17 — The training client's policy as a skill of its own
+
+- The training client's way of answering Matsya's questions is a configuration of its own, the skill `answering-matsya-questions` at `AI/operations/meaning-map-training/client-policy/SKILL.md`, version `1.0.0` in its front matter (AAS, 17 October 2026; the brief `AI/build-areas/meaning-map-iteration/implementation-specs/client-policy-as-configuration/brief.md`). Its body is the responder text of the epoch template with three rules added and no other change of substance: the client reads the same case's earlier replies in the pass and its answer files in the epoch's earlier passes and keeps the choices they made, the family of a law, the application selected, the support, unless the paper contradicts them, a departure being a guess whose reason names the pass departed from; where a question names its admissible answers, as the law question names the seven families, the client chooses among them, and a wish for another is a guess that still names one of them; and the runner's headless launch names the epoch's frozen copy by path, which is the skill for the pass, so that a running epoch is governed by its frozen text. EPOCH-005 and EPOCH-006 showed the need: Deaton's income law and Scheinkman's changed between passes and confounded the paired comparison.
+- `meaning-map-epoch new` copies the skill into the epoch folder as `responder-instructions.md`, the name the runner, the records and the README use, stripping nothing, and the epoch's README names the skill and its version; `epoch-template/responder-instructions.md` is removed, and the template keeps the proposer's text alone. The pass records' `client_policy_sha256` carry the copy's digest as before. The module `meaning_map_training.client_policy` reads the policy's version from its front matter. The skill is linked into the user's skills hub as `~/.ai/skills/answering-matsya-questions`, a local link that is not committed.
+
+### 2026-10-17 — EPOCH-006 closed: the revised method run end to end
+
+- EPOCH-006 is closed after its one round, the ten excerpts under 0.3.28 and 0.3.29: the four-change revision had every intended effect (Agarwal and Angeletos from refused to equal, Bloom and FUES without a lost round), three other cases fell back for reasons the review names (Scheinkman–Schechtman's spelling of a budget identity as a set comprehension, Deaton's description over the 1,000-word bound after the client's changed law, Gourinchas–Parker's value block listing an input no line reads), equal cases seven then six, refusals 13 then 8, weighted tokens 4.86 then 4.17 million; the second pass ran unattended, the runner launching the eight training clients through `--responder-command`. The reviews classify every refusal by its cause and the pair of round 1 is recorded; `AI/operations/meaning-map-training/epochs/epoch-006/end-of-epoch.md`. Phase 3 of the single-candidate method is demonstrated; the plan's status says so.
+
+### 2026-10-17 — EPOCH-006 round 1: configuration 0.3.29
+
+- Configuration 0.3.29, the first revision proposed under the templates of 16 October: one revision answering the four configuration patterns the review of EPOCH-006 pass-v0 found, each by its own change to the writer's text, `texts/BellmanStageProse-to-BellmanSYMDeclaration.md`: a finite law of open size is written as `DiscreteMarkov(weights, points)` with the points and the weights declared as parameters, every law with a family of the table and at least one argument (Agarwal spent its three rounds on the paper's `H`); every branch names a continuation field and defines it even where the model ends (Angeletos); the six operator names no field may take, `E` among them (Bloom); a field joined across periods is typed without an unvalued parameter at either end, the bound kept in the feasibility correspondence (FUES). Left out, with its reason recorded: the descriptions the form checks refused once, whose findings the exports do not keep. Pass-v0 under 0.3.28: seven of ten equal, Scheinkman–Schechtman for the first time; 4.86 million weighted tokens against 5.90 for EPOCH-005's pass-v1.
+
+### 2026-10-16 — Bellman Workbench: one cable for each route of the backward graph, and the count of a cable's wires at its plug
+
+- A cable between two stages is one line at the weight of a wire in a stage's graph, 1.3 px, whatever it carries; selected, it stands in the accent at 2 px (§8).
+- In the backward trellis graph each route is one cable, from a plug of its own on the writing stage into one socket of the reading stage, which no selection splits into its wires; the durables model's `tenure` carries two plugs toward the two consumption stages of the earlier period, and a route that leaves the drawn periods ends at one outside marker for each occurrence it reaches, two at periods 0 to 2 where six stood (§8).
+- A cable that carries more than one wire has a short slash across it near its plug with the number of its wires beside it, the mark a circuit diagram uses for a line that carries several signals; a cable of one wire has none (§8).
+
+### 2026-10-16 — Bellman Workbench: the cable as a line, plugs and sockets, the Recipe tab at rest
+
+- A connection between two stages is one line of 2 px (2.5 px where the wires of two periods share a piece), from a filled square plug centered on the writing card's edge into an open square socket centered on the reading card's edge, with no arrowhead; a stub to an outside occurrence is a dashed line of 1.5 px. The band of two strokes and the dots at the cards' edges are gone (§8).
+- A stage's row of the Recipe tab is text at rest, one line per source entry, with the trash as its one control; a click, Enter or Space opens one row at a time to its selects and its periods field, and Escape, another row or a click elsewhere closes it (§7).
+
+### 2026-10-16 — A revision answers every configuration fault; the portfolio-choice stage file elaborates again
+
+- EPOCH-005 is closed after its two rounds: the review of pass-v2, the pair of round 2 (equal cases six before, five after; the two counted worse are jobs that failed at the provider when the key's credit ran out) and `end-of-epoch.md`. EPOCH-006 is made from 0.3.28 on the same ten excerpts with a budget of one, under the revised templates; its first pass waits on a personal key the provider accepts, both key files at the root being refused while the service's own credential runs a job. The plan's status says phase 2 is complete and phase 3 in progress.
+- `meaning-map-epoch pass --responder-command '<command>'` makes the runner launch the training client itself for a case that stops with questions, the template's `{epoch}`, `{pass}`, `{case}`, `{job}` and `{instructions}` filled in and the headless Claude Code call `claude -p "Follow {instructions} for case {case} of pass {pass}." --permission-mode acceptEdits --allowedTools …` the intended command (the prompt before `--allowedTools`, whose list would otherwise swallow it), and read the answer file the client leaves, so that one `pass` command carries a pass to its end as EPOCH-003's per-source subagents did; `--responder-timeout` bounds the client's run; the client's output is kept under the case's `artifacts/`. Without the option the coordinator launches the clients between runs, as since EPOCH-004 (AAS, 16 October 2026).
+- The epoch README that `meaning-map-epoch new` writes and the `end-of-epoch.md` that `close` writes carry the four document properties (a developer `index` and a developer `report`); the generated records of EPOCH-004, EPOCH-005 and EPOCH-006 are given them, so `document_properties.py check` passes on them.
+- A comparison a job never reached because the provider refused or failed the call has the cause `provider` in a review, admitted only where the pass records the job as failed; the first review form says the same with no owner, as EPOCH-005's last review does.
+- A pass review classifies every refusal a case's jobs raised, one by one, and then the case's comparison, each as caused by the configuration, the language or the paper (`review.yaml` form `meaning-map-pass-review/2`), in place of one classification per case under the word `owner`, which hid the configuration faults inside a case the language also refused (AAS, 16 October 2026). `meaning-map-epoch review` checks that every refusal in `compiler_issues` is classified and no other, and reports counts by cause; `end-of-epoch.md` lists the refusals by cause and counts a case's repeated rule; the first form is still read for the epochs that used it.
+- A configuration revision answers every configuration fault the pass's review found, not one (AAS, 16 October 2026): the proposer's template asks for a change per pattern, each with its reason, and for the patterns left out with why; the proposal and the revision record carry them under `changes` and `left_out`, which `meaning-map-epoch propose` checks and `end-of-epoch.md` lists under each round. The training README says the method measures one revision at a time. Takes effect from the next epoch made from the template.
+- The portfolio-choice stage file `applications/portfolio-choice/declaration/stages/cons/cons.bl` elaborates again: its policy line carried the mark `!doc`, which made it explanatory, so the block declared the control `c` and defined it nowhere (`output-defined`), and every Bellman test that builds the application failed at setup; the mark is removed (AAS, 16 October 2026). The Bellman suite goes from 342 failures and errors to 226; the rest are expectations written for the earlier four-line policy block (`InvEuler`, `endoggrid`) and stale binding fixtures, for the Bellman stream.
+
+### 2026-10-16 — The token-use service installed on DigitalOcean and configuration 0.3.28 published
+
+- The existing service now uses **Bellman 0.1.4**, **meaning-map-training 0.1.6** and **bellman-matsya 0.1.10**, built together from commit `4fc664f9f633e8165f5ea77af3cd9280e48637b3` and installed at 23:00 UTC on 15 October 2026 (16 October in Sydney) in the same Python environment and service unit on port 8710, by the in-place procedure: the idle check found no queued or running job or turn under a database write lock, the backup passed its integrity check with 148 jobs and 52 turns, every table of the job database kept its rows and digests after the restart, and the earlier job `72a191e8af9245abb1db224592e5e3df` answers byte for byte as before. Configuration `0.3.28`, ID `e37fa42b12a11c8a3a5893f7b76c556a7dbadbb920e0d35e13e3da70ba211a9e`, was then published through the API from its local snapshot; the default remains 0.3.20, and no job was submitted. The dated record stands under `AI/operations/verification/matsya/2026-10-16-token-use-reduction-upgrade/`.
+
+### 2026-10-16 — Bellman, comparison and Matsya package versions for the token-use installation
+
+- Bellman is version 0.1.4, adding the compact dossier; the comparison package `meaning-map-training` is 0.1.6, adding the staggered first submissions and the epoch commands committed since 0.1.5, and requires Bellman 0.1.4; the Matsya service is 0.1.10, adding the per-role cache lifetime, the two dossier forms and the elective setting, and requires the two. The three are built together for the in-place installation on DigitalOcean that configuration 0.3.28 needs, since changed package code is never installed under its installed version.
+
+### 2026-10-16 — Staggered first submissions of a training pass
+
+- `meaning-map-epoch pass --stagger <seconds>` makes the first client submit alone and the other nine follow that many seconds after its job is accepted, so that the first job writes the service's cached instruction heads and the others read them; without the option every client submits at once, as before. The service runs two jobs at once, so in EPOCH-005 pass-v1 the two jobs it took first wrote the preparer's head together at each of the pass's two starts, four of the head's seven writes; the other three were expirations, a job's first call more than five minutes after the head's last use. The runner's `run_pass` takes `stagger`, the command passes it through, and the first client's failure releases the others.
+
+### 2026-10-16 — Configuration 0.3.28: the writer's reading, the cached heads, the compact dossier
+
+- Configuration `0.3.28`, ID `e37fa42b12a11c8a3a5893f7b76c556a7dbadbb920e0d35e13e3da70ba211a9e`, from `0.3.27`: the Bellman-SYM writer's pages gain `docs/Bellman-Sym/reference/symbols-conventions.md`, the page it requested five times across EPOCH-004 and EPOCH-005 and was refused each time, whose section 9 lists the punctuation, the reserved sets and the type words the recurring `syntax` refusals violate; the source preparer's pages lose `docs/Bellman-Sym/10-constraints.md` and `docs/Bellman-Sym/reference/forms.md`, on which its text and form block do not depend, a third of its cached head; the preparer's and the writer's `max_retrieval_tokens` rise from 4,000 to 12,000, since the four initial passages filled most of 4,000 and a page part was refused whole, 22 of the two epochs' 27 requests; `cache_ttl` is `"1h"` on the source preparer and the prose writer, whose heads pass-v1 wrote seven and five times, and stays at five minutes on the writer; and the new setting `prose_writer_dossier`, `"compact"`, makes the prose writer read the compact dossier, which the Matsya handler `prose_write` passes to `dossier_of`. The texts, the guides, the provider models, the ceilings and the retrieval index are unchanged. An operator's change ordered by AAS, not a candidate of the configuration-revision method; it is published after the service carries the lifetime and the compact dossier, and the default remains 0.3.20.
+- The loader accepts the elective setting `prose_writer_dossier`, `full` or `compact`, whose absence means `full`, so every earlier configuration loads as before. The fixture configuration of the service's tests takes the current handler and the current instruction texts of the repository configuration, which three tests compare with it; its manifest is rewritten.
+
+### 2026-10-16 — The compact dossier for the reader-back
+
+- `bellman.dossier.compact_dossier_lines` prints an elaborated stage once per fact, from the same pieces as the full dossier: the printed view; the fields with their perches, roles and sets; each definition once, a parameter, a set and a distribution by the line the author wrote, a law of motion and a value aggregator by the function with its sets, a block line by its conditions; the signature of each builders graph with the conditions its primitives alone state; each block's card with the statements under it; and the obligations. It leaves out the rule lines, the primitives' cards, which restate a block's statement as a composed kernel, the diagrams' cards and the definitions referenced, and it keeps the line numbering, which the service's anonymisation renumbers and the form check refuses in the prose. `matsya_service.meaning.dossier_of(E, form="compact")` prints it for a stage or a trellis, and `dossier_of(E)` stays the full form. For the six initial declarations of EPOCH-005 pass-v1 that the elaborator constructs, the compact form is 25 to 33 per cent of the full one in characters: Carroll–Holm–Kimball 9,488 against 33,233, FUES 44,730 against 152,278, Bloom 25,708 against 103,966. The four other declarations are refused by the elaborator, as the service refused them, and have no dossier of either form. A test states that every definition line and every block line of the applications' stage files and of the ten declarations occurs in the compact dossier.
+
+### 2026-10-16 — A per-role lifetime for the cached instruction head
+
+- A role's entry in the configuration's `roles` may name `cache_ttl`, `"5m"` or `"1h"`; the Matsya service writes the hour into the head block of every request of that role, the instruction text with its guide pages, as `{"type": "ephemeral", "ttl": "1h"}` and writes no key for the five minutes, so a configuration that names no lifetime sends the request it sent before. The head of a role is 44,000 to 77,000 tokens; in EPOCH-005 pass-v1 the preparer's head was written seven times and the reader-back's five, the cache writes were 19 per cent of the pass's weighted tokens, and a write under the hour costs twice an uncached token against one and a quarter under the five minutes, so the hour pays for a head that is rewritten often and not for one that is read. Ordered by AAS on 16 October 2026 in the brief `AI/build-areas/meaning-map-iteration/implementation-specs/token-use-reduction/brief.md`, which this commit adds.
+
+### 2026-10-16 — The own-key client published
+
+- The Bellman Matsya client 0.12.1 of AMD-MAT-021, whose changes the entry of 15 October records, is committed and published to the public repository `econ-ark/matsya`, replacing 0.11.1 there, on AAS's order of 16 October 2026. The amendment and operations documents of the same batch are committed by their own stream.
+- The public repository holds the Bellman client alone, at its root, so that one command installs it, `python -m pip install git+https://github.com/econ-ark/matsya.git`: the earlier package `econ-ark-matsya` with its command `matsya` is removed from it (AAS, 16 October 2026). The client is 0.12.2, its upgrade line, its online guide address and its pages naming the root install; `publish_client.sh` copies the committed package onto the public root; the two user-guide source pages of the client's copies are committed with it.
+
+### 2026-10-15 — Cheaper jobs: excerpts of the papers, the prose judge off, retries of failed continuations
+
+- A paper reaches Matsya as its excerpt, the lines of its transcription that state the model, cut once by an excerpt-writer subagent under `AI/build-areas/meaning-map-iteration/corpus/excerpt-instructions.md` with the new command `meaning-map-excerpt`, which writes `excerpt.md` and its record beside `source.md` and never overwrites them; a source list names the excerpt and copies the cut under `source_selection`, which the source-list reader verifies against the transcription (AAS, 15 October 2026). A whole paper is three to four hundred thousand characters that every role call paid for.
+- Configuration 0.3.25 sets `judge_rounds` to 0 for training passes: since AMD-MAT-016 the two prose judgments are reports that decide nothing, and their calls read the whole paper again at about a third of a job's input tokens; the descriptions M and M′ stay in every job's export for a local judgment. Published; the default remains 0.3.20.
+- `end-of-epoch.md` gains a section "Token use by pass": input, output, cache-write and cache-read tokens by role, summed over every exported job of each pass from the role calls the exports record, so that a revision's cost stands beside its effect.
+- `meaning-map-epoch pass --max-retries <n>` raises the retry bound for one run, so that a case whose retries failed with a key's credit is resubmitted once the credit is restored (16 October 2026: five continued jobs of EPOCH-005 pass-v2 failed so).
+- A job that ends `failed` with a provider failure code is retried once on its session, which holds the paper and every reply, and the clarification record keeps the retry as a job entry naming the failed job; a refusal, a question or another kind of failure is not retried. EPOCH-004's first pass lost four continuations within thirteen seconds when a personal key ran out of credit; the retries under the spare key completed them.
+
+### 2026-10-15 — The epoch procedure of the meaning-map training
+
+- One command runs an epoch of configuration revision: `meaning-map-epoch` (`meaning_map_training.epoch_run`) makes the epoch folder from a source-list draft and the two instruction templates, runs or continues a pass with the per-source training clients' saved answers, checks the proposer's review of the pass, records the proposal, applies it to the configuration folder and records the checked child, publishes it, pairs the child's pass with its parent's, and closes the epoch with a generated `end-of-epoch.md` that gives the outcomes by pass, the configuration changes and their measured effects, what they did not fix, the problems with Bellman-SYM itself and the pathological papers. `meaning-map-epoch status` names the next step at any time. The operations page `AI/operations/meaning-map-training/README.md` gives the coordinator's steps.
+- The two agents of an epoch each follow one frozen text: `responder-instructions.md` for the training client that answers Matsya's questions for one source, `proposer-instructions.md` for the configuration proposer that assigns each failure to the configuration, the language or the paper and proposes one general revision. The templates stand in `AI/operations/meaning-map-training/epoch-template/` and are copied into each epoch, where their digests are recorded with every pass and revision.
+- The recorder `epoch.record_revision` accepts the runner's `results.json` as a pass record, and the new pairer `epoch_pair.compare_pass_folders` compares two runner passes case by case: the initial jobs for matched inputs, the final E outcomes for the change. EPOCH-003's stop is recorded in the new form; EPOCH-004 is frozen from configuration 0.3.23 on ten discrete-time sources with a budget of two.
+
+### 2026-10-15 — Phase 2 of the meaning-map training: branching, the end of EPOCH-003 and the training client
+
+- Configuration 0.3.22 regenerates the saved writer guide from the branching page, whose summary and §1 now state that the label is a branching stage's only control and that a continuous choice made under one alternative is a stage of its own on that branch, connected by the period, with the retirement application's period as the example. Configuration 0.3.23 states the same structure in the source preparer's text, which no longer forbids that sequence of stages, and corrects the Bellman-SYM writer's list of unconstructed forms, which named "a branching transition": the form the language lacks is a branching block that also carries a continuous control. Both are checked and registered with their snapshots; neither is published or the default (AAS, 15 October 2026, after the FUES case of EPOCH-003 was refused under `not-constructed`).
+- A refusal that a faithful file meets because the language or the installed compiler lacks a form is outside the configuration loop: the epoch's new record `end-of-epoch.md` lists it for AAS, whose change to the language is a Bellman build that starts a new epoch once installed (AAS, 15 October 2026; requirements §4, the plan and the epoch guide). EPOCH-003's record assigns its refusals: the branching structure to the configuration loop; to AAS the named interval, fixed the same day, an integer set with a symbolic bound, a product set as a correspondence body, and continuous time, which AAS excluded from training.
+- The training client, the local agent that answers Matsya's questions in place of the user, is an input of the epoch and not a part of Matsya's configuration: its instruction text is frozen with the source list and recorded by digest with each pass, `training-client.json` is no longer a configuration component, and the pass runner of the harness package sends the per-source subagents' saved answers from `cases/<case>/answers/<job>.json` (AAS, 15 October 2026).
+- Bellman is version 0.1.3, carrying the named-interval grammar change; the comparison package is 0.1.5 and the Matsya service 0.1.9, with matching exact dependency requirements, for the installation that follows.
+- The Workbench tests, which drive the live application in a browser and its shell, are left out of the default test run for now; `pytest packages/bellman-workbench/tests` runs them (AAS, 15 October 2026).
+
+### 2026-10-15 — A named set defined as an interval
+
+- A named set may be defined as an interval, `Xa := [0, ā]`, `Xa := (0, ā]` or `Xa := [0, ā)`, with a parameter as an endpoint. A field typed `a : Xa` has the declared set that `a : [0, ā]` declares, the stage encoding of the two spellings is equal under the comparison of `meaning-map-compare`, and the definition prints back as written. The open-open form `(0, ā)` after `:=` is read as a pair of values, as it is in a correspondence body, so an open interval is written after the typing colon. The abstract grammar is unchanged: the assignment reuses the interval constructor a field's type uses. [Symbols and conventions](Bellman-Sym/reference/symbols-conventions.md) §9 and [the stage tutorial](Bellman-Sym/01-stage.md) §2 state the forms.
+
+### 2026-10-15 — Source questions in configuration development
+
+- Training records use epoch folders with per-pass CSV and JSON results. The redundant dated run folder, training inspection notebooks and duplicate prose reports were removed.
+- The configuration-development harness records ordinary retrieval exposure separately from blind exclusions. A local training agent may answer a clarification using a paper-supported choice; the initial question and separately identified follow-up remain recorded, with identical answers required for a matched follow-up comparison.
+- Ten baseline jobs returned full results using a personal client key. A supplementary clarified job reached equality of its native elaborated models. Configuration 0.3.21 changes the source preparer’s question order and scope; its matched test is running, with the service default and retrieval index unchanged.
+
+### 2026-10-15 — Bellman compiler and Matsya package versions
+
+- Bellman is version 0.1.2, identifying the implemented backward-header and later-perch state-reading rules separately from the older installed compiler. The matching comparison package is 0.1.4 and the Matsya service is 0.1.8, with exact compatible dependency requirements and a matching service version label. The service retains the optional personal-key implementation with acceptance disabled unless its separate setting is enabled.
+- The three packages were installed together in the existing DigitalOcean environment on 15 October. Configuration 0.3.20 is now the default for new requests, with the retrieval index unchanged. The unchanged previously refused Bloom draft now constructs an elaborated stage; no new model-provider job was submitted for that installation check.
+
+### 2026-10-15 — A registered holder's own Anthropic API key (AMD-MAT-021, local build)
+
+- A registered holder of a Matsya token may run their jobs and conversation turns with their own Anthropic API key, so that the language-model calls of that work are charged to their own Anthropic account. The Matsya token stays required for every request and is obtained through the administrator's registration as before; the key is an optional addition, never a substitute. The client keeps the key in the owner-only file `~/.config/bellman-matsya/anthropic-key`, written by `bellman-matsya configure --set-anthropic-key` once a token is configured and removed by `--clear-anthropic-key`, or reads it from `BELLMAN_MATSYA_ANTHROPIC_KEY` or the `anthropic_api_key` keyword of `MatsyaClient`. It sends the key in the header `Bellman-Matsya-Anthropic-Key` on a job submission, a question and a reply only, and only to an HTTPS address or a local address; a remote plain-HTTP address is refused before the first request. The orientation line names the credential in use, and `Credential: your Anthropic API key` marks work the service ran with it.
+- The service reads the header after the Matsya-token check and only when its environment file holds `MATSYA_PERSONAL_KEYS=accept`; otherwise a request with the header is refused with 403, and a request without one runs under the service key as before. The key is held in memory for that job or turn alone, for Anthropic token counting and message generation and for a job the turn starts; a reply that continues a personal-key job needs a key. A key that Anthropic refuses ends the job with the new code `provider_rejected_credential`, or the turn `incomplete` with that reason, after one response and no retry. Every job and turn records `credential_source`, `client` or `service`; rows written earlier read `service`, and the client installed before this change runs unchanged against the upgraded service.
+- The service is version 0.1.7 and the client 0.12.0, raised to 0.12.1 by the override recorded below. The guide pages, the client README, the token-administration page, the runbook and the local-installation page state the procedure after the Matsya-token procedure, and a template for a public plain-HTTP server block answers a request carrying the header with 403. The service package was installed on DigitalOcean later the same day as 0.1.8 (the entry above), and `MATSYA_PERSONAL_KEYS=accept` was then set there for AAS's test under D-021-4; the client is not installed there and is published after the service has a verified HTTPS address, which then becomes its built-in address (AMD-MAT-021 §2.6).
+- For AAS's own testing before the HTTPS address exists, the client sends the key to a plain-HTTP address when its environment holds `BELLMAN_MATSYA_ANTHROPIC_KEY_OVER_HTTP=accept`, printing once that the key is sent unencrypted and passing the request through no proxy; with the variable absent or holding any other value the refusal remains in force (AMD-MAT-021 §6, D-021-4). The variable serves the operator's own test and is not for holders; the installed guide does not describe it. The client is version 0.12.1.
+
+### 2026-10-15 — One manual configuration revision and matched-pass records
+
+- The meaning-map measuring package records a proposed configuration change, verifies the actual committed parent-to-child diff and retains checking and publication attempts, including refusals followed by retries. Its paired-pass report includes all selected cases, missing results and denominators, while full exports and description differences remain private.
+- Paired job checks require fixed saved guides and actual provider-model and token-ceiling evidence; a missing exclusion record supplies no semantic comparison. Local tests, executed inspection notebooks and a real one-source API test check the procedure. After the approved administrator grant, a checked instruction revision was uploaded and tested with full returned drafts; both controlled jobs stopped before initial elaboration, so no semantic comparison is claimed. The writer now requests one operative joint maximization for jointly chosen controls. Completed-source draws and introductory configuration-version changes are checked against the frozen inventory and committed configuration files.
+
+### 2026-10-14 — The corpus of the meaning-map training holds source text only
+
+- The corpus from which the meaning-map training draws its source material holds source text only: for each paper, its PDF and a transcription of the whole PDF with a marker at the start of each page; for each of the fourteen HARK cases, HARK's own model file of version 0.17.2; for each of the three models of the FUES paper, the section of the paper that states it; and for one user model, its description. Twenty-eight of the 31 papers are transcribed. Epstein and Zin (1989), McKenzie (1976) and Weil (1990) have no transcription: the language-model service's content filter stopped the agents that wrote their pages word for word, and other agents declined them. They wait for a decision on how their text is completed. The model folders, descriptions, declarations and write-ups the corpus held before are kept in the private archive.
+- A dated source inventory records each paper's path, digest, page count and transcription state and names the source of each of the 38 cases of the baseline; a preparation register records how each text was made and checked and every reading left uncertain. The build pilot EPOCH-001 names the inventory by its digest. The harness package's tests read the files of the former corpus they need from unchanged copies among their fixtures.
+
+### 2026-10-14 — Public Bellman Matsya client installation
+
+- The Bellman Matsya client is published as a separate installable package in the public `econ-ark/matsya` repository. Recipients can install `bellman-matsya-client` without access to the private Bellman repository; the earlier Bellman client remains a distinct package and command. The client's installation, update and online-guide addresses now use the public source.
+
+### 2026-10-13 — A backward block's header lists no state
+
+- A backward block's header lists the value fields it reads and writes and the controls at which its lines are read; a state of the perch at which its output stands is a coordinate of that output and is read without a listing (AAS, 12 October 2026). The value equation `V = 𝑢(c, H_d) + β*V[>]` therefore elaborates under the header `(V[>] : [-inf, inf) @ !vlu, c) : !cntn`, and `owner_cons.bl`, `renter_cons.bl` and `tenure_choice.bl` of the housing-renting application elaborate unchanged. A state listed on a backward header is refused under the new rule `header-coordinate`, whose message names the state's perch and the header without the listing; `signature-complete` stands for the value fields a backward line reads and for every field a forward line reads, and its correction for a backward block adds value fields alone.
+- A direct read of an input or later perch's state on a backward line is refused under `input-perch-state`, including a read in a relation or a condition after `⟂` (AAS, 13 October 2026, BH-4). The refusal names the forward block's equation for the state, `h_nxt_kp = h_d`, and the correction `h_d` where that equation supplies it. Reading the state under an expectation over the edge's shock and indexing a policy candidate line by continuation state remain admitted.
+- The six corpus headers that listed a state are corrected: the `bequest` stages of benhabib-2019, durables and retirement-choice, `keeper_cons` of durables, `keeper_saving` of housing-frictions and `consumption_choice` of housing-owner, whose value lines now read `H_d`. [Appendix C](Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) R1 and §4.1, the [perch tagging rules](Bellman-Sym/appendices/13-perch-tagging-rules.md) §2, the [stage tutorial](Bellman-Sym/01-stage.md) §3, the [language overview](overview/03-language.md) §2.2, the wiki's [signature](wiki/signature.md) entry and the [refusals](Bellman-Sym/reference/refusals.md) reference state the rule; the saved Matsya guides are regenerated as local configuration candidate `0.3.19`, superseding the earlier local candidate `0.3.18` without publication.
+
+### 2026-10-12 — Matsya configurations published, selected and pinned (AMD-MAT-020, local build)
+
+- The Matsya service keeps every published configuration unchanged under its ID, the digest of its manifest, in the folder `MATSYA_CONFIGURATIONS_ROOT` names, with the register of IDs, the default and the publication and default-change events in its job database. `POST /v1/configurations` installs a checked ZIP archive after checks before and after the import of its Matsya handler module, and `PUT /v1/configurations/default` changes the default without a restart; both are reserved for the principals the file `MATSYA_CONFIG_ADMIN_GRANTS_FILE` names. At its first start the service installs the folder `MATSYA_CONFIGURATION` names as the first default.
+- A job or a question names a published configuration with `configuration_id` or takes the default; the service pins the ID in the transaction that accepts the request, the worker loads that exact folder, a job a turn starts and the attempt a reply resumes inherit it, and every answer carries it with the digests of the accepted request, the fixed source and the selected index. A question under a configuration without the conversation role is refused with 422; a repeated `delivery_id` with another question or selector with 409.
+- The client gains `bellman-matsya configuration publish` and `set-default`, `--configuration-id` on `job submit`, `project submit` and `ask`, `--model-key` with `--source-cluster`, and `bellman-matsya job export`, which saves a job's full answer as `job.json` for any state. `meaning-map-config-pair` of `meaning-map-training` checks two exported jobs and their local snapshots for a comparable pair. The service is version 0.1.6, the comparison package 0.1.3 and the client 0.11.0; none is installed on DigitalOcean, whose installation needs the separate procedure the amendment's §7 requires.
+
+### 2026-10-12 — Bellman Workbench: one bar, the Inspector, cables and notes
+
+- The window's first row is one main bar: the project's mark, `Back` and `Forward`, the path of what the window shows, ending in the selected stage occurrence, `Go to`, and the toggles `Files`, `Inspector`, `Details` and `Matsya`. The rail of icons at the window's left edge, the head `BellmanSym` over the editor, the head over the graph and the occurrence line under the file tree are gone: the graph's name, its selects, the restriction and Problems stand in the graph's one bar, the tab row holds the toggles `Types` and `Notes` beside `Save`, and the occurrence stands in the path ([Bellman Workbench](overview/07-workbench.md) §1).
+- The panel under the editor is the Inspector, with one strip of tabs and the open file's name and no head: the four tabs of a stage file, or the `Recipe` tab of the recipe the trellis is read under. In the Recipe tab a stage's key, its stage file and its trash stand on one line, its bindings one select per entry under the column heads `Stage`, `Calibration`, `Settings`, `Methods` and `Periods`, each with a hover; the words `Replace` under the selects are gone, `New file` is an icon naming the file it writes, and the trash names the recipe it removes the stage from (§§2 and 7).
+- In the trellis graphs a period's name is set small and faint and a stage's name larger and brighter, `keeper_cons` exactly as written, and wire labels are upright. The joins from one continuation branch of an occurrence into another are drawn as one cable, a translucent band with one port at each end; the trellis graphs' own `Inputs` and `Outputs` boxes are replaced by markers that name the data entering or leaving the drawn periods, `starting data`, `terminal`, `terminal condition` and `result`, each before the label of what it carries, and a connection to an occurrence outside the view ends at a square that names it. Model Explorer's trellis export gives each marker a node of its own and each join's edge the record of its route ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md)).
+- Selecting a cable lists in Details its route, its status and its ordered wires with their sets and origins, in the backward graph as in the forward; selecting a card adds the occurrence's inputs, outputs and policies. Dragging a cable's end, or a branch's port, onto another stage opens one list of the destination's arrival fields, pre-filled with the pairs the package selects by equal names; `join` writes every pair ticked as one entry and releases the pairs the cable held, so that a cable joined by equal names is moved as an authored entry, and a move that would leave one branch on two destinations is refused (§8).
+- Details of a selected stage occurrence offers `Remove from periods 0–5` and `Remove stage`, each naming its scope in its hover; a removal from the stage's last period list also takes its row out of the recipe, and one undo restores both. Backspace pressed in the backward trellis graph lists the sentence `Backspace acts in the forward trellis view` under Problems. The stage list of a period's `+ stage` and of the Recipe tab's `Stage` opens beside its button, and an added stage that no connection reaches is named `unconnected` on the status line (§8).
+- In the editor, the quoted explanation of an annotation is drawn as a note glyph; hovering or focusing it shows the explanation as Markdown with its mathematics typeset, by markdown-it and KaTeX served from the package, and `Notes` shows every note as written. Neither changes the file or marks it unsaved (§2).
+
+### 2026-10-12 — Bellman Matsya client setup
+
+- The Bellman Matsya client now uses the preliminary service's public address by default. `bellman-matsya configure` asks only for the holder's token; an environment setting or an existing saved address still takes precedence. The client can be installed directly from the Bellman repository on GitHub without a local checkout.
+
+### 2026-10-12 — Matsya iteration and package dependencies
+
+- Each model iteration reconstructs one successor from the preceding elaborated object and compares that adjacent pair. A second iteration produces E′′ and compares it with E′. Returned work identifies the latest available declaration and the last comparison completed.
+- The Matsya service package now requires the matching Bellman elaborator and comparison package versions, including their shared selection of connections between stages and periods. The service is version 0.1.5, Bellman 0.1.1, and the comparison package `meaning-map-training` 0.1.2.
+
+### 2026-10-12 — Inspectable connection problems
+
+- Ordinary construction retains representable connection errors on an inspectable model. The public connection report includes rejected automatic candidates, internal and exterior unjoined fields, and the individual authored source entries behind an error. Operations that require a valid order or a certified route still refuse invalid connections.
+- Workbench presents errors and review items through one Problems control at the graph's upper right, replacing the lower-left duplicate summary. Binding failures and unjoined fields have separate entries and source controls; the selected stage occurrence remains navigation context.
+
+### 2026-10-11 — Workbench and offline composition comparisons (AMD-COMP-001, runs 6–7)
+
+- Workbench reads the package's selected connections for its graph, field choices, details and source edits. Either end of an inferred arrow can be moved to write a compact authored replacement. Shared entries are checked in every period they reach; unresolved authored entries remain visible with their errors. Source spelling trials reuse the existing field index, and ordinary field and detail queries reuse the selection.
+- Matsya's offline elaboration and the meaning-map command compare selected within- and inter-period pairs and effective period parameter values. Their dossiers and digests distinguish differently bound occurrences and retain known values in partial recipes. The handler, role texts, client documentation and saved guides describe these rules; provider-free tests exercise the command and comparisons.
+
+### 2026-10-11 — Stage-local connector migration (AMD-COMP-001, run 5)
+
+- The portfolio and consumption–portfolio declarations qualify the ambiguous discount-stage source as `{disc.a: k}`. Unique bare endpoints remain unchanged. Stage equations and parameter values are preserved. Package, authoring, API, calculus, wiki and example pages explain local field names, period-shared parameters and authored connection precedence.
+- Selected pairs retain their exact authored mapping address and endpoint spellings. Reports, Model Explorer and source editing can reuse the selected result for the same trellis version; the source writer supports replacing a selected inferred arrow. A misspelled authored arrow keeps its resolved endpoint reserved rather than silently inferring another connection.
+- Transport of joint atoms preserves exact integer and rational masses and refuses nonfinite inputs or accumulated floating overflow. Existing consumption-stage and terminal-type issues remain recorded in the application inventory; this entry does not assert their resolution.
+
+### 2026-10-11 — Connections selected once (AMD-COMP-001, run 4)
+
+- The joins of a trellis are the pairs of one selection of its connections, made once per reading from the placed stage occurrences, the authored connectors and the calibration each occurrence holds (AMD-COMP-001 §3): an authored endpoint resolves to exactly one eligible use, a bare name where one stage holds it at the perch and the stage key before the field otherwise, and an equal name is inferred only where it is the unique admissible pair. `period_joins`, `forward_order`, `inter_period_joins`, `unjoined_fields`, the trellis drawings and the Model Explorer view project their answers from that selection; the view pairs the value, marginal-value and measure wires of a join as the selection's route establishes them and has no matching rule of its own. The construction selects on the symbolic occurrences and again under the bound values ([The trellis factory](Bellman-Sym/API/factory/trellis-factory.md)).
+- A connector whose endpoint names no field, or several, and a pair that is incompatible or whose route is not certified refuse nothing: the trellis is answered as a draft, and the new `connection_report(trellis)` of `bellman.trellis` names each pair with its origin, address, compatibility and bindings, each route with its status and obligations, and each diagnostic at its entry. An entry of no admitted shape and a continuation field two entries map are refused under `connector-names-no-field`, a cycle of authored pairs and a connector from a stage to itself under `period-join-cycle`; an inferred pair on a cycle is withdrawn and recorded ([Refusals](Bellman-Sym/reference/refusals.md)). `trellis_selection`, `unjoined_fields` and the five transports along a certified route are public under `bellman.trellis`.
+- `connector_entry` writes the shortest spelling that resolves back to the dragged pair at every period the entry reaches, the stage key before a colliding endpoint alone, keeps an existing keyed group when adding to it, and answers `name-shared` where no spelling resolves at every adjacent pair. The applications whose standing mappings name a field two stages continue to, `{a: k}` of the portfolio period among them, now need the stage key before the field; their migration is run 5's.
+
+### 2026-10-11 — Bellman Workbench: the graph as designed, the recipe tab and the rail's icons
+
+- The trellis graph opens with its last period filling the graph's width, up to full size, and its cards, frames and spacing take the proportions of the design; a wire's label is set in the mathematical italic, every wire ends in an arrowhead at the box that reads it, and the backward wires between two periods are drawn as one bundle with one label.
+- A press on the graph's empty ground, or on a card, leaves the view where a pan put it; the keyboard's entry into the graph still reveals its first item.
+- The recipe is edited in the `Recipe` tab of the panel under the editor, open when a recipe file is open: a table with one row per stage and a column for each binding (the stage file, calibration, settings, methods, periods), each cell a select over the folder's files and the recipe's slots, with `Replace` and `New file` beneath, `Remove stage` on the row and `+ stage` as the last row; every change is one edit of the recipe's text with one undo. The recipe region under the file tree is gone.
+- The rail's five icons are taken from the Codicons set at 24 px, with the brand's glyphs (the braces of a mapping, ℝ, the denotation brackets, Υ) typeset in the page's fonts.
+
+### 2026-10-11 — Matsya declaration length
+
+- The declaration writer may now use up to 128,000 output tokens per response, including reasoning and generated files, instead of 32,000. The total output allowance for a job remains 300,000 tokens.
+
+### 2026-10-11 — Matsya search
+
+- Ordinary search and excerpt answers now consider every collection the user may read, including permitted literature and articles. The question's relevance scores and existing collection weights rank the passages; an explicit collection list still narrows the search.
+
+### 2026-10-11 — Matsya convergence and available declarations
+
+- Matsya now reports convergence when the elaborated declaration and its reconstruction compare equal. Prose disagreements, unsupported citations and unresolved notes remain visible as separate findings.
+- Jobs that retain a result expose the most recent parsed declaration files even when the iteration does not converge or asks for more information. A later empty writing does not erase earlier parsed files; a response cut off before parsing is not a declaration.
+
+### 2026-10-11 — Separate Bellman Matsya client
+
+- The client package is now `bellman-matsya-client` 0.10.0, with command `bellman-matsya` and Python module `bellman_matsya`. It reads its own Bellman configuration and includes the current user guide. The earlier client is removed explicitly during an upgrade; its credentials are not read automatically.
+- Workbench now creates and reuses a Bellman service session for each model folder and reads answers and citations from the client’s JSON output.
+
+### 2026-10-10 — Shared period parameters (AMD-COMP-001, run 1)
+
+- A parameter name that two or more stages of one period declare names one parameter of the period. The elaboration reconciles the declarations in each period, sets that are one set or whose intersection the package reads agreeing in that intersection, and `calibrate_trellis`, `specify_trellis` and `respecify_trellis` supply the parameter once, from the sources of the declaring stages, every declaring stage binding that value; a changed value rebinds every declaring stage of the period. Two declared sets with no intersection the package reads, two sources giving two values, and a value outside a declaring stage's set are refused under the new rule `period-parameter-agreement`, with the period, the parameter, the stages and the sources named ([The trellis factory](Bellman-Sym/API/factory/trellis-factory.md) §4; [Refusals](Bellman-Sym/reference/refusals.md)). The same spelling in another period remains another parameter. Field names stay local to their stage; the selection of connections between stages is not changed by this entry.
+
+### 2026-10-10 — Bellman Workbench: the page as one system
+
+- The page is drawn as one system: five text styles (headings, labels and small text in Archivo; the file's words in IBM Plex Mono), one spacing scale, and one height and radius for each class of control. Every icon is a Codicon, the icon set of VS Code, and every button, field, select and view tab is a VSCode Elements control, both copied into the package with their licenses and dressed in the brand's colors and faces.
+- The rail holds the brand's mark and five icons drawn from it: a stack of sheets for the files, a sheet holding the braces of a mapping for the recipe, the double-struck ℝ for the types, the denotation brackets ⟦·⟧ for the details, and a speech bubble with Υ for Matsya. The title bar is 36 px and the status line 24 px.
+- A measure's label in the forward diagrams is `μ≺` or `μ_keep≻`, without its coordinates, since the fields stand on the ports and wires. `remove stage` is drawn as a button, says why where it cannot act, and the recipe region under the tree reads the unsaved recipe, so that a removed stage's block leaves at the click.
+
+### 2026-10-10 — Matsya client guide and operator tools
+
+- The Matsya client gains project-folder commands that submit a model from `economics.md`, follow its session and write a job's declaration back into the folder or a new subfolder. Its installed user and developer guides match the public pages; the command reference describes the outputs and refusals.
+- The scripts for preparing reference guides, building and transferring the retrieval index, administering tokens and deploying the service now stand with the operator instructions under `AI/operations/matsya/deployment/`. The installed service retains the `matsya-serve` command.
+
+### 2026-10-10 — Bellman Workbench: the page after the UX simulation, the stage card, the Fields tab
+
+- A stage occurrence of the trellis graphs is a card that prints its name alone, under it a strip of its builders colored by the pair of perches each joins; a joined field's name stands on its wire's label and in its port's hover, an unjoined field's on the card; the joins of a pair of stages within a period are one wire with one label, in both directions, split into the fields' wires while the pair or a card is selected; the backward trellis's wires name the value and marginal-value fields that pass between two stages, in italic. In the stage view the builders' frames share one width and one left edge, their boxes stand on one axis, and a long label is cut with an ellipsis and printed whole in its hover.
+- The Fields tab writes its own words in sentence case, `≺ Arrival`, `∼ Decision`, `≻ Continuation`, `Field`, `Set`, `Role`, in the interface face and the file's words in the monospace face, with 24-px rows, cells as text at rest, the set column as wide as its widest set, and the add row on one line; the rail's words and the panel heads read `Files`, `Recipe`, `Types`, `Details`, `Matsya`. A decision field is listed in both blocks that carry the decision perch; the stage's name stands on the first line at 18 px.
+- The forms and the two lists over the graph are one panel with Lucide's glyphs; the three panels open and close from a rail of window diagrams, each saying what it reveals and where; the stage list stands on one line per item; the recipe region says which periods each binding holds for and offers `remove stage`; `remove period` and the tree's `remove` delete a file on the next save; `new trellis` always offers a folder beside the open model; a stage library on a common path of the disk (`BELLMAN_STAGE_LIBRARY`) and `from a folder…` bring stages from outside the model; Matsya's column prints no sentence about its index and takes no width while folded.
+- The package gains two public queries the page reads: `respecify_trellis` in `bellman.factory.trellis`, which binds again the occurrences whose stage files or binding sources changed and keeps the others as they stand, and `admitted_methods` in `bellman.stage.method_table`, the method tags the package attaches at a target.
+- From the UX simulation of the pension model: a stage moved between periods keeps its joins; a join by equal names can be selected and its reading field renamed; the Parameters tab keeps every value typed and passes a list or a matrix; one undo per gesture, `new stage` as one saved change, and a stage skeleton that parses; the Methods tab offers what a block can carry and marks the refused row alone; a drag adds to a pair's mapping and `+ period` keeps the common mapping once; an edit of one stage's sources rebinds that stage alone; the error list holds one line per standing refusal and the counts of unjoined fields agree; the page is legible at the sizes it opens; a folder opened at its `declaration/` is told which folder to open, with the button that opens it.
+
+### 2026-10-10 — Workbench installation instructions
+
+- [Install Bellman Workbench](overview/00-install.md) gives Python setup, browser use, local desktop installation and update instructions. It distinguishes the desktop application from the separately installed Bellman and Workbench Python packages.
+
+### 2026-10-09 — Bellman Workbench desktop application
+
+- The opening screen separates **Start** and **Recent projects**, with compact opening actions, keyboard shortcuts and the paths of the eight most recently opened projects. It uses the Project Bellman mark, colours and typography. Native file selection and opening progress remain available; command configuration stays in Settings.
+
+- The macOS title bar uses the Workbench navy. The native File menu offers **Open Project…** and **Open File…** with keyboard shortcuts.
+
+- The desktop icon uses the Project Bellman two-triangle vector mark. Continuous outlines replace overlapping polygon strokes, removing the protruding points at the joins.
+
+- A desktop application opens the installed Workbench in a native window, receives links naming a model folder, file and line, and stops each local server when its window closes. Python remains separately installed. Details can open the selected source in a configured editor; the editor extension adds **Bellman: Open in Workbench**.
+- The macOS application has been built and exercised with the current Workbench. Installer configuration is included for macOS, Linux and Windows; checks on Linux and Windows and public distribution signing remain to be completed.
+
+### 2026-10-09 — Matsya's reference guides with links and tags, and language-model token ceilings
+
+- The command-line client `matsya` at 0.8.0, published at econ-ark/matsya and installed with `pip install git+https://github.com/econ-ark/matsya`: every job names its target, a paper is submitted as its text with `--paper` and a PDF is refused, and the user guide and the developer guide are installed with the client and printed by `matsya docs`.
+- A paper is sent to Matsya as its text in Markdown or LaTeX, attached to a session as a paper entry like any other source; the PDF and the numbered-page forms are refused with one sentence, and the model prose cites a paper by quotation under its heading, which the service finds in the text and records with its line numbers in place of page references; the record's schema advances to version 6 for the renamed and added fields.
+- Every job of architect mode names its target, a stage, a period, a trellis or a recipe; the model prose states the model's structure under a fixed heading, which the judge checks against the source, and a job whose target is narrower than the structure stops with one question before anything is written; the writer returns exactly the files of the target, a recipe checked through the Bellman factory with a fill slot for every value the source does not state and with methods only where the source names them; the job's label carries the target, and the conversation infers it from the discussion when the user does not name it.
+- In a session a user may ask the conversation to submit a job, "submit this as a job"; the conversation role answers with the job's label and the service starts the job from the session's text as it then stands. The conversation role's instruction text states what it is and is not, what a session, a job and architect mode are, which job it discusses and by what label, and which commands the user runs; Prose-to-Bellman-Sym's text says that it builds the model from the model prose and copies no example.
+- A job's record is returned by default as its products and the material of a short report, the last cycle's files, the model prose, the questions, the judges' reports, the comparison's verdict and the usage; the complete record with every cycle and every call is returned on request, for training.
+- A job of architect mode carries a label, the model's name, the version of the text it read, its number in its session and its state; a session's conversation discusses its selected job or, without a selection, its latest job built from the current text, and every answer names the job it read; a queued or running job can be cancelled, keeping its record and the usage of the calls made. The seven defects an adversarial review found on 9 October are corrected: a quotation must lie within contiguous supplied text, a refusal's text counts against the retrieval allowance, each range of a guide page is supplied once, a repeated section identifier is reported as ambiguous, an anchor before a document's first heading is an unsupported address, and a symbolic link among the core documentation pages builds one page.
+- Every language-model role of Matsya, in architect mode and in conversation mode, reads every collection of the retrieval index that the user's Matsya token is granted; the documentation mark that had limited what a role receives gates nothing, and the grant file may name a default set of grants for every user it does not name.
+- The `matsya` command and Python module a user installs call the routes of the present service: the index, a search, a job of architect mode from a description or a paper with its files written to a folder, a session with its entries, and a question answered in a session with its citations.
+- The three reference guides that Matsya's roles read are written by `matsya_guide_builder.py` under a construction policy, `guide_policy.json`: each guide saves its core pages and, within a page limit, the pages they link to, and its page manifest, in the form `matsya-guides/3`, records each saved page's sections, the links written in it, each marked available in the guide or given the reason it is not, and the tags it carries. One parser, `document_metadata.py`, reads a page's headings, links and tags. At the start of a job the frame checks the saved guides against these records. The live guides were rebuilt from the pages of 9 October 2026, and the configuration is at version 0.3.3.
+- Before every call to a language model the frame counts the message's tokens with the provider's counter and charges them to the role and to the job; a call that would carry either past a bound of the settings' `ceilings` object is refused, and the job ends `not_converged` with the reason `token_ceiling_reached`, whatever the Matsya handlers do. Each role's entry names its model's context window, `context_tokens`. A job's record carries the schema `matsya-model-iteration/4` with a `usage` object of counts and no text; a training pass holds the ceilings fixed.
+- The retrieval index records, beside its passages, each admitted document's sections, the links written in it with whether each target is available, and its tag memberships, read by the same parser as the guides. A snapshot of the index answers two bounded operations: `related` lists the material recorded as related to a document, section or passage, authored links first and then shared tags, and `read` returns a section's text in parts; both leave out a target the reader may not see in the same way as one that does not exist. `matsya-index` prints the counts of documents, sections, links and tag memberships before it activates an index, and an index built before this change serves searches until the next rebuild.
+- In architect mode the source preparer and the Bellman-SYM writer may answer a call with one request, `matsya_request`, to read a saved guide page or section, to list the material recorded as related to a page or passage they already hold, or to search the index again. A reading controller, bound to the job's index snapshot, the role's permitted guides, the permissions and the allowances of the new setting `reading`, resolves the request, places the result in the next message and counts it against an allowance of its own, apart from the rounds in which the role prepares, writes and repairs. A substantive change of a session's source material starts a new preparation attempt linked to the earlier job, whose first search is built from the concepts the material names. The configuration is at version 0.3.4.
+- Conversation mode gains an optional language-model role, provisionally `conversation_answer`, which answers a question asked in a session from passages it may both read and send to a model provider, quotes the passage each claim rests on, and asks the user when a choice is open; a configuration that does not name the role runs as before. A fixed turn runner sets the permissions, the index snapshot and the limits of a turn, checks every citation against the passages supplied, and ends a turn that reaches a limit with two fixed sentences; a stage file named in a turn reaches the model as its printed mathematics and never as text. A session's entries are numbered and attributed, so that an answer of Matsya enters a model's source material only when the user accepts it, and a reply to a job's question resumes the job. The routes `POST /v1/sessions/{session_id}/turns` and `GET /v1/sessions/{session_id}/turns/{turn_id}` serve a turn. The configuration is at version 0.3.5; the role is offered in a deployment only after the question set of Matsya spec 0.2 §8 has been run on it.
+- The retrieval index is rebuilt from the reviewed list of 814 sources: 197 pages, stage files and notebooks of this repository, 153 literature files, 230 journal articles, 209 files of HARK and 25 of Theoretical Foundations of Buffer Stock Saving; 57,636 passages with their sections, links and tags. The index passed its 41 private and nine public test searches before activation.
+- Matsya's model-iteration service runs on the project's server beside the earlier service, as the unit `matsya-model-iteration`, with the rebuilt index and the configuration at version 0.3.5; it answers on the server's loopback address until its public route is settled. Its first job against the language-model provider ran end to end.
+
+### 2026-10-08 — The architect terminology of Matsya
+
+- Matsya's model-construction mode is named architect mode, and the four language-model roles of a job carry the names of the maps they compute: `SourceMaterial_to_BellmanStageProse` (the source preparer), `BellmanStageProse_to_BellmanSYMDeclaration` (the Bellman-SYM writer), `ElaboratedSemanticObject_to_BellmanStageProse` (the prose writer) and `BellmanStageProse_judge` (the judge), in the configuration's settings, the names of its instruction texts, every job record and the training package; the configuration is at version 0.3.1.
+- The Matsya handlers, the functions of the configuration folder that run a job, are in the module `matsya_handler.py`, and the program that copies documentation pages into the reference guides is `matsya_guide_builder.py`; the word handler alone keeps its Rosetta-stone sense.
+- A developer guide to Matsya's architecture, `docs/matsya/dev-guide/`, explains the division between the program and the trained configuration, the retrieval index module by module, what a language model reads, and the thirteen Matsya handlers; the wiki gains the pages Matsya collection, Matsya handler, Matsya instructions and Reference guides in Matsya.
+### 2026-10-08 — Bellman Workbench: the trellis's controls, the fields on its frames, the recipe as blocks
+
+- In the forward trellis graph each period's frame carries `+ stage`, which opens the stage list for that period, and `+ period` stands in words in every gap between periods; a selected stage is removed from its period with Backspace, and a drag from one stage's frame to another's opens a list of their fields paired by name, with each field's declared set beside it, that `join` writes as one mapping. Every join wire can be moved by dragging one of its ends, a wire of several entries through the same list; the ends of a selected wire keep their size on the screen, as the ports do.
+- A closed stage frame prints its arrival fields at its reading ports and its continuation fields at its writing ports, and an open occurrence's `Inputs` and `Outputs` boxes print the same; the trellis opens on its terminal period at the largest scale at which that period's header is in view, and the wires between two periods are one bundled wire labeled by the fields it reaches.
+- The graph's header holds the switch `stage │ trellis`, the restriction as a select of ranges and stage keys with a typed line at its foot, and, while Matsya is folded, the glyph `Υ` that reopens it; a folded Matsya takes no width.
+- Details prints a selected stage occurrence, join wire or box as labeled rows read from the package, long lists as ranges; the status line puts the file, `trellis`, the bindings, the restriction and the loop time first and the rest on the details line where the line is wider than its box.
+- Under the tree the checklist lists what the package refuses and the fields no join reaches, folded with its count; a `$name` slot of the recipe is a parameter of the load, bound by `load_recipe`'s keyword, and is printed as such, never as a lack; the recipe stands in a fold as one block per stage with the keywords the load takes under it. `new stage` and `new file` write a stage file and an empty calibration, settings or methods file of the author's own; `from a folder…` copies a stage folder from anywhere on the disk; the `new trellis` form marks a stage `every period` or `terminal period`. Every path the page prints is relative to the model folder.
+
+### 2026-10-08 — Matsya's frame and its configuration
+
+- The Matsya package is the frame of its model-iteration service: it loads one configuration folder at the start of every job, named by `MATSYA_CONFIGURATION`, checks every file against the folder's manifest and every handler's signature against its slot, refuses a job that fails a check with the code `configuration_refused`, and records the configuration's version and hashes with the job. The instruction texts, the guides, the settings and the handlers' code leave the package for that folder.
+- A typed description goes through the same preparation as a paper: the source preparer reads pages of the Bellman calculus and of the language guide and passages from the index before the source material, and answers with the description the writer works from or with questions. A request field `force` carries a job past the questions, and the writer's assumptions are then recorded from its note.
+- A session keeps a named text across jobs: three routes create it, append to it and read it, a job started from a session takes its whole text as the source material, and a job that ends with questions appends them to the session.
+- Every call is recorded with its step and cycle, and the message is sent as ordered parts with the instruction text and the guide pages first as the prefix marked for the provider's prompt cache. The command `matsya-serve` starts the service.
+
+### 2026-10-07 — The gestures of the trellis graph
+
+- In the forward trellis graph a field that no join reaches or reads shows a port; dragging from a continuation port to an arrival port types the connector into the period file or the trellis file through the editor, flat where the names are unambiguous and keyed otherwise, and the file opens at the written line. An arrival that joins already reach takes a further source, written as a further key of the mapping that holds the join; a continuation field joins once; a branching stage's ports carry the branch's label, `keep: w_kp≻`.
+- A join wire is selected by a click and removed by Backspace, Delete or `remove` in Details, or moved by dragging one of its ends; each is one edit of the text that the editor's undo reverses where the file was open. A model left with unjoined fields is drawn, not refused, the fields marked on their boxes and counted on the status line.
+- A stage is added by dropping it from the stage list on a period, or by Enter; a period is added by the `+ period` controls, with the form `add period`; the trellis written as records takes the entry directly.
+- The undo history begins afresh when another file's document replaces the current one, so an undo never restores another file's text into the open tab.
+
+### 2026-10-07 — Bellman Workbench in four columns
+
+- Bellman Workbench stands in four columns on dark surfaces: the folder, the text with the BellmanType panel under it, the graph with Details under it, and Matsya. The buttons `files` and `Matsya` fold the folder and Matsya's column to narrow rails, the browser keeps the folds with the regions' sizes, and a narrowing window narrows Matsya, then the graph, then folds the folder. Every face is served from the package: Archivo, IBM Plex Mono and STIX Two Math ([Bellman Workbench](overview/07-workbench.md) §1).
+- The text has one tab per file opened, each closed by its `×` unless its text is unsaved; the icon `hide types` and the button `Save` stand at the right of the tabs. The stage's name is drawn large, an annotation stands at the right of its statement, a wrapped line is indented by four characters, and a minimap at the editor's right edge moves the editor to the line of the mark clicked ([Bellman Workbench](overview/07-workbench.md) §2).
+- The tab `Fields` holds its three tables side by side, headed `≺ arrival`, `∼ decision` and `≻ continuation`, with no line column: a field's name is a button that moves the editor to its line. The panel's bar no longer names the state of the reading, and the panel keeps one height on every tab. While the construction is refused, the tables read the text's parse and stay editable, the row of a field the refusal names drawn in orange ([Bellman Workbench](overview/07-workbench.md) §2).
+- The graph's header holds the choices `graph` (`operator`, `initial`) and `direction` (`backward`, `forward`) and the button `trellis`; a box prints its symbol alone, its ports' labels on hover; the trellis's restriction is typed in the field `periods`, and `all` shows the whole trellis again ([Bellman Workbench](overview/07-workbench.md) §§2, 7).
+- Details, under the graph, holds the legend and the selected piece's rows, each on one line; with a box of the construction of the saved text selected, its button `paper` writes `paper/<stage>.md` and `paper/<stage>.svg` once ([Bellman Workbench](overview/07-workbench.md) §3).
+- Goto Anything, opened by Command+P or Ctrl+P or the icon `go to`, lists blocks and boxes after `@`, a line after `:`, text after `#` and commands after `>`, shows the current result without moving the cursor, and leaves everything as it was on Escape ([Bellman Workbench](overview/07-workbench.md) §3).
+- The status line is visible: the cursor's place, `8:33`, the file, the occurrence, the state with the digest, `constructed 08c03d3`, the refusals, `indent 4` and `BellmanSym`; `more` shows the details and git's line, and `constructed` carries on hover `The language's check, not a verification of the economics.` ([Bellman Workbench](overview/07-workbench.md) §4).
+- Matsya fills the right column with its periwinkle Υ and answers headed `MATSYA`; its conversation is named by a digest of the folder's path, and `BELLMAN_WORKBENCH_MATSYA=off` removes the column ([Bellman Workbench](overview/07-workbench.md) §5). The folder's button `notebook` writes `notebooks/<folder>.ipynb` once, whose cells assemble the trellis, print each occurrence's view, its digests and its methods ([Bellman Workbench](overview/07-workbench.md) §6).
+- The hovers of the terms `kind` and `period` in Details each read as one clause: `the kind of the box's operator, or block or field in an initial diagram` and `one date of the model, numbered from the terminal period, periods[0]`.
+
+### 2026-10-06 — Matsya's model-iteration service and retrieval code
+
+- The optional package under `packages/matsya/` gains the code that builds and searches a local index of sources, a service in which a writer, a reader and a judge iterate on a Bellman-SYM declaration within a call limit, shorter guides for each role, and records of each call that survive a failed job without holding prompts or private text. It is installed only for the development and evaluation of Matsya, and the Bellman-SYM package does not depend on it.
+
+### 2026-10-06 — The graph drawn in the page
+
+- Bellman Workbench draws its graph on navy. The header separates `graph`, `initial diagram` and `trellis` from `backward` and `forward`. Four icon buttons at the foot change layout direction, zoom in, zoom out and fit, with `perch overlays` in a stage's view. Layers open and close with `▸` and `▾`. The wheel zooms and dragging the background pans ([Bellman Workbench](overview/07-workbench.md) §2).
+- Tab and Shift+Tab reach the graph's boxes and bring them into view, Enter selects, and Escape clears the linked selection. Choosing a field in the `Fields` tab selects its box when the initial diagram containing it is shown, and selecting that box marks its row.
+- A graph that could not be laid out, or a graph file that did not load, puts its refusal in the error mark's list. `export view` also exports the trellis shown, with its restriction and input record.
+- The built Workbench package includes its graph files, fonts and interface files, so the installed page can draw with the network off once its dependencies are installed.
+- The Workbench no longer embeds Model Explorer's component. The lessons' view in Model Explorer is unchanged.
+- The Workbench's installation requires `filelock` below release 3.30, the releases from which the library slows the package's copy of a trellis in Solara's server; `requirements.txt` holds it at 3.29.7.
+- A later start of the Workbench on unchanged files reads the bound trellis from `$XDG_CACHE_HOME/bellman-workbench/bindings/`, or `~/.cache/bellman-workbench/bindings/`, beside the stage views, in place of binding it again; a change of any file the trellis reads, or of the code of the package or of the Workbench, binds it again, and the folder can be removed at any time ([Bellman Workbench](overview/07-workbench.md) §7).
+
+### 2026-10-05 — The time to bind and copy a trellis
+
+- Binding and copying a trellis take less time, and no result changes: the package's copy of a stage version finds what it needs of each class once, a version a binding makes from another holds that version's records without freezing them again, and the occurrences of one stage text bound under different mappings compute the answers their graphs determine once. On the durables trellis of 154 stage occurrences, on one machine, `specify_trellis` takes 2.7 s where it took 6.1 s, one parameter draw by `calibrate_trellis` 1.1 s where it took 2.0 s, and the Workbench's `bind_trellis`, in a process without Solara, 2.0 s where it took 3.7 s.
+
+### 2026-10-05 — Bellman Workbench, into a stage and back, and the BellmanType panel
+
+- The text pane of Bellman Workbench is named BellmanSym, after the language, in place of `Symbolic Bellman`; the graph pane Semantic graph, in place of `Denotational Semantic Graph`; and the panel under the text, the classification table, the BellmanType panel, whose bar holds the state of the last reading and the tabs `Fields`, `Parameters`, `Settings` and `Methods` (AAS, 3 October 2026; [Bellman Workbench](overview/07-workbench.md) §§1 and 2). The buttons that add an entry, `add field`, `new variant`, `add stage` and `add period`, show the sign `+` with their word on hover, and `new trellis` keeps its word. Every region takes its size from a handle on its edge, within a least size: the tree, the two panes, the BellmanType panel, the panel under the graph and the Matsya window; the browser keeps the sizes for the model folder, and a double click on a handle returns its region to its default size.
+- A double click on an occurrence of the trellis view, or the button `open the stage` of its panel, which replaces `open`, opens its stage file bound as the page's recipe binds it at that position, the head under the tree reading `periods[3] / tenure` and the status line's version `bound`; a double click on a box inside an occurrence opens the file at the box's block. The breadcrumb, a new first row of the window, names the path the page took, `durables › spec.yml › periods[3] › tenure`, and its folder, recipe and period are links. Alt+← and Alt+→, pressed outside a text field, and the buttons ← and → at the breadcrumb's start, step back and forward through the places the page has shown, each place its view, recipe, restriction, occurrence and open file with the selection there; the places are kept until the page is closed, and none is written in the model folder ([Bellman Workbench](overview/07-workbench.md) §7).
+- A stage file opened from the tree is bound as its first occurrence in the page's recipe, under the breadcrumb `durables › spec.yml › tenure (in 51 periods)`; the head offers the file's other positions, or, where the page's recipe holds none, names after `held by` each recipe of the folder that holds it, a link that binds the file there, under the breadcrumb `durables › tenure.bl`. With nothing selected, the panel lists under `used at` the file's positions in each recipe that holds it, the page's recipe first, each a link into that recipe's trellis, which shows the occurrence's period alone, `periods 3`, where the restriction in the input leaves the occurrence out.
+- The tab `Fields` is the classification table of 2 October. In a branching stage its continuation table heads each branch's group by the control that selects the branch and its label, `cntn · d = keep`, or by the label alone where nature draws the branch, and adds in every branching stage the group `cntn · all branches` with its own `+`, which writes a state into the block of every branch; the language refuses a field that two branches write, so the elaborator refuses such a state and proposes a new name for one of its copies. `Parameters` lists the parameters the stage declares with their values at the occurrence, or `unvalued`; `Settings` lists the settings with their kinds and values; `Methods` lists each target's method, with a choice among the methods the method table admits there. A typed value or a chosen method is written to the file that writes it, and a parameter that no file values is added to the last calibration file the recipe lists, which the tab names; each row links its file and line, and where the recipe lists no file of a kind, or no recipe binds the stage, the tab says so, `the recipe lists no settings source for disc` or `no recipe values them`.
+- Every refusal of the page stands in one place, except a form's, which stays in its form (git's refusal of a commit stands in both), and the `Methods` tab's sentence on the places of a stage and its refusal at a target, which stay in the tab: an error mark at the right end of the window's first row shows in orange the count of what stands refused or undone, and a click opens the list under it, newest first, each line the refusal's sentence, as the package, the Workbench or git writes it, with nothing added, followed, where the refusal names them, by its file and line, a link that opens the file at that line, or by its file alone; with nothing refused the mark is drawn in slate and the list reads `nothing refused`. The list holds the refusals of the open text and of the trellis, the bindings skipped or refused, a refused change of `Fields`, a refused value, method or choice of a file, a refused restriction, git's refusal of a commit or a push, a refused export, and a save that met a changed file. What was refused keeps a mark in orange in its own place and no longer prints the sentence there: the panel's line, `refused at …` or `refused in …`, with the rule, the cell of `Fields` or the input or choice of another tab that was refused, the button `replace` of the recipe table's entry, the restriction's input, the button of git's line whose command was refused, and the frame of a save's three choices (AAS, 4 October 2026; [Bellman Workbench](overview/07-workbench.md) §3).
+- The page's words are shorter (AAS, 4 October 2026): a label is a word or a few, `Select a box.`, `Select an occurrence.`, `No stage file.`, `Not elaborated.`; a hover carries at most one short sentence; a form's note says in one line what it writes and where; a refusal of the package is its sentence with nothing added, and a refusal of the Workbench's own names in one line what is wrong and where, `the recipe lists no settings source for disc` where the tab added `; add one in the recipe table`, or `declaration/spec.yml holds unsaved text`. On 4 October 2026, in a change made apart from this work on the repository's main branch, a box of the graph came to show its symbol alone, `𝑉≻ ∘ 𝑔≻`, its kind standing among its rows in the panel, and the legend to name its marks in a few words, `bound method`, `at a policy` and `law of motion` ([Bellman Workbench](overview/07-workbench.md) §2).
+- The package's `replace_entry` of `bellman.trellis` writes a number, a boolean and a tag as well as a string, plain as YAML writes them, `1.05`, `400`, `true` and `!pchip`, where before it wrote strings alone, giving `β: "0.95"` for the number 0.95; and `entry_value` refuses with a ValueError a text holding a value that the package's reader of YAML files cannot build, such as `!!bool abc`, and a text nested deeper than the reader follows, where the reader's own error escaped before, a KeyError, an IndexError, an AttributeError, a TypeError, an OverflowError or a RecursionError ([The trellis factory](Bellman-Sym/API/factory/trellis-factory.md) §8).
+
+### 2026-10-04 — Model translation tools
+
+- Added programs for comparing declared models, constructing controlled changes, recording translations between model descriptions and declarations, and summarising their results. The first recorded run uses scripted responses; the first measurement with language models remains to be made.
+- Registered 38 models for the first automated iteration study: ten Econometrica papers, fourteen HARK models and fourteen applications. An input report lists available preparation files, unresolved source relationships and descriptions or declarations still to generate; registration grants no verification grade.
+- Every model in the additional application corpus follows the same [model directory layout](Bellman-Sym/reference/model-directory-layout.md) as `applications/`, with model notes named `economics.md` and one folder per declared stage. Each Econometrica model folder contains its reference paper, model note and declaration folder.
+
+### 2026-10-04 — The trellis view in seconds
+
+- The package's new operation `specify_trellis(syntactic, previous=None, kinds=KINDS)` of `bellman.trellis` answers the specified trellis of a syntactic trellis, equal to the trellis that `elaborate_trellis` and the trellis verbs of `kinds` make, the verbs applied in the order calibrate, methodize, configure: each distinct stage text is constructed once, or taken from `previous`, and each stage occurrence is copied once, where the elaboration and each verb copy every occurrence. `assemble_trellis(directory, recipe)` is `specify_trellis(load_recipe(directory, recipe))` ([The Bellman factory](Bellman-Sym/08-bellman-factory.md) §2), and a refused binding carries the note `Binding kind: <kind>` beside the note that names the occurrence. The durables trellis, of 154 occurrences, is bound with 154 copies of a stage where the elaboration and two verbs made 462.
+- Bellman Workbench reads a trellis through `specify_trellis`, with the trellis shown before as its `previous`; a kind of binding the package refuses is reported and left out of the next call, so that the other kinds still bind. A reading in which no file the trellis reads has changed on disk is not repeated: a new restriction draws the trellis held, in under 0.1 s on durables, where the trellis was read again in about 7 s, and the page reads a folder's trellis once when it opens the folder, where it made two identical readings at the same time.
+- A trellis of more than six periods opens on its terminal period and the two before it, the window writing `periods 0–2` into the input above the graph as a reader would, and the status line names the number of periods of the whole trellis after a restriction of periods alone, `shown periods 0–2 of 51 (10 occurrences)`; a trellis of six periods or fewer shown after a long one opens whole ([Bellman Workbench](overview/07-workbench.md) §7).
+- The view of each stage of a trellis is kept between runs as one JSON file for each stage version, a stage text with its three bindings, and each of its two graphs, backward and forward, in `$XDG_CACHE_HOME/bellman-workbench/views/`, or `~/.cache/bellman-workbench/views/` where the variable is not set. The folder of the views is named by the package's version and a digest of its source files, of Python's major and minor version and of the installed versions of the package's pinned dependencies and of Model Explorer, as a process finds them when it imports `bellman.factory.model_explorer`, so that a change of the package's files or of those versions gives another folder; the version of no other distribution is part of the name. Among the cases in which the name does not describe the code that computes a view are these two: a process that loaded some of the package's modules before its files changed, and imports `bellman.factory.model_explorer` after the change, computes views with its older code in the folder named for the new files; and a process that imports that module before an upgrade of Model Explorer, and exports for the first time after the upgrade, computes views with the newer Model Explorer, and reads those of the older one, in the folder named for the older version. The folder can be removed at any time ([Bellman Workbench](overview/07-workbench.md) §7). The tests of both packages set `XDG_CACHE_HOME` to a temporary folder.
+- Measured on the durables folder under `periods 0–2` on one machine: the Workbench's first reading of the trellis in a fresh process takes 5.17 to 5.37 s with no stage view kept and 3.37 to 3.46 s with the views kept, where it took 7.1 to 7.3 s before this work; opened in the page by a new server, the trellis was drawn after 6.7 s the first time and after 4.9 and 5.0 s the second, in two runs.
+
+### 2026-10-03 — The legend, the text on a box and the colors of the graph
+
+- The box of a primitive operator, in the view in Model Explorer and in Bellman Workbench's graph pane, reads two short lines: the kind of its operator, followed by `at` and the policies where the operator is stated at a policy, above the symbol the drawing shows for it without the arguments of a law or an [aggregator](wiki/aggregation.md) written out at a policy, `Pullback at 𝑐` above `𝑉≻ ∘ 𝑔≻`. A law of motion is named as the operator's card names it, so that the pullback and the push-forward that read one law name it alike, `𝑉≻ ∘ 𝑔≻` and `𝑔≻∗μ`, where the drawing writes the letter `𝑔`; a method bound within the box ends the second line, `𝑉(m_d), 𝑑𝑉(m_d) · !Cartesian`; the arguments stand in the operator's `rule` rows; and `Inputs`, `Outputs` and the nodes of an initial diagram keep one line (`node_label` in `packages/bellman/bellman/factory/model_explorer.py`; [The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.1). AAS found the text on a box "too big and uninformative" on 2 October 2026.
+- An evaluation is labeled by the outputs it produces, `𝑉(m_d), 𝑑𝑉(m_d)`, in place of the words `at the output`, in the drawing that `diagram()` answers as in the view; an evaluation with three or more outputs names the first two and counts the others, `𝑉(a_d, h_d, z_d), 𝑑𝑉_a(a_d, h_d, z_d) and 1 more`, and its tooltip in the drawing, its card and its output ports name them all (`box_symbol` in `packages/bellman/bellman/display/drawing.py`). Lessons 01 and 02 say so, the lesson `kernels` names the aggregation of `cntn_to_dcsn` by its two lines, `Aggregation at 𝑐` over `𝐺`, and the thirteen lessons are recorded again.
+- The view is written as two files, the graph file and the file of the three perch overlays, and `serve(graph_path, …)` takes the graph file alone: the method overlay, which tinted each operator within which a method is bound by the operation the method realizes, is retired with its node data file and with `method_overlay`, and a bound method is the one mark at the end of its box's label ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §1, §2 and §4.2). Seven lessons count the view's two files.
+- The colors of the view tell apart the levels a reader opens and what each builder gives (AAS, 3 October 2026: "these need to be only three or four colors"): a node is white with a navy border and a navy label; the node of an operator that writes a wire read outside its builder's layer, by another builder, by `Outputs` or by a join of a trellis, is lined in ultramarine; a layer is lined in navy, a period of a trellis white, a stage occurrence on the lightest of the site's three pale blues, a builder on the second and a sub-builder on the third, and the perch layers of an initial diagram on the lightest; and the node of a refused graph keeps its orange line. The fills by operator family and the slate of `Inputs` and `Outputs` are gone, and `bellman.stage` and `bellman.trellis` export `LAYER_COLORS`, `NODE_STYLE`, `OUTPUT_STYLE` and `PERCH_COLORS` in place of `FAMILY_STYLES` and `METHOD_TINTS` ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.1; [The API](Bellman-Sym/API/index.md) §2).
+- The legend under Bellman Workbench's graph lists what the graph shown holds and nothing else: as its title the label of the version drawn, `cons methodized`; the levels the graph draws, each with a swatch of its fill and border; each bound method's tag and place, `!egm  policy:Evaluation`, a place in a trellis written with its stage's key and without its period, `!Cartesian  cons/cntn_to_dcsn:Evaluation`, and listed once; the marks the labels hold, `· !tag`, `at 𝑐` and `𝑔≺, 𝑔≻`, each with a sentence that says what it means; the color of each perch while `perch overlays` is on; and in a field diagram each role with its fields, `value  V≻, V, V≺`. The swatches of the operator families and the catalogue of method tags are gone, the catalogue standing on [Method types](Bellman-Sym/reference/methods.md). The Workbench draws a selected box, the boxes it reads from and writes to, and the wires between them in ultramarine, where the viewer's own colors are green and orange (`legend_entries` and `Legend` in `packages/bellman-workbench/bellman_workbench/app.py`, and `brand.css`; [Bellman Workbench](overview/07-workbench.md) §2).
+
+### 2026-10-03 — A trellis view drawn once per stage version
+
+- The view of a trellis in Model Explorer computes one stage view and one builders hypergraph per stage version, the text and the three bindings of an occurrence, and gives it to every occurrence of that version, in place of one computation per occurrence; the drawn view is the same, node for node. The fifty-one periods of the durables model, 154 occurrences of four versions, are exported in 5 seconds where they took 82, and the Workbench's trellis view opens in seconds (AAS, 3 October 2026: the twenty-second load of the durables folder).
+
+### 2026-10-02 — Bellman Workbench, the trellis and the recipe
+
+- Bellman Workbench (`packages/bellman-workbench/`, the page [Bellman Workbench](overview/07-workbench.md) §7) shows the trellis a model folder elaborates to: a folder with a recipe or with trellis files opens on its trellis, each period a frame holding its stage occurrences and each occurrence its builders, the button `trellis` returning to it from a stage. The trellis is read again whenever a file it reads is saved, a changed stage file constructed once and every occurrence of it replaced. Typing `periods 0–2`, `stages cons, port` or both shows part of the trellis, a join that leaves it standing at the view's own inputs or outputs with the occurrence outside named. A refused backward graph lists each join that leaves a marginal value unpaired with a link to the header that declares the wire and to the connector.
+- The recipe stands as a table under the tree at the head's occurrence, and where a folder's `declaration/` holds several recipes, `spec.yml` and its variants `spec.<name>.yml`, they are listed above the table; a cell takes a methods, calibration or settings file of the matching folder of `declaration/`, or for a methods cell a stage folder's `methods.yml`, written in place of one entry of the recipe, by its path from the recipe's folder, with its comments and layout kept, and the stage's view and the trellis show what it binds. The open stage file is bound as the occurrence the head names where that is one of its occurrences. A slot left to fill stands in orange in the table; the slots `answers.yml` marks required, or every slot where it holds no list of slots, are entries of the checklist above the tree, which counts them apart from the refusals ([Bellman Workbench](overview/07-workbench.md) §6). With the cursor on a name, the panel lists its occurrences, its declaration first, its calibration line and the boxes that depend on it: a box whose [kernel](Bellman-Sym/API/stage/05-piece.md) reads or writes the name, a box one of whose wires carries it, and a box whose record rests on one of the name's definitions, directly or through the definitions those use.
+- The package gives the view of part of a trellis, `to_model_explorer(trellis, periods=…, stages=…)`, and `unpaired_joins`, the rows of a refused backward graph as records ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §5); and, in `bellman.trellis`, `entry_span`, `entry_value`, `replace_entry`, `append_to_mapping`, `append_to_sequence` and `written_at`, which find, read, replace and append one entry of a model's YAML files as text, a quoted value keeping its quotes, and move an address of the expanded trellis to the file that writes it, counting a period file's own `repeat` and refusing an `inter_connectors[h]` that no file writes ([The trellis factory](Bellman-Sym/API/factory/trellis-factory.md) §8). `bellman.stage` now exports `PERCH_MARK`, the mark a printed name carries after its letters for each perch, as in `V≻` at the continuation and `μ≺` at the arrival, with none at the decision, by which the Workbench matches a field in a kernel with or without its mark.
+- After the merge with the model folder's layout (the entry below), Bellman Workbench reads a folder's recipes in its `declaration/`, `declaration/spec.yml` first and its variants after it in name order, and a folder whose `declaration/` holds no recipe offers its trellis files, as the eight `declaration/trellis.*.yml` of `applications/cons-port/`. A recipe at the folder's top is not read: a folder that holds `spec.yml` there and no recipe in `declaration/` offers no source, not even its trellis files, and the panel of the open stage file says that the Workbench reads a folder's recipe at `declaration/spec.yml`, the sentence of the layout's `apply_bindings`, a function this work had deleted (`model_sources` and `find_occurrence` in `bellman_workbench/recipe.py`). The merge keeps `bellman_workbench/yaml_text.py` deleted: `new variant` reads the files it copies with `entry_value` and writes the lines that name the copies with `replace_entry` of `bellman.trellis`, a quoted value keeping its quotes, and then opens the variant's recipe as a click on it in the tree does, its trellis in the view and the variant beside the first recipe in the list. The layout's `replace_scalar` and `replace_entry` write the same text for every replacement `new variant` makes in the six recipes of `applications/`. Where `replace_scalar` refused, `replace_entry` writes a plain value that would read as another type, `2026`, in double quotes, writes a double-quoted value with an escape anew within its quotes, and replaces whole a plain value written over two lines, a mapping and a tagged value, whose tag it drops; both refuse an anchored value that an alias reads and an entry the file does not hold, each with its own sentence. The claims of the layout's test of `replace_scalar` stand in the package's test of `replace_entry` (`packages/bellman/tests/test_behaviour.py`). The package's `append_to_mapping`, which `add stage` calls, appends after a text written with `|` as the last entry of a mapping, which the appender of `yaml_text` refused, and refuses a text written with `|+` there, whose kept blank line the new entry would cut.
+
+### 2026-10-02 — The model folder's layout
+
+- Every model folder under `applications/` takes one layout (AAS, 2 October 2026: "proceed with the above restructure"). The files the language reads stand in the folder's `declaration/`: the recipe `spec.yml` and its variants `spec.<name>.yml`, the trellis and period files beside them, `calibration/`, `settings/`, and one folder per stage, `stages/<key>/`, holding the stage file `<key>.bl`, its methods file `methods.yml` and its note `<key>.md`. Beside `declaration/` stand `README.md`, `economics.md` (the former `model.md`), `code/` for the folder's programs, `tests/` for its structural tests, `reference/` for the papers it keeps, and `results/`, which git ignores (`applications/.gitignore`). The 206 files moved are, by folder: benhabib-2019 20, buffer-stock 1, cagetti-denardi-2006 36, cons-port 39, consumption-savings-iid 3, durables 22, epstein-zin-savings 4, housing-frictions 9, housing-owner 7, housing-renting 21, pension-retirement 8, portfolio-choice 14, retirement-choice 17 and smooth-ambiguity-savings 5. The folder `cons-port/`, which has no recipe, holds its eight trellis files of records in `declaration/` as `trellis.<name>.yml` and `trellis.reference-<name>.yml`, and the earlier YAML stages of `syntax/` in `reference/legacy/syntax/`. Each of the thirteen other folders gains a `README.md` that states the model in one sentence and the command `bellman-workbench applications/<model>` that opens it.
+- The documentation states the layout once, on the page [Model directory layout](Bellman-Sym/reference/model-directory-layout.md), which is rewritten. It holds the tree of the durables folder and the parts other folders hold, the six rules of the layout, the three kinds of variant (of the route, of the values and of an equation) and the rule for the paths of a model's documents, which write a path from the model folder and keep a path quoted from a recipe or a trellis file as that file writes it. The six rules are that every file the language reads stands under `declaration/`, the registry `load_recipe` is given; that a recipe and a trellis file write every path they read; that the files of a stage stand in one folder; that variants stand side by side; that `README.md` is a folder's first page and `economics.md` its economics; and that the recordings of a model's stage files stand with the package's tests and the model's code writes into `results/`, which git ignores; a model folder tracks a generated file only as a record kept on purpose, such as cons-port's fixed numerical reference. `applications/README.md` lists the layout and names the page; [Workflow](overview/06-workflow.md), [Bellman Workbench](overview/07-workbench.md) §1, [The Bellman factory](Bellman-Sym/08-bellman-factory.md) §3, [Recipe functions](Bellman-Sym/API/factory/spec-factory.md) §§1 and 2.1, [The trellis factory](Bellman-Sym/API/factory/trellis-factory.md) §1, [The runner](asva/02-the-runner.md) §§2 and 4, the wiki entry [Specification factory](wiki/spec_factory.md), the example pages [Buffer Stock Consumption Model (Normalized)](examples/buffer-stock/buffer_stock.md), [Consumption-Savings with IID Shocks](examples/cons-iid/consumption_savings_iid.md), [Housing Model](examples/housing_renting/housing_owner.md) and [Port-with-Shocks Model](examples/cons-port-stages/port_with_shocks.md), and §§2.1, 3.3 and 4 of the model interface specification 0.3 follow the layout or point to the page. The documents of the model folders, the docstring of `applications/durables/code/wage_schedule.py` and the branching corpus's page on the Cagetti and De Nardi model write their paths by the page's rule, and the cons-port lesson 03 names its methods files by their paths from the repository root in every cell.
+- Each application's recipe, six recipes in five folders, writes `stage: stages/<key>/<key>.bl` and names a stage's methods file `stages/<key>/methods`, and each trellis file of records writes its paths from its new folder; the two recipes of the package's test corpus, which are not model folders, keep `stage: stages/<key>.bl`. The eight recipes of the applications and of the test corpus answer the syntactic trellises they answered before, record for record, apart from the moved paths and the comments that name them: the new test `packages/bellman/tests/test_layout.py` compares each with the digests of `packages/bellman/tests/fixtures/layout_base_trellises.json`, refuses a model folder that departs from the layout, and checks that a recipe whose `stage:` names the earlier path is refused as `load_stage` refuses a missing file. Every reader of a moved path is repointed in the same change, except the notebooks outside `tutorials/`, which this unit does not edit, among them cons-port's frozen legacy notebook `applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb`, which still reads `../../syntax` and so no longer runs where it stands. The readers repointed are the application tests; the package's tests and fixtures, the corpus test collecting `*/declaration/stages/*/*.bl`; the 44 recordings that store a stage file's path, written again, which differ from the earlier ones in the paths alone and in where a printed line holding a longer path breaks; Bellman Workbench, which reads a folder's recipe from `declaration/spec.yml` and takes a stage folder's `methods.yml` for a methods file (`bellman_workbench/model.py`, `_recipe` and `_role`); the decision records and the project's rules and guides; the root `README.md`; the pages of the documentation; and the cells of the thirteen lessons and their set-up module `tutorials/checkout.py`.
+- The thirteen lessons of `tutorials/` are executed again once, by `tutorials/tools/execute_lessons.py --record`, after their cells were repointed, and `tutorials/lessons.json` records their new digests and the paths of their inputs that moved, 82 entries for 46 files; `--check` finds all thirteen up to date. Eight recorded outputs change, each because it prints a moved path or a file whose comment names one: the stage occurrence that lesson 01 of the getting-started series prints and two that the Benhabib lesson prints, which now break the longer path over two lines; the comment of the calibration file `calibration/portfolio.yml` that lesson 04 prints; the trellis file `trellis.port-cons.yml` that lesson 05 and cons-port lesson 02 print; and the recipe and the provenance of the sources that the Benhabib lesson prints. No other output and no cell's source changes.
+- A stage card's `File` section breaks a path wider than the card after a `/`, as the subtitle of a stage's description already did, since a stage folder writes the stage's key twice in its path (`packages/bellman/bellman/display/cards.py`, `_file_block`); the cards of `cons_savings_iid`, `sa_savings` and `retiree_death` in the snapshot recordings are written again. A stage's dossier reads the stage files of a period file that no recipe names at `stages/<key>/<key>.bl` under the period file's folder (`packages/bellman/bellman/dossier.py`). The refusal of a recipe entry that names no stage file advises the layout's path, `stage: stages/<key>/<key>.bl` (`packages/bellman/bellman/factory/recipe.py`), and the example registry of the refusals, `REGISTRY_FILES` of `bellman.refusal_examples`, holds its stage file at `stages/two_nodes/two_nodes.bl`.
+- The recordings that the corpus test compares no longer stand in the model folders under `applications/` but with the package's tests (AAS, 2 October 2026: "proceed with the above restructure"). The parsed term `<file>.bl.ast.json` and the encoding of the elaborated stage `<file>.bl.stage.json` of a stage file of `applications/<model>/` stand in `packages/bellman/tests/snapshot/corpus/<model>/`: 79 files moved unchanged, among them the specified encoding `cons.bl.specified.stage.json` of `portfolio-choice`. The 70 printed parse trees and pages of parsed terms (`.tree`, `.ast.html`), which no test or page read, are deleted, and with them every `derived/` folder.
+- `packages/bellman/tests/snapshot/record.py` gains `recording_path(stage_path, suffix)`, the path of a recording, which depends on the application's folder name and the stage file's name alone, and the option `--corpus`, which writes again, each in the form stored, every recording the corpus test compares and the specified encoding of `portfolio-choice/cons.bl`, which `test_behaviour.py` compares; of the stored recordings it leaves out only the parsed term `housing-owner/consumption_choice.bl.ast.json`, whose stem the corpus test lists as unparseable. `packages/bellman/tests/test_snapshot.py` checks that every stage file the corpus test collects has its recordings, that every recording belongs to such a file, and that `--corpus` reproduces each recording it writes byte for byte.
+- The folder `packages/bellman/harness/` is retired. Its two modules for the structural tests of the applications, `stage_ast.py`, the helpers and printers of a parsed term, and `stage_types.py`, which re-exports the term classes of `bellman.syntax.terms`, stand in `packages/bellman/tests/tools/`, from which those tests import them, and `parse_stage.py`, which wrote the files of the `derived/` folders, is deleted. The folder tree of Bellman Workbench no longer leaves out a folder named `derived` (`bellman_workbench/model.py`, `HIDDEN_NAMES`).
+- The forms of Bellman Workbench that write a model folder, `new trellis`, `add stage` and `add period`, which the entry "Bellman Workbench, creating a model and git" below describes, write this layout: a new folder's `declaration/` holds the recipe, the trellis and period files, `calibration/`, `settings/` and one folder per stage, `stages/<key>/`, with the stage file and the methods file its template brings, copied as `methods.yml`; each row of the recipe writes `stage: stages/<key>/<key>.bl`; `answers.yml`, the `.gitignore` and `README.md` stand at the folder's top, `answers.yml` naming a period file by its name in `declaration/` and a connector's file by its path from the folder. The templates are read from the moved corpus files `cons-port/declaration/trellis.port-cons.yml`, `cons-port/declaration/trellis.reference-cons-only.yml` and `pension-retirement/declaration/spec.yml`, and a template's model title from `economics.md`, then `README.md`. The factory's folder and the recipe's name are two constants of `bellman_workbench/model.py`, `FACTORY_FOLDER` and `RECIPE`, which `creation.py` imports, so that the Workbench binds a stage from the recipe where `new trellis` writes it. The tests of these forms and of the classification table, in the Workbench and in the package, that read a moved stage file or the earlier layout read the new paths.
+- Bellman Workbench writes a second trellis of a model in the same folder (AAS, 2 October 2026: "we cannot construct a new trellis in the same folder"). The button `new variant`, shown where the folder's `declaration/` holds `spec.yml`, asks for a name, a plain word of letters, digits and `-` such as `two-stages`, and writes beside the recipe `spec.two-stages.yml`, `trellis.two-stages.yml` and `period.two-stages.yml`: copies of the recipe, of the trellis file it names and of each period file that trellis file names, a period file `period.<x>.yml` being copied as `period.two-stages.<x>.yml`, in which the recipe's `trellis:` and the trellis file's `template:` entries name the copies and every other line is kept as it stands, comments included (`create_variant` in `bellman_workbench/creation.py`, through the new text writer `replace_scalar` of `bellman_workbench/yaml_text.py`); the page then opens the variant's recipe. A name that is no plain word, or whose files exist, is refused with a sentence that names the files, before anything is written, and so is the form while a file it copies holds unsaved text. The form `add stage` offers the period files that the trellis file of `spec.yml` names, and no longer every `period*.yml` of `declaration/`, so that a stage is not added to a variant's period file through `spec.yml`, after which the factory would refuse both recipes (`period_files`).
+- Bellman Workbench opened on a folder that holds its recipe `spec.yml` at its top, as a folder written before this layout does, binds no stage file and says why in the panel: the recipe stands at the folder's top, and the Workbench reads a folder's recipe at `declaration/spec.yml` (`apply_bindings` in `bellman_workbench/model.py`). The notes of the forms `add stage` and `add period` name the files each edits by their paths from the model folder: `declaration/spec.yml`, the period file chosen and `answers.yml`; or the new period file `declaration/period.<label>.yml`, `declaration/trellis.yml` and `answers.yml`. With a variant's recipe open, the forms thus say that they change the files of `spec.yml` and none of the variant's.
+
+### 2026-10-02 — Bellman Workbench, the classification table
+
+- Under the text of the open stage file in Bellman Workbench (`packages/bellman-workbench/`, the page [Bellman Workbench](overview/07-workbench.md) §2), three tables headed `arvl`, `dcsn` and `cntn` list the fields at each perch with the declared set as the fields table prints it, the role word and the line of the header that first lists the field; the rows are read from the elaborated stage at every pause. During each reading, the reading each save starts included, and after a reading that makes no stage object (one in the state `not parsed`, or one in the state `parsed, refused` in which the construction refused the stage itself), the tables show the last stage that elaborated, dimmed, and take no change (model interface specification 0.3, unit T).
+- A set or a role changed in a cell is written where a header declares the field, in every header that repeats the declaration, as one edit the editor can undo; the box `add field` writes a new field's declaration into the header that takes it, and a field the file declares elsewhere is read there and left there. In a branching stage the continuation table holds one group per branch, with that branch's fields and the values the elaborated stage types as functions of them; a value whose branch the stage does not answer stands under `all branches`. The file on disk changes by `save` alone.
+- The set cells and the code editor expand the Unicode shortcuts of the VS Code extension, read once from `editor/dynspec-vscode/snippets/dynspec.json`: a prefix such as `\StrictlyPositiveReals` followed by Tab gives `ℝ₊₊`. The editor's bundle is rebuilt and its record updated.
+- The package's lowering keeps, after the authored items of the span table that `source_spans` answers, the place of each side of a block header, each field it lists and each component of the field's typing; `bellman.stage` exports `header_of`, `branches`, `to_source`, `ROLE_WORD` and `PRIMITIVE_SETS`, which the table reads.
+
+### 2026-10-02 — Bellman Workbench, creating a model and git
+
+- Bellman Workbench writes a model from templates: the button `new trellis` writes a folder in the factory's layout under the folder the Workbench was started on, with the stage files chosen from the application corpus and the files their models bind them with, a recipe whose every binding is an unfilled slot, `period.yml`, `trellis.yml` and the form's answers, and opens it with its recipe in the editor; outside a repository the folder is made one with the push destination given. `add stage` and `add period` copy one more stage, or write one more period, into such a folder, editing the YAML files as text so that their comments and layout stay. A checklist lists each unfilled slot at its file and line, apart from the refusals, and the tree and the status line count the entries ([Bellman Workbench](overview/07-workbench.md) §6).
+- Git's line commits the files of the folder you name, `git commit --only`, a new file, a deletion and a rename among them, and leaves other staged work as it is; it pushes with the credentials git already holds and shows git's own sentence, a push that would ask for a credential failing at once; and it exports the shown view under `model-explorer/` with a record of its inputs' digests and the commit. Nothing is committed on your behalf: the first commit of a new folder is offered, and made when you press `commit`.
+
+### 2026-10-02 — The trellis, the period file and the recipe in the documentation
+
+- The trellis page `docs/Bellman-Sym/07-trelis.md` is renamed `07-trellis.md`, and every page, lesson, docstring, model note, rule and register that named it is repointed, the three lessons whose opening cell links it recorded again; the records of earlier runs keep the old spelling as they were written.
+- [Trellis Syntax](Bellman-Sym/07-trellis.md) is rewritten from AAS's questions of 2 October 2026 on the durables folder, each answer checked against the loaders, and holds the loading of a trellis as it is written and nothing more (AAS, 2 October 2026: everything up to the trellis is about loading a trellis as it is; the overrides and the fills belong to the specification factory). The page explains, in this order, what the three files are for, the trellis file listing the periods and their connectors, the period file a template that binds nothing and the recipe naming each stage's file and its sources by written paths; why the periods are counted backward from the terminal period; the two shapes of a period's `stages:`, a list of keys read through a recipe and a mapping of records read with none, told apart by the shape and never mixed; how periods are written out one by one, repeated from a template, or both in one list; that a recipe names its trellis file under `trellis:` and each stage's file under `stage:`, every path relative to its own folder with nothing assumed, the recipe file being `spec.yml` and a variant route a second set of the three files beside the first, `spec.<name>.yml`, `trellis.<name>.yml` and `period.<name>.yml`; and how the same trellis is built in Python with `accrete` and no file. Every example is a file of the corpus or a fragment the loaders accept.
+- [The Bellman factory](Bellman-Sym/08-bellman-factory.md) is rewritten to hold the recipe route in full: what a recipe is and what it binds, `trellis:` and `stage:` as written paths with the two refusals, the ordered source lists of each kind and the merge in which a later source stands over an earlier one, the slots and the keyword fills of `load_recipe` and `assemble_trellis` with the three shapes of a fill, the range lists beside `all` and `periods: [lo, hi]`, the `registry` block and the wage schedule written from it, variants side by side, and the route from the recipe to the specified trellis; the construction by accretion is a pointer to the trellis page, and the sections on what each call prints, on what a change makes anew and on the order of a period keep their text and their numbers, every listing run again.
+- [Period Syntax](Bellman-Sym/06-period.md), [Periods and trellis](overview/04-periods-and-trellis.md) and the wiki entries [Trellis](wiki/trellis.md) and [Period](wiki/period.md) state the two shapes of a period, the template that binds nothing and the names `period.yml`, `spec.yml` and `period.<name>.yml` in the same words.
+
+### 2026-10-02 — The package's names imported from the object they concern
+
+- A public name is imported from the namespace of the object it concerns, the subpackage of `bellman` named after that object: `from bellman.stage import load_stage, elaborate_stage`, `from bellman.period import period_joins, diagram_period`, `from bellman.trellis import load_trellis, elaborate_trellis, diagram_trellis`, and the four refusal classes from `bellman.refusals`; the root package `bellman` exports nothing, so `from bellman import load_stage` is refused (AAS, 30 September 2026). Each namespace holds one table from each name to the module that defines it, and that module is imported when the name is first used. A function of the [view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) that takes a stage or a trellis, or reads a view of either, and every constant of the view that the package exports but `INITIAL_IDS` stand in `bellman.stage` and in `bellman.trellis`, one object in two tables; `box_attributes` and `INITIAL_IDS`, which concern a stage only, stand in `bellman.stage` alone. The package's own check of its imports refuses a table entry that names a module which does not define the name. The API index lists the three namespaces in three tables and the stage object in a fourth ([The API](Bellman-Sym/API/index.md) §2). Every import of a name from `bellman` in the documentation, the lessons, the tests and the applications is written anew, and the thirteen lessons are recorded again.
+- The package answers what Bellman Workbench computed for itself: `source_spans`, the [source spans](wiki/source_span.md) of a text, the place of each block, line and top-level item in the file; `bind_stage`, which binds a stage from the calibration, methods and settings of a source record ([Trellis Syntax](Bellman-Sym/07-trellis.md) §6) and reports which of the three [binding verbs](Bellman-Sym/API/stage/09-binding-verbs.md), calibrate, methodize and configure, it applied, which it skipped because their source was empty, and which refused their source; `layers_to_open`, the layers a page opens on a view, a layer being a group of the view's nodes, such as those of one builder or one [perch](wiki/perch.md), that the viewer draws as one closed box until it is opened ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.1); `node_place`, the place of a node of a view, its [stage occurrence](wiki/stage.md) in a trellis, such as `periods[0]/cons`, and the block of the stage file whose lines produced it; and `wire_counts`, the distinct wires of each [builders graph](wiki/semgraph.md), 17 backward and 3 forward for `cons.bl`. The namespaces also export the names the Workbench still reads that it imported from the package's internal modules: `elaborate_text`; `to_model_explorer`, which answers the view as one collection of graphs, the viewer's `GraphCollection`; `method_overlay`, which now also takes that collection once it is built; `box_attributes`; `perch_overlays`, the three overlays that color a view's wires by their perch; `graph_refusal`, the refusal held in the place of a graph the construction refused; `header_line` and `source_lines`, the line of a block's header and the file and the line number of each line of the stage file that the `Source` section of a card quotes, the card of a builder ([A builder](Bellman-Sym/API/stage/04-builder.md) §1), an operation, a block or a definition; `BOUNDARY_IDS`, the ids of the two nodes, shown as `Inputs` and `Outputs`, that hold a builders graph's own inputs and outputs, and `LAYER_ID_ENDING`, the ending of the id of a layer; `INITIAL_IDS`, the ids of the graphs of a stage's two [initial diagrams](Bellman-Sym/API/stage/02-initial.md); and `FAMILY_STYLES` and `METHOD_TINTS`, the fill and border the view gives a node by the family of its operator and the tint of each method tag, which the Workbench's legend shows. Bellman Workbench's `model.py` imports from no module of the package but the namespaces and `bellman.refusals`, and defines none of these functions; the lessons' helper opens the layers that `layers_to_open` names; `ConstructionError` states that its columns count code points.
+
+### 2026-10-02 — A recipe writes its paths
+
+- A recipe names every file it reads by its path from its own folder, the registry directory, and nothing is read in place of a path it does not write (AAS, 2 October 2026: "I would like to be explicit about relative paths instead of making assumptions"). The key `trellis:` at the recipe's top is required, where `load_recipe` read `trellis.yml` when the key was absent, and each stage's entry names its stage file under `stage:`, where the stage key `tenure` was read from `stages/tenure.bl` or `stages/tenure/tenure.bl`. A recipe without `trellis:` is refused under `recipe-shape` with the sentence "the recipe names no trellis file; write `trellis: trellis.yml`, the path from this folder", and an entry without `stage:` with the sentence "the entry `stages.tenure` names no stage file; write `stage: stages/tenure.bl`, the path from this folder", even where the file stands at that path; a written path that names no file, or no `.bl` file, is refused as `load_stage` refuses it, under `readable-file`, at the address `stages.tenure.stage` (`packages/bellman/bellman/factory/recipe.py`, `stage_record`; [Refusals](Bellman-Sym/reference/refusals.md) §3). The recipe file is named `spec.yml`, a variant recipe `spec.<name>.yml`, a variant trellis file `trellis.<name>.yml` and a variant period file `period.<name>.yml` (AAS, 2 October 2026: "let's rename spec_factory to spec.yml"); every `spec_factory*.yml` of the repository is renamed with its readers, and the three lessons that name it are recorded again; the concept keeps its name, the specification factory.
+- Every recipe of the repository writes both keys: the two of `applications/durables/`, those of `applications/pension-retirement/`, `retirement-choice/`, `housing-frictions/` and `benhabib-2019/`, the two of the test corpus and those the tests write; each answers the syntactic trellis it answered before, record for record. The pages that state the recipe's form are corrected ([Model directory layout](Bellman-Sym/reference/model-directory-layout.md) §§1 to 4, [Recipe functions](Bellman-Sym/API/factory/spec-factory.md) §§1 and 2, [The Bellman factory](Bellman-Sym/08-bellman-factory.md) §3, [Specification factory](wiki/spec_factory.md), the recipe quoted in [Retirement choice](examples/retirement/retirement_choice.md)), and the lessons `models/benhabib-2019/the-factory-on-benhabib` and `topics/branching` are recorded again. A stage's dossier reads the stage files of a period file through the recipe whose trellis file names that period file, at the paths the recipe writes, and otherwise beside the period file (`packages/bellman/bellman/dossier.py`).
+
+### 2026-10-02 — Bellman Workbench, the Matsya window
+
+- Under the panel of Bellman Workbench stands a window named Matsya, marked by an orange Υ, in which a question typed in words is answered by Matsya, the project's retrieval service over its documents, theory and examples, with the passages the answer rests on, each named by the path the service gives for it (AAS, 1 October 2026). The window opens folded to its bar; a question is sent with `ask` or the Enter key, in a conversation of the service named after the folder, and the page stays in use while the service answers. The Workbench runs Matsya's own client, the command `econ-ark-matsya` or `matsya`, in a separate process and reads the answer it prints; the client keeps the Matsya token and the service's address, which the Workbench never reads, and without the client, or when the service does not answer, the window says so in one sentence (`packages/bellman-workbench/bellman_workbench/matsya_client.py` and `matsya_window.py`; [Bellman Workbench](overview/07-workbench.md) §5).
+- The method overlay of the view in Model Explorer no longer tints in orange, which the Workbench's page gives to Matsya's mark: a maximization is navy, the solution of an equation a lighter navy and an upper envelope slate, each with a white label ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §4.2; `packages/bellman/bellman/factory/model_explorer.py`).
+
+### 2026-10-01 — Bellman Workbench, the reviews' corrections
+
+- The graph is read from the file, not drawn by hand, and every box returns to the line that made it; two seconds after the typing stops the picture agrees with the text again, and a wrong line is named by line and column while the last good picture stays. Bellman Workbench (`packages/bellman-workbench/`, the page [Bellman Workbench](overview/07-workbench.md)) now keeps the text typed in one file when another is opened, marks a refusal that follows a mathematical letter such as 𝑢 at the refused text, names the occurrence of the folder's recipe the open file is bound as (`periods[0] / worker_saving`), and names the state each reading of the text ends in: `not parsed`, `parsed, refused`, `constructed, forward refused` (or backward) or `constructed`. A stage whose forward graph the construction refuses, `entrepreneur_death.bl` of the Cagetti–De Nardi model, shows its backward graph and the one node stating the refusal, with the refusal's line and rule in the panel.
+- The status line counts the object and not the drawing: blocks by direction, builders and distinct wires, 20 for `cons.bl` where the drawing has 21 edges; it prints the seconds the whole reading took and the first characters of the digest of the text and of each bound source. The panel shows, for a box, its rows, its inputs and outputs with the perch defined where it is printed, its kernel and the lines of the file its card quotes as links; for a builder, its signature, parameters and settings; for the graph's own inputs and outputs, the graph's signature; with nothing selected, the stage's sheets. A legend says what the fill and the tint of a box mean, every term on the status line and the panel carries its definition on hover, and the window opens on the folder's first stage file.
+- The two bundles under `public/` carry the license notices of what they bundle, and each build record under `js/` names its Node version and the digests of its outputs; the editor's bundle rebuilds byte for byte from its sources.
+- Not in this version: the trellis of a folder, the recipe as a table, and git's commit and push from the page.
+
+### 2026-10-01 — Bellman Workbench, the name and the folder
+
+- The browser editor for Bellman-SYM is named Bellman Workbench (AAS, 1 October 2026): the package folder is `packages/bellman-workbench/`, the module `bellman_workbench`, the command `bellman-workbench <folder>`, the environment variables `BELLMAN_WORKBENCH_FOLDER` and `BELLMAN_WORKBENCH_CHROMIUM`, the bundle `public/codemirror/bellman-workbench.js`, and a tab reads `<folder> · Bellman Workbench`; nothing keeps the former names. The site gains the page [Bellman Workbench](overview/07-workbench.md) under Overview, with no menu item of its own.
+
+### 2026-10-01 — The editor's page after AAS's instructions
+
+- The stage editor of `packages/bellman-editor/` (its branch `claude/quirky-feynman-pjzz0y`) draws the types hidden behind the button `hide types` by the VS Code extension's rule, wraps the lines at column 78 with a guide, shows the brand's mark, title and favicon, copies the printed card by a button in the panel instead of displaying it, and lists one button per graph of the view's collection, the two initial diagrams first (AAS, 1 October 2026). The status line counts wires over the two builders graphs alone.
+- The file's pane is named `Symbolic Bellman` and the graph's pane `Denotational Semantic Graph` (AAS, 1 October 2026); the mark stands at 44 px and the three title bars at the height that holds it.
+- The button `horizontal` in the graph's bar lays every layer of the graph out left to right through the viewer's own layer configuration (`groupNodeConfigs`, direction `LEFT_RIGHT`), and `vertical` restores the exporter's directions; no change to the exporter or the viewer's build (`bellman_editor/model.py`, `oriented`). The viewer's toolbar, whose search box floated over the graph, and its info panel, whose rows the page's panel repeats, and its legend are hidden by its configuration (`hideToolBar`, `hideInfoPanel`, `hideLegends`), so the graph takes the whole region; the graph's buttons stand on a row of their own under the title bar, with `zoom in`, `zoom out` and `fit`, which drive the viewer's own zoom (a wheel event with Ctrl, its space key).
+- The editor's panel answers the nodes of a field diagram, whose fields are the nodes since the exporter's rule of the afternoon of 1 October: a field's rows (kind, perch, role, set, the header line that first lists it), and a click on a field moves the editor to that line; a block of the diagram shows its header, statements and lines and the button that copies its record (`bellman_editor/model.py`, `piece` with the collection, `node_attributes`, `header_line_of`). The status line and git's line are optional information, hidden behind the button `show status` (AAS, 1 October 2026), and the server's banner is off.
+- The editor colors a block's id in its header white and bold, the key `id=` and the header's brackets ice-3, and a statement's annotation from `::` to the end of the line ice-3, a marked tag inside it keeping periwinkle, so that the tags read as tags and the ids as the blocks' names (AAS, 1 October 2026); the bundle rebuilt (`packages/bellman-editor/js/codemirror/src/bl_language.js`, `theme.js`).
+
+### 2026-10-01 — The content of the view in Model Explorer
+
+- The view of a stage holds four graphs, listed in the order an author reads them: the two initial diagrams, `backward initial diagram` and `forward initial diagram`, in which each block of the stage file is a node on the fields of its header, white, with its header, its statements with their line numbers and its lines as the rows of its side panel, and each field an edge whose ends carry the field's label, perch, role and declared set; then the two builders graphs, `backward` and `forward`, as before. `explore(stage)` and `serve` with no graph named open on `backward`, and a trellis holds its two builders graphs alone (`packages/bellman/bellman/factory/model_explorer.py`; [The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.1 and §3.3). AAS asked for the field diagrams in the view on 1 October 2026.
+- The side panel of an operator lists its rows in the order an economist reads them, the kind, the rules, the kernel, the method and the lines; a port writes no row that would hold nothing, so the result of an aggregation, which stands at no perch, lists no `perch`; the two nodes `Inputs` and `Outputs` of a builders graph list the graph's signature as `signature()` prints it; the method overlay is named `method: 1 = !egm, 4 = !Cartesian`, the number that stands for each tag written as such, and the viewer's two tables of statistics over those numbers are hidden; a period's layer no longer repeats its index, which its name holds; the reading port of a backward join of a trellis names the rule that paired its wire, `paired by`; and the node of a refused trellis graph lists each join that leaves a wire unpaired on a row of its own, `join 1`, `join 2`, …, with the rules in its `refusal` ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.2, §3.3, §4.2 and §5). The study of 30 September proposed two shorter labels, a result wire by the function it carries at its coordinates, `𝑉(m_d)`, and an aggregation at a policy by `𝐺(𝑐)`; both change labels the drawing shares, so they wait for AAS behind the module's switch `SHORT_LABELS`, which defaults to the recorded forms. The content sheet, the design plan and the screenshots stand in `AI/dev-specs-briefs/model-interface/spec_0.3/view-content.md` and `AI/verification/model-explorer/2026-10-01-view-content/`.
+- The same evening, at AAS's ruling that the nodes of a field diagram are the fields, each initial diagram is drawn as the field diagram of the calculus is drawn ([Fields, functions and types](bellman-calculus/04-fields,%20functions%20and%20types.md) §2). Each perch that holds a field is a layer, `arvl`, `dcsn` or `cntn`, the layers in the order the direction reads them, so that the forward diagram reads arrival, decision, continuation from left to right and the backward one continuation, decision, arrival; each field is a node in the layer of its perch, labeled as the drawing labels it, `V≻`, `m_d`, whose side panel lists its kind, its perch, its role, its declared set and the line of the header that first lists it; a shock, which belongs to no perch, stands outside the layers; and each block is a node outside the layers with an edge from each field it reads and into each field it writes. The diagram has no nodes `Inputs` and `Outputs`, a field no block writes being one the diagram takes and a field no block reads one it gives, and the ports of the field wires carry no key `field`, which the afternoon had added so that a page could label the edges: the field's name stands on its node ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.1 to §3.3; `packages/bellman/bellman/factory/model_explorer.py`). The screenshots of the two diagrams of `cons.bl` stand in `AI/verification/model-explorer/2026-10-01-field-diagram/`.
+
+### 2026-09-30 — The stage editor, stage A
+
+- An economist starts `bellman-editor <folder>` on a model folder, and one page in the browser opens on it with four regions: the folder's files with their git marks, the open file in a code editor, the view of the stage's two builders graphs in Model Explorer's browser component, and a panel under the view. Opening a stage file draws its backward graph with the builders as open layers, the node labels as the drawing prints them (`𝑉≻ ∘ 𝑔(·, 𝑐)` among them); the forward graph is one click away. At every pause of the typing of 750 milliseconds the text is elaborated again, as text and without saving, and the graph redraws from the object the text now denotes, within two seconds for `cons.bl`. A line the package refuses is marked at its line and column with the package's own sentence, in the editor and in the panel, while the last graph stays drawn, dimmed. A click on a box shows in the panel the box's attributes, its card (`denote()`) and its kernel (`kernel()`) character for character and moves the editor to the header of the block that produced the box; the cursor entering a block selects the block's first box in the view and lists the block's boxes in the panel. The status line prints the file's name, the time of the elaboration, the counts of blocks, builders, wires and refusals and the digest of the text; a second line prints git's state of the folder. Saving is explicit, by the Save button or the keyboard's save command; before every save the file's digest is compared with the one remembered, and a file another tool or another tab changed meets the choice compare, overwrite or reload and is overwritten by nothing on its own. This is stage A, reading, the first of the three build stages of the model interface specification 0.2.
+- The code is a distribution of its own, `packages/bellman-editor/`: `bellman_editor/model.py` is the module without Solara that the page and the tests read (the folder read as the factory reads it, the buffer elaborated with `elaborate_text`, the collection and the overlay of the exporter `factory/model_explorer.py`, the pieces' cards and kernels, the block spans of `syntax/lower.py`, the bindings of a recipe, the saves under one lock, git as subprocesses); `app.py` is the Solara page; `editor.vue` and `view.vue` are the two Vue 3 components; `brand.css` holds the site's tokens; `command.py` is the console command. It is installed editable beside `bellman`; the viewer package `ai-edge-model-explorer` is pinned in `requirements.txt`, with the editor's own pins.
+- Two bundles are served from the package's `public/` folder, neither edited by hand. The editor is CodeMirror 6 (codemirror 6.0.2 and its packages, exact versions in `js/codemirror/package.json`), bundled by Rollup from `js/codemirror/src/` into one script, with a tokenizer for `.bl` files written from the eighteen patterns of the repository's TextMate grammar and the site's code-block palette. The view is Model Explorer's browser component, built from the repository's main branch at the commit `522b7b2` of 11 September 2026 with one patch to the custom element's worker service, whose recipe, patch and build script stand in `js/model-explorer/`; the published npm package is not used, since it predates the SVG text renderer and the graph fields the exporter writes.
+- The tests are `packages/bellman-editor/tests/`: `test_model.py` tests `model.py` on the corpus stages without Solara, among them that the collection of each corpus stage equals `to_model_explorer` of the lesson's stage as JSON and that the layers the editor opens equal those the lessons open; `test_page.py` drives the page in headless Chrome through Playwright, eight tests over the first four acceptance items, against a copy of `applications/portfolio-choice/` in a temporary git repository. The page tests are skipped, with the reason printed, where Chromium cannot launch.
+- Not in this stage: the trellis view and the attaching of methods, calibration and settings from the folder (stage B), and the creation of a model from templates, commit and push (stage C). The application's title and headings name PP Monument first and fall back to Archivo, Helvetica and Arial; no font file is copied and no web font is fetched.
+
+### 2026-09-30 — A record's sources bound by `elaborate_stage`
+
+- `elaborate_stage(record)` binds the sources the record supplies and answers the bound stage, unless it is given `bind=False`: a non-empty `calibration`, a `methods` mapping whose list `methods` holds at least one entry and a non-empty `settings`, in the order calibrate, methodize, configure, each bound as its verb binds it and refused as its verb refuses it, settings without methods among them. An empty source binds nothing, so `elaborate_stage(load_stage(path))` and `elaborate_text(text, origin)` answer the symbolic stage as before, and a `bind` that is not `True` or `False` is refused. The stage is copied once, at the end, where the chain of `elaborate_stage` and the three verbs copied it four times, and it equals, provenance included, the stage the three verbs make from `elaborate_stage(record, bind=False)` with the record's mappings. `assemble_trellis` binds each stage occurrence in the same way and copies it once, 103 copies for the 103 occurrences of the two-stage durables trellis where the calls it stands for made 412, with an equal result, and `methodize_trellis` copies once a stage occurrence it makes anew ([The stage](Bellman-Sym/API/stage/01-the-stage.md) §1; [The binding verbs](Bellman-Sym/API/stage/09-binding-verbs.md) §1). This is AAS's ruling of 30 September 2026, on reading the cell of the parameters lesson that hands `elaborate_stage` a record with three empty mappings; the lesson gains a cell that hands it the same text with the calibration file read into `calibration` and prints the calibrated table of parameters, and `packages/bellman/tests/test_elaborate_stage_binds.py` holds one test for each of the six acceptance items of the brief `elaborate-stage-binds-its-record.md`.
+
+### 2026-09-30 — Duplicated code removed
+
+- Code written twice now stands once, without a change to what the package answers. The fold reads the operator occurrences of a line with `occurrence_paths` of `packages/bellman/bellman/typing/line_unknowns.py`, the walker that also refuses a form no construction rule reads, and its own copy in `fold/stage_names.py` is removed; `stage.par` and `stage.settings` share one base class for their iteration, length, printing and completion (`stage/pieces.py`); the test of the documentation's shape reads the reference tables with the table reader, the row anchor and the markers of `docs/_hooks/reference_pages.py`, the script that writes them; the policy card of `cons.bl` stands once, in `packages/bellman/tests/conftest.py`, for the two tests that compare it; the per-model tests under `applications/` take their spellings, the reading of a stage file, the comparison of two terms and the runner outside pytest from `packages/bellman/harness/stage_ast.py`; the three figures of `applications/cons-port/code/ffp_plots.py` share one set-up and one labelling of a panel; and one function each reads the set of a call (`fold/declared_sets.py`), checks an option keyed by coordinate (`stage/binding_verbs.py`), prints a clause and rebuilds the parts of a term (`typing/typed_expressions.py`), makes the pullback row of a value (`fold/backward.py`) and gathers the conditions of a stage (`stage/stage_answers.py`).
+
+### 2026-09-30 — The view of a stage and a trellis in Model Explorer
+
+- A stage version's two builders graphs, and those of a trellis, are read interactively in Model Explorer, Google's viewer of large graphs, which runs in the browser. `explore(stage)` writes the view as three JSON files into the folder `model-explorer/` beside the stage file, serves them from the viewer's server on port 8080, starting one only where none answers there, and opens the page; `write_model_explorer(stage, folder)` writes the files alone; and `serve(graph_path, node_data_path, port=8080, layers=(...))` answers the address of a page on the viewer's server (`packages/bellman/bellman/factory/model_explorer.py`; [The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md)). The view is written by functions and by no verb of the stage, as AAS ruled on 29 September: `explore` and `write_model_explorer` are exported from `bellman`, and `serve` is imported from the module, which stands in `factory/` because the view of a trellis reads the joins that `factory/joins.py` answers. The viewer is the extra `explore` of the package, `pip install -e "packages/bellman[explore]"`, which installs `ai-edge-model-explorer`; the core install leaves it out, and without it the module refuses in one sentence naming the extra.
+- In the view each builder is a layer that opens to its sub-builders and its primitive operators, and to no other grain. A primitive operator is a node labeled with the symbol the drawing shows, and the side panel lists its kind, the lines of its kernel, the rows of its card one attribute to a row, the lines of the stage file it realizes, the call that prints its card, and the method bound within it with its handler, options and settings; a layer lists its builder's signature. Every wire is an edge whose two ports hold the wire's identity, its label, its perch, its type and its role. Three edge overlays paint the wires at each perch in the drawing's three perch colors, each edge labeled with the wire's name and the perch's name, `V at continuation`, and the method overlay tints each operator within which a method is bound, in a tint fixed for each method tag. A direction the construction refused is one node that states the refusal. The view writes no mathematics of its own, and the drawing of `diagram()` remains the recorded figure of the pages and the lessons.
+- The same day the view took the colors of the project's site, the tokens of `docs/_stylesheets/bellman.css`, in place of the drawing's: operators filled by family in white and two shades of blue with navy borders and navy labels, layers in pale blue, the three perch overlays in navy, dark orange and blue, the colors the site gives the arrival, decision and continuation perches, and the method overlay tinted by the operation a method realizes, orange for a maximization, the solution of an equation and an upper envelope, and blue for a representation and an expectation. In a lesson, `checkout.explore` shows the view in a frame under a title line that names the view and its graph and a link to its address ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.1 and §4).
+- The same evening, at AAS's instruction, the side panel of a primitive no longer lists two attributes, the call that prints its card and the rows of its card's `Conditions`, and it numbers the lines of a kernel and the rows of a section only where there are several, `rule` or `rule 1` and `rule 2`. Every port lists the wire's label under `label` as well, so that an output, which the side panel heads by the node that reads it, shows the wire's label, perch, type and role as an input does. The three perch overlays carry no edge label and are no longer loaded with the view, since the viewer draws an overlay edge as a straight line between two nodes and not along the wire's edge; they stand in the file `<label>.edge-overlays.json`, which a reader loads through the viewer's panel of edge overlays ([The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.2, §3.3 and §4.1).
+- Later that evening, at AAS's instruction, the view was reduced to what a numerical solver, an assistant and an economist need to read a model. A primitive's side panel lists its rules one to an attribute, the region a rule holds on after the rule, `𝑐(𝑚_d≻(a)) = 𝑐≻(a)  on 𝑚_d≻(Xa)`; an evaluation lists only the rows that type its outputs and no rule of the operation before it; and `lines` names the stage file and the numbers of the lines, `cons.bl 22–23`. The local abbreviations of the rules, such as the law of motion at a branch, stand once, on the layer of their builder, which also lists each parameter its operations read with its declared set and, on a calibrated version, its value, every setting of a configured version, whether or not a method names it, and on the policy builder's layer the definition of each feasible set its policy names, `Γ(x : ℝ₊₊) := (0, x]`. The method overlay holds only the graphs within which a method is bound, and the page loads it only then. In a trellis each occurrence's policy ends at a node `Outputs` inside its layer, and `explore(trellis)` opens the page located on `periods[1]`, the first period after the terminal one (`packages/bellman/bellman/factory/model_explorer.py`, `packages/bellman/bellman/display/cards.py`; [The view in Model Explorer](Bellman-Sym/API/stage/10-model-explorer.md) §3.3, §4.2 and §5).
+- A trellis is one collection of two graphs, with a layer for each period, `periods[h]`, and for each stage occurrence inside it, `periods[h]/<key>`, and each join drawn between the wires of the two occurrences it joins, labeled as the drawing of `diagram_trellis` labels it. The backward graph pairs the marginal values of a join by the coordinates their names declare, through the join's mapping of those coordinates, and otherwise by their role and, where a role holds several, by equal names; where a marginal value is left unpaired, as in the trellises of the pension, durables and housing models, whose names declare no coordinate, the backward graph is refused on one node and the forward graph is drawn.
+- The trial of 30 September, recorded with its notebook and eight screenshots, three of them of the view of the trellis `port-cons.yml`, in `AI/verification/model-explorer/2026-09-30-trial/`, found that the viewer's default text renderer garbles the mathematical labels on the canvas while its setting "Use SVG text renderer" draws them exactly, that the side panel draws every attribute exactly with either renderer, that an edge's label is drawn by the older renderer whatever the setting, and that one server serves any number of independent views. These findings fixed the overlays' edge labels in plain letters, with the full label on the port, and the one port, 8080, for which the browser keeps the setting. Seven lessons gain a cell `checkout.explore(...)` that shows the view in a running kernel; a recorded run of the lessons writes the files and starts no server (`tutorials/checkout.py`, `tutorials/tools/execute_lessons.py`).
+- Two questions the build found are filed as issues: the role of a result wire can differ from the role of the field an evaluation makes of it, `value` for the marginal value `m_d ↦ 𝑑𝑢(𝑐(m_d))` of `cons.bl` (`AI/road-map/issues-to-be-addressed/result-role-differs-from-the-evaluated-field.md`); and where the names of marginal values declare no coordinate, as in the pension, durables and housing models, nothing the language states pairs two marginal values of different names across a join (`AI/road-map/issues-to-be-addressed/marginal-values-paired-by-a-join.md`).
+- The tests of `packages/bellman/tests/cat/test_model_explorer.py` state the view of `cons.bl` against its builders graphs and its wire table, the kernels and the method attributes against the cards, the overlays, the three files loaded through the viewer's own data classes, the view of the trellis `applications/cons-port/trellises/port-cons.yml` and the refusal of the pension trellis's backward graph.
+
+### 2026-09-30 — Homepage and documentation design
+
+- The [About us](about.md) page introduces the project, its authors, support and ways to contribute. It is linked from the homepage footer and the documentation navigation.
+- The homepage introduces Project Bellman with modular loop artwork and links to the existing guides. The documentation uses the same ultramarine, ice and orange palette, logo and typography, with light and dark appearances and layouts for small screens. The documentation's content and page addresses are unchanged.
+- Language contains the user guide, API, appendices and reference catalogues. The API retains its factory and stage-object groups; the sidebar opens the current page's branch and lets readers expand the other groups. Overview and Foundations use the same names as the homepage, and the unemployment example's two existing pages now appear together under Examples.
+
+## 0.02, the internal developer release
+
+- The second internal release gathers two units built in parallel after the tag `internal-dev-0.01`: the four document properties on every markdown file, and the builders reached by the pair of perches they join; each adds its dated entry below when it merges.
+- The release is the tag `internal-dev-0.02` of 30 September 2026 on `main`, at the commit that records it after the fast-forward 9c88a498b. On that commit the package's fast core (690 tests) and its sweeps (349) passed, the root suite (54 tests) passed, `mkdocs build --strict` reported no warning, the thirteen lessons stood as recorded, and the checks of the document properties and of the decision records reported no fault.
+
+### 2026-09-30 — The builders reached by the pair of perches they join
+
+- A builder is read by the ordered pair of perches it joins, whatever the identifier of its block. `stage.builder` is a read-only mapping from `(source, target)` to the builder that joins the two perches: `stage.builder["cntn", "dcsn"]` is the backward builder from continuation to decision, and `stage.builder["arvl", "dcsn"]` the forward builder from arrival to decision. The policy builder, whose block joins the same two perches as `cntn_to_dcsn`, is read by its own key, `stage.builder["policy"]` or `stage.builder.policy`, and `stage.builder.bwd` and `stage.builder.fwd` are the two builders graphs. A pair that no builder joins is refused with the list of the stage's builders, and a pair that two builders join is refused with the key that reads each by its block identifier (`packages/bellman/bellman/stage/pieces.py`, `stage/builder_pairs.py`; [The builders graphs](Bellman-Sym/API/stage/03-build.md) §1). This is AAS's direction of 29 September: system D of `AI/road-map/issues-to-be-addressed/builder-names.md`, the pair, as the base, and system B, the shorter perch paths, defined on it.
+- The perch paths are the shorter form, each defined as one key of the mapping. `stage.arvl`, `stage.dcsn` and `stage.cntn` are objects of their own, and each one's `builder` reaches the builders of the edge that leaves the perch, the step from that perch to the next: `stage.dcsn.builder.bwd` is `stage.builder["cntn", "dcsn"]`, `stage.arvl.builder.fwd` is `stage.builder["arvl", "dcsn"]`, and `stage.dcsn.builder.policy` is the policy builder. The continuation perch, which no edge of the stage leaves, refuses both directions with the reason, and a stage that writes no forward block from decision to continuation refuses `stage.dcsn.builder.fwd`. The perch words may be imported, `from bellman import cntn, dcsn` ([The builders graphs](Bellman-Sym/API/stage/03-build.md) §2).
+- Lane N's `stage.build`, with its two graphs `sol` and `sim` and the perch attributes that named the builders in them, is deleted outright with no alias, together with the classes `Build` and `BuildersGraph`, the table `BUILD_MEMBERS` and the resolution `builder_named`; the stored record of the two builders graphs stands under the private name `_builders`. Before the deletion, the sweep of `packages/bellman/tests/cat/test_builder_names.py` found 293 lines holding a retired path in 43 files: 26 pages, 9 lessons, 4 modules of the package, the hook `docs/_hooks/reference_pages.py`, the cons-port tool with its acceptance test, and `AGENTS.md`; it now finds none. The unit changed 21 modules of the package, the new `stage/builder_pairs.py` among them, and its schema file, 17 files of its tests, 26 pages under `docs/` with the wiki entries among them, the terminology rows of `AI/rules/terminology.md` and the rule "One way in" of `AGENTS.md`, the docstring and the README of `asva`, ten lessons, and the code cells of the eleven C07 notebooks.
+- A card names its builder by the pair at every grain: `STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)`, with the block identifier in parentheses, and a piece's card `STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback`, whether the piece is read from its builder or through `.primitives`; the policy builder's title, `STAGE cons / POLICY BUILDER policy`, is unchanged. Every card's title block gains a field, `pair`, which holds the pair on the card of a backward or a forward builder and on the card of every piece inside one, and is empty on every other card, the policy builder's included; the stage's encoding writes the field, so the stage-encoding schema is at 2.6 (`packages/bellman/bellman/display/stage-encoding-2.6.schema.json`, the file of 2.5 deleted). `stage.builder.list()` answers a printed record keyed by the block identifier, whose value is the pair, or `policy` for the policy builder, and the direction word, and `stage.dcsn.builder.list()` one keyed by the path, whose value is the pair the path reads; `stage.list()` shows the first under `builder` ([The stage](Bellman-Sym/API/stage/01-the-stage.md) §4).
+- The recordings: the eight snapshot recordings under `packages/bellman/tests/snapshot/` and the 36 stored encodings under `applications/*/derived/` and `applications/*/stages/derived/` were recorded again when the card's title changed, and the encodings once more when the schema moved to 2.6. In the snapshot recordings 482 leaves differ from the base, each in a card's title alone: in 311 the title line names the pair, and in 171 a piece's title, grown past the width of the card, continues on a second line. The stored encodings differ from the base only by the field `pair` of each title block, 2,206 leaves, and by the schema's identifier, 2.6. A second run of the recorder, once every other change was made, changed nothing. The ten lessons that read the paths were executed again and recorded; their outputs differ from the base in 13 card titles, in the listing of `stage.builder.list()` in `tutorials/getting-started/01-the-stage.ipynb` and in the schema's identifier in `tutorials/topics/the-native-mathematics.ipynb`. The C07 notebooks were not executed: the 124 code cells changed in eleven notebooks, and two markdown cells beside them, are listed for AAS in `AI/working/AAS/30092026/c07-cells-changed-by-the-pair-paths.md`, which also says that the notebooks' eight digests, already stale at the base, since 23 September, must be recorded again before `execute_demos.py` executes a notebook.
+- The tests: `packages/bellman/tests/cat/test_builder_pairs.py` compares what each pair answers with a fixed record of what the retired paths answered at the base, `builder_pairs_base.json`, and holds the refusals, the perch paths and the two listings; the sweep of `test_builder_names.py` reads the retired forms of this unit with those of lane N. The five decision records that quoted a retired path or the schema 2.5, DR-0098, DR-0130, DR-0136, DR-0139 and DR-0225 under `AI/decisions/`, are reworded to the new paths.
+
+### 2026-09-30 — The four document properties on every markdown file
+
+- Every markdown file under `AI/`, `docs/`, `applications/`, `tutorials/` and at the repository root carries four front-matter properties, `audience` (`user`, `developer`, `team` or `ai`), `type` (one value from the audience's list), `topic` (one or more subjects) and, on issues, briefs, plans and task lists, `work` (the kind of work), with the vocabularies and the folder-to-type table in `AI/rules/properties.md`; the former `category` field of the issues is retired, its subject values moved to `topic` and its work values to `work`.
+- The script `AI/tools/document_properties.py` places a file by its folder (`apply`), refuses a file whose values are missing or outside the vocabularies (`check`) and writes the rule file's tables (`rule-file`); it edits front matter by line and never a body. The root test `tests/test_document_properties.py` runs `check` over the repository, so a new file takes its properties by running `apply`. The decision records under `AI/decisions/` carry `audience: developer` and `type: decision-record`, written by their own tool.
+- Pages under `docs/` take no `title` from this run, since the site's navigation and a page's heading give it; seven front matters whose values held an unquoted colon were repaired by quoting; the report of the run is `AI/working/AAS/30092026/document-properties-report.md`.
+
+## 0.01, the internal developer release
+
+- The first release of the repository, made for the project's developers to install and use: a fresh clone of `https://github.com/econ-ark/bellman.git` installs by the five lines of the README or by `install-dev.sh`, on Python 3.12 or later, and the documentation site is built from `docs/` by `mkdocs build --strict`.
+- The release is built in ten lanes, each the work of one brief, merged into `main` one after another; a lane adds its dated entry below when it merges:
+    - A, asva: the numerical toolkit kikku renamed `asva`, in `packages/asva/`, importing nothing of `bellman`, with its pages in `docs/asva/`.
+    - T0, the tests' time: the records a card prints kept for the stage version that printed them, and the package's tests divided into a fast core and the sweeps that `-m sweep` selects (`packages/bellman/bellman/stage/denotations.py`, `packages/bellman/tests/`).
+    - R, the repository's housekeeping: the helper scripts of `scripts/` and `tools/` kept, deleted or retired, the kept ones placed by who runs them, the two folders removed and the editor support placed in `editor/`; `requirements.txt`, the project files and `install-dev.sh` trimmed to what the repository uses; the README rewritten and this changelog brought to one entry form; the source of the concept wiki moved to `docs/wiki/`.
+    - N, the way in: the names by which a user reaches the pieces of a stage and asks each to print, draw and state its parameters and settings, `denote()`, `diagram()`, `par` and `settings` among them, in `packages/bellman/bellman/stage/` and in every page, lesson and notebook that uses them.
+    - P, the card's form: the printed form of a card, the text a builder or an operator prints to state what it reads, what it writes and the equations it realizes (`packages/bellman/bellman/display/`).
+    - K, the kinds and the methods: the kinds of the operations a card lists, `Argmax` for a maximization, with the kinds `Inversion` and `Solution` retired, and the places at which a numerical method may be attached, `!egm` among them.
+    - C, the clause: the reading of a Kuhn–Tucker clause written on a first-order condition, such as `⟂ a >= 0` on the consumption stage `applications/portfolio-choice/cons.bl`, which states that saving is nonnegative and that the condition holds with equality wherever saving is positive.
+    - D, the reference catalogues and the documentation's shape: the documentation of the language in four parts under `docs/Bellman-Sym/`, the user guide in its root pages, `API/`, `appendices/` and `reference/`, with the catalogues of `reference/` written from the package's own tables.
+    - E, kernels as clean functions, and asva's contract: a compiled kernel, the function of an operation's equations, as a plain Python function that holds no stage; a builder's record of its compiled functions, from which a numerical operator is built without the stage; and the adapter from that record to `asva`.
+    - W, the documentation, the tutorials and the wiki: every page under `docs/`, every lesson under `tutorials/` and every entry of the wiki read against the merged package and rewritten where a name, a path or a reading changed.
+- The 927 decision records, their index and their export moved on 29 September from `docs/decisions/` to `AI/decisions/`, and their script from `docs/_hooks/decision_records.py` to `AI/tools/decision_records.py`: the records stand with the internal folder `AI/`, which the public repository will not include, and the site no longer renders them. Each record's generated section links its wiki concepts, documentation pages, code and tests by paths relative to the new folder.
+- The release is the tag `internal-dev-0.01` of 29 September 2026 on `main`. A fresh clone of the tag was installed by `install-dev.sh` with Python 3.14.7; on that install the package's fast core (639 tests), its sweeps (383) and the root suite (254) passed, one drawing was made, `mkdocs build --strict` reported no warning, and the thirteen lessons stood as recorded.
+
+### 2026-09-29 — The law of motion at the policy written out
+
+- No printed surface names the law of motion at the policy: a pullback at the policy prints its output as `𝑉≻ ∘ 𝑔≻(·, 𝑐)` and its rule as `(𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))`, the aggregation's rule reads `𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))` and a push-forward's preimage `μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})`; the `Where` line that defined a named map for the law at the policy is gone, as AAS ruled on 29 September, while a `Where` line that names coordinates at the policy, `(y_f, y_p) = 𝑔≻(m_f, m_p, w_d, 𝑐, 𝑐_p)` on the pension card, stays, and a stage with several controls or states writes the law with its own arguments. The reason is the reading of the former `𝑔≻,𝑐`, whose baseline comma made `𝑉≻(𝑔≻,𝑐(m_d))` read as a function of two arguments, and the absence in Unicode of a subscript for the two indices. The listings and the drawings write `𝑉≻∘𝑔(·, 𝑐)`, `𝑔(·, 𝑐)∗μ` and `𝐺(·, ·, 𝑐)` (`packages/bellman/bellman/stage/defining_expressions.py`, `typing/typed_expressions.py`, `display/drawing.py`).
+- The refusal of a singular conditioning covariance prints the numerical block as the declaration writes a matrix, `0.0` for a block of one entry, so the [refusals](Bellman-Sym/reference/refusals.md) page holds no text that the site's link plugin reads as a link, and the strict build of the site reports no warning.
+- The tests: `packages/bellman/tests/test_behaviour.py` holds the rule on every card, listing and drawing of `cons` and `port`; the snapshot recording, the stored encodings and the builder-names base are re-recorded once; the pages that print cards are regenerated and the thirteen lessons executed again.
+
+### 2026-09-29 — The cons-port acceptance on Python 3.14: the portfolio share compared up to a tie
+
+- The reference values of the consumption and portfolio model are reproduced to 1e-12 on Python 3.14 as on 3.12, except that the portfolio share may differ from the reference by one grid step at a state where the share objective takes the same value at both shares to within 1e-14 of its size: numpy's wheel for Python 3.14 on macOS links Apple's Accelerate, whose rounding of a dot product depends on alignment and tips such exact ties, while the 3.12 wheel links OpenBLAS and reproduces the reference exactly. The test reports the number of tie states and asserts every other value; the reference is not re-recorded; `share_objective(stage)` in `applications/cons-port/code/cons_port_tool.py` evaluates the objective the search uses.
+
+### 2026-09-29 — The parameter shortcut: `stage.par.ρ` answers the value alone
+
+- One parameter's value, or one setting's, is read by its name as an attribute, `stage.par.ρ` and `stage.settings.n_a`, the `value` of the record that `stage.par["ρ"]` and `stage.settings["n_a"]` answer whole; on a version no calibration binds, the attribute raises an `AttributeError` naming the record and the calibration verb; a parameter whose name is one of the table's own attributes, such as `list`, is read by the key alone; `dir()` lists the names, so the attribute completes at a prompt. The parameters lesson, `tutorials/getting-started/04-parameters-methods-and-settings.ipynb`, shows both forms, and the [API index](Bellman-Sym/API/index.md) and the page on [parameters and settings](Bellman-Sym/API/stage/06-par-and-settings.md) hold the rows and a listing (`packages/bellman/bellman/stage/pieces.py`, `packages/bellman/tests/cat/test_parameter_shortcut.py`).
+
+### 2026-09-29 — Lane W, the documentation, the tutorials and the wiki: every page read against the merged package
+
+- Every page under `docs/`, the thirteen lessons under `tutorials/` and the entries of the wiki were read once against the merged package and rewritten where a name, a path, a kind, a card, a verb or a reading had changed under the lanes of this release: the paths and verbs of the way in, the card's form, the five kinds of operation, the reading of the clause, the four parts of the language's documentation, the kernel functions and asva. Every term is defined or linked at its first use on a page, spellings are American, and no page describes unfinished work.
+- The guide opens at [Stages](Bellman-Sym/01-stage.md), its placeholder first page retired; the Matsya page and the home page's button are gone; the calculus's pages link into the language only from their intro boxes, so the documentation's direction of links holds with no exception; the wiki's entry on the field graph is merged into [semgraph](wiki/semgraph.md), and every wiki entry defines or links each term of the terminology it uses.
+- The tests: `packages/bellman/tests/cat/test_docs_update.py` runs the union of the lanes' sweeps for old forms over the pages, the lessons with their outputs, the applications and the rules, checks that every card shown is one the package prints, that every wiki entry defines or links its terms, that the direction test allows no link, and that the site builds in strict mode; the lessons are re-recorded once.
+
+### 2026-09-29 — Lane C, the clause: the Kuhn–Tucker clause read on the candidate line
+
+- A Kuhn–Tucker clause on a candidate line, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>]) ⟂ a >= 0` in `applications/portfolio-choice/cons.bl`, is read as one split of its regions, derived from the condition the clause builds and equivalent to it: where the bound is slack the residual holds with equality, and where it binds the residual takes the sign the clause assigns; a strict core has no interior region, and a chain of two bounds keeps both feasibility inequalities in each of its three regions (`packages/bellman/bellman/typing/ranges.py`). The candidate of such a line denotes, at each saving, the set of values its clause admits, its carrier a correspondence printed `Xa ⇉ ℝ₊₊`; the grid line's operation reads it at each admitted value, and the identification's `signature()` answers the relation over the admitted pairs. The relation's solution set may be empty in a non-concave case, and the stage states the relation and no more.
+- A grid line is checked against the law of motion solved for the decision coordinate, every declared function an opaque symbol, and a line that does not reduce to the identity is refused under `grid-line-consistency` with both terms in the message; a law with several outputs is solved only where its other lines give every unknown.
+- Every card prints a control or wire read at a point of several coordinates by its bare name, with the point's membership in its domain after `on`, and a rule's later conjuncts at the rule's own column, so that the pension and durables policy cards print as the card redesign draws them; the constraints page is rewritten from its redraft, Appendix C's citations of Dobrescu and Shanker are renumbered to the 7 December 2024 text with its rearrangement rule added, and the three spellings of the condition are named on the field-equations, methodization and syntax-to-problem pages.
+- The tests: `packages/bellman/tests/cat/test_candidate_clause.py` holds the six items of the plan's C row, and `test_amd_sg_035.py` is retired into it and `test_refusals.py`; the snapshot recording and the stored encodings are re-recorded once; the lessons are up to date.
+
+### 2026-09-29 — Lane E, kernels as clean functions, and asva's contract
+
+- A kernel is one plain Python function. `kernel()` on an operation answers `.python`, the source text of a function whose arguments are the kernel's own, in printed order, and then the values of the parameters it reads, with the named functions of the stage file as inner functions and array arithmetic through NumPy alone; `.parameters` names them and `.parameter_values` holds the calibration's values, or None on a symbolic version. `compile_kernel()` executes that text in a fresh namespace holding NumPy alone and returns the function, on a symbolic version as on a calibrated one, so that `numba.njit` compiles it in one call, `inspect.getsource` prints it and `cloudpickle` saves it; a row whose rule has no explicit function is refused under `kernel-target`, and the refusal `kernel-unbound` is gone with the interpreter closure (`packages/bellman/bellman/stage/kernels.py`).
+- A builder answers `kernels()`: one record free of the stage, holding for each of its operations in order the compiled function with its argument and output names, the wires it reads and writes, the parameters' names and bound values, or the printed relation where no function exists, and the declared sets the operations are read on (`packages/bellman/bellman/stage/pieces.py`, `display/printed_records.py`). `asva.egm(policy, decision, savings, evaluation)` builds one endogenous-grid step from the policy builder's and the decision builder's records and two grids, reading no stage (`packages/asva/asva/egm_1d.py`); the cons-port tool builds its operator that way, and its acceptance reproduces the reference values under a changed calibration and changed grids.
+- The kernels lesson, `tutorials/topics/kernels.ipynb`, reads a kernel's text, compiles it, composes two kernels into one step, compiles that with numba and changes the calibration without recompiling; the page [Solutions at the perches](Bellman-Sym/11-solutions-at-the-perches.md) states how a solver keeps its arrays, one dictionary per stage occurrence keyed by perch and field, the stage holding no solution. `packages/bellman/tests/cat/test_kernel_functions.py` holds the six items of the brief; four lessons are re-recorded.
+
+### 2026-09-29 — Lane D, the reference catalogues and the documentation's shape: the language's pages in four parts
+
+- The documentation of the language stands in four parts under `docs/Bellman-Sym/`: the user guide in its root pages, `API/`, `appendices/` and `reference/`. `docs/Bellman-Term/` is retired, and the narrative of `docs/semantics/the-stage-object.md` stands, without its listings and in the informal register, in the overview [Semantics](overview/05-semantics.md); the navigation holds the four parts, with the changelog at its top level.
+- `API/`: the [API index](Bellman-Sym/API/index.md), one table of every public function and of every path and verb of the way in to the stage object, each with what it answers, its type, where the package defines it and one printed example; and nine pages of the stage object, one for each level (the stage, the initial diagrams, the builders graphs, a builder, a piece, parameters and settings, methods and places, the definitions table and the binding verbs), every listing printed by the package. The factory pages stand in the group "Bellman factory API", and the stage object's page in the guide, until they move under `API/`.
+- The moves of 29 September: the five factory pages moved from `docs/Bellman-Sym/syntax-API/` to `docs/Bellman-Sym/API/factory/` with their names ([The factory API](Bellman-Sym/API/factory/index.md)), and the page of the stage object, `docs/Bellman-Sym/02-the-stage-object.md`, retired to the private archive, each section, listing and paragraph of it that no page of `docs/Bellman-Sym/API/stage/` held carried into the page of its level, from [The stage](Bellman-Sym/API/stage/01-the-stage.md) to [The binding verbs](Bellman-Sym/API/stage/09-binding-verbs.md), among them the conventions by which a card is read and the types a wire answers ([A piece](Bellman-Sym/API/stage/05-piece.md) §§5 and 6). The navigation loses the page's Guide entry; every link to the two places, the package's docstrings that cited the page and three lessons are repointed, the lessons recorded again with their outputs unchanged.
+- `reference/`: one page for each kind of object, [operations](Bellman-Sym/reference/operations.md), [shock distributions](Bellman-Sym/reference/laws.md), [expression forms](Bellman-Sym/reference/forms.md), [methods](Bellman-Sym/reference/methods.md) and [refusals](Bellman-Sym/reference/refusals.md), each written by hand around one table that `docs/_hooks/reference_pages.py` writes from the package's own table (`PRIMITIVE_DEFINITIONS`, `FAMILY_ARGUMENTS`, `BOUND_OPERATORS`, `METHOD_TYPES`, `RULES`): each row states how a stage file writes the object, links the section of Appendix E.3 that defines what it denotes, and names the module, table and key it is read from. The methods page links each method type to its line of `method_table.py`, whose docstring names the page. `reference/primitives.md`, the page of the dolo-plus schema and Appendix E.5 are retired to the private archive, their content standing in these pages and in §9 of the [symbol conventions](Bellman-Sym/reference/symbols-conventions.md).
+- [Appendix E.3](bellman-calculus/catalogues/operators.md) names the eight kinds of a builder's operations under the package's names, `PolicyInsertion` for the insertion of a policy and `Evaluation` for the identity into the declared carrier, each with a `realized by` link to its row of the operations page; the optimizing decision builder is written with a selection from the maximizing set and the insertion ι*.
+- The tests: `packages/bellman/tests/cat/test_docs_shape.py` checks the folders, the part tags of the lane's pages and the navigation against the documentation's architecture; that every generated table and listing is what its script prints; that every `denotes` link reaches a section of Appendix E.3 and every entry of the package's tables stands in one reference row; and that no page links to a retired page, and no page of the calculus to the language outside the sanctioned lines. The snapshot recording, the stored encodings and the lessons are unchanged.
+
+### 2026-09-29 — Lane K, the kinds and the methods: five kinds of operation, and where a method stands
+
+- A builder's rows take the kinds `Pullback`, `Aggregation`, `Expectation`, `Evaluation` and `Argmax`; `Selection`, `Inversion` and `Solution` are gone with their definitions. A relational line forms one `Aggregation` carrying its relation and clause, a `solve` line one `Aggregation` of its residuals, and an operative `argmax` line an `Argmax` row; an omitted identification line is refused under `output-defined`; the derived relation is deleted with its producers (`packages/bellman/bellman/fold/`, `typing/`, `stage/`).
+- `!egm` stands at the Evaluation of a block that writes the grid line, or on the `Argmax` row that carries its first-order condition as a property, and is refused elsewhere naming the grid line; `!vfi` stands on the backward decision builder alone and `!root-find` on the `Argmax` row; the obligation `optimality` is gone. The eight methods files that bound `!vfi` elsewhere bind it on `cntn_to_dcsn`.
+- Every query reads a row by its kind; `compile_kernel` answers the explicit side of `InvEuler:Aggregation` and is refused under `kernel-target` elsewhere. The records hold a rule for every kind, a Pullback's composite at a point, an Expectation's integral and an Evaluation's membership of the declared carrier, and every card prints them; a property of an `Argmax` entry prints under `rule:`, labeled by its id.
+- The tests: `packages/bellman/tests/cat/test_policy_kinds.py` holds the six items of the plan's K row; the twin text `cons_argmax` and the restated items of `test_amd_sg_035.py` and `test_behaviour.py` read the kinds; Appendix E.3 §4 is restated to the set of maximizers. The snapshot recording and the stored encodings (schema 2.5) are re-recorded once; the [stage object's page](Bellman-Sym/API/index.md), the methodization page's places table, the refusals page and the semantics and durables pages state the new kinds and places; the twelve lessons are re-recorded, and the parameters lesson shows a parameter's description, the quoted text after `::` on its declaration line, under `describes`.
+
+### 2026-09-29 — Lane P, the card's form: one form for every printed card
+
+- A card prints its title, a heavy line under it and its sections in one order, each present only with content: `Signature`, `At`, `Where`, `Declared`, `Rule`, `Operations`, `Conditions`, a light line, `Source <file>`, `Definitions referenced`, and a closing heavy line; each heading stands at column 0 with its content two columns in. The stub column, the rail, the narrowing rounds and the glyphs `┈` `═` `│` are gone (`packages/bellman/bellman/display/cards.py`, `syntax/layout.py`, `display/printed_records.py`).
+- An entry of `Operations` reads its number and key, a sub-builder's entry its key alone, then one `in:`/`out:` line, a short line and its `rule:` lines; a policy prints as its type and its rules, each once at the operation that forms it. An expression prints on one line when it fits and otherwise breaks at its outermost group first; a relation's right-hand side that does not fit after its sign stands on the next line at the sign's column; a maximand or integrand that does not follow its head stands on its own line; no line breaks between a name and its bracket; the width is 78 columns. The stage's card prints no rule under its builder entries, and the printer composes no mathematics: the rule texts print as the records hold them.
+- The tests: `packages/bellman/tests/sheets_parse.py` reads the new grammar; `packages/bellman/tests/cat/test_card_form.py` holds the items of the plan's P row, item 5 against the 77 cards printed before the change and saved under `packages/bellman/tests/fixtures/`; `test_amd_sg_034.py` is retired, its items standing in `test_card_form.py` and `test_behaviour.py`; every test that read the old form was brought to the new one by printing with the package. The snapshot recording is re-recorded once (the card of each of the eight stages and the denotation of every box and definition); the [stage object's page](Bellman-Sym/API/index.md) and the semantics page have their listings printed again; the lessons that show a card are re-recorded, and each lesson's opening boxes are Jupyter alert boxes, which Jupyter and the notebook editors style.
+
+### 2026-09-28 — Lane R, the housekeeping: the scripts placed, the environment pinned, the README and the wiki's source
+
+- `scripts/` and `tools/` no longer exist. Every kept script is placed by who runs it: the site's hooks and printers under `docs/_hooks/` (`stage_object_page.py`, `obsidian_tags.py`, `decision_records.py`), excluded from the site; the tests' two scripts under `packages/bellman/tests/tools/` (`local_imports.py --strict` run by a test, `identity_parse_sites.py` joining the suite with lane P); the developers' scripts under `AI/tools/`; the editor support as `editor/dynspec-vscode/`. Six scripts are deleted and fourteen retired to the private archive, `sync_wiki.py` and `tests/test_sync_wiki.py` among them; every caller is repointed.
+- `requirements.txt` holds twenty-six pinned lines; the two `pyproject.toml` files declare Python 3.12 or later, pin their dependencies and carry the extras `dev` and `docs`; `install-dev.sh` is the README's five install lines. A drawing's layout reads the Node package at the repository root alone (`npm install` at the root, or Graphviz's `dot`).
+- The root `README.md` is rewritten for the release: the repository in one paragraph, the five install lines, the layout, the tests, the site, the first-model route through the two orders of the cons-port model, and that the release does not simulate. This changelog has one entry form, the release entry at its head and the earlier entries under "Before the release".
+- The concept wiki's 55 pages moved from `AI/wiki/` to `docs/wiki/`, the source the site publishes as written, their citations translated to bibliographic references and their provenance kept in the wiki's registers under `AI/wiki/.meta/`; the housing_renting pages, the root files, the docstrings and twenty-two further files lost or repointed their citations of documents under `AI/`; `tests/test_housekeeping.py` sweeps the repository outside `AI/` for paths under it. The branching lesson reads its refused stage from `tutorials/topics/stages/plan_choice.bl`.
+- A fresh clone installs by the five lines on Python 3.14.7 and passes the package suite; `mkdocs build --strict` leaves seventeen warnings, all on pages of lanes D and W.
+
+### 2026-09-28 — The decision records: the rules of spec 0.3 in one catalogue
+
+- Every decision of spec 0.3, and the earlier decisions that still bind the system, is one page under `docs/decisions/` (under `AI/decisions/` since 29 September): 927 records, each stating the rule as its register recorded it, with its scope, its kind in Kruchten's classification of design decisions, its status, who decided it and whether AAS has reviewed it, and links to the wiki concepts, the documentation pages, the code by path and symbol and the tests that check it. The records were extracted from the decision registers by nine agents and merged scope by scope by eleven; no rule was written anew.
+- The index lists first the 581 delegated decisions that await AAS's review, then the records by scope; the export `decisions.json` (JSON-LD, with Dublin Core, PROV-O and SKOS terms) holds the same data for a program.
+- `docs/_hooks/decision_records.py check` verifies every link, every closed vocabulary and the absence of private paths, and the root test `tests/test_decision_records.py` runs it; `write` regenerates each page's link section, the index and the export.
+- Records that decided the stage's old paths and verbs, renamed on this day by lane N of the internal dev 0.01 release, are marked superseded and name the ruling; the index says which names changed.
+
+### 2026-09-28 — Lane N, the way in: one path to every piece of a stage
+
+- The two initial diagrams are `stage.initial.backward` and `stage.initial.forward`; the builders graphs are `stage.build.sol`, the backward builders used in solution, and `stage.build.sim`, the forward builders used in simulation; a builder is reached by its perch, `stage.build.sol.dcsn`, `stage.build.sim.arvl`, and the policy builder as `stage.build.sol.policy`; a piece inside a graph or a builder by its name, `stage.build.sol.dcsn[<node id>, <operator>]`.
+- One parameter, one setting and one bound method are read by the name their file writes: `stage.par["ρ"]`, `stage.settings["n_a"]`, `stage.methods["policy"]`; `methods` answers at every level.
+- Every piece answers with the same verbs at every level: `view()`, `denote()`, `list()`, `diagram()`, `kernel()`, `compile_kernel()`, `signature()`; the old paths and verbs (`stage.builders.<direction>`, `stage.initial_diagrams`, `denotation()`, `draw()` for a piece) are deleted, and a refusal that named an old path names the new one.
+- A trellis drawing names each node `periods[h] <key>`; the snapshot recording and the stored encodings are unchanged; the twelve lessons are re-recorded, six trellis drawings differing; the [stage object's page](Bellman-Sym/API/index.md) has its listings printed from the package.
+- The tests read the new paths (`packages/bellman/tests/cat/test_builder_names.py`, six items against the old paths' recorded answers); the C07 notebooks' code cells and the lessons' code and prose are repointed; the rule row "One way in" of `AGENTS.md` and the terminology rows state the new forms, with one new row for `diagram()`.
+
+### 2026-09-28 — Lane A, asva: the numerical toolkit kikku renamed asva
+
+- The numerical toolkit beside the language's package is `packages/asva`, installed after `packages/bellman` by `install-dev.sh` and by the README's manual steps (`pip install -e packages/asva`); its `pyproject.toml` names the package `asva`, version 0.1.0, declaring NumPy, Numba, pandas and PyYAML as its dependencies, mpi4py as the optional extra `mpi`, and not `bellman`. The modules of `kikku.asva` stand at the top of `asva` (`asva.egm_1d`, `asva.compose_interp`, `asva.numerics`, `asva.simulate`), and the runner is `asva.run`, which holds `types.py` and `make_test.py` beside the sweeps, moments, estimation, metrics, MPI helpers and the saving of solutions. A script that imported `kikku.asva.egm_1d` or `kikku.run.sweep` imports `asva.egm_1d` or `asva.run.sweep`; no alias of the old names is kept. No module of asva imports `bellman`, and the repository's test run collects asva's tests.
+- Deleted outright: `kikku.dynx`, which re-exported the archived dolo-plus factories, since the language's package now loads and binds stages and assembles periods and trellises; the runner's command line, `run/cli.py`, which read dolo-plus directories; and `run/nest_io.py`. In the moved code the words twister and horse are the inter-period connector and the operator's plain name. The simulator of `asva.simulate` raises when it is called, so this release does not simulate.
+- The two retirement-choice methods files name the handler `asva:make_egm_1d`, and the [retirement-choice example](examples/retirement/retirement_choice.md) quotes them as they stand. The API pages of asva are under `docs/asva/`.
+- Provenance: asva is `bright-forest/kikku` at `a54619c` (version 0.2.0, 21 August 2026), renamed on 28 September 2026 as AAS directed on 27 September 2026.
+
+### 2026-09-28 — Lane T0, the tests' time: a card's record kept for its version, and two test selections
+
+- A card printed again on one version is computed once: `bellman.stage.denotations` keeps each record a card prints for the version it was asked of (an operator's card, a builder's, a graph's, the identities a record reads and the objects they reach), and a version a binding verb returns computes its own, since a card prints the bindings of its own version. No printed character changes: every card of `cons`, `adjuster_cons` and `worker_saving` (88, 101 and 105 cards) printed after the change equals the card printed before it, byte for byte. Printing every card of `cons` a first time falls from 0.98 to 0.49 CPU seconds and a second time from 0.78 to 0.05.
+- The package suite has two selections. `pytest packages/bellman` runs the fast core, 619 tests in 54 s on eighteen cores; `pytest packages/bellman -m sweep` runs the 286 sweeps, the corpus card and sheet sweeps one test for each stage, the snapshot guard at every grain, the command-line runs of the refusal file and the factory's trellis tests, in 126 s; `-m "sweep or not sweep"` runs every test, 905 in 175 s where the suite of 800 tests took 195 s before. A sweep reads a stage's cards and sheets from the fixture `printed_cards` of `packages/bellman/tests/conftest.py`, which prints a stage once in each worker and keeps what it printed.
+- The snapshot recording of each corpus stage holds the stage's card under the key `card` of its `stage` selection, and `python tests/snapshot/record.py --leaves`, run from `packages/bellman`, prints every leaf at which the package's recording now differs from the stored one, as stage, selection, box and field.
+- The tests read the four preliminary applications they use from copies under `packages/bellman/tests/corpus/` and read no file under `AI/` for a stage fixture; the sweep for retired terms reads the pages under `docs/` alone.
+
+## Before the release
+
+### 2026-09-28 — The Kuhn–Tucker clause of `cons.bl` and the twelfth lesson
+
+- The first-order condition of `applications/portfolio-choice/cons.bl` reads `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>]) ⟂ a >= 0` again: the clause states that saving is nonnegative and that the inequality holds with equality wherever saving is positive. It had been taken out on 27 September while the package's cleanup ran, because the guard pins every recorded output of `cons`; those outputs are re-recorded once, and the tests that quoted the old line now quote the new one (f5418f6b9).
+- The tutorials collection has twelve lessons: The mathematics a stage carries (`tutorials/topics/the-native-mathematics.ipynb`) joins the topics, written from the inspection notebook on the native mathematics and reviewed three times through the project's acceptance profile. The branching lesson reads the preliminary application it cites at its moved place.
+
+### 2026-09-27 — The package read from the top down, with names by meaning
+
+- Each module now reads in order: a function stands below its first caller, a record names what a tuple held by position, calls name their arguments, a repeated block is written once as a named step, and a docstring says what its object is. No printed answer or card changes, and every refusal keeps its text. What a script reads changes in these places, with no alias kept:
+    - `bellman.stage.inventory.direction_entries` and `directions` take `(stage, direction)`: the parameter `level`, and the `ValueError` it raised, are gone.
+    - `compose` of `bellman.stage.denotation_queries`, now `bellman.stage.denotations`, is deleted; its two callers in that module pass their parts to a private step.
+    - `marked` and `clauses` of `bellman.display.sheets`, which nothing called, are deleted.
+    - The exported `Example` of `bellman.refusal_examples` has no field `pending`, so `Example(pending=…)` raises `TypeError`; the example it marked is refused under `method-attachment`, and the catalogue prints the same.
+    - `parse_with_spans` of `bellman.syntax.lower` answers `ParsedFile(term, spans)`, a named tuple that still unpacks as the pair.
+    - `SourceSpan` and `Primitive` take their fields by keyword only; a record of `bellman.native` with more than three fields takes by position only the fields that identify it, `Definition`'s identity and kind and `Line`'s address, `BlockData` and `WorkingStage` take every field by keyword, and `Identity` keeps its signature.
+    - The parameter `forward` of `drawn_edges` and of `shock_builders`, formerly `assign_edges`, in `bellman.distributions.edges` is `listed_shocks`, and `drawn_edges` answers `DrawnEdges`, a named tuple that still unpacks.
+    - `bellman.load_recipe` and `bellman.assemble_trellis` take `directory` and `recipe` by position only, `(directory, recipe, /, **fills)`, so that a slot of a recipe may be named either word.
+    - `domain_conditions` of `bellman.fold.conditions` reads no defined field for a line that is no equation, where it read the field of the line before; no stage file of the corpus reaches the case.
+- Names say what each thing means: the rename table's rows, folder by folder (syntax 15, native 54, distributions 27, typing 84, fold 93, graphs 19, display 46, stage 116, factory 32, root 8), the grammar's 41 rule names, five one-letter ASDL fields, five set constructors and the recorded words the terminology refuses, with about 4,500 lines in 135 files repointed; the entry "Names by meaning" below lists each public name, old → new. Stored documents use `stage-encoding/2.4`, whose 17 kinds and 13 fields take the new names; a stage or trellis pickled earlier names retired classes (`Version` is `StageVersion`) and is not read back.
+- A stage's dossier finds the stage files a period file names where the registry keeps them, `stages/<key>.bl` or `stages/<key>/<key>.bl`, and otherwise beside the period file. The stages of six of the eleven period files of the core applications, `durables/period.yml` among them, and of the childbearing model's period file now elaborate on the dossier's period line, where they were refused under `readable-file`, so those seven lines change where the entry "The flat form retired" of 25 September kept every period file's line; the three period files of the portfolio–consumption application are still refused.
+- `ruff` 0.12.1 formats the package at 99 columns, with docstrings and comments at 79, and sorts its imports, as `packages/bellman/pyproject.toml` configures it: 78 of the 88 modules changed in form alone, every syntax tree and string constant unchanged, and `.git-blame-ignore-revs` names the formatting commit. The long strings left were then divided by hand into adjacent parts of the same text, and the prose rewrapped, except where no division keeps a line whole.
+
+### 2026-09-27 — A drawing lays itself out
+
+- `Drawing.svg()` lays out a drawing through the package's module `bellman.display.graphviz_layout`, with Graphviz's `dot` where it is installed and otherwise with the WebAssembly build of Graphviz, which Node runs after `npm install` at the repository root (`packages/bellman/README.md` §5). A notebook cell holding a `draw()` shows the picture wherever one of the two runs; elsewhere `svg()` refuses with a sentence naming what is missing and the command to run. The notebooks' set-up modules register no display, and a drawing's text form is `Drawing of N boxes`.
+
+### 2026-09-27 — The closed verification records moved to the private archive
+
+- The verification run folders of 9 to 23 September 2026, for work already merged, left the repository for the project's private archive, which keeps their relative paths and their SHA-256 digests; current documents cite them there. The records of work still open stay, the verification notebooks and their tools among them.
+
+### 2026-09-27 — Appendix B retired; the appendices in their own folder
+
+- The tutorials are no longer published on the site: the symbolic link `docs/tutorials`, the site's Tutorials section, the notebook plugin and its link hook are removed (AAS, 27 September 2026). The lessons stay in the repository's `tutorials/` folder with their execution tool and record, and the three pages that linked a lesson name it there.
+- Appendix B, the Dolo translation and the strict dolo-plus skeleton, is retired from the documentation to keep the guide clean; it is preserved in the private archive at its path, and the handler step reads it there (AAS, 27 September 2026). Every page that linked to it now states that older stage YAML is no longer part of the documentation.
+- Appendices C and D of the Bellman-SYM guide, and the two rules pages, the equation parsing rules and the perch tagging rules, move to `Bellman-Sym/appendices/`, and every link to them, on the site, in the tutorials and in the internal notes, is repointed.
+
+### 2026-09-27 — Names by meaning
+
+- The package's names say what each object is, in the words of the terminology table: every name the structure review's readings marked is renamed but two, `StageDenotation`, kept by AAS's choice, and `declared_parameters` of `bellman.factory.recipe`, which a test reads, with every reader (the package, its tests and harness, the scripts, the applications' code, the pages and the wiki) repointed in the same change and no alias kept. A private name another module read is public under a noun. The renamed names that were public before, old → new, by folder:
+    - `syntax`: `lower.parse_meta` → `parse_annotation`; `lower.sweeten` → `condition_tail_domain`; `lower.residue` → `unlowered_parse_nodes`; `parse.NewlineInParens` → `NewlinesInsideBrackets`; `layout.rule` → `horizontal_line`; `vocabulary.BOUNDARY` → `OUTPUT_LINE`.
+    - `native`: `records.SemanticObligation` → `Condition`; `records.SemanticType` → `ExpressionType`; `records.ResolvedInput` → `ResolvedName`; `records.OutputDerivation` → `DerivedRelation`; `records.BoundaryRepresentation` → `ValueRepresentation`; `versions.Version` → `StageVersion`; `identity.check_name` → `refuse_colliding_name`; `identity.piece` → `piece_identity`; `labels.view_text` → `graph_text`; `records.one_typing_per_identity` → `construction_typing_table`; `records.identified` → `with_identity`; `provenance.lifecycle_provenance` → `binding_provenance`; `provenance.versions` → `grammar_versions`; `Identity.qualifier` → `second_segment`; `Identity.within` → `key_within`; `_Copier.visit` → `copy`.
+    - `distributions`: `conditionals.Selection` → `ConditionalDistribution`; `edges.Edge` → `JointDistribution`; `edges.Owner` → `DistributionDeclaration`; `families.Arguments` → `ArgumentShape`; `conditionals.select` → `select_conditional`; `conditionals.conditioning` → `conditioning_shocks`; `conditionals.check_conditioning` → `check_conditioning_covariance`; `edges.edge_of` → `joint_distribution`; `edges.owners_of` → `distribution_declarations`; `edges.assign_edges` → `shock_builders`; `edges.factorization` → `factorization_obligation`; `families.normal_parts` → `normal_mean_and_covariance`; `families.weight_matrix` → `weight_matrix_text`; `families.check_arguments` → `check_argument_count`; `families.check_domain` → `check_family_conditions`; `families.evaluate` → `numeric_value`; `families.tidy` → `drop_zeros_and_ones`; `ConditionalDistribution.owners` → `declarations`; `ConditionalDistribution.conditioning` → `conditioning_shocks`; `JointDistribution.owner_of` → `declaration_of`; `JointDistribution.owners` → `declarations`; `ArgumentShape.counted` → `in_words`.
+    - `typing`: `typed_expressions.SemanticTypeAnswer` → `WireType`; `typed_expressions.law_symbol` → `declared_distribution_symbol`; `typed_expressions.typed_parts` → `policy_set_parts`; `typed_expressions.bound_functions` → `policy_fields`; `line_unknowns.group_systems` → `systems_by_shared_candidate`; `primitive_definitions.SEMANTIC_RULES` → `PRIMITIVE_DEFINITIONS`; `primitive_definitions.declared_rule` → `primitive_definition`; `primitive_definitions.instantiate_rule` → `instantiated_definition`; `primitive_definitions.binding` → `bound_variable`; `ranges.membership` → `range_within`; `Declarations.check_multiplier_listings` → `check_multipliers_unlisted`; `Declarations.side_listings` → `side_entries`; `Declarations.listed_types` → `listed_identities`; `Declarations.first_listing` → `first_listing_address`; `Declarations.fields_and_signatures` → `fields_and_header_sides`; `Declarations.transition` → `block_between`; `Declarations.builder_candidates` → `blocks_between`; `Declarations.value_block_edge` → `backward_block_edge`; `Declarations.first_address` → `stage_line_address`; `Declarations.references` → `check_definition_body`; `Declarations.names_in_scope` → `names_in_scope_text`; `Declarations.block_names_in_scope` → `block_names_in_scope_text`; `Declarations.check_reach` → `check_known_at_perch`; `Declarations.check_selection` → `check_branch_selection`; `Declarations.annotation` → `declarations_record`; `Declarations.read_law` → `read_distribution`; `Declarations.mark_perch` → `perch_of_mark`; `Declarations.domain_term_of` → `declared_set_of`; `TypingContext.retain` → `typed_builders`; `typed_expressions.Function` → `FunctionSet`; `typed_expressions.Measurable` → `MeasurableMapSet`; `typed_expressions.Kernel` → `StochasticKernelSet`; `typed_expressions.FiniteMeasure` → `FiniteMeasureSet`; `typed_expressions.Probability` → `ProbabilityMeasureSet`.
+    - `fold`: `table.OperationTable` → `ConstructionTable`; `table.Rows` → `BlockRows`; `stage_fold.fold_operations` → `fold_stage_file`; `stage_fold.transition_equations` → `law_of_motion_equations`; `backward.fold_value_block` → `fold_backward_block`; `value_bundles.in_reading_order` → `in_dependency_order`; `declared_sets.restriction` → `definedness_condition`; `conditions.expectation_selection` → `conditional_distribution_of`; `block_lines.stage_graph` → `working_hypergraph`; `block_lines.ports_of` → `header_wire_sorts`; `block_lines.derived_of` → `derived_relations_of`; `block_lines.is_implicit` → `is_implicit_solve`; `wire_terms.value_inputs` → `wires_read`; `wire_terms.lhs_spelling` → `defined_name`; `ConstructionTable.operations` → `primitive_rows`; `ConstructionTable.closed` → `sub_builder_rows`; `_StageBlocks.owners_covering` → `distributions_of`; `_StageBlocks.transition` → `law_of_motion`; `StageNames.name_role` → `role_by_name`; `StageNames.grid` → `perch_coordinates`; `StageNames.stage` → `stage_name`; the symbol groups `prestate`, `states` and `poststates` of `block_lines.symbols` → `arvl_states`, `dcsn_states` and `cntn_states`.
+    - `graphs`: `builders_graphs.render_graphs` → `construct_graphs`; `builders_graphs.operation_boxes` → `operator_boxes`; `builders_graphs.builders_grains` → `builders_graph_by_grain`; `initial_diagrams.initial_boundary` → `initial_diagram_inputs_and_outputs`; `initial_diagrams.selected_builders` → `blocks_of_direction`; `initial_diagrams.construct_initial_diagrams` → `initial_diagram_from_lines`; `initial_diagrams.field_grain_graphs` → `initial_diagram_at_grains`; `initial_diagrams.leftover_bubble` → `undirected_block_bubble`; `WireTable.port` → `sort_of`; `WireTable.role` → `declared_role`; `WireTable.ty` → `tensor_of_sorts`; `WireTable.measure` → `add_measure_sort`; `WireTable.targets` → `measures_written`; `WireTable.boundary` → `builder_inputs_and_outputs`; the parameter `dom` of `interior_at` → `inputs`; the parameter `cod` of `interior_at` → `outputs`; the parameter `dom` of `_builder_bubble` → `inputs`; the parameter `cod` of `_builder_bubble` → `outputs`; the parameter `dom` of `block_bubble` → `inputs`; the parameter `cod` of `block_bubble` → `outputs`; the parameter `dom` of `_on_domain` → `inputs`; the parameter `dom` of `connect` → `inputs`; the parameter `cod` of `connect` → `outputs`; the parameter `order` of `_subgraph` → `wire_priority`; the parameter `stage` of `WireTable.field_of` → `stage_name`.
+    - `display`: `bellman.display.encoding_reader` → `bellman.display.encoding_checks`; `cards.Named` → `ImageByName`; `cards.Pointwise` → `ImageAtPoint`; `cards.SetOf` → `ImageSet`; `cards.Operator` → `OperatorCard`; `cards.Authored` → `AuthoredCard`; `cards.DefinitionDenotation` → `DefinitionCard`; `cards.sheet_of` → `card_of`; `cards.printed` → `card_body_lines`; `cards.FALLEN` → `OVERFLOW_COLUMN`; `sheets.rule` → `section_heading`; `sheets.sets` → `SetsLine`; `sheets.named` → `PathLine`; `sheets.free_spaces` → `outer_space_parts`; `sheets.free_maps` → `outer_map_parts`; `sheets.pieces` → `break_parts`; `sheets.pairs` → `label_columns`; `sheets.column` → `label_column_width`; `sheets.plain` → `unlabeled`; `sheets.against_right` → `with_margin_mark`; `drawing.sort_label` → `wire_label`; `drawing.drawn_label` → `box_symbol`; `answer_encoding.kind_of` → `schema_kind`; `printed_records.bundled_sorts` → `sorts_by_value_bundle`; `_Names.of` → `pairs_for`; the parameter `mark` of `sheet` → `stamp`; the parameter `mark` of `title` → `stamp`.
+    - `stage`: `bellman.stage.build` → `bellman.stage.construction`; `bellman.stage.navigation` → `bellman.stage.pieces`; `bellman.stage.stage_queries` → `bellman.stage.stage_answers`; `bellman.stage.graph_queries` → `bellman.stage.grains`; `bellman.stage.box_queries` → `bellman.stage.boxes`; `bellman.stage.denotation_queries` → `bellman.stage.denotations`; `bellman.stage.kernel_queries` → `bellman.stage.kernels`; `bellman.stage.type_queries` → `bellman.stage.carriers`; `bellman.stage.semantic_queries` → `bellman.stage.defining_expressions`; `bellman.stage.targets` → `bellman.stage.method_targets`; `bellman.stage.calibration` → `bellman.stage.calibration_requirements`; `stage_answers.fields_role` → `field_role`; `stage_answers.describes` → `descriptions`; `grains.builder_of` → `block_id_of`; `grains.refusal_of` → `graph_refusal`; `boxes.merged_members` → `merged_lines`; `denotations.denotation_for` → `denotation_of`; `denotations.denote` → `operator_card`; `denotations.denote_definition` → `definition_card`; `denotations.graph_inputs_and_outputs` → `graph_signature`; `denotations.wire_pairs` → `wire_records`; `denotations.complete_answer` → `with_definitions_and_source`; `carriers.over_identities` → `with_names_as_identities`; `carriers.coordinate_occurrence` → `bound_variable_number`; `carriers.transition_range_evidence` → `law_range_evidence`; `defining_expressions.specialised_law` → `law_at_policy_identity`; `defining_expressions.specialised_aggregator` → `aggregator_at_policy_identity`; `defining_expressions.specialised_symbol` → `symbol_at_policy`; `defining_expressions.section_law` → `section_identity`; `defining_expressions.specialized_kernel` → `kernel_at_policy`; `defining_expressions.declared` → `declared_set_of`; `defining_expressions.read_at_perch` → `line_at_point`; `defining_expressions.residual_lines` → `residual_rules`; `defining_expressions.wire_lines` → `wire_residual_rules`; `defining_expressions.passed_wire` → `identity_input_of`; `defining_expressions.result_names` → `result_labels`; `inventory.stage_text` → `stage_sheet`; `method_table.METHOD_RULES` → `METHOD_TYPES`; `calibration_requirements.set_identity` → `declared_set_reference`; `method_targets.builder_box` → `block_box`; `sources.read_yaml` → `read_yaml_mapping`.
+    - `factory`: `loading.plain` → `plain_python`; `elaboration.source_of` → `stage_text_of`; `elaboration.occurrence_of` → `stage_occurrence`; `trellis.holds` → `already_bound`; `recipe.read_recipe` → `_read_recipe`; `recipe.check_agreement` → `_check_recipe_template_agreement`; `recipe.active` → `_is_active`; `recipe.registry_block` → `_registry_assignments`; `recipe.settings_named` → `_setting_names`; `recipe.fill_parts` → `_fill_parts`; `recipe.write_records` → `_syntactic_periods`; `recipe.names_at` → `_source_names_at`; `recipe.source_list` → `_merged_source_list`; `recipe.read_source` → `_read_source`; `recipe.resolve_source` → `_registry_file`; `recipe.merge_sources` → `_merge_sources`.
+    - `root`: `refusal_catalogue.Refusal` → `CatalogueEntry`; `dossier.card_of` → `card_lines`; `dossier.header` → `first_line`; `dossier.anonymous` → `without_authored_text`; `dossier.check_anonymous` → `check_no_file_path`; the parameter `kind` of `construction_error` → `error_class`.
+- The grammar's abbreviated rule names are full words (`pvar` is `bracketed_name`, `tupidx` `tuple_selection`, `pslack` `slackness_clause`, `bdecl` `block_declaration`, `kv` `key_value`, `dconds` `condition_tail`, and the rest of the 41 in `stage.lark`); the ASDL fields `Declare.d`, `Complementary.d`, `Typer.t`, `Sym.s` and `Space.s` are `declaration`, `declaration`, `typing`, `symbol` and `set`; the semantic set constructors `Function`, `Measurable`, `Kernel`, `FiniteMeasure` and `Probability` are `FunctionSet`, `MeasurableMapSet`, `StochasticKernelSet`, `FiniteMeasureSet` and `ProbabilityMeasureSet`.
+- `stage.encoding()` writes the schema `stage-encoding/2.4`: the kinds of the renamed classes take their names (`records.Condition`, `records.ExpressionType`, `records.WireType`, `records.ResolvedName`, `records.DerivedRelation`, `records.ValueRepresentation`, `records.ImageByName`, `records.ImageAtPoint`, `records.ImageSet`, `records.OperatorCard`, `records.AuthoredCard`, `records.DefinitionCard` and the five `semantic.*Set` kinds); a condition's `identities`, `subjects` and `kind` are its `entries`, `named_identities` and `family`, and an obligation's `identities` in the document are its `entries`; the `params` of an operator's and a composite's card are its `policies`; a method's `method` is its `tag`; a comparison's `op` is its `relation`; a block's `boundary_statements` are its `statements_outside_nodes`; a wire's and a denoted object's `semantic_type` is its `mathematical_type`; the diagnostics' `complete_boundary` is `complete_signature`. `StageDenotation` keeps its name and kind.
+- A line that defines an output of its block has the role `output`, formerly `boundary`, and a refusal names it an output statement; the identity kind of a function's parameter is `function-parameter`, formerly `parameter-port`; the conditions and the kernel lines write "the distribution of y" and "the restricted law of motion" where they wrote "law" alone. Every stored document is re-recorded once under these words: the snapshot recordings, the derived stage encodings, parse trees and term encodings, the listings of the five pages the listing tool maintains, and the two annexes.
+
+### 2026-09-26 — The tutorials collection completed
+
+- The collection holds eleven lessons in three groups, each executed and recorded in `tutorials/lessons.json`, with the reading order in its README, `tutorials/README.md`: Getting started, five lessons from The stage as an object (`tutorials/getting-started/01-the-stage.ipynb`) to Periods and trellises (`tutorials/getting-started/05-periods-and-trellises.ipynb`); Specific topics, Expectations and nested aggregation (`tutorials/topics/expectations.ipynb`) and Branching (`tutorials/topics/branching.ipynb`); Model walkthroughs, the three portfolio–consumption lessons and the Benhabib–Bisin–Luo walkthrough (`tutorials/models/benhabib-2019/the-factory-on-benhabib.ipynb`). Lessons 02 and 03 of the portfolio–consumption model moved from `applications/cons-port/notebooks/`, and the Benhabib notebook from `applications/benhabib-2019/`, where the model's files stay. The site's copy `docs/notebooks/solve_port_cons_ffp.ipynb` and `applications/cons-port/notebooks/checkout.py` are retired. Each lesson opens with a summary, a folded box of related documents and a folded table of terms, which `docs/_javascripts/notebook-callouts.js` renders on the site.
+
+### 2026-09-26 — The tutorials collection
+
+- The root folder `tutorials/` holds the lessons of Bellman calculus in three groups, Getting started, Specific topics and Model walkthroughs, with the reading order in its README, `tutorials/README.md`; the site publishes it as Tutorials. Two of the three groups hold a lesson: Getting started holds The stage as an object (`tutorials/getting-started/01-the-stage.ipynb`), the consumption stage of the portfolio–consumption model as an object, and Model walkthroughs holds Two stages, two orders (`tutorials/models/cons-port/01-two-stages-two-orders.ipynb`), moved from `applications/cons-port/notebooks/`; Specific topics holds none yet. On the site, the hook `scripts/notebook_links.py` turns a lesson's wikilinks into links to the wiki and its relative links into links to other lessons or to the repository. `tutorials/tools/execute_lessons.py` executes each lesson in a fresh kernel and writes `tutorials/lessons.json`, the digests of each lesson, of the files it lists as read and of the set-up module `tutorials/checkout.py`; `tutorials/tests/test_lessons.py` fails when one of those files has changed since the lesson was executed, and checks on each lesson's notebook that it opens with its title and its files, imports only in its first code cell, and holds no definition or comment in a code cell.
+
+### 2026-09-26 — The folders in their order
+
+- The package stands in nine folders, in the order `syntax`, `native`, `distributions`, `typing`, `fold`, `graphs`, `display`, `stage`, `factory`: a module imports at its head from its own folder, from the folders before it and from `bellman/refusals.py`, no module imports inside a function, and no import closes a cycle (`packages/bellman/README.md` §6, checked by `scripts/oracle/local_imports.py --strict`). The public names of `bellman` and what they answer are unchanged; what changes is the module path of everything a user imports from a module rather than from `bellman`, and the old paths are gone, with no alias:
+    - `bellman.graphs.identity`, `predicates`, `frozen`, `labels` and `records` are `bellman.native.identity`, `predicates`, `frozen`, `labels` and `records`; `bellman.graphs.native` is `bellman.native.hypergraphs`; `bellman.stage.versions` and `bellman.stage.provenance` are `bellman.native.versions` and `bellman.native.provenance`.
+    - `bellman.graphs.render` is divided: the table of a stage's wires, `WireTable` (formerly `_Wiring`), with `connect` and `needed`, is `bellman.graphs.wire_sorts`; every step of an initial diagram, `initial_diagram_grains` among them, is in `bellman.graphs.initial_diagrams`; `render_graphs`, `builders_grains`, `interior_at` and `bundles` are in `bellman.graphs.builders_graphs`.
+    - `bellman.graphs.semgraph` is `bellman.stage.semgraph`; `bellman.semgraph` is unchanged.
+    - `bellman.syntax.semantic` is `bellman.typing.typed_expressions`, which also holds `SemanticTypeAnswer`, formerly of the records; `bellman.display.layout` is `bellman.syntax.layout`.
+    - `load_calibration` and `load_settings` (`bellman.bindings.calibration`), `load_methods` (`bellman.bindings.methodization`) and `read_yaml` (`bellman.bindings.tag_tolerant_yaml`) are in `bellman.stage.sources`.
+    - `bellman.bindings` is `bellman.factory`: `loading`, `recipe` and `trellis` keep their names, `bellman.bindings.stage_factory.loader` is `bellman.factory.elaboration`, `bellman.stage.joins` is `bellman.factory.joins`, and `bellman.display.trellis` is `bellman.factory.trellis_drawings`.
+    - `bellman.display.dossier` is `bellman.dossier`; `bellman.bindings.refusals` is divided into `bellman.refusal_catalogue` (`catalogue`, `refusal_of`, `text_of`, `Refusal`) and `bellman.refusal_examples` (`EXAMPLES`, `Example`, `REGISTRY_FILES`, `write_registry`, `CORPUS`).
+- A stage version written by the standard pickle before this change names the old modules of its classes and of `_mapping_proxy`, now `bellman.native.hypergraphs._mapping_proxy`, and is not read back by this package; a pickle carries a version between the processes of one run, and one written by this package reads back as before.
+
+### 2026-09-26 — The fold and the stage separated
+
+- The reading of a stage's blocks and lines stands in the fold: `bellman.fold.block_lines` holds the blocks of a stage, what a block's header declares, the wires, the three tables of the fields (`fields_of`), the symbol groups (`symbols`), `parameter_sets`, the derived output relations and the lines marked `!doc` (`doc_lines`), and `bellman.fold.stage_names` holds `lines_of`, `branches_of`, `label_coordinate` and `occurrences_of` beside `StageNames`, which they read and which reads them. `bellman.stage.targets` keeps `resolve_target`, `target_inventory` and `implicit_statement`, and `fields` is `bellman.stage.stage_queries.fields`. `bellman.stage.methods` is gone: the three binding verbs stand in `bellman.stage.binding_verbs`, the method table and the attachment of methods in `bellman.stage.method_table`, and `bellman.method_types` answers as before. `bellman.stage.wire_queries` is part of `bellman.stage.semantic_queries`; the denotation of a stage and of a piece, `card`, `box_signature` and `graph_inputs_and_outputs` stand in `bellman.stage.denotation_queries`; the named operations on terms (`apply_at`, `compose`, `restrict`, `residual`, `slack`, `kuhn_tucker`) in `bellman.stage.term_operations`; the records of the kernels of g and G in `bellman.stage.kernel_records`, and `affine` in `bellman.stage.kernel_queries`; `bubble_at` in `bellman.stage.box_queries`, `written_name` in `bellman.stage.type_queries` and `source_file` in `bellman.stage.provenance`. `graph_of` takes no `assumptions`, which it only checked; `bellman.semgraph.record` takes them as before. The working value of a construction is the class `WorkingStage` of `bellman.stage.versions`, beside `Version`. No module of `bellman.stage` or `bellman.fold` imports inside a function. Nothing printed changes.
+- On the durables trellis of 154 stage occurrences, the package now builds the specified trellis, `elaborate_trellis` followed by `calibrate_trellis`, `methodize_trellis` and `configure_trellis`, in about 12 s, and makes a draw of β with the kernels of its trellis in about 4.5 s, the draw taking about 2.5 s and the kernels about 2 s ([The Bellman factory](Bellman-Sym/08-bellman-factory.md) §6.1). The review of the stage object under repeated use measured 48 to 53 s and 20 to 22 s on 25 September 2026, before the changes it recommended.
+
+### 2026-09-25 — A new version carries the answers its graphs determine
+
+- A version that `calibrate`, `methodize` or `configure` returns, and every copy the trellis verbs make, starts with copies of the answers its argument had computed that the definitions table and the graphs determine, which a binding does not change: the construction table, the table of the stage's wires, the graphs at every grain and the answers about each wire and its carrier. The copies refer to the new version's own boxes and wires, so that versions still share nothing, and an answer that reads a binding, such as a condition the calibration decides, is computed again. On the durables trellis of 154 stage occurrences, building the specified trellis takes 17 to 18 s instead of 23 to 24 s; a draw takes 3.1 to 3.3 s instead of 2.9 s, 0.4 s of it copying the answers; and compiling the kernels of a drawn trellis takes 2.3 to 2.5 s instead of 7.9 to 8.3 s, or 0.7 s once the specified trellis has compiled its own kernels. A draw with the kernels of its trellis thus takes 5.5 to 5.8 s instead of 10.7 to 11.2 s, and 3.8 to 4.1 s once the specified trellis has compiled its own kernels. The change is item 2 of the review of the stage object under repeated use (25 September 2026), which AAS approved on that day.
+
+### 2026-09-25 — Many draws on many cores, on the factory page
+
+- [The Bellman factory](Bellman-Sym/08-bellman-factory.md) §6.1 tells an economist who runs an estimation how to use the factory when the model is solved once per parameter draw on many cores: the specified trellis is built once and each draw binds its values with `calibrate_trellis`; on one node, a parent process builds the trellis, makes one draw, calls `gc.freeze()` and starts its workers by `fork`, so that no worker builds anything; across nodes under MPI, one rank builds the trellis and sends it to the others with the standard pickle. A listing runs the pattern on three periods of the durables model, and the section states the times and the memory measured on its full trellis of 154 stage occurrences. The section is item 5 of the review of the stage object under repeated use (25 September 2026).
+
+### 2026-09-25 — Each distinct input bound once
+
+- `bellman.calibrate_trellis`, `bellman.methodize_trellis` and `bellman.configure_trellis` apply the stage verb once for each distinct pair of a stage occurrence and the mapping the syntactic trellis gives it, each mapping written with its keys in the same order, and place at the other positions of the pair a copy that records its own position and parent and equals the version the verb would bind there alone, as `elaborate_trellis` constructs each distinct stage text once ([The Bellman factory](Bellman-Sym/08-bellman-factory.md) §6); the exception is a changed method choice, which `methodize_trellis` remakes at each position from its record. On the durables trellis of 154 stage occurrences, each of the three verbs of the route applies the stage verb 45 times instead of 154, and a draw of β twice instead of 102 times: the three verbs of the route take 12 to 13 s instead of 23 to 26 s, a first draw 1.8 to 2.6 s instead of 5.4 to 6.5 s, and a later draw 1.6 to 1.8 s instead of 2.6 to 2.9 s.
+
+### 2026-09-25 — The printer divided by decision
+
+- `bellman.display.printers` is gone, its parts standing in the modules of the decisions they hide. The drawing of a graph is `bellman.display.drawing`, with `to_drawing`, `Drawing`, `sort_label` and `dot_head`; `to_drawing(graph)` reads no stage, and the drawing with the names the stage gives its wires and the title of its graph is asked of the piece, `stage.builders.backward.draw()`, where a script called `to_drawing(graph, stage, level=…, direction=…, grain=…)`. The stage sheet, the definitions sheet and the directions of an initial diagram are composed in `bellman.stage.inventory`, and the stage encoding in `bellman.stage.encoding`, whose answer records `encode_answer` of `bellman.display.answer_encoding` writes as JSON. An obligation's entries and a predicate are written by `obligation_entry` and `predicate_text` of `bellman.syntax.semantic`. Nothing printed changes ([API](Bellman-Sym/API/index.md) §1).
+
+### 2026-09-25 — A stage and a trellis written by the standard pickle
+
+- Python's standard `pickle`, the form in which `multiprocessing` and `mpi4py` send an object to another process, writes and reads back a stage version and a trellis of versions, a contract a test of the package keeps: a read-only mapping of a stage is written as a call of `bellman.graphs.native._mapping_proxy` on a plain dict, and a version is written without the answers it has kept, which the version read back computes again when asked, so that a version that has answered a query is written too. The durables trellis of 154 stage occurrences pickles to 10.6 MB, written in about 0.15 s and read back in about 1 s, equal at every position. `copy.deepcopy` of a version, refused before for the same reason, now succeeds as well. The rule that writes a read-only mapping so is registered with `copyreg` for `types.MappingProxyType` in the whole Python process once the module that defines `_mapping_proxy` is imported, which happens when any function of the package that constructs or binds a stage is imported, so that `pickle` and `copy.deepcopy` then accept any read-only mapping in that process, not only a stage's. The change is item 3 of the review of the stage object under repeated use (25 September 2026), which AAS approved on that day.
+
+### 2026-09-25 — Stored diagrams opened with the package's hypergraph class
+
+- The five modules that open a stored diagram as a hypergraph (`bellman.stage.targets`, `bellman.graphs.render`, `bellman.display.printers`, `bellman.display.encoding` and `bellman.stage.navigation`) build it with the package's `BellmanHypergraph`, whose constructor makes DisCoPy's checks in one pass, instead of DisCoPy's public `Hypergraph`, which halves the time to elaborate and bind the durables trellis of 154 stage occurrences, from 46 s to 23 to 24 s, and to compile the kernels of a drawn trellis, from 17 s to 8 s, the graphs being the same.
+
+### 2026-09-25 — The flat form retired
+
+- The readers of the flat form of one period are deleted: `bellman.bindings.stage_factory.load_syntax`, the folders `bellman.bindings.period_factory` and `bellman.bindings.trellis_factory`, and `load_yaml_tag_tolerant`, the loader that removed unknown YAML tags. A model is read from its files by `bellman.load_trellis(file)`, from a trellis file whose periods write their stages as records, or by `bellman.load_recipe(directory, recipe)`, from a registry and its recipe, each reading the period templates the trellis file names; a period written in code is a dictionary of records, each `bellman.load_stage(path)` completed with its three mappings, appended to a trellis with `bellman.accrete` ([Period functions](Bellman-Sym/API/factory/period-factory.md) §§1 and 2). Every YAML file the package reads goes through one reader, which keeps every tag and refuses a key written twice.
+- The period section of a stage's dossier reads its period file through that reader, and its stage keys as a recipe reads a period template; its line on each period file under `applications/` is unchanged. A malformed period file is now refused on that line. The rule `trellis-file-shape` refuses a file that is missing, does not read as YAML or holds no mapping, on which the dossier raised an exception; a file that writes a key twice, which was read as its last value; and stages written as records, whose keys were read. The rule `recipe-shape` refuses a stage key listed twice, which was read once. The pages no longer state the flat form, and [Stage functions](Bellman-Sym/API/factory/stage-factory.md) no longer names the binding verbs as functions of `bellman.bindings.stage_factory`.
+
+### 2026-09-25 — The lower folders divided by decision
+
+- `bellman.distributions.shocks` is three modules: `families`, the shock families a stage may declare and what their arguments mean, with the conditions the calibration's numbers decide; `edges`, where a shock is drawn, the declaration that owns it and the edge of the forward builder it is assigned to; and `conditionals`, the conditional distribution an expectation selects and its printed form. A script that read `evaluate` or `owners_of` from `shocks` reads them from `families` and `edges`, as the portfolio-consumption tool now does.
+- `bellman.fold.operations` is nine modules, each holding one decision of the fold: `wire_terms`, `declared_sets`, `stage_names`, `table`, `value_bundles`, `backward`, `policy`, `stage_fold` and `conditions`. The names of a stage as the fold and the queries read them are the class `StageNames` of `fold.stage_names`, which was the private class `_Context`.
+- `bellman.typing.context` holds the typing walk alone; the declaration pass is `bellman.typing.declarations`, its ten steps, the nine checks and the annotation, in the order `make_stage` calls them, and a line's operators and unknowns are `bellman.typing.line_unknowns`. The construction hands the typing the authored `!node` lines on the builder boxes rather than through a table on the declaration pass; no printed answer changes.
+
+### 2026-09-25 — The answer records beneath the queries
+
+- The records a denotation answers with (`Wire`, `Operator`, `Composite`, `StageDenotation` and the others) stand in `bellman.display.cards` beside the card that prints them, and the listings, signatures, obligations and tables of rows the pieces answer (`Listing`, `Signature`, `Obligations`, `Rows` and the others) in `bellman.display.printed_records`; `bellman.graphs.records` holds the stored and construction records, the answer of a wire's carrier (`SemanticTypeAnswer`) and the entries the bindings print (`Bindings.entries`). A wire holds the carrier the query that built it derived, and `Wire.detached()`, which returned the same wire once the carrier was derived, is deleted. `stage.definitions.list()` answers a `DefinitionsListing`, which prints as the definitions sheet as before; `stage.bindings` writes its own entries (`Bindings.entries`), which the stage sheet sets in its columns. Nothing printed changes ([API](Bellman-Sym/API/index.md) §1).
+
+### 2026-09-25 — One encoding schema
+
+- `stage.encoding()` writes the one schema `stage-encoding/2.3`, and the documents stored beside the stage files under `derived/` are written under it, each holding what the encoding holds, the derived answers included; the schema files of 1.0, 2.1 and 2.2 and the document kept under 2.1 are deleted. Each node of a derived answer carries a kind spelled `<namespace>.<Kind>` in one of the schema's five namespaces, `terms`, `semantic`, `records`, `predicates` and `methods`, which the schema now states are names of its own and name no module of the package; the package's encoder holds the one table from its classes to these kinds, so that a class may be moved or renamed while a stored document stays as written ([The stage](Bellman-Sym/API/stage/01-the-stage.md) §5). The kinds and the fields of every node are those of 2.2.
+- A `line` record of the definitions table carries its `ordinal`, the position of the line among the items of its block's body counted from 1, as the construction counts it, the branches of a branching block counted in turn, and as an unnamed line's address `<block>.<n>` spells it outside a branch; the version reads the number from the record instead of counting its line records again, so that a line that follows a multiplier declaration has one number in the construction's and the version's refusals (`policy.InvEuler` of `cons_obs` is line 3 on both, where the version counted 2). The encoding writes the key `ordinal` on every definition, `null` on every kind but a line ([The definitions table](Bellman-Sym/API/stage/08-definitions.md) §2).
+
+### 2026-09-25 — Refusals at the root; one derivation per fact
+
+- The four refusal classes and the names of every rule stand in `bellman.refusals`, which the root exports; a refusal of the lowering or of the typing walk carries its rule, its position and the four parts, written for the author of the stage file. Three rules are new: `well-typed` (a function, tuple, relation or label read as a number, an argument of another kind, two sides of a line of two kinds), `divisor-nonzero` (a written zero divisor) and `readable-file` (a path naming no readable stage file; a calibration, settings or methods file that is no YAML mapping or writes a key twice, refused on every path by one reader).
+- Each fact the package states is derived once: the value roles, the perch marks and the primitive sets stand in `syntax/vocabulary.py`; a nested block opened at the primitive grain shows its lines; a method bound on an `argmax` is stored under `Solution`; the package version is read from `pyproject.toml` and never reads `unreleased`. The display installer is gone: a raw term in a notebook prints its dataclass form.
+
+### 2026-09-25 — Printed corrections
+
+- The value aggregator prints in italic, `𝐺`, as the law of motion prints `𝑔`; the definitions listing and the cards no longer print the bold `𝐆`.
+- An aggregation whose result an evaluation writes as a value or marginal-value field at a perch is labelled `Value aggregation 𝐺`, and every other aggregation `Apply 𝐺`, in a graph's listing, its drawing and the stage's encoding. Since 21 September every aggregation had been labelled `Apply 𝐺`.
+- The GRAPHS section of the stage sheet writes each builders graph's mapping, `(𝑉≻, 𝑑𝑉≻) ↦ (𝑉≺, 𝑑𝑉≺), 𝑐(m_d)` backward and `μ≺ ↦ μ≻` forward on the consumption stage, where it printed the header row of the graph's card ([The stage](Bellman-Sym/API/stage/01-the-stage.md) §3).
+- The kernel of an expectation names the edge that draws its shocks and the builder that integrates them, `drawn on the edge dcsn_to_cntn; in cntn_to_dcsn at each point of k_d, integrates Ψ, θ`, where it named the integrating builder as the place of the draw.
+- Refusals say backward block, law of motion, edge and distribution where they said value block, transition and law ([Refusals](Bellman-Sym/reference/refusals.md)).
+- A piece opened at a finer grain names the grain in its short form, `Builder('cons', 'cntn_to_dcsn', primitives)` and `BuildersGraph('cons', 'backward', sub_builders)`.
+
+### 2026-09-25 — Branching, the second version
+
+- A stage whose branches a declared shock selects is constructed: the law gives each label its probability, the expectation over the tuple indexed by the shock is one aggregation whose card prints the line as written and whose definition is the weighted sum, and the forward builder extends the distribution by the law and routes it by the drawn label. [Branching](Bellman-Sym/05-branching.md) §4 quotes the retiree's stage of the Cagetti–De Nardi model.
+- The four demographic stages of the Cagetti–De Nardi model construct, and the childbearing model of de la Croix and Pommeret is a registry whose 36 periods elaborate.
+- The rule `branch-law` refuses a label shock without a law or with a law giving the labels no probability each; a stage that draws its branch and also chooses a control is not yet constructed ([Refusals](Bellman-Sym/reference/refusals.md)).
+
+### 2026-09-25 — One public surface
+
+- `bellman` exports twenty-six names, listed once in `bellman/__init__.py` in the order a modeler meets them: the thirteen functions of the Bellman factory, `make_stage`, the five functions of a period, `period_joins`, `computable_together`, `forward_order`, `backward_order` and `inter_period_joins`, which were imported from `bellman.stage.joins`, `semgraph`, `method_types`, `ElaboratedStage` and the four refusal classes. [Period functions](Bellman-Sym/API/factory/period-factory.md) §4 states the five, and the portfolio-consumption application imports them from `bellman`.
+- The three binding verbs are reached one way, as methods of the stage, `stage.calibrate(x)`, `stage.methodize(x)` and `stage.configure(x)`: `bellman.bindings.stage_factory` no longer holds them or `elaborate_stage`, and [Methodization](Bellman-Sym/04-methodization.md) §5 and [Stage functions](Bellman-Sym/API/factory/stage-factory.md) §3 write the methods. `python -m bellman --help` names the program.
+- Four public names are renamed, and the old names are removed: `rebound` is `changed_positions`, the positions whose stage occurrence is new or a new version; the second argument of `elaborate_trellis` is `previous`, the trellis whose unchanged stage occurrences are copied; the argument of `stage.methodize` is `methods_source`; and `bellman.bindings.methodization.load_methodization` is `load_methods`. The pages, the tests, the scripts, the applications and the cells of the notebooks that used them are written with the new names; the notebooks were edited and not executed, so their recorded outputs show the old names until they are executed again.
+- The pages that gave the stage or an operator a `draw()` now say that a graph, a builder, a block and a sub-builder draw, and the table of [API](Bellman-Sym/API/index.md) §2 states that a builder, a block and a sub-builder answer `obligations()` and that an operator answers an empty listing. Two pages of the semantics guide, Inspecting the semantic graph and Consumption and investment walkthrough (both retired on 28 September 2026), imported names that `bellman.stage.stage_queries` no longer defines; their listings now call the stage's methods and run on the stage files the pages ask the reader to save.
+
+### 2026-09-24 — Branching, the first version
+
+- A stage whose forward block from the decision perch holds labeled nested blocks, one for each label of a control over a finite set, `d : !ctrl @ {work, retire}`, is constructed. The block keeps one law of motion, read at each label as its section, `𝑔_work≻ = 𝑔≻(·, work)`, which a builder's card states once under `where`; each branch value is pulled back along its own section and selected at the policy by the tuple of the value line, the policy builder maximizes the same tuple, and the forward builder writes one measure for each label. `kind`, `branches` and `combination` answer from the nested blocks, and the stage encoding gains no field. [Branching](Bellman-Sym/05-branching.md) quotes the retirement choice as its file stands, [The stage object](Bellman-Sym/API/stage/05-piece.md) states the types of a branching stage, and [Trellis syntax](Bellman-Sym/07-trellis.md) admits an arrival field with several sources, within its period and across a pair of periods.
+- Five rules refuse a branching block by name. Four refuse a block that breaks the form of a branch: under `branch-form` a branching block with one nested block, a line beside its nested blocks, or a nested block without a label or in another block; under `branch-labels` a label outside the control's set or out of its order; under `branch-tuple-mismatch` a policy whose maximand differs from the value line's tuple; and under `branch-value-position` a branch value read at two positions or at none. One refuses a form not yet constructed: under `not-constructed` a block whose branches a shock selects, which a later version of the package constructs. [Refusals](Bellman-Sym/reference/refusals.md) prints each with its example and what to write.
+- The durables, retirement, pension and housing applications are registries whose whole trellises elaborate through the Bellman factory, of 51, 20, 15 and 60 periods, every continuation field joined once.
+
+### 2026-09-24 — The Benhabib demonstration of the Bellman factory
+
+- The within-life model of Benhabib, Bisin and Luo (2019) is a registry in `applications/benhabib-2019/`: 37 periods, the bequest a stage, six age brackets of earnings as ranges of the recipe, one inter-period mapping, and the fifty instances of the paper as fills. The notebook `the-factory-on-benhabib.ipynb` beside it elaborates the whole trellis through the public functions and shows what each verb binds; nothing is solved.
+- A verb given a list-valued parameter equal to the one a stage holds binds nothing: `holds` compares the held tuple with the list of the same entries.
+
+### 2026-09-24 — The portfolio-consumption application on the stage files
+
+- The portfolio stage, `applications/portfolio-choice/port.bl`, continues to `m_next`, next year's resources, where it continued to `m`, so that a period of consumption, discounting and the portfolio stage joined by the connector `{a: k}` has an order and is not refused as a cycle. The stage's page, its recorded derived files, the tests and the pages that quote the stage use the new name.
+- An inter-period connector joins only the continuation fields that leave the earlier period, those that no join within that period reads: after a period of the portfolio stage, consumption and discounting, `{a: k}` joins the discount stage's assets and not the consumption stage's, and `draw_trellis` draws one wire where it drew two. A key naming a field that a join within the period reads is refused under `connector-names-no-field`, and the pages that state the check say so.
+- `applications/cons-port/` builds and solves the portfolio-consumption model from the four stage files of `applications/portfolio-choice/` in three notebooks: two stages forming a period in either order; a life cycle of six periods built backwards from an empty trellis; and both orders solved with a method chosen for each stage, each order's value recovered from the other's. The model's numerical tool, `code/cons_port_tool.py`, realizes each stage by the handler its methods file names, and every equation it evaluates is compiled from a stage file. A grid's spacing is a setting of that tool: `grid_spacing: expmult` gives the multi-exponential grid, and a settings file that names no spacing gives evenly spaced points.
+- The tool reproduces the 360 arrays of the fixed reference, `reference/legacy/port_cons_h5.npz`, to 10⁻¹² in four configurations and in structure in the fifth, whose recorded run evaluated utility at negative consumption, with two handlers that repeat the reference's departures from `port.bl`. One departure is a finding: the reference's quadrature added the mean of the logarithms of the two shocks twice, so it integrated a mean risky return of 1.0705 and a mean income shock of 0.9888 where the calibration gives 1.04 and 1.00. The notebooks integrate the declared distribution, and the reference is not recorded again.
+### 2026-09-23 — The two spellings of the Kuhn–Tucker condition
+
+- A policy block states the corner of its policy, the states at which a constraint binds, exactly and in two spellings that denote one relation. The first is the clause `⟂` on the first-order condition, `𝑑𝑢(c) = dV[>] ⟂ a >= 0`, whose Solution's rule is the clause read at each decision state, `𝑑𝑢(𝑐(m_d)) = 𝑑𝑉≻(𝑔≻(m_d, 𝑐(m_d))) ⟂ 𝑔≻(m_d, 𝑐(m_d)) ≥ 0` on `Xm`. The second is a multiplier declared in the block's body, `μ[>] : ℝ₊ ⟂ a >= 0`, which makes `(a, μ)` the coordinates of that block's continuation functions on the observable set `{(a, μ) ∈ Xa × ℝ₊ | a ≥ 0 ∧ μ · a = 0}`, while the continuation value and its derivative keep the saving as their only coordinate. The inequality statement of `cons.bl` keeps its literal reading, stated on the image of the grid and silent below it.
+- A clause on a statement may carry two bounds, `⟂ 0 <= c_p <= w_d`, which the pension application's worker stage now writes for its contribution cap; a clause with one bound writes the bounded quantity first; statements that share an unknown are one Solution, which `methodize` with `!egm` binds. A malformed declaration is refused under the new rule `multiplier-declaration`. `stage.encoding()` writes the schema `stage-encoding/2.2`, which records the declaration, the two-bound clause and the condition held in a rule, with the files of 2.1 and 1.0 kept; the portfolio application gains `cons_obs.bl`, its consumption stage written with the declared multiplier, in the corpus and the recorded outputs.
+- [Constraints](Bellman-Sym/10-constraints.md) states the two spellings, the two-bound clause and the literal reading of the inequality statement, with the grammar of `Between` and `Complementary`. [Appendix C](Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the declaration, the rule of a system's Solution and, in §4.5, the theorem that the two spellings denote one relation and, under concavity, one policy, the maximizer. The terminology gains rows for spelling, complementary slackness, multiplier, observable and observable set (AMD-SG-035).
+
+### 2026-09-23 — The Bellman factory
+
+- A model is loaded, elaborated and bound by named functions on two dictionaries of one shape: `load_stage`, `load_trellis` and `load_recipe` return the model as written; `elaborate_stage` and `elaborate_trellis` construct the stages without binding; `calibrate_trellis`, `methodize_trellis` and `configure_trellis` bind every stage occurrence from the mapping the written model holds at its key, binding again only where a mapping changed; `accrete` appends a period; `assemble_trellis` runs the whole route from a registry and a recipe in one call; `rebound` lists the positions a verb bound.
+- The registry is a directory and the recipe a file naming, for each stage and kind, an ordered list of sources and slots; a fill is bound to a slot by keyword; every refusal of the recipe, the fills, the trellis file, a record and the joins of a period carries a rule name and the four parts (where, what, why, what to write).
+- The joins of a period are derived from the fields and the connectors and the order from the joins; the list order of a template carries no meaning; a cycle is refused. `draw_period` and `draw_trellis` draw a period and the periods with their inter-period connectors from the dictionary.
+- `bellman.elaborate`, its stopping points and the elaborating `load_stage` are removed; the terminal value is a stage (the durables model's bequest); the terms specification functor, resolved specification and `SpecGraph` are retired (AMD-FAC-002).
+- The guide page `08-spec-factory.md` is renamed `08-bellman-factory.md` and rewritten as the route from the files to the specified trellis, its listings printed by the page script from the durables registry; every link to the old name is repointed; the five factory reference pages are rewritten as the reference of the thirteen functions, one function per section with its signature, what it reads, what it returns and its refusals, and the period, trellis, overview and directory-layout pages are brought to the same calls.
+
+### 2026-09-23 — The readable card
+
+- A card is a table with formal headers. Each block opens with a header row, its label stands in a stub column of fourteen characters, and the blocks are `signature`, `at`, `where`, `declared`, `rule`, `operations`, `conditions`, `source` and `definitions`. The `operations` block gives each piece its key, the wires it reads and the function it produces, with the piece's rule under a rail; the footer lists every name the card writes beside the key that answers it.
+- A line marked `!doc` forms no operation. Its statement, with the constructed output substituted, stands in the `declared` block, and the line as the file writes it stands in `source`. An expression prints with precedence, a binder by the coordinate it ranges over, a perch mark directly after its letter, a distribution by its declared law, and a forward measure by its rule at an event. A condition prints as a term with no status word, and only where the analysis has not discharged it; a discharged condition keeps its evidence on `obligations()`.
+- `stage.encoding()` writes the schema `stage-encoding/2.1`, which records these forms; the documents stored beside the stage files keep `stage-encoding/1.0`. The four saving stages of the pension-retirement and housing-frictions applications are recorded beside their files; their two choice stages await the construction rule for branching blocks.
+
+### 2026-09-22 — Mathematical encoding
+
+- The stage encoding includes derived operator expressions, typed inputs and outputs, declared objects and existing conditions as structured data. Bound variables use scoped references; unresolved meanings and textual evidence remain explicit. The earlier encoding schema is retained.
+- A standalone reader checks references and lists operators without importing Bellman or rebuilding a stage. Methods and settings remain separate from exact mathematics. No convergence or existence requirement is added.
+
+### 2026-09-21 — Mathematical cards
+
+- Denotation cards group typed inputs, kernel data, outputs and authored constraints on one fixed-width layout. Intermediate functions display their defining expressions; policy-dependent transitions and aggregators retain their definitions. Policy Evaluation displays the same set of functions on both sides.
+- Cards retain authored source and annotations, including shock declarations. Two operative equations defining the same name in one block are refused with both positions; documentary lines are not counted.
+- Range checks use declared function and correspondence result sets and admit finite utility plus a negative infinite continuation value. No convergence or existence requirement is added.
+
+### 2026-09-21 — Structured mathematical answers
+
+- Cards read typed expressions, carriers, policy data and the stage's existing conditions from one derived answer. The answer remains usable after its stage is released. A signature derives each carrier only when requested.
+- The Solution takes the candidate and coordinate maps. A documentary maximisation is not an input; its authored optimality inclusion remains separate. Methods add no convergence, existence or other analytic requirement.
+- Mathematical parts display as mathematics rather than constructor calls. Authored text is retained, and marked line breaks preserve its characters.
+
+### 2026-09-21 — Restricted laws and policy sets
+
+- Derived transition types retain the declared feasible pairs. Selection and single-control Solution outputs are sets of feasible policy functions, distinct from the supplied policy used by decision kernels. Correspondences and shock laws have structured function and probability-kernel carriers.
+- Arithmetic range checks preserve one-sided extended value sets and positive powers, and establish supported transition memberships from the declared constraints. Joint shock definitions retain dependency order. No convergence, existence, derivative-compatibility or mass-preservation proof obligation is added.
+
+### 2026-09-21 — Method attachment places and typed options
+
+- `bellman.method_types` states where each method may attach and the options it accepts. `stage.places()` lists those places. Methodization checks the place and option names; configuration checks supplied values and coordinate bounds. These calls add no convergence or existence requirements and leave the exact operator equations and graphs unchanged.
+- Representation methods attach to a declared function or to the Evaluation of a computed function. The canonical method names are `Linear`, `root-find` and `vfi`; retired spellings no longer resolve. Invalid methods and targets are always refused, without a `strict` option. Settings show their readers, including an empty reader list for supplied settings that no method uses.
+
+### 2026-09-21 — Decision operators at a policy
+
+- Decision builders use the supplied policy in their transition, aggregation and shock kernels. The backward builder returns functions of the decision state, and the forward builder pushes measures through the same policy-dependent transition. Raw authored kernels remain inspectable and compilable.
+- Evaluation identifies computed functions or sets of policies with the named outputs of a builder or sub-builder; it inserts no policy and selects no member of a set. Representation methods attach there. `state_choice_measure()` states the joint distribution of states and their policy choices.
+
+### 2026-09-21 — Fields, carriers and evaluation
+
+- The terminology and stage-object guide distinguish a field, its function, a carrier expression and the set it denotes. Exact Evaluation preserves a function or a set of feasible policies; the law of motion and aggregator carry the policy dependence. The methodization guide, calculus and wiki use this account consistently. Runtime behaviour and public names are unchanged.
+
+### 2026-09-21 — An overview page on fields, evaluation and methods
+
+- [Fields, evaluation and methods](overview/08-fields-evaluation-and-methods.md) states how a field is read as a function of the state at a policy, which fields a stage returns by name, what evaluation is, and where each kind of numerical method may stand, with the consumption stage and the smooth-ambiguity stage as examples.
+
+### 2026-09-21 — Derived carriers and primitive definitions
+
+- A wire returned by `signature()` or `denotation()` exposes `.semantic_type`, derived from its retained coordinates and declared value set. The answer separates its sort descriptor from its carrier expression and marks unresolved components explicitly. The stored stage and native DisCoPy graphs are unchanged.
+- Primitive denotation records expose `.expression`, with typed binders and explicit mathematical definitions. Named utility, transition and aggregation objects expose their corresponding type and expression queries. These expressions state requirements; they neither run a solver nor establish analytic conditions.
+- The stage-object guide describes the new attributes. Five demonstration notebooks show the stage, backward builders, forward builders, nested aggregation, and one builder read as a card, a record and an encoding. No Lean text is included. Exact carriers do not depend on methods or settings, and the existing encoding schema is unchanged.
+
+### 2026-09-21 — Stage encoding and public refusals
+
+- `stage.encoding()` supplies a JSON-compatible record of one stage version, with a packaged schema and application fixtures. It carries definitions, the stored graph hierarchy, methods, settings, provenance and conditions; there is no decoder.
+- Parser refusals give the source position, offending line, explanation and remedy. The package and tests share the examples published in the [refusal catalogue](Bellman-Sym/reference/refusals.md). Methodization checks whether each method admits its target, and calibration refuses false parameter-only conditions or establishes true ones with the values as evidence. Every obligation has an explanatory sentence.
+- `python -m bellman` prints the stage inventory, encoding, dossier or refusal catalogue. Public docstrings refer to [The stage object](Bellman-Sym/API/index.md), whose sections 6–8 describe these answers and bindings.
+
+### 2026-09-20 — The denotation of a piece as one record and one card
+
+- Below the stage `denotation()` is the one verb that answers what a piece is and what it denotes, and `view()` is retired there: a primitive operator, a builder, a sub-builder, a builders graph at any grain, an initial diagram, a block, an authored line and a record of the definitions table each answer it, `print(piece)` prints what it answers, and the stage keeps both verbs, being an occurrence with an inventory. What the verb answers is a record — the typed wires, the image, the kernel with the statements it denotes and the objects they denote, the hypotheses, the conditions and, on a methodized version, the method bound within the piece — and the card is that record printed, so that the verb and the card cannot disagree. On every piece that answers `signature()`, what `signature()` prints is a contiguous block of the card's statement.
+- A card maps the statements written in the stage file to the mathematics they denote. Under `kernel` each statement stands as the author wrote it, with its file position, and beneath it the object it denotes, `𝑔 : Xm × ℝ₊₊ ⇀ Xa := (m_d, c) ↦ m_d - c`, with the construction rule cited by number and never explained. The sections SOURCE, WHERE and METHOD are the clauses `where` and `method`, so a statement stands once on a card and a condition once; the words the construction spoke give way to ten conventions, which the guide's page states in one paragraph and no card repeats. On a methodized version the method bound within a piece is part of what the piece denotes, and `methods` at a piece answers every binding within it, its own, its boxes' and its lines'.
+- A shock prints on the arrow of the edge that draws it and in no perch group, `forward    ≺ b[<]  → y drawn →  ∼ w  →  ≻ a[>]`, with a line in PERCHES for each edge that draws one and the edge named in FIELDS; `fields()` lists every declared shock with that edge. The GRAPHS section prints the first line of each builders graph's own answer in place of `present`; the settings no method of a stage names are one line; `parameters()` and the definitions listing carry the description a declaration writes; a block's documentary line is reached by its name and no block's card says that it has none; `obligations()` at a box answers a record and `metadata` a mapping that displays itself; a handle's short form is the project's word for the piece it holds, `Builder('cons', 'cntn_to_dcsn')`; and a set the file does not declare reads `undeclared` on every surface.
+- [The stage object](Bellman-Sym/API/index.md) reads the card in the new order, states the ten conventions and the containment, and its §6 table puts `view()` at the stage alone and gives `denotation()` to a block, a line, an initial diagram and a definition. The terminology gains a row **sheet** for the grammar of a printed view, and the row **view** keeps the stage's sheet alone.
+
+### 2026-09-20 — The drawings of a stage
+
+- A drawing of an initial diagram or a builders graph runs down the page as the card lists its lines, each builder's chain in one column; a wire with one writer and one reader is the label on one arrow and a branching wire plain text; only the graph's own inputs and outputs keep a box, in the perch's hue; every operator box is one rounded shape, the ten operator kinds in four families told apart by three line weights and one fill; a box's drawn label is the repository's symbol (`𝑉[>] ∘ 𝑔`, `E_{Ψ}[· | ν] · risk_ce`), the sentence kept in the drawing's labels and in the tooltip; the type is the site's, at nine to ten and a half points. The structure of every drawing, its boxes, wires and incidences, is what it was; of the thirty-six drawings of the three real models, thirty-four were wider than seven inches and none is now.
+- The records that display themselves stand in one leaf module of the printer, `display/printed_records.py`, so that the package's import graph has the two components AMD-SG-018 left, every remaining body import within its own component.
+
+### 2026-09-20 — The surface of the stage, and the four notebooks as demonstrations
+
+- The stage answers nine questions and three binding verbs beside its seven attributes, thirteen question names in all in place of twenty-six: ten stage-level names that answered what another name answered, handed out a raw box, or had no reader are gone (`transition_map`, `aggregator`, `policy_relation`, `selection`, `expectations`, `methods_of`, `definitions_of`, `symbols`, `kind`, `branches`), and three handle verbs are merged into the verbs that state their facts (`origins()` into the record `kernel()` answers, `affine()` into the aggregation's denotation, `directions()` into the initial diagram's sheet); the key `obligations` of `diagnostics()` is split into `forward_map` and `builder_choice`.
+- Every answer is one of four things and displays itself: a sheet (`view()`), a record (`denotation()`, `signature()`, `list()`, `kernel()`, `fields()`, `obligations()`, `diagnostics()`, `parameters()`, `settings()`, `methods`, `bindings`, `provenance`), a drawing, or a compiled function; the containment `signature() ⊂ denotation() ⊂ view()` holds on every primitive operator and composite, the sheet of a builder and of a graph printing DENOTATION in place of SIGNATURE and OPERATORS, an operator's card naming each wire once, a bubble's listing printing the key by which a piece is reached beside its whole name; the stage, which answers no signature, stands outside the containment.
+- The four verification notebooks are rewritten as demonstrations of the stage object: each cell one path through the object ending in one verb, the answer as the object displays it, one or two sentences before it; no assertion, custom print, loop or coined name; real models from `applications/` read by path and named economically; the set-up in one module beside them. Every property the old notebooks asserted stands in a named test. The notebooks are *The stage*, *The backward builders*, *The forward builders* and *Nested aggregation*.
+
+### 2026-09-20 — The pipeline, the queries and the layout of the package
+
+- The construction of a stage is four calls in order, typing, fold, render, freeze, each with named inputs and a returned value; the working value is built once and never assigned to; the table of typings is opened and closed by the typing call alone; the interior of a `!node` builder is a record of what the dependency walk resolved, and the construction of the consumption stage takes half the time it took.
+- The value-block fold and the policy-block fold are two module functions over an explicit block environment and slice environment, with no class and no mode flag; the endogenous-grid relation of Appendix C is computed once by one module beside the typing, and a numerical method's placement and conditions are a row of a table, not a comparison with its name.
+- The queries of the stage are bound in the class body, in four modules by level (the stage, the graphs, one box, the kernels); the cache of a version holds no object that holds the stage, so a version is collected when its last reference goes; the frozen graph classes are static, so a graph pickled in one process loads in another.
+- The printer owns every printed line: no query answers a display string and none reads one back; the denotation's record is three records, one per shape; a composite's sentence inside the stage's answer is wrapped at the column it prints at, the one printed change of the amendment, on five files outside the corpus.
+- The package is eight packages that each own one object and import downward, `syntax`, `typing`, `graphs`, `distributions`, `fold`, `stage`, `display`, `bindings`; the public surface, `from bellman import elaborate, ElaboratedStage, make_stage, load_stage, semgraph` (superseded by AMD-FAC-002: `elaborate_trellis` and the three trellis verbs; 23 September 2026) and the three binding verbs, is unchanged, and the printer's old path under the retired `cat` subpackage is kept for one release as a documented alias, forwarding to `bellman.display.printers`.
+
+### 2026-09-19 — The layout: eight packages, each owning one kind of object
+
+- The two subpackages named after the two former distributions, `bellman-sym` and `bellman-cat`, are replaced by eight packages under `packages/bellman/bellman/`, each holding the modules that own one kind of object: `syntax` (the grammar, the parser, the lowering, the term hierarchy, the decoder and the printer of retained terms), `typing` (the set algebra, the typing context, the derived output relation and the refusal), `graphs` (the identities, the records and sorts, the frozen DisCoPy subclasses, the initial diagrams and the rendering), `distributions` (the shock families and the conditional an expectation selects), `fold` (the construction table), `stage` (the elaborated stage, its versions, its targets, its queries by level, its navigation and its three binding verbs), `display` (the grammar of a sheet and every printed view) and `bindings` (the loaders of the three sources and the period and trellis assembly). That order is the order in which the packages depend on one another, and every module names at its head the modules it imports.
+- Nothing a reader sees changed: `from bellman import elaborate, ElaboratedStage, make_stage, load_stage, semgraph` (superseded by AMD-FAC-002: `elaborate_trellis` and the three trellis verbs; 23 September 2026) and every verb and query of the stage answer as before, and every printed view, dossier and notebook output is identical.
+- The pages that showed an import line show the new one. `packages/bellman/README.md` states the layout.
+
+### 2026-09-19 — The elaborator after the blind reconstruction of the applications
+
+- A statement whose left side is an expression rather than a name is admitted, and the rule for its unknowns is stated: its candidates are the outputs of the block that either side mentions and that no statement with a name on its left side defines; the candidate statements that share an unknown form one system, solved jointly by one `Solution` operator, refused where the statements are not as many as the unknowns. A residual on the decision control reads the continuation marginal value as a function of the decision states and the control.
+- A control's perch is read one way from either spelling of a header, and a bare name in a statement resolves as the header places it; the header line prints the canonical signature under every spelling.
+- A definition is addressed by its file position, and the definition card of a set, a function, a correspondence or an alias prints a `DESCRIBES` section where the source carries a description; a refusal prints `address` where it printed `term address`.
+- An obligation is one of five typed kinds; an arithmetic condition is recorded only where the declared sets do not decide it; an `argmax` line carries the range obligation of its candidate; an alias has the set of its body.
+- A distribution family's arguments are checked wherever the family is written, a family nested in a mixture included, and a chain's conditioning is read wherever it is written.
+- The second parser of stage files and its comparison harness are deleted; every sheet of every stage file that elaborates is within the grammar of a sheet, checked by a standing test. A shock a sub-builder reads through the distribution it integrates is a coordinate at which the line is read and a wire of no initial diagram (AMD-SG-017 §5.9, for AAS to confirm).
+
+### 2026-09-19 — The guide says what a piece denotes, and nine printed lines are corrected
+
+- Nine sentences of the guide are brought to the verb "denotes", which the guide uses for the passage from a written form to the mathematical object it names, one to "are represented by", the form it keeps for a function representing a field, and one more states how a field is represented. In Appendix C: `w` and `w[>]` denote cash on hand at the decision and the continuation perches; a block denotes a typed relation between its inputs and outputs; `argmax_{c}(e)` denotes the maximiser set, and a policy, where one is required, is a measurable selection from it; `max_{c}(e)` denotes the maximum value; `solve_{c}(r_1, …, r_k)` denotes the relation of feasible unknowns; and `V[<]` denotes the value field at arrival. On the page that passes from a stage file to a formal problem, and on the page on field equations, `V[>]` denotes the continuation-value field, which a supplied function represents, and the backward block denotes the choice value; the candidate fields `c[>]` and `m_d[>]` are represented by the two candidate functions, and the supplied `dV[>]` is represented by the derivative of the same continuation function. One sentence of the page on the stage object is brought to what the object holds: the policy builder states the policy, the decision builder is the operator at a policy, and which policy stands there in a computation is stated at methodization. The mathematics of each sentence is unchanged.
+- Appendix C R7 states one further fact of extended-real arithmetic that a printed card cites: a sum with a term -inf and no term +inf is -inf, the value of an infeasible point.
+- The terminology gains four rows — denotation, representation, mapping and chain — and eight rows are corrected: operator and primitive operator, kernel, inputs and outputs, view, Υ, pullback, shock probability distribution, and field. A denotation is the mathematical object the interpretation assigns to a piece of a stage; a printed view is text that states one and is not one; a representation is what a method computes with in place of a function or a measure. The concept wiki gains the same definition.
+- Nine printed lines of a stage's views are corrected. The range the construction assumes is printed on the card of the operator that writes the left side of the statement it belongs to, with the right side as the obligation holds it, so that no card asserts that an objective is positive. A factor of a kernel's domain that the file does not declare reads `set not declared`, a set standing where a set stands. A function's and a correspondence's rule prints `𝑢(c) = c^(1 - ρ)/(1 - ρ)`, with `=` and without the declared set the source writes on the binder, which the signature line above already gives. The perches of a stage that declares a marginal value close with the sentence that a marginal value is declared by `!mrgnvl` and that no derivative is computed. A declared set followed by a condition prints with the name it constrains, `(0, 1) with β < E_{Ψ}(…)`, wherever it prints, and a semicolon separates two parameters where a comma stands inside one. The fields section names a shock that owns a declared distribution and conditions another, `Ψ; ν enters through the distribution of Ψ`, and the forward direction names the shocks that a block after the first reads, `∼ k_d, Ψ (shock), θ (shock)`. A distribution sheet states the convention its family is read under, `LogNormal(μ, σ): σ is the standard deviation of log Ψ`. A parameter's declared set is labelled `set`, since `domain` is said of a function, on the card and on the column head of the parameters table alike. A row of the definitions table broken inside one of its records keeps the space after the separator that closes it.
+
+### 2026-09-19 — The representations of the elaborator
+
+- The elaborator's dead code and placeholders are gone: the syntax-side `Stage`, `Period` and `Trellis` classes whose methods raised, the period and trellis makers, the alias table, the second printer, and the YAML-era methodization functions; the package's dependencies are those it imports.
+- One generated term hierarchy is the stored form of every retained term: a term written by hand equals the one the lowering builds, and a list given for a sequence slot is stored as a tuple.
+- Every wire, box, definition and obligation of a stage is named by one typed identity record, built in one place and never parsed; a name that would collide with the spelling of an identity is refused where it is written, under `identity-collision`. A sort is equal by its identity and its winding number, and an identity carries one typing, validated where a second sort of it is built.
+- One set algebra on retained set terms decides the meet and the inclusion of declared sets, with one table of the thirteen spellings of the primitive sets that the grammar admits; no printed set is parsed anywhere. A set the algebra does not decide records an obligation and is never refused.
+- The expression-diagram typing pass is retired: one walk of the retained term types every line, with the same refusals in the same order, and no diagram is built during elaboration but the four stored graphs and their bubbles. Elaboration of the guide's stage takes under half the time it took.
+- Nothing a reader sees changed: every printed view, obligation, dossier and notebook output is identical to the day before.
+
+### 2026-09-18 — The printed views of a stage take the grammar of a sheet
+
+- Every printed view of the package is now a sheet of one grammar: the address of the piece and a stamp carrying the one fact a reader wants first, a heavy rule of 78 columns, then sections whose labels stand in capitals over a hairline to the same width, labels in a left column and content in a right one, every wire on its own line, nothing abbreviated and no ellipsis. A section whose content is still to be supplied is ruled with dashes rather than a hairline, so the rule says whether a version is complete. The nine sheets are the stage, a builders graph, a builder, an operator, a definition, a block line, the definitions listing, an initial diagram and a block.
+- The stage's sheet prints its perches with the fields at each, the same fields by role, the blocks with the arrow of their direction and the coordinate each is read at, the records of the definitions table by kind and by their rules, the graphs, the three bindings in full, and at its foot the directions the two initial diagrams answer.
+- `directions()` is a verb of an initial diagram, at the graph level beside `signature()`, `list()` and `draw()`: it answers one line per chain of blocks, each block's wires grouped by perch on either side of the direction's arrow, the policy block on its own line.
+- The bindings are made in the order calibrate, methodize, configure, and the stopping points of `bellman.elaborate` (superseded by AMD-FAC-002: `elaborate_trellis` and the three trellis verbs; 23 September 2026) are `symbolic`, `calibrated`, `methodized` and `specified`. The short form of a version names the stopping point it reaches, or the bindings it holds in that order where they are no initial segment of it.
+- Twelve readings that misled a reader of the printed object are corrected: a shock's conditioning is stated apart from the place it is drawn; the solution box says that the maximiser and the solution define one control and prints the transition whose inverse its coordinate line states; an inequality statement prints as the correspondence it is, with the equation the construction reads; a marginal value names the coordinate it is taken in; an aggregator is cited by its identity and repeats its own argument list; a finiteness condition is stated in the wire's terms; no wire is typed `unspecified`; a scalar component of a mixture prints as a point mass; every clause of a declared set prints with its subject; the change of argument at the endogenous grid is stated; a control's perch is printed once; and a line marked `!doc` is shown on the initial diagram.
+- The construction records one further obligation: an interval that closes on an infinite endpoint is not within a real set, so the range condition of a line whose right side lies in such an interval is recorded rather than discharged.
+
+### 2026-09-18 — The states a policy block's documentary line mentions are coordinates
+
+- In a block whose declared output is a control, a state field of any perch that a line mentions is a coordinate and no input of the block: the decision state is the argument of the policy the block creates, the continuation state is the bound coordinate of the lines that compute it by inverting functions, and the block reads no state as a wire (AAS, 9 and 18 September 2026). Such a field is no longer required in the block's header under `signature-complete`, and the header of the guide's `cons.bl` policy block lists the two value functions alone. The states are therefore no wires of the policy block in the field diagrams, the backward field diagram of `cons` reads `V[>]` and `dV[>]` alone, and the decision state is no output of its forward field diagram. Listing a state remains allowed and makes it no wire. A value function a line reads is listed as before.
+
+### 2026-09-17 — The card and the record after the builder at a policy
+
+- A printed card's first line is labelled `header`, because it quotes what the author wrote, and the line that names a control a block's lines are read at is labelled `coordinate`, on a block of either direction at every grain and on the card of a line box that reads no wire. `signature()` answers the wires, which on a block that names a control is a different list. The card's label column is eleven characters wide, and its type column holds the longest type text of the card, so that the identity column is aligned where a policy wire carries its feasibility condition. The label `read at` is retired.
+- The record a block retains holds the inputs its author declared; the declared outputs are the box's own wires and are read from there.
+- A box held at a policy names every line of the policy block that defines the control, the operative lines first: on `cons.bl` the evaluation and the policy insertion answer `policy.cons_choice` and `policy.optimality`. The evaluation's second `applies` line reads `c ∈ Γ(m_d), read from the subscript of the argmax in policy.optimality`, and the clause `with 𝑐(m_d) ∈ Γ(m_d)` is called the **feasibility condition** in place of the earlier phrase, which named the maximiser's box as well.
+- A membership is dropped from a box's `where` block when the type of a wire the card prints states it, and no longer when the coordinate's name stands anywhere else on the card. The printed result on the five corpus stages is unchanged.
+- A description an author writes on a parameter or a shock declaration, `β : (0,1) :: ["discount factor"]`, is kept and printed under `describes` on that record's card. It was dropped at parsing before. Two obligations recorded the ordinal of an item in the file where every other obligation records an identity, `inverse-function-domain` and `external-callable-signature-and-provider`; each now records the identity of the definition it stands in.
+
+### 2026-09-17 — The builder at a policy
+
+- A decision builder is the operator at a policy: one operator for each policy, all with the same inputs and outputs. `signature()` therefore answers one record at every level with two parts, `inputs` and `outputs`, and prints the two words `in` and `out` and no other. The lines `parameters` and `defined in` are retired, and with them the reading that called the policy a parameter of a builder.
+- The policy is typed once, where the stage text defines it: on the output of the policy builder, and on every line that prints that wire, the primitive box that writes it included. Its type carries the feasibility condition with its application where the control declares a feasibility correspondence, `𝑐 : Xm → ℝ₊₊ with 𝑐(m_d) ∈ Γ(m_d)`, and is printed plain where no correspondence is declared. The spelling `in Γ(m_d)` is retired.
+- A control a block names among its inputs is the coordinate at which the block's lines are read, and no wire of an initial diagram at any grain. The block's box has no input wire for it, no wire runs from the policy block into a block of the backward initial diagram, a control is an input of the forward initial diagram no longer, and the block's printed view names it on a `coordinate` line. The header the author wrote is unchanged and its declared inputs are retained on the block, which is what the `header` line of a printed view, the stage's own block lines, the fields table and the perch rule read.
+- The policy's field stays an output of the backward initial diagram: the policy block writes it and no block of either diagram reads it, so it is delivered at the diagram's boundary.
+
+### 2026-09-17 — The printed word and the parameterised builder
+
+- A graph, a builder and a sub-builder open to a finer grain by an attribute a reader can complete, `primitives` and `sub_builders`, each returning a piece of the same kind, so that the merged interior of one builder is reached from that builder: `stage.builders.cntn_to_dcsn.primitives["expectation"]`. The string form `.at("primitive")` and the stage query `operators_of` leave the reader's surface. `list()` prints one line per box, its name and the label its printed view and its drawing show.
+- A function is written in mathematical italic and everything else in roman on every printed surface: the labels of boxes, the lines of a printed view, the definition cards, the signatures, the drawn wires and the two-column listing. The value function on a wire reads `𝑉[>]`, its marginal `𝑑𝑉`, a law of motion `𝑔`, an aggregator `𝐺`, a policy `𝑐`; a field, a state, a control, a shock, a parameter, a set, a correspondence, a measure and an operator symbol stay roman. The calculus pages and the symbols reference, which stated the opposite convention, were brought to the rule.
+- A function wire is typed on spaces: the product of the declared sets of its coordinates, then the set of its values, `𝑉[>] : Xa → [-inf, inf)` and `𝑉∘𝑔 : Xm × ℝ₊₊ → [-inf, inf)`; a measure reads `measure on Xm`; a wire of an initial diagram is a field and keeps its own declared set. Where a function is defined on less than the ambient product the restriction stays a condition: a pullback carries the range condition `𝑔(m_d, c) ∈ Xa`, and a choice value whose control has a declared correspondence carries `c ∈ Γ(m_d)`.
+- Every primitive box's `operator` line states the mapping it applies: `𝑉 ↦ 𝑉∘𝑔`, `𝑊 ↦ 𝐺(𝑊, m_d, c), at each point of (m_d, c)`, `𝑓 ↦ E_{y}[𝑓]`, `𝑄 ↦ 𝑄(·, 𝑐(·)), at the policy 𝑐`, `μ ↦ μ∘𝑔⁻¹, the push-forward through 𝑔`, and the corresponding forms for the selection, the inversion, the solution, the distribution extension and the policy insertion. A result wire takes the letter of the thing it is the result of, so an aggregation's result is the italic `𝐺[·]` and an expectation's the roman `E[·]`, in a box's mapping as on its own wire line.
+- A builder's listing prints its name alone where the label repeats it. The word for the authored grain is **sub-builder** wherever it is printed. The feasible set of a control stands on the type line of the wire and, with the place it was read from, on the box's `applies` line, rather than among the conditions under `where`.
+- The operator names retired on 15 September, **Transition substitution** and **Function maker**, were removed from the seven published pages that still carried them; each now reads **pullback along the law of motion**, and a sub-builder is named by the function its complete equation and ordered arguments define.
+- The optimal policy is a parameter of the decision builder and of the decision push-forward, not an input wire. No wire runs from the policy builder into either; the policy builder stays a part of the same graph, drawn in the same picture, and its output is an output of the graph. The box that applies the policy refers to the line that defines it, which `origins()` resolves. `signature()` answers one record at every level with three parts, `inputs`, `outputs` and `parameters`; the words `supplied` and `open` are retired, and the `parameters` line says where the producer is, `produced by the policy builder` on a graph that holds it and `produced by the policy builder of the backward graph` on one that does not. How the value builders and the policy builder are joined is stated at methodization, not in the symbolic graph.
+
+### 2026-09-16 — One box per operator step on the value bundle
+
+- A **value bundle** is the tuple of value objects that are functions of the same states, written by one box and read by one box: the value and the marginal value of a consumption stage, and whatever further value objects a stage declares at a perch. It is read off the graph and stored nowhere, and each of its wires remains one function with its own identity, role and domain.
+- A pullback, an evaluation at a policy and an expectation act on the whole bundle in one box whenever every component is a function of the same states and the box applies one kernel to each. The box is named without a field segment, `dcsn_to_arvl:Pullback`, `cntn_to_dcsn:Evaluation`, whenever it acts on every value function its block reads on that base, whether that is one or three, and its printed description lists the components and prints the kernel once. Where two boxes of one kind and one law of motion remain in one builder, because they act on functions of different states, each keeps in its name the field it acts on, `policy:Pullback:V` beside `policy:Pullback:dV`, a form no stage under `applications/` writes today. The names the 15 September entry below uses, `cntn_to_dcsn:Pullback:V` and the key `["pullback:V"]`, were replaced by `cntn_to_dcsn:Pullback` and `["pullback"]`, and `cntn_to_dcsn:Evaluation:V` by `cntn_to_dcsn:Evaluation`.
+- Where an author wrote one occurrence per component, as the two expectations over income of the consumption-savings example, the primitive grain shows one expectation on the bundle, preceded by one aggregation whose kernel is the identity on the component it leaves alone; the sub-builder grain keeps the occurrences as they were written. Occurrences whose shocks or whose conditioning differ keep their own boxes, two results one kernel reads together are not a bundle, two functions that merely stand side by side — a control and a state written by one policy box — are not a bundle, and no merge crosses a computation the author marked `!node`.
+- A box that realises one authored line keeps that line's address, so a reader reaches it by the author's own name. A box merged across lines is named for the builder or the marked computation that holds it; it carries the recorded assumptions of its member lines, each naming the line it came from, and the lines merged into it bind one numerical method, a conflict being refused when methods are attached.
+- A drawing shows a bundle as one thick wire labelled with its components, so that the reader can tell it from a branch, whose alternatives are functions on different state spaces. Each component is named on the wire, `E[·](b) of value` beside `E[·](b) of marginal`: the bracket holds the integrand and the statement the result realises is named after it.
+- A kernel on several value inputs names each by the letter of the value it carries, `G(v, w, b, y) = (v, R*w)`, and reports what each of its components reads. An expectation's printed label names the statement it integrates where the box realises one statement; a box merged across statements names its distribution alone. `signature()` is also available on one operator box and prints each bundle as one line, `in   (V, dV) : m_d → [-inf, inf) × (0, inf]`; and the stage's printed view names the value objects the stage carries and at which perches.
+- A stage file can declare a second marginal value, `ddV : !sndmrgnvl`, which joins the same bundle as a third component.
+
+### 2026-09-16 — Development specifications withdrawn from the site
+
+- The generated `docs/dev-specs/` section, its build hook and the overview's links to it were removed. The specifications remain internal working documents; a public page that rests on one states the rule itself.
+
+### 2026-09-16 — The core-functionality page split
+
+- The walk through the elaborated stage object (elaboration, the definitions, the stage graph, the two views, specifying, and what a specified stage is not) moved from the core-functionality page to a new page, "The stage object", listed under Inspection. The core-functionality page keeps the overview, the stage, several stages and the file layout.
+
+### 2026-09-15 — The stage object: initial diagrams, builders and the words
+
+- The stage holds seven attributes: `initial_diagrams`, the backward and the forward blocks on the fields they read and write, and `builders`, the backward builders on function wires and the forward builders on measure wires, in place of the former `views`. The two initial diagrams are separate graphs and are drawn and printed on their own; the undirected graph of the whole stage is a working object of the construction and is neither stored nor drawn.
+- A box of an initial diagram is a **block** and a box of a builders graph a **builder**, so the two boxes that share a block id have two words and two printed descriptions.
+- The backward box that composes a continuation function with the law of motion is a **pullback**, `cntn_to_dcsn:Pullback:V`, labelled "Pullback of V[>] along the law of motion g"; its forward partner is the push-forward. Each piece prints its own description with `view()` and returns its own callable with `compile_kernel()`. The names the 14 September entry below uses were replaced, the attribute that held the graphs was split into the two named above, and the queries that took a box as an argument became methods of the piece itself. No retired name resolves and no alias is kept.
+- `stage.builders.cntn_to_dcsn` reaches one builder by name, `["pullback:V"]` one primitive box inside it and `["<node id>", "pullback:V"]` one box inside a sub-builder; the same forms on `stage.initial_diagrams` reach a block, a sub-block and a line. Each answers `view()`, `list()`, `draw()`, `kernel()`, `compile_kernel()`, `signature()` and `methods`, as far as its level has them, and returns the box the stored graph holds.
+- The forward extension of a measure admits `Mixture`, `Categorical` and `Bernoulli` beside the four earlier families, so the forward graphs of the buffer-stock and consumption-savings examples and of eleven preliminary stages construct. The weights of a mixture and of a categorical each lie in the unit interval and sum to one, checked when calibration decides them.
+- New page: [The stage object](Bellman-Sym/API/index.md), every listing printed from the package on `cons.bl`.
+
+### 2026-09-15 — Retained kernels in policy builders
+
+- Adjacent explicit statements of a policy block that define functions on the continuation grid, such as the inverse-Euler candidate `c[>] = 𝑑𝑢𝑖𝑛𝑣(dV[>])` and the resources `m_d[>] = a + c[>]`, form one pointwise kernel, `G(w, a) = (𝑑𝑢𝑖𝑛𝑣(w), a + 𝑑𝑢𝑖𝑛𝑣(w))`, which `kernel()` prints and `compile_kernel()` evaluates. It reads the marginal value at the saving, substitutes no law of motion and adds no formal value input; its outputs keep the roles and domains of the fields they define, and its box is labelled `Apply G`.
+- An inequality such as `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>])` remains a relation in its unknown and reads the kernel of its bound; the implicit statement `c = c[>]` remains the solution relation. Supplied derivatives and inverse marginal utilities are ordinary kernel content: nothing is differentiated or inverted numerically, and the symbolic `Inv` of `cons_savings_iid.bl` keeps its `kernel-form` refusal.
+- An expectation written in a policy alias is constructed once, with its integrand composed with the law of motion and its conditional distribution, and is shared by every line reading the alias; a `!node` line of a policy block is a sub-builder, shown at the sub-builder grain and composed at the primitive grain.
+- The operators notebook adds §6.1, the interior inverse-Euler variant of `cons.bl` with its kernel, callable and drawing.
+
+### 2026-09-15 — Complete policy objectives and joint controls
+
+- Consecutive nodes that pass a value through preserve their original input when their evaluations are removed. The operators notebook now demonstrates sequential nodes splitting G, alongside the existing parallel example.
+- Policy builders construct their complete objective or residuals, including transitions and expectations, before one joint choice or solution operation. A choice can produce a product-valued control or a flat tuple of named controls; numerical optimisation remains a supplied method.
+- Compiled g and G kernels accept fixed-product components and selection by declared finite-state labels. Named product domains and coupled feasible-set bodies construct; generic symbolic-sized families remain unsupported.
+- Sequential transition outputs, target-state reads and selection-key dependencies are preserved. Row-selected Markov matrices retain their expression scopes, and ordinary calls in distribution arguments are distinguished from the distribution family.
+- Diagnostics include external calls inside function bodies and admitted distribution arguments. Function-domain conditions follow named definitions. Mixed headers retain each field's information set in summaries.
+- The four review notebooks have shorter explanations; the operators notebook includes a joint-control check. Personal acceptance remains separate from execution.
+
+### 2026-09-15 — Forward measures in their own coordinates, derivative shapes and the semgraph record
+
+- The forward builders graph at a decision edge inserts the policy, extends the measure by each shock in dependency order and then pushes it forward. Each measure is on its own coordinates: in `sa_savings.bl` the measure on `m_d` becomes a measure on `(m_d, c)`, then on `(m_d, c, ν)` and on `(m_d, c, ν, Ψ)`, and the push-forward returns the measure on `a`, in which `ν` no longer appears. The identity of an extended measure names the distribution it was extended by (`sa_savings:measure:dcsn:with-distribution:ν`).
+- `compile_kernel()` follows a function alias such as `𝑢 := utility` to its definition, refusing a cycle, and checks the number of arguments; an alias of a symbolic derivative is refused as before. A refused kernel names the output component, the address of the statement defining it and the source file.
+- A gradient declared on a product of sets, such as `dV : ℝ₊₊ × ℝ₊₊`, compiles to a function whose values have that shape after the shape of the evaluation points; an argument or a component of another shape raises `ValueError` naming it. A matrix-valued component cannot yet be declared.
+- The module operation `semgraph.record(stage, level=..., direction=..., grain=...)` again returns the record `Semgraph`, whose parameters are those the selected graph's terms name directly or through the functions they call; the stage attribute `semgraph` stays removed.
+- `dir(stage)` lists Python's protocol names beside the public names of the stage.
+- In a drawing each wire is labelled by the function or measure it carries and its coordinates, such as `CE(m_d, c, ν)` and `μ(m_d, c, ν)`.
+
+### 2026-09-14 — The fold of a backward block and the distributions of its shocks
+
+- A backward block is constructed in slices, one for each `!node` statement and one for the block's outputs. Each slice substitutes the value inputs it reads and constructs each expectation once, and an unmarked statement two slices read is constructed in each. The primitive grain opens the sub-builders, drops their identity evaluations and merges adjacent pointwise aggregations.
+- Each result carries the shocks it still depends on and those already integrated on its paths. An expectation's output is a function of the source coordinates and its conditioning shocks. A shock read again after its expectation is refused (`shock-reintroduced`), and so is a block output with an active shock or a path that leaves an edge shock unintegrated (`shock-observed`).
+- An aggregation without a value input reads one formally, unused by its kernel.
+- Separate distribution declarations define the product of the declared conditional distributions. A shock named only as another declaration's argument, such as `ν` in `Ψ ~ LogNormal(ν, σ_Ψ)`, is drawn on that declaration's edge. Each expectation uses the conditional distribution it selects from the edge's joint distribution, and its face prints that distribution.
+- A distribution record holds its state, control and shock arguments as its coordinates. New refusals: `distribution-dependency`, `distribution-edge`, `distribution-domain` (also applied when values are calibrated) and `conditional-not-declared`.
+- `obligations` also lists the factorisation of each edge's joint distribution, the integrability of each expectation and the admissibility of each aggregation.
+- A correspondence can be written by comprehension, `Γ(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}`.
+- New example: the smooth-ambiguity savings stage, `applications/smooth-ambiguity-savings/sa_savings.bl` and [its page](examples/smooth-ambiguity/smooth_ambiguity_savings.md).
+
+### 2026-09-14 — The stage object in one vocabulary: faces, kernels, methods and complete signatures
+
+- The names in this entry were renamed on 15 September: `face` is `view`, `compile` is `compile_kernel`, `Substitution` is `Pullback`, and `views` is the two attributes `initial_diagrams` and `builders`. The entry above records the renames; this one records what was released on 14 September.
+- A definition of a shock's distribution has the kind `distribution` (`cons:distribution:y`), the forward operator that extends a measure by it is `DistributionExtension`, and a correspondence has the identity `<stage>:correspondence:<name>`; a wire's `Sort` holds `domain` and `coordinates`.
+- `face(stage, box)` prints the face of a box or a definition: the source equations, the kernel it applies, the operation, the typed wires and the conditions; `kernel` prints the kernel alone, and `compile` evaluates the g of a substitution or push-forward box and the G segment of an aggregation box with the arguments of the printed kernel. `equation` stays as an alias of `face` for one release.
+- Every query of the stage is also its method under the same name (`stage.view('operator', 'backward')`, `stage.face(box)`, `stage.parameters()`), and so are `methodize`, `calibrate` and `configure`; `parameters`, `settings` and `definitions_of` are new, and `operators_of` takes a view and a direction.
+- A block's header lists every field its lines read, and a read it does not list is refused under `signature-complete` with the corrected header; the policy headers of `cons.bl`, `ez_savings.bl` and `port.bl` were completed and `c` in `cons.bl` declared on ℝ₊₊.
+- `to_drawing(view)` gives the Graphviz description of a whole view, captioned by the labels of the faces; the aliases kept for one release by the previous revision of the object (`GraphStage`, `build_stage`, `hypergraph`, `data`, `semgraph`, `semantic_definitions`, `branch_poststates`, the old kind segments and the old spellings of `view`) were removed.
+
+### 2026-09-13 — The YAML era archived; the build order written down
+
+- The legacy dolo and dolang packages, `packages/legacy/dolo` and `packages/legacy/dolang`, left the repository for the private archive; nothing on the current path imported them.
+- The folders of the semantic subpackage that read stages written in YAML (`syntax`, `elaborate`, `graph`, `corpus`, `review`, `typing`) were archived with their eight test files, and the semantic side was left with one subpackage; the entry of 19 September on the layout records the eight packages that replaced the two subpackages.
+- The repository tests of the dolo pipeline, `tests/unit/`, `tests/integration/` and `tests/fixtures/models/`, were archived.
+- The applications written against the YAML surface, `applications/pre-dynspec/`, and the pipeline demonstrations, `applications/stage-pipeline-demos/`, were archived; the `.bl` applications and `applications/cons-port/`, with its portfolio and consumption notebook, stay.
+- The Rosetta cards, `docs/rosetta-stone/`, were archived and their navigation removed; the pages that linked them now say the cards are being rebuilt from handlers that work, and the Rosetta specification under `AI/dev-specs/rosetta-stone/` stays.
+- The rule file `AI/rules/dolo-submodule-workflow.md` was archived, and the rules, the READMEs and `pytest.ini` no longer describe dolo as the target or collect the archived paths.
+- The order of the work that follows, finishing the elaboration, then solving applications in-house from their method declarations, then handlers and the rebuilt cards, is `AI/road-map/plans/build-order-2026-09-13.md`.
+
+### 2026-09-12 — Core functionality: the Bellman-SYM guide opens on the workflow and the constructed stage
+
+- The first page of the Bellman-SYM guide, `docs/Bellman-Sym/00-intr-syntax-expressions.md`,
+  is rewritten as **Core functionality**, on the model of a language guide's
+  opening chapter: one household example carried through twelve sections, each a
+  short explanation, a call, and the result that call prints. It opens with what
+  Bellman-SYM does as a workflow, author, elaborate, bind, realise, then shows
+  `bellman.elaborate` (superseded by AMD-FAC-002: `elaborate_trellis` and the three trellis verbs; 23 September 2026) on a one-period syntactic trellis, the definitions table,
+  the stage graph, the backward and forward views at the builder and primitive
+  grains, the three bindings as separate versions, what a specified stage is not,
+  nodes and sub-builders, and a three-stage two-period model built from the
+  portfolio application. Every printed result was produced by running the page's
+  blocks in order. The former page was a file-type table with no code; its table
+  is kept as the closing section.
+- The page states the current vocabulary: the definitions table, the stage graph
+  and its two operator views, the substitution, expectation and aggregation
+  boxes, wires carrying functions in the backward view and measures in the
+  forward view. It no longer teaches the stage-YAML symbol groups (`prestate`,
+  `poststates`) or the retired paired equation views. A folded technical note
+  lists the renames decided in AMD-SG-006 so that a reader meeting
+  `GraphStage` or `semantic_definitions` knows what they become.
+- The navigation entry is renamed from "Files and expressions" to "Core
+  functionality", and the three sentences that describe this page from the
+  section index and the stage tutorial are rewritten to match.
+
+### 2026-09-12 — A stage is specified, not bound
+
+- The step that attaches methods, numerical settings and economic parameters
+  to a stage is called **specification** throughout the user-facing documents,
+  and the verb is **specify**. The vocabulary now agrees with the terms already
+  in use around it: a specification recipe names the sources, the specification
+  factory resolves them, and the result is a specified stage. The word "bind"
+  keeps its logical sense, which is unrelated: a binder, an expectation or a
+  function definition binds a variable, and an occasionally binding constraint
+  is unaffected. It also remains a name inside the code.
+- Nineteen pages are rewritten: the Bellman-SYM index, the core-functionality
+  page, the stage tutorial's relations box, methodization, periods, trellises,
+  the specification factory, the Dolo compatibility appendix, the four factory
+  API pages, six inspection pages, and the site's front page. Four headings
+  change, and no page linked to their anchors. The concept wiki is changed at
+  its source under `AI/wiki/` and republished, so `specified_stage` now heads
+  its sequence "Specification order" and `methodization` its contract
+  "Specification contract".
+
+### 2026-09-12 — The backward builder's general form: two maps around the shock integral
+
+- The vocabulary of the semgraph is settled (terminology table, 12 September
+  2026): a backward block is `cntn_to_dcsn` or `dcsn_to_arvl` and is never a
+  "value block"; a box inside a builder is an operator, a primitive operator,
+  never an "operation"; a statement marked `!node` is a node, and the operator
+  it denotes is a sub-builder; an authored equation line is a statement, a
+  value statement when it defines a value or marginal value, never a "value
+  line". The wiki gains entries for the sub-builder, the aggregation, the
+  branch and the statement, and its semgraph entry states how a value
+  statement is folded; the public pages that said "value block", "value
+  builder" or "sub-computation" now say backward block, backward builder and
+  sub-builder.
+
+- *Stages and perches* gains §2.3a: a statement of a backward block may
+  apply one pointwise map inside the shock integral and another outside it,
+  so the choice-value aggregator is in general two maps around one
+  integral, of which the form of §2.2 (the outer map the identity) and the
+  reward-plus-discounted-expectation form (the inner map the identity) are
+  the two special cases, and an Epstein–Zin recursion the case with both
+  nonlinear. The two placements coincide exactly when the outer map is
+  affine. The note of §1.1 that the Epstein–Zin extension "remains
+  unfinished" is resolved, and re-timing the shock to its own edge becomes
+  a modelling choice rather than a requirement (D25; AMD-SG-005). The
+  operators page, the fields page, Appendices B, D and F, the ingredients
+  table, the wiki entry on the backward builder and Appendix C's paragraph
+  on the result of an occurrence point to the general form; the
+  specification's displayed builder gains its companion with the
+  aggregation after the expectation.
+
+### 2026-09-09 — Every backward wire is a function; a transition block takes no expectation
+
+- In the backward view of a stage's semgraph every wire now carries a
+  function: a value function, its composition with the transition, an
+  expectation's result, a choice function, a declared or solved policy. A
+  state, a control or a shock written in a backward equation is the bound
+  argument of the function an operation defines, recorded on the operation
+  record, and is no longer drawn as an input; the closure operation is
+  retired, and the policy relation reads the coordinate functions of the
+  endogenous grid and names the transition it inverts (AMD-SG-004 §8c, D22).
+  A transition block that integrates over a shock is refused at the
+  statement: a forward builder is a push-forward through g (rule
+  `transition-without-expectation`). The corpus's policy blocks no longer
+  list the continuation state; the review notebooks were revised.
+
+### 2026-09-09 — The semgraph rendered from operation records (AMD-SG-004 implemented)
+
+- Elaboration now folds a stage's statements into primitive operation records
+  and renders the twenty views and grains from them; `semgraph.view` selects a
+  rendered graph. No box of any view is an arithmetic-level operation and no
+  hypergraph of arithmetic is reachable through a retained record. The
+  interpretation modules of the expression-level construction are retired,
+  and calibration carries parameter values in the version's mapping while
+  equations stay named. `cons.bl` elaborates in 0.27 s (was 2.6 s), `port.bl`
+  in 0.21 s (was 3.9 s). Forty tests of the retired construction moved to the
+  private archive; the acceptance checks of the amendment are new tests.
+
+### 2026-09-09 — AMD-SG-004 accepted; retained terms and the operation fold
+
+- The amendment that makes the semgraph's finest box a primitive operation
+  carrying its equations was accepted. A second generated module, retired on 19
+  September when one term hierarchy replaced the two, held the frozen form of
+  every term constructor with `freeze` and `thaw`; an instance check against a
+  parsed-term class also accepted its retained counterpart. A new module, the
+  fold (`bellman.fold.operations` today), folds a stage
+  into operation records (Pullback, PayOffAgg, Expectation, Lambda,
+  Pushforward, PolicyInsertion, LawExtension, Selection, Inversion, Relation)
+  with retained equations and predicate conditions, in milliseconds. The views
+  are not yet rendered from it.
+
+### 2026-09-09 — Inequality statement admitted; Benhabib families; policy signatures
+
+- The stage grammar admits an inequality statement, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>])`
+  (also `>=`, `<`, `>`), as a statement core alongside the equation; it
+  lowers to `Inequality(lhs, op, rhs)`, prints back as written, may carry the
+  complementary-slackness clause, and the loading software keeps it like an
+  equation with the relation in the statement's term. A double-quoted
+  explanation inside a statement annotation may contain `]` and `,`.
+- `applications/benhabib-2019/benhabib_bellman.bl`: the earnings and return
+  types are finite sets with named members and parameters of the instance,
+  the wage schedule and gross returns products of fixed count; a value
+  selected by a key from a product of identical sets is read as lying in
+  that set. The stage constructs all three semgraph views.
+- Policy blocks of the housing and retirement stages carry perch words; the
+  housing consumption policy lists continuation objects only and states
+  the maximisation over the feasible set declaratively. A set defined by a
+  grid constructor (`XH := linspace(...)`) is refused at its span instead of
+  failing internally.
+
+### 2026-09-09 — Constraints page
+
+- New guide page `docs/Bellman-Sym/10-constraints.md`: where a fixed bound, a
+  state-dependent feasible correspondence, and an occasionally binding
+  constraint are each written; the Kuhn–Tucker conditions and the
+  complementary-slackness clause `⟂`; the inequality statement as the
+  second spelling of the same condition; examples with irreversible
+  investment, a collateral constraint, and a two-sided portfolio bound; the
+  notation's sources in the complementarity-problem literature and the
+  toolkits. Abstract-grammar boxes for the clause and the inequality
+  statement, with status lines naming what the loading software does not yet
+  construct.
+  The section on the inequality statement explains the constrained segment
+  by the observable-grid construction of Dobrescu and Shanker (2024) and
+  shows the explicit-multiplier spelling as the third form, with its status.
+
+### 2026-09-09 — One meaning per symbol: ⟂ is complementarity only
+
+- The stage grammar no longer accepts ⟂ in an operator subscript
+  (`argmax_{cp ⟂ Γ(w)}`). Membership of a binder in its feasible set is
+  written with the typing colon, `argmax_{cp : Γ(w)}`, as in every other
+  binder. The glyph ⟂ keeps its single meaning, the complementary-slackness
+  clause after an equation. The worker-consumption stage file and the tests
+  are updated; the printer no longer describes the removed alias.
+
+### 2026-09-08 — Stage-class revival proposal
+
+- Archived the parked proposal to revive the earlier Stage class and updated
+  the development indexes. The original document is preserved unchanged.
+
+### 2026-09-08 — Earlier Rosetta-stone specifications
+
+- Archived the earlier inventory and three-way alignment specifications.
+  Updated current navigation and historical citations; retained the registry
+  specification, card schemas and supporting context.
+
+### 2026-09-08 — Product design notes
+
+- Consolidated three early naming, audience and release proposals into one
+  internal summary, distinguishing current names from historical proposals.
+  Preserved the original documents in the archive and updated their references.
+
+### 2026-09-08 — Overview consolidation
+
+- Combined reading guidance into one [Overview](overview/index.md), with
+  direct links to the language, mathematics, inspection and examples.
+- Linked specification status and published drafts directly from the Overview,
+  removing the separate development-specifications introduction. Six old
+  overview pages are archived; their temporary link pages were also removed,
+  leaving only the main overview in the folder.
+- Removed obsolete stage-YAML and Matsya workflow descriptions from the
+  overview reading route and corrected links to the numerical notebook.
+
+### 2026-09-08 — Historical foundations and specifications
+
+- Preserved three superseded foundations chapters and an empty concept
+  placeholder in the private archive after their definitions were consolidated
+  in [Appendix G](bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING.md).
+- Preserved 28 old specification files, including earlier Bellman-SYM designs,
+  explicitly superseded proposals and historical examples. Current specifications,
+  compatibility requirements, the FP manuscript and the remaining theory stay
+  in the repository. Updated reading links and identified historical citations.
+
+### 2026-09-08 — Functional programming applied to stages
+
+- Expanded [Appendix G](bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING.md)
+  to define the project's primitive objects, typed expressions, declarations
+  and stages, and the objects, arrows and composition laws for calibration,
+  methodization and configuration.
+- Worked through the income-and-consumption stage from declarations to its
+  Bellman operations and a numerical expectation. Distinguished retained
+  economic definitions from parameter bindings, method settings and numerical
+  approximation, and documented why parameters are not separate graph wires.
+
+### 2026-09-08 — Builder identifiers
+
+- Removed the duplicate `BlockData.block_id` attribute. Read the native
+  builder's `Box.name` instead. Numerical method attachment and inspection
+  use that same name; child nodes retain their references to their parent
+  builders.
+
+### 2026-09-07 — Semgraph construction time
+
+- Removed repeated copying of nested definitions during private composition
+  and changes of grain. Returned semgraphs still own their mutable graphs;
+  editing one result cannot change another result or the source stage.
+- Reuse immutable type and input records, and avoid reconstructing builders
+  when their source information has not changed. Native DisCoPy composition
+  and validation remain in use.
+- Construct complete builders before copying their definitions, and combine
+  grain selection, parameter specialization and attached methods before the
+  final semgraph copy. Temporary input routing reuses operands; independently
+  inspected equations are copied before assigning their source information.
+- Install the actual DisCoPy source from `packages/discopy`, with small
+  construction-time corrections based on release 1.2.2. Port lists are built
+  once per constructor; wire indexing is linear and successful type checks
+  avoid allocating error text and generators. The native classes, validation
+  and wire order are preserved, with upstream source and licence recorded.
+
+### 2026-09-07 — Semgraph names and parameters
+
+- Function makers retain their actual function names or ordered output
+  fields, including the perch. Diagram captions use Transition substitution
+  and Apply G, with Value aggregation G for the consumption composition.
+- Parameters are fixed named quantities inside complete semgraph definitions,
+  with declarations and calibration available separately. They are absent
+  from diagram inputs and wires; their domain and conditional-law restrictions
+  remain part of the constructed mathematics.
+- Mathematical printouts include fixed parameter declarations and bindings.
+  Conflicting bindings and ambiguous display names are rejected. The review
+  notebooks explain and inspect these objects directly.
+
+### 2026-09-07 — Ordinary stage elaboration and semgraph inspection
+
+- Implemented the public `elaborate` sequence for ordinary stage occurrences:
+  read `.bl`, construct the semgraph, attach methods, supply settings and bind
+  calibration. Each occurrence owns its mutable graphs; temporary syntax and
+  source-location objects are released, including on errors.
+- Added separate initial forward/backward field views, backward operators on
+  functions and forward operators on distributions. Native definitions retain
+  whole builders, natural mathematical operations and authored nodes, with
+  their domain conditions and effective method choices.
+- Added mathematical printing from retained equations and complete g/G/law
+  definitions. Joint builder outputs preserve shared computation; grouping
+  independently defined wires preserves their distinct domains and dependencies.
+- Expanded the manual notebooks to separate syntax, elaboration, function and
+  distribution views, conditional laws and construction comparisons. Their
+  graphs come from actual DisCoPy objects and their personal review fields
+  remain blank. Numerical solving and wider factory migration remain separate.
+
+### 2026-09-07 — Functional-programming foundations
+
+- Added [Functional programming](bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING.md),
+  covering Backus’s FP and FFP systems, typed composition, mathematical
+  interpretation, and the assumptions needed for probability and numerical
+  claims. Linked it from the calculus introduction, grammar and reading order.
+- Preserved superseded foundations and proposal drafts in the private archive
+  after independent source review and verification of all 48 copied files.
+  Current references distinguish the retained theory from historical proposals.
+
+### 2026-09-07 — Concept wiki consolidation
+
+- Reviewed every existing concept page against current language requirements,
+  mathematical chapters, code where relevant, and verified literature. The
+  wiki now has 46 canonical concepts and 20 redirects that preserve earlier
+  names. Bellman-SYM and semgraph replace obsolete language and representation
+  descriptions; distinct mathematical concepts retain separate entries.
+- Corrected information/state distinctions, fixed-policy versus optimizing
+  updates, transition duality, initiality, approximation and fixed-point
+  assumptions. Added independent mathematical, syntax and publication reviews.
+- Replaced the stale source register with 45 currently cited or governing
+  sources. Preserved the previous register and validation records as internal
+  history, including concurrent additions.
+- Updated wiki publication to resolve aliases, omit redirects from the concept
+  index, preserve code and bibliography formatting, and reject private paths
+  before replacing generated pages. Forty-one focused tests pass; a complete
+  documentation build introduced no new warnings or broken links. Existing
+  unrelated site findings remain.
+
+### 2026-09-07 — Semgraph inspection requirements
+
+- Specified three semgraph views: initial fields, backward operators on
+  functions, and forward operators on measures. Each supports whole
+  builders, natural mathematical operations, and authored nodes.
+- Added the combined operator/node traversal, explicit dependency order,
+  generic ordered wire bundles, and reversible product interpretation.
+  Whole g/G definitions, conditional laws, guards and shared dependencies
+  remain inspectable through native DisCoPy objects.
+- Corrected the implementation sequence so public ordinary-stage elaboration
+  is constructed before its lifetime checks and before numerical application
+  comparison. Manual review follows complete elaboration; automated checks
+  and a notebook for each review remain required.
+- Recorded that Matsya must not be used while its index is out of date.
+  Local retrieval from the private literature corpus and focused historical
+  retrieval from the private archive remain permitted. These are specification and workflow changes;
+  they do not claim the new semgraph capabilities are implemented.
+
+### 2026-09-07 — Bellman calculus consistency revision
+
+- Revised the 24 canonical calculus pages to agree with the amended
+  `.bl` construction account and reviewed Bellman-SYM mathematics. Stage
+  declarations and equations use `.bl`; composition and numerical
+  specifications remain YAML. Arithmetic and binding structure are parsed,
+  and distinct stage occurrences receive fresh constructed objects.
+- Separated information from sufficient states, almost-sure field
+  representations from definitions over feasible states and actions, and
+  Markov expectation from reward-bearing Bellman operators. Clarified
+  declared types, implicit relations and the assumptions for compositional
+  interpretation, exact refinement and convergence.
+- Preserved the economic model, chapter order, filenames, valid derivations
+  and unfinished notices. The index now describes the one developed
+  buffer-stock example. Corrected its shared consumption binder and CRRA
+  parameter restriction. Excluded the separate fields WIP from the public
+  build without changing that draft or the archived chapters.
+- Every revised page received independent mathematical and applied-economist
+  reviews. Counterexamples and direct, page-specific literature checks
+  support the restricted claims. The documentation build from a temporary
+  working-tree copy succeeded; 807 rendered links involving these pages,
+  equation references, retained `.bl` fragments and inspected mathematical
+  displays passed their checks. No new link or rendering warning is
+  attributable to this revision; unrelated site warnings remain.
+
+### 2026-09-07 — Bellman-SYM language and inspection guide
+
+- Reorganized the guide around a complete buffer-stock consumption example
+  written in `.bl`. Information sets, domains, budget equations and constrained
+  choice precede the separate interior endogenous-grid example.
+- Developed reusable consumption, discounting and portfolio modules with
+  explicit shock assumptions, compatible zero-savings boundaries and one
+  discount factor. The two period definitions retain their different initial
+  information and terminal-value domains.
+- Updated all active language references, factory documentation and inspection
+  pages. Bellman-SYM now includes the inspection pages at their existing URLs;
+  Bellman calculus remains the mathematical guide. Appendix B supplies active
+  compatibility guidance, while the archived references remain preserved.
+- Updated the homepage and architecture diagram to distinguish authored
+  equations, their interpretation and numerical choices. Independent
+  mathematical and economist-facing reviews accompany the source and query
+  checks; implementation prerequisites are recorded separately.
+
+### 2026-09-07 — Retired the Dolo equation-recipe appendix
+
+- Removed Appendix A's Dolo-specific equation-compilation recipes from
+  Bellman-SYM and its navigation. An unchanged copy is preserved in the
+  project's private archive. Typed expressions and their context determine
+  the current semantic graph, as described by Appendices C and D.
+  Specification-factory recipes for assembling model files are separate
+  from the retired equation-recipe tables.
+
+### 2026-09-07 — Appendix D nodes and field indexing
+
+- Rewrote Appendix D using typed `.bl` signatures and `!node` annotations.
+  Statement identifiers name computations; equations and their declared
+  context determine the mathematics. Implicit equations retain their
+  solution relations in both field and functional diagrams.
+- Distinguished authored computation boundaries from operations within
+  equations. Substitution preserves declared outputs, arguments, and
+  binding. Adding `!node` preserves mathematical meaning while changing
+  the boundaries recorded for inspection or method attachment.
+- Distinguished perch marks, collection selectors, and function arguments.
+  Ordinary brackets do not declare an information domain. The page states
+  the condition for representing a function using an intermediate value
+  and separates that condition from measurability.
+- Clarified stable method addresses and the conditions on the
+  initial-algebra interpretation. All five syntax fragments parse in their
+  stated contexts; the policy block matches the canonical consumption
+  source, and the expectation and retirement equations match their
+  respective application sources.
+
+### 2026-09-07 — Appendix C mathematical assumptions and policy relations
+
+- Reviewed the `.bl` rules in Appendix C while retaining R1–R12 and both
+  the field and functional equation views. The page now distinguishes
+  random states from state spaces, states the sufficiency and domain
+  assumptions for representing fields as functions, and uses the
+  conditional joint law required by each expectation.
+- Corrected the policy relation: candidates need to agree whenever they
+  represent the same decision state; injectivity of the coordinate map is
+  a stronger sufficient condition. Transition consistency, domain coverage,
+  measurable selection, and optimality are stated separately. Corrected the
+  complementarity residual sign and the envelope formula so the policy is
+  the selected control, rather than its candidate parameter.
+- Restricted the forward/backward integral identity to the transition
+  operator; rewards and maximisation do not satisfy that identity. Clarified
+  that numerical interpolation approximates the declared relation and that
+  mathematical operations remain present within unmarked equations.
+- All nine Bellman-SYM examples parse in their stated contexts, and the two
+  canonical consumption examples have the same parsed structure as their
+  source files.
+
+### 2026-09-07 — Appendix C rewritten over the stage file: fields, contexts, and the lowered function graph
+
+- **`docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md`**: rewritten
+  from the stage-YAML carrier to the `.bl` stage file, keeping the file
+  name and the rule identifiers R1 to R12. The page now states each rule
+  over the written expressions and the declared typing context: what a
+  name denotes (a field, a random variable measurable at its perch), which
+  function of the declared state represents it, and how the functions
+  compose into the stage's backward and forward operators. Perch form and
+  functional form are two readings of one context, and no notation for
+  random variables against realisations is introduced. Three earlier
+  claims are withdrawn on the page: that a perch mark is a binder (R4; a
+  mark asserts measurability, and `V[>]` in a value statement is free), that
+  a numerical method's need creates an operator (R7, R11; only `!node`
+  does), and that choosing the endogenous grid method inserts `evaluate`
+  and `upper_env` into the stage's reading (R12; the envelope is the
+  maximisation over the fibre of the coordinate map, authored or performed
+  inside the method). R10 states the relation a policy block determines
+  with or without its final line and the premises under which the two
+  agree, and states the complementarity clause `⟂` as a mixed
+  complementarity condition. Worked derivations cover a product-output
+  stage without consumption, `cons.bl` and `cons_savings_iid.bl` with their
+  discount conventions, the paired perch-form and functional-form
+  derivation of `V[<] = E_{y}(V)`, a constrained policy, the
+  endogenous-grid policy with and without its final line, and the
+  retirement choice of `ret_choice.bl` with the pension model. Every
+  complete example parses under the current stage grammar. Parser, program,
+  and library vocabulary is kept off the page; internal paths and
+  version tokens are removed.
+
+### 2026-09-07 — Bellman calculus terminology
+
+- Use **Bellman calculus** in place of **T-calculus**. The working note now
+  describes mathematical objects, operations and their connections directly,
+  without naming a separate “core” layer. Its former path links to the renamed
+  note so historical references remain usable. The mathematical rules are unchanged.
+
+### 2026-09-06 — The optional decision-perch mark `[~]`
+
+- **`packages/bellman/bellman/syntax/grammars/stage.lark`, `lower.py`**: `x[~]`
+  is accepted wherever `x[<]` and `x[>]` are (expressions, signature
+  coordinates, declaration and law subjects) and marks the decision perch; a
+  field at that perch is written bare, so `x[~]` lowers to the same term as
+  `x` and a file's JSON encoding does not depend on whether the mark is
+  written. The lowering does not check that a marked name is at the decision
+  perch: the perch of a bare name is that of the signature side listing it. The
+  tilde is the ASCII form of the subscript $\sim$ of the mathematics. In
+  dyno's own files `k[~]` is the steady-state marker; a stage has no steady
+  state, and the stage grammar gives the bracket tilde this meaning instead
+  (AAS, 6 September 2026). Pages 01, 12, and 13 of `docs/Bellman-Sym/` and
+  `reference/symbols-conventions.md` list the mark; tests in
+  `packages/bellman/tests/sym/test_decision_perch_mark.py`.
+- **`applications/consumption-savings-iid/cons_savings_iid.bl`**: the
+  endogenous-grid statement is now `[id=g_cntn_to_dcsn]` (the map from the
+  continuation state back to the decision state) and the implicit statement
+  is written `c[~] = c[>]`; derived encodings regenerated, the page beside it
+  updated.
+
+### 2026-09-05 — Three views of a stage; operators are occurrences, not nodes; the tower is a realisation tower
+
+- **`docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md` R1, R7, R10**:
+  a line becomes a node only when it carries `@node` (`!node` in the `.bl`
+  surface). A numerical operator inside a line — `E`, `argmax`, `solve`,
+  `upper_env` — is an *operator occurrence*, a box only at the finest of
+  three views of one stage (builder view; node view, each builder cut by its
+  `@node` marks; finest view, one box per occurrence), and the methods file's
+  targets choose which view the solver works at. Methods attach to a builder
+  box, a node box, or an operator occurrence, and to nothing else; a method
+  named by operator governs every occurrence in the stage. R10's inversion
+  line is a `solve` occurrence, a node only when marked. Untagged lines that
+  define a block output are the builder's *boundary statements*; *alias* is
+  reserved for an intermediate name folded into a later line. Decided by
+  AAS, 4–5 September 2026 (spec 0.3c decision register, D06).
+- **`docs/bellman-calculus/APPX-F-OPERATOR-ALGEBRA.md` §F.6**: "the graded
+  refinement tower" is renamed *the graded realisation tower*, and its laws
+  speak of each *move* of the tower; the convergence net is a *settings net*.
+  "Refine" now means moving to a finer view of a stage (as in R7 and Appendix
+  B) and is not used for the lifecycle, whose steps are methodize, configure,
+  and calibrate. The wiki entry `operator` follows.
+
+### 2026-07-18 — The carrier is exchangeable
+
+- **`docs/bellman-calculus/11-abstract-grammar.md` §1**: a paragraph added
+  stating that the per-construct encoding — the head, then the keys' values
+  in schema order — is the whole contract a file format must deliver. YAML
+  is the canonical carrier, inherited from the dolo lineage; an alternative
+  carrier is an adapter onto the same tree, changing a model's spelling and
+  never its meaning. The ruling and the precedent survey behind it are
+  recorded in the project road-map.
+
+### 2026-07-18 — Stage page: abstract-grammar box; the perch state groups renamed
+
+- **`docs/Bellman-Sym/01-stage.md` §1 completed with the normative
+  `Abstract grammar: STAGE` box**, replacing the placeholder. The box fixes the
+  head (`!stage`, `name`, optional `kind`) and the full `symbols:` block; the
+  `equations` and `dolo_plus` sorts are carried opaque (the equations grammar
+  belongs to the Field-equations page). The continuation-states group takes
+  `Flat | Branched` alternatives, so a fork is read from the block's shape;
+  decorator payloads are terminal atoms, per the no-AST position. The Status
+  paragraph records the two software deviations (the `kind: branching`
+  requirement; the legacy group names in the loaders).
+- **The perch state declaration groups are renamed** (decided 18 Jul 2026):
+  `arvl_states` / `dcsn_states` / `cntn_states`, replacing
+  `prestate` / `states` / `poststates`, which parse as permanent aliases. The
+  grouped declaration shape is confirmed — the ruling and its reasons (the
+  abstract syntax tree must carry enough authored context to build the
+  semantic graph deterministically) are recorded in the road-map issue brief.
+  The page's grammar box, group table, and examples carry the new spelling;
+  the loader, translator, schema reference, and example files follow.
+- **Smaller corrections on the same page**: the summary box now names both
+  aggregation equations — $G_{\succ}$ (`cntn_to_dcsn`) and $G_{\prec}$
+  (`dcsn_to_arvl`) — where it previously denied the arrival edge an
+  aggregator; a note records that the feasible set has no declaration of its
+  own beyond the `@in` domains (open design question, tracked in the
+  road-map); page properties (front matter) added, matching the period and
+  trellis pages.
+- **Declarations read unquoted** (decided 18 Jul 2026): the language's
+  spelling is `w: @in R+`; the quoted form (`w: "@in R+"`) remains what
+  today's loaders require — standard YAML reserves `@` at the start of an
+  unquoted value — and is what generated files emit. Recorded as a software
+  difference in the stage page's grammar box until the reader accepts the
+  unquoted form.
+
+### 2026-07-18 — Value symbols are fields; the "perch value objects" section retired
+
+- **`docs/Bellman-Sym/01-stage.md`: the "Perch objects and perch value objects"
+  section removed.** It claimed the surface carries two kinds of objects with
+  different identity rules; the calculus says otherwise — every declared
+  symbol is a field typed by perch, role, and domain, and (token, perch)
+  identity holds for all of them ([Fields, functions and
+  types](bellman-calculus/04-fields,%20functions%20and%20types.md) and its
+  field catalogue). The section's surviving content — the role and domain of
+  the value groups, the per-perch declaration of the value token, bare `V`
+  reading at the decision perch, and value fields being defined by backward
+  evaluation equations — is now the "Value fields" subsection §3.1; the
+  shifting section renumbered §5 → §4 with in-page references updated; the
+  namespace callout reduced to one line linking to
+  [Periods](Bellman-Sym/06-period.md).
+- **`docs/Bellman-Sym/appendices/13-perch-tagging-rules.md` §4 restated.** Value fields
+  are governed by the same tag function as every field: a token declared at
+  several perches is Rule 2's situation, with "unmarked = decision" a naming
+  convention layered on it — replacing the earlier "not governed by these
+  rules" exemption. The tag-function table row updated to match.
+- The shelf index line for the stage page now says "value fields" instead of
+  "perch objects" (and no longer lists branching, which moved to its own page
+  on 17 Jul).
+
+### 2026-07-17 — Branching gets its own page
+
+- **New page `docs/Bellman-Sym/05-branching.md`** ("05 Branching" in the nav,
+  between Methodization and Periods): the stage page's "Branching
+  declarations" section and the field-equations page's branching material
+  (the branch-keyed transition mapping, the branch combination in the
+  policy block, the endogenous-probabilities example) combined into one
+  page — declarations and the coproduct reading, declaration rules, branch
+  transitions and builders, the combining step, value functions on a
+  coproduct, composition within a period, and the worked softmax example.
+  Content moved verbatim; the source pages keep one-sentence pointers, and
+  the periods page's branching links now point here.
+- **The shelf renumbered once more**: Periods through Appendix D became
+  06–15 (`06-period`, `07-trelis`, `08-spec-factory` (to be renamed `08-bellman-factory` by AMD-FAC-002 F12),
+  `09-from-syntax-to-formal-problem-definition`, `10-appendix-a-recipes`,
+  `11-appendix-b-dolo-translation`, `12-equation-parsing-rules`,
+  `13-perch-tagging-rules`, `14-appendix-c-syntax-to-semantics`,
+  `15-appendix-d-node-tag-and-field-indexing`), with references, nav, and
+  the shelf index adjusted.
+
+### 2026-07-17 — Periods and trellises split into two pages; shelf renumbered
+
+- **`05-period-and-trelis.md` split** into `docs/Bellman-Sym/05-period.md`
+  ("05 Periods") and `docs/Bellman-Sym/06-trelis.md` ("06 Trellises" — a
+  full section of its own, per AAS). The period page carries the period
+  grammar box, the stage-reference rule, connectors, and branching; the
+  trellis page carries the trellis grammar box, the worked trellis
+  examples, and well-formedness. Content moved verbatim; each page gained
+  its own summary and relationship boxes, and every inbound reference
+  across the docs, wiki, and rules was retargeted to whichever page now
+  owns the material.
+- **The shelf reordered and renumbered**: the spec factory moved up to
+  sit directly after the trellis page (per AAS — assembly follows
+  composition), and the pages between shifted down one. The shelf now
+  runs `05-period`, `06-trelis`, `07-spec-factory`,
+  `08-from-syntax-to-formal-problem-definition`, `09-appendix-a-recipes`,
+  `10-appendix-b-dolo-translation`, `11-equation-parsing-rules`,
+  `12-perch-tagging-rules`, `13-appendix-c-syntax-to-semantics`,
+  `14-appendix-d-node-tag-and-field-indexing`, with all references, the
+  nav (the spec factory now appears there, after Trellises), and the
+  shelf index renumbered in the same pass. Three legacy numbered titles
+  ("0.2", "1.4", "11.") were reduced to plain titles per the numbering
+  rule.
+
+### 2026-07-16 — Stage pages merged into one; periods page renamed
+
+- **`01-symbols-and-declarations.md` and `02-stage-structure-and-timing.md` merged**
+  into a single page, `docs/Bellman-Sym/01-stage.md` ("01 Stage" in the nav; both
+  old pages deleted, all inbound references retargeted). The page now reads in
+  authoring order: perches and timing, underlying slots, declarations, perch
+  objects and value objects, shifting across perches, branching declarations.
+  Nothing was dropped except a stale link block and a pointer section already
+  owned by the periods page; the filtration display folded into a technical box
+  linking the theory shelf.
+- Corrections landed during the adversarial review of the merge: the
+  `kind: branching` tag documented as load-bearing for the parser (verified
+  against `stage_factory/symbolic.py` — the tag, not the sub-block shape, is what
+  triggers branch-keyed parsing today); the planned-feature status of
+  label/slot divergence (partially observed problems) restored; the legacy
+  single-builder combining spelling labelled as such with a pointer to the
+  equations page; `information_timing` defined at first use; the branch-value
+  spelling equivalences (`V_own[>]` / `V[>][own]` / `V_cntn[own]`) connected in
+  one sentence; the periods page's recall of the branching declaration corrected
+  from "one named continuation field" to "one named sub-block of continuation
+  fields".
+- **`03-equations-and-operators.md` renamed to `03-field-equations.md`** ("03 Field
+  equations" in the nav; all references and link labels swept). The page received
+  its overdue migration in the same pass: the legacy `# 1.3` numbering replaced by
+  local section numbers, the `Related` list replaced by the standard intro boxes,
+  headings reduced to plain words, spec-version tokens removed, and the four
+  inline links to internal dev-specs replaced with published targets (the
+  methodization page; the theory shelf's operators and branching pages), the spec
+  paths retained in an internal comment.
+- **`05-periods-models.md` renamed to `05-period-and-trelis.md`** (all references
+  swept); its trailing Summary section removed as a duplicate of the opening
+  summary box; spec-version tokens removed from reader-facing prose on the
+  shelf's pages 01, 03, and 05 (rule recorded in the project memory); a `[!todo]`
+  callout type added to the docs style rules.
+
+### 2026-07-16 — New theory page: Abstract grammar
+
+- **New page `docs/bellman-calculus/11-abstract-grammar.md`** ("11. Abstract grammar"
+  in the nav): the stage, period, and trellis files read as sentences of the calculus.
+  The nesting of the authored objects is presented as the language's abstract grammar
+  (its abstract syntax): a constructor grammar bottoming out at the modeller's data —
+  transitions, rewards, shock distributions, parameters — with the builders produced
+  by the Υ evaluation rather than present in the term. Periods and trellises are
+  insert-composition of represented stage objects in Backus's FFP sense, with the
+  FP-versus-FFP licensing of that fold stated precisely; the page closes with what
+  the tree is not (no parse of value-level arithmetic; a shared term graph at run
+  time; many-sorted and fixed-vocabulary where Backus is untyped and open-ended).
+- The draft was checked against the Backus 1978 chunk file and the corpus by a
+  Matsya literature query and two independent adversarial reviews; every confirmed
+  finding was applied before publication.
+
+### 2026-07-15 — Methodization pages merged into one how-to
+
+- **`04-methodization.md` and `04a-methodizing-a-step.md` merged** into a single
+  user-facing page, `04-methodization.md`; `04a` deleted and removed from the nav.
+  The page teaches the file-writing workflow (parts of a step, the entry shape,
+  whole-step vs part-by-part solvers, the honour declaration, one worked example)
+  with the design records referenced rather than restated.
+- Corrections landed during the adversarial review of the merge: the maximization
+  part is `argmax_c` (control-subscripted), never bare `argmax`; `max_{…}` /
+  `argmax_{…}` instance extraction is implemented (spec 0.1f), not planned;
+  `evaluate` and `upper_env` documented as implied parts; the exhaustive table
+  expansion and duplicate-part errors attributed to the methodize step, not file
+  load; method tags documented as recorded-never-validated; the `evaluate` method
+  tag convention fixed to interpolation family with the grid as a setting; handler
+  cards linked to the Rosetta stone pages.
+
+### 2026-06-21 — Internal docs reorganization: docs/development → AI/dev-docs; changelog → docs/changelog.md
+
+- **`docs/development/` retired.** Its contents moved out of the published docs tree into the
+  internal (tracked, unpublished) `AI/dev-docs/`:
+    - `research-notes/` (incl. `Concepts/`, the canonical long-form-definition home) → `AI/dev-docs/research-notes/`;
+    - `references/unified/` (the unified-framework corpus) → `AI/dev-docs/reference-archive/unified/`;
+    - the redundant `references/MMDP` symlink dropped (the real MMDP already lives in the reference archive).
+- **Changelog relocated** to `docs/changelog.md` — a top-level published page in the MkDocs nav
+  (previously `docs/development/changelog.md`, an orphan page). `CLAUDE.md`'s "One changelog" rule updated.
+- **`docs/dolo-explained/` archived** to `AI/dev-docs/reference-archive/dolo-explained/`; the
+  `AI/dolo-explained` symlink removed.
+- **`unified` recorded as a critical reference** in `CLAUDE.md`: it was the project's initial
+  canonical source and remains the benchmark to check the bellman-calculus derivation against.
+- **References repointed repo-wide** (90+ files); the only remaining `docs/development` mentions
+  are intentional "moved from …" provenance notes and historical changelog/working-note narrative.
+
+### 2026-06-21 — Appendix E.6 (Method schemes) retired into E.5 (Methods)
+
+- **E.6 "Method schemes" archived.** The no-schemes migration
+  (spec 0.1d.1)
+  retired the *method scheme* entity — methods now attach via the operator-slot
+  surface (one entry per named node: `on:` / `method:` / `handler:`). The page
+  `catalogues/method-schemes.md` therefore moved to `catalogues/old/method-schemes.md`,
+  with its body replaced by a one-line redirect to E.5, and the E.6 nav entry was
+  removed.
+- **E.5 Methods (`bellman-calculus/catalogues/methods.md`) is now the single source
+  of truth for methods.** Everything that was unique to E.6 was folded in,
+  re-expressed in operator-slot vocabulary: the per-method equation bindings (the
+  `cntn_to_dcsn_builder` sub-equation table, and one binding line per operator), the
+  consolidated settings registry (setting × type × operator × what it configures),
+  the worked authoring examples (VFI / EGM / pure-expectation / per-instance
+  expectation stages), and the attachment-and-open-questions section.
+- **Inbound links repointed.** The cross-references from E.3 (Operators), the
+  catalogue overview, E.4 (Parameters and settings), the field-typing chapter, the
+  `primitives.md` surface reference, and the `methodization` / `tool` wiki pages now
+  point at E.5; the archived `dolo-plus-spec/reference/old/method-schemes.md` sibling
+  was repointed too.
+
+### 2026-06-21 — Concept-wiki consolidation + Bellman-calculus rebrand
+
+- **Two reference docs folded into the concept wiki** (`AI/wiki/`). `terminology.md` and
+  `definitions.md` were distributed into their home concept pages (one home per fact); two
+  new pages were added (`ordering_conventions`, `slot`) and `spec_factory` gained the
+  specification-functor / merge algebra (a term AMD-FAC-002 retired on 23 September 2026). The source files are archived under
+  `AI/working/AAS/21062026/`; `Terminology` was removed from the reference section.
+- **System renamed BE-DDSL → "Bellman calculus."** The wiki's `be_ddsl` page merged into
+  `bellman_calculus` (now the system/language page); `be_ddsl` and `ddsl` are redirects.
+  The Υ meaning-map content moved to `upsilon` (the canonical map page), and map-sense
+  links were repointed there.
+- **`t_core` retired** — folded into `semantics` as the term layer ($T_\Sigma$), per a
+  Matsya / denotational-semantics consult.
+- **Surface-syntax rename dolo-plus → "dolang+" is in progress (deferred).** The system
+  rename and `t_core` fold are complete; the `dolo_plus` → `dolang` page merge and the broad
+  "dolo-plus" prose-term purge across the wiki and `docs/` (and the `docs/dolo-plus-spec/`
+  directory rename) remain a tracked follow-up.
+- Terminology resolved while merging: nest → **trellis**, syntactic → **symbolic stage**,
+  bound → **specified stage** (old names kept as deprecated synonyms).
+
+### 2026-06-21 — Reference reorganisation: schema rename, method-schemes archival
+
+- **Schema doc renamed** `docs/dolo-plus-spec/reference/ddsl_schema.md` →
+  `dolang_plus_schema.md` (page title and nav label updated to "Dolang+ YAML
+  Schema (v0.1)"). Inbound links updated across the published docs, the concept
+  wiki (`AI/wiki/`), and the live specs/road-map. Historical session notes and
+  prior changelog entries retain the old name as a record.
+- **`method-schemes.md` archived.** The retired reference
+  `docs/dolo-plus-spec/reference/method-schemes.md` moved to
+  `reference/old/method-schemes.md` and removed from the site navigation. It was
+  already superseded by the methods catalogue (Appendix E.5–E.6); the catalogue's
+  supersession notes and the remaining inbound links now point at the archived
+  copy. The methods catalogue remains the live source of truth.
+
+### 2026-06-15 — Operator algebra (Appendix F) + methods catalogue, validated against the applications
+
+- New **Appendix F — Operator algebra** (`docs/bellman-calculus/APPX-F-OPERATOR-ALGEBRA.md`):
+  the algebra the operators form — the presented distributive category (cartesian
+  backward / Markov forward), branching by coproducts, the graded refinement tower
+  (mathematize → parameterize → methodize → settingize → horse), and the
+  operator type system (morphisms typed by rank × grade). Hardened against
+  adversarial review by two Matsya models (opus 4.8 and gpt-5.5 pro), which
+  converged on: the carrier is a presented distributive category (not a free SMC);
+  branching needs coproducts; the methodization law is **mathematization-preserving
+  with convergence** ($\rho\to\Upsilon$), *not* denotation-erasure (this supersedes
+  the §3.4 erasure reading of spec 0.1a); "transpose under the pairing," scoped to
+  the policy-fixed linear fragment, replaces "conjugate."
+- **Methods catalogue** (Appendix E.5–E.6, `catalogues/methods.md`,
+  `catalogues/method-schemes.md`): single source of truth for methods. Methods
+  attach to **operators** directly — the legacy `scheme:` classifier is retired
+  (migration table in E.5). Supersedes `dolo-plus-spec/reference/method-schemes.md`
+  and the methods/operations sections of `primitives.md`.
+- **Operator catalogue (E.3)** expanded to the complete inventory (structural
+  morphisms, branching operators, implicit/auxiliary operators, the gradient and
+  multi-control `solve` codomains); the "operators are not typed" wording corrected
+  to "typed by their rank but not inhabitants of a sort."
+- **Validated against the applications** (cons-port, consumption-savings-iid,
+  housing-owner, durables, mortgages, retirement/unemployment branching,
+  benhabib-2019): catalogue + theory cover the apps; fixes folded in
+  (`!golden-section`, `!endogenous` grid, `!scalar-multiply`, branching
+  aggregators `max_J`/`E_J`, the i.i.d.-mixture vs persistent-regime split, the
+  NEGM-vs-DCEGM distinction, the random-growth/ergodic out-of-scope note). Review
+  artifacts under `AI/working/AAS/14062026/`.
+
+### 2026-06-11 — Forward-builder notation: $\mathbb{F}_\prec \to \mathbb{F}$, $\mathbb{F}^{\sigma}_{\succ} \to \mathbb{G}_{\pi}$
+
+- The decision-edge forward builder is now written $\mathbb{G}_{\pi}$ — a
+  pushforward *under a policy function* $\pi$ — and the arrival-edge
+  forward builder is plain $\mathbb{F}$ (no subscript). Rationale: the
+  decision-side object exists only once a policy fills the action slot,
+  so the notation should name the policy rather than the perch; with the
+  two builders distinguished by letter, neither needs a $\prec$/$\succ$
+  subscript. The composite forward stage operator is
+  $\mathbb{F}^{\pi} = \mathbb{G}_{\pi} \circ \mathbb{F}$ (previously
+  $\mathbb{F}^{\sigma}$), and the policy symbol in forward contexts is
+  $\pi$ throughout (the conjugacy partner is the policy-closed
+  expectation $\mathbb{E}^{\pi}_{\eta}$); $\sigma$ remains in
+  backward-side contexts. Blackboard $\mathbb{G}$ is distinct from the
+  roman aggregator $\mathrm{G}$ of the stage tuple.
+- Updated: `docs/bellman-calculus/` (02, 03, 04, 05, APPX-B),
+  `docs/dolo-plus-spec/reference/symbols-conventions.md`,
+  `AI/rules/terminology.md` (forward-builder row), the wiki
+  (`forward_builder` page and schema description), and the live specs
+  (semantics 0.0 and 0.1a, rosetta-stone 0.2, forward-builders 0.1m —
+  where the old plain-$\mathbb{F}$ *composite* is now $\mathbb{F}^{\pi}$
+  to free $\mathbb{F}$ for the arrival builder). Schema-level symbols
+  `F_ad` / `F_de` are unchanged; the math column of the 0.1m mapping
+  table records the correspondence $\mathbb{F} \leftrightarrow$ `F_ad`,
+  $\mathbb{G}_{\pi} \leftrightarrow$ `F_de`. Historical material
+  (superseded specs, `docs/old/`, the ModularMDP-era unified sections,
+  past presentation decks) retains the old notation as a record.
+
+### 2026-06-11 — Dev-spec status audit; overview moved to the dev-specs root
+
+- `AI/dev-specs/spec-status-overview.md` (moved from
+  `dolang+/spec_0.1/spec_0.1-overview.md`, stub left behind): every spec 0.1
+  status re-verified against the code. Corrections from the audit: 0.1eA
+  (semiconjugate solve) and 0.1s (spec factory) are **implemented** —
+  `dolo/compiler/semiconjugate.py` and `dolo/compiler/spec_factory/` —
+  though their spec frontmatters still carry stale statuses; 0.1j has no
+  work distinct from the implemented 0.1eA pipeline and is recorded as
+  covered; the 0.1m row now follows the actual spec file (forward
+  builders, proposal) rather than the older "constraints (extended)"
+  label. Added a cross-package family table (rosetta-stone, kikku,
+  matsya, semantics, historical families) and corrected stale example and
+  demo-script paths (the old `explore/` tree no longer exists). Links
+  updated in `CLAUDE.md`, the root `README.md`, rosetta spec 0.2, the
+  dolo-plus-spec README, the session-start and submodule-workflow rules,
+  and the Project Plan.
+- `AI/dev-specs/dolang+/spec_0.1/`: December-2025 legacy drafts moved to a
+  `legacy/` subfolder with a provenance README; the founding document
+  (`doloplus-foundations.md`, with renders and the early example YAML)
+  moved into `0.1_a/` with a historical-status note, since it seeded the
+  first milestone iterations.
+### 2026-06-10 — Rosetta Stone: HARK inventory v0.1 (tools + horses) at HARK 0.17.2
+
+- `rosetta-stones/hark/tools.md` v0.1: the second per-package inventory,
+  authored per the spec 0.1 §3 procedure read under spec 0.2 (§9), from a
+  source walk of the econ-ark/HARK 0.17.2 tag with every import path verified
+  against an installed econ-ark==0.17.2. All ten Bellman-core schemes in the
+  dolo section order, each opening with its spec 0.2 §6 handler contract;
+  grid constructors under `interpolation` sub-choices; composite recipes;
+  evidenced gaps; an example index over HARK's own tests; and a builder-level
+  note with the DDSL-to-HARK term map. The headline structural finding is the
+  mirror image of dolo: HARK's `solve_one_period_*` functions are natively one
+  backward step (the §6.5 step-count clause holds by construction, no
+  `max_iter=1` workaround), but they hard-code their model family's
+  transitions and rewards, so the §6.5 no-re-encoding clause cannot hold
+  without refactoring. The newer block framework (`HARK.model`,
+  `HARK.simulator`) is inventoried in its own status-flagged section: no
+  block-level backward solver exists at 0.17.2, and the DBlock-to-stage
+  correspondence table records where blocks lack the stage's information-set
+  factorization.
+- `rosetta-stones/hark/horses/`: README plus 16 machine-readable sidecars
+  (spec 0.1 §5 schema). The two builder horses carry `single_step: native`
+  and `transition_alignment: model-locked`, the HARK-specific inversion of
+  the dolo horses' single-step `needs confirmation` flag.
+- `rosetta-stones/overview.md` v0.8: the Appendix A HARK column re-verified
+  at 0.17.2 from the walked inventory. Corrections: the Monte Carlo
+  expectation cell refuted (`HARK.simulation.monte_carlo` is forward
+  simulation, not an integrator); no VFI driver (`AgentType.solve` is a
+  method-agnostic convergence wrapper); the `!pchip` monotonicity flag
+  settled negatively (`CubicHermiteInterp` wraps scipy's Hermite spline;
+  proposed tag `!hermite-cubic`); `scipy.optimize.bisect` and `fsolve` are
+  imported nowhere in HARK; `compute_steady_state` renamed
+  `compute_pe_steady_state`. Restored: `HARK.SSJutils` (present and
+  substantial at 0.17.2; the 0.16.0-era sourcing note had it as
+  nonexistent), with a proposed `!ssj-fake-news` row. Added: 0.17.2 surface
+  (`HARK.mat_methods.mass_to_grid`, `HARK.simulator.AgentSimulator`,
+  `HARK.econforgeinterp.LinearFast`).
+
+### 2026-06-10 — Rosetta Stone: dolo inventory v0.4, re-anchored to spec 0.2
+
+- `rosetta-stones/dolo/tools.md` → v0.4: the inventory is now read against
+  spec 0.2 (the three-way alignment) rather than spec 0.1's procedural
+  framing. Added a mapping section tying each scheme section to its
+  alignment-table row (spec 0.2 §3) and handler contract (§6); restated the
+  `interpolation` placement as the evaluation reading of §6.2 (the registry's
+  construction reading recorded as superseded, with the open
+  interpolation-placement brief linked); added contract summaries to the
+  `expectation`, `maximization`, `simulation`, and `shock_discretisation`
+  sections (the last raised in standing by §3.1's shocks-primitive
+  convention); repointed the single-step rule from spec 0.1 §1.7 to
+  spec 0.2 §6.5; and carried spec 0.2 §11's live-file divergences (builder
+  label split, phantom `ShadowBellman` targets, the shared `E_y` name) as a
+  warning over the interface hooks. Function rows and signatures are
+  unchanged from the 2026-05-31 source walk — no source re-walk was done.
+- `rosetta-stones/dolo/horses/` → README v0.2 and the builder-level and
+  interpolation horse sidecars: spec references updated (schema remains
+  spec 0.1 §5, retained by spec 0.2 §9; contracts now cite spec 0.2 §6),
+  and the interpolation horses state the evaluation placement.
+
+### 2026-05-31 — Rosetta Stone: dolo inventory v0.3 + builder/operator horses
+
+- `rosetta-stones/dolo/tools.md` → v0.3: re-implemented the
+  `spec_0.1-rosetta-stone.md` §3 meta-prompt for dolo. Re-walked every signature
+  against `packages/dolo/dolo/` source, added the `Level` column (operator /
+  builder / composite / model), and corrected v0.2 guesses —
+  `value_iteration` / `time_iteration` / `improved_time_iteration` / `ncpsolve`
+  kwargs; dropped the non-existent `find_deterministic_equilibrium` (→
+  `find_steady_state` + `perturb`); fixed the interpolation API
+  (`DecisionRule(..., interp_method=...)`, not `Linear(grid)`); reclassified
+  `algos.invert.invert` to `linear_solve`. Repointed interface hooks to
+  `applications/.../registry/stages/*methods.yml`. Added a builder-level
+  single-step note (drivers are convergence loops; one-pass entry unverified).
+- `rosetta-stones/dolo/horses/` (new): 13 machine-readable horse YAMLs (spec §5
+  schema) — builder-level `dolo_egm` / `dolo_vfi` / `dolo_time_iteration` (with
+  continuation→decision term map, single-step `needs confirmation`) and
+  operator-level quadrature / interpolation / grid / simulation /
+  shock-discretisation / root-finding horses; plus `horses/README.md`.
+- Working note + Matsya literature cross-check (incl. EGM-as-higher-order-handler
+  flag): `AI/working/AAS/31052026/rosetta-dolo-build.md`.
+
+### 2026-05-31 — Rosetta Stone spec: attachment levels
+
+- `AI/dev-specs/rosetta-stone/spec_0.1-rosetta-stone.md` → v0.5: added §1.5
+  (attachment-level nesting — operator / builder / composite / stage-model,
+  with `on:` as the level selector and coarse-subsumes-fine semantics) and
+  §1.6 (worked illustration of dolo as a tool at three levels on one
+  consumption–saving stage). Additive only; meta-prompt, rubric, and
+  appendices unchanged apart from a one-line `on:`-level cross-reference.
+- Follow-up (same v0.5): added the rule that *level is what a function does,
+  not where it lives* (end of §1.5); §1.7 (builder-level solvers — using a
+  package convergence solver as a single backward step via the “iterate-once”
+  mechanism, with the required continuation/decision term map); Appendix A.7
+  (optional conceptual-background wikilinks, bellman-ddsl internal); a §3
+  Step 3 note to record each function's level; and fixed the stale Appendix
+  A.2 example-YAML paths (now `applications/...`).
+- Review fixes (same v0.5): hardened the scheme/method rule (methods opaque
+  but must be observed, else `(proposed)`/`needs confirmation`); separated
+  **horse** (adapter, `horse_id`) from the **tool** package in §1.2 and
+  renamed “tool id” → horse ID / “Tools … does NOT provide” → “Numerical
+  roles … does NOT provide”; scoped the attachment-level semantics
+  (subsume/override now flagged *proposed*, `needs confirmation`); switched
+  worked examples to the canonical `method: !linear` + `settings.grid:
+  !Cartesian` form (legacy `!Cartesian` noted as back-compat, overview §12
+  ambiguity A); tightened the grid/settings/parameters boundary (§1.4); made
+  the builder-level one-pass a hard validation rule (§1.7); renamed
+  `solvers_composite` to “Composite recipes — named bundles of schemes” and
+  made grid sub-choices a subsection under `interpolation` in the template;
+  split front-matter `version` into `spec_version`/`document_version`; added
+  a `Level` output column, a source-walk-log deliverable, and an evidenced-
+  gap rule; collapsed Appendix A.7 to a one-line pointer (links preserved).
+
+### 2026-05-23 — applications/ migration (Phase 2a)
+
+- `cons-port`: registry, notebooks, and shared code moved from
+  `explore/cons-port/` and `packages/dolo/.../port-with-shocks/` to
+  `applications/cons-port/`. Layout: shared `registry/` with
+  `notebooks/{port-cons,noport-cons}/` subfolders.
+- `consumption-savings-iid`: flat layout under `applications/consumption-savings-iid/`
+  (from dolo `consumption_savings_iid_egm_doloplus/`).
+- `housing-owner`: registry moved to `applications/housing-owner/registry/`.
+- `unemployment-branching`: registry at `applications/unemployment-branching/registry/`
+  with placeholder `methodization.yml`; docs reconcile note in `docs/examples/unemployment/`.
+- `mortgages`: draft registry at `applications/mortgages/` with placeholder stubs.
+- `benhabib-2019`: promoted from `docs/examples/Benhabib_et_al_2019/` to
+  `applications/benhabib-2019/`.
+
+### 2026-05-23 — applications/ migration (Phase 2b)
+
+- `stage-pipeline-demos`: tutorial notebooks moved from
+  `explore/stage-pipeline-demos/` to
+  `applications/stage-pipeline-demos/`. Two FUES-app demo subfolders
+  added: `durables/` (pipeline + tag-verification notebooks) and
+  `retirement-branching/` (branching-period stub solver + demo-only
+  registry).
+- `explore/durables/notebooks/` (dead symlink) deleted.
+
+### 2026-05-23 — applications/ migration (Phase 2c)
+
+- `retirement`: dolo `retirement_choice_doloplus/` and the empty
+  sibling `retirement/` deleted. FUES (`AI/context/FUES/examples/retirement/`)
+  is the single source of truth. bellman-ddsl keeps only the
+  branching-period pipeline demo at
+  `applications/stage-pipeline-demos/retirement-branching/`.
+  `docs/examples/retirement/retirement_choice.md` cross-link updated.
+- `durables`: dolo `durables/` registry (both nested copies) deleted.
+  FUES (`AI/context/FUES/examples/durables/mod/cobb_douglas/`) is the
+  single source of truth. bellman-ddsl keeps the DDSL-pipeline +
+  tag-verification notebooks at
+  `applications/stage-pipeline-demos/durables/`.
+- `housing-renting`: dolo `housing_renting_doloplus/` registry deleted.
+  FUES (`AI/context/FUES/examples/housing_renting/config_HR/`) is the
+  single source of truth (on its older config-driven schema, not
+  dolo-plus stages). bellman-ddsl keeps `docs/examples/housing_renting/`
+  prose untouched.
+
+### 2026-05-23 — applications/ migration (Phase 2d)
+
+- `explore/` top-level directory removed (`explore/README.md` deleted).
+  `explore/old/` was not tracked in git at migration time.
+- `applications/old/` becomes the single legacy bucket per audit
+  decision 4.
+- `experimental` (dolo submodule): six variants moved to
+  `applications/old/<variant>/`. Dolo submodule HEAD bumped accordingly.
+
+### 2026-05-21 — The theory documents moved under the development documents
+
+- **`core-ddsl-FFP-concepts.md` → `ddsl-foundations/`**:
+  Backus FFP primer moved under the DDSL foundations tree; MkDocs nav and cross-links updated.
+
+- **Theory papers under `AI/dev-docs/theory/papers/`**:
+  `ddsl-as-ffp-no-ast/` and `diagram-foundations/` are standalone manuscript trees (`supporting/`, `reviews/`, `sessions/`, `old/`). Removed legacy symlink paths `theory/ddsl-ffp` and `MDP-foundations/diagram-foundations`.
+
+- **`ddsl-ffp` → `AI/dev-docs/theory/papers/ddsl-as-ffp-no-ast/`**:
+  FFP / no-AST consolidated paper moved under the theory tree (now under `papers/`).
+
+- **`dolo-explained` → `docs/dolo-explained/`**:
+  Tutorial moved from `docs/development/dolo-explained/` to top-level `docs/dolo-explained/` (matches `docs/references.md` link). Removed duplicate `AI/dolo-explained/` tree; `AI/dolo-explained` is now a symlink.
+
+- **MMDP reference notes → `AI/dev-docs/reference-archive/MMDP/`**:
+  Dyn-X / StageCraft modular MDP material (`concepts.md`, `modular-bellman.md`) moved out of `docs/development/references/` into the dev-docs reference archive. Still linked from the MkDocs nav via `AI/dev-docs/reference-archive/MMDP` symlink. Not deprecated — reference layer alongside `AI/dev-docs/theory/`.
+
+- **Theory docs relocated to `AI/dev-docs/theory/`**:
+  Canonical source for MDP foundations, DDSL foundations, and FFP concepts is now under `AI/dev-docs/theory/`. The published MkDocs nav still uses `docs/theory/…` via a symlink (`docs/theory` → `../AI/dev-docs/theory`). Edit only the `AI/dev-docs/theory/` tree.
+
+### 2026-04-30 — The multi-period composite renamed from nest to trellis
+
+- **Multi-period composite renamed: nest → trellis (terminology lock)**:
+  The object that bellman-ddsl previously called *nest* (and that SolvingMicroDSOPs called *pile*) is now canonically the **trellis**. Both prior names were placeholders without literature precedent; *trellis* has a precise meaning in coding theory (Forney 1973, "The Viterbi Algorithm") and is used by Bertsekas (*DP and Optimal Control* Vol I, Ch. 2) for finite-state DP visualisations. Decided jointly by AAS and CDC after a Matsya-led literature search. See `AI/working/AAS/30042026/session.md` for the full rationale and `docs/dolo-plus-spec/reference/definitions.md` for the canonical entry.
+    - **Phase 1 (this release)** — canonical references and the active artefact under `mod/benhabib/`:
+        - `docs/dolo-plus-spec/reference/definitions.md`: added "Trellis" entry.
+        - `docs/dolo-plus-spec/reference/terminology.md`: 6 references updated.
+        - `AI/dev-specs/dolang+/spec_0.1/spec_0.1-overview.md`: milestone 0.1h description updated.
+        - `docs/examples/Benhabib_et_al_2019/mod/benhabib/`: `nest.yaml` → `trellis.yaml`; README updated.
+    - **Phase 2 (deferred)** — the Python module and example YAMLs:
+        - `packages/dolo/dolo/compiler/nest_factory/` → `trellis_factory/` (with deprecation alias).
+        - `packages/dolo/examples/models/doloplus/*/nest.yaml` and `explore/*/nest.yaml`: rename with the parser still accepting both names.
+        - `mkdocs.yml` nav references; `docs/development/dolo-plus-impl/spec_0.1h-periods-nests.md` content.
+        Phase 2 needs a focused commit because the Python module rename requires a deprecation alias and parser-side dual-name support; not safely combined with Phase 1.
+
+### 2026-03-21 — The decision perch's subscript changed from ∘ to ∼, and the Matsya prompt corrected
+
+- **Decision-perch subscript: $\circ$ → $\sim$ (repo-wide)**:
+  Adopted `\sim` as the canonical math subscript for the decision perch, replacing `\circ`. This aligns bellman-ddsl with SolvingMicroDSOPs notation and frees `\circ` for its standard use as function composition. Updated across all spec pages, theory docs, examples, formal MDPs, dev-specs, working notes, and the Matsya system prompt.
+    - `symbols-conventions.md`: perch index table, filtration definition, Rosetta Stone, all transition subscripts ($\mathrm{g}_{\prec\sim}$, $\mathrm{g}_{\sim\succ}$)
+    - Syntax-semantic-rules: `01`, `06`, `07`, `08`
+    - Theory: `03-symbol-system`, `05-bellman-theory`, `06-representation-maps`, `07-execution-pipeline`, `MDP-foundations/index`, `dolo-sym-to-ddsl-core-mapping`
+    - Examples: `solving-conjugates`, `unemployment/index`, formal MDPs (`noport_stage_mdp`, `unemployment_branching_mdp`)
+    - Dev-specs: `spec_0.1l-branching-theory`, `spec_0.1eA-stage-operators-to-dolo`
+    - References: `ddsl_schema`, `dolo-to-doloplus-syntax-changes`
+    - AI/working: `dolo-plus.md`, `T-calc-core.md`, session notes, perch-index exploration
+    - Matsya prompt (`Bellman-DDSL.md`): transition notation, branching notation
+    - **$\sim$ over $\circ$ for decision perch**: Using `\sim` eliminates ambiguity with function composition (`\mathbb{I} \circ \mathbb{B}`). The tilde visually suggests "approximately here" or "the reference point" — the decision perch is the unmarked default from which `\prec` and `\succ` are defined. SolvingMicroDSOPs already uses `\sim`; adopting it in bellman-ddsl unifies the notation across the two repositories.
+- **Matsya system prompt fixes (HIGH + MEDIUM severity)**:
+    - `max_{c}()` vs `max_{c}{}`: now accepts both; braces are canonical for operator bodies, parentheses accepted for named-operator arguments
+    - ShadowBellman: removed false "DEPRECATED" claim — `ShadowBellman` is valid in `dcsn_to_arvl_builder`; `MarginalBellman` is valid in `cntn_to_dcsn_builder`
+    - `[~]` decision tag: softened prohibition — unmarked is preferred, `[~]` accepted as explicit marker
+    - Unicode parameters: softened mandate — both `β`/`ρ` and `beta`/`rho` are valid
+    - `_opr` alias: noted as valid synonym for `_builder` (used by canonical `consumption_savings_iid` example)
+    - `V_cntn` branching notation: replaced with spec 0.1l canonical `V[>][label]` sugar (looked up via `values.V[>]` map)
+
+### 2026-02-12 — Specification 0.2a of the compiler pipeline, and the perch tags normalized
+
+- **spec 0.2a (compiler pipeline architecture)**: Lean 4-inspired architectural spec for the full dolo-plus compiler pipeline.
+    - `AI/dev-specs/dolang+/spec_0.2/spec_0.2a-compiler-pipeline-architecture.md`
+    - 8-stage pipeline (Parse → Validate → Υ → Methodize → Calibrate → Ρ → Solve → Analyze) with typed intermediate representations at each stage.
+    - Operator registry with attribute-based registration (pluggable methods as Lean-style tactics).
+    - Immutable environment threading (scoped extensions pattern).
+    - Template-driven Ρ-map code generation.
+    - Multi-error validation following Lean's collect-all-errors approach.
+    - Composition pipeline design for periods and nests.
+    - **Pluggable methods as tactics**: Lean's tactic framework (registered proof strategies dispatched by name) maps directly to the DDSL operator registry (registered solver methods dispatched by method tag). The `@register_method` decorator pattern enables extensibility without modifying core pipeline code.
+    - **Persistent IRs prevent black-box pipelines**: Every pipeline stage should produce a serializable, inspectable intermediate representation. This makes debugging, diffing, and testing tractable — you can inspect a methodized stage without running calibration.
+    - **Immutable environment threading**: Following Lean's scoped extensions, each pipeline stage should extend (never mutate) the symbol/method environment. This is especially important for composition, where each stage in a period has its own scope joined by connector renames.
+- **Lean 4 ≈ CORE elaboration note**: added analogy connecting Lean 4's elaboration pipeline to the φ (SYM → CORE) translation in `08-sym-core-architecture.md`, `for-engineers.md`, and homepage.
+    - **Elaboration ≈ φ (SYM → CORE)**: Lean 4's elaboration (surface `Syntax` → kernel `Expr`) is the precise analogue of the Bellman-calculus φ map (dolo-plus YAML → normalized typed stage IR). The kernel/elaboration separation principle means CORE should be small and trusted; all complexity lives in the SYM-to-CORE desugaring.
+- **`AI/matsya.md`**: added Matsya RAG configuration file to repo.
+- **Perch tag propagation (repo-wide)**:
+    - Parser (`packages/dolang/dolang/grammar.py`): added `normalize_perch_glyphs()` pre-parse step — `[<]`/`[>]` glyph tags normalize to canonical `[_arvl]`/`[_cntn]` before Lark parsing.
+    - Parser (`packages/dolo/dolo/compiler/doloplus_translator/transforms.py`): defensive normalization in `perch_to_time()` and `shift_perch_tags()`.
+    - MDP foundations (`docs/theory/MDP-foundations/index.md`): full notation rewrite — subscript → superscript perch indices ($x_{\prec}$ → $x^{\prec}$), transition functions ($\mathrm{g}_{\prec}/\mathrm{g}_{\succ}$ → $\mathrm{f}/\mathrm{g}$), preferred SYM tags (`[<]`/unmarked/`[>]`).
+    - Homepage, for-engineers, language guide, dolo-dynare-relationship, stage-structure-and-timing: updated to preferred perch tags and superscript notation.
+- **Canonical naming: "Dolo+" → "dolo-plus"**: global rename across 51 files (387 occurrences). Updated `CLAUDE.md` canonical terminology table accordingly.
+- **Value object perch tags**: `V` → `V[-]` and `dV` → `dV[-]` in all YAML snippets where decision-perch value objects appeared bare. Value objects that exist at all three perches require explicit `[-]` tag at the decision perch (unlike controls/states where unmarked = decision by convention). Updated in homepage, symbols-conventions, for-engineers, consumption_savings_iid example doc, ddsl_foundations proposal.
+    - **Unmarked ≠ bare for value objects**: The "unmarked = decision" convention works for controls and states (which live at exactly one perch), but value objects (`V`, `dV`) that span multiple perches must always carry an explicit perch tag. This is a measurability distinction: `V[-]` asserts "V evaluated at the decision σ-algebra", which differs from `V[<]` and `V[>]`.
+
+### 2026-02-12 — The semiconjugate solve of specification 0.1eA, with the fixes and reviews around it
+
+- **Semiconjugate solve (spec 0.1eA implementation)**: full pipeline from dolo-plus split-file stages through accretive nest build to EGM solve with Stachurski's semiconjugate transform.
+    - `explore/semiconjugate_solve.py` — three solve methods (egm black-box, egm per-period, manual loop), all verified to exact match.
+    - `explore/semiconjugate_solve.ipynb` — hand-holdy notebook with Stachurski references, iterates lemma, per-cell math explanations.
+- **`return_internals` for `egm()`** (dolo): returns raw `sa0/xa0/z` arrays alongside `EGMResult`, enabling per-period EGM calls without cubic-resampling error accumulation.
+- **`make_egm_dr0_from_internals()`** (dolo): builds a linear-interpolation dr0 callable from raw EGM internals — matches what `egm()` uses between its own internal iterations.
+- **`mapping_set()`** (dolang): `yaml_nodes.mapping_set(m, key, value_node)` for setting/updating keys in YAML MappingNode data.
+- **spec_0.1p (intermediate-variable indexing)**: placeholder spec for `c[_a]`, `m_d[_a]` bracket syntax — intermediate variables as local perch indices within builder sub-equations.
+    - `AI/dev-specs/dolang+/spec_0.1/0.1_p/spec_0.1p-intermediate-variable-indexing.md`
+- **Deliverables addendum**: `docs/deliverables-AAS-Feb2026.md` — polished Feb–Apr 2026 SOW addendum with tags and repo links.
+- **`Model.set_calibration()`** (dolo): now works with MappingNode data from `yaml.compose()`. Previously crashed with `TypeError: 'MappingNode' object is not subscriptable`.
+- **solving-conjugates.md**: front-to-back review — fixed Ŝ vs S operator labelling, rewrote pseudocode to use real repo APIs (`doloplus_to_dolo`, `egm()`), added "level values vs EGM objects" conceptual seam, removed nonexistent helpers.
+- **spec_0.1eA**: fixed β-placement convention (β in `direct_response_egm`, not `expectation`), added `import numpy`, renamed Step 4 to reflect `mr(a)` output.
+- **noport_stage_mdp.md**: `\mathrm{T}` → `\mathbf{T}`, `E` → `\mathbf{E}`.
+- **CLAUDE.md**: added single-changelog rule (no root `CHANGELOG.md`).
+
+### 2026-02-11 — The page on the foundations of Markov decision processes rewritten, with the navigation and the home page
+
+- **MDP foundations rewrite**: rewrote `theory/MDP-foundations/index.md` with ≺/·/≻ perch notation, **B**/**I** backward builders, intra-stage branching diagrams, and clean forward/backward separation.
+- **Nav restructure**: restructured mkdocs nav to match folder layout; added network scroll animation.
+- **Homepage**: updated homepage algebra section with Bellman calculus identity.
+
+### 2026-02-09 — The site's landing page and branding, and the Matsya assistant on the home page
+
+- Condensed MDP foundations, reordered Theory nav, toned down nav CSS.
+- Added branding assets; removed legacy operator YAMLs.
+- Embedded Matsya (MatsΥa) chatbot on homepage (MatsΥa (AI) button).
+- Refreshed site landing page, nav, and RAG demo.
+
+### 2026-02-07 — The DDSL schema, the discrete housing grid and the example pages
+
+- **DDSL YAML schema**: `docs/dolo-plus-spec/reference/ddsl_schema.md` with v0.1 stage/period/nest field definitions.
+- **Discrete housing grid**: `XH: "@def linspace(H_min, H_max, n_H)"` in housing_owner space declaration (design principle: grid defines the mathematical space → parameters, not settings).
+- Comprehensive example documentation for all models (consumption_savings_iid, housing_owner, port_with_shocks, formal MDPs).
+- Combined port_with_shocks and period-nests into single page.
+- Updated period-nests doc to use actual period YAML files.
+- Fleshed out core ideas on index page; restructured documentation sections.
+- Dark teal Material theme with custom CSS overrides.
+- Broken anchor link in port_stage.md.
+- Missing link to port-with-shocks in examples index.
+- `.gitkeep` for overrides dir so CI can find `custom_dir`.
+- Normalised notebook format via nbconvert.
+
+### 2026-02-06 — The translation of stages into operators (specification 0.1eA)
+
+- **spec 0.1eA (stage-to-operator translation)**: implemented generic translator + backward step orchestrator.
+    - `explore/transformations/egm-stage-operators-to-dolo/translate_stage_to_operator.py`
+    - `explore/transformations/egm-stage-operators-to-dolo/backward_step_noport_cons.py`
+    - Mapping tables for cons and noport operators.
+    - `test_stage_operators.py` — regression test against vanilla Dolo.
+- **DDSL overview presentation**: docs aimed at DSAI audience.
+- Compiled stage operators as vanilla Dolo models.
+- mkdocs-callouts plugin in CI workflow.
+- Comprehensive review of spec 0.1eA (stage operators).
+- Added intelligent perch offset handling to translator note.
+- Added overview section with new docs to index.
+- Quick Summary link in Overview section.
+
+### 2026-02-05 — Obsidian callouts on the site, and specification 0.1h restructured
+
+- **Obsidian/MkDocs dual rendering**: Added `mkdocs-callouts` plugin to automatically convert Obsidian-style callouts (`> [!type]`) to MkDocs admonitions during build.
+- **spec_0.1h restructured**: Converted nested callouts to collapsible `??? type` details sections for proper HTML rendering while preserving Obsidian compatibility.
+    - Warning block with open questions now uses expandable sections for each decision point
+    - Separated nested `[!note]` from `[!important]` callout
+
+### 2026-01-29 — Bare symbols (specification 0.1g), `argmax_{}` in the grammar, and the bindings of port-with-shocks
+
+- **spec_0.1g (bare symbol resolution)**: Allow bare symbols in adc-stage equations without explicit perch indices.
+    - `packages/dolang/dolang/perch_resolver.py` — AST walker for native perch inference
+    - `packages/dolang/dolang/grammar.lark` — bare symbol support in assignment LHS
+    - `packages/dolo/dolo/compiler/model.py` — integration for adc-stage dialect
+- **argmax grammar support**: Added `argmax_{}` syntax mirroring existing `max_{}` structure.
+    - `packages/dolang/dolang/grammar.lark` — argmaximization rule
+    - `packages/dolang/dolang/grammar.py` — argmaximization printer method
+- **port-with-shocks library bindings**:
+    - `calibration.yaml` — parameter values (β, ρ, R, shock parameters)
+    - `settings.yaml` — numerical settings (grid sizes, quadrature nodes, simulation)
+    - `methodization.yml` — scheme/method pairings for all three stages
+- **Explore scripts**:
+    - `explore/stage_explorer.py` — inspect stage files (symbols, equations, metadata)
+    - `explore/stage_pipeline.py` — run methodize/calibrate/configure pipeline
+    - `explore/stage_pipeline.ipynb` — notebook demonstrating accretion approach
+- Updated `spec_0.1-overview.md` with implementation status table for all milestones (0.1a–0.1h).
+- Documented implementation locations and example files for each completed spec.
+
+### 2026-01-25 — The changelog begun, and the page on periods and models refined
+
+- Repository-level `CHANGELOG.md` plus rendered `docs/changelog.md` page and MkDocs nav entry.
+- `AI/working/AAS/25012026/session.md` (today’s working log).
+- Refined `docs/specs/dolo-plus-v0.1/syntax-semantic-rules/periods-and-models.md`:
+    - Made **twisters** explicitly core model-level DDSL syntax (inter-period wiring), including an indexed/template form (`t`, `t+1`).
+    - Clarified the DDSL/orchestration boundary: DDSL specifies *artifact interfaces*, not *construction procedures*.
+    - Clarified “bindings are immutable once instantiated” (no hidden state / referential transparency stance).
+- Added/updated internal process guidance:
+    - `AI/claude.md` now points to `AI/road-map-todo.md` (roadmap/decision tracker) and records the proposed periods/models instantiation boundary as **pending team review**.
+    - `AI/road-map-todo.md` includes a rename note (replacing older `AI/todo.md`).
+
+### 2026-01-24 — Periods and models: the assembly of a model from its templates
+
+- Introduced/expanded **“0.4 Periods and models (assembly)”** to formalize:
+    - **Syntax collections** (template libraries) vs **instantiated model instances** (time-expanded constructions).
+    - Orchestration-layer responsibility for **time-indexing**, **per-period calibration binding**, and **inter-period wiring**.
+    - The `twisters.yaml` concept for inter-period variable and value-function wiring, including a loop-generated `connections:` pattern.
+- Polished internal consistency across Dolang+ syntax/semantics docs (terminology: period template vs period instance; connectors vs twisters; what lives in SYM vs orchestration).
+- Updated `05-methodization.md` framing to align with the “syntax collection / orchestration” separation.
+- Working-note digest: **Pflug & Pichler (2014)** multistage stochastic optimization concepts relevant to scenario trees, information structure, and nonanticipativity.
+
+### 2026-01-23 — The port-with-shocks syntax collection, and the syntax and semantics pages restructured
+
+- New Dolang+ example syntax collection: `packages/dolo/examples/models/doloplus/port-with-shocks/`
+    - Stage templates: `noport_stage.yaml`, `port_stage.yaml`, `cons_stage.yaml`
+    - Period templates: `cons_period.yaml`, `port_cons_period.yaml`, `cons_port_period.yaml`
+    - README documenting “optimal” period YAML direction and identity/rename connector conventions.
+- Restructured Dolang+ syntax/semantics documentation into a flat, numbered set of pages under:
+    - `docs/specs/dolo-plus-v0.1/syntax-semantic-rules/`
+    - Added “From syntax to formal problem definition” and “Methodization” as numbered overview pages.
+- Updated MkDocs navigation to make:
+    - **dolo-plus** a top-level section with separate **implementation** and **Dolang+ syntax and semantics** groupings.
+    - Unified-framework sections render as separate pages under a “Unified Framework” group.
+    - “Example: Portfolio Choice with Correlated Shocks” grouped under a single navigation subsection.
+- Added custom sidebar styling via `docs/stylesheets/extra.css` to visually distinguish major nav section headers.

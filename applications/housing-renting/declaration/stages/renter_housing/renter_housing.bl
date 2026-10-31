@@ -1,0 +1,22 @@
+@stage: renter_housing
+
+XS := linspace(S_min, S_max, n_S)    :: ["the quantities of housing services a renter may rent; a discrete set of the model, not a numerical grid"]
+
+P_r   : ℝ₊₊    :: ["rental price of one unit of housing services"]
+S_min : ℝ₊     :: ["smallest quantity of rented services"]
+S_max : ℝ₊₊    :: ["largest quantity of rented services"]
+n_S   : ℕ      :: ["number of rental quantities"]
+
+[id=dcsn_to_cntn, (w_d : ℝ₊, y_d : ℝ₊₊, S : XS @ !ctrl) : !dcsn -> (w_rent : ℝ₊₊, S_rent : XS, y_rent : ℝ₊₊) : !cntn] {
+    w_rent = w_d + y_d - P_r*S    :: [id=renter_budget, "cash left for consumption and saving, after income and the rent paid"]
+    S_rent = S
+    y_rent = y_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, S) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = V[>]                     :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (S : XS @ !ctrl) : !dcsn] {
+    S = argmax_{S}(V[>])    :: [id=choice]
+}

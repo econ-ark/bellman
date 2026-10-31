@@ -1,0 +1,10 @@
+@methods: retiree_saving
+# The first-order condition of the retiree's consumption as the method block
+# of the policy builder, whose stage file states the maximization alone
+# (AMD-MB-001 §4.1): the Euler equation with its complementarity clause,
+# which reads the derivative of the continuation value by the term
+# D_{y_f_ret}V[>].
+
+[id=foc, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    𝑑𝑢(c) = β*D_{y_f_ret}V[>] ⟂ m_r - c >= 0           :: [id=euler_financial]
+}

@@ -1,0 +1,80 @@
+# Numerical settings of the durables model, in the names the replication code of
+# Dobrescu and Shanker (2026) uses for them. Nothing here is part of the model:
+# the domains and laws are in the stage files and the parameter values in
+# calibration/durables.yml. The entries marked "fixed in the code's source" are
+# numerical choices the code makes in Python rather than in its settings file.
+
+settings:
+  # Grid of savings. It is the exogenous grid of the endogenous grid method in
+  # both consumption stages, and the grid of cash on hand on which the keeper's
+  # decision functions are tabulated. grid_phi above one packs points near the
+  # lower end. Table 2 of the paper reports grids of 250, 500, 750 and 1,000
+  # points; 300 is the value of the code's settings file.
+  n_a: 300
+  a_min: 1.0e-02
+  a_max: 7.5
+  grid_phi: 1.01
+
+  # The lowest saving the numerical method uses, and the floor to which savings
+  # are clamped. The model admits zero saving; this floor is numerical.
+  b: 1.0e-02
+
+  # Grid of housing: the keeper's state and the adjuster's exogenous grid of new
+  # housing.
+  n_h: 300
+  h_min: 1.0e-02
+  h_max: 10.0
+
+  # Grid of total wealth, on which the adjuster's decision functions are
+  # tabulated. The effective lower end is the smallest wealth the tenure stage
+  # can produce, R*a_min + R_H*(1 - δ)*h_min.
+  n_w: 300
+  w_min: 1.0e-10
+  w_max: 12.5
+
+  # Upper envelope. FUES is the fast upper envelope scan; the remaining entries
+  # are its tolerances and the options of its jump detection.
+  keeper_upper_envelope: FUES
+  adj_upper_envelope: FUES
+  m_bar: 1.01
+  fues_lb: 4
+  fues_eps_d: 1.0e-05
+  fues_eps_sep: 1.0e-05
+  fues_eps_fwd_back: 0.05
+  fues_parallel_guard: 1.0e-07
+  keeper_include_intersections: 0
+  keeper_no_double_jumps: 1
+  keeper_single_intersection: 1
+  keeper_disable_jump_checks: 0
+  adj_include_intersections: 0
+  adj_no_double_jumps: 1
+  adj_single_intersection: 1
+  adj_disable_jump_checks: 1
+  correct_jumps: 1
+
+  # Reading a tabulated function outside its grid: 0 clamps at the boundary, 1
+  # extrapolates linearly; clamp_max_factor bounds a policy read above the grid.
+  extrap_policy: 0
+  clamp_max_factor: 1.1
+
+  # The adjuster's search for the roots of the housing first-order condition
+  # along the savings grid: the number of roots kept per housing point, and the
+  # step of a coarse scan (zero uses every grid point).
+  egm_n: 25
+  root_eps: 0.0
+
+  # The nested alternative: the number of sections of the golden-section search
+  # over new housing.
+  n_sections: 1
+
+  # Discretisation of the income process by Tauchen's method.
+  N_wage: 4
+  tauchen_n_std: 3          # fixed in the code's source
+  tauchen_min_prob: 1.0e-03 # fixed in the code's source
+
+  # A tie between keeping and adjusting selects adjusting.
+  tie_break: adjust         # fixed in the code's source
+
+  # Simulation of the forward operators.
+  n_sim: 10000
+  sim_seed: 42

@@ -1,0 +1,52 @@
+stage: worker_cons
+
+methods:
+  # The endogenous grid method opens the policy builder with the method block
+  # of worker_cons_egm.bl, which writes the grid line w[>] = b + c[>]; the
+  # stage file states the maximization alone. The candidates the block
+  # computes at each level of savings are selected by the upper envelope
+  # below, since the worker's continuation value need not be concave.
+  - on: policy
+    method: !egm
+    block: ../../methods/worker_cons_egm.bl
+    handler: asva:make_egm_1d
+
+  # The derivatives of the decision value and the arrival value are stated by
+  # the two marginal blocks of marginals_worker_cons.bl, one for each value
+  # builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_worker_cons.bl
+
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: ../../methods/marginals_worker_cons.bl
+
+  # The upper envelope over the candidates that satisfy the first-order
+  # condition; m_bar is the jump-detection threshold of the scan.
+  - on: upper_env
+    method: !FUES
+    handler: dcsmm:EGM_UE
+    settings:
+      m_bar: m_bar
+
+  # The arrival value is tabulated on the asset grid; the entry on the line
+  # dcsn_to_arvl.marginal represents the stated derivative of the arrival
+  # value in assets on the same grid.
+  - on: dcsn_to_arvl.value
+    method: !Linear
+    handler: dcsmm:interp_as_2
+    settings:
+      orders:
+        a_w: n_a
+      bounds:
+        a_w: [a_min, a_max]
+
+  - on: dcsn_to_arvl.marginal
+    method: !Linear
+    handler: dcsmm:interp_as_2
+    settings:
+      orders:
+        a_w: n_a
+      bounds:
+        a_w: [a_min, a_max]

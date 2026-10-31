@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pulse 3/4 — chain grows left: 720 → 950 → 1150.
+     New node (720) bright; previous chain faded. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 480"
+  preserveAspectRatio="xMidYMid slice">
+  <!-- Oldest edge: 950 → 1150 (faintest) -->
+  <line x1="950" y1="140" x2="1150" y2="240"
+    stroke="#1a1a1a" stroke-width="0.6" opacity="0.18"/>
+  <!-- Oldest node: 1150 -->
+  <circle cx="1150" cy="240" r="3" fill="#1a1a1a" opacity="0.14"/>
+  <!-- Previous edge: 720 → 950 (medium) -->
+  <line x1="720" y1="210" x2="950" y2="140"
+    stroke="#1a1a1a" stroke-width="0.9" opacity="0.55"/>
+  <!-- Previous node: 950 -->
+  <circle cx="950" cy="140" r="3.5" fill="#1a1a1a" opacity="0.30"/>
+  <circle cx="950" cy="140" r="11" fill="none" stroke="#1a1a1a"
+    stroke-width="0.5" stroke-dasharray="3 2" opacity="0.12"/>
+  <!-- Branch edge hint -->
+  <line x1="720" y1="210" x2="850" y2="380"
+    stroke="#1a1a1a" stroke-width="0.6" opacity="0.20"/>
+  <!-- Active node: 720 -->
+  <circle cx="720" cy="210" r="5" fill="#1a1a1a" opacity="0.85"/>
+  <g fill="none" stroke="#1a1a1a" stroke-width="0.7"
+     stroke-dasharray="3 2" stroke-linecap="round">
+    <circle cx="720" cy="210" r="12" opacity="0.45"/>
+    <circle cx="720" cy="210" r="20" opacity="0.30"/>
+    <circle cx="720" cy="210" r="30" opacity="0.15"/>
+  </g>
+</svg>

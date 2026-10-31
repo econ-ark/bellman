@@ -1,0 +1,26 @@
+@stage: terminal_worker
+
+# The continuation value of a young worker at the end of the terminal year,
+# the terminal period periods[0]; in every other year the next year's
+# worker_ageing supplies it. The arrival fields carry the tag tw and are
+# reached from worker's a_wk_wa, y_wk_wa, θ_wk_wa by the connector of the
+# terminal period's own entry of trellis.yml (E15).
+
+Xa := ℝ₊
+Y  := ℝ₊₊        :: ["working ability; the positive reals stand in for its finite grid, whose number of points is a numerical choice"]
+Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
+
+[id=arvl_to_dcsn, (a_tw : Xa, y_tw : Y, θ_tw : Θ) : !arvl -> (a : Xa, y : Y, θ : Θ) : !dcsn] {
+    a = a_tw
+    y = y_tw
+    θ = θ_tw
+}
+
+# V[>] is the terminal boundary data, zero, supplied at realization (D15; AMD-FAC-002 §5; A33)
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) -> (V : ℝ @ !vlu) : !dcsn] {
+    V = V[>]                             :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                             :: [id=value]
+}

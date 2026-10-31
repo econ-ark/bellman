@@ -1,0 +1,13 @@
+stage: disc
+# The discount stage's methods: the two forward laws are deterministic, and the two value builders bind nothing.
+
+methods:
+  - on: cntn_to_dcsn
+
+  - on: dcsn_to_arvl
+
+  - on: arvl_to_dcsn
+    method: !deterministic
+
+  - on: dcsn_to_cntn
+    method: !deterministic

@@ -1,0 +1,8 @@
+stage: terminal
+
+methods:
+  # The two derivatives of the terminal value, zero, are stated by the marginal
+  # block of marginals_terminal.bl on the decision value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_terminal.bl

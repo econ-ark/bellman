@@ -1,0 +1,13 @@
+stage: house_choice
+
+methods:
+  # The derivatives of the decision value and of the arrival value are stated by
+  # the two marginal blocks of marginals_house_choice.bl, one for each value
+  # builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_house_choice.bl
+
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: ../../methods/marginals_house_choice.bl

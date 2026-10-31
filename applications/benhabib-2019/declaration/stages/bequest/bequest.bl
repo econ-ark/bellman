@@ -1,0 +1,22 @@
+@stage: bequest
+
+A : ℝ₊     :: ["weight of the warm-glow bequest"]
+μ : ℝ₊     :: ["curvature of the warm-glow bequest"]
+β : (0,1)  :: ["discount factor"]
+
+[id=arvl_to_dcsn, (a_pre : ℝ₊) : !arvl -> (a : ℝ₊) : !dcsn] {
+    a = a_pre                                :: [id=wealth]
+}
+
+# The warm-glow bequest e(a) = A*a^(1-μ)/(1-μ), weighted by 1/β: the stage of the
+# last age discounts what it reads here by β, and the paper's last period values
+# the bequest undiscounted. V[>] is the terminal boundary data, zero, supplied at
+# realization, the step after configuration that builds the numerical
+# model.
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) -> (V : ℝ @ !vlu) : !dcsn] {
+    V = (A/β)*a^(1-μ)/(1-μ) + V[>]           :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                                 :: [id=value]
+}

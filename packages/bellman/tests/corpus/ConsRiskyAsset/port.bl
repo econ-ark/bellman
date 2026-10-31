@@ -1,0 +1,33 @@
+@stage: port
+
+Xw := ℝ₊
+Xk := ℝ₊
+
+R      : ℝ₊₊    :: ["gross return factor of the risk-free asset (HARK Rfree)"]
+φ_mean : ℝ₊₊    :: ["mean gross return factor of the risky asset (HARK RiskyAvg)"]
+σ_φ    : ℝ₊     :: ["standard deviation of the log risky return (HARK RiskyStd)"]
+
+φ : ℝ₊₊
+φ ~ LogNormal(log(φ_mean) - (σ_φ^2)/2, σ_φ)
+
+[id=arvl_to_dcsn, (w : Xw) : !arvl -> (w_d : Xw) : !dcsn] {
+    w_d = w
+}
+
+[id=dcsn_to_cntn, (w_d, ς : [0,1] @ !ctrl, φ) : !dcsn -> (k_next : Xk) : !cntn] {
+    k_next = (R + ς*(φ - R))*w_d            :: [id=portfolio_return]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, ς) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V        = E_{φ}(V[>])                     :: [id=value]
+    D_{w_d}V = E_{φ}((R + ς*(φ - R))*D_{k_next}V[>]) :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                        :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (ς : [0,1] @ !ctrl) : !dcsn] {
+    ς = argmax_{ς}(E_{φ}(V[>]))                      :: [id=optimality, !doc]
+    ς = solve_{ς}(E_{φ}((φ - R)*w_d*D_{k_next}V[>]))  :: [id=foc]
+}

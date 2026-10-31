@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "asva"
+version = "0.1.0"
+description = "The numerical toolkit beside bellman: code that methods files name as handlers, endogenous grid factories, and a runner for sweeps, moments, estimation and MPI"
+readme = "README.md"
+# Python 3.12 or later, which bellman requires; asva is installed and tested
+# beside it.
+requires-python = ">=3.12"
+# The versions are those that requirements.txt at the repository root pins.
+dependencies = [
+    "numba==0.63.1",
+    "numpy==2.3.5",
+    "pandas==2.3.3",
+    "pyyaml==6.0.3",
+]
+
+[project.optional-dependencies]
+# asva.run.mpi imports mpi4py where it is installed and treats a run as one
+# process where it is not. mpi4py is not pinned: no environment of the
+# release installs it.
+mpi = ["mpi4py"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["asva*"]
+namespaces = false

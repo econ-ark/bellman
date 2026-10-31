@@ -1,0 +1,40 @@
+Introduction to T-calculus
+
+The T-calculus is a declarative functional programming system for expressing recursive dynamic programming problems (RDPs) as compositions of Bellman operators. It lets the modeller state an RDP once, in a form that is standardised, mathematically explicit, modular, and independent of any numerical solver. From that single statement it provides maps to the various forms of the RDP — to solve it by different methods, to simulate it, or to analyse its mathematical properties.
+
+The basic unit of the T-calculus is a stage: a self-contained Bellman operator with a standardised structure. Defining a stage fixes its state spaces, shocks, transitions, rewards, and controls, but says nothing about where the stage sits in a larger model. Stages compose into periods, and periods compose across time into what we refer to as a trellis, which represents the complete RDP. A stage keeps its identity inside the trellis: even when it sits within a larger model, it can be solved on its own, with its own numerical methods.
+
+This decomposition follows the operator-theoretic tradition of dynamic programming (Bellman 1957; Blackwell 1965; Denardo 1967; Bertsekas and Shreve 1978; Stokey, Lucas and Prescott 1989; Hernandez-Lerma and Lasserre 1996, 1999; Stachurski 2009; Sargent and Stachurski 2023, 2026). In the textbook presentation a model is summarised by a Bellman operator
+
+    T : v -> Tv,
+
+that takes an arbitrary value function and returns one. The operator T is defined independently of any particular feature of the value function it acts on, for example its time subscript or the numerical settings of the operator that produced it. T is also independent of any other operator in the RDP with which it composes.
+
+In practice, however, the operator-theoretic view rarely carries over to the exposition or the code of larger applied models. Economists write the same model several times: once to explain it, taking shortcuts and leaving assumptions implicit; once in mathematical notation; and once again in computer code. These versions drift apart. It is often hard to map a computational routine to the object it stands for in the mathematics, or to swap one numerical choice for another without disturbing the rest. Timing conventions, shock placement, grids, interpolants, and policy representations become entangled with the economic specification of the model itself.
+
+The T-calculus is built to close that gap. The modeller writes the problem declaratively, and the system elaborates that single specification along two maps. The Upsilon map gives its mathematical meaning: the Bellman object defined by the stages, perches, equations, connectors, and twisters. The Rho map gives a computational representation: executable objects for a chosen backend, once methodisation, calibration, and settings are supplied. The economic model and the numerical method stay separate.
+
+The T-calculus keeps the operator-theoretic idea but makes the operator's internal mathematical and computational structure explicit and standardised, and general enough to express any RDP in the same syntax and semantics. [This is the reading the operator shares with functional programming — to the analyst T is a contraction map; to the programmer it is an immutable, named operator composed without reference to its arguments, in the function-level tradition of Backus (1978).]
+
+
+T-calculus as a declarative semantics
+
+The Upsilon map is a denotational semantics: it says what each operation means rather than executing it (Schmidt 1986; Winskel 1993). It recurses over the abstract syntax but fixes no numerical detail. At the lowest level its registers are operations such as expectation and interpolation, and the Rho map sends each to a handler — a call to an external solver library — where meaning bottoms out in computation.
+
+The semantic object itself is a graph — a term graph whose composition is organised in the language of category theory. A modeller never has to see it. Its purpose is that the analytic facts which make a dynamic program well-posed — that the operator is a contraction with a unique fixed point under standard conditions, or has a least fixed point under the order-theoretic conditions that hold more generally (Knaster-Tarski; Winskel 1993) — are established once, at the level of the framework, and inherited by every well-formed model. The economist states the model declaratively and does not re-derive that analysis problem by problem; the graph- and category-theoretic foundations sit in the theory layer, and are not a prerequisite for using the language.
+
+
+Components of T-calculus
+
+The implementation has several parts:
+
+- dolo-plus — the economist-facing YAML format for stages, perches, and equations;
+- Dolang+ — the expression language used inside those equations;
+- ordo — the functional elaboration language that realises Upsilon, turning the syntax into a term graph (a semantic graph) that records what RDP is solved — the order in which operators apply, and how each maps to a solver — without fixing numerical detail;
+- a Rosetta stone of alternative representations, and the rules by which they attach interoperably;
+- Matsya — an AI translator between natural-language model descriptions and the denotational semantics.
+
+Underpinning all of this is a formal mathematical system, an abstract algebra of operators that defines an RDP; around it a pipeline parses, validates, methodises, calibrates, represents, solves, and analyses the model.
+
+
+The rest of these notes introduce the pieces in the order a modeller meets them: the Bellman equation and its factored form, illustrated on the buffer-stock and consumption-portfolio models; stages and perches; the forward and backward operators and the builders that assemble them; and the composition of stages into periods and trellises. The maps Upsilon and Rho — from declarative syntax to mathematical meaning, and from meaning to executable code — run underneath throughout.

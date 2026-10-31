@@ -1,0 +1,34 @@
+!trellis
+name: childbearing_postponement
+# The paper's horizon is infinite, and the period repeats unchanged, age being a
+# state field. The trellis truncates it at 36 dates, the lattice 0, Δ, ..., T of
+# the attempt problem with Δ = 1 year and T = 35, the menopause age in model
+# time (calibration/childbearing.yml; the paper, p. 15): periods[h] is model
+# time 35 - h, so periods[35] is date 0, where the forward recursion starts
+# from initial wealth a0, and periods[0] is date T. The fecundity schedule
+# written in fecundity.bl has no cut-off at T, so T enters here alone.
+#
+# periods[0] is written out: the period's five stages and the three terminal
+# stages, one for each route that leaves the period, joined by one flat
+# mapping in the period's own entry. The terminal stages arrive at names no
+# other stage of the period declares, so the inter-period mapping into
+# periods[0] reaches cons_wait, cons_mother and cons_childless alone.
+periods:
+  - stages: [cons_wait, attempt, fecundity, cons_mother, cons_childless, terminal_wait, terminal_mother, terminal_childless]
+    connectors:
+      - {b_wait: a_att, age_c: age_att}
+      - {a_try: a_fec, age_try: age_fec}
+      - {a_mth: a_mother}
+      - {a_chl: a_childless}
+      - {a_next: a_tw, age_next: age_tw, b_mother: a_tm, b_childless: a_tc}
+  - {template: period.yml, repeat: 35}
+# One mapping stands for every adjacent pair: the wait branch of the attempt
+# returns to the next date's pre-attempt consumption with the age advanced, and
+# each regime returns to itself, so no route leaves a regime and the attempt is
+# one-shot (the paper, p. 5). The arrival fields a_mother and a_childless each
+# have two sources, the fecundity draw of the same date and the regime of the
+# date before, disjoint sub-populations whose measures sum. Both sources are
+# declared, one in the period's connectors and one in the inter-period
+# mapping, so the arrival measure of each field is the sum of the two.
+inter_connectors:
+  - {a_next: a_wait, age_next: age, b_mother: a_mother, b_childless: a_childless}

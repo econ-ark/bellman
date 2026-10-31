@@ -1,0 +1,12 @@
+!period
+# Period name
+name: cons_port_period
+
+# Stage sequence within the period
+stages:
+  - cons_stage
+  - port_stage
+
+# Intra-period connector declarations
+connectors:
+  - {a: k}

@@ -1,0 +1,65 @@
+@stage: generation
+
+Xw     := ℝ₊₊
+Rstate := {r1, r2, r3, r4}
+Ystate := {y1, y2, y3, y4, y5, y6}
+
+T : ℝ₊₊       :: ["length of a generation's life, in years"]
+ρ : ℝ₊₊       :: ["discount rate; the paper states ρ > 0 (p. 129)"]
+σ : (1, inf)  :: ["elasticity of the utility and of the bequest function; the paper writes σ ≥ 1 and both displayed formulas divide by 1-σ (Assumption 1, p. 129)"]
+χ : ℝ₊₊       :: ["intensity of the joy-of-giving bequest; the paper requires χ > 0 (Assumption 1, p. 129)"]
+b : [0,1)     :: ["estate tax; the paper states b < 1 (p. 128)"]
+ζ : [0,1)     :: ["capital income tax; Section 2 has none and Section 4.3 (p. 135) redefines the return as pre-tax, so the return in the budget is (1-ζ) times the drawn value"]
+g : ℝ         :: ["growth rate of a household's earnings over its own life (footnote 19, p. 128; Appendix A, p. 143)"]
+
+r_vals : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊                          :: ["the before-tax return states r̄ of Assumption 2 (p. 145); the calibration of footnote 41 (p. 137) has four, while Assumption 2 leaves the count m open"]
+y_vals : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊              :: ["the earnings states ȳ of Assumption 2; the calibration of footnote 39 (p. 136) has six, while Assumption 2 leaves the count l open"]
+Q : [0,1]     :: ["the transition of the chain of Assumption 2; [0,1] stands in for a matrix, which has no spelling"]
+
+z : Rstate
+q : Ystate
+(z, q) ~ MarkovChain(Q, (Rstate, Ystate), z_prev)   :: ["Assumption 2, p. 145: (r_n, y_n) is a real, irreducible, aperiodic, stationary Markov chain on r̄ × ȳ whose transition satisfies Pr(r_n, y_n | r_{n-1}, y_{n-1}) = Pr(r_n, y_n | r_{n-1}), so the parent's return state alone conditions the draw"]
+
+r : ℝ₊₊, >= ρ  :: ["the return that enters the budget, after the capital income tax; Assumption 1 requires it to be at least ρ, which footnote 21 (p. 129) uses to rule out borrowing within the life"]
+y : ℝ₊₊        :: ["earnings at birth, strictly positive by Assumption 3(i), p. 145"]
+
+𝑢(c : ℝ₊₊) := c^(1-σ)/(1-σ)        :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-σ)              :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/σ)         :: [id=inv_marg_util]
+𝑒(x : ℝ₊₊) := χ*x^(1-σ)/(1-σ)      :: [id=bequest_util]
+𝑑𝑒(x : ℝ₊₊) := χ*x^(-σ)            :: [id=marg_bequest_util]
+𝐴(x : ℝ₊₊) := (ρ + (σ-1)*x)/σ      :: [id=A_of_r, "the paper's A(r_n) = r_n - (r_n - ρ)/σ, Appendix A p. 144"]
+Φ(x : ℝ₊₊) := (1 - exp(-𝐴(x)*T))/𝐴(x)   :: [id=path_factor, "the integral of exp(-A(r)τ) over the life: both the present value of one unit of the consumption path and the weight on utility at birth"]
+𝐡(x : ℝ₊₊, s : ℝ₊₊) := s*(1 - exp((g-x)*T))/(x-g)   :: [id=human_capital, "the paper's h_n(0), Appendix A p. 143"]
+Γ(x : ℝ₊₊) := (0, x]               :: [id=feasible]
+
+[id=arvl_to_dcsn, (w : Xw, z_prev : Rstate, z, q) : !arvl -> (w_d : Xw, r, y, z_d : Rstate) : !dcsn] {
+    w_d = w                        :: [id=inherited_wealth]
+    r   = (1-ζ)*r_vals[z]          :: [id=after_tax_return]
+    y   = y_vals[q]                :: [id=earnings]
+    z_d = z                        :: [id=return_state]
+}
+
+[id=dcsn_to_cntn, (w_d, r, y, z_d, c0 : ℝ₊₊ @ !ctrl) : !dcsn -> (w_nxt : Xw, r_c : ℝ₊₊, y_c : ℝ₊₊, z_c : Rstate) : !cntn] {
+    w_T   = exp(r*T)*(w_d + 𝐡(r, y) - c0*Φ(r))   :: [id=terminal_wealth]
+    w_nxt = (1-b)*w_T                             :: [id=bequest]
+    r_c   = r                                     :: [id=return]
+    y_c   = y                                     :: [id=earnings]
+    z_c   = z_d                                   :: [id=return_state]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c0) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V  = Φ(r)*𝑢(c0) + exp(-ρ*T)*𝑒((1-b)*exp(r*T)*(w_d + 𝐡(r, y) - c0*Φ(r)))   :: [id=value]
+    D_{w_d}V = 𝑑𝑢(c0)                       :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{z,q}(V)      :: [id=value]
+}
+
+[id=policy, () : !cntn -> (c0 : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c0     = argmax_{c0 : Γ((w_d + 𝐡(r, y))/Φ(r))}(Φ(r)*𝑢(c0) + exp(-ρ*T)*𝑒((1-b)*exp(r*T)*(w_d + 𝐡(r, y) - c0*Φ(r))))   :: [id=optimality, !doc]
+    c0[>]  = 𝑑𝑢𝑖𝑛𝑣(exp((r_c-ρ)*T)*(1-b)*𝑑𝑒(w_nxt))              :: [id=InvEuler]
+    w_d[>] = w_nxt/((1-b)*exp(r_c*T)) + c0[>]*Φ(r_c) - 𝐡(r_c, y_c)   :: [id=endoggrid]
+    c0     = c0[>]                                               :: [id=cons_choice]
+}

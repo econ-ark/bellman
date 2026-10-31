@@ -1,0 +1,15 @@
+# The horizon and the ages of the within-life model, which no stage declares.
+# The recipe's `registry` block admits them, so a fill of one is not refused;
+# the trellis holds them as data with their provenance, and no stage is bound
+# to them.
+
+calibration:
+  # Table 4, "[36]", fixed: 36 years of working life, six brackets of six years.
+  T: 36
+  # Period t of the paper is age 24 + t, so decisions run from age 25 to age 60,
+  # and the terminal period T + 1, which holds the bequest, is age 61.
+  # trellis.yml writes the number of periods, 37, which equals last_age minus
+  # first_age plus one; these names neither set it nor bind any stage.
+  # periods[h] is age last_age - h.
+  first_age: 25
+  last_age: 61

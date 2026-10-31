@@ -1,0 +1,21 @@
+!trellis
+name: housing_lifecycle
+# Sixty periods, one per date: the application's trellis file and calibration
+# state sixty dates (Dobrescu and Shanker 2024, §6.2.4, T = 60). periods[0] is
+# the terminal period, written out: the three stages of the template and the
+# terminal stage, with two connectors, the first from both saving stages'
+# post-states to the terminal stage's arrival fields, which the template
+# cannot hold, since no other period holds the terminal stage, and the second
+# period.yml's. The fifty-nine earlier periods repeat period.yml. One
+# inter-period mapping stands for every adjacent pair: both saving stages
+# continue to the next period's house_choice, one route per branch; since the
+# terminal stage arrives at names of its own, the mapping reaches house_choice
+# alone in periods[0] as well.
+periods:
+  - stages: [house_choice, keeper_saving, adjuster_saving, terminal]
+    connectors:
+      - {y_f_kp: y_f_T, y_h_kp: y_h_T, y_f_adj: y_f_T, y_h_adj: y_h_T}
+      - {w_kp: m_d, h_kp: h_d, w_adj: m}
+  - {template: period.yml, repeat: 59}
+inter_connectors:
+  - {y_f_kp: y_f, y_h_kp: y_h, y_f_adj: y_f, y_h_adj: y_h}

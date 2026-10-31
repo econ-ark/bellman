@@ -1,0 +1,53 @@
+stage: tenure
+
+# Numerical choices for tenure.bl, taken from the replication code of Dobrescu
+# and Shanker (2026), Application 2. The stage constructs, and the four targets
+# below, policy, cntn_to_dcsn, E_ε and arvl_to_dcsn, resolve on tenure.bl.
+
+methods:
+  # The comparison of the two branch values and the choice of branch. A tie
+  # between keeping and adjusting selects adjusting, which the code fixes in its
+  # source and which is written here as a setting.
+  - on: policy
+    method: !max
+    handler: fues-durables:make_tenure_ops
+    settings:
+      tie_break: tie_break
+
+  # The derivatives of the decision value in assets and in housing are stated by
+  # the marginal block of marginals_tenure.bl on the decision value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_tenure.bl
+
+  # The branch values and their marginals are the consumption stages' decision
+  # functions read at the branch states, by linear interpolation in cash on hand
+  # and in total wealth.
+  - on: cntn_to_dcsn
+    method: !Linear
+    handler: dcsmm:interp_as_scalar
+    settings:
+      extrapolate: extrap_policy
+      clamp_factor: clamp_max_factor
+
+  # The expectation over the innovation to log income is taken with the finite
+  # Markov chain of Tauchen's method: n_income_states states spanning n_std
+  # unconditional standard deviations, with transition probabilities floored at
+  # min_prob and renormalised. The number of states, the width and the floor are
+  # numerical choices; the law the stage declares is the continuous one.
+  - on: E_ε
+    method: !tauchen
+    handler: fues-durables:make_conditioners
+    settings:
+      n_income_states: N_wage
+      n_std: tauchen_n_std
+      min_prob: tauchen_min_prob
+
+  # Forward, the innovation is drawn on the arrival edge, once per simulated
+  # household.
+  - on: arvl_to_dcsn
+    method: !monte-carlo
+    handler: fues-durables:make_tenure_forward
+    settings:
+      n_paths: n_sim
+      seed: sim_seed

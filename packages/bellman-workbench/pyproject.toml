@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bellman-workbench"
+version = "0.1.0"
+description = "Bellman Workbench: a page on your machine that reads a stage file as you type it and shows, beside the text, the operators its equations denote, each with its printed mathematics"
+readme = "README.md"
+requires-python = ">=3.12"
+# The package `bellman` with its extra `explore` (Model Explorer's exporter)
+# is installed beside the Workbench, editable from a checkout or from its
+# wheel (G-D20), rather than resolved by this distribution from an index.
+dependencies = [
+    "solara==1.62.1",
+    # held below 3.30.0: every later release registers a Python audit hook
+    # when Solara's server imports it, and the hook then runs at each call
+    # of id() the package bellman makes while it copies a trellis, which
+    # slowed the binding of a large trellis by about a fifth when measured
+    # on 5 October 2026, before the package's copy was made faster
+    "filelock<3.30",
+    "ipyvue>=3,<4",
+    "ipyvuetify>=3,<4",
+    # PyYAML reads the YAML that creation.py reads itself, its composer giving
+    # the positions of the recipe's slots for the checklist; the package
+    # bellman pins its version (packages/bellman/pyproject.toml)
+    "pyyaml>=6",
+]
+
+[project.optional-dependencies]
+# The tests: tests/test_model.py under pytest, tests/test_page.py in headless
+# Chrome through Playwright.
+dev = [
+    "playwright",
+    "pytest",
+]
+
+[project.scripts]
+bellman-workbench = "bellman_workbench.command:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bellman_workbench*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"bellman_workbench" = ["*.vue", "*.css", "public/**/*", "solara-cdn/**/*"]
+
+[tool.ruff]
+# The formatter and the linter, as packages/bellman/pyproject.toml sets them.
+line-length = 99
+# The Python version the formatter and the linter target is read from
+# requires-python above.
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "E501", "W505"]
+# The fixes of these rules delete an import or an assignment, or rewrite a
+# lambda as a function; they are made by hand.
+unfixable = ["F401", "F811", "F841", "E731"]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 79
+
+[tool.ruff.lint.isort]
+known-first-party = ["bellman", "bellman_workbench"]

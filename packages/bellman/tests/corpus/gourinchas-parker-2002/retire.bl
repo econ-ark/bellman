@@ -1,0 +1,32 @@
+@stage: retire
+
+Xa := ℝ₊
+Xx := ℝ₊
+
+ρ   : ℝ₊₊        :: ["relative risk aversion, as in the working stage"]
+R   : ℝ₊₊        :: ["constant after-tax gross real interest rate"]
+v_Z : ℝ₊₊        :: ["the taste shifter v(Z_{T+1}) at the retirement date"]
+κ   : ℝ          :: ["the constant of the postulated retirement value function; its sign follows that of 1-ρ"]
+γ_1 : ℝ₊₊        :: ["marginal propensity to consume out of total wealth at retirement"]
+h   : ℝ₊         :: ["illiquid wealth at retirement per unit of the permanent component, H_{T+1} = h*P_T; the paper writes γ_0 = γ_1*h"]
+σ_u : ℝ₊         :: ["standard deviation of ln U at the retirement date"]
+p   : [0,1)      :: ["probability that the transitory draw is exactly zero"]
+
+U : ℝ₊
+U ~ Mixture((p, 0), (1-p, LogNormal(0, σ_u)))
+
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)            :: [id=marg_util]
+
+[id=arvl_to_dcsn, (a_pre : Xa, U) : !arvl -> (x : Xx) : !dcsn] {
+    x = R*a_pre + U                           :: [id=cash_on_hand]
+}
+
+[id=cntn_to_dcsn, () -> (V : ℝ @ !vlu) : !dcsn] {
+    V      = κ*v_Z*(x + h)^(1-ρ)              :: [id=value]
+    D_{x}V = v_Z*𝑑𝑢(γ_1*(x + h))              :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]          = E_{U}(V)                  :: [id=value]
+    D_{a_pre}V[<] = E_{U}(R*D_{x}V)           :: [id=marginal]
+}

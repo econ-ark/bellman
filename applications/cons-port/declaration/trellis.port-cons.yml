@@ -1,0 +1,13 @@
+!trellis
+name: port_cons
+# Portfolio first, the returns drawn at the beginning of the period: the share is chosen on capital,
+# consumption follows on the resources the draws give, and discounting closes the period; the savings that
+# leave each period are the next period's capital. Six equal periods; the one inter-period mapping stands for
+# every adjacent pair.
+periods:
+  - stages: [port, cons, disc]
+    connectors:
+      - {w: m}
+    repeat: 6
+inter_connectors:
+  - {disc.a: k}

@@ -1,0 +1,54 @@
+@stage: cons
+
+Xs := ℝ₊
+Xa := ℝ₊₊
+Z  := ℕ
+Xε := ℝ
+Xζ := ℝ
+Xη := ℝ
+
+N_z    : ℕ       :: ["the number of exogenous states; the paper says only that Z is finite (p. 8)"]
+Π      : [0,1]   :: ["the transition matrix P(z, z-hat) of the exogenous chain (p. 8); the set of one probability stands in for the matrix"]
+z_vals : ℝ       :: ["the values the exogenous chain takes; the reals stand in for the vector of N_z values"]
+
+z : Z
+z ~ DiscreteMarkov(Π, z_vals, z_pre)  :: ["this date's exogenous state, drawn from the row of the irreducible finite chain Π that the arrival state z_pre selects (p. 8)"]
+
+ε : Xε
+ε ~ π_ε(Xε)   :: ["the innovation of the discount process; π_ε is the paper's name for its marginal law (p. 24) and no family is given"]
+ζ : Xζ
+ζ ~ π_ζ(Xζ)   :: ["the innovation of the return process (p. 24)"]
+η : Xη
+η ~ π_η(Xη)   :: ["the innovation of the non-financial income process (p. 24)"]
+
+𝑢(c : ℝ₊₊) := 𝒰(c)             :: [id=util, "the paper's u, given by its properties and by no formula (p. 8), so 𝒰 is an external function"]
+𝑑𝑢 := D_{c}(𝑢)                 :: [id=marg_util, "u prime, the derivative of u in its own argument"]
+𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)               :: [id=inv_marg_util, "the inverse of u prime, which the paper writes in condition (17), p. 12"]
+Γ(x : ℝ₊₊) := (0, x]           :: [id=feasible, "problem (4), p. 8, writes 0 <= c <= a and the candidate class of p. 11 writes 0 < c <= a; the file takes the candidate class, on which u prime is defined"]
+
+[id=arvl_to_dcsn, (s_pre : Xs, z_pre : Z, z, ε, ζ, η) : !arvl -> (a : Xa, z_d : Z) : !dcsn] {
+    a   = 𝑅(z, ζ)*s_pre + 𝑌(z, η)   :: [id=wealth, "the budget of (4) with the return and the income of (5), p. 8"]
+    z_d = z                          :: [id=exog_state]
+}
+
+[id=dcsn_to_cntn, (a, z_d, c : ℝ₊₊ @ !ctrl) : !dcsn -> (s : Xs, z_c : Z) : !cntn] {
+    s   = a - c                      :: [id=savings]
+    z_c = z_d                        :: [id=exog_state]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V      = 𝑢(c) + V[>]             :: [id=value, "no discount factor: the date's discount factor is drawn with the date's shocks and is applied on the arrival edge"]
+    D_{a}V = 𝑑𝑢(c)                   :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]          = E_{z,ε,ζ,η}(𝛽(z, ε)*V)                 :: [id=value, "the discount factor of (5) multiplies the value inside the expectation"]
+    D_{s_pre}V[<] = E_{z,ε,ζ,η}(𝛽(z, ε)*𝑅(z, ζ)*D_{a}V)    :: [id=marginal, "the right side of the Euler condition (9), p. 10"]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c    = argmax_{c : Γ(a)}(𝑢(c) + V[>])   :: [id=optimality, !doc]
+    c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{s}V[>])                :: [id=InvEuler, "the Euler condition in the max form (10), p. 10, as a Kuhn and Tucker condition"]
+    a[>] = s + c[>]                          :: [id=endoggrid]
+    c    = c[>]                              :: [id=cons_choice]
+}

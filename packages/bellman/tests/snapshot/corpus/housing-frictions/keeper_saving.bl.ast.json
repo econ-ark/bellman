@@ -1,0 +1,1106 @@
+{
+  "__class__": "FILE",
+  "items": [
+    {
+      "__class__": "Metadata",
+      "key": "stage",
+      "value": "keeper_saving"
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "β",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 0
+                },
+                "upper": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "right": {
+                  "__class__": "Open"
+                }
+              }
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"discount factor\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "ρ",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "upper": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "inf"
+                  }
+                },
+                "right": {
+                  "__class__": "Open"
+                }
+              }
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"curvature of utility from consumption\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "α",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 0
+                },
+                "upper": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "right": {
+                  "__class__": "Open"
+                }
+              }
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"one less the weight of housing in utility\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "FuncDef",
+        "name": "𝑢",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "c",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊₊"
+                }
+              }
+            ]
+          },
+          {
+            "__class__": "Coordinate",
+            "stem": "h",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Add",
+          "left": {
+            "__class__": "Div",
+            "left": {
+              "__class__": "Sub",
+              "left": {
+                "__class__": "Pow",
+                "base": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "c"
+                  }
+                },
+                "exponent": {
+                  "__class__": "Sub",
+                  "left": {
+                    "__class__": "Number",
+                    "value": 1
+                  },
+                  "right": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "ρ"
+                    }
+                  }
+                }
+              },
+              "right": {
+                "__class__": "Number",
+                "value": 1
+              }
+            },
+            "right": {
+              "__class__": "Sub",
+              "left": {
+                "__class__": "Number",
+                "value": 1
+              },
+              "right": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Constant",
+                  "name": "ρ"
+                }
+              }
+            }
+          },
+          "right": {
+            "__class__": "Mul",
+            "left": {
+              "__class__": "Sub",
+              "left": {
+                "__class__": "Number",
+                "value": 1
+              },
+              "right": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Constant",
+                  "name": "α"
+                }
+              }
+            },
+            "right": {
+              "__class__": "Call",
+              "fun": "log",
+              "args": [
+                {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "h"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "util"
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "FuncDef",
+        "name": "𝑢_c",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "c",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Pow",
+          "base": {
+            "__class__": "Sym",
+            "symbol": {
+              "__class__": "Constant",
+              "name": "c"
+            }
+          },
+          "exponent": {
+            "__class__": "Neg",
+            "operand": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "ρ"
+              }
+            }
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "marg_util_cons"
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "FuncDef",
+        "name": "𝑢_h",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "h",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Div",
+          "left": {
+            "__class__": "Sub",
+            "left": {
+              "__class__": "Number",
+              "value": 1
+            },
+            "right": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "α"
+              }
+            }
+          },
+          "right": {
+            "__class__": "Sym",
+            "symbol": {
+              "__class__": "Constant",
+              "name": "h"
+            }
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "marg_util_housing"
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "CorrDef",
+        "name": "Γ",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "x",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Interval",
+          "bounds": {
+            "__class__": "Range",
+            "left": {
+              "__class__": "Open"
+            },
+            "lower": {
+              "__class__": "Number",
+              "value": 0
+            },
+            "upper": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "x"
+              }
+            },
+            "right": {
+              "__class__": "Closed"
+            }
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "feasible"
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "dcsn_to_cntn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "m_d",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "h_d",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "c",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊₊"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Control"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "y_f_kp",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "y_h_kp",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊₊"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Continuation"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "y_f_kp"
+              }
+            },
+            "rhs": {
+              "__class__": "Sub",
+              "left": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Constant",
+                  "name": "m_d"
+                }
+              },
+              "right": {
+                "__class__": "Sym",
+                "symbol": {
+                  "__class__": "Constant",
+                  "name": "c"
+                }
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "financial_post_state"
+              }
+            ]
+          }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "y_h_kp"
+              }
+            },
+            "rhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "h_d"
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "housing_post_state"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "cntn_to_dcsn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "c",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "source_types": [],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "V"
+              }
+            },
+            "rhs": {
+              "__class__": "Add",
+              "left": {
+                "__class__": "Call",
+                "fun": "𝑢",
+                "args": [
+                  {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "c"
+                    }
+                  },
+                  {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "h_d"
+                    }
+                  }
+                ]
+              },
+              "right": {
+                "__class__": "Mul",
+                "left": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "β"
+                  }
+                },
+                "right": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Variable",
+                    "name": "V",
+                    "when": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "shift": 0
+                  }
+                }
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "policy"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Continuation"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "c",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊₊"
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Control"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "c"
+              }
+            },
+            "rhs": {
+              "__class__": "Operator",
+              "head": "argmax",
+              "subs": [
+                {
+                  "__class__": "In",
+                  "var": "cp",
+                  "set": {
+                    "__class__": "Call",
+                    "fun": "Γ",
+                    "args": [
+                      {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "m_d"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Add",
+                  "left": {
+                    "__class__": "Call",
+                    "fun": "𝑢",
+                    "args": [
+                      {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "cp"
+                        }
+                      },
+                      {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "h_d"
+                        }
+                      }
+                    ]
+                  },
+                  "right": {
+                    "__class__": "Mul",
+                    "left": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "β"
+                      }
+                    },
+                    "right": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Variable",
+                        "name": "V",
+                        "when": {
+                          "__class__": "At",
+                          "side": {
+                            "__class__": "Continuation"
+                          }
+                        },
+                        "shift": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "optimality"
+              },
+              {
+                "__class__": "Tag",
+                "tag": "!doc"
+              }
+            ]
+          }
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Slack",
+            "core": {
+              "__class__": "Equation",
+              "lhs": {
+                "__class__": "Call",
+                "fun": "𝑢_c",
+                "args": [
+                  {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "c"
+                    }
+                  }
+                ]
+              },
+              "rhs": {
+                "__class__": "Mul",
+                "left": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "β"
+                  }
+                },
+                "right": {
+                  "__class__": "Operator",
+                  "head": "D",
+                  "subs": [
+                    {
+                      "__class__": "Var",
+                      "name": "y_f_kp"
+                    }
+                  ],
+                  "args": [
+                    {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Variable",
+                        "name": "V",
+                        "when": {
+                          "__class__": "At",
+                          "side": {
+                            "__class__": "Continuation"
+                          }
+                        },
+                        "shift": 0
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "bound": {
+              "__class__": "Rel",
+              "left": {
+                "__class__": "Sub",
+                "left": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "m_d"
+                  }
+                },
+                "right": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "c"
+                  }
+                }
+              },
+              "op": {
+                "__class__": "Ge"
+              },
+              "right": {
+                "__class__": "Number",
+                "value": 0
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "euler_financial"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

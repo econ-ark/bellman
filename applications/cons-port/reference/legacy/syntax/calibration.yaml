@@ -1,0 +1,17 @@
+# Calibration block — matched to SolvingMicroDSOPs portfolio config
+# (SolvingMicroDSOPs-Latest/Code/Python/notebook_params.py::portfolio_params).
+calibration:
+  # Parameter values shared across stages
+  parameters:
+    β: 0.96            # DiscFac
+    ρ: 6.0             # CRRA (rho_port — the portfolio problem's risk aversion)
+    R: 1.02            # Rfree (safe gross return)
+    # Risky return: lognormal with level-mean R+φ = 1.04 (φ=0.02) and level-std 0.15
+    # (RiskyR_sigma). Our shock is exp(normal(μ_Ψ, σ_Ψ)), so μ_Ψ/σ_Ψ are the log-space
+    # parameters that reproduce that level-mean / level-std:
+    μ_Ψ: 0.028927      # log-mean → E[risky] = 1.04
+    σ_Ψ: 0.143486      # log-std  → level-std = 0.15
+    # Transitory income: mean-one lognormal with log-std 0.15 (theta_sigma_port):
+    μ_θ: -0.01125      # = -σ_θ²/2 (mean-one)
+    σ_θ: 0.15
+    ρ_ζ: 0.0

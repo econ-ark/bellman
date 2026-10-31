@@ -1,0 +1,33 @@
+stage: cons
+
+methods:
+  - on: policy
+    method: !egm
+    block: ../../methods/cons_egm.bl
+    handler: cons-port:egm
+
+  - on: cntn_to_dcsn.value
+    method: !Cartesian
+    settings:
+      orders:
+        m_d: n_m
+      bounds:
+        m_d: [m_min, m_max]
+    handler: cons-port:_make_interp
+
+  - on: cntn_to_dcsn.marginal
+    method: !Cartesian
+    settings:
+      orders:
+        m_d: n_m
+      bounds:
+        m_d: [m_min, m_max]
+    handler: cons-port:_make_interp
+
+  - on: dcsn_to_arvl
+
+  - on: arvl_to_dcsn
+    method: !deterministic
+
+  - on: dcsn_to_cntn
+    handler: cons-port:transition_fwd

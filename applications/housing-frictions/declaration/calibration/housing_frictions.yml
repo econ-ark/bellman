@@ -1,0 +1,19 @@
+# Economic parameters of the housing model with adjustment frictions. Dobrescu
+# and Shanker (2024), §6.2.4, p. 23: ρ = 3, α = 0.66, β = 0.93, τ = 0.18,
+# r = 0.01, T = 60; the earnings shock takes the values 0.1 and 1 with equal
+# probability. The age profile of earnings W is the cited function of the
+# paper, which the application does not write; 1.0 stands here as a
+# normalization until AAS supplies it, in every period. One mapping serves the
+# three stages that declare parameters, each binding the ones it declares; T is
+# the number of periods of trellis.yml, and no stage declares it. The terminal
+# stage declares no parameter.
+
+calibration:
+  β: 0.93
+  ρ: 3
+  α: 0.66
+  τ: 0.18
+  r: 0.01
+  W: 1.0
+  η_lo: 0.1
+  η_hi: 1.0

@@ -1,0 +1,61 @@
+!stage
+# Stage name
+name: cons_stage
+
+# Symbol declarations
+symbols:
+  spaces:
+    Xm: "@def R++"
+    Xa: "@def R+"
+  prestate:
+    m: "@in Xm"
+  states:
+    m_d: "@in Xm"
+  poststates:
+    a: "@in Xa"
+  controls:
+    c: "@in R+"
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+  parameters:
+    β: "@in (0,1)"
+    ρ: "@in R+"
+  settings:
+    n_m: "@in Z+"
+    m_min: "@in R+"
+    m_max: "@in R+"
+    n_sim: "@in Z+"
+    sim_seed: "@in Z+"
+
+# Stage equations
+equations:
+  # Arrival to decision transition (g_av)
+  arvl_to_dcsn:
+    - m_d = m
+
+  # Decision to continuation transition (g_ve savings law)
+  dcsn_to_cntn:
+    - a = m_d - c
+
+  # Backward decision mover (induced aggregator, no max)
+  cntn_to_dcsn:
+    - reward: u[c] = (c^(1-ρ))/(1-ρ)
+    - dcsn_val: V = u_fn[c] + β*V[>]
+    - marginal: dV = (c)^(-ρ) # d u[c] ?? AAS to AI/ALL: should this be a derivtative (16 jul 2026; urgent)
+
+  # Backward arrival mover (deterministic, no max)
+  dcsn_to_arvl:
+    - V[<] = V
+    - dV[<] = dV
+
+  # Policy construction (EGM kernel/policy)
+  policy: # AAS to AI: why no argmax here?
+    - InvEuler: "c[>] = (β*dV[>])^(-1/ρ) @node"
+    - reverse_state: "m_d[>] = a + c[>] @node"
+    - pol_func: c = evaluate(c[>], m_d[>], m_d)

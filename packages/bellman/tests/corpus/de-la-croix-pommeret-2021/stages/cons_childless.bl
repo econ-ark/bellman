@@ -1,0 +1,38 @@
+@stage: cons_childless
+
+# Consumption and saving after a failed attempt: the paper's programme [B]
+# (p. 9). The technology is the childless one, riskless and with the higher
+# mean return r1, and no further attempt is possible, so the age no longer
+# enters. One date of length Δ; the paper's ȧ = r1 a - c is the limit as Δ → 0.
+
+Xa := ℝ₊₊
+
+ρ  : ℝ₊₊       :: ["psychological discount rate per unit of time (p. 6)"]
+Δ  : ℝ₊₊       :: ["length of one date; the paper's problem is the limit Δ → 0"]
+ε  : (1, inf)  :: ["relative risk aversion; the paper assumes ε > 1 (p. 6)"]
+r1 : ℝ         :: ["return on financial and human wealth of a childless woman (p. 6)"]
+
+𝑢(c : ℝ₊₊)  := c^(1-ε)/(1-ε)     :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ε)            :: [id=marg_util]
+
+[id=arvl_to_dcsn, (a_childless : Xa) : !arvl -> (m_childless : Xa) : !dcsn] {
+    m_childless = a_childless                            :: [id=wealth]
+}
+
+[id=dcsn_to_cntn, (m_childless, c : ℝ₊₊ @ !ctrl) : !dcsn -> (b_childless : Xa) : !cntn] {
+    b_childless = (m_childless - c*Δ)*exp(r1*Δ)          :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V                = 𝑢(c)*Δ + exp(-ρ*Δ)*V[>]           :: [id=value]
+    D_{m_childless}V = 𝑑𝑢(c)                             :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]  = V                                            :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{c}(𝑢(c)*Δ + exp(-ρ*Δ)*V[>])              :: [id=optimality, !doc]
+    c = solve_{c}(𝑑𝑢(c) - exp((r1-ρ)*Δ)*D_{b_childless}V[>])  :: [id=euler]
+}

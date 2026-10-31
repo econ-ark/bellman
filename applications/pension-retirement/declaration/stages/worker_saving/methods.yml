@@ -1,0 +1,20 @@
+stage: worker_saving
+
+methods:
+  # Time iteration opens the policy builder with the method block of
+  # worker_saving_foc.bl, the first-order conditions of the two controls; the
+  # stage file states the maximization alone.
+  - on: policy
+    method: !time-iteration
+    block: ../../methods/worker_saving_foc.bl
+
+  # The derivatives of the decision value and the arrival value are stated by
+  # the two marginal blocks of marginals_worker_saving.bl, one for each value
+  # builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_worker_saving.bl
+
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: ../../methods/marginals_worker_saving.bl

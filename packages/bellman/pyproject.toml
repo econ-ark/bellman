@@ -1,0 +1,101 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bellman"
+version = "0.1.6"
+description = "Bellman-SYM in one distribution: bellman.syntax parses .bl stage files into terms, and the packages above it build and answer for the typed semantic graph of a stage"
+readme = "README.md"
+# factory/trellis_drawings.py writes a backslash inside an f-string's
+# replacement field, which Python accepts from 3.12.
+requires-python = ">=3.12"
+# The versions here and in the extras `dev` and `docs` are those of
+# requirements.txt at the repository root, which pins the packages the
+# repository's code imports.
+dependencies = [
+    "discopy==1.2.2",
+    "jsonschema==4.26.0",
+    "lark==1.3.1",
+    "numpy==2.3.5",
+    "pyyaml==6.0.3",
+]
+
+[project.optional-dependencies]
+# The tests, run in parallel by pytest-xdist; the acceptance tests of the
+# compiled kernels as functions, tests/cat/test_kernel_functions.py, which
+# compile the kernels with Numba and save them with cloudpickle (numba,
+# cloudpickle); the formatter and linter (ruff); and the two generators of the
+# term classes from the ASDL listings, gen_types.py and gen_semantic_types.py
+# (pyasdl).
+dev = [
+    "cloudpickle==3.1.2",
+    "mpmath==1.3.0",
+    "numba==0.63.1",
+    "pyasdl==22.1.23",
+    "pytest==9.0.2",
+    "pytest-xdist==3.8.0",
+    "ruff==0.12.1",
+]
+# The documentation site, which mkdocs.yml at the repository root describes.
+docs = [
+    "mkdocs==1.6.1",
+    "mkdocs-callouts==1.16.0",
+    "mkdocs-material==9.7.2",
+    "mkdocs-roamlinks-plugin==0.3.2",
+    "mkdocs-toggle-sidebar-plugin==0.0.9",
+    "pymdown-extensions==10.21",
+]
+# The interactive view of a stage's or a trellis's semgraph in Google's Model
+# Explorer (bellman/factory/model_explorer.py): the viewer and its own dependencies.
+# The versions are those of the 0.1 series from 0.1.33, since the module relies
+# on two parts of the viewer as that series has them: the state of the viewer's
+# page, which the address that `serve` answers writes under `uiState`, and the
+# route `check_health`, at which the module asks whether the viewer's server
+# answers.
+explore = [
+    "ai-edge-model-explorer>=0.1.33,<0.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bellman*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"bellman.syntax" = ["grammars/*"]
+"bellman.display" = ["stage-encoding-2.6.schema.json", "graphviz_layout.mjs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# A test marked `sweep` is part of a sweep over the corpus stages, the refusal
+# catalogue or a whole trellis. tests/conftest.py leaves the sweeps out of a
+# run given no marker expression, so that the fast core is the default
+# selection, and `-m sweep` runs them.
+markers = [
+    "sweep: part of a sweep over the corpus stages, the refusal catalogue or a whole trellis; left out of a run given no marker expression, run by -m sweep",
+]
+
+[tool.ruff]
+# The formatter and the linter of the package (structure review C18).
+line-length = 99
+# The Python version the formatter and the linter target is read from
+# requires-python above.
+# terms.py is written by gen_types.py; the formatter and the linter leave it
+# as the generator writes it.
+extend-exclude = ["bellman/syntax/terms.py"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "E501", "W505"]
+# The fixes of these rules delete an import or an assignment, or rewrite a
+# lambda as a function; they are made by hand.
+unfixable = ["F401", "F811", "F841", "E731"]
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 79
+
+[tool.ruff.lint.isort]
+known-first-party = ["bellman"]

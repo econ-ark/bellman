@@ -1,0 +1,34 @@
+@stage: returns
+
+Xq := ℝ₊
+Xa := ℝ₊
+E  := {e_h, e_m, e_l}   :: ["the three productivity states, high, medium and low, in the order of choice.bl"]
+
+r   : (-1, inf)                  :: ["after-tax real return on financial assets, fixed by the stationary equilibrium"]
+Π   : ℝ₊₊                        :: ["gross inflation rate; 1/Π is the gross real return on money"]
+Q_h : [0,1] × [0,1] × [0,1]      :: ["row of the transition matrix Q for a household in the high state"]
+Q_m : [0,1] × [0,1] × [0,1]      :: ["row of Q for the medium state"]
+Q_l : [0,1] × [0,1] × [0,1]      :: ["row of Q for the low state"]
+
+e_n : E
+e_n ~ Categorical((Q_h, Q_m, Q_l)[e_c])   :: ["next period's productivity state, drawn from the row of Q that the current state e_c selects"]
+
+[id=arvl_to_dcsn, (a : Xa, m_c : ℝ₊₊, e_c : E, e_n) : !arvl -> (q_d : Xq, e_d : E) : !dcsn] {
+    q_d = (1 + r)*a + m_c/Π                        :: [id=wealth, "next period's total wealth"]
+    e_d = e_n                                      :: [id=productivity]
+}
+
+[id=dcsn_to_cntn, (q_d, e_d) : !dcsn -> (q_nxt : Xq, e_nxt : E) : !cntn] {
+    q_nxt = q_d                                    :: [id=wealth]
+    e_nxt = e_d                                    :: [id=productivity]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = V[>]                                       :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]        = E_{e_n}(V)                       :: [id=value]
+    D_{a}V[<]   = E_{e_n}((1 + r)*D_{q_d}V)        :: [id=marginal_assets]
+    D_{m_c}V[<] = E_{e_n}(D_{q_d}V/Π)              :: [id=marginal_money]
+}

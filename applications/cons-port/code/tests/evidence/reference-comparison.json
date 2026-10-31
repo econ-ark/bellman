@@ -1,0 +1,242 @@
+[
+ {
+  "configuration": "cons_only",
+  "h": 0,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 3.552713678800501e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "cons_only",
+  "h": 1,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 2.6645352591003757e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "cons_only",
+  "h": 2,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 1.7763568394002505e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "cons_only",
+  "h": 3,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 3.552713678800501e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "cons_only",
+  "h": 4,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 3.552713678800501e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "cons_only",
+  "h": 5,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 2.6645352591003757e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "beginning_egm",
+  "h": 0,
+  "arrays": 11,
+  "result": "equal to 1e-12",
+  "largest difference": 7.105427357601002e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "beginning_egm",
+  "h": 1,
+  "arrays": 11,
+  "result": "equal to 1e-12",
+  "largest difference": 1.4210854715202004e-14,
+  "share ties": 0
+ },
+ {
+  "configuration": "beginning_egm",
+  "h": 2,
+  "arrays": 11,
+  "result": "equal to 1e-12",
+  "largest difference": 5.684341886080802e-14,
+  "share ties": 0
+ },
+ {
+  "configuration": "beginning_egm",
+  "h": 3,
+  "arrays": 11,
+  "result": "equal to 1e-12",
+  "largest difference": 5.329070518200751e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "beginning_egm",
+  "h": 4,
+  "arrays": 11,
+  "result": "equal to 1e-12",
+  "largest difference": 4.440892098500626e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "beginning_egm",
+  "h": 5,
+  "arrays": 11,
+  "result": "equal to 1e-12",
+  "largest difference": 7.105427357601002e-15,
+  "share ties": 0
+ },
+ {
+  "configuration": "beginning_vfi",
+  "h": 0,
+  "arrays": 9,
+  "largest difference": null,
+  "share ties": null,
+  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+ },
+ {
+  "configuration": "beginning_vfi",
+  "h": 1,
+  "arrays": 9,
+  "largest difference": null,
+  "share ties": null,
+  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+ },
+ {
+  "configuration": "beginning_vfi",
+  "h": 2,
+  "arrays": 9,
+  "largest difference": null,
+  "share ties": null,
+  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+ },
+ {
+  "configuration": "beginning_vfi",
+  "h": 3,
+  "arrays": 9,
+  "largest difference": null,
+  "share ties": null,
+  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+ },
+ {
+  "configuration": "beginning_vfi",
+  "h": 4,
+  "arrays": 9,
+  "largest difference": null,
+  "share ties": null,
+  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+ },
+ {
+  "configuration": "beginning_vfi",
+  "h": 5,
+  "arrays": 9,
+  "largest difference": null,
+  "share ties": null,
+  "result": "structural only: The beginning-of-period-returns run with the VFI consumption operator is recorded but excluded from numerical equality assertions: under the current inputs its values are of order 1e40, because the helper binds the consumption stage with the portfolio methods file to borrow !vfi, whose evaluate node starts the grid at k_min = 1e-10, so the candidate consumption range linspace(1e-6, m_d - 1e-6) is negative at the bottom of the grid and, with rho = 6, c^(-5) explodes (spec 0.3c section 7.3)."
+ },
+ {
+  "configuration": "end_returns",
+  "h": 0,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 8.881784197001252e-16,
+  "share ties": 0
+ },
+ {
+  "configuration": "end_returns",
+  "h": 1,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 8.881784197001252e-16,
+  "share ties": 0
+ },
+ {
+  "configuration": "end_returns",
+  "h": 2,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 8.881784197001252e-16,
+  "share ties": 0
+ },
+ {
+  "configuration": "end_returns",
+  "h": 3,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 8.881784197001252e-16,
+  "share ties": 0
+ },
+ {
+  "configuration": "end_returns",
+  "h": 4,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 3.552713678800501e-15,
+  "share ties": 1584
+ },
+ {
+  "configuration": "end_returns",
+  "h": 5,
+  "arrays": 10,
+  "result": "equal to 1e-12",
+  "largest difference": 8.881784197001252e-16,
+  "share ties": 0
+ },
+ {
+  "configuration": "port_only",
+  "h": 0,
+  "arrays": 6,
+  "result": "equal to 1e-12",
+  "largest difference": 4.336808689942018e-19,
+  "share ties": 0
+ },
+ {
+  "configuration": "port_only",
+  "h": 1,
+  "arrays": 6,
+  "result": "equal to 1e-12",
+  "largest difference": 6.938893903907228e-18,
+  "share ties": 0
+ },
+ {
+  "configuration": "port_only",
+  "h": 2,
+  "arrays": 6,
+  "result": "equal to 1e-12",
+  "largest difference": 1.734723475976807e-18,
+  "share ties": 0
+ },
+ {
+  "configuration": "port_only",
+  "h": 3,
+  "arrays": 6,
+  "result": "equal to 1e-12",
+  "largest difference": 1.3010426069826053e-18,
+  "share ties": 0
+ },
+ {
+  "configuration": "port_only",
+  "h": 4,
+  "arrays": 6,
+  "result": "equal to 1e-12",
+  "largest difference": 1.0164395367051604e-20,
+  "share ties": 0
+ },
+ {
+  "configuration": "port_only",
+  "h": 5,
+  "arrays": 6,
+  "result": "equal to 1e-12",
+  "largest difference": 2.710505431213761e-20,
+  "share ties": 168
+ }
+]

@@ -1,0 +1,8 @@
+# The consumption stage's numerical settings as the fixed reference's grid search used them: the capital grid
+# the reference borrowed through the portfolio methods file (cell 22 of the earlier notebook, line 66), on which
+# its candidates turn negative and its values reach 1e40. The run is compared in structure only.
+settings:
+  n_m: 800
+  m_min: 1.0e-10
+  m_max: 1000.0
+  n_c: 200

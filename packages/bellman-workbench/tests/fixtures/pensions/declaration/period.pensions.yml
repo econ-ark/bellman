@@ -1,0 +1,17 @@
+!period
+name: pension_period
+
+# A retirement year of the pension model (Dobrescu, Shanker, Bateman, Newell
+# and Thorp 2023): the period's draws, survival or death, the tenure choice,
+# and consumption on the branch that choice selects; a decedent's wealth goes
+# to the bequest. The order of the stages is derived from their fields.
+stages:
+  - shocks
+  - survival
+  - tenure_pa
+  - renter_cons
+  - keeper_cons_pa
+  - adjuster_cons_pa
+  - bequest_pa
+connectors:
+  - {a_sv: w_a, adc_sv: adc_a, π_sv: π_a, h_sv: h_a, m_sv: m_a, P_sv: P_a, ξ_sv: ξ_a, α_sv: α_a, β_sv: β_a, plan_sv: plan_a}

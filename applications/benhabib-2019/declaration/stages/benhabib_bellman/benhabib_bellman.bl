@@ -1,0 +1,28 @@
+@stage: bellman
+
+Xa     := ℝ₊
+Tau    := {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10}
+R_type := {r1, r2, r3, r4, r5}
+
+β       : (0,1)
+σ       : ℝ₊
+μ       : ℝ₊
+A       : ℝ₊
+wage_fn : ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊
+R_vec   : ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊ × ℝ₊₊
+tau     : Tau
+r_type  : R_type
+
+Γ_c(x : Xa) := [0, x]
+
+[id=dcsn_to_cntn, (m : Xa, c : !ctrl @ ℝ₊) : !dcsn -> (a : Xa) : !cntn] {
+    a = R_vec[r_type] * (m - c) + wage_fn[tau]    :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = c^(1-σ)/(1-σ) + β*V[>]    :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(cp^(1-σ)/(1-σ) + β*V[>])   :: [id=optimality]
+}

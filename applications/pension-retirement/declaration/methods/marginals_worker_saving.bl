@@ -1,0 +1,17 @@
+@methods: worker_saving
+# The derivatives of the worker's two values, each stated as a marginal block
+# of the value builder that writes the value (AMD-MB-001 §4.3). The decision
+# value's derivative in financial assets is the envelope condition and its
+# derivative in pension assets the discounted derivative of the continuation
+# value; the arrival value's lines keep the factors 1 + r_f and 1 + r_p of the
+# laws m_f = (1 + r_f)*y_f_w + w and m_p = (1 + r_p)*y_p_w.
+
+[id=dcsn_marginal, (V[>], c) : !cntn -> (V) : !dcsn] {
+    D_{m_f}V = 𝑑𝑢(c)                            :: [id=marginal_financial]
+    D_{m_p}V = β*D_{y_p}V[>]                    :: [id=marginal_pension]
+}
+
+[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+    D_{y_f_w}V[<] = E_{w}((1 + r_f)*D_{m_f}V)   :: [id=marginal_financial]
+    D_{y_p_w}V[<] = E_{w}((1 + r_p)*D_{m_p}V)   :: [id=marginal_pension]
+}

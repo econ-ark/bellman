@@ -1,0 +1,305 @@
+cntn_to_dcsn.value:Expectation:1      !gauss-hermite
+cntn_to_dcsn.envelope:Expectation:1   !gauss-hermite
+policy.euler:Expectation:1            !gauss-hermite
+policy                                !time-iteration   block port_foc.bl
+cntn_to_dcsn:Evaluation               !marginals   block port_foc.bl
+cntn_to_dcsn:Evaluation               !Linear
+dcsn_to_cntn                          !monte-carlo
+
+STAGE port / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊
+       ────────────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊₊
+
+At
+  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  DistributionExtension:Ψ_θ
+     in: μ                              out: μ⊗P_{Ψ, θ}
+     ──────────────────────────────────────────────────
+     rule: μ⊗P_{Ψ, θ}(B)
+             = ∫_{k ∈ ℝ₊} [P_{Ψ, θ}({Ψ, θ ∈ ℝ₊₊ × ℝ₊₊ | (k, Ψ, θ) ∈ B})] μ(dk)
+
+  2  Pushforward
+     in: (1)                            out: μ≻
+     ──────────────────────────────────────────────────
+     rule: μ≻(B)
+             = μ⊗P_{Ψ, θ}({k, Ψ, θ ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≻(k, 𝜍(k), Ψ, θ) ∈ B})
+
+Method
+  !monte-carlo   handler                                          dcsn_to_cntn
+
+Options
+  n_paths = 'n_sim'
+  seed = 'sim_seed'
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+
+Definitions referenced
+  Γ_ς       port:correspondence:Γ_ς
+  P_{Ψ, θ}  port:distribution:Ψ_θ
+  Ψ         port:distribution:Ψ_θ
+  θ         port:distribution:Ψ_θ
+  𝑔≻        port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STAGE port / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊ → ℝ
+
+At
+  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·))(k, Ψ, θ) = 𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))
+
+  2  value:Expectation:1
+     in: (1)
+     out: k ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+     ───────────────────────────────────────────────────────────
+     rule: (2)(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊ → ℝ
+           D_{k}𝑉(k)
+             = E_{Ψ, θ}[(f
+                          ↦ (c, y)
+                            ↦ sup_{a ∈
+                              {a ∈ ℝ |
+                               ∀ epsilon ∈ (0, ∞): (∃ delta ∈ (0, ∞): (∀ t ∈
+                               {t ∈ ℝ |
+                               (t²)^(1/2) > 0
+                               ∧ (t²)^(1/2) < delta
+                               ∧ c + t ∈ ℝ₊₊}: ((((f(c + t, y) − f(c, y))/t
+                               − a)²)^(1/2)
+                               < epsilon)))}} [a])((w, unit)
+                               ↦ 𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ)))(w≻, ()) · (𝜍(k) · Ψ
+                            + (1 − 𝜍(k)) · R)]
+
+Conditions
+  Aggregation  𝑉(k) ∈ ℝ
+
+Method
+  !gauss-hermite   cons-port:gauss_hermite    cntn_to_dcsn.value:Expectation:1
+
+Options
+  n_nodes = ('n_Ψ_nodes', 'n_θ_nodes')
+
+Method
+  !marginals   block port_foc.bl                       cntn_to_dcsn:Evaluation
+
+Method
+  !Linear   handler                                    cntn_to_dcsn:Evaluation
+
+Options
+  orders = {'k': 'n_k'}
+  bounds = {'k': ('k_min', 'k_max')}
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  22  V  = E_{Ψ,θ}(V[>])                           :: [id=value]
+
+Source  port_foc.bl
+  8   D_{k}V = E_{Ψ,θ}(D_{w}V[>]*(ς*Ψ + (1-ς)*R))  :: [id=envelope]
+
+Definitions referenced
+  R     port:parameter:R
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STAGE port / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ───────────────────────────────────────────────────
+  out  𝜍   : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Declared
+  𝜍(k) ∈ argmax_{ς ∈ Γ_ς(k)} [E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]]
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ─────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(k, ς, Ψ, θ) = 𝑉≻(𝑔≻(k, ς, Ψ, θ))
+
+  2  euler:Aggregation:1
+     in: (1)
+     out: (k, ς, Ψ, θ) ↦ D_{w}𝑉≻(𝑔≻(k, ς, Ψ, θ)) · (Ψ − R)
+     ─────────────────────────────────────────────────────
+     rule: (k, ς, Ψ, θ) ↦ D_{w}𝑉≻(𝑔≻(k, ς, Ψ, θ)) · (Ψ − R)
+
+  3  euler:Expectation:1
+     in: (2)                            out: r₁
+     ─────────────────────────────────────────────────────
+     rule: r₁ = E_{Ψ, θ}[D_{w}𝑉≻(𝑔≻(k, ς, Ψ, θ)) · (Ψ − R)]
+
+  4  euler:Aggregation
+     in: r₁                             out: 𝜍
+     ─────────────────────────────────────────────────────
+     rule: ς = solve_{ς}(r₁)
+
+  5  Evaluation
+     in: 𝜍                              out: 𝜍
+     ─────────────────────────────────────────────────────
+     rule: 𝜍 : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Method
+  !gauss-hermite   cons-port:gauss_hermite          policy.euler:Expectation:1
+
+Options
+  n_nodes = ('n_Ψ_nodes', 'n_θ_nodes')
+
+Method
+  !time-iteration   cons-port:share_search   block port_foc.bl          policy
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))     :: [id=objective]
+
+Source  port_foc.bl
+  4   ς = solve_{ς}(E_{Ψ,θ}(D_{w}V[>]*(Ψ - R)))  :: [id=euler]
+
+Definitions referenced
+  R     port:parameter:R
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STAGE port / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   μ   : finite measure on ℝ₊
+       ────────────────────────────────────────────────
+  out  μ≻  : finite measure on ℝ₊₊
+
+At
+  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  DistributionExtension:Ψ_θ
+     in: μ                              out: μ⊗P_{Ψ, θ}
+     ──────────────────────────────────────────────────
+     rule: μ⊗P_{Ψ, θ}(B)
+             = ∫_{k ∈ ℝ₊} [P_{Ψ, θ}({Ψ, θ ∈ ℝ₊₊ × ℝ₊₊ | (k, Ψ, θ) ∈ B})] μ(dk)
+
+  2  Pushforward
+     in: (1)                            out: μ≻
+     ──────────────────────────────────────────────────
+     rule: μ≻(B)
+             = μ⊗P_{Ψ, θ}({k, Ψ, θ ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≻(k, 𝜍(k), Ψ, θ) ∈ B})
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  18  w = k*(ς*Ψ + (1-ς)*R) + θ
+
+Definitions referenced
+  Γ_ς       port:correspondence:Γ_ς
+  P_{Ψ, θ}  port:distribution:Ψ_θ
+  Ψ         port:distribution:Ψ_θ
+  θ         port:distribution:Ψ_θ
+  𝑔≻        port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STAGE port / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────────────────
+  out  𝑉   : ℝ₊ → ℝ
+
+At
+  𝜍  : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·)
+     ───────────────────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻(·, 𝜍, ·, ·))(k, Ψ, θ) = 𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))
+
+  2  value:Expectation:1
+     in: (1)
+     out: k ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+     ───────────────────────────────────────────────────────────
+     rule: (2)(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+
+  3  Aggregation
+     in: (2)                            out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉(k) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, 𝜍(k), Ψ, θ))]
+
+  4  Evaluation
+     in: 𝑉                              out: 𝑉
+     ───────────────────────────────────────────────────────────
+     rule: 𝑉 : ℝ₊ → ℝ
+
+Conditions
+  Aggregation  𝑉(k) ∈ ℝ
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  22  V  = E_{Ψ,θ}(V[>])  :: [id=value]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STAGE port / POLICY BUILDER policy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signature
+  in   𝑉≻  : ℝ₊₊ → ℝ
+       ─────────────────────────────────────────────
+  out  𝜍   : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+
+Operations
+  1  Pullback
+     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻
+     ───────────────────────────────────────────────
+     rule: (𝑉≻ ∘ 𝑔≻)(k, ς, Ψ, θ) = 𝑉≻(𝑔≻(k, ς, Ψ, θ))
+
+  2  objective:Expectation:1
+     in: (1)
+     out: (k, ς) ↦ E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]
+     ───────────────────────────────────────────────
+     rule: (2)(k, ς) = E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]
+
+  3  objective:Argmax
+     in: (2)                            out: 𝜍
+     ───────────────────────────────────────────────
+     rule: 𝜍(k) ∈ argmax_{ς ∈ Γ_ς(k)} [E_{Ψ, θ}[𝑉≻(𝑔≻(k, ς, Ψ, θ))]]
+
+  4  Evaluation
+     in: 𝜍                              out: 𝜍
+     ───────────────────────────────────────────────
+     rule: 𝜍 : ℝ₊ → [0, 1],  𝜍(k) ∈ Γ_ς(k)
+──────────────────────────────────────────────────────────────────────────────
+Source  port.bl
+  26  ς = argmax_{ς : Γ_ς(k)}(E_{Ψ,θ}(V[>]))  :: [id=objective]
+
+Definitions referenced
+  Γ_ς   port:correspondence:Γ_ς
+  Ψ     port:distribution:Ψ_θ
+  θ     port:distribution:Ψ_θ
+  𝑔≻    port:g:dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -1,0 +1,22 @@
+@stage: cons
+Xm := ℝ₊₊
+Xa := ℝ₊
+ρ : (1, inf)
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)
+Γ(x : ℝ₊₊) := (0, x]
+
+[id=arvl_to_dcsn, (m : Xm) : !arvl -> (m_d : Xm) : !dcsn] {
+    m_d = m
+}
+[id=dcsn_to_cntn, (m_d, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {
+    a = m_d - c
+}
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + V[>]
+}
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V
+}
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>]) :: [id=optimality]
+}

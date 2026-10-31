@@ -1,0 +1,82 @@
+name: ConsGenIncProcess
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    Xp: "@def R++"
+    Xm: "@def R+"
+    Xa: "@def R+"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+
+  exogenous:
+    psi:
+      - "@in R++"
+      - "@dist IncShkDstn[0]"
+    xi:
+      - "@in R++"
+      - "@dist IncShkDstn[1]"
+
+  states:
+    p: "@in Xp"
+    m: "@in Xm"
+
+  poststates:
+    a: "@in Xa"
+    p_nxt: "@in Xp"
+
+  controls:
+    c: "@in R+"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    beta: "@in (0,1)"
+    rho: "@in R+"
+    R: "@in R++"
+    LivPrb: "@in [0,1]"
+
+  functions:
+    pLvlNextFunc: "@in Xp -> Xp"
+
+equations:
+  arvl_to_dcsn_transition: |
+    p_temp = pLvlNextFunc(p_prev)
+    p = p_temp * psi
+    y = xi * p
+    b = R * k
+    m = b + y
+
+  dcsn_to_cntn_transition: |
+    a = m - c
+    p_nxt[>] = p
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      V = max_c{c^(1-rho)/(1-rho) + beta * LivPrb * V[>]}
+    InvEuler: |
+      c = (beta * LivPrb * dV[>])^(-1/rho)
+    MarginalBellman: |
+      dV = c^(-rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{psi, xi}[V]
+    ShadowBellman: |
+      dV[<] = R * E_{psi, xi}[dV]
+
+calibration:
+  beta: 0.96
+  rho: 2.0
+  R: 1.03
+  LivPrb: 0.98

@@ -1,0 +1,35 @@
+@stage: cons_savings_iid
+
+Y := ℝ₊
+
+β : ℝ₊₊ :: ["discount factor must be a strictly positive number"] 
+γ : ℝ₊ :: ["Relative risk aversion must be greater than 1"]
+R : ℝ₊₊
+μ_y : ℝ
+σ_y : ℝ₊
+p_zero : (0,1)
+
+y : Y
+y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))
+
+𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ)         :: [id=util]
+𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]
+Γ(x : ℝ₊) := (0, x]                  :: [id=feasible_consumption]
+
+[id=arvl_to_dcsn, (b : ℝ₊, y) : !arvl -> (w : ℝ₊) : !dcsn] {
+    w = y + b*R                 :: [id=cash_on_hand, "market_resources are blah blah"] 
+}
+
+[id=dcsn_to_cntn, (w, c : !ctrl @ ℝ₊) : !dcsn -> (a : ℝ₊) : !cntn] {
+    a = w - c
+}
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]               :: [id=value]
+}
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{y}(V)                 :: [id=value]
+}
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])  :: [id=optimality]
+}

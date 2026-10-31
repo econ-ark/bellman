@@ -1,0 +1,9 @@
+# The corporate sector of Cagetti and De Nardi (2006), equation (1),
+# F(K_c, L_c) = A K_c^α L_c^(1-α): the two names no stage declares. The
+# recipe's `registry` block admits them, so a fill of one is not refused; they
+# are carried as data with their provenance and reach no stage. The
+# equilibrium computation that sets r, w and τ reads them (economics.md §7).
+calibration:
+  # Table 5, panel A, as economics.md §6 cites it
+  α: 0.33         # capital share of the corporate sector
+  A: 1.0          # scale of the corporate technology

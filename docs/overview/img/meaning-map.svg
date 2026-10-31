@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 20 900 252" width="900" style="max-width:100%;height:auto;overflow:visible" role="img" aria-labelledby="fig-meaning-map" aria-describedby="mm-desc">
+  <!-- Drawn 19 September 2026 for docs/overview/01-concepts.md by make_meaning_map.py, along the lines of slide 14 of the CEF interoperability talk, in the vocabulary of the modularity figure. Econ-ARK palette by role: navy for structure and for the letters Upsilon and Rho, pink for the AI assistant, the home page's perch hues (arrival green, decision orange, continuation cyan). Colours are CSS variables set in docs/_stylesheets/extra.css; the fallbacks here are the light scheme. -->
+  <desc id="mm-desc">Drawn in the axonometric manner of the modularity figure. At the left, you, drawn as the Adam Smith avatar; you write the stage files, a pile of sheets. Elaboration, the meaning map Upsilon, turns them into the semantic graph, a platform carrying the stage's two operators as boxes on a wire between its three perches, inside a region marked as the meaning, the model stated in full. The graph's denotations give the formal mathematics, a sheet above the files with the Bellman equation and the law of motion on it, which you read back. Compiled by Rho, on whose arrow the AI sits, inside a band marked outside Bellman-SYM, it gives code, a fan of three tiles named HARK, Dolo and QuantEcon.</desc>
+  <defs>
+    <style>
+      .bf-t { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 12.5px; font-weight: 700; fill: var(--bf-ink, #1f476b); }
+      .bf-s { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 12px; fill: var(--bf-muted, #64717d); }
+      .bf-l { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 12px; fill: var(--bf-muted, #64717d); }
+      .bf-m { font-family: "STIX Two Math", "STIX Two Text", "Cambria Math", "Latin Modern Math", "Times New Roman", serif; font-size: 16.5px; fill: var(--bf-ink, #1f476b); }
+      .bf-p { font-family: "STIX Two Math", "STIX Two Text", "Cambria Math", "Latin Modern Math", "Times New Roman", serif; font-size: 12.5px; font-style: italic; fill: var(--bf-ink, #1f476b); }
+      .bf-sub { font-size: 10px; font-style: normal; }
+      .bf-iso { font-family: "STIX Two Math", "STIX Two Text", "Cambria Math", "Latin Modern Math", "Times New Roman", serif; font-size: 12px; }
+      .bf-ups { fill: var(--bf-ink, #1f476b); }
+      .bf-e { stroke: var(--bf-ink, #1f476b); stroke-width: 1.6; stroke-linejoin: round; }
+      .bf-top { fill: var(--bf-face, #ffffff); }
+      .bf-left { fill: var(--bf-face-2, #edf2f7); }
+      .bf-right { fill: var(--bf-shade, #1f476b); }
+      .bf-p2 .bf-e { stroke: var(--bf-ink-2, #3a6b96); }
+      .bf-p2 .bf-right { fill: var(--bf-shade-2, #3a6b96); }
+      .bf-p3 .bf-e { stroke: var(--bf-ink-3, #5e92c0); }
+      .bf-p3 .bf-right { fill: var(--bf-shade-3, #5e92c0); }
+      .bf-p4 .bf-e { stroke: var(--bf-ink-4, #2f5a80); }
+      .bf-p4 .bf-right { fill: var(--bf-shade-4, #2f5a80); }
+      .bf-p5 .bf-e { stroke: var(--bf-ink-5, #4a7aa8); }
+      .bf-p5 .bf-right { fill: var(--bf-shade-5, #4a7aa8); }
+      .bf-p6 .bf-e { stroke: var(--bf-ink-6, #5486b6); }
+      .bf-p6 .bf-right { fill: var(--bf-shade-6, #5486b6); }
+      .bf-far .bf-e { stroke-width: 1.0; }
+      .bf-hi .bf-e { stroke: var(--bf-accent-line, #d98c14); }
+      .bf-hi .bf-top, .bf-hi .bf-left { fill: var(--bf-tint, #fff1d6); }
+      .bf-hi .bf-right { fill: var(--bf-accent, #fcb040); }
+      .bf-ghost { opacity: 0.45; }
+      .bf-lead { fill: none; stroke: var(--bf-ink, #1f476b); stroke-width: 0.7; stroke-dasharray: 3 3; }
+      .bf-wire { fill: none; stroke: var(--bf-ink, #1f476b); stroke-width: 0.9; stroke-dasharray: 4 3; }
+      .bf-path { fill: none; stroke: var(--bf-ink, #1f476b); stroke-width: 0.8; opacity: 0.8; vector-effect: non-scaling-stroke; }
+      .bf-dot { fill: var(--bf-ink, #1f476b); stroke: var(--bf-face, #ffffff); stroke-width: 1.2; }
+      .bf-stud-base { fill: var(--bf-shade, #1f476b); }
+      .bf-stud { fill: var(--bf-face, #ffffff); stroke: var(--bf-ink, #1f476b); stroke-width: 1.1; vector-effect: non-scaling-stroke; }
+      .bf-p2 .bf-stud-base { fill: var(--bf-shade-2, #3a6b96); }
+      .bf-p2 .bf-stud { stroke: var(--bf-ink-2, #3a6b96); }
+      .bf-p3 .bf-stud-base { fill: var(--bf-shade-3, #5e92c0); }
+      .bf-p3 .bf-stud { stroke: var(--bf-ink-3, #5e92c0); }
+      .bf-hi .bf-stud-base { fill: var(--bf-accent, #fcb040); }
+      .bf-hi .bf-stud { fill: var(--bf-tint, #fff1d6); stroke: var(--bf-accent-line, #d98c14); }
+      .bf-flow { fill: none; stroke: var(--bf-ink, #1f476b); stroke-width: 1.1; marker-end: url(#mm-head-ink); }
+      .bf-head-ink { fill: none; stroke: var(--bf-ink, #1f476b); stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+      .bf-head-ai { fill: none; stroke: var(--bf-ai, #ed217c); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+      .bf-ai { fill: none; stroke: var(--bf-ai, #ed217c); stroke-width: 1.4; stroke-linecap: round; stroke-dasharray: 0.1 4; marker-end: url(#mm-head-ai); }
+      .bf-ai-t { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 11.5px; font-weight: 700; fill: var(--bf-ai-text, #c9156a); }
+      .bf-ai-l { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 12px; fill: var(--bf-ai-text, #c9156a); }
+      .bf-ai-c { fill: var(--bf-face, #ffffff); stroke: var(--bf-ai, #ed217c); stroke-width: 1.4; }
+      .bf-hu-c { fill: var(--bf-face, #ffffff); stroke: var(--bf-ink, #1f476b); stroke-width: 1.4; }
+      .bf-hu { fill: var(--bf-ink, #1f476b); }
+      .bf-pointer { stroke: var(--bf-ink, #1f476b); stroke-width: 1.3; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+      .bf-name { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: 700; fill: var(--bf-ink, #1f476b); }
+      .bf-eq { font-family: "STIX Two Math", "STIX Two Text", "Cambria Math", "Latin Modern Math", "Times New Roman", serif; font-style: italic; fill: var(--bf-ink, #1f476b); }
+      .bf-p2 .bf-name { fill: var(--bf-ink-2, #3a6b96); }
+      .bf-hi .bf-name { fill: var(--bf-accent-line, #d98c14); }
+      .bf-socket { fill: var(--bf-arvl, #39b54a); }
+      .bf-port-c .bf-stud-base { fill: var(--bf-cntn, #00aeef); }
+      .bf-port-c .bf-stud { stroke: var(--bf-cntn-line, #007ea8); }
+      .bf-legend { font-family: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 12px; fill: var(--bf-muted, #64717d); }
+      .bf-region { fill: var(--bf-region, #f3f6fa); stroke: var(--bf-ink, #1f476b); stroke-width: 1.0; }
+      .bf-band { fill: var(--bf-band, #f7fafb); stroke: var(--bf-band-line, #e2e8ec); stroke-width: 1; }
+      .bf-ink-t { fill: var(--bf-ink, #1f476b); font-weight: 700; }
+      .bf-sheet { stroke: var(--bf-line, #8a96a3); stroke-width: 1.0; vector-effect: non-scaling-stroke; }
+      .bf-curve { fill: none; stroke: var(--bf-ink, #1f476b); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+      .bf-op { fill: var(--bf-face, #ffffff); stroke: var(--bf-ink, #1f476b); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+      .bf-arvl { fill: var(--bf-arvl, #39b54a); }
+      .bf-dcsn { fill: var(--bf-dcsn, #ff8a00); }
+      .bf-cntn { fill: var(--bf-cntn, #00aeef); }
+      .bf-perch { stroke: var(--bf-face, #ffffff); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+      .bf-tick { stroke: var(--bf-line, #8a96a3); stroke-width: 0.7; }
+      .bf-wait .bf-seq { animation-play-state: paused; }
+      @media print { .bf-seq { animation: none !important; } }
+
+    </style>
+<marker id="mm-head-ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 2 1.5 L 8.5 5 L 2 8.5" class="bf-head-ink"/></marker>
+<marker id="mm-head-ai" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 2 1.5 L 8.5 5 L 2 8.5" class="bf-head-ai"/></marker>
+  </defs>
+<rect x="578" y="58" width="317" height="178" rx="6" class="bf-band"/>
+<rect x="350" y="58" width="210" height="178" rx="6" class="bf-region"/>
+<defs><mask id="mm-you" maskUnits="userSpaceOnUse" x="5.0" y="139.0" width="46" height="46" style="mask-type:luminance"><image href="../img/adam-smith-mask.png" x="5.0" y="139.0" width="46" height="46"/></mask><clipPath id="mm-you-clip"><circle cx="28" cy="162" r="18.6"/></clipPath></defs>
+<circle cx="28" cy="162" r="20" class="bf-hu-c"/>
+<g clip-path="url(#mm-you-clip)" aria-hidden="true"><rect x="5.0" y="139.0" width="46" height="46" class="bf-hu" mask="url(#mm-you)"/></g>
+<text x="28.0" y="258.0" class="bf-t" text-anchor="middle">You</text>
+<path d="M 54.0 162.0 L 151.0 162.0" class="bf-flow"/>
+<text x="104.0" y="154.0" class="bf-l" text-anchor="middle">write</text>
+<g><polygon points="160.0,26.6 266.0,87.8 201.2,125.2 95.2,64.0" class="bf-e bf-top"/>
+<polygon points="95.2,67.4 201.2,128.6 201.2,125.2 95.2,64.0" class="bf-e bf-left"/>
+<polygon points="266.0,91.2 201.2,128.6 201.2,125.2 266.0,87.8" class="bf-e bf-right"/></g>
+<g transform="matrix(29.4449,17.0000,-29.4449,17.0000,160.00,26.60)"><text x="0.30" y="0.62" class="bf-eq" style="font-size:0.36px">V(m) = <tspan font-style="normal">max</tspan><tspan style="font-size:0.24px" dy="0.12">c</tspan></text><text x="0.62" y="1.16" class="bf-eq" style="font-size:0.36px">u(c) + β <tspan font-style="normal">E</tspan> V′(m′)</text><text x="0.30" y="1.72" class="bf-eq" style="font-size:0.36px">m′ = R(m − c) + y′</text></g>
+<path d="M 344.0 87.8 L 272.0 87.8" class="bf-flow"/>
+<text x="308.0" y="79.8" class="bf-l" text-anchor="middle">denotations</text>
+<path d="M 89.2 64.0 L 28 64.0 L 28 134" class="bf-flow"/>
+<text x="35.0" y="112.0" class="bf-l" text-anchor="start">read</text>
+<text x="6.0" y="44.0" class="bf-t" text-anchor="start">Formal math</text>
+<g><polygon points="190.0,146.9 235.7,173.3 203.3,192.0 157.6,165.6" class="bf-e bf-top"/>
+<polygon points="157.6,168.7 203.3,195.1 203.3,192.0 157.6,165.6" class="bf-e bf-left"/>
+<polygon points="235.7,176.4 203.3,195.1 203.3,192.0 235.7,173.3" class="bf-e bf-right"/></g>
+<g><polygon points="198.4,143.8 244.1,170.2 211.7,188.9 166.0,162.5" class="bf-e bf-top"/>
+<polygon points="166.0,165.6 211.7,192.0 211.7,188.9 166.0,162.5" class="bf-e bf-left"/>
+<polygon points="244.1,173.3 211.7,192.0 211.7,188.9 244.1,170.2" class="bf-e bf-right"/></g>
+<g><polygon points="206.8,140.8 252.5,167.2 220.1,185.9 174.4,159.5" class="bf-e bf-top"/>
+<polygon points="174.4,162.5 220.1,188.9 220.1,185.9 174.4,159.5" class="bf-e bf-left"/>
+<polygon points="252.5,170.2 220.1,188.9 220.1,185.9 252.5,167.2" class="bf-e bf-right"/></g>
+<g transform="matrix(19.0526,11.0000,-19.0526,11.0000,190.00,140.76)">
+<line x1="0.72" y1="-0.02" x2="2.54" y2="-0.02" class="bf-sheet"/>
+<line x1="0.72" y1="0.30" x2="2.14" y2="0.30" class="bf-sheet"/>
+<line x1="0.72" y1="0.62" x2="2.39" y2="0.62" class="bf-sheet"/>
+<line x1="0.72" y1="0.94" x2="1.74" y2="0.94" class="bf-sheet"/>
+</g>
+<text x="205.0" y="258.0" class="bf-t" text-anchor="middle">Stage files</text>
+<path d="M 259.0 162.0 L 344.0 162.0" class="bf-flow"/>
+<text x="301.0" y="154.0" class="bf-l" text-anchor="middle"><tspan class="bf-m">Υ</tspan> elaborate</text>
+<text x="550.0" y="76.0" class="bf-l bf-ink-t" text-anchor="end">the meaning</text>
+<text x="550.0" y="92.0" class="bf-l bf-ink-t" text-anchor="end"><tspan class="bf-iso">≅</tspan> the model, stated in full</text>
+<g><polygon points="438.0,141.2 510.4,183.0 472.3,205.0 399.9,163.2" class="bf-e bf-top"/>
+<polygon points="399.9,172.0 472.3,213.8 472.3,205.0 399.9,163.2" class="bf-e bf-left"/>
+<polygon points="510.4,191.8 472.3,213.8 472.3,205.0 510.4,183.0" class="bf-e bf-right"/></g>
+<g transform="matrix(19.0526,11.0000,-19.0526,11.0000,438.00,141.20)">
+<path d="M 0.55 1.45 L 1.9 1.0 L 3.25 0.5" class="bf-curve"/>
+<rect x="0.900" y="1.035" width="0.6" height="0.4" class="bf-op"/>
+<rect x="2.280" y="0.550" width="0.6" height="0.4" class="bf-op"/>
+<circle cx="0.55" cy="1.45" r="0.19" class="bf-arvl bf-perch"/>
+<circle cx="1.9" cy="1.0" r="0.19" class="bf-dcsn bf-perch"/>
+<circle cx="3.25" cy="0.5" r="0.19" class="bf-cntn bf-perch"/>
+</g>
+<line x1="420.9" y1="137" x2="420.9" y2="157.7" class="bf-tick"/>
+<text x="420.9" y="131.0" class="bf-p" text-anchor="middle">x<tspan class="bf-sub" dy="3">≺</tspan></text>
+<line x1="455.1" y1="137" x2="455.1" y2="167.6" class="bf-tick"/>
+<text x="455.1" y="131.0" class="bf-p" text-anchor="middle">x</text>
+<line x1="490.4" y1="137" x2="490.4" y2="176.9" class="bf-tick"/>
+<text x="490.4" y="131.0" class="bf-p" text-anchor="middle">x<tspan class="bf-sub" dy="3">≻</tspan></text>
+<text x="455.0" y="258.0" class="bf-t" text-anchor="middle">Semantic graph</text>
+<text x="588.0" y="76.0" class="bf-l" text-anchor="start">outside</text>
+<text x="588.0" y="92.0" class="bf-l" text-anchor="start">Bellman-SYM</text>
+<path d="M 566.0 162.0 L 650.0 162.0" class="bf-flow"/>
+<circle cx="670" cy="162" r="15" class="bf-ai-c"/>
+<text x="670.0" y="166.5" class="bf-ai-t" text-anchor="middle">AI</text>
+<text x="586.0" y="154.0" class="bf-l" text-anchor="start"><tspan class="bf-m">Ρ</tspan> compile</text>
+<path d="M 690.0 162.0 L 715.5 162.0" class="bf-flow"/>
+<g><polygon points="762.0,142.2 820.5,176.0 780.0,199.4 721.5,165.6" class="bf-e bf-top"/>
+<polygon points="721.5,173.4 780.0,207.2 780.0,199.4 721.5,165.6" class="bf-e bf-left"/>
+<polygon points="820.5,183.8 780.0,207.2 780.0,199.4 820.5,176.0" class="bf-e bf-right"/></g>
+<g transform="matrix(22.5167,13.0000,-22.5167,13.0000,762.00,142.20)"><text x="0.16" y="1.64" class="bf-name" style="font-size:0.40px">HARK</text></g>
+<g><polygon points="798.0,139.6 856.6,173.4 816.0,196.8 757.5,163.0" class="bf-e bf-top"/>
+<polygon points="757.5,170.8 816.0,204.6 816.0,196.8 757.5,163.0" class="bf-e bf-left"/>
+<polygon points="856.6,181.2 816.0,204.6 816.0,196.8 856.6,173.4" class="bf-e bf-right"/></g>
+<g transform="matrix(22.5167,13.0000,-22.5167,13.0000,798.03,139.60)"><text x="0.16" y="1.64" class="bf-name" style="font-size:0.40px">Dolo</text></g>
+<g><polygon points="834.1,137.0 892.6,170.8 852.1,194.2 793.5,160.4" class="bf-e bf-top"/>
+<polygon points="793.5,168.2 852.1,202.0 852.1,194.2 793.5,160.4" class="bf-e bf-left"/>
+<polygon points="892.6,178.6 852.1,202.0 852.1,194.2 892.6,170.8" class="bf-e bf-right"/></g>
+<g transform="matrix(22.5167,13.0000,-22.5167,13.0000,834.05,137.00)"><text x="0.16" y="1.64" class="bf-name" style="font-size:0.40px">QuantEcon</text></g>
+<text x="805.0" y="258.0" class="bf-t" text-anchor="middle">Compiled code</text>
+</svg>

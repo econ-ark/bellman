@@ -1,0 +1,17 @@
+!period
+name: durables_period
+
+# One period of the durables model before the terminal one: the tenure choice,
+# then consumption on the branch that choice selects. The connector joins the
+# fields each branch of tenure ends at to the decision states of the stage the
+# branch enters, the decision perch being each consumption stage's entry
+# perch; z_d, the name of both consumption stages' income state, is written
+# with its stage key. The order of the stages is derived from their fields,
+# not from this list. The terminal period, which adds the bequest and the
+# connector to it, is written out in trellis.yml.
+stages:
+  - tenure
+  - keeper_cons
+  - adjuster_cons
+connectors:
+  - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}

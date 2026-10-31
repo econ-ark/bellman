@@ -1,0 +1,33 @@
+@stage: accumulation
+
+# The general model of McKenzie (1976), "Turnpike theory", Econometrica 44(5),
+# section 2, pages 845 to 846, and the recursion of equation (1), page 848.
+# One stage is one period of accumulation. The arrival stock is the paper's x,
+# the initial stock of the period; the control y is the paper's y, the terminal
+# stock of the period; the continuation stock k_next is that same quantity read
+# after the choice. The reduced-form utility 𝑢 and the feasible set are the
+# paper's primitives and the paper gives neither a formula.
+
+Xk := ℝ₊                                 :: ["the nonnegative orthant of the paper's E_{t-1} and E_t, p. 846; one good, because the number of goods cannot be left open"]
+
+Γ(x : Xk) := {y : Xk | 𝑢(x, y) > -inf}   :: [id=feasible, "the section of the paper's feasible set D at x, p. 846; 𝑢 is -∞ off D by the closedness of Assumption 2, p. 847, so the section is where 𝑢 is finite. The further restriction y ∈ K_{t+1} of equation (1), p. 848, is not writable: K is derived from the whole future"]
+
+[id=arvl_to_dcsn, (k : Xk) : !arvl -> (k_d : Xk) : !dcsn] {
+    k_d = k                              :: [id=initial_stock, "nothing is realised between arrival and decision: the paper states no stochastic problem, p. 846"]
+}
+
+[id=dcsn_to_cntn, (k_d, y : Xk @ !ctrl) : !dcsn -> (k_next : Xk) : !cntn] {
+    k_next = y                           :: [id=terminal_stock, "the significant choice of the period is the terminal stock given the initial stock, p. 846"]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, y) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = 𝑢(k_d, y) + V[>]                 :: [id=value, "the summand of equation (1), p. 848; 𝑢 is the reduced-form utility of the period, taken as -∞ off the feasible set D, which the closedness of Assumption 2 licenses, p. 847"]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                             :: [id=value, "the identity: with no shock there is nothing to integrate"]
+}
+
+[id=policy, (V[>]) : !cntn -> (y) : !dcsn] {
+    y = argmax_{y : Γ(k_d)}(𝑢(k_d, y) + V[>]) :: [id=optimality, "the supremum of equation (1), p. 848; the paper asserts attainment only along the weakly maximal path it studies"]
+}

@@ -1,0 +1,7 @@
+# Earnings in age bracket 3, ages 37 to 42: periods 19-24 of the trellis,
+# counted from the terminal period (the legacy registry's periods 13-18,
+# counted from age 25). Benhabib, Bisin and Luo (2019), Table 1, column
+# "Age 37-42", in thousands of dollars a year, one entry per earnings decile,
+# q1 to q10 in order.
+calibration:
+  wage_fn: [12.06, 25.20, 34.96, 43.95, 52.42, 60.70, 69.42, 80.37, 97.51, 169.5]

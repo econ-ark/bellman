@@ -1,0 +1,7 @@
+# Earnings in age bracket 4, ages 43 to 48: periods 13-18 of the trellis,
+# counted from the terminal period (the legacy registry's periods 19-24,
+# counted from age 25). Benhabib, Bisin and Luo (2019), Table 1, column
+# "Age 43-48", in thousands of dollars a year, one entry per earnings decile,
+# q1 to q10 in order.
+calibration:
+  wage_fn: [12.81, 26.42, 36.46, 45.55, 54.37, 63.09, 72.89, 85.09, 103.5, 182.4]

@@ -1,0 +1,360 @@
+site_name: Project Bellman
+site_description: Build rich, dynamic heterogeneous agent models from reusable stages—in a language both humans and AI can understand.
+site_url: https://econ-ark.github.io/bellman/
+
+repo_name: econ-ark/bellman
+repo_url: https://github.com/econ-ark/bellman
+
+docs_dir: docs
+site_dir: site
+
+# Files matching these globs are excluded from the build. Used here for
+# snippet partials (files prefixed with "_") that are pulled in via
+# pymdownx.snippets and should not render as standalone pages.
+exclude_docs: |
+  _*.md
+  # The site's hooks and the page printer: Python that the build and the tests
+  # run, which MkDocs would otherwise copy into the built site.
+  /_hooks/
+  # Theme templates are read through custom_dir, not published as raw HTML.
+  /_overrides/
+  # The canonical fields chapter is 04-fields, functions and types.md.
+  bellman-calculus/04-fields-functions-and-types--WIP-revision.md
+  # Folders named old: `**/old/` of .gitignore keeps them out of git, so they
+  # stand only in a checkout that holds them as leftovers and never in a clone.
+  # Excluded so that the strict build of such a checkout reports the warnings
+  # of a clone's.
+  **/old/
+
+theme:
+  name: material
+  palette:
+    - scheme: bellman
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font: false
+  logo: _assets/brand/logo.svg
+  favicon: _assets/brand/favicon.svg
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.path        # breadcrumb trail at the top of each page (the "where am I" cue)
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+  custom_dir: docs/_overrides
+
+plugins:
+  - search
+  - callouts  # Converts Obsidian-style callouts to MkDocs admonitions
+  - roamlinks  # Converts Obsidian [[wikilinks]] to relative links (rosetta-stone wiki)
+  # - obsidian-support  # Converts Obsidian tags, wikilinks, etc. (needs pip install)
+  - toggle-sidebar:
+      toggle_button: all
+      show_navigation_by_default: true
+      show_toc_by_default: true
+      theme: auto
+  - tags
+
+# Build-time hooks (no extra pip dependency required), kept in docs/_hooks/.
+hooks:
+  - docs/_hooks/obsidian_tags.py  # render standalone Obsidian #tag lines as chips (not <h1>)
+  - docs/_hooks/homepage.py       # the custom homepage uses CSS animations and no docs controls
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.saneheaders   # require a space after '#': Obsidian #tags never become headings
+  - pymdownx.details
+  - pymdownx.snippets:
+      base_path:
+        - docs
+      check_paths: true
+  - toc:
+      permalink: true
+  - tables
+  - attr_list
+  - md_in_html
+  - footnotes
+
+extra_css:
+  # Query string is a cache-buster; bump when CSS changes substantially.
+  - _stylesheets/extra.css?v=20260930a
+  - _stylesheets/rosetta.css?v=20260622q   # Rosetta Stone registry "Lexicon" styling
+  - _stylesheets/bellman.css?v=20261003a
+
+extra_javascript:
+  - _javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - _javascripts/meaning_map.js
+  - _javascripts/figure_sequences.js   # the figures' assembly sequences wait until the figure is on screen
+  - _javascripts/rosetta-card-nav.js   # keep the left nav visible + highlighted on Rosetta card pages
+
+nav:
+  - Home: index.md
+  - Install: overview/00-install.md
+
+  # ══════════════════════════════════════════════════
+  # OVERVIEWS — the informal reading of the language and its semantics
+  # ══════════════════════════════════════════════════
+  - Overview:
+    - overview/index.md
+    - "Core concepts": overview/01-concepts.md
+    - "The stage": overview/02-stage.md
+    - "The Bellman-SYM language": overview/03-language.md
+    - "Periods and trellis": overview/04-periods-and-trellis.md
+    - "Semantics": overview/05-semantics.md
+    - "Workflow": overview/06-workflow.md
+    - "Bellman Workbench": overview/07-workbench.md
+    - "Fields, evaluation and methods": overview/08-fields-evaluation-and-methods.md
+
+  # ══════════════════════════════════════════════════
+  # BELLMAN-SYM — the language in four parts: the user guide (the root
+  # pages), the API, the appendices and the reference catalogues
+  # ══════════════════════════════════════════════════
+  - Language:
+    - Bellman-Sym/index.md
+    - "User guide":
+      - "Stage tutorial": Bellman-Sym/01-stage.md
+      - "Field equations": Bellman-Sym/03-field-equations.md
+      - "Methodization": Bellman-Sym/04-methodization.md
+      - "Branching": Bellman-Sym/05-branching.md
+      - "Periods": Bellman-Sym/06-period.md
+      - "Trellises": Bellman-Sym/07-trellis.md
+      - "The Bellman factory": Bellman-Sym/08-bellman-factory.md
+      - "From source to functions": Bellman-Sym/09-from-syntax-to-formal-problem-definition.md
+      - "Constraints": Bellman-Sym/10-constraints.md
+      - "Solutions at the perches": Bellman-Sym/11-solutions-at-the-perches.md
+    - "API":
+      - Bellman-Sym/API/index.md
+      - "Bellman factory API":
+        - "The factory API": Bellman-Sym/API/factory/index.md
+        - "Stage functions": Bellman-Sym/API/factory/stage-factory.md
+        - "Recipe functions": Bellman-Sym/API/factory/spec-factory.md
+        - "Period functions": Bellman-Sym/API/factory/period-factory.md
+        - "The trellis factory": Bellman-Sym/API/factory/trellis-factory.md
+      - "The stage object":
+        - "The stage": Bellman-Sym/API/stage/01-the-stage.md
+        - "The initial diagrams": Bellman-Sym/API/stage/02-initial.md
+        - "The builders graphs": Bellman-Sym/API/stage/03-build.md
+        - "A builder": Bellman-Sym/API/stage/04-builder.md
+        - "A piece": Bellman-Sym/API/stage/05-piece.md
+        - "Parameters and settings": Bellman-Sym/API/stage/06-par-and-settings.md
+        - "Methods and places": Bellman-Sym/API/stage/07-methods.md
+        - "The definitions table": Bellman-Sym/API/stage/08-definitions.md
+        - "The binding verbs": Bellman-Sym/API/stage/09-binding-verbs.md
+        - "The view in Model Explorer": Bellman-Sym/API/stage/10-model-explorer.md
+    - "Appendices":
+      - "Equation parsing rules": Bellman-Sym/appendices/12-equation-parsing-rules.md
+      - "Perch tagging rules": Bellman-Sym/appendices/13-perch-tagging-rules.md
+      - "Appendix C — From source to semantics": Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+      - "Appendix D — Nodes and field indexing": Bellman-Sym/appendices/15-appendix-d-node-tag-and-field-indexing.md
+    - "Reference":
+      - "Operations": Bellman-Sym/reference/operations.md
+      - "Laws": Bellman-Sym/reference/laws.md
+      - "Forms": Bellman-Sym/reference/forms.md
+      - "Methods": Bellman-Sym/reference/methods.md
+      - "Refusals": Bellman-Sym/reference/refusals.md
+      - "Symbol conventions": Bellman-Sym/reference/symbols-conventions.md
+      - "Model directory layout": Bellman-Sym/reference/model-directory-layout.md
+
+  # ══════════════════════════════════════════════════
+  # BELLMAN CALCULUS — the mathematics of staged Bellman problems
+  # ══════════════════════════════════════════════════
+  - Foundations:
+    - bellman-calculus/index.md
+    - "01. Introduction": bellman-calculus/01-Introduction to T-calculus.md
+    - "02. Illustrative example": bellman-calculus/02-Illustrative example.md
+    - "03. Stages and perches": bellman-calculus/03-Stages and perches.md
+    - "04. Fields, functions and types": bellman-calculus/04-fields, functions and types.md
+    - "05. Operators and builders": bellman-calculus/05-Operators and builders.md
+    - "06. Methods": bellman-calculus/06-Methods.md
+    - "07. Stage composition": bellman-calculus/07-stage-composition.md
+    - "08. Periods and trellis": bellman-calculus/08-periods-and-trellis.md
+    - "09. Branching": bellman-calculus/09-branching.md
+    - "10. Semi-conjugacy": bellman-calculus/10-semi-conjugacy.md
+    - "11. Abstract grammar": bellman-calculus/11-abstract-grammar.md
+    - "Ingredients (glossary)": bellman-calculus/ingredients.md
+    - "Appendix A: Semantics": bellman-calculus/APPX-A-SEMANTICS.md
+    - "Appendix B: Initial algebra": bellman-calculus/APPX-B-INITIAL-ALGEBRA.md
+    - "Appendix C: Stage term": bellman-calculus/APPX-C-STAGE-TERM.md
+    - "Appendix D: Kinds and sorts": bellman-calculus/APPX-D-KINDS-AND-SORTS.md
+    - "Appendix E: Catalogues":
+      - "Overview": bellman-calculus/catalogues/index.md
+      - "E.1 Field types": bellman-calculus/catalogues/fields.md
+      - "E.2 Function types": bellman-calculus/catalogues/functions.md
+      - "E.3 Operators": bellman-calculus/catalogues/operators.md
+      - "E.4 Parameters and settings": bellman-calculus/catalogues/parameters-settings.md
+    - "Appendix F: Operator algebra": bellman-calculus/APPX-F-OPERATOR-ALGEBRA.md
+    - "Appendix G: Functional programming": bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING.md
+
+  # ══════════════════════════════════════════════════
+  # EXAMPLES
+  # ══════════════════════════════════════════════════
+  # The Rosetta Stone navigation was removed on 13 September 2026: its cards are archived in
+  # the legacy backup and are rebuilt one at a time from handlers that work
+  # (the build order of 13 September 2026, an internal plan).
+  - Examples:
+    - examples/index.md
+    - "Consumption-Savings IID":
+      - "YAML Spec": examples/cons-iid/consumption_savings_iid.md
+      - "Formal MDP": examples/formal-mdps/cons_savings_iid_mdp.md
+    - "Buffer Stock (Normalized)": examples/buffer-stock/buffer_stock.md
+    - "Housing Owner":
+      - "YAML Spec": examples/housing_renting/housing_owner.md
+      - "Formal MDP (housing)": examples/housing_renting/housing_choice_mdp.md
+      - "Formal MDP (cons)": examples/housing_renting/housing_cons_choice_mdp.md
+    - "Retirement Choice (DCEGM)": examples/retirement/retirement_choice.md
+    - "Smooth-Ambiguity Savings": examples/smooth-ambiguity/smooth_ambiguity_savings.md
+    - "Housing Tenure-Choice":
+      - "Model & Period DAG": examples/housing_renting/index.md
+      - "tenure_choice": examples/housing_renting/stages/tenure_choice.md
+      - "owner_housing": examples/housing_renting/stages/owner_housing.md
+      - "owner_cons": examples/housing_renting/stages/owner_cons.md
+      - "renter_housing": examples/housing_renting/stages/renter_housing.md
+      - "renter_cons": examples/housing_renting/stages/renter_cons.md
+      - "Period & Trellis": examples/housing_renting/period_and_nest.md
+    - "Housing Investment with Frictions": examples/durables/durables.md
+    - "Unemployment Branching":
+      - "Historical YAML": examples/unemployment/index.md
+      - "Formal MDP": examples/unemployment/unemployment_branching_mdp.md
+    - "Portfolio-Consumption":
+      - "Period Overview": examples/cons-port-stages/port_with_shocks.md
+      - "cons_stage (YAML)": examples/cons-port-stages/cons_stage.md
+      - "cons_stage (MDP)": examples/formal-mdps/cons_stage_mdp.md
+      - "port_stage (YAML)": examples/cons-port-stages/port_stage.md
+      - "port_stage (MDP)": examples/cons-port-stages/port_stage_mdp.md
+      - "noport_stage (YAML)": examples/cons-port-stages/noport_stage.md
+      - "noport_stage (MDP)": examples/cons-port-stages/noport_stage_mdp.md
+      - "Solving via Conjugation": examples/cons-port-stages/solving-conjugates.md
+
+  # ══════════════════════════════════════════════════
+  # ASVA — the numerical toolkit beside bellman: its numerical
+  # steps and the API pages of its runner
+  # ══════════════════════════════════════════════════
+  - Asva:
+    - asva/index.md
+    - "Numerical steps": asva/01-numerical-steps.md
+    - "The runner": asva/02-the-runner.md
+    - "Parameter sweeps": asva/03-parameter-sweeps.md
+    - "Saving solutions": asva/04-saving-solutions.md
+    - "Estimation": asva/05-estimation.md
+    - "The cross-entropy method": asva/06-cross-entropy-method.md
+
+  # ══════════════════════════════════════════════════
+  # CONCEPT WIKI — docs/wiki/; the pages are sorted by title to match
+  # wiki/index.md, and each label comes from the page's `title:` front matter
+  # ══════════════════════════════════════════════════
+  - "Wiki":
+    - "Concepts":
+      - wiki/index.md
+      - wiki/abstract_decision_process.md
+      - wiki/accretion-modules.md
+      - wiki/adequacy.md
+      - wiki/aggregation.md
+      - wiki/asdl.md
+      - wiki/backward_builder.md
+      - wiki/banach_contraction.md
+      - wiki/bellman_algebra.md
+      - wiki/bellman_calculus.md
+      - wiki/bellman_operator.md
+      - wiki/sym.md
+      - wiki/bellman_sym_writer.md
+      - wiki/blackwell_conditions.md
+      - wiki/branch.md
+      - wiki/builder.md
+      - wiki/calibration.md
+      - wiki/connector.md
+      - wiki/declarative_language.md
+      - wiki/elaborated_stage.md
+      - wiki/expression.md
+      - wiki/field.md
+      - wiki/forward_builder.md
+      - wiki/functional_form.md
+      - wiki/ffp.md
+      - wiki/handler.md
+      - wiki/initial_algebra.md
+      - wiki/judge.md
+      - wiki/lawvere_theory.md
+      - wiki/matsya_collection.md
+      - wiki/matsya_handler.md
+      - wiki/matsya_instructions.md
+      - wiki/methodization.md
+      - wiki/operator.md
+      - wiki/ordering_conventions.md
+      - wiki/parameters.md
+      - wiki/perch.md
+      - wiki/period.md
+      - wiki/prose_writer.md
+      - wiki/rank.md
+      - wiki/recursive_decision_process.md
+      - wiki/reference-guides-matsya.md
+      - wiki/referential_transparency.md
+      - wiki/semantics.md
+      - wiki/semgraph.md
+      - wiki/semiconjugacy.md
+      - wiki/settings.md
+      - wiki/signature.md
+      - wiki/sort.md
+      - wiki/source_span.md
+      - wiki/spec_factory.md
+      - wiki/specified_stage.md
+      - wiki/stage.md
+      - wiki/statement.md
+      - wiki/sub_builder.md
+      - wiki/symbolic_stage.md
+      - wiki/syntax.md
+      - wiki/term_address.md
+      - wiki/term_json_encoding.md
+      - wiki/trellis.md
+      - wiki/rho.md
+      - wiki/upsilon.md
+
+  # ══════════════════════════════════════════════════
+  # PROJECT — people, support and the changelog
+  # ══════════════════════════════════════════════════
+  - Matsya:
+      - matsya/index.md
+      - User guide:
+          - matsya/user-guide/index.md
+          - matsya/user-guide/00-for-a-local-model.md
+          - matsya/user-guide/01-the-roles-and-the-work-of-a-job.md
+          - matsya/user-guide/02-working-from-the-command-line.md
+          - matsya/user-guide/03-working-on-a-project-folder.md
+          - matsya/user-guide/04-the-service-by-http.md
+          - matsya/user-guide/05-the-command-reference.md
+          - matsya/user-guide/06-the-python-module.md
+          - matsya/user-guide/07-collections-and-weights.md
+      - Developer guide:
+          - matsya/dev-guide/index.md
+          - matsya/dev-guide/01-the-retrieval-index.md
+          - matsya/dev-guide/02-what-matsya-reads.md
+          - matsya/dev-guide/03-matsya-handlers.md
+          - matsya/dev-guide/04-updating-configurations.md
+  - About us: about.md
+  - Changelog: changelog.md

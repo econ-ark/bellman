@@ -1,0 +1,8 @@
+{
+  "name": "bellman-ddsl",
+  "private": true,
+  "description": "The WebAssembly build of Graphviz that lays the package's drawings out where Graphviz's dot is not installed (packages/bellman/bellman/display/graphviz_layout.py); `npm install` here writes node_modules/, which git ignores.",
+  "dependencies": {
+    "@viz-js/viz": "3.25.0"
+  }
+}

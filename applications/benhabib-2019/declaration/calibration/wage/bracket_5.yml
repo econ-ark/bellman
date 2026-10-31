@@ -1,0 +1,7 @@
+# Earnings in age bracket 5, ages 49 to 54: periods 7-12 of the trellis,
+# counted from the terminal period (the legacy registry's periods 25-30,
+# counted from age 25). Benhabib, Bisin and Luo (2019), Table 1, column
+# "Age 49-54", in thousands of dollars a year, one entry per earnings decile,
+# q1 to q10 in order.
+calibration:
+  wage_fn: [11.74, 24.66, 33.56, 42.23, 51.18, 60.34, 70.63, 82.78, 101.4, 183.4]

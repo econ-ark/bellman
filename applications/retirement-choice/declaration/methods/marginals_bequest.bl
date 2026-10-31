@@ -1,0 +1,8 @@
+@methods: bequest
+# The derivative of the terminal value in wealth, stated in closed form by the
+# marginal block of the decision value builder: the savings left after the
+# last date have no value, so the derivative is zero.
+
+[id=dcsn_marginal, () -> (V) : !dcsn] {
+    D_{x}V = 0                                         :: [id=marginal_wealth]
+}

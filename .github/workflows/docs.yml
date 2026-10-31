@@ -1,0 +1,30 @@
+name: Deploy Docs
+
+# Manual only. The public site, econ-ark.github.io/bellman, is served by the
+# public repository econ-ark/bellman from its gh-pages branch, which GitHub
+# Pages reads directly (branch mode, 31 October 2026); `mkdocs gh-deploy` from
+# a clone of that repository, or a run of this workflow there, deploys it. In
+# the development repository this workflow is not run: its Pages is off.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force

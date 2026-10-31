@@ -1,0 +1,29 @@
+stage: owner_housing
+
+# The FUES solver searches over the housing sizes at every point of the asset
+# grid, reading the owner's consumption value at the cash each size leaves by
+# linear interpolation on the cash grid, and holds the resulting decision value
+# and its derivative on the asset grid.
+methods:
+  - on: policy
+    method: !discrete-choice
+
+  # The derivative of the decision value is stated by the marginal block of
+  # marginals_owner_housing.bl.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_owner_housing.bl
+
+  - on: cntn_to_dcsn.value
+    method: !Linear
+    settings:
+      orders: [a_points]
+      bounds: [[a_min, a_max]]
+
+  - on: cntn_to_dcsn.marginal
+    method: !Linear
+    settings:
+      orders: [a_points]
+      bounds: [[a_min, a_max]]
+
+  - on: dcsn_to_cntn

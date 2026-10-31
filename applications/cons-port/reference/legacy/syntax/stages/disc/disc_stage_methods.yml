@@ -1,0 +1,24 @@
+# stage name
+stage: disc_stage
+
+# node method assignments
+methods:
+  # continuation to decision backward evaluation
+  - on: cntn_to_dcsn
+
+  # decision to arrival backward evaluation
+  - on: dcsn_to_arvl
+
+  # arrival to decision transition
+  - on: arvl_to_dcsn
+
+  # decision to continuation transition
+  - on: dcsn_to_cntn
+
+  # arrival to decision forward builder
+  - on: arvl_to_dcsn_builder
+    method: !deterministic
+
+  # decision to continuation forward builder
+  - on: dcsn_to_cntn_builder
+    method: !deterministic

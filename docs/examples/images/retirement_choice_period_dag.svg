@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 280">
+  <defs>
+    <style>
+      .edge   { fill: none; stroke: #1a1a1a; stroke-width: 1.2px; stroke-linecap: round; }
+      .arrow  { fill: #1a1a1a; }
+      .perch  { fill: #fff; stroke: #1a1a1a; stroke-width: 1.2px; }
+      .stg    { fill: #1a1a1a; stroke: none; }
+      .bound  { fill: none; stroke: #1a1a1a; stroke-width: 0.8px;
+                stroke-dasharray: 4 3; opacity: 0.25; }
+      .field  { font-family: Georgia, 'Times New Roman', serif;
+                font-style: italic; font-size: 15px; fill: #1a1a1a; }
+      .sub    { font-size: 10.5px; }
+      .ptag   { font-family: Georgia, 'Times New Roman', serif;
+                font-style: italic; font-size: 9.5px; fill: #1a1a1a; opacity: 0.40; }
+      .slabel { font-family: 'Inter', 'Helvetica Neue', sans-serif;
+                font-size: 11px; fill: #1a1a1a; }
+      .branch { font-family: 'Inter', 'Helvetica Neue', sans-serif;
+                font-size: 10px; fill: #1a1a1a; font-style: italic; }
+      .period { font-family: 'Inter', 'Helvetica Neue', sans-serif;
+                font-size: 9.5px; fill: #1a1a1a; opacity: 0.30;
+                font-style: italic; }
+      .legend { font-family: 'Inter', 'Helvetica Neue', sans-serif;
+                font-size: 8px; fill: #1a1a1a; opacity: 0.45; }
+    </style>
+    <marker id="ah" markerWidth="8" markerHeight="6" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 L1.5,3 Z" class="arrow"/>
+    </marker>
+  </defs>
+
+  <!-- period boundary -->
+  <rect class="bound" x="14" y="14" width="652" height="252" rx="8"/>
+  <text class="period" x="26" y="30">LifecyclePeriod</text>
+
+  <!-- ═══ LEGEND (top-right) ═══ -->
+  <circle class="stg" cx="548" cy="27" r="3.5"/>
+  <text class="legend" x="555" y="30">stage</text>
+  <circle class="perch" cx="600" cy="27" r="3.5"/>
+  <text class="legend" x="607" y="30">perch field</text>
+
+  <!-- ═══ ARRIVAL PERCH FIELDS (open circles, ≺ tag) ═══ -->
+
+  <!-- a  (arrival of labour_mkt_decision) -->
+  <circle class="perch" cx="68" cy="105" r="6"/>
+  <text class="field" x="68" y="88" text-anchor="middle">a</text>
+  <text class="ptag" x="68" y="124" text-anchor="middle">≺</text>
+
+  <!-- a_ret  (arrival of retire_cons) -->
+  <circle class="perch" cx="68" cy="210" r="6"/>
+  <text class="field" x="68" y="198" text-anchor="middle">a<tspan class="sub" dy="3">ret</tspan></text>
+  <text class="ptag" x="68" y="230" text-anchor="middle">≺</text>
+
+  <!-- ═══ STAGE NODES (filled circles) ═══ -->
+
+  <!-- labour_mkt_decision -->
+  <circle class="stg" cx="220" cy="105" r="7"/>
+  <text class="slabel" x="220" y="82" text-anchor="middle">labour_mkt_decision</text>
+
+  <!-- work_cons -->
+  <circle class="stg" cx="415" cy="65" r="7"/>
+  <text class="slabel" x="415" y="48" text-anchor="middle">work_cons</text>
+
+  <!-- retire_cons -->
+  <circle class="stg" cx="415" cy="192" r="7"/>
+  <text class="slabel" x="415" y="222" text-anchor="middle">retire_cons</text>
+
+  <!-- ═══ CONTINUATION PERCH FIELDS (open circles, ≻ tag) ═══ -->
+
+  <!-- b  (continuation of work_cons) -->
+  <circle class="perch" cx="575" cy="65" r="6"/>
+  <text class="field" x="575" y="48" text-anchor="middle">b</text>
+  <text class="ptag" x="575" y="84" text-anchor="middle">≻</text>
+
+  <!-- b_ret  (continuation of retire_cons) -->
+  <circle class="perch" cx="575" cy="192" r="6"/>
+  <text class="field" x="575" y="180" text-anchor="middle">b<tspan class="sub" dy="3">ret</tspan></text>
+  <text class="ptag" x="575" y="212" text-anchor="middle">≻</text>
+
+  <!-- ═══ EDGES ═══ -->
+
+  <!-- a → labour_mkt_decision -->
+  <line class="edge" x1="75" y1="105" x2="212" y2="105" marker-end="url(#ah)"/>
+
+  <!-- labour_mkt_decision → work_cons  (branch: work) -->
+  <path class="edge" d="M228,102 C265,82 360,65 407,65" marker-end="url(#ah)"/>
+  <text class="branch" x="310" y="72">work</text>
+
+  <!-- labour_mkt_decision → retire_cons  (branch: retire) -->
+  <path class="edge" d="M228,109 C268,140 355,182 407,192" marker-end="url(#ah)"/>
+  <text class="branch" x="298" y="165">retire</text>
+
+  <!-- a_ret → retire_cons -->
+  <path class="edge" d="M75,210 C185,210 335,198 407,193" marker-end="url(#ah)"/>
+
+  <!-- work_cons → b -->
+  <line class="edge" x1="423" y1="65" x2="568" y2="65" marker-end="url(#ah)"/>
+
+  <!-- retire_cons → b_ret -->
+  <line class="edge" x1="423" y1="192" x2="568" y2="192" marker-end="url(#ah)"/>
+
+</svg>

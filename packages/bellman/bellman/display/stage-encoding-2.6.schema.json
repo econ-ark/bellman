@@ -1,0 +1,2269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://econ-ark.org/bellman-sym/stage-encoding/2.6",
+  "title": "An elaborated Bellman-SYM stage",
+  "description": "The stage encoding: the JSON document `stage.encoding()` writes for one version of a Bellman-SYM stage. Each node of its derived answers carries a kind, spelled `<namespace>.<Kind>` in one of the five namespaces `x-namespaces` lists, with the fields `x-constructors` gives it. A namespace is a name of this schema and names no module of the package that writes the document: the package holds one table from its classes to these kinds, so that a class may be moved or renamed while a document already written stays as written.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "https://econ-ark.org/bellman-sym/stage-encoding/2.6"
+    },
+    "version": {
+      "enum": [
+        "symbolic",
+        "calibrated",
+        "methodized",
+        "specified",
+        "methods",
+        "settings",
+        "calibration, settings",
+        "methods, settings"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/mapping"
+    },
+    "definitions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/definition"
+      }
+    },
+    "initial_diagrams": {
+      "$ref": "#/$defs/directions"
+    },
+    "builders": {
+      "$ref": "#/$defs/directions"
+    },
+    "bindings": {
+      "$ref": "#/$defs/bindings"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/obligation"
+      }
+    },
+    "diagnostics": {
+      "$ref": "#/$defs/diagnostics"
+    },
+    "package_version": {
+      "type": "string"
+    },
+    "derived": {
+      "$ref": "#/$defs/derived"
+    }
+  },
+  "required": [
+    "schema",
+    "version",
+    "name",
+    "metadata",
+    "definitions",
+    "initial_diagrams",
+    "builders",
+    "bindings",
+    "provenance",
+    "obligations",
+    "diagnostics",
+    "package_version",
+    "derived"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "json": {
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/json"
+      }
+    },
+    "term": {
+      "description": "The existing syntax.lower.to_json representation, including null for an undeclared set.",
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/term"
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "__class__"
+          ],
+          "properties": {
+            "__class__": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/term"
+          }
+        }
+      ]
+    },
+    "definition": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "set",
+            "distribution",
+            "parameter",
+            "function",
+            "function alias",
+            "correspondence",
+            "law of motion",
+            "value aggregator",
+            "line",
+            "multiplier"
+          ]
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/term"
+              }
+            ],
+            "items": false,
+            "minItems": 2
+          }
+        },
+        "equations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "term": {
+                "$ref": "#/$defs/term"
+              }
+            },
+            "required": [
+              "address",
+              "term"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "address": {
+          "type": "string"
+        },
+        "ordinal": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "on a line, its position among the items of its block's body, from 1, the branches of a branching block counted in turn; null for every other kind"
+        },
+        "describes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "categories": {
+          "type": "object",
+          "description": "on a set marked `!categories`, its category map: the identifier written after the marker, or null, and the pairs of a code and its category's name in increasing code order; absent on every other definition",
+          "properties": {
+            "identifier": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1
+            },
+            "codes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                ],
+                "items": false,
+                "minItems": 2
+              }
+            }
+          },
+          "required": [
+            "identifier",
+            "codes"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "identity",
+        "kind",
+        "coordinates",
+        "equations",
+        "tags",
+        "address",
+        "ordinal",
+        "describes"
+      ],
+      "additionalProperties": false
+    },
+    "directions": {
+      "type": "object",
+      "properties": {
+        "backward": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/graph"
+            },
+            {
+              "$ref": "#/$defs/refusal"
+            }
+          ]
+        },
+        "forward": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/graph"
+            },
+            {
+              "$ref": "#/$defs/refusal"
+            }
+          ]
+        }
+      },
+      "required": [
+        "backward",
+        "forward"
+      ],
+      "additionalProperties": false
+    },
+    "refusal": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "graph": {
+      "type": "object",
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "wires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/wire"
+          }
+        },
+        "boxes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/box"
+          }
+        }
+      },
+      "required": [
+        "inputs",
+        "outputs",
+        "wires",
+        "boxes"
+      ],
+      "additionalProperties": false
+    },
+    "wire": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "field",
+            "function",
+            "measure"
+          ]
+        },
+        "perch": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "domain": {
+          "$ref": "#/$defs/term"
+        },
+        "coordinates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "identity",
+        "kind",
+        "perch",
+        "role",
+        "domain",
+        "coordinates"
+      ],
+      "additionalProperties": false
+    },
+    "box": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "in": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "out": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "address": {
+          "type": "string"
+        },
+        "pieces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/box"
+          }
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pieceMethod"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "label",
+        "in",
+        "out"
+      ],
+      "additionalProperties": false
+    },
+    "setting": {
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/setting"
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/json"
+            }
+          },
+          "required": [
+            "name",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/settings"
+        }
+      ]
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/setting"
+      }
+    },
+    "method": {
+      "type": "object",
+      "properties": {
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "handler": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "settings": {
+          "$ref": "#/$defs/settings"
+        },
+        "block": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "tag",
+        "handler",
+        "settings"
+      ],
+      "additionalProperties": false
+    },
+    "pieceMethod": {
+      "type": "object",
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "handler": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "settings": {
+          "$ref": "#/$defs/settings"
+        },
+        "block": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "tag",
+        "handler",
+        "settings"
+      ],
+      "additionalProperties": false
+    },
+    "bindings": {
+      "type": "object",
+      "properties": {
+        "calibration": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/mapping"
+            }
+          ]
+        },
+        "methods": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/method"
+          }
+        },
+        "settings": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/mapping"
+            }
+          ]
+        }
+      },
+      "required": [
+        "calibration",
+        "methods",
+        "settings"
+      ],
+      "additionalProperties": false
+    },
+    "obligation": {
+      "type": "object",
+      "properties": {
+        "condition": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "explanation": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "required",
+            "assumed",
+            "established"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "condition",
+        "entries",
+        "explanation",
+        "status",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "diagnostics": {
+      "type": "object",
+      "properties": {
+        "complete_signature": {
+          "type": "boolean"
+        },
+        "missing_builders": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "exposed_inputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unused_outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "forward_map": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/json"
+            }
+          }
+        },
+        "builder_choice": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/json"
+            }
+          }
+        },
+        "external_calls": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/json"
+            }
+          }
+        },
+        "unread_inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "source_entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/json"
+                }
+              }
+            },
+            "required": [
+              "rule",
+              "address",
+              "message",
+              "candidates",
+              "source_entries"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ready_for_interpretation": {
+          "type": "boolean"
+        },
+        "derivative_missing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "source_entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/json"
+                }
+              }
+            },
+            "required": [
+              "rule",
+              "address",
+              "message",
+              "candidates",
+              "source_entries"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "complete_signature",
+        "missing_builders",
+        "exposed_inputs",
+        "unused_outputs",
+        "forward_map",
+        "builder_choice",
+        "external_calls",
+        "unread_inputs",
+        "ready_for_interpretation"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "text": false
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/provenanceValue"
+      }
+    },
+    "provenanceValue": {
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/provenanceValue"
+          }
+        },
+        {
+          "$ref": "#/$defs/provenance"
+        }
+      ]
+    },
+    "unboundBox": {
+      "properties": {
+        "methods": false,
+        "pieces": {
+          "items": {
+            "$ref": "#/$defs/unboundBox"
+          }
+        }
+      }
+    },
+    "unboundGraph": {
+      "properties": {
+        "boxes": {
+          "items": {
+            "$ref": "#/$defs/unboundBox"
+          }
+        }
+      }
+    },
+    "unboundDirections": {
+      "properties": {
+        "backward": {
+          "$ref": "#/$defs/unboundGraph"
+        },
+        "forward": {
+          "$ref": "#/$defs/unboundGraph"
+        }
+      }
+    },
+    "boundBox": {
+      "properties": {
+        "methods": {},
+        "pieces": {
+          "items": {
+            "$ref": "#/$defs/boundBox"
+          }
+        }
+      },
+      "required": [
+        "methods"
+      ]
+    },
+    "boundGraph": {
+      "properties": {
+        "boxes": {
+          "items": {
+            "$ref": "#/$defs/boundBox"
+          }
+        }
+      }
+    },
+    "boundDirections": {
+      "properties": {
+        "backward": {
+          "$ref": "#/$defs/boundGraph"
+        },
+        "forward": {
+          "$ref": "#/$defs/boundGraph"
+        }
+      }
+    },
+    "identityEntry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "$ref": "#/$defs/tree"
+            },
+            "stage": {
+              "$ref": "#/$defs/tree"
+            },
+            "address": {
+              "$ref": "#/$defs/tree"
+            },
+            "perch": {
+              "$ref": "#/$defs/tree"
+            },
+            "field": {
+              "$ref": "#/$defs/tree"
+            },
+            "owner": {
+              "$ref": "#/$defs/tree"
+            },
+            "subjects": {
+              "$ref": "#/$defs/tree"
+            },
+            "occurrence": {
+              "$ref": "#/$defs/tree"
+            },
+            "mark": {
+              "$ref": "#/$defs/tree"
+            }
+          },
+          "required": [
+            "kind",
+            "stage",
+            "address",
+            "perch",
+            "field",
+            "owner",
+            "subjects",
+            "occurrence",
+            "mark"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "bundle": {
+      "type": "object",
+      "properties": {
+        "identities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/identityEntry"
+          }
+        },
+        "value": {
+          "$ref": "#/$defs/tree"
+        }
+      },
+      "required": [
+        "identities",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "derived": {
+      "type": "object",
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/bundle"
+        },
+        "initial_diagrams": {
+          "type": "object",
+          "properties": {
+            "backward": {
+              "$ref": "#/$defs/bundle"
+            },
+            "forward": {
+              "$ref": "#/$defs/bundle"
+            }
+          },
+          "required": [
+            "backward",
+            "forward"
+          ],
+          "additionalProperties": false
+        },
+        "primitives": {
+          "type": "object",
+          "properties": {
+            "backward": {
+              "$ref": "#/$defs/bundle"
+            },
+            "forward": {
+              "$ref": "#/$defs/bundle"
+            }
+          },
+          "required": [
+            "backward",
+            "forward"
+          ],
+          "additionalProperties": false
+        },
+        "structural_sources": {
+          "$ref": "#/$defs/structuralSources"
+        },
+        "definitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/bundle"
+          }
+        }
+      },
+      "required": [
+        "stage",
+        "initial_diagrams",
+        "primitives",
+        "structural_sources",
+        "definitions"
+      ],
+      "additionalProperties": false
+    },
+    "structuralSource": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "kind": {
+          "enum": [
+            "Cap",
+            "Spider"
+          ]
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "outputs"
+      ],
+      "additionalProperties": false
+    },
+    "structuralSourceDirections": {
+      "type": "object",
+      "properties": {
+        "backward": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/structuralSource"
+          }
+        },
+        "forward": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/structuralSource"
+          }
+        }
+      },
+      "required": [
+        "backward",
+        "forward"
+      ],
+      "additionalProperties": false
+    },
+    "structuralSources": {
+      "type": "object",
+      "properties": {
+        "initial_diagrams": {
+          "$ref": "#/$defs/structuralSourceDirections"
+        },
+        "builders": {
+          "$ref": "#/$defs/structuralSourceDirections"
+        }
+      },
+      "required": [
+        "initial_diagrams",
+        "builders"
+      ],
+      "additionalProperties": false
+    },
+    "tree": {
+      "if": {
+        "type": "object"
+      },
+      "then": {
+        "if": {
+          "required": [
+            "node"
+          ]
+        },
+        "then": {
+          "if": {
+            "required": [
+              "fields"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/ordinaryNode"
+          },
+          "else": {
+            "$ref": "#/$defs/scopedNode"
+          }
+        },
+        "else": {
+          "if": {
+            "required": [
+              "ref"
+            ]
+          },
+          "then": {
+            "$ref": "#/$defs/reference"
+          },
+          "else": {
+            "$ref": "#/$defs/taggedTree"
+          }
+        }
+      },
+      "else": {
+        "anyOf": [
+          {
+            "type": [
+              "null",
+              "boolean",
+              "number",
+              "string"
+            ]
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/tree"
+            }
+          }
+        ]
+      }
+    },
+    "ordinaryNode": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "enum": [
+            "methods.MethodOption",
+            "predicates.And",
+            "predicates.Compare",
+            "predicates.Complementarity",
+            "predicates.IsInteger",
+            "predicates.Member",
+            "predicates.Not",
+            "predicates.Or",
+            "records.ArithmeticHead",
+            "records.AuthoredCard",
+            "records.Bindings",
+            "records.BlockData",
+            "records.BlockHeader",
+            "records.ValueRepresentation",
+            "records.Builders",
+            "records.CategoryCodes",
+            "records.Composite",
+            "records.Declared",
+            "records.Definition",
+            "records.DefinitionCard",
+            "records.Denoted",
+            "records.BlockDenoted",
+            "records.Hypothesis",
+            "records.InitialDiagrams",
+            "records.KernelClause",
+            "records.Line",
+            "records.Metadata",
+            "records.Method",
+            "records.MethodClause",
+            "records.BlockMethodClause",
+            "records.ImageByName",
+            "records.NodeData",
+            "records.OperatorCard",
+            "records.OperatorOccurrence",
+            "records.Piece",
+            "records.ImageAtPoint",
+            "records.Provenance",
+            "records.Refusal",
+            "records.ResolvedName",
+            "records.Rule",
+            "records.Condition",
+            "records.ExpressionType",
+            "records.WireType",
+            "records.Semgraph",
+            "records.ImageSet",
+            "records.StageDenotation",
+            "records.Statement",
+            "records.TitleBlock",
+            "records.UndeclaredSet",
+            "records.Wire",
+            "semantic.Apply",
+            "semantic.Compose",
+            "semantic.FiniteMeasureSet",
+            "semantic.FunctionSet",
+            "semantic.StochasticKernelSet",
+            "semantic.MeasurableMapSet",
+            "semantic.PowerSet",
+            "semantic.ProbabilityMeasureSet",
+            "terms.Add",
+            "terms.Annotation",
+            "terms.Arrival",
+            "terms.Assignment",
+            "terms.At",
+            "terms.Between",
+            "terms.Block",
+            "terms.Call",
+            "terms.Closed",
+            "terms.Complementary",
+            "terms.Constant",
+            "terms.Continuation",
+            "terms.Control",
+            "terms.Coordinate",
+            "terms.Decision",
+            "terms.Declaration",
+            "terms.Declare",
+            "terms.Div",
+            "terms.Domain",
+            "terms.Eq",
+            "terms.Equation",
+            "terms.FILE",
+            "terms.FiniteSet",
+            "terms.Functions",
+            "terms.Ge",
+            "terms.Group",
+            "terms.Gt",
+            "terms.In",
+            "terms.Inequality",
+            "terms.Infoset",
+            "terms.IntegerRange",
+            "terms.Interval",
+            "terms.Key",
+            "terms.KeyValue",
+            "terms.Law",
+            "terms.Le",
+            "terms.Lt",
+            "terms.Marked",
+            "terms.Metadata",
+            "terms.Mul",
+            "terms.Named",
+            "terms.Neg",
+            "terms.Node",
+            "terms.Number",
+            "terms.Open",
+            "terms.Operator",
+            "terms.Parameter",
+            "terms.PathAssignment",
+            "terms.Points",
+            "terms.Pos",
+            "terms.Pow",
+            "terms.Product",
+            "terms.Range",
+            "terms.Rel",
+            "terms.Residual",
+            "terms.Role",
+            "terms.Select",
+            "terms.Shock",
+            "terms.Signature",
+            "terms.Slack",
+            "terms.Space",
+            "terms.State",
+            "terms.Statement",
+            "terms.SteadyState",
+            "terms.Sub",
+            "terms.Subject",
+            "terms.Sym",
+            "terms.T",
+            "terms.Tag",
+            "terms.TimeValue",
+            "terms.Tuple",
+            "terms.Typer",
+            "terms.Value",
+            "terms.Var",
+            "terms.Variable"
+          ]
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/tree"
+          }
+        }
+      },
+      "required": [
+        "node",
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "scopedNode": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "enum": [
+            "semantic.Lambda",
+            "semantic.Integral",
+            "semantic.Sup",
+            "semantic.Measure",
+            "semantic.ProductMeasure",
+            "terms.Comprehension",
+            "terms.Operator",
+            "terms.FuncDef",
+            "terms.CorrDef"
+          ]
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tree"
+          }
+        },
+        "outside": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tree"
+          }
+        },
+        "body": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tree"
+          }
+        },
+        "shape": {
+          "$ref": "#/$defs/tree"
+        }
+      },
+      "required": [
+        "node",
+        "bindings",
+        "outside",
+        "body",
+        "shape"
+      ],
+      "additionalProperties": false
+    },
+    "reference": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "const": "bound"
+            },
+            "depth": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "ref",
+            "depth",
+            "position"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "const": "document"
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ref",
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "const": "primitive"
+            },
+            "name": {
+              "enum": [
+                "Aggregation",
+                "Argmax",
+                "D",
+                "DistributionExtension",
+                "E",
+                "Evaluation",
+                "Expectation",
+                "Inv",
+                "LogNormal",
+                "Mixture",
+                "N",
+                "PolicyInsertion",
+                "Pullback",
+                "Pushforward",
+                "R+",
+                "R++",
+                "R_{++}",
+                "R_{+}",
+                "Relation",
+                "TruncatedLogNormal",
+                "TruncatedNormal",
+                "TypeIExtremeValue",
+                "Uniform",
+                "argmax",
+                "evaluate",
+                "exists",
+                "exp",
+                "forall",
+                "inf",
+                "log",
+                "max",
+                "min",
+                "primitive:boolean",
+                "primitive:extended-real",
+                "primitive:integer",
+                "primitive:natural",
+                "primitive:nonnegative-real",
+                "primitive:positive-real",
+                "primitive:real",
+                "product",
+                "solve",
+                "upper_env",
+                "ℕ",
+                "ℝ",
+                "ℝ_{+∞}",
+                "ℝ_{-∞}",
+                "ℝ_{±∞}",
+                "ℝ̄",
+                "ℝ₊",
+                "ℝ₊₊",
+                "ℤ"
+              ]
+            }
+          },
+          "required": [
+            "ref",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ref": {
+              "const": "unresolved"
+            },
+            "target": {
+              "$ref": "#/$defs/tree"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ref",
+            "target",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "taggedTree": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "textual": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "textual"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mapping": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "$ref": "#/$defs/tree"
+                  },
+                  {
+                    "$ref": "#/$defs/tree"
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2,
+                "items": false
+              }
+            }
+          },
+          "required": [
+            "mapping"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "float": {
+              "enum": [
+                "inf",
+                "-inf",
+                "nan"
+              ]
+            }
+          },
+          "required": [
+            "float"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "set": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/tree"
+              }
+            }
+          },
+          "required": [
+            "set"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "bindings": {
+            "properties": {
+              "methods": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "initial_diagrams": {
+            "$ref": "#/$defs/unboundDirections"
+          },
+          "builders": {
+            "$ref": "#/$defs/unboundDirections"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "initial_diagrams": {
+            "$ref": "#/$defs/boundDirections"
+          },
+          "builders": {
+            "$ref": "#/$defs/boundDirections"
+          }
+        }
+      }
+    }
+  ],
+  "x-primitives": [
+    "Aggregation",
+    "Argmax",
+    "D",
+    "DistributionExtension",
+    "E",
+    "Evaluation",
+    "Expectation",
+    "Inv",
+    "LogNormal",
+    "Mixture",
+    "N",
+    "PolicyInsertion",
+    "Pullback",
+    "Pushforward",
+    "R+",
+    "R++",
+    "R_{++}",
+    "R_{+}",
+    "Relation",
+    "TruncatedLogNormal",
+    "TruncatedNormal",
+    "TypeIExtremeValue",
+    "Uniform",
+    "argmax",
+    "evaluate",
+    "exists",
+    "exp",
+    "forall",
+    "inf",
+    "log",
+    "max",
+    "min",
+    "primitive:boolean",
+    "primitive:extended-real",
+    "primitive:integer",
+    "primitive:natural",
+    "primitive:nonnegative-real",
+    "primitive:positive-real",
+    "primitive:real",
+    "product",
+    "solve",
+    "upper_env",
+    "ℕ",
+    "ℝ",
+    "ℝ_{+∞}",
+    "ℝ_{-∞}",
+    "ℝ_{±∞}",
+    "ℝ̄",
+    "ℝ₊",
+    "ℝ₊₊",
+    "ℤ"
+  ],
+  "x-namespaces": {
+    "terms": "the constructors of the base grammar of the language, `syntax/grammars/*.asdl`, as `syntax.lower.to_json` also writes them",
+    "semantic": "the typed expressions of the semantic grammar, `syntax/grammars/semantic.asdl`: an application, a lambda, a composition, an integral, a supremum, a measure, a finite product of measures, the sets of functions, kernels and measures, and an unresolved reference",
+    "records": "the records of a stage version, stored and derived alike: the definitions, sorts, conditions, bindings and methods a version holds, and the records a denotation answers, from the stage's own to a wire's",
+    "predicates": "the seven forms of a condition",
+    "methods": "the typed option of a method"
+  },
+  "x-constructors": {
+    "terms.FILE": [
+      "items"
+    ],
+    "terms.Metadata": [
+      "key",
+      "value"
+    ],
+    "terms.Statement": [
+      "core",
+      "annot"
+    ],
+    "terms.Block": [
+      "tag",
+      "body"
+    ],
+    "terms.Declare": [
+      "declaration",
+      "annot"
+    ],
+    "terms.Equation": [
+      "lhs",
+      "rhs"
+    ],
+    "terms.Inequality": [
+      "lhs",
+      "op",
+      "rhs"
+    ],
+    "terms.Residual": [
+      "form"
+    ],
+    "terms.Assignment": [
+      "target",
+      "value"
+    ],
+    "terms.PathAssignment": [
+      "target",
+      "bound",
+      "value"
+    ],
+    "terms.CorrDef": [
+      "name",
+      "params",
+      "body"
+    ],
+    "terms.Law": [
+      "subjects",
+      "law"
+    ],
+    "terms.FuncDef": [
+      "name",
+      "params",
+      "body"
+    ],
+    "terms.Slack": [
+      "core",
+      "bound"
+    ],
+    "terms.Range": [
+      "left",
+      "lower",
+      "upper",
+      "right"
+    ],
+    "terms.Open": [],
+    "terms.Closed": [],
+    "terms.Annotation": [
+      "entries"
+    ],
+    "terms.Tag": [
+      "tag"
+    ],
+    "terms.KeyValue": [
+      "key",
+      "value"
+    ],
+    "terms.Typer": [
+      "typing"
+    ],
+    "terms.Constant": [
+      "name"
+    ],
+    "terms.TimeValue": [
+      "name",
+      "time"
+    ],
+    "terms.Variable": [
+      "name",
+      "when",
+      "shift"
+    ],
+    "terms.T": [],
+    "terms.SteadyState": [],
+    "terms.At": [
+      "side"
+    ],
+    "terms.Number": [
+      "value"
+    ],
+    "terms.Sym": [
+      "symbol"
+    ],
+    "terms.Add": [
+      "left",
+      "right"
+    ],
+    "terms.Sub": [
+      "left",
+      "right"
+    ],
+    "terms.Neg": [
+      "operand"
+    ],
+    "terms.Mul": [
+      "left",
+      "right"
+    ],
+    "terms.Div": [
+      "left",
+      "right"
+    ],
+    "terms.Pow": [
+      "base",
+      "exponent"
+    ],
+    "terms.Call": [
+      "fun",
+      "args"
+    ],
+    "terms.Operator": [
+      "head",
+      "subs",
+      "args"
+    ],
+    "terms.Tuple": [
+      "items"
+    ],
+    "terms.Select": [
+      "family",
+      "sel"
+    ],
+    "terms.Space": [
+      "set"
+    ],
+    "terms.Pos": [
+      "at"
+    ],
+    "terms.Key": [
+      "at"
+    ],
+    "terms.Var": [
+      "name"
+    ],
+    "terms.In": [
+      "var",
+      "set"
+    ],
+    "terms.Declaration": [
+      "subject",
+      "classifiers",
+      "value"
+    ],
+    "terms.Marked": [
+      "kind"
+    ],
+    "terms.Signature": [
+      "source",
+      "source_types",
+      "target",
+      "target_types"
+    ],
+    "terms.Complementary": [
+      "declaration",
+      "bound"
+    ],
+    "terms.Subject": [
+      "coordinates"
+    ],
+    "terms.Coordinate": [
+      "stem",
+      "at",
+      "classifiers"
+    ],
+    "terms.Group": [
+      "inner",
+      "classifiers"
+    ],
+    "terms.Domain": [
+      "space"
+    ],
+    "terms.Infoset": [
+      "side"
+    ],
+    "terms.Role": [
+      "kind"
+    ],
+    "terms.Arrival": [],
+    "terms.Decision": [],
+    "terms.Continuation": [],
+    "terms.State": [],
+    "terms.Control": [],
+    "terms.Value": [
+      "order"
+    ],
+    "terms.Shock": [],
+    "terms.Parameter": [],
+    "terms.Node": [],
+    "terms.Named": [
+      "name"
+    ],
+    "terms.Interval": [
+      "bounds"
+    ],
+    "terms.FiniteSet": [
+      "members"
+    ],
+    "terms.Product": [
+      "factors"
+    ],
+    "terms.Comprehension": [
+      "bound",
+      "base",
+      "conds"
+    ],
+    "terms.IntegerRange": [
+      "lower",
+      "upper"
+    ],
+    "terms.Points": [
+      "members",
+      "superset"
+    ],
+    "terms.Functions": [
+      "domain",
+      "codomain"
+    ],
+    "terms.Rel": [
+      "left",
+      "op",
+      "right"
+    ],
+    "terms.Between": [
+      "lower",
+      "lo",
+      "middle",
+      "hi",
+      "upper"
+    ],
+    "terms.Lt": [],
+    "terms.Le": [],
+    "terms.Eq": [],
+    "terms.Ge": [],
+    "terms.Gt": [],
+    "semantic.Apply": [
+      "function",
+      "args"
+    ],
+    "semantic.Lambda": [
+      "bindings",
+      "body"
+    ],
+    "semantic.Integral": [
+      "binding",
+      "measure",
+      "body"
+    ],
+    "semantic.Sup": [
+      "binding",
+      "body"
+    ],
+    "semantic.Measure": [
+      "domain",
+      "binding",
+      "body"
+    ],
+    "semantic.ProductMeasure": [
+      "binding",
+      "body"
+    ],
+    "semantic.Unresolved": [
+      "identity",
+      "missing"
+    ],
+    "semantic.FunctionSet": [
+      "domain",
+      "codomain"
+    ],
+    "semantic.MeasurableMapSet": [
+      "domain",
+      "codomain"
+    ],
+    "semantic.StochasticKernelSet": [
+      "domain",
+      "codomain"
+    ],
+    "semantic.FiniteMeasureSet": [
+      "domain"
+    ],
+    "semantic.ProbabilityMeasureSet": [
+      "domain"
+    ],
+    "semantic.PowerSet": [
+      "domain"
+    ],
+    "predicates.Member": [
+      "subject",
+      "set"
+    ],
+    "predicates.Compare": [
+      "left",
+      "relation",
+      "right"
+    ],
+    "predicates.Not": [
+      "operand"
+    ],
+    "predicates.And": [
+      "left",
+      "right"
+    ],
+    "predicates.Complementarity": [
+      "core",
+      "bound"
+    ],
+    "predicates.Or": [
+      "left",
+      "right"
+    ],
+    "predicates.IsInteger": [
+      "operand"
+    ],
+    "records.CategoryCodes": [
+      "identifier",
+      "codes"
+    ],
+    "records.Definition": [
+      "identity",
+      "kind",
+      "coordinates",
+      "equations",
+      "tags",
+      "address"
+    ],
+    "records.ExpressionType": [
+      "kind",
+      "domain",
+      "arguments",
+      "results"
+    ],
+    "records.WireType": [
+      "sort",
+      "carrier",
+      "declarations"
+    ],
+    "records.ResolvedName": [
+      "identity",
+      "value_type",
+      "role",
+      "perch"
+    ],
+    "records.ArithmeticHead": [
+      "head"
+    ],
+    "records.UndeclaredSet": [],
+    "records.Condition": [
+      "condition",
+      "entries",
+      "status",
+      "evidence",
+      "explanation",
+      "named_identities",
+      "predicate",
+      "purpose",
+      "family"
+    ],
+    "records.InitialDiagrams": [
+      "backward",
+      "forward",
+      "refused_blocks"
+    ],
+    "records.Builders": [
+      "backward",
+      "forward"
+    ],
+    "records.Semgraph": [
+      "graph",
+      "inputs",
+      "outputs",
+      "obligations",
+      "parameters",
+      "calibration"
+    ],
+    "records.Refusal": [
+      "reason",
+      "diagnostic"
+    ],
+    "records.OperatorOccurrence": [
+      "head",
+      "subscripts",
+      "position",
+      "unknown",
+      "target"
+    ],
+    "records.Line": [
+      "address",
+      "ordinal",
+      "role",
+      "tags",
+      "operators",
+      "core",
+      "equation_kind",
+      "unknowns",
+      "inputs",
+      "outputs"
+    ],
+    "records.Method": [
+      "tag",
+      "handler",
+      "settings",
+      "block"
+    ],
+    "records.Metadata": [
+      "entries"
+    ],
+    "records.Provenance": [
+      "entries"
+    ],
+    "records.Bindings": [
+      "methods",
+      "calibration",
+      "settings"
+    ],
+    "records.NodeData": [
+      "node_id",
+      "block_id",
+      "statements",
+      "marks",
+      "branch",
+      "inputs",
+      "outputs"
+    ],
+    "records.BlockData": [
+      "perch_from",
+      "perch_to",
+      "statements_outside_nodes",
+      "nodes",
+      "branch_labels"
+    ],
+    "records.BlockHeader": [
+      "inputs"
+    ],
+    "records.ValueRepresentation": [
+      "block_id"
+    ],
+    "records.TitleBlock": [
+      "address",
+      "subtitle",
+      "stamp",
+      "stage",
+      "identity",
+      "level",
+      "direction",
+      "keys",
+      "grain",
+      "pair"
+    ],
+    "records.Statement": [
+      "address",
+      "text",
+      "position",
+      "doc",
+      "no_wire"
+    ],
+    "records.Denoted": [
+      "symbol",
+      "mathematical_type",
+      "expression",
+      "cited",
+      "identity",
+      "bare",
+      "specializes"
+    ],
+    "records.BlockDenoted": [
+      "symbol",
+      "mathematical_type",
+      "expression",
+      "cited",
+      "identity",
+      "bare",
+      "specializes",
+      "written_at"
+    ],
+    "records.Textual": [
+      "text"
+    ],
+    "records.Hypothesis": [
+      "kind",
+      "predicate"
+    ],
+    "records.KernelClause": [
+      "kind",
+      "symbol",
+      "owner",
+      "identity",
+      "statements",
+      "denoted",
+      "hypotheses"
+    ],
+    "records.MethodClause": [
+      "address",
+      "tag",
+      "handler",
+      "settings",
+      "option_types",
+      "values"
+    ],
+    "records.BlockMethodClause": [
+      "address",
+      "tag",
+      "handler",
+      "settings",
+      "option_types",
+      "values",
+      "block"
+    ],
+    "records.ImageByName": [
+      "expression"
+    ],
+    "records.ImageAtPoint": [
+      "expression"
+    ],
+    "records.ImageSet": [
+      "expression"
+    ],
+    "records.OperatorCard": [
+      "kind",
+      "policies",
+      "inputs",
+      "outputs",
+      "image",
+      "feasible",
+      "affine",
+      "kernel",
+      "required",
+      "coordinate",
+      "conditions",
+      "method",
+      "title",
+      "expression",
+      "definitions",
+      "source",
+      "at",
+      "where"
+    ],
+    "records.Composite": [
+      "policies",
+      "inputs",
+      "outputs",
+      "pieces",
+      "chain",
+      "order",
+      "order_kind",
+      "free",
+      "header",
+      "coordinate",
+      "conditions",
+      "method",
+      "title",
+      "definitions",
+      "source",
+      "at",
+      "where",
+      "doc",
+      "declarations"
+    ],
+    "records.AuthoredCard": [
+      "kind",
+      "inputs",
+      "outputs",
+      "statements",
+      "pieces",
+      "header",
+      "coordinate",
+      "tags",
+      "describes",
+      "method",
+      "title",
+      "conditions",
+      "definitions",
+      "source"
+    ],
+    "records.DefinitionCard": [
+      "kind",
+      "statement",
+      "denoted",
+      "hypotheses",
+      "describes",
+      "conditions",
+      "method",
+      "title",
+      "definitions",
+      "source"
+    ],
+    "records.StageDenotation": [
+      "directions",
+      "stage",
+      "source",
+      "definitions",
+      "conditions"
+    ],
+    "methods.MethodOption": [
+      "kind",
+      "required",
+      "conditions"
+    ],
+    "records.Wire": [
+      "identity",
+      "mathematical_type",
+      "note",
+      "expression",
+      "definition",
+      "controls",
+      "rules",
+      "residuals"
+    ],
+    "records.Piece": [
+      "key",
+      "name",
+      "record"
+    ],
+    "records.Rule": [
+      "statement",
+      "where",
+      "on",
+      "label"
+    ],
+    "records.Declared": [
+      "source",
+      "statement"
+    ],
+    "semantic.Compose": [
+      "outer",
+      "inner",
+      "outputs"
+    ]
+  }
+}

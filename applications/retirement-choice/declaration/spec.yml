@@ -1,0 +1,14 @@
+# The recipe of the retirement model: the trellis file and each stage's file,
+# by their paths from this folder, and for each stage and each kind the
+# ordered sources; `$fill` and the three methods slots are bound by keyword of
+# `load_recipe`. Each stage has its own methods slot, `$ret_choice_method`,
+# `$worker_method` and `$retiree_method`, so that a method choice reaches one
+# stage. The bequest declares no parameter or setting; its one methods file
+# binds the marginal block of its derivative, and it is active in the
+# terminal period alone, `periods: [0, 0]`.
+trellis: trellis.yml
+stages:
+  ret_choice:   {stage: stages/ret_choice/ret_choice.bl,     calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/ret_choice/methods, $ret_choice_method]}}
+  worker_cons:  {stage: stages/worker_cons/worker_cons.bl,   calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/worker_cons/methods, $worker_method]}}
+  retiree_cons: {stage: stages/retiree_cons/retiree_cons.bl, calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/retiree_cons/methods, $retiree_method]}}
+  bequest:      {stage: stages/bequest/bequest.bl,           methods: {all: [stages/bequest/methods]}, periods: [0, 0]}

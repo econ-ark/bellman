@@ -1,0 +1,15 @@
+stage: survival
+
+# The expectation over survival and death is the sum of the two branch values
+# weighted by the survival probability; forward, each household is drawn
+# alive or dead.
+methods:
+  - on: E_s
+    method: !sum
+  - on: dcsn_to_cntn
+    method: !monte-carlo
+    settings:
+      n_paths: 10000
+      seed: 42
+  - on: arvl_to_dcsn
+    method: !deterministic

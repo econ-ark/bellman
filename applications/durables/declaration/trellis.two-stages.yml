@@ -1,0 +1,17 @@
+!trellis
+name: durables_two_stages
+# A route without the tenure stage: the two consumption stages and the
+# bequest, the periods not joined to one another. The full recipe,
+# spec.yml, constructs the tenure stage and joins the periods; this
+# file keeps the route the factory's acceptance tests and the listings of the
+# factory's page read.
+# The terminal period holds the bequest and the connector from both
+# continuation sets to its arrival fields a_bq, h_bq and z_bq; the fifty
+# earlier periods hold the two consumption stages alone, since a connector to
+# a field no stage of the period declares is refused.
+periods:
+  - stages: [keeper_cons, adjuster_cons, bequest]
+    connectors:
+      - {a_nxt_kp: a_bq, h_nxt_kp: h_bq, z_nxt_kp: z_bq, a_nxt_adj: a_bq, h_nxt_adj: h_bq, z_nxt_adj: z_bq}
+  - {template: period.two-stages.yml, repeat: 50}
+inter_connectors: []

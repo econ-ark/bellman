@@ -1,0 +1,86 @@
+name: ConsPrefShock
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    Xp: "@def R++"
+    Xm: "@def R+"
+    Xa: "@def R+"
+    Xxi: "@def R++"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+
+  exogenous:
+    psi:
+      - "@in R++"
+      - "@dist IncShkDstn[perm]"
+    theta:
+      - "@in R+"
+      - "@dist IncShkDstn[tran]"
+    xi:
+      - "@in Xxi"
+      - "@dist PrefShkDstn"
+
+  states:
+    m: "@in Xm"
+    p: "@in Xp"
+
+  poststates:
+    a: "@in Xa"
+    p_nxt: "@in Xp"
+
+  controls:
+    c: "@in R+"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    beta: "@in (0,1)"
+    rho: "@in (1, Inf)"
+    Rfree: "@in R++"
+    PermGroFac: "@in R++"
+    LivPrb: "@in (0,1]"
+
+equations:
+  arvl_to_dcsn_transition: |
+    G = PermGroFac * psi
+    p = p_prev * G
+    b = Rfree * k / G
+    y = theta
+    m = b + y
+
+  dcsn_to_cntn_transition: |
+    a = m - c
+    p_nxt[>] = p
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u = xi * (c^(1-rho))/(1-rho)
+      V = max_c{u + beta * LivPrb * V[>]}
+    InvEuler: |
+      c = (xi * beta * LivPrb * dV[>])^(-1/rho)
+    MarginalBellman: |
+      dV = xi * c^(-rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{psi, theta, xi}[V]
+    ShadowBellman: |
+      dV[<] = Rfree * E_{psi, theta, xi}[(G)^(-rho) * dV]
+
+calibration:
+  beta: 0.96
+  rho: 2.0
+  Rfree: 1.03
+  PermGroFac: 1.01
+  LivPrb: 1.0

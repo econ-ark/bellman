@@ -1,0 +1,30 @@
+stage: bellman
+
+# Numerical choices for stages/benhabib_bellman/benhabib_bellman.bl, whose stage name is
+# `bellman`, taken from the legacy registry's bellman_methods.yml. The handlers
+# are the legacy's placeholders `dolo:<callable>`: no callable realizes these
+# method tags yet. The legacy entries name no setting, so no setting of
+# settings/default.yml is read at a place.
+#
+# Two legacy entries are not copied. `upper_env` (`!FUES`): the stage writes
+# no upper-envelope operator for it to attach to. `policy.InvEuler`
+# (`!analytic-inverse`): the method attaches to the node, and `configure` then
+# stops at that node with an error the package does not catch.
+# The legacy's `evaluate` entry, `!Linear` on the line c = c[>], is not copied
+# either: the interpolation of the policy is part of the `!egm` method, which
+# stands at the Evaluation of the policy block, and a second entry reaching that
+# box would be refused as a conflict.
+
+methods:
+  # The endogenous grid method opens the policy builder with the method block
+  # of benhabib_bellman_egm.bl; the stage file states the maximization alone.
+  - on: policy
+    method: !egm
+    block: ../../methods/benhabib_bellman_egm.bl
+    handler: dolo:egm_backward
+
+  # The derivative of the decision value in wealth is stated by the marginal
+  # block of marginals_benhabib_bellman.bl on the decision value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_benhabib_bellman.bl

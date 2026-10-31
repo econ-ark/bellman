@@ -1,0 +1,18 @@
+!trellis
+name: reference_cons_only
+# The fixed reference's consumption problem without a portfolio choice (its configuration cons_only): capital
+# earns the safe return and income is drawn, consumption follows on the resources, discounting closes the
+# period. noport continues to m and cons arrives at m, so no connector is written.
+# Six equal periods; the one inter-period mapping stands for every adjacent pair.
+periods:
+  - stages:
+      noport: {stage: stages/noport/noport.bl, calibration: calibration/portfolio.yml,
+               settings: settings/noport.yml, methods: methods/noport.yml}
+      cons: {stage: stages/cons/cons.bl, calibration: calibration/portfolio.yml,
+             settings: settings/cons.yml, methods: methods/cons.yml}
+      disc: {stage: stages/disc/disc.bl, calibration: calibration/portfolio.yml,
+             settings: {}, methods: methods/disc.yml}
+    connectors: []
+    repeat: 6
+inter_connectors:
+  - {disc.a: k}

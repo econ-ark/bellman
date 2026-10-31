@@ -1,0 +1,9 @@
+@stage: port
+
+[id=foc, (V[>]) : !cntn -> ς] {
+    ς = solve_{ς}(E_{Ψ,θ}(D_{w}V[>]*(Ψ - R)))       :: [id=euler]
+}
+
+[id=dcsn_marginal, (V[>], ς) : !cntn -> (V) : !dcsn] {
+    D_{k}V = E_{Ψ,θ}(D_{w}V[>]*(ς*Ψ + (1-ς)*R))     :: [id=envelope]
+}

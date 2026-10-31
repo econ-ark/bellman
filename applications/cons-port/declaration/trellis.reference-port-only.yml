@@ -1,0 +1,17 @@
+!trellis
+name: reference_port_only
+# The fixed reference's portfolio problem without consumption (its configuration port_only): the share is
+# chosen on capital as the reference solved it, the resources the draws give are discounted and are the next
+# period's capital.
+# Six equal periods; the one inter-period mapping stands for every adjacent pair.
+periods:
+  - stages:
+      port: {stage: stages/port/port.bl, calibration: calibration/portfolio.yml,
+             settings: settings/port.yml, methods: methods/port_reference.yml}
+      disc: {stage: stages/disc/disc.bl, calibration: calibration/portfolio.yml,
+             settings: {}, methods: methods/disc.yml}
+    connectors:
+      - {w: a}
+    repeat: 6
+inter_connectors:
+  - {a: k}

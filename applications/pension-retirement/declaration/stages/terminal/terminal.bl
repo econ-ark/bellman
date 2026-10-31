@@ -1,0 +1,36 @@
+@stage: terminal
+
+Xf := ℝ₊
+Xp := ℝ₊
+
+# The terminal stage of the pension model, written for the build of branching
+# (the terminal value is a stage). It stands last in
+# the terminal period, periods[0], and takes the six
+# continuation fields that leave that period, the two branches of
+# retire_choice and the retiree's own savings, through the terminal period's
+# connector in trellis.yml. Its arrival fields are renamed, y_f_T and y_p_T,
+# the paper's end-of-period assets at the terminal date T, so that no stage of
+# the terminal period arrives at a name worker_saving or retiree_saving
+# arrives at.
+#
+# The model states no terminal value: economics.md names none, and the paper's
+# agent maximizes lifetime utility of consumption with T finite and no bequest
+# term (Dobrescu and Shanker 2024, §6.1). The value after the last period is
+# therefore the boundary data V[>], zero, and its derivatives are zero, as
+# the arrival builder's marginal block, in
+# declaration/methods/marginals_terminal.bl, states.
+# AAS has not yet confirmed this terminal value.
+
+[id=arvl_to_dcsn, (y_f_T : Xf, y_p_T : Xp) : !arvl -> (y_f_d : Xf, y_p_d : Xp) : !dcsn] {
+    y_f_d = y_f_T                                     :: [id=financial]
+    y_p_d = y_p_T                                     :: [id=pension]
+}
+
+# V[>] is the terminal boundary data, zero, supplied at realization
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = V[>]                                          :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                                          :: [id=value]
+}

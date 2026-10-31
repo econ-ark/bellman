@@ -1,0 +1,43 @@
+!stage
+# stage name
+name: disc_stage
+
+# symbol declarations
+symbols:
+  spaces:
+    Xa: "@def R+"
+
+  prestate:
+    a: "@in Xa"
+
+  states:
+    a_d: "@in Xa"
+
+  poststates:
+    a: "@in Xa"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  parameters:
+    β: "@in (0,1)"
+
+# stage equations
+equations:
+  # arrival to decision transition
+  arvl_to_dcsn:
+    - a_d = a
+
+  # decision to continuation transition
+  dcsn_to_cntn:
+    - a = a_d
+
+  # continuation to decision backward evaluation
+  cntn_to_dcsn:
+    - V = β*V[>]
+
+  # decision to arrival backward evaluation
+  dcsn_to_arvl:
+    - V[<] = V

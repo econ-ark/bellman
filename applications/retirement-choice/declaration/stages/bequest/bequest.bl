@@ -1,0 +1,21 @@
+@stage: bequest
+
+# The terminal value of the retirement model, written as a stage. The papers
+# consume all resources at the last date, so the savings left after the
+# terminal period have no value (economics.md, "The terminal continuation
+# value"). V[>] is the terminal boundary data, zero, supplied at
+# realization. The arrival field is a_bq and not a
+# or a_ret, the names at which ret_choice and retiree_cons of the terminal
+# period arrive: the savings left after the last date begin no further date.
+
+[id=arvl_to_dcsn, (a_bq : ℝ₊) : !arvl -> (x : ℝ₊) : !dcsn] {
+    x = a_bq                                           :: [id=wealth]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = V[>]                                           :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                           :: [id=value]
+}

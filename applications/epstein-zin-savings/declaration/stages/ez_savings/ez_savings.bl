@@ -1,0 +1,24 @@
+@stage: ez_savings
+
+β : (0,1), < E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ))  :: ["discount factor; the bound is the restriction under which an optimal plan exists"]
+ρ : ℝ₊₊   :: ["1/ρ is the elasticity of intertemporal substitution; ρ differs from 1"]
+γ : ℝ₊₊   :: ["relative risk aversion; γ differs from 1"]
+μ_Ψ : ℝ
+σ_Ψ : ℝ₊
+
+Ψ : ℝ₊₊
+Ψ ~ LogNormal(μ_Ψ, σ_Ψ)
+
+Γ(m_d : ℝ₊₊) := (0, m_d]
+
+[id=dcsn_to_cntn, (m_d : ℝ₊₊, c : !ctrl @ ℝ₊₊, Ψ) : !dcsn -> (a : ℝ₊₊) : !cntn] {
+    a = (m_d - c)*Ψ                 :: [id=savings, "resources carried forward, scaled by the gross return drawn after the decision"]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = ((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ))     :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> c] {
+    c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) + β*E_{Ψ}(V[>]^(1-γ))^((1-ρ)/(1-γ)))^(1/(1-ρ)))    :: [id=objective]
+}

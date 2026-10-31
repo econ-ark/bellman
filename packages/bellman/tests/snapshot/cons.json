@@ -1,0 +1,4186 @@
+{
+ "builders/backward/builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ───────────────────────────────────────────────────\n  out  𝑉   : Xm → [−∞, ∞)\n\nAt\n  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nOperations\n  1  Pullback\n     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)\n     ─────────────────────────────────────────────────────\n     rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n\n  2  Aggregation\n     in: (1)                            out: 𝑉\n     ─────────────────────────────────────────────────────\n     rule: 𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n\n  3  Evaluation\n     in: 𝑉                              out: 𝑉\n     ─────────────────────────────────────────────────────\n     rule: 𝑉 : Xm → [−∞, ∞)\n           D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))\n\nConditions\n  Aggregation  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑢     cons:function:𝑢\n  𝑑𝑢    cons:function:𝑑𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ──────────────────\n  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)\n           : Xm → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:function:cntn:V"
+      ],
+      "kind": "Pullback",
+      "name": "cntn_to_dcsn:Pullback",
+      "outputs": [
+       "cons:function:cntn:V:g"
+      ],
+      "references": [
+       "cons:g:dcsn_to_cntn",
+       "cons:function:dcsn:c"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)\n          : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:function:cntn:V:g"
+      ],
+      "kind": "Aggregation",
+      "name": "cntn_to_dcsn:Aggregation",
+      "outputs": [
+       "cntn_to_dcsn:Aggregation:V:result"
+      ],
+      "references": [
+       "cons:G:cntn_to_dcsn",
+       "cons:function:dcsn:c"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n  𝑉 : Xm → [−∞, ∞)\n  D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑑𝑢    cons:function:𝑑𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cntn_to_dcsn:Aggregation:V:result"
+      ],
+      "kind": "Evaluation",
+      "name": "cntn_to_dcsn:Evaluation",
+      "outputs": [
+       "cons:function:dcsn:V"
+      ],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      [
+       [
+        1
+       ],
+       [
+        2
+       ]
+      ],
+      [
+       [
+        2
+       ],
+       [
+        3
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:function:cntn:V"
+     ],
+     "output_wires": [
+      3
+     ],
+     "outputs": [
+      "cons:function:dcsn:V"
+     ],
+     "spiders": [
+      "Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())",
+      "Sort('cons:function:cntn:V:g', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=())",
+      "Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+      "Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))"
+     ]
+    },
+    "kind": null,
+    "name": "cntn_to_dcsn",
+    "outputs": [
+     "cons:function:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉   : Xm → [−∞, ∞)\n       ────────────────────────────────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nOperations\n  1  Pullback\n     in: 𝑉                              out: 𝑉 ∘ 𝑔≺\n     ──────────────────────────────────────────────\n     rule: (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))\n\n  2  Aggregation\n     in: (1)                            out: 𝑉≺\n     ──────────────────────────────────────────────\n     rule: 𝑉≺ = 𝑉(𝑔≺(m, l))                                on (m, l) ∈ Xm × ℝ₊\n\n  3  Evaluation\n     in: 𝑉≺                             out: 𝑉≺\n     ──────────────────────────────────────────────\n     rule: 𝑉≺ : Xm × ℝ₊ → ℝ\n\nConditions\n  Aggregation  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ──────────────────────\n  out  𝑉 ∘ 𝑔≺\n          : Xm × ℝ₊ → [−∞, ∞)\n\nRule\n  (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:function:dcsn:V"
+      ],
+      "kind": "Pullback",
+      "name": "dcsn_to_arvl:Pullback",
+      "outputs": [
+       "cons:function:dcsn:V:g"
+      ],
+      "references": [
+       "cons:g:arvl_to_dcsn"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉 ∘ 𝑔≺\n           : Xm × ℝ₊ → [−∞, ∞)\n       ───────────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:function:dcsn:V:g"
+      ],
+      "kind": "Aggregation",
+      "name": "dcsn_to_arvl:Aggregation",
+      "outputs": [
+       "dcsn_to_arvl:Aggregation:V:result"
+      ],
+      "references": [
+       "cons:G:dcsn_to_arvl"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≺  : Xm × ℝ₊ → ℝ\n       ─────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n  𝑉≺ : Xm × ℝ₊ → ℝ\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "dcsn_to_arvl:Aggregation:V:result"
+      ],
+      "kind": "Evaluation",
+      "name": "dcsn_to_arvl:Evaluation",
+      "outputs": [
+       "cons:function:arvl:V"
+      ],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      [
+       [
+        1
+       ],
+       [
+        2
+       ]
+      ],
+      [
+       [
+        2
+       ],
+       [
+        3
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:function:dcsn:V"
+     ],
+     "output_wires": [
+      3
+     ],
+     "outputs": [
+      "cons:function:arvl:V"
+     ],
+     "spiders": [
+      "Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))",
+      "Sort('cons:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+      "Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+      "Sort('cons:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "dcsn_to_arvl",
+    "outputs": [
+     "cons:function:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ──────────────────────────────────────────────────────────────────────\n  out  𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nOperations\n  1  Pullback\n     in: 𝑉≻                             out: 𝑉≻ ∘ 𝑔≻\n     ────────────────────────────────────────────────────────────────────────\n     rule: (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))\n\n  2  optimality:Aggregation\n     in: (1)                            out: (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n     ────────────────────────────────────────────────────────────────────────\n     rule: (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n\n  3  optimality:Argmax\n     in: (2)                            out: 𝑐\n     ────────────────────────────────────────────────────────────────────────\n     rule: 𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n\n  4  Evaluation\n     in: 𝑐                              out: 𝑐\n     ────────────────────────────────────────────────────────────────────────\n     rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / POLICY BUILDER policy / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ────────────────────────────────────────────────\n  out  𝑉≻ ∘ 𝑔≻\n           : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:function:cntn:V"
+      ],
+      "kind": "Pullback",
+      "name": "policy:Pullback",
+      "outputs": [
+       "cons:function:cntn:V:g:policy"
+      ],
+      "references": [
+       "cons:g:dcsn_to_cntn"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ──────────────────────────────────────────────\n  out  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:function:cntn:V:g:policy"
+      ],
+      "kind": "Aggregation",
+      "name": "policy.optimality:Aggregation",
+      "outputs": [
+       "policy.optimality:Aggregation:result"
+      ],
+      "references": [
+       "cons:G:policy"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Argmax\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n          : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ───────────────────────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "policy.optimality:Aggregation:result"
+      ],
+      "kind": "Argmax",
+      "name": "policy.optimality:Argmax",
+      "outputs": [
+       "policy.optimality:Argmax:c:result"
+      ],
+      "references": [
+       "policy.optimality"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / POLICY BUILDER policy / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n       ───────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n  𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "policy.optimality:Argmax:c:result"
+      ],
+      "kind": "Evaluation",
+      "name": "policy:Evaluation",
+      "outputs": [
+       "policy:Evaluation:c:result"
+      ],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      [
+       [
+        1
+       ],
+       [
+        2
+       ]
+      ],
+      [
+       [
+        2
+       ],
+       [
+        3
+       ]
+      ],
+      [
+       [
+        3
+       ],
+       [
+        4
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:function:cntn:V"
+     ],
+     "output_wires": [
+      4
+     ],
+     "outputs": [
+      "policy:Evaluation:c:result"
+     ],
+     "spiders": [
+      "Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())",
+      "Sort('cons:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+      "Sort('policy.optimality:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+      "Sort('policy.optimality:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())",
+      "Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "policy",
+    "outputs": [
+     "policy:Evaluation:c:result"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "cntn_to_dcsn",
+   "  Pullback of 𝑉≻ along 𝑔 at 𝑐",
+   "  Value aggregation 𝐺",
+   "  Evaluation of 𝑉",
+   "dcsn_to_arvl",
+   "  Pullback of 𝑉 along the law of motion 𝑔",
+   "  Value aggregation 𝐺",
+   "  Evaluation of 𝑉≺",
+   "policy",
+   "  Pullback of 𝑉≻ along the law of motion 𝑔",
+   "  Apply 𝐺 of the statement optimality",
+   "  Argmax of the statement optimality",
+   "  Evaluation of 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      0
+     ],
+     [
+      3
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:function:cntn:V"
+   ],
+   "output_wires": [
+    2,
+    3
+   ],
+   "outputs": [
+    "cons:function:arvl:V",
+    "policy:Evaluation:c:result"
+   ],
+   "spiders": [
+    "Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())",
+    "Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))",
+    "Sort('cons:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())"
+   ]
+  }
+ },
+ "builders/backward/combined": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ──────────────────\n  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)\n           : Xm → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "cntn_to_dcsn:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)\n          : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "cntn_to_dcsn:Aggregation",
+    "outputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:cntn_to_dcsn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n  𝑉 : Xm → [−∞, ∞)\n  D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑑𝑢    cons:function:𝑑𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "cntn_to_dcsn:Evaluation",
+    "outputs": [
+     "cons:function:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ──────────────────────\n  out  𝑉 ∘ 𝑔≺\n          : Xm × ℝ₊ → [−∞, ∞)\n\nRule\n  (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V"
+    ],
+    "kind": "Pullback",
+    "name": "dcsn_to_arvl:Pullback",
+    "outputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉 ∘ 𝑔≺\n           : Xm × ℝ₊ → [−∞, ∞)\n       ───────────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "dcsn_to_arvl:Aggregation",
+    "outputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:dcsn_to_arvl"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≺  : Xm × ℝ₊ → ℝ\n       ─────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n  𝑉≺ : Xm × ℝ₊ → ℝ\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "dcsn_to_arvl:Evaluation",
+    "outputs": [
+     "cons:function:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ────────────────────────────────────────────────\n  out  𝑉≻ ∘ 𝑔≻\n           : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "policy:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ──────────────────────────────────────────────\n  out  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "kind": "Aggregation",
+    "name": "policy.optimality:Aggregation",
+    "outputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "references": [
+     "cons:G:policy"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Argmax\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n          : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ───────────────────────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "kind": "Argmax",
+    "name": "policy.optimality:Argmax",
+    "outputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "references": [
+     "policy.optimality"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n       ───────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n  𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "kind": "Evaluation",
+    "name": "policy:Evaluation",
+    "outputs": [
+     "policy:Evaluation:c:result"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "Pullback of 𝑉≻ along 𝑔 at 𝑐",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉",
+   "Pullback of 𝑉 along the law of motion 𝑔",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉≺",
+   "Pullback of 𝑉≻ along the law of motion 𝑔",
+   "Apply 𝐺 of the statement optimality",
+   "Argmax of the statement optimality",
+   "Evaluation of 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ],
+    [
+     [
+      3
+     ],
+     [
+      4
+     ]
+    ],
+    [
+     [
+      4
+     ],
+     [
+      5
+     ]
+    ],
+    [
+     [
+      5
+     ],
+     [
+      6
+     ]
+    ],
+    [
+     [
+      0
+     ],
+     [
+      7
+     ]
+    ],
+    [
+     [
+      7
+     ],
+     [
+      8
+     ]
+    ],
+    [
+     [
+      8
+     ],
+     [
+      9
+     ]
+    ],
+    [
+     [
+      9
+     ],
+     [
+      10
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:function:cntn:V"
+   ],
+   "output_wires": [
+    6,
+    10
+   ],
+   "outputs": [
+    "cons:function:arvl:V",
+    "policy:Evaluation:c:result"
+   ],
+   "spiders": [
+    "Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())",
+    "Sort('cons:function:cntn:V:g', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))",
+    "Sort('cons:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())"
+   ]
+  }
+ },
+ "builders/backward/factored": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ──────────────────\n  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)\n           : Xm → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "cntn_to_dcsn:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)\n          : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "cntn_to_dcsn:Aggregation",
+    "outputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:cntn_to_dcsn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n  𝑉 : Xm → [−∞, ∞)\n  D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑑𝑢    cons:function:𝑑𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "cntn_to_dcsn:Evaluation",
+    "outputs": [
+     "cons:function:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ──────────────────────\n  out  𝑉 ∘ 𝑔≺\n          : Xm × ℝ₊ → [−∞, ∞)\n\nRule\n  (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V"
+    ],
+    "kind": "Pullback",
+    "name": "dcsn_to_arvl:Pullback",
+    "outputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉 ∘ 𝑔≺\n           : Xm × ℝ₊ → [−∞, ∞)\n       ───────────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "dcsn_to_arvl:Aggregation",
+    "outputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:dcsn_to_arvl"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≺  : Xm × ℝ₊ → ℝ\n       ─────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n  𝑉≺ : Xm × ℝ₊ → ℝ\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "dcsn_to_arvl:Evaluation",
+    "outputs": [
+     "cons:function:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ────────────────────────────────────────────────\n  out  𝑉≻ ∘ 𝑔≻\n           : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "policy:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ──────────────────────────────────────────────\n  out  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "kind": "Aggregation",
+    "name": "policy.optimality:Aggregation",
+    "outputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "references": [
+     "cons:G:policy"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Argmax\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n          : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ───────────────────────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "kind": "Argmax",
+    "name": "policy.optimality:Argmax",
+    "outputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "references": [
+     "policy.optimality"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n       ───────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n  𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "kind": "Evaluation",
+    "name": "policy:Evaluation",
+    "outputs": [
+     "policy:Evaluation:c:result"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "Pullback of 𝑉≻ along 𝑔 at 𝑐",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉",
+   "Pullback of 𝑉 along the law of motion 𝑔",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉≺",
+   "Pullback of 𝑉≻ along the law of motion 𝑔",
+   "Apply 𝐺 of the statement optimality",
+   "Argmax of the statement optimality",
+   "Evaluation of 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ],
+    [
+     [
+      3
+     ],
+     [
+      4
+     ]
+    ],
+    [
+     [
+      4
+     ],
+     [
+      5
+     ]
+    ],
+    [
+     [
+      5
+     ],
+     [
+      6
+     ]
+    ],
+    [
+     [
+      0
+     ],
+     [
+      7
+     ]
+    ],
+    [
+     [
+      7
+     ],
+     [
+      8
+     ]
+    ],
+    [
+     [
+      8
+     ],
+     [
+      9
+     ]
+    ],
+    [
+     [
+      9
+     ],
+     [
+      10
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:function:cntn:V"
+   ],
+   "output_wires": [
+    6,
+    10
+   ],
+   "outputs": [
+    "cons:function:arvl:V",
+    "policy:Evaluation:c:result"
+   ],
+   "spiders": [
+    "Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())",
+    "Sort('cons:function:cntn:V:g', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))",
+    "Sort('cons:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())"
+   ]
+  }
+ },
+ "builders/backward/primitive": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ──────────────────\n  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)\n           : Xm → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "cntn_to_dcsn:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)\n          : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "cntn_to_dcsn:Aggregation",
+    "outputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:cntn_to_dcsn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n  𝑉 : Xm → [−∞, ∞)\n  D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑑𝑢    cons:function:𝑑𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "cntn_to_dcsn:Evaluation",
+    "outputs": [
+     "cons:function:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ──────────────────────\n  out  𝑉 ∘ 𝑔≺\n          : Xm × ℝ₊ → [−∞, ∞)\n\nRule\n  (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V"
+    ],
+    "kind": "Pullback",
+    "name": "dcsn_to_arvl:Pullback",
+    "outputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉 ∘ 𝑔≺\n           : Xm × ℝ₊ → [−∞, ∞)\n       ───────────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "dcsn_to_arvl:Aggregation",
+    "outputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:dcsn_to_arvl"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≺  : Xm × ℝ₊ → ℝ\n       ─────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n  𝑉≺ : Xm × ℝ₊ → ℝ\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "dcsn_to_arvl:Evaluation",
+    "outputs": [
+     "cons:function:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ────────────────────────────────────────────────\n  out  𝑉≻ ∘ 𝑔≻\n           : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "policy:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ──────────────────────────────────────────────\n  out  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "kind": "Aggregation",
+    "name": "policy.optimality:Aggregation",
+    "outputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "references": [
+     "cons:G:policy"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Argmax\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n          : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ───────────────────────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "kind": "Argmax",
+    "name": "policy.optimality:Argmax",
+    "outputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "references": [
+     "policy.optimality"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n       ───────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n  𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "kind": "Evaluation",
+    "name": "policy:Evaluation",
+    "outputs": [
+     "policy:Evaluation:c:result"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "Pullback of 𝑉≻ along 𝑔 at 𝑐",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉",
+   "Pullback of 𝑉 along the law of motion 𝑔",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉≺",
+   "Pullback of 𝑉≻ along the law of motion 𝑔",
+   "Apply 𝐺 of the statement optimality",
+   "Argmax of the statement optimality",
+   "Evaluation of 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ],
+    [
+     [
+      3
+     ],
+     [
+      4
+     ]
+    ],
+    [
+     [
+      4
+     ],
+     [
+      5
+     ]
+    ],
+    [
+     [
+      5
+     ],
+     [
+      6
+     ]
+    ],
+    [
+     [
+      0
+     ],
+     [
+      7
+     ]
+    ],
+    [
+     [
+      7
+     ],
+     [
+      8
+     ]
+    ],
+    [
+     [
+      8
+     ],
+     [
+      9
+     ]
+    ],
+    [
+     [
+      9
+     ],
+     [
+      10
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:function:cntn:V"
+   ],
+   "output_wires": [
+    6,
+    10
+   ],
+   "outputs": [
+    "cons:function:arvl:V",
+    "policy:Evaluation:c:result"
+   ],
+   "spiders": [
+    "Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())",
+    "Sort('cons:function:cntn:V:g', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))",
+    "Sort('cons:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())"
+   ]
+  }
+ },
+ "builders/backward/sub-builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ──────────────────\n  out  𝑉≻ ∘ 𝑔≻(·, 𝑐)\n           : Xm → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "cntn_to_dcsn:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻(·, 𝑐)\n          : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "cntn_to_dcsn:Aggregation",
+    "outputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:cntn_to_dcsn",
+     "cons:function:dcsn:c"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER cntn → dcsn (cntn_to_dcsn) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ─────────────────\n  out  𝑉  : Xm → [−∞, ∞)\n\nRule\n  𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))\n  𝑉 : Xm → [−∞, ∞)\n  D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  𝑑𝑢    cons:function:𝑑𝑢\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cntn_to_dcsn:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "cntn_to_dcsn:Evaluation",
+    "outputs": [
+     "cons:function:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉  : Xm → [−∞, ∞)\n       ──────────────────────\n  out  𝑉 ∘ 𝑔≺\n          : Xm × ℝ₊ → [−∞, ∞)\n\nRule\n  (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V"
+    ],
+    "kind": "Pullback",
+    "name": "dcsn_to_arvl:Pullback",
+    "outputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉 ∘ 𝑔≺\n           : Xm × ℝ₊ → [−∞, ∞)\n       ───────────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:dcsn:V:g"
+    ],
+    "kind": "Aggregation",
+    "name": "dcsn_to_arvl:Aggregation",
+    "outputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "references": [
+     "cons:G:dcsn_to_arvl"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BUILDER dcsn → arvl (dcsn_to_arvl) / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≺  : Xm × ℝ₊ → ℝ\n       ─────────────────\n  out  𝑉≺  : Xm × ℝ₊ → ℝ\n\nRule\n  𝑉≺ = 𝑉(𝑔≺(m, l))                                         on (m, l) ∈ Xm × ℝ₊\n  𝑉≺ : Xm × ℝ₊ → ℝ\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "dcsn_to_arvl:Aggregation:V:result"
+    ],
+    "kind": "Evaluation",
+    "name": "dcsn_to_arvl:Evaluation",
+    "outputs": [
+     "cons:function:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Pullback\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻  : Xa → [−∞, ∞)\n       ────────────────────────────────────────────────\n  out  𝑉≻ ∘ 𝑔≻\n           : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V"
+    ],
+    "kind": "Pullback",
+    "name": "policy:Pullback",
+    "outputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Aggregation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑉≻ ∘ 𝑔≻\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ──────────────────────────────────────────────\n  out  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n         : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n\nRule\n  (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:function:cntn:V:g:policy"
+    ],
+    "kind": "Aggregation",
+    "name": "policy.optimality:Aggregation",
+    "outputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "references": [
+     "cons:G:policy"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / optimality:Argmax\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))\n          : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞)\n       ───────────────────────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Aggregation:result"
+    ],
+    "kind": "Argmax",
+    "name": "policy.optimality:Argmax",
+    "outputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "references": [
+     "policy.optimality"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BUILDER policy / Evaluation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n       ───────────────────────────────\n  out  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nRule\n  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]\n  𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n──────────────────────────────────────────────────────────────────────────────\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "policy.optimality:Argmax:c:result"
+    ],
+    "kind": "Evaluation",
+    "name": "policy:Evaluation",
+    "outputs": [
+     "policy:Evaluation:c:result"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "Pullback of 𝑉≻ along 𝑔 at 𝑐",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉",
+   "Pullback of 𝑉 along the law of motion 𝑔",
+   "Value aggregation 𝐺",
+   "Evaluation of 𝑉≺",
+   "Pullback of 𝑉≻ along the law of motion 𝑔",
+   "Apply 𝐺 of the statement optimality",
+   "Argmax of the statement optimality",
+   "Evaluation of 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ],
+    [
+     [
+      3
+     ],
+     [
+      4
+     ]
+    ],
+    [
+     [
+      4
+     ],
+     [
+      5
+     ]
+    ],
+    [
+     [
+      5
+     ],
+     [
+      6
+     ]
+    ],
+    [
+     [
+      0
+     ],
+     [
+      7
+     ]
+    ],
+    [
+     [
+      7
+     ],
+     [
+      8
+     ]
+    ],
+    [
+     [
+      8
+     ],
+     [
+      9
+     ]
+    ],
+    [
+     [
+      9
+     ],
+     [
+      10
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:function:cntn:V"
+   ],
+   "output_wires": [
+    6,
+    10
+   ],
+   "outputs": [
+    "cons:function:arvl:V",
+    "policy:Evaluation:c:result"
+   ],
+   "spiders": [
+    "Sort('cons:function:cntn:V', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:cntn:a',), derivatives=())",
+    "Sort('cons:function:cntn:V:g', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cntn_to_dcsn:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:function:dcsn:V', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d',), derivatives=('cons:dcsn:m_d',))",
+    "Sort('cons:function:dcsn:V:g', 'function', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('dcsn_to_arvl:Aggregation:V:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:arvl:V', 'function', perch='arvl', role='value', domain='ℝ', coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:function:cntn:V:g:policy', 'function', perch='cntn', role='value', domain='[-inf, inf)', coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Aggregation:result', 'function', perch=None, role='value', domain=None, coordinates=('cons:dcsn:m_d', 'cons:dcsn:c'), derivatives=())",
+    "Sort('policy.optimality:Argmax:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('policy:Evaluation:c:result', 'function', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=('cons:dcsn:m_d',), derivatives=())"
+   ]
+  }
+ },
+ "builders/forward/builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ≺  : finite measure on Xm × ℝ₊\n       ───────────────────────────────────────\n  out  μ   : finite measure on Xm\n\nOperations\n  1  Pushforward\n     in: μ≺                             out: μ\n     ─────────────────────────────────────────\n     rule: μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:arvl"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ≺  : finite measure on Xm × ℝ₊\n       ───────────────────────────────\n  out  μ   : finite measure on Xm\n\nRule\n  μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:measure:arvl"
+      ],
+      "kind": "Pushforward",
+      "name": "arvl_to_dcsn:Pushforward",
+      "outputs": [
+       "cons:measure:dcsn"
+      ],
+      "references": [
+       "cons:g:arvl_to_dcsn"
+      ]
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:measure:arvl"
+     ],
+     "output_wires": [
+      1
+     ],
+     "outputs": [
+      "cons:measure:dcsn"
+     ],
+     "spiders": [
+      "Sort('cons:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+      "Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "arvl_to_dcsn",
+    "outputs": [
+     "cons:measure:dcsn"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ   : finite measure on Xm\n       ────────────────────────────────────────\n  out  μ≻  : finite measure on Xa\n\nAt\n  𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)\n\nOperations\n  1  Pushforward\n     in: μ                              out: μ≻\n     ──────────────────────────────────────────\n     rule: μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  Γ     cons:correspondence:Γ\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:dcsn"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ   : finite measure on Xm\n       ──────────────────────────\n  out  μ≻  : finite measure on Xa\n\nRule\n  μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:measure:dcsn"
+      ],
+      "kind": "Pushforward",
+      "name": "dcsn_to_cntn:Pushforward",
+      "outputs": [
+       "cons:measure:cntn"
+      ],
+      "references": [
+       "cons:g:dcsn_to_cntn",
+       "cons:function:dcsn:c"
+      ]
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:measure:dcsn"
+     ],
+     "output_wires": [
+      1
+     ],
+     "outputs": [
+      "cons:measure:cntn"
+     ],
+     "spiders": [
+      "Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+      "Sort('cons:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons:cntn:a',), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "dcsn_to_cntn",
+    "outputs": [
+     "cons:measure:cntn"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "arvl_to_dcsn",
+   "  Push-forward through the law of motion 𝑔",
+   "dcsn_to_cntn",
+   "  Push-forward through 𝑔 at 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:measure:arvl"
+   ],
+   "output_wires": [
+    2
+   ],
+   "outputs": [
+    "cons:measure:cntn"
+   ],
+   "spiders": [
+    "Sort('cons:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons:cntn:a',), derivatives=())"
+   ]
+  }
+ },
+ "builders/forward/combined": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ≺  : finite measure on Xm × ℝ₊\n       ───────────────────────────────\n  out  μ   : finite measure on Xm\n\nRule\n  μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:arvl"
+    ],
+    "kind": "Pushforward",
+    "name": "arvl_to_dcsn:Pushforward",
+    "outputs": [
+     "cons:measure:dcsn"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ   : finite measure on Xm\n       ──────────────────────────\n  out  μ≻  : finite measure on Xa\n\nRule\n  μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:dcsn"
+    ],
+    "kind": "Pushforward",
+    "name": "dcsn_to_cntn:Pushforward",
+    "outputs": [
+     "cons:measure:cntn"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   }
+  ],
+  "listing": [
+   "Push-forward through the law of motion 𝑔",
+   "Push-forward through 𝑔 at 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:measure:arvl"
+   ],
+   "output_wires": [
+    2
+   ],
+   "outputs": [
+    "cons:measure:cntn"
+   ],
+   "spiders": [
+    "Sort('cons:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons:cntn:a',), derivatives=())"
+   ]
+  }
+ },
+ "builders/forward/factored": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ≺  : finite measure on Xm × ℝ₊\n       ───────────────────────────────\n  out  μ   : finite measure on Xm\n\nRule\n  μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:arvl"
+    ],
+    "kind": "Pushforward",
+    "name": "arvl_to_dcsn:Pushforward",
+    "outputs": [
+     "cons:measure:dcsn"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ   : finite measure on Xm\n       ──────────────────────────\n  out  μ≻  : finite measure on Xa\n\nRule\n  μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:dcsn"
+    ],
+    "kind": "Pushforward",
+    "name": "dcsn_to_cntn:Pushforward",
+    "outputs": [
+     "cons:measure:cntn"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   }
+  ],
+  "listing": [
+   "Push-forward through the law of motion 𝑔",
+   "Push-forward through 𝑔 at 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:measure:arvl"
+   ],
+   "output_wires": [
+    2
+   ],
+   "outputs": [
+    "cons:measure:cntn"
+   ],
+   "spiders": [
+    "Sort('cons:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons:cntn:a',), derivatives=())"
+   ]
+  }
+ },
+ "builders/forward/primitive": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ≺  : finite measure on Xm × ℝ₊\n       ───────────────────────────────\n  out  μ   : finite measure on Xm\n\nRule\n  μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:arvl"
+    ],
+    "kind": "Pushforward",
+    "name": "arvl_to_dcsn:Pushforward",
+    "outputs": [
+     "cons:measure:dcsn"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ   : finite measure on Xm\n       ──────────────────────────\n  out  μ≻  : finite measure on Xa\n\nRule\n  μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:dcsn"
+    ],
+    "kind": "Pushforward",
+    "name": "dcsn_to_cntn:Pushforward",
+    "outputs": [
+     "cons:measure:cntn"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   }
+  ],
+  "listing": [
+   "Push-forward through the law of motion 𝑔",
+   "Push-forward through 𝑔 at 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:measure:arvl"
+   ],
+   "output_wires": [
+    2
+   ],
+   "outputs": [
+    "cons:measure:cntn"
+   ],
+   "spiders": [
+    "Sort('cons:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons:cntn:a',), derivatives=())"
+   ]
+  }
+ },
+ "builders/forward/sub-builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER arvl → dcsn (arvl_to_dcsn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ≺  : finite measure on Xm × ℝ₊\n       ───────────────────────────────\n  out  μ   : finite measure on Xm\n\nRule\n  μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑔≺    cons:g:arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:arvl"
+    ],
+    "kind": "Pushforward",
+    "name": "arvl_to_dcsn:Pushforward",
+    "outputs": [
+     "cons:measure:dcsn"
+    ],
+    "references": [
+     "cons:g:arvl_to_dcsn"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn) / Pushforward\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   μ   : finite measure on Xm\n       ──────────────────────────\n  out  μ≻  : finite measure on Xa\n\nRule\n  μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  𝑔≻    cons:g:dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:measure:dcsn"
+    ],
+    "kind": "Pushforward",
+    "name": "dcsn_to_cntn:Pushforward",
+    "outputs": [
+     "cons:measure:cntn"
+    ],
+    "references": [
+     "cons:g:dcsn_to_cntn",
+     "cons:function:dcsn:c"
+    ]
+   }
+  ],
+  "listing": [
+   "Push-forward through the law of motion 𝑔",
+   "Push-forward through 𝑔 at 𝑐"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:measure:arvl"
+   ],
+   "output_wires": [
+    2
+   ],
+   "outputs": [
+    "cons:measure:cntn"
+   ],
+   "spiders": [
+    "Sort('cons:measure:arvl', 'measure', perch='arvl', role='measure', domain=None, coordinates=('cons:arvl:m', 'cons:arvl:l'), derivatives=())",
+    "Sort('cons:measure:dcsn', 'measure', perch='dcsn', role='measure', domain=None, coordinates=('cons:dcsn:m_d',), derivatives=())",
+    "Sort('cons:measure:cntn', 'measure', perch='cntn', role='measure', domain=None, coordinates=('cons:cntn:a',), derivatives=())"
+   ]
+  }
+ },
+ "initial/backward/builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   V≻  : {V≻}\n       ──────────\n  out  V   : {V}\n\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n  marginal-reading: the right side of each derivative line equals the\n    derivative, in the named coordinate, of the value the builder writes,\n    under the envelope conditions: concavity of the continuation value,\n    interiority of the maximizer or the multiplier's term at a binding\n    constraint, differentiability of the reward in the control, a measurable\n    selection of the policy, and differentiability of the value at the point\n    read; listed and not checked   [required]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "header": [
+     "cons:cntn:V",
+     "cons:dcsn:c"
+    ],
+    "inputs": [
+     "cons:cntn:V"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:cntn:V"
+      ],
+      "kind": null,
+      "name": "cntn_to_dcsn.value",
+      "outputs": [
+       "cons:dcsn:V"
+      ],
+      "references": []
+     },
+     {
+      "denotation": "refused: TargetError: stage 'cons': the box 'Spider(1, 2, cons:dcsn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "inputs": [
+       "cons:dcsn:V"
+      ],
+      "kind": "dcsn",
+      "name": "Spider(1, 2, cons:dcsn:V)",
+      "outputs": [
+       "cons:dcsn:V",
+       "cons:dcsn:V"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / marginal\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  marginal-reading: the right side of each derivative line equals the\n    derivative, in the named coordinate, of the value the builder writes,\n    under the envelope conditions: concavity of the continuation value,\n    interiority of the maximizer or the multiplier's term at a binding\n    constraint, differentiability of the reward in the control, a measurable\n    selection of the policy, and differentiability of the value at the point\n    read; listed and not checked   [required]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:dcsn:V"
+      ],
+      "kind": null,
+      "name": "cntn_to_dcsn.marginal",
+      "outputs": [],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      [
+       [
+        1
+       ],
+       []
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:cntn:V"
+     ],
+     "output_wires": [
+      1
+     ],
+     "outputs": [
+      "cons:dcsn:V"
+     ],
+     "spiders": [
+      "Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+      "Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "cntn_to_dcsn",
+    "outputs": [
+     "cons:dcsn:V"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK dcsn_to_arvl\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   V   : {V}\n       ──────────\n  out  V≺  : {V≺}\n\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "header": [
+     "cons:dcsn:V"
+    ],
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / BACKWARD BLOCK dcsn_to_arvl / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:dcsn:V"
+      ],
+      "kind": null,
+      "name": "dcsn_to_arvl.value",
+      "outputs": [
+       "cons:arvl:V"
+      ],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:dcsn:V"
+     ],
+     "output_wires": [
+      1
+     ],
+     "outputs": [
+      "cons:arvl:V"
+     ],
+     "spiders": [
+      "Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+      "Sort('cons:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=(), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "dcsn_to_arvl",
+    "outputs": [
+     "cons:arvl:V"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / POLICY BLOCK policy\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   V≻  : {V≻}\n       ──────────\n  out  c   : {c}\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "header": [
+     "cons:cntn:V"
+    ],
+    "inputs": [
+     "cons:cntn:V"
+    ],
+    "interior": [
+     {
+      "denotation": "refused: TargetError: stage 'cons': the box 'Spider(0, 1, cons:dcsn:m_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "inputs": [],
+      "kind": "dcsn",
+      "name": "Spider(0, 1, cons:dcsn:m_d)",
+      "outputs": [
+       "cons:dcsn:m_d"
+      ]
+     },
+     {
+      "denotation": "refused: TargetError: stage 'cons': the box 'Swap(cons:dcsn:m_d, cons:cntn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "inputs": [
+       "cons:dcsn:m_d",
+       "cons:cntn:V"
+      ],
+      "kind": "dcsn",
+      "name": "Swap(cons:dcsn:m_d, cons:cntn:V)",
+      "outputs": [
+       "cons:cntn:V",
+       "cons:dcsn:m_d"
+      ]
+     },
+     {
+      "denotation": "STAGE cons / POLICY BLOCK policy / optimality\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:cntn:V",
+       "cons:dcsn:m_d"
+      ],
+      "kind": null,
+      "name": "policy.optimality",
+      "outputs": [
+       "cons:dcsn:c"
+      ],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0,
+        1
+       ],
+       [
+        2
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:cntn:V"
+     ],
+     "output_wires": [
+      2
+     ],
+     "outputs": [
+      "cons:dcsn:c"
+     ],
+     "spiders": [
+      "Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+      "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+      "Sort('cons:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "policy",
+    "outputs": [
+     "cons:dcsn:c"
+    ]
+   }
+  ],
+  "listing": [
+   "cntn_to_dcsn",
+   "  cntn_to_dcsn.value",
+   "  cntn_to_dcsn.marginal",
+   "dcsn_to_arvl",
+   "  dcsn_to_arvl.value",
+   "policy",
+   "  policy.optimality"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      0
+     ],
+     [
+      3
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:cntn:V"
+   ],
+   "output_wires": [
+    2,
+    3
+   ],
+   "outputs": [
+    "cons:arvl:V",
+    "cons:dcsn:c"
+   ],
+   "spiders": [
+    "Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/backward/combined": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V"
+    ],
+    "kind": null,
+    "name": "cntn_to_dcsn.value",
+    "outputs": [
+     "cons:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK dcsn_to_arvl / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "kind": null,
+    "name": "dcsn_to_arvl.value",
+    "outputs": [
+     "cons:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BLOCK policy / optimality\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V",
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "policy.optimality",
+    "outputs": [
+     "cons:dcsn:c"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "cntn_to_dcsn.value",
+   "dcsn_to_arvl.value",
+   "policy.optimality"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      0,
+      3
+     ],
+     [
+      4
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:cntn:V"
+   ],
+   "output_wires": [
+    2,
+    4
+   ],
+   "outputs": [
+    "cons:arvl:V",
+    "cons:dcsn:c"
+   ],
+   "spiders": [
+    "Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/backward/factored": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V"
+    ],
+    "kind": null,
+    "name": "cntn_to_dcsn.value",
+    "outputs": [
+     "cons:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / marginal\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  marginal-reading: the right side of each derivative line equals the\n    derivative, in the named coordinate, of the value the builder writes,\n    under the envelope conditions: concavity of the continuation value,\n    interiority of the maximizer or the multiplier's term at a binding\n    constraint, differentiability of the reward in the control, a measurable\n    selection of the policy, and differentiability of the value at the point\n    read; listed and not checked   [required]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "kind": null,
+    "name": "cntn_to_dcsn.marginal",
+    "outputs": [],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK dcsn_to_arvl / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "kind": null,
+    "name": "dcsn_to_arvl.value",
+    "outputs": [
+     "cons:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BLOCK policy / optimality\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V",
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "policy.optimality",
+    "outputs": [
+     "cons:dcsn:c"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "cntn_to_dcsn.value",
+   "cntn_to_dcsn.marginal",
+   "dcsn_to_arvl.value",
+   "policy.optimality"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     []
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      0,
+      3
+     ],
+     [
+      4
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:cntn:V"
+   ],
+   "output_wires": [
+    2,
+    4
+   ],
+   "outputs": [
+    "cons:arvl:V",
+    "cons:dcsn:c"
+   ],
+   "spiders": [
+    "Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/backward/primitive": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V"
+    ],
+    "kind": null,
+    "name": "cntn_to_dcsn.value",
+    "outputs": [
+     "cons:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / marginal\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  marginal-reading: the right side of each derivative line equals the\n    derivative, in the named coordinate, of the value the builder writes,\n    under the envelope conditions: concavity of the continuation value,\n    interiority of the maximizer or the multiplier's term at a binding\n    constraint, differentiability of the reward in the control, a measurable\n    selection of the policy, and differentiability of the value at the point\n    read; listed and not checked   [required]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "kind": null,
+    "name": "cntn_to_dcsn.marginal",
+    "outputs": [],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK dcsn_to_arvl / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "kind": null,
+    "name": "dcsn_to_arvl.value",
+    "outputs": [
+     "cons:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BLOCK policy / optimality\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V",
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "policy.optimality",
+    "outputs": [
+     "cons:dcsn:c"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "cntn_to_dcsn.value",
+   "cntn_to_dcsn.marginal",
+   "dcsn_to_arvl.value",
+   "policy.optimality"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     []
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      0,
+      3
+     ],
+     [
+      4
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:cntn:V"
+   ],
+   "output_wires": [
+    2,
+    4
+   ],
+   "outputs": [
+    "cons:arvl:V",
+    "cons:dcsn:c"
+   ],
+   "spiders": [
+    "Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/backward/sub-builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V"
+    ],
+    "kind": null,
+    "name": "cntn_to_dcsn.value",
+    "outputs": [
+     "cons:dcsn:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / marginal\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  marginal-reading: the right side of each derivative line equals the\n    derivative, in the named coordinate, of the value the builder writes,\n    under the envelope conditions: concavity of the continuation value,\n    interiority of the maximizer or the multiplier's term at a binding\n    constraint, differentiability of the reward in the control, a measurable\n    selection of the policy, and differentiability of the value at the point\n    read; listed and not checked   [required]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "kind": null,
+    "name": "cntn_to_dcsn.marginal",
+    "outputs": [],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / BACKWARD BLOCK dcsn_to_arvl / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:V"
+    ],
+    "kind": null,
+    "name": "dcsn_to_arvl.value",
+    "outputs": [
+     "cons:arvl:V"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / POLICY BLOCK policy / optimality\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:cntn:V",
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "policy.optimality",
+    "outputs": [
+     "cons:dcsn:c"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "cntn_to_dcsn.value",
+   "cntn_to_dcsn.marginal",
+   "dcsn_to_arvl.value",
+   "policy.optimality"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      1
+     ]
+    ],
+    [
+     [
+      1
+     ],
+     []
+    ],
+    [
+     [
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      0,
+      3
+     ],
+     [
+      4
+     ]
+    ]
+   ],
+   "input_wires": [
+    0
+   ],
+   "inputs": [
+    "cons:cntn:V"
+   ],
+   "output_wires": [
+    2,
+    4
+   ],
+   "outputs": [
+    "cons:arvl:V",
+    "cons:dcsn:c"
+   ],
+   "spiders": [
+    "Sort('cons:cntn:V', 'field', perch='cntn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:V', 'field', perch='dcsn', role='value', domain='[-inf, inf)', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:V', 'field', perch='arvl', role='value', domain='ℝ', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:c', 'field', perch='dcsn', role='control', domain='ℝ₊₊', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/forward/builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   m≺   : {m≺}\n       l≺   : {m≺, l≺}\n       ───────────────\n  out  m_d  : {m_d}\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "header": [
+     "cons:arvl:m",
+     "cons:arvl:l"
+    ],
+    "inputs": [
+     "cons:arvl:m",
+     "cons:arvl:l"
+    ],
+    "interior": [
+     {
+      "denotation": "refused: TargetError: stage 'cons': the box 'Spider(1, 0, cons:arvl:l)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "inputs": [
+       "cons:arvl:l"
+      ],
+      "kind": "arvl",
+      "name": "Spider(1, 0, cons:arvl:l)",
+      "outputs": []
+     },
+     {
+      "denotation": "STAGE cons / FORWARD BLOCK arvl_to_dcsn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  13  m_d = m\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:arvl:m"
+      ],
+      "kind": null,
+      "name": "arvl_to_dcsn.1",
+      "outputs": [
+       "cons:dcsn:m_d"
+      ],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        2
+       ]
+      ]
+     ],
+     "input_wires": [
+      0,
+      1
+     ],
+     "inputs": [
+      "cons:arvl:m",
+      "cons:arvl:l"
+     ],
+     "output_wires": [
+      2
+     ],
+     "outputs": [
+      "cons:dcsn:m_d"
+     ],
+     "spiders": [
+      "Sort('cons:arvl:m', 'field', perch='arvl', role='state', domain='Xm', coordinates=(), derivatives=())",
+      "Sort('cons:arvl:l', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())",
+      "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "arvl_to_dcsn",
+    "outputs": [
+     "cons:dcsn:m_d"
+    ]
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSignature\n  in   m_d  : {m_d}\n       ────────────\n  out  a≻   : {a≻}\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "header": [
+     "cons:dcsn:m_d",
+     "cons:dcsn:c"
+    ],
+    "inputs": [
+     "cons:dcsn:m_d"
+    ],
+    "interior": [
+     {
+      "denotation": "STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  17  a = m_d - c\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      "inputs": [
+       "cons:dcsn:m_d"
+      ],
+      "kind": null,
+      "name": "dcsn_to_cntn.1",
+      "outputs": [
+       "cons:cntn:a"
+      ],
+      "references": []
+     }
+    ],
+    "interior_wiring": {
+     "box_wires": [
+      [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ]
+     ],
+     "input_wires": [
+      0
+     ],
+     "inputs": [
+      "cons:dcsn:m_d"
+     ],
+     "output_wires": [
+      1
+     ],
+     "outputs": [
+      "cons:cntn:a"
+     ],
+     "spiders": [
+      "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+      "Sort('cons:cntn:a', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())"
+     ]
+    },
+    "kind": null,
+    "name": "dcsn_to_cntn",
+    "outputs": [
+     "cons:cntn:a"
+    ]
+   }
+  ],
+  "listing": [
+   "arvl_to_dcsn",
+   "  arvl_to_dcsn.1",
+   "dcsn_to_cntn",
+   "  dcsn_to_cntn.1"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0,
+      1
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ]
+   ],
+   "input_wires": [
+    0,
+    1
+   ],
+   "inputs": [
+    "cons:arvl:m",
+    "cons:arvl:l"
+   ],
+   "output_wires": [
+    3
+   ],
+   "outputs": [
+    "cons:cntn:a"
+   ],
+   "spiders": [
+    "Sort('cons:arvl:m', 'field', perch='arvl', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:l', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:cntn:a', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/forward/combined": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK arvl_to_dcsn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  13  m_d = m\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:arvl:m"
+    ],
+    "kind": null,
+    "name": "arvl_to_dcsn.1",
+    "outputs": [
+     "cons:dcsn:m_d"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  17  a = m_d - c\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "dcsn_to_cntn.1",
+    "outputs": [
+     "cons:cntn:a"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "arvl_to_dcsn.1",
+   "dcsn_to_cntn.1"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ]
+   ],
+   "input_wires": [
+    0,
+    1
+   ],
+   "inputs": [
+    "cons:arvl:m",
+    "cons:arvl:l"
+   ],
+   "output_wires": [
+    3
+   ],
+   "outputs": [
+    "cons:cntn:a"
+   ],
+   "spiders": [
+    "Sort('cons:arvl:m', 'field', perch='arvl', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:l', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:cntn:a', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/forward/factored": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK arvl_to_dcsn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  13  m_d = m\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:arvl:m"
+    ],
+    "kind": null,
+    "name": "arvl_to_dcsn.1",
+    "outputs": [
+     "cons:dcsn:m_d"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  17  a = m_d - c\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "dcsn_to_cntn.1",
+    "outputs": [
+     "cons:cntn:a"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "arvl_to_dcsn.1",
+   "dcsn_to_cntn.1"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ]
+   ],
+   "input_wires": [
+    0,
+    1
+   ],
+   "inputs": [
+    "cons:arvl:m",
+    "cons:arvl:l"
+   ],
+   "output_wires": [
+    3
+   ],
+   "outputs": [
+    "cons:cntn:a"
+   ],
+   "spiders": [
+    "Sort('cons:arvl:m', 'field', perch='arvl', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:l', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:cntn:a', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/forward/primitive": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK arvl_to_dcsn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  13  m_d = m\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:arvl:m"
+    ],
+    "kind": null,
+    "name": "arvl_to_dcsn.1",
+    "outputs": [
+     "cons:dcsn:m_d"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  17  a = m_d - c\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "dcsn_to_cntn.1",
+    "outputs": [
+     "cons:cntn:a"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "arvl_to_dcsn.1",
+   "dcsn_to_cntn.1"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ]
+   ],
+   "input_wires": [
+    0,
+    1
+   ],
+   "inputs": [
+    "cons:arvl:m",
+    "cons:arvl:l"
+   ],
+   "output_wires": [
+    3
+   ],
+   "outputs": [
+    "cons:cntn:a"
+   ],
+   "spiders": [
+    "Sort('cons:arvl:m', 'field', perch='arvl', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:l', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:cntn:a', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "initial/forward/sub-builder": {
+  "boxes": [
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK arvl_to_dcsn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  13  m_d = m\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:arvl:m"
+    ],
+    "kind": null,
+    "name": "arvl_to_dcsn.1",
+    "outputs": [
+     "cons:dcsn:m_d"
+    ],
+    "references": []
+   },
+   {
+    "denotation": "STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  17  a = m_d - c\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "inputs": [
+     "cons:dcsn:m_d"
+    ],
+    "kind": null,
+    "name": "dcsn_to_cntn.1",
+    "outputs": [
+     "cons:cntn:a"
+    ],
+    "references": []
+   }
+  ],
+  "listing": [
+   "arvl_to_dcsn.1",
+   "dcsn_to_cntn.1"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "wiring": {
+   "box_wires": [
+    [
+     [
+      0
+     ],
+     [
+      2
+     ]
+    ],
+    [
+     [
+      2
+     ],
+     [
+      3
+     ]
+    ]
+   ],
+   "input_wires": [
+    0,
+    1
+   ],
+   "inputs": [
+    "cons:arvl:m",
+    "cons:arvl:l"
+   ],
+   "output_wires": [
+    3
+   ],
+   "outputs": [
+    "cons:cntn:a"
+   ],
+   "spiders": [
+    "Sort('cons:arvl:m', 'field', perch='arvl', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:arvl:l', 'field', perch='arvl', role='state', domain='ℝ₊', coordinates=(), derivatives=())",
+    "Sort('cons:dcsn:m_d', 'field', perch='dcsn', role='state', domain='Xm', coordinates=(), derivatives=())",
+    "Sort('cons:cntn:a', 'field', perch='cntn', role='state', domain='Xa', coordinates=(), derivatives=())"
+   ]
+  }
+ },
+ "stage": {
+  "card": [
+   "STAGE cons",
+   "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+   "Signature",
+   "  backward",
+   "    in   𝑉≻  : Xa → [−∞, ∞)",
+   "         ──────────────────────────────────────",
+   "    out  𝑉≺  : Xm × ℝ₊ → ℝ",
+   "         𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)",
+   "  forward",
+   "    in   μ≺  : finite measure on Xm × ℝ₊",
+   "         ──────────────────────────────────────",
+   "    out  μ≻  : finite measure on Xa",
+   "",
+   "Operations",
+   "  backward",
+   "    1  cntn_to_dcsn",
+   "       in: 𝑉≻                           out: 𝑉",
+   "",
+   "    2  dcsn_to_arvl",
+   "       in: 𝑉                            out: 𝑉≺",
+   "",
+   "    3  policy",
+   "       in: 𝑉≻                           out: 𝑐",
+   "",
+   "  forward",
+   "    1  arvl_to_dcsn",
+   "       in: μ≺                           out: μ",
+   "",
+   "    2  dcsn_to_cntn",
+   "       in: μ                            out: μ≻",
+   "",
+   "Conditions",
+   "  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)",
+   "  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ",
+   "  𝑢                         ¬(1 − ρ = 0)",
+   "  cntn_to_dcsn.marginal     marginal-reading: the right side of each",
+   "                              derivative line equals the derivative, in the",
+   "                              named coordinate, of the value the builder",
+   "                              writes, under the envelope conditions: concavity",
+   "                              of the continuation value, interiority of the",
+   "                              maximizer or the multiplier's term at a binding",
+   "                              constraint, differentiability of the reward in",
+   "                              the control, a measurable selection of the",
+   "                              policy, and differentiability of the value at",
+   "                              the point read; listed and not checked",
+   "                              [required]",
+   "──────────────────────────────────────────────────────────────────────────────",
+   "Source  cons.bl",
+   "  13  m_d = m",
+   "  17  a = m_d - c",
+   "  21  V        = 𝑢(c) + V[>]                       :: [id=value]",
+   "  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]",
+   "  26  V[<] = V                                     :: [id=value]",
+   "  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]",
+   "",
+   "Definitions referenced",
+   "  Xm    cons:set:Xm",
+   "  Xa    cons:set:Xa",
+   "  ρ     cons:parameter:ρ",
+   "  𝑢     cons:function:𝑢",
+   "  Γ     cons:correspondence:Γ",
+   "",
+   "File",
+   "  applications/portfolio-choice/declaration/stages/cons/cons.bl",
+   "",
+   "Perches",
+   "  ≺  arrival, written [<]",
+   "  ≻  continuation, written [>]",
+   "     unmarked: decision",
+   "",
+   "Appendix",
+   "  Bellman-SYM, Appendix C",
+   "  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md",
+   "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  ],
+  "definitions": [
+   [
+    "cons:set:Xm",
+    "set",
+    "STAGE cons / SET Xm\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  Xm  = ℝ₊₊\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  3  Xm := ℝ₊₊\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:set:Xa",
+    "set",
+    "STAGE cons / SET Xa\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  Xa  = ℝ₊\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  4  Xa := ℝ₊\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:parameter:ρ",
+    "parameter",
+    "STAGE cons / PARAMETER ρ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  ρ  ∈ [1, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  6  ρ : [1, inf)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:function:𝑢",
+    "function",
+    "STAGE cons / FUNCTION 𝑢\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝑢  : ℝ₊₊ → ℝ,  c ↦ c^(1 − ρ)/(1 − ρ)\n\nConditions\n  ¬(1 − ρ = 0)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  8  𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)  :: [id=util]\n\nDefinitions referenced\n  ρ     cons:parameter:ρ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:function:𝑑𝑢",
+    "function",
+    "STAGE cons / FUNCTION 𝑑𝑢\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  9  𝑑𝑢(c : ℝ₊₊) := c^(-ρ)  :: [id=marginal_utility]\n\nDefinitions referenced\n  ρ     cons:parameter:ρ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:correspondence:Γ",
+    "correspondence",
+    "STAGE cons / CORRESPONDENCE Γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  10  Γ(x : ℝ₊₊) := (0, x]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "arvl_to_dcsn.1",
+    "line",
+    "STAGE cons / FORWARD BLOCK arvl_to_dcsn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  13  m_d = m\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "dcsn_to_cntn.1",
+    "line",
+    "STAGE cons / FORWARD BLOCK dcsn_to_cntn / 1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  17  a = m_d - c\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cntn_to_dcsn.value",
+    "line",
+    "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cntn_to_dcsn.marginal",
+    "line",
+    "STAGE cons / BACKWARD BLOCK cntn_to_dcsn / marginal\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  marginal-reading: the right side of each derivative line equals the\n    derivative, in the named coordinate, of the value the builder writes,\n    under the envelope conditions: concavity of the continuation value,\n    interiority of the maximizer or the multiplier's term at a binding\n    constraint, differentiability of the reward in the control, a measurable\n    selection of the policy, and differentiability of the value at the point\n    read; listed and not checked   [required]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  22  D_{m_d}V = 𝑑𝑢(c)  :: [id=marginal]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "dcsn_to_arvl.value",
+    "line",
+    "STAGE cons / BACKWARD BLOCK dcsn_to_arvl / value\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "policy.optimality",
+    "line",
+    "STAGE cons / POLICY BLOCK policy / optimality\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:g:arvl_to_dcsn",
+    "g",
+    "STAGE cons / LAW OF MOTION arvl_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝑔≺  : Xm × ℝ₊ → Xm,  (m, l) ↦ m\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  13  m_d = m\n\nDefinitions referenced\n  Xm    cons:set:Xm\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:g:dcsn_to_cntn",
+    "g",
+    "STAGE cons / LAW OF MOTION dcsn_to_cntn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝑔≻  : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → Xa,  (m_d, c) ↦ m_d − c\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  17  a = m_d - c\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  Xa    cons:set:Xa\n  Γ     cons:correspondence:Γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:G:cntn_to_dcsn",
+    "G",
+    "STAGE cons / VALUE AGGREGATOR cntn_to_dcsn\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞),\n        (V≻, m_d, c) ↦ 𝑢(c) + V≻\n\nConditions\n  𝑉(m_d) ∈ [−∞, ∞)\n  marginal-reading: the right side of each derivative line equals the\n    derivative, in the named coordinate, of the value the builder writes,\n    under the envelope conditions: concavity of the continuation value,\n    interiority of the maximizer or the multiplier's term at a binding\n    constraint, differentiability of the reward in the control, a measurable\n    selection of the policy, and differentiability of the value at the point\n    read; listed and not checked   [required]\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  21  V        = 𝑢(c) + V[>]  :: [id=value]\n  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:G:dcsn_to_arvl",
+    "G",
+    "STAGE cons / VALUE AGGREGATOR dcsn_to_arvl\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝐺≺  : [−∞, ∞) × Xm × ℝ₊ → ℝ,  (V, m, l) ↦ V\n\nConditions\n  𝑉≺(m, l) ∈ ℝ\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  26  V[<] = V  :: [id=value]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ],
+   [
+    "cons:G:policy",
+    "G",
+    "STAGE cons / VALUE AGGREGATOR policy\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)}\n          → UNRESOLVED[𝐺; result set],\n        (V≻, m_d, c) ↦ 𝑢(c) + V≻\n──────────────────────────────────────────────────────────────────────────────\nSource  cons.bl\n  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]\n\nDefinitions referenced\n  Xm    cons:set:Xm\n  𝑢     cons:function:𝑢\n  Γ     cons:correspondence:Γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+   ]
+  ],
+  "description": [
+   "BELLMAN-SYM / STAGE cons                                  [VERSION = SYMBOLIC]",
+   "a stage occurrence of",
+   "applications/portfolio-choice/declaration/stages/cons/cons.bl",
+   "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+   "",
+   "PERCHES ──────────────────────────────────────────────────────────────────────",
+   "  ≺ arrival        m≺ state, l≺ state, V≺ value",
+   "  ∼ decision       m_d state, c control, V value",
+   "  ≻ continuation   a≻ state, V≻ value",
+   "",
+   "FIELDS ───────────────────────────────────────────────────────────────────────",
+   "  states           m≺ at arrival, l≺ at arrival, m_d at decision, a≻ at",
+   "                   continuation",
+   "  controls         c at decision",
+   "  values           V at every perch",
+   "  shocks           none",
+   "",
+   "BLOCKS ───────────────────────────────────────────────────────────────────────",
+   "  → arvl_to_dcsn   (m≺, l≺) : !arvl -> (m_d) : !dcsn",
+   "  → dcsn_to_cntn   (m_d) : !dcsn, at c -> (a≻) : !cntn",
+   "  ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn",
+   "  ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl",
+   "  ← policy         (V≻) : !cntn -> (c) : !dcsn",
+   "",
+   "DEFINITIONS ──────────────────────────────────────────────────────────────────",
+   "  kind                 count   in file order",
+   "  ───────────────────  ─────   ─────────────────────────────────────────────",
+   "  sets                     2   Xm := ℝ₊₊, Xa := ℝ₊",
+   "  parameters               1   ρ : [1, inf)",
+   "  functions                2   𝑢, 𝑑𝑢 on ℝ₊₊",
+   "  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊",
+   "  laws of motion           2   m_d = m; a = m_d - c",
+   "  value aggregators        3   V = 𝑢(c) + V[>], D_{m_d}(V) = 𝑑𝑢(c); V[<] = V;",
+   "                               c = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])",
+   "  block lines              6   arvl_to_dcsn.1, dcsn_to_cntn.1,",
+   "                               cntn_to_dcsn.value, cntn_to_dcsn.marginal,",
+   "                               dcsn_to_arvl.value, policy.optimality",
+   "",
+   "GRAPHS ───────────────────────────────────────────────────────────────────────",
+   "  initial diagrams  backward present, forward present",
+   "  builders          backward   𝑉≻ ↦ 𝑉≺, 𝑐(m_d)",
+   "                    forward    μ≺ ↦ μ≻",
+   "",
+   "BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄",
+   "  calibration      none   calibrate(stage, source)",
+   "  methods          none   methodize(stage, source)",
+   "  settings         none   configure(stage, source)",
+   "",
+   "DIRECTIONS ───────────────────────────────────────────────────────────────────",
+   "  forward    ≺ m≺, l≺  →  ∼ m_d  →  ≻ a≻",
+   "  backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻",
+   "  policy     ∼ c  ←  ≻ V≻"
+  ],
+  "obligations": [
+   [
+    "arithmetic-definedness",
+    [
+     "cons:function:𝑢",
+     "¬(1 - ρ = 0)"
+    ],
+    "required",
+    "The divisor 1 - ρ at cons:function:𝑢 must be nonzero."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy.optimality",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy.optimality must be finite real numbers."
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "cntn_to_dcsn:Aggregation",
+     "cntn_to_dcsn.value",
+     "cntn_to_dcsn:Aggregation:V:result",
+     "V(m_d) ∈ [-inf, inf)"
+    ],
+    "required",
+    "The equations at cntn_to_dcsn.value must define cntn_to_dcsn:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "marginal-reading",
+    [
+     "cntn_to_dcsn.marginal"
+    ],
+    "required",
+    "the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked"
+   ],
+   [
+    "aggregation-admissibility",
+    [
+     "dcsn_to_arvl:Aggregation",
+     "dcsn_to_arvl.value",
+     "dcsn_to_arvl:Aggregation:V:result",
+     "V≺(m, l) ∈ ℝ"
+    ],
+    "required",
+    "The equations at dcsn_to_arvl.value must define dcsn_to_arvl:Aggregation on its declared inputs with values in its declared output sets."
+   ],
+   [
+    "finite-real-arithmetic",
+    [
+     "policy",
+     "Add"
+    ],
+    "required",
+    "The operands of Add at policy must be finite real numbers."
+   ],
+   [
+    "range-compatibility",
+    [
+     "dcsn_to_cntn.1",
+     "ℝ₊",
+     "Xa",
+     "m_d − c(m_d) ∈ Xa"
+    ],
+    "established",
+    "The restricted law of motion takes values in its declared output set."
+   ]
+  ],
+  "repr": "ElaboratedStage('cons', symbolic)"
+ }
+}

@@ -1,0 +1,13 @@
+@stage: disc
+
+Xa := ℝ₊
+
+β : (0,1)
+
+[id=dcsn_to_cntn, (a_d : Xa) : !dcsn -> (a[>] : Xa) : !cntn] {
+    a[>] = a_d
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V  = β*V[>]                     :: [id=value]
+}

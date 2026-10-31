@@ -1,0 +1,109 @@
+-- dynspec_full.asdl — mechanical merge of the three canonical
+-- listings (dynsym.asdl the baseline, dynsym_new.asdl the core
+-- additions, stage.asdl the stage additions) into one standard
+-- Zephyr module, so that
+-- pyasdl can parse it and gen_types.py can generate the dataclass
+-- layer (stage_types.py). The three listings remain canonical:
+-- edit them first, then remake this file to match.
+-- Merge-only adjustments, both documented in the working record:
+--   * the baseline symbol constructor Value(name, time) is renamed
+--     TimeValue here — it collides with the role Value(order) in a
+--     flat class namespace;
+--   * Declare(typer) is the provisional item for a bare declaration
+--     line (entry 107): stage.asdl does not yet give it a home. It carries
+--     the optional trailing annotation as Statement does, so that a
+--     description an author writes on a parameter or a shock declaration,
+--     `beta : (0,1) :: ["discount factor"]`, is retained (AMD-SG-014 section 3).
+
+module dynspec
+{
+  file = FILE(item* items)
+
+  item = Metadata(identifier key, scalar value)
+       | Statement(stmt core, annotation? annot)
+       | Block(annotation tag, item* body)
+       | Declare(typer declaration, annotation? annot)
+
+  stmt = Equation(expr lhs, expr rhs)
+       | Inequality(expr lhs, relop op, expr rhs)   -- lhs <= rhs: an inequality statement,
+                                        -- valid spelling of an occasionally
+                                        -- binding constraint (D20, 9 Sep 2026)
+       | Residual(expr form)
+       | Assignment(symbol target, expr value)
+       | PathAssignment(variable target, range? bound, expr value)
+       | CorrDef(identifier name, coordinate* params, setexpr body)
+       | Law(identifier* subjects, expr law)
+       | FuncDef(identifier name, coordinate* params, expr body)
+       | Slack(stmt core, cond bound)   -- core ⟂ bound: complementary
+                                        -- slackness; the bound is held
+                                        -- and checked by nothing
+
+  range = Range(end? left, expr lower, expr upper, end? right)
+  end   = Open | Closed
+
+  annotation = Annotation(entry* entries)
+  entry = Tag(string tag)
+        | KeyValue(identifier key, scalar value)
+        | Typer(typer typing)
+
+  symbol = Constant(identifier name)
+         | TimeValue(identifier name, int time)
+         | Variable(identifier name, index when, int shift)
+
+  index = T | SteadyState | At(perch side)
+
+  expr = Number(number value)
+       | Sym(symbol symbol)
+       | Add(expr left, expr right)
+       | Sub(expr left, expr right)
+       | Neg(expr operand)
+       | Mul(expr left, expr right)
+       | Div(expr left, expr right)
+       | Pow(expr base, expr exponent)
+       | Call(identifier fun, expr* args)
+       | Operator(identifier head, subscript* subs, expr* args)
+       | Tuple(expr* items)
+       | Select(expr family, selector sel)
+       | Space(setexpr set)
+
+  selector  = Pos(int at) | Key(identifier at)
+  subscript = Var(identifier name)
+            | In(identifier var, expr set)
+
+  typer = Declaration(subject subject, classifier* classifiers,
+                      expr? value)
+        | Marked(mark kind)
+        | Signature(subject source, classifier* source_types,
+                    subject target, classifier* target_types)
+        | Complementary(typer declaration, cond bound)   -- a declared multiplier with its
+                                               -- clause, μ[>] : ℝ₊ ⟂ a >= 0
+
+  subject    = Subject(coordinate* coordinates)
+  coordinate = Coordinate(identifier stem, index? at,
+                          classifier* classifiers)
+             | Group(subject inner, classifier* classifiers)
+
+  classifier = Domain(setexpr space)
+             | Infoset(perch side)
+             | Role(role kind)
+
+  perch = Arrival | Decision | Continuation
+  role  = State | Control | Value(int order)
+        | Shock
+        | Parameter
+  mark  = Node
+
+  setexpr = Named(identifier name)
+          | Interval(range bounds)
+          | FiniteSet(identifier* members)
+          | Product(setexpr* factors)
+          | Comprehension(subject bound, setexpr? base, cond* conds)
+          | IntegerRange(expr lower, expr upper)   -- {0, …, J}
+          | Points(expr* members, setexpr? superset) -- {0, 1}; {0, θ} ⊂ ℝ
+          | Functions(setexpr domain, setexpr codomain) -- I_J → ℝ₊
+
+  cond  = Rel(expr left, relop op, expr right)
+        | Between(expr lower, relop lo, expr middle, relop hi, expr upper)
+                                               -- a two-sided bound, 0 <= c_p <= w_d
+  relop = Lt | Le | Eq | Ge | Gt
+}

@@ -1,0 +1,30 @@
+@stage: sa_savings
+
+β : (0,1) :: ["discount factor"]
+ρ : (1,inf) :: ["1/ρ is the elasticity of intertemporal substitution"]
+γ : (1,inf) :: ["relative risk aversion"]
+η : (1,inf), > γ :: ["ambiguity aversion"]
+κ_1 : ℝ
+σ_ν : ℝ₊
+σ_Ψ : ℝ₊
+
+ν : ℝ
+ν ~ N(κ_1, σ_ν^2)
+Ψ : ℝ₊₊
+Ψ ~ LogNormal(ν, σ_Ψ)
+
+Γ(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}
+
+[id=dcsn_to_cntn, (m_d : ℝ₊₊, c : !ctrl @ ℝ₊₊, Ψ) : !dcsn -> (a : ℝ₊₊) : !cntn] {
+    a = (m_d - c)*Ψ :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ₊₊ @ !vlu, c) : !cntn -> (V : ℝ₊₊ @ !vlu) : !dcsn] {
+    CE = E_{Ψ}(V[>]^(1-γ))^(1/(1-γ)) :: [id=risk_ce, !node]
+    AMB = E_{ν}(CE^(1-η))^(1/(1-η)) :: [id=ambiguity_ce, !node]
+    V = ((1-β)*c^(1-ρ) + β*AMB^(1-ρ))^(1/(1-ρ)) :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> c] {
+    c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) + β*E_{ν}(E_{Ψ}(V[>]^(1-γ))^((1-η)/(1-γ)))^((1-ρ)/(1-η)))^(1/(1-ρ))) :: [id=objective]
+}

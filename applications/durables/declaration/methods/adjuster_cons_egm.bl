@@ -1,0 +1,10 @@
+@methods: adjuster_cons
+# The method block of the adjuster's policy builder, the endogenous grid method,
+# whose lines read the derivatives of the continuation value by the terms
+# D_{a_nxt_adj}V[>] and D_{h_nxt_adj}V[>].
+
+[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])                                              :: [id=InvEuler]
+    m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj                                       :: [id=endoggrid]
+    (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) - 𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])   :: [id=choice]
+}

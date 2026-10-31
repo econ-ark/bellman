@@ -1,0 +1,36 @@
+!trellis
+name: housing_tenure_lifecycle
+# The household lives twenty periods. A trellis for `elaborate_trellis` repeats
+# the period below twenty times, `periods[0]` being the terminal period, and
+# joins period h+1 to period h with the inter-period connector below, so that
+# nineteen copies of that connector are needed for twenty periods.
+#
+# The connector carries both routes into the one arrival perch of the tenure
+# stage: an owner leaves the period with savings, the housing size chosen and
+# this period's income; a renter with savings, no housing (the zero written in
+# renter_cons.bl) and this period's income, which becomes next period's y_pre.
+# The two routes are the alternatives of one discrete choice, so each arrival
+# field has two sources, one per branch, and an agent is on exactly one of
+# them.
+#
+# Terminal continuation value, the boundary data supplied to the two
+# consumption stages of `periods[0]`: the utility of consuming the savings
+# while holding the house,
+#   V[>]      = α*log(a) + (1 - α)*log(κ*(H + ι)),
+#   D_{a}V[>] = α/a,
+# with H = 0 on the renter's route. This is the terminal function of the FUES
+# solver; the trellis pages prescribe no representation for terminal data, so
+# it is recorded here in prose. Equation (31) of the paper instead writes a
+# bequest function of liquidated wealth, which it leaves unspecified for this
+# application.
+periods:
+  - !period
+    name: housing_tenure
+    stages: [tenure_choice, owner_housing, owner_cons, renter_housing, renter_cons]
+    connectors:
+      - {from: tenure_choice, to: owner_housing, fields: {a_o: a_d, H_o: H_d, y_o: y_d}}
+      - {from: tenure_choice, to: renter_housing, fields: {w_r: w_d, y_r: y_d}}
+      - {from: owner_housing, to: owner_cons, fields: {w_own: w_d, H_own: H_d, y_own: y_d}}
+      - {from: renter_housing, to: renter_cons, fields: {w_rent: w_d, S_rent: S_d, y_rent: y_d}}
+inter_connectors:
+  - {a_nxt_o: a, H_nxt_o: H, y_nxt_o: y_pre, a_nxt_r: a, H_nxt_r: H, y_nxt_r: y_pre}

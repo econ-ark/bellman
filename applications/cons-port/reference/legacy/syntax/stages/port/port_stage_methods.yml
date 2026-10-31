@@ -1,0 +1,40 @@
+# Stage this methodization applies to
+stage: port_stage
+
+# Operator-slot methodization (one entry per named node)
+methods:
+  - on: E_Ψ_θ
+    method: !gauss-hermite
+    handler: cons-port:_build_joint_quadrature
+    settings:
+      n_nodes: n_joint_nodes
+
+  - on: policy                              # legacy run: the helper dispatches on `on: policy`; !vfi is the grid argmax the saved run used
+    method: !vfi
+    # Draft kept for spec 0.3c (not runnable on the legacy helper):
+    #   on: policy.maximization.argmax          # AAS to AI: 1) How does this method know what eqn node defines the foc? 2) Note also that I added the argmax operator
+    #   method: !rootfind                       # solve the risky-share max from its FOC (smooth), not a grid argmax
+    #   handler: hark:solve_stage_rootfind      # HARK-side root-finder; swappable for quantecon via Matsya. AAS to AI: is this what the handler is called?
+
+  - on: evaluate #AAS to AI: should this be attached to policy.evaluate? Why was this working the way it is set up as now?
+    method: !linear
+    handler: cons-port:_make_interp
+    settings:
+      orders: [n_k]
+      bounds: [[k_min, k_max]]
+
+  - on: dcsn_to_arvl
+
+  - on: arvl_to_dcsn
+
+  - on: dcsn_to_cntn
+    handler: cons-port:transition
+
+  - on: arvl_to_dcsn_builder
+    method: !deterministic  #AAS to AI: this is redundant now right?
+
+  - on: dcsn_to_cntn_builder
+    method: !monte-carlo
+    settings:
+      n_paths: n_sim
+      seed: sim_seed

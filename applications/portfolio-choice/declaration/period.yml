@@ -1,0 +1,14 @@
+!period
+name: portfolio_period
+
+# One period of the portfolio model, in the order portfolio first: the share is
+# chosen on capital, consumption follows on the resources the draws give, and
+# discounting closes the period. The order of the stages is derived from their
+# fields, not from this list; the connector pairs the portfolio stage's
+# continuation resources with the consumption stage's arrival resources.
+stages:
+  - port
+  - cons
+  - disc
+connectors:
+  - {m_next: m}

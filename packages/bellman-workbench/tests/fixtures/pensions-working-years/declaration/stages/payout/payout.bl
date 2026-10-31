@@ -1,0 +1,48 @@
+@stage: payout
+
+Plan := {DB, DC}
+
+f_ACF : ℝ₊       :: ["average contribution factor, equation (5)"]
+f_LSF : ℝ₊       :: ["lump-sum factor at 65, 23%, equation (5)"]
+f_ASF : ℝ₊       :: ["average service factor, 100%, equation (5)"]
+τ_R   : ℝ₊       :: ["tenure at retirement, 48 years, Appendix D.1"]
+Y_65  : ℝ₊       :: ["deterministic earnings level at 65"]
+Y_64  : ℝ₊       :: ["deterministic earnings level at 64"]
+Y_63  : ℝ₊       :: ["deterministic earnings level at 63"]
+
+[id=arvl_to_dcsn, (a_sv : ℝ₊, adc_sv : ℝ₊, h_sv : ℝ₊, m_sv : ℝ₊, P_sv : ℝ₊₊, ξ_sv : ℝ, α_sv : (0,1), β_sv : (0,1), plan_sv : Plan, π_sv : [0,1]) : !arvl -> (a_d : ℝ₊, adc_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan, π_d : [0,1]) : !dcsn] {
+    a_d    = a_sv
+    adc_d  = adc_sv
+    h_d    = h_sv
+    m_d    = m_sv
+    P_d    = P_sv
+    ξ_d    = ξ_sv
+    α_d    = α_sv
+    β_d    = β_sv
+    plan_d = plan_sv
+    π_d    = π_sv
+}
+
+[id=dcsn_to_cntn, (a_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, π_d) : !dcsn -> (w_a : ℝ₊, adc_a : ℝ₊, π_a : [0,1], h_a : ℝ₊, m_a : ℝ₊, P_a : ℝ₊₊, ξ_a : ℝ, α_a : (0,1), β_a : (0,1), plan_a : Plan) : !cntn] {
+    w_a    = a_d + adc_d + (f_ACF*f_LSF*f_ASF*τ_R*(Y_65 + Y_64 + Y_63)*exp(ξ_d)/3, 0)[plan_d]                             :: [id=payout]
+    adc_a  = 0                                                           :: [id=balance_emptied]
+    π_a    = π_d
+    h_a    = h_d
+    m_a    = m_d
+    P_a    = P_d
+    ξ_a    = ξ_d
+    α_a    = α_d
+    β_a    = β_d
+    plan_a = plan_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = V[>]                              :: [id=value]
+    D_{a_d}V = D_{w_a}V[>]                       :: [id=marginal_liquid]
+    D_{h_d}V = D_{h_a}V[>]                       :: [id=marginal_housing]
+    D_{m_d}V = D_{m_a}V[>]                       :: [id=marginal_mortgage]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                     :: [id=value]
+}

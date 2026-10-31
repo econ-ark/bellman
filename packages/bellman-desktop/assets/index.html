@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Bellman Workbench</title>
+  <link rel="stylesheet" href="welcome.css">
+  <script src="welcome.js" defer></script>
+</head>
+<body>
+  <main class="welcome" aria-labelledby="welcome-title">
+    <header class="identity">
+      <img class="mark" src="logo.svg" alt="" width="52" height="47">
+      <div>
+        <h1 id="welcome-title">Bellman <span>Workbench</span></h1>
+        <p class="introduction">Open a project to begin.</p>
+      </div>
+    </header>
+    <div class="workspace">
+      <section class="start" aria-labelledby="start-title">
+        <h2 id="start-title">Start</h2>
+        <div class="actions">
+          <form action="/open-project" method="get">
+            <button class="open-project" type="submit" data-open-action>
+              <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M3 7V5h6l2 2h10v13H3V7Zm0 3h18"/></svg>
+              <span>Open Project…</span>
+              <kbd data-shortcut="project" aria-hidden="true"></kbd>
+            </button>
+          </form>
+          <form action="/open-file" method="get">
+            <button class="open-file" type="submit" data-open-action>
+              <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M6 3h8l4 4v14H6V3Zm8 0v5h4M9 12h6M9 16h6"/></svg>
+              <span>Open File…</span>
+              <kbd data-shortcut="file" aria-hidden="true"></kbd>
+            </button>
+          </form>
+        </div>
+        <p class="action-help">Choose a model folder, or open a<br>Bellman stage or recipe.</p>
+      </section>
+      <section class="recent" aria-labelledby="recent-title">
+        <h2 id="recent-title">Recent projects</h2>
+        <div id="recent-empty">
+          <p>No recent projects</p>
+          <p class="empty-help">Projects you open will appear here.</p>
+        </div>
+        <ul id="recent-projects" aria-label="Recent projects" hidden></ul>
+      </section>
+    </div>
+    <p id="open-status" role="status" aria-live="polite" aria-atomic="true"></p>
+  </main>
+  <footer><span>Project Bellman</span><span>Economic modelling</span></footer>
+</body>
+</html>

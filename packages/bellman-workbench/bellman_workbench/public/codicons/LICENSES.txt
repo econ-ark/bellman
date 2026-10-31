@@ -1,0 +1,5 @@
+The license notices of the files of this folder. codicon.css and codicon.ttf are the files dist/codicon.css and dist/codicon.ttf of @vscode/codicons 0.0.45, copied unmodified from the package npm serves.
+
+Icons: Codicons © Microsoft Corporation, CC BY 4.0, unmodified, https://github.com/microsoft/vscode-codicons
+
+The icons and the font that draws them are licensed under the Creative Commons Attribution 4.0 International license, whose text is in LICENSE. The stylesheet's code is licensed under the MIT license, whose text is in LICENSE-CODE.

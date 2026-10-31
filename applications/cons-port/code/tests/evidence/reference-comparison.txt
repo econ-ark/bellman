@@ -1,0 +1,31 @@
+configuration    h arrays  largest difference share ties  result
+cons_only        0     10            3.55e-15          0  equal to 1e-12
+cons_only        1     10            2.66e-15          0  equal to 1e-12
+cons_only        2     10            1.78e-15          0  equal to 1e-12
+cons_only        3     10            3.55e-15          0  equal to 1e-12
+cons_only        4     10            3.55e-15          0  equal to 1e-12
+cons_only        5     10            2.66e-15          0  equal to 1e-12
+beginning_egm    0     11            7.11e-15          0  equal to 1e-12
+beginning_egm    1     11            1.42e-14          0  equal to 1e-12
+beginning_egm    2     11            5.68e-14          0  equal to 1e-12
+beginning_egm    3     11            5.33e-15          0  equal to 1e-12
+beginning_egm    4     11            4.44e-15          0  equal to 1e-12
+beginning_egm    5     11            7.11e-15          0  equal to 1e-12
+beginning_vfi    0      9                                 structural only: The b
+beginning_vfi    1      9                                 structural only: The b
+beginning_vfi    2      9                                 structural only: The b
+beginning_vfi    3      9                                 structural only: The b
+beginning_vfi    4      9                                 structural only: The b
+beginning_vfi    5      9                                 structural only: The b
+end_returns      0     10            8.88e-16          0  equal to 1e-12
+end_returns      1     10            8.88e-16          0  equal to 1e-12
+end_returns      2     10            8.88e-16          0  equal to 1e-12
+end_returns      3     10            8.88e-16          0  equal to 1e-12
+end_returns      4     10            3.55e-15       1584  equal to 1e-12
+end_returns      5     10            8.88e-16          0  equal to 1e-12
+port_only        0      6            4.34e-19          0  equal to 1e-12
+port_only        1      6            6.94e-18          0  equal to 1e-12
+port_only        2      6            1.73e-18          0  equal to 1e-12
+port_only        3      6            1.30e-18          0  equal to 1e-12
+port_only        4      6            1.02e-20          0  equal to 1e-12
+port_only        5      6            2.71e-20        168  equal to 1e-12

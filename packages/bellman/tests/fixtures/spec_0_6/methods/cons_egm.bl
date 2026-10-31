@@ -1,0 +1,12 @@
+@stage: cons
+𝑑𝑢     := D_{c}(𝑢)
+𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)
+
+[id=egm, (V[>]) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0  :: [id=InvEuler]
+    m_d[>] = a + c[>]                    :: [id=grid]
+    c      = c[>]                        :: [id=identification]
+}
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{m_d}V = 𝑑𝑢(c)                     :: [id=envelope]
+}

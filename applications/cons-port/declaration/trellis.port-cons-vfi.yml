@@ -1,0 +1,18 @@
+!trellis
+name: port_cons_vfi
+# Portfolio first, as trellis.port-cons.yml writes it, with consumption chosen by a grid search over
+# candidate consumption levels in place of the endogenous-grid method (notebook 03 §8).
+# Six equal periods; the one inter-period mapping stands for every adjacent pair.
+periods:
+  - stages:
+      port: {stage: stages/port/port.bl, calibration: calibration/portfolio.yml,
+             settings: settings/port_wide.yml, methods: methods/port.yml}
+      cons: {stage: stages/cons/cons.bl, calibration: calibration/portfolio.yml,
+             settings: settings/cons_vfi.yml, methods: methods/cons_vfi.yml}
+      disc: {stage: stages/disc/disc.bl, calibration: calibration/portfolio.yml,
+             settings: {}, methods: methods/disc.yml}
+    connectors:
+      - {w: m}
+    repeat: 6
+inter_connectors:
+  - {disc.a: k}

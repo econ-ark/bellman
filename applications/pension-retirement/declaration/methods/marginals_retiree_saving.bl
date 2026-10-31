@@ -1,0 +1,15 @@
+@methods: retiree_saving
+# The derivatives of the retiree's two values, each stated as a marginal block
+# of the value builder that writes the value (AMD-MB-001 §4.3). The decision
+# value's line is the envelope condition; the arrival value's lines keep the
+# factors 1 + r_f and 1 + r_p of the law m_r = (1 + r_f)*y_f_r + w_R +
+# (1 + r_p)*y_p_r, which is not the identity.
+
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{m_r}V = 𝑑𝑢(c)                                  :: [id=marginal]
+}
+
+[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+    D_{y_f_r}V[<] = (1 + r_f)*D_{m_r}V                :: [id=marginal_financial]
+    D_{y_p_r}V[<] = (1 + r_p)*D_{m_r}V                :: [id=marginal_pension]
+}

@@ -1,0 +1,36 @@
+@stage: cons_obs
+
+Xm := ℝ₊₊
+Xa := ℝ₊
+
+ρ : [1, inf)
+
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)          :: [id=inv_marg_util]
+Γ(x : ℝ₊₊) := (0, x]
+
+[id=arvl_to_dcsn, (m : Xm) : !arvl -> (m_d : Xm) : !dcsn] {
+    m_d = m
+}
+
+[id=dcsn_to_cntn, (m_d, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : Xa) : !cntn] {
+    a = m_d - c
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = 𝑢(c) + V[>]          :: [id=value]
+    D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                        :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])   :: [id=optimality, !doc]
+    μ[>]   : ℝ₊ ⟂ a >= 0             :: [id=slackness]
+    c[>]   = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>] + μ[>]) :: [id=InvEuler]
+    m_d[>] = a + c[>]                :: [id=endoggrid]
+    c      = c[>]                    :: [id=cons_choice]
+}

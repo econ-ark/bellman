@@ -1,0 +1,7 @@
+# The recipe declaration/spec.port-cons.yml, portfolio first, with the portfolio stage's methods taken from
+# methods/port_without_marginals.yml, which binds no !marginals line. Paths are written from the folder declaration/.
+trellis: trellis.port-cons.yml
+stages:
+  cons: {stage: stages/cons/cons.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/cons_wide]}, methods: {all: [methods/cons]}}
+  disc: {stage: stages/disc/disc.bl, calibration: {all: [calibration/portfolio]}, methods: {all: [methods/disc]}}
+  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/port_wide]}, methods: {all: [methods/port_without_marginals]}}

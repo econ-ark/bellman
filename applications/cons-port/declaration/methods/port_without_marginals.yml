@@ -1,0 +1,19 @@
+stage: port
+# The portfolio stage's methods of port.yml, beside this file, without its !marginals line and without its
+# !Linear representation, which would evaluate the first derivative of the represented value, so that the value
+# the stage exports carries no derivative. The two recipes under notebooks/without-portfolio-marginals/ name
+# this file, and the notebook notebooks/declared-and-operative.ipynb binds them to show the requirement that the
+# consumption stage's endogenous grid method, which reads a derivative of its continuation value, places on
+# the stage that supplies that value.
+methods:
+  - on: policy
+    method: !time-iteration
+    block: port_foc.bl
+    handler: cons-port:share_search
+  - on: E_Ψ_θ
+    method: !gauss-hermite
+    handler: cons-port:gauss_hermite
+    settings: {n_nodes: [n_Ψ_nodes, n_θ_nodes]}
+  - on: dcsn_to_cntn
+    method: !monte-carlo
+    settings: {n_paths: n_sim, seed: sim_seed}

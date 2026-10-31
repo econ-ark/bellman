@@ -1,0 +1,12 @@
+# Numerical choices, not model content: the asset grids the methods tabulate on
+# and the jump-detection threshold of the upper envelope scan. The FUES
+# retirement example uses 3,000 points on assets between 1e-10 and 500 for both
+# consumption stages, and a threshold of 1.01.
+settings:
+  n_a: 3000
+  a_min: 1.0e-10
+  a_max: 500
+  n_a_ret: 3000
+  a_ret_min: 1.0e-10
+  a_ret_max: 500
+  m_bar: 1.01

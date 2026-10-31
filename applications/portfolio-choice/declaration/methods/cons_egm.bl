@@ -1,0 +1,12 @@
+@methods: cons
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
+
+# The endogenous grid method as a method block of the consumption stage, whose
+# stage file writes the maximization alone and states the envelope condition
+# at its decision builder (AMD-MB-001 §4.1); the candidate line reads the
+# derivative of the continuation value by the term D_{a}V[>].
+[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0    :: [id=InvEuler]
+    m_d[>] = a + c[>]                        :: [id=grid]
+    c      = c[>]                            :: [id=identification]
+}

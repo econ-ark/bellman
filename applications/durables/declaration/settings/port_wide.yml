@@ -1,0 +1,17 @@
+# The portfolio stage's numerical settings in the notebooks' trellis files port-cons.yml, cons-port.yml and
+# port-cons-vfi.yml (decision Q19 of step D, extended in the Fable pass): the capital grid is the
+# multi-exponential grid of SolvingMicroDSOPs (grid_spacing: expmult, read by the tool's evaluation_grid),
+# 16,000 points from 1e-6 up to 2,000, the points of the savings grid of settings/cons_wide.yml, so that the
+# marginal value the endogenous-grid method reads at each saving stands at a grid point; the share is
+# searched among 201 candidates, 0.005 apart. settings/port.yml, 800 evenly spaced points up to 1,000 and
+# 50 shares, serves the reference's trellis files alone: on it the marginal value at low savings is
+# interpolated across 1.25 of capital, and the share below capital of 20 moves between 0.02 and 0.59 from
+# one grid point to the next.
+settings:
+  grid_spacing: expmult
+  n_k: 16000
+  k_min: 1.0e-6
+  k_max: 2000.0
+  n_Ψ_nodes: 7
+  n_θ_nodes: 7
+  n_ς: 201

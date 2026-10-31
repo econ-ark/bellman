@@ -1,0 +1,25 @@
+!trellis
+name: pensions_australia_life_cycle
+# periods[0] is the period after the last age, in which the wealth of a
+# household that reached the last age is bequeathed with certainty. Seven
+# periods for the first build of the working years: periods[1] and periods[2]
+# are retirement years, periods[3] the year of retirement, periods[4] and
+# periods[5] working years and periods[6] the year of enrollment; the full
+# model repeats the retirement years 35 times and the working years 47 times.
+periods:
+  - stages: [shocks, bequest_pa]
+    connectors:
+      - {a_s: a_bq, adc_s: adc_bq, h_s: h_bq, m_s: m_bq, P_s: P_bq}
+  # retirement years: the survive branch goes straight to the tenure choice
+  - {template: period.pensions.yml, repeat: 2, connectors: [{a_sv: w_a, adc_sv: adc_a, π_sv: π_a, h_sv: h_a, m_sv: m_a, P_sv: P_a, ξ_sv: ξ_a, α_sv: α_a, β_sv: β_a, plan_sv: plan_a}]}
+  # the year of retirement, with the payout; its own empty connectors, so
+  # that a connector the working years take does not reach it
+  - {template: period.pensions.yml, repeat: 1, connectors: []}
+  # working years, with the contribution and the allocation
+  - {template: period.pensions.yml, repeat: 2}
+  # the year of enrollment, with the plan choice and no survival draw
+  - {template: period.pensions.yml, repeat: 1}
+# One mapping stands for every adjacent pair: the three consumption stages
+# continue to the next period's shocks stage.
+inter_connectors:
+  - {a_nxt_rt: a, adc_nxt_rt: a_dc, π_nxt_rt: π_pre, h_nxt_rt: h, m_nxt_rt: m, P_nxt_rt: P_pre, ξ_nxt_rt: ξ_pre, α_nxt_rt: α_pre, β_nxt_rt: β_pre, plan_nxt_rt: plan, a_nxt_kp: a, adc_nxt_kp: a_dc, π_nxt_kp: π_pre, h_nxt_kp: h, m_nxt_kp: m, P_nxt_kp: P_pre, ξ_nxt_kp: ξ_pre, α_nxt_kp: α_pre, β_nxt_kp: β_pre, plan_nxt_kp: plan, a_nxt_adj: a, adc_nxt_adj: a_dc, π_nxt_adj: π_pre, h_nxt_adj: h, m_nxt_adj: m, P_nxt_adj: P_pre, ξ_nxt_adj: ξ_pre, α_nxt_adj: α_pre, β_nxt_adj: β_pre, plan_nxt_adj: plan}

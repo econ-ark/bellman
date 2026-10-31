@@ -1,0 +1,90 @@
+# The packages that the code of this repository imports or runs, and
+# filelock, which Solara requires, held for the reason its line gives, each
+# pinned to the version installed and tested with the others. Python 3.12 or
+# later.
+# install-dev.sh installs this file and then, in editable mode, the three
+# packages of the repository, packages/bellman, packages/asva and
+# packages/bellman-workbench.
+
+# bellman (packages/bellman)
+discopy==1.2.2
+jsonschema==4.26.0
+lark==1.3.1
+numpy==2.3.5
+PyYAML==6.0.3
+
+# asva (packages/asva): its endogenous grid factories are compiled by Numba,
+# as are the kernels in packages/bellman/tests/cat/test_kernel_functions.py and
+# in the lesson tutorials/topics/kernels.ipynb; its runner reads data files
+# with pandas
+numba==0.63.1
+pandas==2.3.3
+
+# the tests, which pytest-xdist runs in parallel (-n auto); cloudpickle saves
+# the compiled kernels in packages/bellman/tests/cat/test_kernel_functions.py
+# and the endogenous grid operator in the cons-port application's acceptance
+# tests, applications/cons-port/code/tests/test_cons_port_acceptance.py
+pytest==9.0.2
+pytest-xdist==3.8.0
+cloudpickle==3.1.2
+# the arbitrary-precision arithmetic that two test modules of packages/bellman
+# compare the package's distributions against (test_amd_sg_036.py,
+# test_continuous_distributions.py)
+mpmath==1.3.0
+
+# the lessons under tutorials/ and the execution of notebooks: the kernel that
+# runs a lesson (ipykernel), the exception display that the lessons' set-up
+# module sets (ipython), the lessons' tool (nbformat, nbclient), the read-only
+# execution of a notebook, applications/readonly_notebook_execution.py, which
+# tests/test_readonly_notebook_execution.py runs (jupyter_client), the plots of
+# the cons-port tool (matplotlib); the figure script of docs/examples/images/
+# draws with networkx, which DisCoPy requires and pip installs with it
+ipykernel==6.31.0
+ipython==9.7.0
+jupyter_client==8.8.0
+matplotlib==3.10.8
+nbclient==0.10.4
+nbformat==5.10.4
+
+# the formatter and linter of packages/bellman, which its pyproject.toml
+# configures (ruff), and the two generators of the package's term classes from
+# its ASDL listings, packages/bellman/gen_types.py and gen_semantic_types.py
+# (pyasdl)
+ruff==0.12.1
+pyasdl==22.1.23
+
+# the build backend that the two pyproject.toml files name: a virtual
+# environment on Python 3.12 or later holds none, and the tests of asva build
+# its wheel without build isolation, reading the backend from the environment
+setuptools==80.9.0
+
+# the documentation site (mkdocs.yml): MkDocs, its theme, the Markdown
+# extensions, and the three plugins it names besides search and tags, which
+# MkDocs and the theme provide; docs/_hooks/reference_pages.py imports
+# Markdown, which MkDocs requires and pip installs with it
+mkdocs==1.6.1
+mkdocs-material==9.7.2
+pymdown-extensions==10.21
+mkdocs-callouts==1.16.0
+mkdocs-roamlinks-plugin==0.3.2
+mkdocs-toggle-sidebar-plugin==0.0.9
+
+# the extra explore of packages/bellman, for the lessons and the API index
+ai-edge-model-explorer==0.1.33
+
+# Bellman Workbench (packages/bellman-workbench): the local page and its server
+# (solara), the two Vue 3 components of the page (ipyvue, ipyvuetify), and the
+# tests of the page in headless Chrome, packages/bellman-workbench/tests/test_page.py
+# (playwright)
+solara==1.62.1
+# held below 3.30.0: every later release registers a Python audit hook when
+# it is imported, as Solara's server imports it, and the hook then runs at
+# each of the calls of id() the package makes while it copies a trellis:
+# about 0.8 of the 4 seconds in which the Workbench bound the durables
+# trellis on 5 October 2026, before the package's copy was made faster;
+# the copy now calls id() about a third as often, and the cost has not
+# been measured since; lifted once a release registers no hook
+filelock==3.29.7
+ipyvue==3.0.0
+ipyvuetify==3.0.0
+playwright==1.63.0

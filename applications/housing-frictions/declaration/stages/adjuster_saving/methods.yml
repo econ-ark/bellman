@@ -1,0 +1,8 @@
+stage: adjuster_saving
+
+methods:
+  # The derivative of the decision value in total resources is stated by the
+  # marginal block of marginals_adjuster_saving.bl on the decision value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_adjuster_saving.bl

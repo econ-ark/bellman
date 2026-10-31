@@ -1,0 +1,393 @@
+---
+title: Reaching the service by HTTP
+audience: user
+type: user-guide
+topic: [matsya]
+---
+
+# Reaching the service by HTTP
+
+> [!summary]
+> The commands of matsya-client send their requests to the Matsya service over HTTP, the protocol of the web, and print its answers, and a reader without Python, or a program written in any language, can send the same requests directly. This page lists every **route** of the service, that is, every kind of request, named by an HTTP method and a path, with the body the request sends and the answer it receives. It says how the Matsya token is sent with each request, how a personal Anthropic key may be sent with a request that starts language-model work, and how the service refuses a request, and it gives a `curl` example for each kind of request: the index, a search, a job from a description, a job's record, a session, an entry, a question and its answer, a cancellation and the selected job. For each route it names the command of matsya-client that sends the same request.
+
+> [!info]- Relationship with other documents
+> **Builds on** — [Matsya in three parts](index.md), which defines the session, the job, the turn, the label and the target; [The roles and the work of a job](01-the-roles-and-the-work-of-a-job.md), which names the roles whose work a job's record reports; [Working with Matsya from the command line](02-working-from-the-command-line.md), whose commands send the requests of this page.
+> **Continued by** — [The command reference](05-the-command-reference.md), the first of the reference pages, which gives the exact form of every command of the client.
+> **See also** — [Collections and weights](07-collections-and-weights.md), the fields of a search and what a returned passage holds; [The Python module and the files the client writes](06-the-python-module.md), the same requests as Python functions.
+> **Explained for developers in** — the [Matsya developer guide](../dev-guide/index.md), which describes the program that answers each route.
+
+## 1 The address, the Matsya token and the examples
+
+The service's administrator gives you two things: the service's address, a URL, and your Matsya token ([Matsya in three parts](index.md) §1), `msy_` followed by 32 hexadecimal characters, which the service checks on every request under `/v1/`. Every session, job and turn you create belongs to you, and the service answers a request for another person's as though it did not exist (§3).
+
+The examples on this page read the two from environment variables, the same two that the command `bellman-matsya` reads, so that a terminal set up for the examples serves the command as well:
+
+```sh
+export BELLMAN_MATSYA_SERVER="<the service's address, without a final slash>"
+export BELLMAN_MATSYA_TOKEN="$(cat <the private file that holds your Matsya token>)"
+```
+
+Keep the Matsya token in a file that only you can read and that stands outside every folder under version control; reading the variable from that file keeps the Matsya token out of the shell's history.
+
+Every request to a route under `/v1/` carries the Matsya token in the `Authorization` header, after the word `Bearer` and one space:
+
+```text
+Authorization: Bearer msy_…
+```
+
+A request with a body sends one object in JSON, the text format of named fields and lists that the service reads and writes, with the header `Content-Type: application/json`, and every answer is one JSON object. The examples use `curl`, the command-line program for HTTP requests that most systems install, in version 7.76 or later. Its option `-sS` hides the progress display and keeps `curl`'s own error messages, and `--fail-with-body` prints the service's answer to a refused request and makes `curl` exit with a nonzero status. An answer arrives on one line; a JSON viewer, or `python3 -m json.tool` where Python is installed, prints it with one field per line.
+
+The first request checks the address and the Matsya token:
+
+```sh
+curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/index" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+The answer names the version of the retrieval index by its digest ([Matsya in three parts](index.md) §1); the identity of the embedding model, the model that turns each passage into a vector of numbers for the search ([Collections and weights](07-collections-and-weights.md) §4); the ID and the version of the default configuration, the instruction texts and settings under which the service runs (§8); the service's own version; and its **capabilities**, the features of the service that a client uses only where this answer names them:
+
+```json
+{"index_digest":"…","embedding_model_id":"…","configuration_id":"…","configuration_version":"…",
+ "service_version":"…","capabilities":["capture_at_acceptance","job_delivery_id"]}
+```
+
+The service names two capabilities: `capture_at_acceptance`, that it fixes a job's source material when it accepts a job whose request names `reviewed_through` (§6), and `job_delivery_id`, that a job's request may name a `delivery_id` (§5). A service whose answer names no capabilities refuses both fields of a job's request with 422. `bellman-matsya index` sends the same request and prints its first four fields, and `bellman-matsya configuration effective` sends it to report the configuration under which a new job or question would run, with the service's version and its capabilities ([The command reference](05-the-command-reference.md) §9).
+
+A request that starts language-model work, that is, a job, a question or a reply that starts a job's next attempt, may also include a **personal Anthropic key**, an Anthropic API key of your own ([Matsya in three parts](index.md) §1), in the header `Bellman-Matsya-Anthropic-Key`; the service then makes every language-model call of that job or turn with your key, and Anthropic charges those calls to your Anthropic account in place of the service's:
+
+```text
+Bellman-Matsya-Anthropic-Key: <your Anthropic API key>
+```
+
+The key is an addition to the Matsya token, not a substitute for it: the service checks the Matsya token first, and a request with a key and no valid Matsya token is refused with 401. The service reads the header on three routes alone, `POST /v1/model-iterations`, `POST /v1/sessions/{session_id}/turns` and `POST /v1/sessions/{session_id}/entries`, and accepts the key only when its operator has enabled personal keys. A service that has not enabled them refuses a request whose header holds a key with 403 and creates nothing (§3), and a service built before personal keys ignores the header and runs the work under its own key. The service holds the key in memory for that job or turn alone, never stores it, and records only which key it used, in the field `credential_source` (§5). Send the header only to an HTTPS address, or to a service on your own machine at `localhost`, `127.0.0.1` or `::1`: over plain HTTP between machines the key is sent unencrypted, and the address the client uses by default, `http://45.55.225.169:8710`, uses plain HTTP, so never send the header there. To send a key with `curl`, read it from a private file into the variable that `bellman-matsya` also reads, as the Matsya token is read above, and add `-H "Bellman-Matsya-Anthropic-Key: $BELLMAN_MATSYA_ANTHROPIC_KEY"` to a request of those three routes:
+
+```sh
+export BELLMAN_MATSYA_ANTHROPIC_KEY="$(cat <the private file that holds your Anthropic API key>)"
+```
+
+## 2 The routes
+
+A part of a path in braces stands for an identifier that an earlier answer gave: the `id` of a session, a job or a turn, 32 hexadecimal characters, or the `passage_id` of a passage, 64 hexadecimal characters. A **query parameter** is a named value written into the address after the path, following `?`, in the form `name=value`, as in `/v1/model-iterations/<job>?view=full`.
+
+| Method and path | Body | Answer | The same request from bellman_matsya-client |
+|---|---|---|---|
+| `GET /v1/index` | none | the index's digest, the embedding model's identity, the ID and the version of the default configuration, the service's version and its capabilities | `bellman-matsya index`, `bellman-matsya configuration effective` |
+| `POST /v1/search` | a search: `query`, and optionally `collections`, `limit`, `source_ids` and `boosts`; at most 16 KiB | `index_digest` and `passages`, the passages that best match the query | `bellman-matsya search` |
+| `POST /v1/answer` | the body of a search | one sentence copied from a matching passage, with its evidence, or none | none |
+| `GET /v1/passages/{passage_id}` | none; the query parameter `index_digest` is optional | one passage | the function `passage` of the Python module |
+| `POST /v1/sessions` | `{"name": …}`; at most 16 KiB | 201 and the new session | `bellman-matsya session new` |
+| `GET /v1/sessions/{session_id}` | none | the session: its entries, the version of its text, its jobs and its turns | `bellman-matsya session show` |
+| `POST /v1/sessions/{session_id}/entries` | one entry: `text`, `kind`, `replies_to`, `delivery_id`; at most 24 MiB | the session, with the entry appended | `bellman-matsya session add` |
+| `POST /v1/sessions/{session_id}/selected-job` | `{"job": …}`; at most 16 KiB | the session | `bellman-matsya session select` |
+| `POST /v1/sessions/{session_id}/turns` | a question; at most 256 KiB | 202, the turn's identifier, its configuration ID, its `credential_source` and its route | `bellman-matsya ask` |
+| `GET /v1/sessions/{session_id}/turns/{turn_id}` | none | the turn, with its record once it has finished | `bellman-matsya ask`, while it waits; `bellman-matsya turn status`, `bellman-matsya turn wait` |
+| `POST /v1/model-iterations` | a job's request; at most 24 MiB | 202, the job's identifier and state, its configuration ID, its `credential_source` and its route, with the fields of §§5 and 6 for a request that names a `delivery_id` or `reviewed_through` | `bellman-matsya job submit`, `bellman-matsya job submit-prepared` |
+| `GET /v1/model-iterations/{job_id}` | none; the query parameter `view` is optional | the job, with its record once it has ended | `bellman-matsya job status`, `bellman-matsya job wait` |
+| `POST /v1/model-iterations/{job_id}/cancel` | none | the job | `bellman-matsya job cancel` |
+| `POST /v1/configurations` | a checked configuration folder as a ZIP archive, `Content-Type: application/zip`; at most 24 MiB | 201 and the configuration's ID and version, or 200 for an ID already published | `bellman-matsya configuration publish` |
+| `PUT /v1/configurations/default` | `{"configuration_id": …}`; at most 16 KiB | the former and the new default's ID with the new version | `bellman-matsya configuration set-default` |
+
+An answer has the status 200 unless the table names another. The routes of a job, a question and an entry also read the header `Bellman-Matsya-Anthropic-Key` of §1, and no other route reads it. The service also answers `GET /healthz` with `{"status":"ok"}`, without a Matsya token; that route serves the administrator's check on the server itself, since the address the administrator gives passes only the routes under `/v1/` to the service.
+
+Where the table names a command of matsya-client, the command sends the same request, and its option `--json` prints the service's answer as it arrived, except that `bellman-matsya job submit-prepared` and `bellman-matsya configuration effective` print an object that the client assembles from the answer ([The command reference](05-the-command-reference.md) §§4.1 and 9).
+
+## 3 Refusals
+
+The service answers a refused request with one field, `{"detail": "<a sentence>"}`, whose sentence states the fault, and one of these statuses:
+
+| Status | When the service answers it |
+|---|---|
+| 401 | The `Authorization` header holds no Matsya token, or one that the service does not hold or has revoked. Check the Matsya token the administrator gave you, and ask the administrator if the service refuses it. A request that includes a personal Anthropic key receives the same 401, since the key grants no access of its own. |
+| 403 | A search or an answer names a collection that your Matsya token is not granted; the sentence is `Collection access is not granted` ([Collections and weights](07-collections-and-weights.md) §2). A publication or a change of the default was sent with a Matsya token whose holder the administrator has not named as an administrator (§8). A job, a question or an entry includes the header `Bellman-Matsya-Anthropic-Key` (§1) and is sent to a service whose operator has not enabled personal keys; the sentence is `This service does not accept a personal Anthropic key`, a request that repeats a `delivery_id` is refused in the same way, and nothing is created. |
+| 404 | The session, job, turn or passage does not exist or is not yours; the service does not distinguish the two cases. A passage also receives 404 when your Matsya token may not read its collection, or when the service no longer keeps the version of the index that the request names. A question also receives 404 when the service offers no turns of matsya-master, or when it keeps no version of the index with the digest the question names. A job, a question or a change of the default that names a configuration ID the service has not published receives 404, and no job or question is recorded. |
+| 409 | A cancellation names a job that has ended; the sentence is `The job has ended`. A question repeats a `delivery_id` with another question or another configuration selector than the turn the session holds under it. A job's request repeats a `delivery_id` under which you hold a job with another request; the sentence is `The delivery_id names a job whose request differs` (§5). A job's request names in `reviewed_through` an entry after which the session holds further entries; the sentence names each of them by its number and kind, as in `The session holds an entry after entry 1, the last entry the request reviewed: entry 2 (user); review it and submit again` (§6). Neither of the last two creates a job. |
+| 413 | The body exceeds the route's limit (§2), a published archive whose contents expand beyond 24 MiB among them. |
+| 415 | A body was sent without the header `Content-Type: application/json`, or a publication without `Content-Type: application/zip`. |
+| 422 | The request is malformed: a field that the route does not know, a value outside its range, a view other than `products` or `full`, a configuration ID that is not 64 lowercase hexadecimal characters, or an entry, a selection or a job that the session cannot hold, such as a reply that names an entry that is not a question. A job's request whose `reviewed_through` names no entry of the session also receives 422, with a sentence such as `The session holds no entry 3; its last entry is entry 2`, and no job is created (§6). A question also receives 422 when the configuration it selects, or the default, does not enable the conversation role; no question is appended. A published archive receives 422 when an entry escapes the folder, is a link or is not a regular file, when two entries share a name, when a file is absent from the manifest or differs from its digest, or when the configuration fails any check. The header `Bellman-Matsya-Anthropic-Key` is present with an empty or blank value; the sentence is `The Bellman-Matsya-Anthropic-Key header is empty`. A reply that would start the next attempt of a job run under a personal Anthropic key includes no such header; the sentence is `The job awaiting this reply ran under a personal Anthropic key; send the reply with a personal Anthropic key`, and the session is left unchanged (§6). |
+| 503 | The service cannot read its database of Matsya tokens, or holds no retrieval index. Report the route and the answer to the administrator. |
+
+The service answers an empty header with 422, and any other with 403 when its operator has not enabled personal keys, after its check of the Matsya token and before it reads the request's body. None of the three refusals of a personal key uses 401, which concerns the Matsya token alone, and none creates a job, a turn or an entry. When the service refuses a request that a command of matsya-client sent, the command prints the sentence and exits with status 1; for a reply refused for want of a key, it adds a sentence that says how to supply one (§6).
+
+## 4 The index, a search and a passage
+
+A search sends a query and receives the passages of the index that best match it. Without `collections`, it searches every collection your Matsya token may read. This example restricts the search to the repository:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/search" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"query": "decision perch state and controls", "collections": ["repository"], "limit": 4}'
+```
+
+The answer is `{"index_digest": "…", "passages": [ … ]}`, with the passages in the order of their scores, each with its identifier, its source, its location, its text and its scores. [Collections and weights](07-collections-and-weights.md) gives the fields of the request (§3), how the passages are ranked (§4) and what a passage holds (§5). `bellman-matsya search "decision perch state and controls" --collections repository --limit 4` sends the same request.
+
+`POST /v1/answer` takes the same body and answers with one sentence copied from a retrieved passage whose words match the query's, or with none. No language model is called, and nothing is paraphrased:
+
+```json
+{"answer": "…", "method": "extractive", "index_digest": "…", "passage_ids": ["…"],
+ "evidence": [{"passage_id": "…", "excerpt": "…", "source_id": "…", "title": "…",
+               "path": "…", "location": {"…": "…"}, "authority": "…"}],
+ "explanation": "The answer quotes retrieved source text. No model checked the economics."}
+```
+
+When no short sentence matches, `answer` is `null`, `evidence` is empty and the explanation says that no matching excerpt was found. The explanation of a sentence taken from a PDF, or from a transcription or a secondary reading of an article, asks you to compare its claims with the page of the PDF before you accept them.
+
+A passage is read again by its identifier:
+
+```sh
+curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/passages/<passage_id>?index_digest=<index_digest>" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+Without `index_digest`, the route reads the index the service reads now. With it, the route reads the version of the index that the digest names, so that a passage cited from an earlier version can be read again, as long as the service keeps that version and your Matsya token may read the passage's collection. The answer is the passage as a search returns it, without the scores.
+
+## 5 A job
+
+A job's request is one JSON object with a source and, optionally, the fields that shape the job. The roles that the table names are described in [The roles and the work of a job](01-the-roles-and-the-work-of-a-job.md) §1.
+
+| Field | What it gives |
+|---|---|
+| `source` | the source material, in one of two forms: `{"kind": "description", "text": "…"}`, a model's description in prose and displayed equations, or `{"kind": "paper", "text": "…"}`, a paper as its text in Markdown or LaTeX; a paper sent as numbered pages or as a PDF is refused with 422 and the sentence `A paper is sent as text: source.text holds the paper in Markdown or LaTeX` |
+| `session` | in place of `source`, the identifier of a session, whose text the job reads as it stands when the job starts, or as it stood when the service accepted the job where the request names `reviewed_through` (§6) |
+| `reviewed_through` | with `session` alone, the number of the session's last entry when you reviewed it, an integer from 1: the service checks the session against it and fixes the job's source material when it accepts the job (§6) |
+| `max_cycles` | the most iterations after the initial declaration: a positive integer, by default the configuration's cycle limit, three at present, and at most the configuration's maximum, five at present |
+| `force` | `true` sends the job on to writing when preparation, the step of the Model-prose-writer, ends with questions, which then stand in its record; without it, such a job ends `needs_input` |
+| `starting_declaration` | files that the first cycle checks in place of the first writing by Prose-to-Bellman-Sym: an object that maps file names, `<name>.bl` for a stage file, `period.yml`, `trellis.yml` or `note.md`, to the files' texts; files that the elaborator, the program that checks stage files, refuses go back to Prose-to-Bellman-Sym for repair |
+| `target` | required: the level of the declaration the job writes, one of `stage`, `period`, `trellis` and `recipe` ([Matsya in three parts](index.md) §2 says what each holds); a request without it, or with another word, is refused with `target must be stage, period, trellis or recipe` |
+| `formulation` | a sentence of at most 500 characters that names the one formulation to write, when the source states several |
+| `model_key`, `source_cluster` | two labels in lowercase letters, digits and hyphens, sent together, that name the groups of indexed sources the job must not read ([Collections and weights](07-collections-and-weights.md) §6) |
+| `configuration_id` | the ID of a published configuration the job runs under, 64 lowercase hexadecimal characters (§8); without it the job runs under the service's default, and the answer names the ID resolved either way |
+| `delivery_id` | a name of 1 to 64 characters for the request: the same request sent again under it is answered with the job you hold under it and creates none, whatever has changed since; another request under the same name is refused with 409 |
+
+A request that holds both `source` and `session`, or neither, `reviewed_through` without `session`, or a field outside this table, is refused with 422. The source's text, a paper's included, is sent to the language-model provider, so ask the service's administrator before you submit a paper that may not leave your machine. A PDF is converted to Markdown or LaTeX before it is sent.
+
+Write the request into a file, `request.json`:
+
+```json
+{
+  "target": "stage",
+  "source": {
+    "kind": "description",
+    "text": "A household lives forever with discount factor beta. It holds cash on hand m. It consumes c in [0, m] and saves a = m - c. Next period m = R a + y, with y iid lognormal, mean one, standard deviation sigma. Utility is CRRA with risk aversion rho. It maximizes expected discounted utility."
+  },
+  "max_cycles": 1
+}
+```
+
+and send it:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/model-iterations" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data-binary @request.json
+```
+
+The answer, with the status 202, gives the job's identifier, the key used for its language-model calls and the route of its record:
+
+```json
+{"id":"<job>","state":"queued","configuration_id":"<id>","credential_source":"service","status_url":"/v1/model-iterations/<job>"}
+```
+
+`bellman-matsya job submit model.md --target stage --no-session --max-cycles 1` sends the same request for the description kept in the file `model.md`. Without `--no-session`, the command first creates a session, appends the file's text to it and starts the job from the session (§6).
+
+A request that names a `delivery_id` can be sent again when its answer was lost, as when the connection failed after the request was sent. The service answers the same request sent again under the same name with the job you hold under it, its present state in `state` and `"repeated":true`, even where the job's session has received entries since, and creates no second job; the answer to a new request that names a `delivery_id` holds `"repeated":false`. A different request under a name you have used is refused with 409 and the sentence `The delivery_id names a job whose request differs`, and nothing is created. This is the capability `job_delivery_id` of §1.
+
+With a personal Anthropic key (§1), sent only to an HTTPS address or to a service on your own machine, the job's request includes one more header, and the answer names `"credential_source":"client"`; `bellman-matsya job submit` adds the header itself when a key is selected:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/model-iterations" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Bellman-Matsya-Anthropic-Key: $BELLMAN_MATSYA_ANTHROPIC_KEY" \
+  -H "Content-Type: application/json" \
+  --data-binary @request.json
+```
+
+The job is read from its route:
+
+```sh
+curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/model-iterations/<job>" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+The answer holds the job's `state`: `queued`, `running`, and at its end `converged`, `not_converged`, `needs_input`, `cancelled`, `failed` or `interrupted`. It holds the job's `label`, whose `text` names the session, the target, the version of the session's text the job read, the job's number in the session and its state, such as `a household · stage · version 1 · job 1 · running`, and is the target and the state for a job of no session; `cancel_requested`, whether you asked to cancel the job; `progress`, the step the job has reached, `preparation`, `writing`, `prose_writing` or `judging`, with its cycle (0 for the initial writing); and `events`, the records of the job's calls of language models, each with the role called, the size and digest of its message, the counts of language-model tokens ([Matsya in three parts](index.md) §1), and any failure, but no text. A job of a session also holds `session`; once it has started, or from its acceptance for a job whose request named `reviewed_through` (§6), `revision` and `entry_numbers`, the version of the text it read and the numbers of the entries it read; for such a job, `reviewed_through`, the entry its request named; and at its end `current`, whether the text stayed at that version while it ran. A job whose request named a `delivery_id` holds it under `delivery_id`. A job that matsya-master started at your request names that turn under `started_by`. Every job holds `configuration_id`, the ID of the configuration it runs under, fixed when the service accepted it and unchanged by a later change of the default; `request_sha256`, the digest of the request as accepted, computed over its fields except `configuration_id`, so that two jobs with equal digests received the same source bytes, target and other fields; `source_sha256`, the digest of the source text the job reads, fixed at acceptance for a source sent with the request and for a session's text fixed then (§6), and otherwise when the job starts, a description stripped of surrounding whitespace and a paper unchanged; and `index_digest`, the digest of the index the job selected when it began. Each of the three digests is `null` until fixed, and all four fields are `null` for a job recorded before the service kept them. A failed or cancelled job keeps its `configuration_id` and `request_sha256`. Every job also holds `credential_source`, `client` when its language-model calls are made with the personal Anthropic key sent with its request (§1) and `service` when they are made with the service's own key, fixed when the service accepted the job and kept when the job fails or is interrupted; a job recorded before the service kept the field reads `service`, the only key there then was. The field names a key and never holds one; a job that made no call caused no charge to either account; and neither `configuration_id` nor `request_sha256` depends on it.
+
+A job runs for minutes. Read its route again every half minute until its state is neither `queued` nor `running`; `bellman-matsya job wait <job>` does this and prints each new step. In a shell without Python, this loop waits and then prints the job:
+
+```sh
+JOB="<job>"
+while curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/model-iterations/$JOB" \
+    -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" | grep -Eq '"state": *"(queued|running)"'; do
+  sleep 30
+done
+curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/model-iterations/$JOB" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+Once the job has ended, its record stands under `result`, in one of two views, which the query parameter `view` selects. The default view, `products`, gives the products of the job and the material of its report:
+
+- `status` and `reason`, the outcome and why the job stopped, such as `semantic_fixed_point`, `cycle_limit_reached` or `token_ceiling_reached`;
+- `schema`, the form of the record; `description`, the prepared model prose, and `questions`;
+- `paper_source_check`, the reports of the prose-source-judge, and `paper_form_check`, the check of the model prose's headings and length;
+- `available_writing`, the latest nonempty parsed declaration files, giving their cycle number, the files and the prose from which they were written as `description`, or `null` if no writing produced parsed files; cycle 0 is the initial declaration, and a `not_converged` job may still return its files for review;
+- `cycles_run`, the number of iterations after the initial declaration, and `last_cycle`: under `files` the stage files of the actual last iteration, which may be empty even when `available_writing` holds earlier files; under `judging` the reports of the prose-roundtrip-judge, under `comparison` whether adjacent elaborated semantic objects are equivalent (`equal`) and their first difference, under `citations_supported` whether every block quotes the prose from which that declaration was written, and under `unresolved_note` whether `note.md` leaves something open;
+- `last_completed_comparison`, the latest completed comparison with its left and right cycle numbers (0 names the initial elaborated object), its `equal` verdict and first difference; it is `null` if no comparison completed, even if a later iteration began;
+- `reading`, the digests of the index read and of the reference guides given to the roles;
+- `captured_source`, for a job whose request named `reviewed_through`, the history it was built from: `reviewed_through`, `revision` and `entries`, the numbers of the entries it read (§6);
+- `usage`, the language-model tokens charged to each role and to the job, the number of calls of each role, and the refusal, when a ceiling refused a call.
+
+The roles and the two kinds of prose are described in [The roles and the work of a job](01-the-roles-and-the-work-of-a-job.md) §1. The view `full` gives the complete record: `initial_writing`, the first declaration from the prepared prose, then every numbered iteration with its prose writing, declaration writing, judging and adjacent comparison; every call; the record of what each role read; `continues`, the earlier job of the same session that this job continues, by its identifier, its status and the digest of its source, or `null`, fixed at acceptance for a job whose request named `reviewed_through` (§6); the versions of the program and of the configuration; and, for a converged job, `artifacts`, the files of a model folder:
+
+```sh
+curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/model-iterations/<job>?view=full" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+`bellman-matsya job status <job>` reads the default view, and `bellman-matsya job files <job> <folder> --all-iterates` reads the full view as well. A `not_converged` job with a record can be read and written to a folder in the same way as a converged job; its report states why the checks did not conclude. A failed job holds no record, and its `error` names a fixed code: for instance `provider_error`; `incomplete_model_response`, an answer cut off before it could be parsed into files; `prompt_too_long`, a message longer than its role's limit or the language model's context window; `provider_rejected_request`, a message that the language-model provider rejected without processing it; `provider_rejected_credential`, an Anthropic API key that Anthropic refused, after its first such answer and with no request under another key, where the job's `credential_source` names the key refused: replace your key, or stop sending it, when it is `client`, and tell the administrator when it is `service`; `invalid_request`, a source the service could not read; or `configuration_refused`, with the part refused under `error_detail`. A job that a restart of the service interrupted holds the code `server_restarted`.
+
+A converged job has a pair of adjacent elaborated semantic objects that the comparator found equivalent. The prose judges, the check of quotations in the stage files and the writer's note are reported separately; they do not decide convergence. If an iteration's declaration cannot be elaborated, that iteration has no comparison verdict. Read the diagnostics to assess whether the prepared prose and the declaration state the model you meant. Older records can retain the earlier success reasons `semantic_fixed_point_and_declaration_checks` or `source_agreement_and_semantic_fixed_point`; those names describe the stopping rule in force when the jobs ran. The files remain proposals: the service writes nothing on your machine, and `bellman-matsya job files` writes them only into the folder you name. Keep a job's identifier with its result, since the administrator needs it to trace a failure or an unexpected answer.
+
+A queued or running job is cancelled through its route `cancel`, with no body:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/model-iterations/<job>/cancel" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+A queued job ends `cancelled` at once and never runs. A running job is marked `cancel_requested` and stops before its next call to the language-model provider: a call already sent finishes and is charged, and the job then ends `cancelled`, keeping its record with the usage of the calls it made. The answer is the job as its route gives it. A job that has ended cannot be cancelled: the service answers 409 with `{"detail":"The job has ended"}`. `bellman-matsya job cancel <job>` sends the same request.
+
+## 6 Sessions, entries and the selected job
+
+A session is created with its name, a text of at most 200 characters:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/sessions" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"name": "a household"}'
+```
+
+The answer, with the status 201, is the session as its route gives it: its `id` and `name`; `entries`, its numbered entries; `revision`, the version of its text, which is the number of its last entry of the kind `user`, `paper` or `acceptance`; `awaiting_answer`, the job whose questions await your reply, or `null`; `selected_job`; `jobs`, each with its `id`, `state`, `revision`, `current` and `label`, in the order they were created; and `turns`, the identifiers of the turns asked in it. `bellman-matsya session new "a household"` sends the same request. The session is read from its route, as `bellman-matsya session show <session>` reads it:
+
+```sh
+curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/sessions/<session>" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+An entry is appended with its text:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/sessions/<session>/entries" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"text": "A household saves out of cash on hand and faces a risky income."}'
+```
+
+The body holds `text`; `kind`, which is `user` by default, `paper` for the text of a paper, or `acceptance`; `replies_to`, the number of the entry it answers; and `delivery_id`, a name of 1 to 64 characters, with which a repeated request returns the entry already stored and appends nothing. A reply, of the kind `user` or `paper`, names a question of Matsya in `replies_to`. An acceptance holds no text and names in `replies_to` the answer of matsya-master it accepts; only an accepted answer enters the text that a later job reads. A reply of the kind `user` to a question of the job that the session awaits starts that job's next attempt at once; the attempt reads the session's text as it stands when it starts, the reply included, even where the job it continues was fixed at acceptance.
+
+Such a reply may include the header `Bellman-Matsya-Anthropic-Key` (§1); the attempt it starts then uses that key and records `credential_source` `client`, and a reply without the header starts the attempt under the service's key. The service keeps no key, so a job that ran under a personal key, with `credential_source` `client`, is continued only by a reply that includes a key again: a reply to it without the header is refused with 422 and the sentence `The job awaiting this reply ran under a personal Anthropic key; send the reply with a personal Anthropic key`, and the session's entries, its awaiting mark and its jobs stay as they were. The key may differ from the one the earlier job used, and a reply to a job that ran under the service's key may include a key for the next attempt. A request that repeats a `delivery_id` starts no work and needs no key.
+
+The answer is the session with three more fields: `entry`, the entry as stored, with its `number`, `kind`, `text`, `origin`, `replies_to` and the time it was appended, where `origin` names the job or the turn that wrote an entry of Matsya and is `null` for yours; `repeated`; and `scheduled`, the identifier, the route and the `credential_source` of the job that a reply started, or `null`. `bellman-matsya session add <session> notes.md` sends the same request, with `--kind`, `--replies-to` and `--delivery-id` for the other fields. With `--replies-to`, an entry of the kind `user` is sent with a selected key in the header, and for a reply that the service refuses for want of a key the command adds to the service's sentence `Supply one with bellman-matsya configure --set-anthropic-key, BELLMAN_MATSYA_ANTHROPIC_KEY, or MatsyaClient(..., anthropic_api_key=...).`
+
+A job is started from the session's text by naming the session in place of a source:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/model-iterations" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"session": "<session>", "target": "stage"}'
+```
+
+Such a job reads the session's entries up to the version of the text at the moment it starts, an answer of matsya-master among them only when you have accepted it, so that it also reads an entry appended while it waits to start; a session that holds no text is refused with 422. `bellman-matsya job submit --session <session>` sends the same request.
+
+A job's request may also name `reviewed_through`, the number of the session's last entry when you reviewed it, so that the job reads the text you reviewed and no later one:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/model-iterations" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"session": "<session>", "target": "stage", "reviewed_through": 2, "delivery_id": "a-household-stage-1"}'
+```
+
+The service checks the session against that number in the step in which it accepts the job. A session that holds an entry after it is refused with 409 and a sentence that names each such entry by its number and kind, such as `The session holds an entry after entry 1, the last entry the request reviewed: entry 2 (user); review it and submit again`, and a number beyond the session's last entry with 422 and a sentence such as `The session holds no entry 3; its last entry is entry 2`; neither creates a job, and you submit again once you have read the later entries. Otherwise the service **fixes the job's source material at acceptance**: in the same step it records the session's text as it then stands, an answer of matsya-master among its entries only when you have accepted it, the version of that text, the numbers of its entries, and the earlier job that the new one continues, the session's latest job that holds a record and was current at its end. The job reads these when it starts, in place of the session, so that neither an entry appended nor a job ended while it waits changes what it reads. The answer, with the status 202, adds `reviewed_through`, `revision` and `entry_numbers` to the fields of §5, the job's route holds them from then on, and the job's record names the history it was built from under `captured_source`, as `{"reviewed_through": 2, "revision": 2, "entries": [1, 2]}` for a session of two entries of the kind `user`. This is the capability `capture_at_acceptance` of §1. `bellman-matsya job submit-prepared <file>` sends such a request from a prepared-inputs file, after it has checked that the service names the capability ([The command reference](05-the-command-reference.md) §4.1).
+
+The selected job ([Matsya in three parts](index.md) §3) is set through the route `selected-job`: the selection names a job of the session that holds a record, and `null` clears it:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/sessions/<session>/selected-job" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"job": "<job>"}'
+```
+
+The answer is the session. A job of another session, or one that holds no record, is refused with 422. `bellman-matsya session select <session> <job>` sends the same request, and `bellman-matsya session select <session> --none` sends `{"job": null}`.
+
+## 7 A question in a session
+
+A question is asked in a session and answered in a turn of matsya-master:
+
+```sh
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/sessions/<session>/turns" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"question": "What does the decision perch of a stage hold?"}'
+```
+
+The body is one JSON object of at most 256 KiB. It holds `question`, of at most 8,000 characters, and optionally:
+
+- `stage_file`, the text of one stage file, which the service elaborates so that the language model reads its dossier ([The roles and the work of a job](01-the-roles-and-the-work-of-a-job.md) §1) and never the file's text;
+- `refusal`, `timing` and `package_version`, material of your own: the elaborator's refusal of a file of yours, the timing of your model and the version of the `bellman` package you use (at most 200 characters), each placed in the language model's message under its name;
+- `index_digest`, the digest of an earlier version of the index to read, as an earlier turn's record names it;
+- `delivery_id`, a name of 1 to 64 characters, with which a repeated request returns the turn already asked; a repeated name with another question or another `configuration_id` is refused with 409;
+- `configuration_id`, the ID of a published configuration whose conversation role answers (§8); without it the default answers. A configuration that does not enable the role refuses the question with 422 before anything is appended.
+
+The question is appended to the session as an entry, and the answer, with the status 202, is
+
+```json
+{"id":"<turn>","state":"queued","question":4,"repeated":false,"configuration_id":"<id>","credential_source":"service","status_url":"/v1/sessions/<session>/turns/<turn>"}
+```
+
+where `question` is the number of your question's entry, and `credential_source` is `client` when the question was sent with a personal Anthropic key (§1) and `service` otherwise. The turn is read from its route:
+
+```sh
+curl --fail-with-body -sS "$BELLMAN_MATSYA_SERVER/v1/sessions/<session>/turns/<turn>" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN"
+```
+
+Its `state` is `queued` or `running`, and at its end `finished`, `failed` or `interrupted`; a turn takes about a minute, so read the route again every ten seconds until it has ended. A finished turn holds its `record`, whose `result` gives:
+
+- `status`: `answered`; `needs_input`, with Matsya's questions in `questions`; or `incomplete`, with the reason in `reason` and an answer of two fixed sentences, for instance when the requests for further material allowed in one turn were used up or a call would have passed the turn's ceiling of language-model tokens. When Anthropic refused the Anthropic API key of the turn's calls, after its first such answer and with no request under another key, the reason is `provider_rejected_credential` and the answer is the one sentence `Matsya could not answer, because the language-model provider refused the Anthropic API key used for this turn.`;
+- `answer` and `citations`, each citation with the quoted sentence, the identity, path, heading and location of the material it quotes, and the digest of the index read;
+- `passages`, the material given to the language model, by identity, path and location;
+- `job`, the job whose outputs the turn read, by its identifier and label, or `null`;
+- `job_started`, the job that the turn started when you asked for one, by its identifier and label, or `null`;
+- `current`, whether you added no entry to the session while the question was answered.
+
+The record's `usage` gives the language-model tokens charged in the turn, by role and in total, and the ceilings in force. The turn's answer holds `configuration_id`, the ID pinned to it; a job the turn starts at your request runs under that same ID. It also holds `credential_source`, kept when the turn fails or is interrupted, and a job the turn starts at your request uses the turn's key, so that the job of a turn asked with a personal key has `credential_source` `client` too. A failed turn names under `error` the code `configuration_refused`, `processing_failed` or `worker_unavailable`, and a turn that a restart of the service interrupted names `server_restarted`. The answer, or Matsya's questions, are appended to the session as entries of the kind `answer` or `question` that reply to your question's entry. `bellman-matsya ask <session> "<question>"` sends the same question, waits for the turn and prints the answer; its options `--stage-file`, `--index-digest`, `--delivery-id` and `--configuration-id` send the fields of those names, and a selected personal key is sent in the header of §1. With `--no-wait`, the command prints the turn's identifier as soon as the service has accepted the question and does not wait for the answer; `bellman-matsya turn status <session> <turn>` then reads the turn's route once, and `bellman-matsya turn wait <session> <turn>` reads it until the turn has ended, from the same terminal or another.
+
+## 8 Publishing and selecting configurations
+
+A **configuration** is the checked folder of instruction texts, settings, Matsya handlers and saved guides that a job or a turn runs under ([Matsya developer guide](../dev-guide/index.md) §1). Its **configuration ID** is the SHA-256 digest of its `manifest.json`, 64 lowercase hexadecimal characters. The service keeps every published configuration unchanged under its ID and one **default**, which a request that names no ID runs under. A configuration ID selects a configuration; it is not a Matsya token, and any valid Matsya token may select any published ID. Publishing a configuration and changing the default are reserved for the administrators the service's operator names, since a configuration holds Python code the service runs.
+
+An administrator publishes a checked folder by sending it as a ZIP archive whose entries are the folder's files by their paths relative to the folder:
+
+```sh
+(cd candidate && zip -r -q - .) > candidate.zip
+curl --fail-with-body -sS -X POST "$BELLMAN_MATSYA_SERVER/v1/configurations" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/zip" \
+  --data-binary @candidate.zip
+```
+
+The answer, with the status 201, is `{"configuration_id":"<id>","version":"<version>"}`, the ID under which the service installed the folder and the version its manifest names; the same folder published again answers 200 with the same ID. The service checks every file against the manifest, then again after it has imported the Matsya handler module, and refuses an archive that escapes its folder, holds a link, a duplicate name or a file the manifest does not list, or expands beyond 24 MiB (§3). Publication changes the default not at all. `bellman-matsya configuration publish <folder>` sends the same request.
+
+A job (§5) or a question (§7) selects a published configuration by its ID in the field `configuration_id`, and every answer on the job or the turn names the ID resolved, the default's when the request named none. An administrator changes the default with
+
+```sh
+curl --fail-with-body -sS -X PUT "$BELLMAN_MATSYA_SERVER/v1/configurations/default" \
+  -H "Authorization: Bearer $BELLMAN_MATSYA_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{"configuration_id": "<id>"}'
+```
+
+The answer is `{"previous_configuration_id":"<old id>","configuration_id":"<new id>","version":"<version>"}`. The change takes effect for the next request, without a restart; a job or a turn already accepted keeps the ID pinned to it, as does the attempt that a reply to such a job's question starts. `GET /v1/index` names the current default's ID and version. `bellman-matsya configuration set-default <id>` sends the same request.

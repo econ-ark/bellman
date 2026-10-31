@@ -1,0 +1,49 @@
+@stage: growth
+
+Xz := ℝ₊₊
+
+β    : (0,1)      :: ["discount factor, in (0,1) by assumption (v), p. 1113"]
+γ    : ℝ₊₊        :: ["coefficient of relative risk aversion; the displayed utility of equation (30) requires γ different from 1, and the paper reads u as the logarithm at γ = 1"]
+α    : (0,1)      :: ["capital share of the Cobb-Douglas production function f(k) = k^α, equation (30)"]
+δ    : (0,1)      :: ["depreciation rate of capital, p. 1121"]
+ρ_z  : [-1,1]     :: ["persistence of the two-state productivity chain, written ρ in the transition matrix (31)"]
+z_lo : ℝ₊₊        :: ["low productivity level, e^(-σ) in the paper's Z = [e^σ, e^(-σ)], p. 1126"]
+z_hi : ℝ₊₊        :: ["high productivity level, e^σ"]
+k_lb : ℝ₊₊        :: ["lower endpoint of the state space K, written k underbar, p. 1121"]
+k_ub : ℝ₊₊        :: ["upper endpoint of the state space K, written k overbar, p. 1121"]
+
+z : Xz
+z ~ DiscreteMarkov((((1+ρ_z)/2, (1-ρ_z)/2), ((1-ρ_z)/2, (1+ρ_z)/2)), (z_lo, z_hi))   :: ["the two-state chain of equation (31); the draw is from the row of P that the arrival state z_pre selects, which the law line cannot yet say"]
+
+𝑓(k : [k_lb, k_ub]) := k^α                :: [id=production]
+𝑑𝑓(k : [k_lb, k_ub]) := α*k^(α-1)         :: [id=marg_product]
+𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ)               :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-γ)                     :: [id=marg_util]
+Γ(k : [k_lb, k_ub]) := [(1-δ)*k, k_ub]    :: [id=feasible]
+
+[id=arvl_to_dcsn, (k : [k_lb, k_ub], z_pre : Xz, z) : !arvl -> (k_d : [k_lb, k_ub], z_d : Xz) : !dcsn] {
+    k_d = k                                :: [id=capital]
+    z_d = z                                :: [id=productivity]
+}
+
+[id=dcsn_to_cntn, (k_d, z_d, k_nxt : [k_lb, k_ub] @ !ctrl) : !dcsn -> (k_c : [k_lb, k_ub], z_c : Xz) : !cntn] {
+    k_c = k_nxt                            :: [id=capital]
+    z_c = z_d                              :: [id=productivity]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, k_nxt) -> (V : ℝ @ !vlu) : !dcsn] {
+    c  = z_d*𝑓(k_d) + (1-δ)*k_d - k_nxt    :: [id=consumption]
+    λ  = 𝑑𝑢(c) - β*D_{k_c}V[>]             :: [id=multiplier, !node]
+    λ >= 0 ⟂ k_nxt >= (1-δ)*k_d            :: [id=slackness]
+    V  = 𝑢(c) + β*V[>]                     :: [id=value]
+    D_{k_d}V = (1 + z_d*𝑑𝑓(k_d) - δ)*𝑑𝑢(c) - (1-δ)*λ    :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{z}(V)                        :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (k_nxt : [k_lb, k_ub] @ !ctrl) : !dcsn] {
+    k_nxt = argmax_{kp : Γ(k_d)}(𝑢(z_d*𝑓(k_d) + (1-δ)*k_d - kp) + β*V[>])   :: [id=optimality, !doc]
+    k_nxt = solve_{k_nxt}(𝑑𝑢(z_d*𝑓(k_d) + (1-δ)*k_d - k_nxt) - β*D_{k_c}V[>]) ⟂ k_nxt >= (1-δ)*k_d    :: [id=euler]
+}

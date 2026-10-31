@@ -1,0 +1,78 @@
+@stage: contrib
+
+# The voluntary-contribution choice of one working-age period (Dobrescu, Fan,
+# Bateman, Newell, Ortmann and Thorp, equations 6, 18, 23 and 25). The paper
+# writes the menu as {v_i, i = 1, 2 … N_v} and Appendix B fixes N_v = 6, the
+# first level being the 0% default. Nothing about the individual's wealth
+# changes at this choice: the rate is used one stage later, in the budget and
+# in the accumulation of the defined-contribution account.
+
+σ_v  : ℝ₊₊   :: ["scale of the contribution taste shocks ζ_v, written σ_v^j in equation 23 and estimated separately for DB and DC members"]
+ψ    : ℝ₊    :: ["the individual's default-preference type, ψ_H or ψ_L (section 3.3)"]
+ν_v0 : ℝ     :: ["constant of the contribution switching cost (equation 6)"]
+ν_v1 : ℝ     :: ["age at which the contribution switching cost is smallest (equation 6)"]
+ν_v2 : ℝ     :: ["curvature in age of the contribution switching cost"]
+ν_v3 : ℝ     :: ["coefficient on log non-pension wealth in the contribution switching cost"]
+t_age : ℝ₊₊  :: ["the age of this period; the trellis supplies one value per period"]
+
+𝑢v(x : ℝ₊) := ψ + exp(ν_v0 + ν_v2*(t_age - ν_v1)^2 + ν_v3*max(0, log(x)))   :: [id=contrib_cost, "equation 6; max is the positive part, supplied by the realisation"]
+𝑙𝑠𝑢𝑚6(x_1 : ℝ, x_2 : ℝ, x_3 : ℝ, x_4 : ℝ, x_5 : ℝ, x_6 : ℝ, σ : ℝ₊₊) := σ*log(exp(x_1/σ) + exp(x_2/σ) + exp(x_3/σ) + exp(x_4/σ) + exp(x_5/σ) + exp(x_6/σ))   :: [id=logsum, "equation 23"]
+
+[id=arvl_to_dcsn, (a : ℝ₊, aDC : ℝ₊, ξ : ℝ, τ : ℝ₊) : !arvl -> (a_d : ℝ₊, aDC_d : ℝ₊, ξ_d : ℝ, τ_d : ℝ₊) : !dcsn] {
+    a_d   = a                                 :: [id=wealth]
+    aDC_d = aDC                               :: [id=dc_balance]
+    ξ_d   = ξ                                 :: [id=wage_shock]
+    τ_d   = τ                                 :: [id=tenure]
+}
+
+[id=dcsn_to_cntn, (a_d, aDC_d, ξ_d, τ_d, v : !ctrl @ {v_1, v_2, v_3, v_4, v_5, v_6}) : !dcsn -> ()] {
+    [label=v_1, () -> (a_1 : ℝ₊, aDC_1 : ℝ₊, ξ_1 : ℝ, τ_1 : ℝ₊) : !cntn] {
+        a_1 = a_d
+        aDC_1 = aDC_d
+        ξ_1 = ξ_d
+        τ_1 = τ_d
+    }
+    [label=v_2, () -> (a_2 : ℝ₊, aDC_2 : ℝ₊, ξ_2 : ℝ, τ_2 : ℝ₊) : !cntn] {
+        a_2 = a_d
+        aDC_2 = aDC_d
+        ξ_2 = ξ_d
+        τ_2 = τ_d
+    }
+    [label=v_3, () -> (a_3 : ℝ₊, aDC_3 : ℝ₊, ξ_3 : ℝ, τ_3 : ℝ₊) : !cntn] {
+        a_3 = a_d
+        aDC_3 = aDC_d
+        ξ_3 = ξ_d
+        τ_3 = τ_d
+    }
+    [label=v_4, () -> (a_4 : ℝ₊, aDC_4 : ℝ₊, ξ_4 : ℝ, τ_4 : ℝ₊) : !cntn] {
+        a_4 = a_d
+        aDC_4 = aDC_d
+        ξ_4 = ξ_d
+        τ_4 = τ_d
+    }
+    [label=v_5, () -> (a_5 : ℝ₊, aDC_5 : ℝ₊, ξ_5 : ℝ, τ_5 : ℝ₊) : !cntn] {
+        a_5 = a_d
+        aDC_5 = aDC_d
+        ξ_5 = ξ_d
+        τ_5 = τ_d
+    }
+    [label=v_6, () -> (a_6 : ℝ₊, aDC_6 : ℝ₊, ξ_6 : ℝ, τ_6 : ℝ₊) : !cntn] {
+        a_6 = a_d
+        aDC_6 = aDC_d
+        ξ_6 = ξ_d
+        τ_6 = τ_d
+    }
+}
+
+[id=cntn_to_dcsn, (V_1[>] : ℝ @ !vlu, V_2[>] : ℝ @ !vlu, V_3[>] : ℝ @ !vlu, V_4[>] : ℝ @ !vlu, V_5[>] : ℝ @ !vlu, V_6[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V        = 𝑙𝑠𝑢𝑚6(V_1[>], V_2[>] - 𝑢v(a_d), V_3[>] - 𝑢v(a_d), V_4[>] - 𝑢v(a_d), V_5[>] - 𝑢v(a_d), V_6[>] - 𝑢v(a_d), σ_v)                                                                                                                                                                         :: [id=value, "equation 23; the cost of equation 6 is charged on the five levels above the 0% default"]
+    D_{a_d}V = exp((V_1[>] - V)/σ_v)*D_{a_1}V_1[>] + exp((V_2[>] - 𝑢v(a_d) - V)/σ_v)*D_{a_2}V_2[>] + exp((V_3[>] - 𝑢v(a_d) - V)/σ_v)*D_{a_3}V_3[>] + exp((V_4[>] - 𝑢v(a_d) - V)/σ_v)*D_{a_4}V_4[>] + exp((V_5[>] - 𝑢v(a_d) - V)/σ_v)*D_{a_5}V_5[>] + exp((V_6[>] - 𝑢v(a_d) - V)/σ_v)*D_{a_6}V_6[>]  :: [id=marginal, "the derivative of the line above; each weight is the choice probability of equation 25, written as exp((value − log-sum)/σ_v)"]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]  = V                                 :: [id=value]
+}
+
+[id=policy, (V_1[>], V_2[>], V_3[>], V_4[>], V_5[>], V_6[>]) : !cntn -> (v : {v_1, v_2, v_3, v_4, v_5, v_6} @ !ctrl) : !dcsn] {
+    v = argmax_{v}(V_1[>], V_2[>] - 𝑢v(a_d), V_3[>] - 𝑢v(a_d), V_4[>] - 𝑢v(a_d), V_5[>] - 𝑢v(a_d), V_6[>] - 𝑢v(a_d))   :: [id=choice, "equation 18 read with ζ_v = 0; the paper's selection is the logit of equation 25, a conditional distribution over the six levels and not a measurable selection"]
+}

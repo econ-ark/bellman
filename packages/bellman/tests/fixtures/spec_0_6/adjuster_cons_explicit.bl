@@ -1,0 +1,42 @@
+@stage: adjuster_cons
+
+β   : (0,1)       :: ["discount factor"]
+α   : (0,1)       :: ["weight of consumption in utility"]
+γ_c : (1, inf)    :: ["curvature of utility from consumption"]
+γ_h : (1, inf)    :: ["curvature of utility from housing services"]
+κ   : ℝ₊₊         :: ["housing services per unit of the housing stock"]
+τ   : ℝ₊₊         :: ["cost of adjusting housing, per unit of housing bought"]
+
+𝑢(c : ℝ₊₊, h : ℝ₊₊) := α*c^(1-γ_c)/(1-γ_c) + (1-α)*(κ*h)^(1-γ_h)/(1-γ_h)   :: [id=util]
+𝑢_c(c : ℝ₊₊) := α*c^(-γ_c)                                                :: [id=marg_util_cons]
+𝑢_h(h : ℝ₊₊) := (1-α)*κ^(1-γ_h)*h^(-γ_h)                                  :: [id=marg_util_housing]
+𝑢_c_inv(x : ℝ₊₊) := (α/x)^(1/γ_c)                                         :: [id=inv_marg_util_cons]
+Γ_c(x : ℝ₊₊) := (0, x]                                                    :: [id=feasible_consumption]
+Γ_h(x : ℝ₊) := (0, x/(1 + τ)]                                             :: [id=feasible_housing]
+
+[id=arvl_to_dcsn, (w_adj : ℝ₊₊, z_adj : ℝ₊₊) : !arvl -> (m : ℝ₊₊, z_d : ℝ₊₊) : !dcsn] {
+    m   = w_adj
+    z_d = z_adj
+}
+
+[id=dcsn_to_cntn, (m, z_d, c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl) : !dcsn -> (a_nxt_adj : ℝ₊, h_nxt_adj : ℝ₊₊, z_nxt_adj : ℝ₊₊) : !cntn] {
+    a_nxt_adj = m - c - (1 + τ)*h_choice               :: [id=savings]
+    h_nxt_adj = h_choice                               :: [id=housing]
+    z_nxt_adj = z_d                                    :: [id=income_state]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c, h_choice) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V      = 𝑢(c, h_choice) + β*V[>]                   :: [id=value]
+    D_{m}V = 𝑢_c(c)                                    :: [id=marginal_wealth]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]    = V                                        :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl) : !dcsn] {
+    (c, h_choice) = argmax_{c : Γ_c(m), h_choice : Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])        :: [id=optimality, !doc]
+    c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])                                              :: [id=InvEuler]
+    m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj                                       :: [id=endoggrid]
+    (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) - 𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])   :: [id=choice]
+}

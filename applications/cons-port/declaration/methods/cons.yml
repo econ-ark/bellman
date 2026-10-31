@@ -1,0 +1,22 @@
+stage: cons
+# The consumption stage's methods. The stage file writes the maximization alone; the block file cons_egm.bl,
+# beside this file, opens the policy builder with the endogenous-grid method and states the derivative of the
+# decision value, the envelope condition. The function egm of the application's tool,
+# applications/cons-port/code/cons_port_tool.py, realizes the method. The value is represented on the grid of
+# resources the settings name.
+methods:
+  - on: policy
+    method: !egm
+    block: cons_egm.bl
+    handler: cons-port:egm
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: cons_egm.bl
+  - on: cntn_to_dcsn.envelope
+    method: !Cartesian
+    settings: {orders: {m: n_m}, bounds: {m: [m_min, m_max]}}
+
+
+
+    ## Issues for aAS 24 oct 2026: 1) why evaluate was envelope, 2) how can i declare different methods ie polynomial spline etc. something on the the interpolated V ( should be fully flexible as to how the dV is created if at all). 
+    # Answer (26 October 2026, AMD-MB-001 D4 and D6): the derivative line stands at the decision builder's Evaluation because the value's representation is bound there, so the envelope line and the interpolation method are two properties of one represented value. A representation of the derivative of its own, a polynomial spline or any other representation method, is bound on the line's id, as the entry on cntn_to_dcsn.envelope above binds !Cartesian, and where no line is bound the derivative of the value's representation serves.

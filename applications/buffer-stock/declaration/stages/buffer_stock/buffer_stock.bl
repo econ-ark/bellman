@@ -1,0 +1,44 @@
+@stage: buffer_stock
+
+Xm := ℝ₊₊
+Xa := ℝ₊₊
+
+β : (0,1)        :: ["discount factor"]
+ρ : (1, inf)     :: ["coefficient of relative risk aversion, greater than one"]
+R : ℝ₊₊          :: ["gross interest rate"]
+Γ : ℝ₊₊          :: ["deterministic permanent income growth factor"]
+σ_ψ : ℝ₊         :: ["standard deviation of the log permanent shock"]
+σ_ξ : ℝ₊         :: ["standard deviation of the log transitory shock, conditional on a positive draw"]
+μ_ξ : ℝ          :: ["log-mean of the positive transitory draw; E[ξ] = 1 requires μ_ξ = -log(1 - p_zero) - σ_ξ^2/2"]
+p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
+
+ψ : ℝ₊₊
+ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)
+ξ : ℝ₊
+ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
+
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
+𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]
+
+Γ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}   :: [id=feasible_consumption]
+
+[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {
+    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]
+}
+
+[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {
+    a = m - c                       :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]               :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
+}

@@ -1,0 +1,9 @@
+stage: keeper_saving
+
+methods:
+  # The derivatives of the decision value in cash on hand and in housing are
+  # stated by the marginal block of marginals_keeper_saving.bl on the decision
+  # value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_keeper_saving.bl

@@ -1,0 +1,25 @@
+!trellis
+name: retirement_lifecycle
+# periods[h] is the date T - h: periods[0] is the terminal period. The model
+# has twenty dates, the horizon of the FUES retirement example whose
+# calibration and settings this registry holds (economics.md, "Calibration and
+# settings"); the working paper's tables use fifty, which is `repeat: 49`.
+# The terminal period is written out, since its connector names the bequest,
+# which no other period holds: it adds the bequest, the terminal value as a
+# stage, and the connector from both consumption stages to its
+# arrival field a_bq, a name of its own, since the savings left after the last
+# date begin no further date. The nineteen earlier periods repeat the template.
+periods:
+  - stages: [ret_choice, worker_cons, retiree_cons, bequest]
+    connectors:
+      - {a_r: a_ret}
+      - {b: a_bq, b_ret: a_bq}
+  - {template: period.yml, repeat: 19}
+# One mapping stands for every adjacent pair and holds both routes
+# (docs/Bellman-Sym/07-trellis.md §2): the worker's savings go to the next
+# period's choice stage, the retiree's to the next period's retiree stage, so
+# no route returns a retiree to work. In periods[0] the name a is ret_choice's
+# alone and a_ret retiree_cons's alone, so the mapping reaches the bequest
+# nowhere.
+inter_connectors:
+  - {b: a, b_ret: a_ret}

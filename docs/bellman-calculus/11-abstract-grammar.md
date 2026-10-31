@@ -1,0 +1,149 @@
+---
+audience: user
+type: theory
+topic: [calculus]
+---
+# Abstract grammar
+
+This page describes mathematical composition terms for stages, periods and trellises. #syntax #ffp
+
+> [!summary]
+> A composition term records which stage and connector operations are combined. This mathematical notation is distinct from the concrete `.bl` grammar, its temporary parser tree and the retained structures of a constructed stage. The period and trellis calculations below illustrate the distinction.
+
+> [!info]- Relationship with other documents
+> **Builds on** — [Stage composition](./07-stage-composition.md) and [Periods and the trellis](./08-periods-and-trellis.md) define the compatible compositions.
+> **Formal account** — [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) treats specified terms and interpretations; [The stage term](./APPX-C-STAGE-TERM.md) gives the stage-level signature.
+> **Used by** — [Stages](../Bellman-Sym/01-stage.md), [Field equations](../Bellman-Sym/03-field-equations.md), [Period Syntax](../Bellman-Sym/06-period.md) and [Trellis Syntax](../Bellman-Sym/07-trellis.md) state the authoring rules; Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the interpretation rules.
+
+## 1 Two grammars
+
+The **concrete grammar** specifies which source strings are well formed. The **abstract grammar** describes the structure of their expressions after punctuation is removed. Schmidt distinguishes the derivation tree from the string that abbreviates it.[^schmidt] For the current language, `.bl` stage declarations and arithmetic equations are parsed, while supporting YAML records model composition and bindings. The mathematical composition notation used here is a separate description of the resulting operations.
+
+The syntax pages use **ASDL**, the Zephyr Abstract Syntax Description Language, to describe constructor positions and their types.[^asdl] An **ASDL field** is a named position in a constructor, distinct from an economic field. The symbols `?` and `*` denote an optional position and a list. These notations describe syntax structure; they do not make every mathematical diagram on this page a concrete parser constructor.
+
+The following is schematic mathematical composition notation, not the `.bl` abstract grammar or a loader schema. It suppresses documentation names and binding records to show the composition operands:
+
+```text
+model_term = TRELLIS(period* periods, connector* inter_connectors)
+period     = PERIOD(stage_occurrence* stages, connector* connectors)
+connector  = CONNECTOR(pair* pairs)
+pair       = (identifier source, identifier target)
+```
+
+Here a stage occurrence supplies an already specified stage operation with its required inputs. Stage declarations, function bodies, arithmetic, local binders and branches have their own source structures; they are not terminal atoms in the concrete grammar. The current forms are recorded on Bellman-SYM's pages on stages and field equations. [The stage term](./APPX-C-STAGE-TERM.md) gives a mathematical inventory, not a competing `STAGE` parser production.
+
+A connector records compatible field identifications. An empty explicit rename list gives an identity connection only when the source rules already determine matching boundaries; it cannot supply missing compatibility. The compositions below are restricted to chains with those identifications specified. General branching and the economic order of stages are not determined by the order of entries in an ASDL list. [Periods and the trellis](./08-periods-and-trellis.md) §§3–6 supplies the boundary conditions.
+
+A source format can be changed without changing meaning only when its translation preserves the declared terms, binding and interpretation. A new file format is not automatically equivalent because it can store similar lists. Three objects therefore remain distinct: the source string, a mathematical term describing composition, and its interpretation in a specified algebra of operations.
+
+## 2 Expressions are objects
+
+Backus's [FFP systems](../wiki/ffp.md) use objects to represent functions systematically. Functional forms are represented by sequences whose first element identifies the form and whose remaining elements give its parameters.[^backus-131] The representation and evaluation functions are part of the description of the system.[^backus-1331] This provides a comparison with headed composition records; it does not prescribe the parser or runtime representation of Bellman-SYM.
+
+[Functional programming](./APPX-G-FUNCTIONAL-PROGRAMMING.md) §§1–5 supplies the underlying definitions, the algebra of combining forms and the distinction between an FP object and an object in a category. The examples below apply that account to model composition.
+
+> [!note]
+> Backus's representation function $\rho$ and meaning function $\mu$ are his notation. This page uses $\Upsilon$ for the interpretation of its mathematical terms. Backus's $\rho$ is distinct from this project's numerical-construction map Ρ and from a utility-curvature parameter.
+
+Consider the existing two-stage consumption–portfolio composition schematically. The current period authoring example of Bellman-SYM includes a separate discount stage; here its placement is left within the specified stage operations. Once their compatible boundaries and fixed policies have been supplied, a coarse object representation is
+
+$$
+P\equiv\langle\mathrm{PERIOD},\langle s_{\mathrm{cons}},s_{\mathrm{port}}\rangle,\langle C\rangle\rangle,
+\qquad C\equiv\langle\mathrm{CONNECTOR},\langle\langle a,k\rangle\rangle\rangle.
+$$
+
+The symbols $s_{\mathrm{cons}}$ and $s_{\mathrm{port}}$ represent stage occurrences, and $\langle a,k\rangle$ identifies outgoing assets with incoming capital. The sequence is a mathematical encoding of these operands, not the actual YAML mapping. Its interpretation is
+
+$$
+\Upsilon(P)=\Upsilon(s_{\mathrm{cons}})\circ\varkappa^*\circ\Upsilon(s_{\mathrm{port}})
+=\mathbb T_{[\mathrm{cons}],\pi}\circ\varkappa^*\circ\mathbb T_{[\mathrm{port}],\pi}.
+$$
+
+The map $\varkappa$ identifies the compatible boundary states, and its **pullback** acts on functions by $(\varkappa^*v)(x)=v(\varkappa(x))$. It implements the declared renaming, not a new economic transformation. Consumption precedes portfolio choice in economic time; the portfolio operator is applied first in backward calculation. Field dependencies and declared joins establish this order, not YAML list position.
+
+This composition resembles Backus's **insert**, which applies a binary function repeatedly across a sequence.[^backus-insert] To use insert on representations of functions, one must specify an operation that constructs a representation of their composite. Backus's FFP allows forms represented by objects; it does not by itself define the calculus's composition rules. Here those rules are the displayed equations on compatible domains.
+
+For a finite horizon of $H\ge2$ periods, numbered here in forward economic order, write
+
+$$
+N\equiv\langle\mathrm{TRELLIS},\langle P_0,\ldots,P_{H-1}\rangle,
+\langle\chi_0,\ldots,\chi_{H-2}\rangle\rangle,
+\qquad
+\Upsilon(N)=\Upsilon(P_0)\circ\chi_0^*\circ\Upsilon(P_1)\circ\cdots\circ\chi_{H-2}^*\circ\Upsilon(P_{H-1}).
+$$
+
+This numbering differs from the application's backward-from-terminal index described in §1 of Bellman-SYM's Trellis Syntax page.
+
+Each $\chi_i^*$ is the pullback of the compatible inter-period identification. For one period, there are no inter-period connectors. With terminal function $v_T$ in the last operator's domain, backward evaluation is
+
+$$
+\Upsilon(N)(v_T)=\Upsilon(P_0)\Bigl(\chi_0^*\bigl(\Upsilon(P_1)(\cdots\Upsilon(P_{H-1})(v_T)\cdots)\bigr)\Bigr).
+$$
+
+Every intermediate output must belong to the next input domain. Free parameters and policies are held fixed in these displays; an optimizing interpretation requires its separately defined operators. The calculation resembles evaluating a represented compound form from its constituent meanings, but Backus's metacomposition rule does not supply the economic identities or assumptions.[^backus-meta]
+
+Backus's inner-product example combines summation, pairwise multiplication and transposition.[^backus-52] The comparison is structural:
+
+| Role | Backus's inner product | Mathematical model composition |
+|---|---|---|
+| Constituent functions | $+$, $\times$, $\mathrm{Trans}$ | Stage operators and connector pullbacks |
+| Combining forms | $/{+}$, $\alpha\times$, $\circ$ | Compatible composition at period and trellis levels |
+| Whole expression | $\mathrm{IP}\equiv(/{+})\circ(\alpha\times)\circ\mathrm{Trans}$ | $P$ or $N$ as defined above |
+| Application | $\mathrm{IP}:\langle x,y\rangle$ | $\Upsilon(N)(v_T)$ |
+
+Here $/{+}$ sums a sequence, $\alpha\times$ multiplies corresponding entries and $\mathrm{Trans}$ transposes a pair of lists. Backus wrote this example in FP; representation of functions by objects is the additional FFP construction. The table is an analogy between compositions, not an identity of languages.
+
+## 3 The model term
+
+The mathematical nesting can be displayed as a tree. This schematic suppresses the internal equation structures:
+
+```text
+TRELLIS
+├─ PERIOD P₀
+│   ├─ stage occurrence s_cons
+│   │   ├─ transitions and reward
+│   │   ├─ conditional shock laws
+│   │   └─ definitions, parameters and domains
+│   ├─ stage occurrence s_port
+│   └─ CONNECTOR
+│       └─ field pair (a, k)
+├─ inter-period connector χ₀
+├─ PERIOD P₁
+└─ …
+```
+
+**The stage entries have internal structure.** The tree suppresses it for the composition calculation; it is not a claim that arithmetic or local definitions are unparsed. Backus distinguishes primitive functions, defined functions and functional forms.[^backus-tri] This classification offers a comparison with supplied operations, local definitions and ways of combining operations. Parameters, field names and domains are other inputs, not automatically members of that function classification.
+
+**The displayed tree suppresses builder symbols.** At this coarse level, $\Upsilon$ assigns each stage occurrence its specified backward operation and composes those operations through the connectors. In the finer signature of [The stage term](./APPX-C-STAGE-TERM.md), builders are themselves symbols. The uniqueness statement in [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) §§1–2 applies only after the signature, target operations and assignments to free inputs have been supplied. It does not infer missing economic equations from a stage header.
+
+**The encoding resembles FFP representations.** A head and its operands describe a represented compound operation. The term remains distinct from its mathematical meaning and from whichever software structures retain interpreted equations.
+
+<a id="4-what-the-tree-is-not"></a>
+
+## 4 Source and retained structures
+
+Arithmetic such as `R*k + y` is parsed into expression structure. Local function types and binders remain available to interpretation; substitution must respect scope. The source may author evaluation, optimization and implicit relations. Their meaning and applicable conditions come from the declared expression and the interpretation rules of Bellman-SYM's Appendix C, not an inference that all branches expose the same method operations.
+
+In the specified construction, parser trees and source locations are temporary. The stage retains interpreted equations, definitions and typed diagrams. Periods and the trellis retain their outer records, with fresh objects for distinct occurrences; reuse of a module does not imply one shared mutable stage object or a retained whole-trellis syntax graph. These statements describe the construction specified for the language, not completion of every runtime component.
+
+The mathematical signatures used here are **many-sorted**: their symbols have declared input and output types. Their vocabulary is the specified signature under discussion. Adding a form requires extending that signature and its interpretation; defining a local function within the admitted language is a different act. Neither statement proves all the identities an extension might need.
+
+Branching also requires its own interpretation. A finite choice compares complete feasible branch values; an exogenous branch uses the declared conditional probabilities. Evaluating all feasible branch values and then maximizing is generally different from evaluating a single branch selected by a pre-existing predicate. Ties and measurable policy selection retain the qualifications in [Branching](./09-branching.md).
+
+<a id="see-also"></a>
+
+## 5 Related documents
+
+- [FFP](../wiki/ffp.md), [functional form](../wiki/functional_form.md), and [ASDL](../wiki/asdl.md) define the programming-language terms.
+- [Semantics](./APPX-A-SEMANTICS.md) relates interpreted equations to numerical methods.
+- [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) states the conditions for unique interpretation and exact refinement.
+- [The stage term](./APPX-C-STAGE-TERM.md) gives the finer mathematical signature.
+
+[^schmidt]: D. A. Schmidt, *Denotational Semantics: A Methodology for Language Development*, Allyn and Bacon, 1986, ch. 1, opening discussion, p. 8: "the derivation trees are the real sentences of a language, and strings of symbols are just abbreviations for the [trees]."
+[^asdl]: D. C. Wang, A. W. Appel, J. L. Korn, and C. S. Serra, "The Zephyr Abstract Syntax Description Language," *Proceedings of the USENIX Conference on Domain-Specific Languages*, 1997.
+[^backus-131]: J. Backus, "Can Programming Be Liberated from the von Neumann Style? A Functional Style and Its Algebra of Programs," *Communications of the ACM* 21(8), 1978, §13.1, p. 631.
+[^backus-1331]: Backus (1978), §13.3.1, p. 632.
+[^backus-meta]: Backus (1978), §13.3.2, p. 632: $(\rho \langle x_1, \ldots, x_n \rangle)\!:\!y \equiv (\rho x_1)\!:\!\langle\langle x_1, \ldots, x_n\rangle, y\rangle$.
+[^backus-insert]: Backus (1978), §11.2.4, p. 621: $/f\!:\!x \equiv x{=}\langle x_1\rangle \to x_1;\; x{=}\langle x_1, \ldots, x_n\rangle \,\&\, n \geq 2 \to f\!:\!\langle x_1, /f\!:\!\langle x_2, \ldots, x_n\rangle\rangle;\; \bot$.
+[^backus-52]: Backus (1978), §5.2, p. 616.
+[^backus-tri]: Backus (1978), §11.2.3, p. 620: every function in $F$ is primitive, defined, or a functional form.

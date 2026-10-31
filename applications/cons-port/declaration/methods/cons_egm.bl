@@ -1,0 +1,19 @@
+@methods: cons
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
+
+
+[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0    :: [id=InvEuler]
+    m[>]   = a + c[>]                        :: [id=grid]
+    c      = c[>]                            :: [id=identification]
+}
+
+
+
+
+
+
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{m}V = 𝑑𝑢(c)                           :: [id=envelope]
+}

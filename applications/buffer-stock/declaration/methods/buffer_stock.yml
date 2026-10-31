@@ -1,0 +1,34 @@
+stage: buffer_stock
+# The buffer-stock stage's methods. The stage file writes the values and the
+# maximization alone; the block file buffer_stock_egm.bl, beside this file,
+# opens the policy builder with the endogenous grid method, and the block file
+# marginals.bl states the derivatives of the decision value and the arrival
+# value, one marginal block for each value builder.
+#
+# At the arrival builder dcsn_to_arvl, the expectation over the two income
+# shocks is taken by quadrature with the node counts the settings name, seven
+# for each shock, the point mass of the transitory shock at zero exact; and the
+# stated derivative of the arrival value, D_{k}V[<], is represented on the grid
+# of assets k the settings name, read between its nodes by linear interpolation.
+# The counts and the grid are those of the HARK solution of this model in the
+# QuantEcon community library (projects/HARK/buffer-stock/tutorial.ipynb,
+# HARK 0.17.1), whose seven values per shock are equiprobable conditional means
+# and whose 960 asset points from 0.001 to 20 are exponentially nested with
+# factor 3; the method table names no equiprobable rule and no nesting, so the
+# rule here is Gauss-Hermite and the grid is stated by its order and bounds.
+methods:
+  - on: policy
+    method: !egm
+    block: buffer_stock_egm.bl
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: marginals.bl
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: marginals.bl
+  - on: E_ψ_ξ
+    method: !gauss-hermite
+    settings: {n_nodes: [n_ψ_nodes, n_ξ_nodes]}
+  - on: dcsn_to_arvl.marginal
+    method: !Linear
+    settings: {orders: {k: n_k}, bounds: {k: [k_min, k_max]}}

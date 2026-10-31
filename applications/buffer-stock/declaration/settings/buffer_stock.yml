@@ -1,0 +1,12 @@
+# The buffer-stock stage's numerical settings: the quadrature nodes of the two
+# income shocks at the arrival builder's expectation, and the grid of assets k
+# on which the arrival value's derivative is represented. The values are those
+# of the HARK solution of this model in the QuantEcon community library
+# (projects/HARK/buffer-stock/tutorial.ipynb): seven points per shock, 960
+# asset points from 0.001 to 20.
+settings:
+  n_ψ_nodes: 7
+  n_ξ_nodes: 7
+  n_k: 960
+  k_min: 0.001
+  k_max: 20.0

@@ -1,0 +1,24 @@
+@stage: keeper_saving
+
+β : (0,1)        :: ["discount factor"]
+ρ : (1, inf)     :: ["curvature of utility from consumption"]
+α : (0,1)        :: ["one less the weight of housing in utility"]
+
+𝑢(c : ℝ₊₊, h : ℝ₊₊) := (c^(1-ρ) - 1)/(1-ρ) + (1-α)*log(h)   :: [id=util]
+𝑢_c(c : ℝ₊₊) := c^(-ρ)                                     :: [id=marg_util_cons]
+𝑢_h(h : ℝ₊₊) := (1-α)/h                                    :: [id=marg_util_housing]
+Γ(x : ℝ₊₊) := (0, x]                                       :: [id=feasible]
+
+[id=dcsn_to_cntn, (m_d : ℝ₊₊, h_d : ℝ₊₊, c : ℝ₊₊ @ !ctrl) : !dcsn -> (y_f_kp : ℝ₊, y_h_kp : ℝ₊₊) : !cntn] {
+    y_f_kp = m_d - c                                    :: [id=financial_post_state]
+    y_h_kp = h_d                                        :: [id=housing_post_state]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c, h_d) + β*V[>]                              :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c      = argmax_{cp : Γ(m_d)}(𝑢(cp, h_d) + β*V[>])   :: [id=optimality, !doc]
+    𝑢_c(c) = β*D_{y_f_kp}V[>] ⟂ m_d - c >= 0               :: [id=euler_financial]
+}

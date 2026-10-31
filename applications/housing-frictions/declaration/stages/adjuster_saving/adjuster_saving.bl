@@ -1,0 +1,27 @@
+@stage: adjuster_saving
+
+β : (0,1)        :: ["discount factor"]
+ρ : (1, inf)     :: ["curvature of utility from consumption"]
+α : (0,1)        :: ["one less the weight of housing in utility"]
+τ : ℝ₊₊          :: ["cost of adjusting housing, per unit of housing bought"]
+
+𝑢(c : ℝ₊₊, h : ℝ₊₊) := (c^(1-ρ) - 1)/(1-ρ) + (1-α)*log(h)   :: [id=util]
+𝑢_c(c : ℝ₊₊) := c^(-ρ)                                     :: [id=marg_util_cons]
+𝑢_h(h : ℝ₊₊) := (1-α)/h                                    :: [id=marg_util_housing]
+Γ_c(x : ℝ₊₊) := (0, x]                                     :: [id=feasible_consumption]
+Γ_h(x : ℝ₊) := (0, x/(1 + τ)]                              :: [id=feasible_housing]
+
+[id=dcsn_to_cntn, (m : ℝ₊₊, c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl) : !dcsn -> (y_f_adj : ℝ₊, y_h_adj : ℝ₊₊) : !cntn] {
+    y_f_adj = m - c - (1 + τ)*h_choice                  :: [id=financial_post_state]
+    y_h_adj = h_choice                                  :: [id=housing_post_state]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c, h_choice) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c, h_choice) + β*V[>]                         :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl) : !dcsn] {
+    (c, h_choice)  = argmax_{c : Γ_c(m), h_choice : Γ_h(m - c)}(𝑢(c, h_choice) + β*V[>])   :: [id=optimality, !doc]
+    𝑢_c(c)         = β*D_{y_f_adj}V[>] ⟂ m - c - (1 + τ)*h_choice >= 0                       :: [id=euler_financial]
+    (1 + τ)*𝑢_c(c) = 𝑢_h(h_choice) + β*D_{y_h_adj}V[>]                                     :: [id=euler_housing]
+}

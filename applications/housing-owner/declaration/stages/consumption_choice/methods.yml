@@ -1,0 +1,15 @@
+stage: consumption_choice
+
+methods:
+  # The method block of consumption_choice_egm.bl opens the policy builder with
+  # the endogenous grid method; the stage file states the maximization alone.
+  - on: policy
+    method: !egm
+    block: ../../methods/consumption_choice_egm.bl
+
+  # The derivative of the decision value in cash on hand is stated by the
+  # marginal block of marginals_consumption_choice.bl on the decision value
+  # builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_consumption_choice.bl

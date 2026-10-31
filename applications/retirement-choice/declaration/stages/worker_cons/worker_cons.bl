@@ -1,0 +1,32 @@
+@stage: worker_cons
+
+Xa := ℝ₊
+
+β : (0,1)        :: ["discount factor"]
+R : ℝ₊₊          :: ["gross return on assets"]
+y : ℝ₊₊          :: ["wage paid in a period of work"]
+
+𝑢(c : ℝ₊₊) := log(c)                :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := 1/c                  :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := 1/x               :: [id=inv_marg_util]
+Γ(x : ℝ₊₊) := (0, x]                :: [id=feasible]
+
+[id=arvl_to_dcsn, (a_w : Xa) : !arvl -> (w : ℝ₊₊) : !dcsn] {
+    w = R*a_w + y                   :: [id=cash_on_hand]
+}
+
+[id=dcsn_to_cntn, (w, c : ℝ₊₊ @ !ctrl) : !dcsn -> (b : Xa) : !cntn] {
+    b = w - c                       :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]               :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                        :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{c : Γ(w)}(𝑢(c) + β*V[>])        :: [id=optimality]
+}
