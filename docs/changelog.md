@@ -8,6 +8,10 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-11-01 — The homepage's sequence without captions
+
+- The homepage's photographs carry no captions; the acknowledgments of their sources and licenses stand at the end of `README.md` and in §4 of the about page. The sequence runs the half-built Harbour Bridge, the sculls, the Owatonna bank, the houses and the vegetable seller; the photograph of the finished bridge is withdrawn. The market loop is re-encoded under 4 MB (AAS, 1 November 2026).
+
 ### 2026-10-31 — The dynamic sections return under the 4 October hero
 
 - The documentation homepage holds again, under the hero of 4 October (the isometric loop on the left, the text on the right), the dynamic sections of 18 October: the properties standing over the looping overhead video of a market, with the field of the brand's wire modules that settles into a grid and recedes on scroll, and the sequence of six photographs of the decisions the language models. The second photograph is replaced: in place of the roundhouse of 1942 stands a quadruple scull photographed from directly above at dawn, the puddles of the oars as circles on the water (Wikimedia Commons, `File:Fluidesign Quad Rowing Team At Dawn.jpg`, TudorTulok, 2023, CC0), chosen by AAS for the recursive theme of the project. The second loop is shown nowhere on the page (AAS, 31 October 2026).
