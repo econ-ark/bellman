@@ -383,19 +383,24 @@ def test_item_4_a_marginal_block_shares_its_builder_with_another_method():
 
 def test_item_4_one_entry_of_each_kind_stands_on_one_target_in_one_source():
     """A methods source may hold a solution method and a representation on one
-    builder, since each kind has its own place: `!egm` on `policy` stands on
-    the builder and `!Linear` on `policy` at the Evaluation that closes it, the
-    consumption function read between the pairs the endogenous grid method
-    stores; a second entry of one kind on one target is refused (MB-U53)."""
+    target, since each kind has its own place: `!egm` on `policy` stands on the
+    builder and a representation named on `policy` at the Evaluation that
+    closes it; a second entry of one kind on one target is refused (MB-U53).
+    The buffer-stock application itself binds its interpolation on the authored
+    operator occurrence `policy.cons_choice.evaluate` (MB-U54)."""
     folder = ROOT / "applications/buffer-stock/declaration"
-    stage = elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl"))
-    stage.methodize(folder / "methods/buffer_stock.yml")
+    block = str(folder / "methods/buffer_stock_egm.bl")
+    pair = {"methods": [{"on": "policy", "method": "!egm", "block": block}, {"on": "policy", "method": "!Linear"}]}
+    stage = elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl")).methodize(pair)
     printed = [line.split()[:2] for line in str(stage.methods).splitlines()]
     assert ["policy", "!egm"] in printed
     assert ["policy:Evaluation", "!Linear"] in printed
     twice = {"methods": [{"on": "policy", "method": "!Linear"}, {"on": "policy", "method": "!pchip"}]}
     with pytest.raises(ValueError, match="Duplicate methodization target 'policy'"):
         elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl")).methodize(twice)
+    bound = elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl")).methodize(folder / "methods/buffer_stock.yml")
+    assert ["policy.cons_choice", "!Linear"] in [line.split()[:2] for line in str(bound.methods).splitlines()]
+    assert "policy.cons_choice.evaluate" in str(bound.places())
 
 
 def test_item_4_a_method_choice_on_a_builder_keeps_the_marginal_block_bound_there():

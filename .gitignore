@@ -20,8 +20,8 @@ docs/**/_build/
 docs/**/exports/
 exports/pdfs/
 
-# the Node package that lays drawings out where Graphviz's dot is absent (npm install at the root)
-/node_modules/
+# the Node package that lays drawings out where Graphviz's dot is absent (npm install in packages/bellman/)
+node_modules/
 
 # the JSON files of Model Explorer's view, written beside a stage file or a lesson
 model-explorer/

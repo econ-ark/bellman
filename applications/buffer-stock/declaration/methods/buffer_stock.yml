@@ -17,17 +17,19 @@ stage: buffer_stock
 # factor 3; the method table names no equiprobable rule and no nesting, so the
 # rule here is Gauss-Hermite and the grid is stated by its order and bounds.
 #
-# At the decision side, the consumption function the endogenous grid method
-# stores at its pairs is read between them by linear interpolation, the
-# representation bound on the policy builder, which places it at the Evaluation
-# that closes the builder; the decision value's derivative, D_{m}V = 𝑑𝑢(c), is
-# read through it and has no representation of its own, and the decision value
-# itself is not represented, as the HARK solution builds no value function.
+# At the decision side, the method block's last line reads the consumption
+# function at the resources m between the candidate pairs by the operator
+# evaluate, and the linear interpolation method is bound on that operator
+# occurrence, policy.cons_choice.evaluate; the endogenous grid method stands on
+# the policy builder itself. The decision value's derivative, D_{m}V = 𝑑𝑢(c),
+# is read through the interpolated consumption and takes no representation of
+# its own, and the decision value is not represented, as the HARK solution
+# builds no value function.
 methods:
   - on: policy
     method: !egm
     block: buffer_stock_egm.bl
-  - on: policy
+  - on: policy.cons_choice.evaluate
     method: !Linear
   - on: cntn_to_dcsn
     method: !marginals

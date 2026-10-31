@@ -8,6 +8,14 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-10-31 — The dynamic sections return under the 4 October hero
+
+- The documentation homepage holds again, under the hero of 4 October (the isometric loop on the left, the text on the right), the dynamic sections of 18 October: the properties standing over the looping overhead video of a market, with the field of the brand's wire modules that settles into a grid and recedes on scroll, and the sequence of six photographs of the decisions the language models. The second photograph is replaced: in place of the roundhouse of 1942 stands a quadruple scull photographed from directly above at dawn, the puddles of the oars as circles on the water (Wikimedia Commons, `File:Fluidesign Quad Rowing Team At Dawn.jpg`, TudorTulok, 2023, CC0), chosen by AAS for the recursive theme of the project. The second loop is shown nowhere on the page (AAS, 31 October 2026).
+
+### 2026-10-31 — The parent organization's line above the header
+
+- Every page of the site carries, above its header, a navy band of one line with the Econ-ARK mark and "An Econ-ARK project" linking to econ-ark.org, as a foundation's wordmark stands above a project's own header on the project sites of Mozilla and of the Eclipse Foundation, and as Apache's branding policy asks of a prominent link to the parent (AAS, 31 October 2026). The partial `docs/_overrides/partials/parent-bar.html` is included by `main.html` for the documentation pages and by the homepage's template; its rules stand at the end of `docs/_stylesheets/bellman.css`.
+
 ### 2026-10-31 — The homepage returns to its 4 October form
 
 - The documentation homepage is again the page of 4 October 2026: the hero with the isometric loop on the left and the text on the right, and the properties band below it with the second loop. The market video, the field of modules and the six photographs of the decisions the language models, added on 18 October, are withdrawn with their eight files under `docs/_assets/home/` (AAS, 31 October 2026, on seeing the page served from the public repository). `docs/_overrides/home.html` and `docs/_stylesheets/home.css` are the files of 4 October.
@@ -20,7 +28,7 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ### 2026-10-31 — The buffer-stock application names its quadrature and its asset grid
 
-- A methods file may hold one entry of each kind on one target, a solution method, a representation and a marginal block, since each kind has its own place; `!egm` on `policy` and `!Linear` on `policy` now stand together in one file, the second at the Evaluation that closes the policy builder ([Methodization](Bellman-Sym/04-methodization.md) §4). The buffer-stock application binds that pair: the consumption function is read between the pairs the endogenous grid method stores by linear interpolation, as the published HARK solution does, and neither the decision value nor its derivative takes a representation of its own.
+- A methods file may hold one entry of each kind on one target, a solution method, a representation and a marginal block, since each kind has its own place; `!egm` on `policy` and `!Linear` on `policy` now stand together in one file, the second at the Evaluation that closes the policy builder ([Methodization](Bellman-Sym/04-methodization.md) §4). The buffer-stock application writes its interpolation as an operation: the last line of its method block reads the consumption function at the resources between the candidate pairs by `evaluate`, and `!Linear` is bound on that operator occurrence, `policy.cons_choice.evaluate`, as the published HARK solution interpolates its consumption function; neither the decision value nor its derivative takes a representation of its own.
 - The methods file of `applications/buffer-stock/` binds `!gauss-hermite` on the arrival builder's expectation over the two income shocks, with the node counts the new settings file names, seven for each shock, and `!Linear` on the stated derivative of the arrival value, `D_{k}V[<]`, represented on the grid of 960 asset points from 0.001 to 20; the counts and the grid follow the published HARK solution of the model in the QuantEcon community library, whose equiprobable discretization and exponentially nested grid the method table does not name ([Methodization](Bellman-Sym/04-methodization.md) §4.1; [Method types](Bellman-Sym/reference/methods.md)).
 
 ### 2026-10-28 — One cons-port folder
