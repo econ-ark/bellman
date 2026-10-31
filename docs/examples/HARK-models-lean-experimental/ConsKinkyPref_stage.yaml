@@ -1,0 +1,100 @@
+name: ConsKinkyPref
+
+symbols:
+  spaces:
+    Xk: "@def R"
+    Xp: "@def R++"
+    Xb: "@def R"
+    Xm: "@def R++"
+    Xa: "@def R+"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+
+  exogenous:
+    PermShk:
+      - "@in R++"
+      - "@dist LogNormal(0, sigma_psi)"
+    TranShk:
+      - "@in R++"
+      - "@dist LogNormal(0, sigma_xi)"
+    PrefShk:
+      - "@in R++"
+      - "@dist LogNormal(0, sigma_eta)"
+
+  states:
+    b: "@in Xb"
+    m: "@in Xm"
+    p: "@in Xp"
+
+  controls:
+    c: "@in R+"
+
+  poststates:
+    a: "@in Xa"
+    live:
+      - "@in {0,1}"
+      - "@dist Bernoulli(LivPrb)"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    Rboro: "@in R++"
+    Rsave: "@in R++"
+    PermGroFac: "@in R++"
+    LivPrb: "@in [0,1]"
+    rho: "@in R++"
+    beta: "@in (0,1)"
+    sigma_psi: "@in R+"
+    sigma_xi: "@in R+"
+    sigma_eta: "@in R+"
+
+equations:
+  arvl_to_dcsn_transition: |
+    G = PermGroFac * PermShk
+    p = p_prev * G
+    boro = (k < 0.0)
+    Rfree = Rsave + (Rboro - Rsave) * boro
+    b = Rfree * k / G
+    y = TranShk
+    m = b + y
+
+  dcsn_to_cntn_transition: |
+    a = m - c
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u = PrefShk * (c^(1-rho))/(1-rho)
+      V = max_c(u + beta * LivPrb * V[>])
+    InvEuler: |
+      c = (PrefShk^(-1) * beta * LivPrb * dV[>])^(-1/rho)
+    MarginalBellman: |
+      dV = PrefShk * c^(-rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{PermShk, TranShk, PrefShk}[V]
+    ShadowBellman: |
+      dV[<] = E_{PermShk, TranShk, PrefShk}[
+        (Rfree / G) * dV
+      ]
+
+calibration:
+  Rboro: 1.20
+  Rsave: 1.03
+  PermGroFac: 1.01
+  LivPrb: 0.98
+  rho: 2.0
+  beta: 0.96
+  sigma_psi: 0.1
+  sigma_xi: 0.1
+  sigma_eta: 0.0

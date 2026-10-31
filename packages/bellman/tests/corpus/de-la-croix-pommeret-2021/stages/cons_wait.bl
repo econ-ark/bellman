@@ -1,0 +1,40 @@
+@stage: cons_wait
+
+# Consumption and saving before the procreation attempt, at the childless
+# technology. One date of length Δ; the paper's continuous-time budget
+# ȧ = r1 a - c (equation 3, first line, p. 6) is the limit as Δ → 0.
+
+Xa := ℝ₊₊
+Xt := ℝ₊
+
+ρ  : ℝ₊₊       :: ["psychological discount rate per unit of time, the paper's ρ (p. 6)"]
+Δ  : ℝ₊₊       :: ["length of one date; the paper's problem is the limit Δ → 0"]
+ε  : (1, inf)  :: ["relative risk aversion and the inverse elasticity of substitution; the paper assumes ε > 1 (p. 6)"]
+r1 : ℝ         :: ["return on financial and human wealth of a childless woman (p. 6)"]
+
+𝑢(c : ℝ₊₊)  := c^(1-ε)/(1-ε)     :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ε)            :: [id=marg_util]
+
+[id=arvl_to_dcsn, (a_wait : Xa, age : Xt) : !arvl -> (m_wait : Xa, age_d : Xt) : !dcsn] {
+    m_wait = a_wait                          :: [id=wealth]
+    age_d  = age                             :: [id=age]
+}
+
+[id=dcsn_to_cntn, (m_wait, age_d, c : ℝ₊₊ @ !ctrl) : !dcsn -> (b_wait : Xa, age_c : Xt) : !cntn] {
+    b_wait = (m_wait - c*Δ)*exp(r1*Δ)        :: [id=savings]
+    age_c  = age_d                           :: [id=age]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V           = 𝑢(c)*Δ + exp(-ρ*Δ)*V[>]    :: [id=value]
+    D_{m_wait}V = 𝑑𝑢(c)                      :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]  = V                                :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{c}(𝑢(c)*Δ + exp(-ρ*Δ)*V[>])              :: [id=optimality, !doc]
+    c = solve_{c}(𝑑𝑢(c) - exp((r1-ρ)*Δ)*D_{b_wait}V[>])  :: [id=euler]
+}

@@ -1,0 +1,75 @@
+@stage: shocks
+
+Plan := {DB, DC}
+
+R       : ℝ₊₊       :: ["gross return on liquid assets, Section 4.E"]
+δ       : [0,1)     :: ["depreciation rate of housing, equation (8)"]
+Y       : ℝ₊        :: ["earnings level exp(y(t, τ)) at the age of the period, zero from retirement on"]
+φ       : (-1,1)    :: ["persistence of the wage state, equation (3)"]
+σ_u     : ℝ₊        :: ["standard deviation of the wage innovation, equation (3)"]
+r_r     : ℝ         :: ["mean log return of the risky asset, equation (7)"]
+r_s     : ℝ         :: ["mean log return of the safe asset, equation (7)"]
+scale_r : ℝ₊        :: ["scale of the return shock on the risky asset, equation (7)"]
+scale_s : ℝ₊        :: ["scale of the return shock on the safe asset, equation (7)"]
+σ_d     : ℝ₊        :: ["standard deviation of the pension-return shock, equation (7)"]
+β_m     : ℝ₊        :: ["markup of the mortgage rate over the mean safe return, equation (10)"]
+κ_m     : ℝ₊        :: ["scale of the return shock in the mortgage rate, equation (10)"]
+r_h     : ℝ         :: ["mean net housing return, text after equation (14)"]
+σ_h     : ℝ₊        :: ["standard deviation of the housing-return shock"]
+Π_α     : ℝ         :: ["transition matrix of the housing taste, Section 4.A"]
+α_pts   : ℝ         :: ["points of the housing taste"]
+Π_β     : ℝ         :: ["transition matrix of the discount factor, Section 4.F"]
+β_pts   : ℝ         :: ["points of the discount factor"]
+
+u   : ℝ
+u   ~ N(0, σ_u^2)                                :: ["innovation to the wage state, equation (3)"]
+ε_d : ℝ
+ε_d ~ N(0, σ_d^2)                                :: ["the pension-return shock of equation (7), shared by the mortgage rate of equation (10)"]
+ε_h : ℝ
+ε_h ~ N(0, σ_h^2)                                :: ["the housing-return shock, text after equation (14)"]
+α   : (0,1)
+α   ~ DiscreteMarkov(Π_α, α_pts, α_pre)          :: ["the housing taste, Section 4.A"]
+β   : (0,1)
+β   ~ DiscreteMarkov(Π_β, β_pts, β_pre)          :: ["the discount factor, Section 4.F"]
+
+[id=arvl_to_dcsn, (a : ℝ₊, a_dc : ℝ₊, π_pre : [0,1], h : ℝ₊, m : ℝ₊, P_pre : ℝ₊₊, ξ_pre : ℝ, α_pre : (0,1), β_pre : (0,1), plan : Plan, u, ε_d, ε_h, α, β) : !arvl -> (a_d : ℝ₊, y_d : ℝ₊, adc_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan, π_d : [0,1]) : !dcsn] {
+    a_d    = R*a                                                                      :: [id=liquid_return]
+    ξ_d    = φ*ξ_pre + u                                                              :: [id=wage_state]
+    y_d    = Y*exp(ξ_d)                                                               :: [id=earnings]
+    adc_d  = (π_pre*exp(r_r + scale_r*ε_d) + (1 - π_pre)*exp(r_s + scale_s*ε_d))*a_dc :: [id=pension_return]
+    h_d    = (1 - δ)*h                                                                :: [id=depreciation]
+    P_d    = (1 + r_h + ε_h)*P_pre/(1 - δ)                                            :: [id=house_price]
+    m_d    = exp(β_m*r_s + κ_m*ε_d)*m                                                 :: [id=mortgage_interest]
+    α_d    = α
+    β_d    = β
+    plan_d = plan
+    π_d    = π_pre
+}
+
+[id=dcsn_to_cntn, (a_d, y_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, π_d) : !dcsn -> (a_s : ℝ₊, y_s : ℝ₊, adc_s : ℝ₊, h_s : ℝ₊, m_s : ℝ₊, P_s : ℝ₊₊, ξ_s : ℝ, α_s : (0,1), β_s : (0,1), plan_s : Plan, π_s : [0,1]) : !cntn] {
+    a_s    = a_d
+    y_s    = y_d
+    adc_s  = adc_d
+    h_s    = h_d
+    m_s    = m_d
+    P_s    = P_d
+    ξ_s    = ξ_d
+    α_s    = α_d
+    β_s    = β_d
+    plan_s = plan_d
+    π_s    = π_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = V[>]                              :: [id=value]
+    D_{a_d}V = D_{a_s}V[>]                       :: [id=marginal_liquid]
+    D_{h_d}V = D_{h_s}V[>]                       :: [id=marginal_housing]
+    D_{m_d}V = D_{m_s}V[>]                       :: [id=marginal_mortgage]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]      = E_{u, ε_d, ε_h, α, β}(V)                                :: [id=value]
+    D_{a}V[<] = E_{u, ε_d, ε_h, α, β}(R*D_{a_d}V)                       :: [id=marginal_liquid]
+    D_{h}V[<] = E_{u, ε_d, ε_h, α, β}((1 - δ)*D_{h_d}V)                 :: [id=marginal_housing]
+    D_{m}V[<] = E_{u, ε_d, ε_h, α, β}(exp(β_m*r_s + κ_m*ε_d)*D_{m_d}V)  :: [id=marginal_mortgage]
+}

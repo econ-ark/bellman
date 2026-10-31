@@ -1,0 +1,332 @@
+{
+  "Reals": {
+    "prefix": "\\Reals",
+    "body": "ℝ",
+    "description": "ℝ — the reals"
+  },
+  "PositiveReals": {
+    "prefix": "\\PositiveReals",
+    "body": "ℝ₊",
+    "description": "ℝ₊ — the nonnegative reals"
+  },
+  "StrictlyPositiveReals": {
+    "prefix": "\\StrictlyPositiveReals",
+    "body": "ℝ₊₊",
+    "description": "ℝ₊₊ — the strictly positive reals"
+  },
+  "Naturals": {
+    "prefix": "\\Naturals",
+    "body": "ℕ",
+    "description": "ℕ — the naturals"
+  },
+  "Integers": {
+    "prefix": "\\Integers",
+    "body": "ℤ",
+    "description": "ℤ — the integers"
+  },
+  "member": {
+    "prefix": "\\in",
+    "body": "∈",
+    "description": "∈ — set membership"
+  },
+  "times": {
+    "prefix": "\\times",
+    "body": "×",
+    "description": "× — product of sets"
+  },
+  "leq": {
+    "prefix": "\\leq",
+    "body": "≤",
+    "description": "≤"
+  },
+  "geq": {
+    "prefix": "\\geq",
+    "body": "≥",
+    "description": "≥"
+  },
+  "perp": {
+    "prefix": "\\perp",
+    "body": "⟂",
+    "description": "⟂ — complementary-slackness clause (U+27C2; not ⊥ U+22A5)"
+  },
+  "italic a": {
+    "prefix": "_a",
+    "body": "𝑎",
+    "description": "𝑎 — mathematical italic a (U+1D44E)"
+  },
+  "italic b": {
+    "prefix": "_b",
+    "body": "𝑏",
+    "description": "𝑏 — mathematical italic b (U+1D44F)"
+  },
+  "italic c": {
+    "prefix": "_c",
+    "body": "𝑐",
+    "description": "𝑐 — mathematical italic c (U+1D450)"
+  },
+  "italic d": {
+    "prefix": "_d",
+    "body": "𝑑",
+    "description": "𝑑 — mathematical italic d (U+1D451)"
+  },
+  "italic e": {
+    "prefix": "_e",
+    "body": "𝑒",
+    "description": "𝑒 — mathematical italic e (U+1D452)"
+  },
+  "italic f": {
+    "prefix": "_f",
+    "body": "𝑓",
+    "description": "𝑓 — mathematical italic f (U+1D453)"
+  },
+  "italic g": {
+    "prefix": "_g",
+    "body": "𝑔",
+    "description": "𝑔 — mathematical italic g (U+1D454)"
+  },
+  "italic h": {
+    "prefix": "_h",
+    "body": "ℎ",
+    "description": "ℎ — mathematical italic h (U+210E)"
+  },
+  "italic i": {
+    "prefix": "_i",
+    "body": "𝑖",
+    "description": "𝑖 — mathematical italic i (U+1D456)"
+  },
+  "italic j": {
+    "prefix": "_j",
+    "body": "𝑗",
+    "description": "𝑗 — mathematical italic j (U+1D457)"
+  },
+  "italic k": {
+    "prefix": "_k",
+    "body": "𝑘",
+    "description": "𝑘 — mathematical italic k (U+1D458)"
+  },
+  "italic l": {
+    "prefix": "_l",
+    "body": "𝑙",
+    "description": "𝑙 — mathematical italic l (U+1D459)"
+  },
+  "italic m": {
+    "prefix": "_m",
+    "body": "𝑚",
+    "description": "𝑚 — mathematical italic m (U+1D45A)"
+  },
+  "italic n": {
+    "prefix": "_n",
+    "body": "𝑛",
+    "description": "𝑛 — mathematical italic n (U+1D45B)"
+  },
+  "italic o": {
+    "prefix": "_o",
+    "body": "𝑜",
+    "description": "𝑜 — mathematical italic o (U+1D45C)"
+  },
+  "italic p": {
+    "prefix": "_p",
+    "body": "𝑝",
+    "description": "𝑝 — mathematical italic p (U+1D45D)"
+  },
+  "italic q": {
+    "prefix": "_q",
+    "body": "𝑞",
+    "description": "𝑞 — mathematical italic q (U+1D45E)"
+  },
+  "italic r": {
+    "prefix": "_r",
+    "body": "𝑟",
+    "description": "𝑟 — mathematical italic r (U+1D45F)"
+  },
+  "italic s": {
+    "prefix": "_s",
+    "body": "𝑠",
+    "description": "𝑠 — mathematical italic s (U+1D460)"
+  },
+  "italic t": {
+    "prefix": "_t",
+    "body": "𝑡",
+    "description": "𝑡 — mathematical italic t (U+1D461)"
+  },
+  "italic u": {
+    "prefix": "_u",
+    "body": "𝑢",
+    "description": "𝑢 — mathematical italic u (U+1D462)"
+  },
+  "italic v": {
+    "prefix": "_v",
+    "body": "𝑣",
+    "description": "𝑣 — mathematical italic v (U+1D463)"
+  },
+  "italic w": {
+    "prefix": "_w",
+    "body": "𝑤",
+    "description": "𝑤 — mathematical italic w (U+1D464)"
+  },
+  "italic x": {
+    "prefix": "_x",
+    "body": "𝑥",
+    "description": "𝑥 — mathematical italic x (U+1D465)"
+  },
+  "italic y": {
+    "prefix": "_y",
+    "body": "𝑦",
+    "description": "𝑦 — mathematical italic y (U+1D466)"
+  },
+  "italic z": {
+    "prefix": "_z",
+    "body": "𝑧",
+    "description": "𝑧 — mathematical italic z (U+1D467)"
+  },
+  "italic A": {
+    "prefix": "_A",
+    "body": "𝐴",
+    "description": "𝐴 — mathematical italic A (U+1D434)"
+  },
+  "italic B": {
+    "prefix": "_B",
+    "body": "𝐵",
+    "description": "𝐵 — mathematical italic B (U+1D435)"
+  },
+  "italic C": {
+    "prefix": "_C",
+    "body": "𝐶",
+    "description": "𝐶 — mathematical italic C (U+1D436)"
+  },
+  "italic D": {
+    "prefix": "_D",
+    "body": "𝐷",
+    "description": "𝐷 — mathematical italic D (U+1D437)"
+  },
+  "italic E": {
+    "prefix": "_E",
+    "body": "𝐸",
+    "description": "𝐸 — mathematical italic E (U+1D438)"
+  },
+  "italic F": {
+    "prefix": "_F",
+    "body": "𝐹",
+    "description": "𝐹 — mathematical italic F (U+1D439)"
+  },
+  "italic G": {
+    "prefix": "_G",
+    "body": "𝐺",
+    "description": "𝐺 — mathematical italic G (U+1D43A)"
+  },
+  "italic H": {
+    "prefix": "_H",
+    "body": "𝐻",
+    "description": "𝐻 — mathematical italic H (U+1D43B)"
+  },
+  "italic I": {
+    "prefix": "_I",
+    "body": "𝐼",
+    "description": "𝐼 — mathematical italic I (U+1D43C)"
+  },
+  "italic J": {
+    "prefix": "_J",
+    "body": "𝐽",
+    "description": "𝐽 — mathematical italic J (U+1D43D)"
+  },
+  "italic K": {
+    "prefix": "_K",
+    "body": "𝐾",
+    "description": "𝐾 — mathematical italic K (U+1D43E)"
+  },
+  "italic L": {
+    "prefix": "_L",
+    "body": "𝐿",
+    "description": "𝐿 — mathematical italic L (U+1D43F)"
+  },
+  "italic M": {
+    "prefix": "_M",
+    "body": "𝑀",
+    "description": "𝑀 — mathematical italic M (U+1D440)"
+  },
+  "italic N": {
+    "prefix": "_N",
+    "body": "𝑁",
+    "description": "𝑁 — mathematical italic N (U+1D441)"
+  },
+  "italic O": {
+    "prefix": "_O",
+    "body": "𝑂",
+    "description": "𝑂 — mathematical italic O (U+1D442)"
+  },
+  "italic P": {
+    "prefix": "_P",
+    "body": "𝑃",
+    "description": "𝑃 — mathematical italic P (U+1D443)"
+  },
+  "italic Q": {
+    "prefix": "_Q",
+    "body": "𝑄",
+    "description": "𝑄 — mathematical italic Q (U+1D444)"
+  },
+  "italic R": {
+    "prefix": "_R",
+    "body": "𝑅",
+    "description": "𝑅 — mathematical italic R (U+1D445)"
+  },
+  "italic S": {
+    "prefix": "_S",
+    "body": "𝑆",
+    "description": "𝑆 — mathematical italic S (U+1D446)"
+  },
+  "italic T": {
+    "prefix": "_T",
+    "body": "𝑇",
+    "description": "𝑇 — mathematical italic T (U+1D447)"
+  },
+  "italic U": {
+    "prefix": "_U",
+    "body": "𝑈",
+    "description": "𝑈 — mathematical italic U (U+1D448)"
+  },
+  "italic V": {
+    "prefix": "_V",
+    "body": "𝑉",
+    "description": "𝑉 — mathematical italic V (U+1D449)"
+  },
+  "italic W": {
+    "prefix": "_W",
+    "body": "𝑊",
+    "description": "𝑊 — mathematical italic W (U+1D44A)"
+  },
+  "italic X": {
+    "prefix": "_X",
+    "body": "𝑋",
+    "description": "𝑋 — mathematical italic X (U+1D44B)"
+  },
+  "italic Y": {
+    "prefix": "_Y",
+    "body": "𝑌",
+    "description": "𝑌 — mathematical italic Y (U+1D44C)"
+  },
+  "italic Z": {
+    "prefix": "_Z",
+    "body": "𝑍",
+    "description": "𝑍 — mathematical italic Z (U+1D44D)"
+  },
+  "ExtendedReals": {
+    "prefix": "\\ExtendedReals",
+    "body": "ℝ̄",
+    "description": "extended reals [-∞, ∞] (alias ℝ_{±∞})"
+  },
+  "RealsMinusInf": {
+    "prefix": "\\RealsMinusInf",
+    "body": "ℝ_{-∞}",
+    "description": "reals with -∞ adjoined: [-∞, ∞)"
+  },
+  "RealsPlusInf": {
+    "prefix": "\\RealsPlusInf",
+    "body": "ℝ_{+∞}",
+    "description": "reals with +∞ adjoined: (-∞, ∞]"
+  },
+  "Infinity": {
+    "prefix": "\\infty",
+    "body": "∞",
+    "description": "infinity (glyph twin of inf)"
+  }
+}

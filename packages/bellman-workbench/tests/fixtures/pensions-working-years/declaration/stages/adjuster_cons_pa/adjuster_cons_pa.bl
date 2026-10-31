@@ -1,0 +1,55 @@
+@stage: adjuster_cons_pa
+
+Plan := {DB, DC}
+
+γ   : (1, inf)     :: ["curvature of utility, equation (1)"]
+ρ   : ℝ, < 1       :: ["substitution parameter between consumption and housing services, equation (1)"]
+φ_C : (0,1)        :: ["deposit share of the collateral constraint, equation (11)"]
+τ_H : [0,1)        :: ["transaction cost per unit of housing value, Section 4.D"]
+
+𝑢(c : ℝ₊₊, S : ℝ₊₊, α : (0,1))   := (((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ) - 1)/(1 - γ)                 :: [id=util]
+𝑢_c(c : ℝ₊₊, S : ℝ₊₊, α : (0,1)) := (1 - α)*c^(ρ - 1)*((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ - 1)        :: [id=marg_util_cons]
+𝑢_S(c : ℝ₊₊, S : ℝ₊₊, α : (0,1)) := α*S^(ρ - 1)*((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ - 1)              :: [id=marg_util_services]
+Γ_c(x : ℝ₊) := (0, x]                                    :: [id=feasible_consumption]
+Γ_h(x : ℝ₊, P : ℝ₊₊) := (0, x/((τ_H + φ_C)*P)]           :: [id=feasible_housing]
+Γ_m(x : ℝ₊) := [0, x]                                    :: [id=feasible_mortgage]
+
+[id=arvl_to_dcsn, (w_adj : ℝ₊, adc_adj : ℝ₊, π_adj : [0,1], P_adj : ℝ₊₊, ξ_adj : ℝ, α_adj : (0,1), β_adj : (0,1), plan_adj : Plan) : !arvl -> (w_d : ℝ₊, adc_d : ℝ₊, π_d : [0,1], P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan) : !dcsn] {
+    w_d    = w_adj
+    adc_d  = adc_adj
+    π_d    = π_adj
+    P_d    = P_adj
+    ξ_d    = ξ_adj
+    α_d    = α_adj
+    β_d    = β_adj
+    plan_d = plan_adj
+}
+
+[id=dcsn_to_cntn, (w_d, adc_d, π_d, P_d, ξ_d, α_d, β_d, plan_d, c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl, m_nxt : ℝ₊ @ !ctrl) : !dcsn -> (a_nxt_adj : ℝ₊, h_nxt_adj : ℝ₊₊, m_nxt_adj : ℝ₊, adc_nxt_adj : ℝ₊, π_nxt_adj : [0,1], P_nxt_adj : ℝ₊₊, ξ_nxt_adj : ℝ, α_nxt_adj : (0,1), β_nxt_adj : (0,1), plan_nxt_adj : Plan) : !cntn] {
+    a_nxt_adj = w_d - c - (1 + τ_H)*P_d*h_choice + m_nxt    :: [id=savings]
+    h_nxt_adj = h_choice                                     :: [id=housing]
+    m_nxt_adj = m_nxt                                        :: [id=mortgage]
+    adc_nxt_adj = adc_d
+    π_nxt_adj = π_d
+    P_nxt_adj = P_d
+    ξ_nxt_adj = ξ_d
+    α_nxt_adj = α_d
+    β_nxt_adj = β_d
+    plan_nxt_adj = plan_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c, h_choice) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = 𝑢(c, h_choice, α_d) + β_d*V[>]             :: [id=value]
+    D_{w_d}V = 𝑢_c(c, h_choice, α_d)                      :: [id=marginal_wealth]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                             :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl, m_nxt : ℝ₊ @ !ctrl) : !dcsn] {
+    (c, h_choice, m_nxt) = argmax_{c : Γ_c(w_d), h_choice : Γ_h(w_d, P_d), m_nxt : Γ_m((1 - φ_C)*w_d/(τ_H + φ_C))}(𝑢(c, h_choice, α_d) + β_d*V[>])   :: [id=optimality]
+    𝑢_c(c, h_choice, α_d) = β_d*D_{a_nxt_adj}V[>] ⟂ w_d - c - (1 + τ_H)*P_d*h_choice + m_nxt >= 0   :: [id=optimality.euler_liquid]
+    (1 + τ_H)*P_d*𝑢_c(c, h_choice, α_d) = 𝑢_S(c, h_choice, α_d) + β_d*D_{h_nxt_adj}V[>]              :: [id=optimality.euler_housing]
+    -β_d*D_{m_nxt_adj}V[>] = 𝑢_c(c, h_choice, α_d) ⟂ 0 <= m_nxt <= (1 - φ_C)*P_d*h_choice             :: [id=optimality.euler_mortgage]
+}

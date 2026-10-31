@@ -1,0 +1,20 @@
+stage: keeper_cons_pa
+
+# The keeper's consumption and mortgage: the endogenous grid method at the
+# maximization, which inverts the liquid-asset condition for the candidate
+# (Appendix D.2); the backward outputs read by linear interpolation.
+methods:
+  - on: policy.optimality.argmax
+    method: !egm
+  - on: cntn_to_dcsn.value
+    method: !Linear
+  - on: cntn_to_dcsn.marginal_cash
+    method: !Linear
+  - on: cntn_to_dcsn.marginal_housing
+    method: !Linear
+  - on: cntn_to_dcsn.marginal_mortgage
+    method: !Linear
+  - on: arvl_to_dcsn
+    method: !deterministic
+  - on: dcsn_to_cntn
+    method: !deterministic

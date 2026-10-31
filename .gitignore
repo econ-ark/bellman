@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+venv/
+.venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# the documentation site's build and the MyST exports
+site/
+_build/
+docs/**/_build/
+docs/**/exports/
+exports/pdfs/
+
+# the Node package that lays drawings out where Graphviz's dot is absent (npm install at the root)
+/node_modules/
+
+# the JSON files of Model Explorer's view, written beside a stage file or a lesson
+model-explorer/
+
+# a model folder Bellman Workbench writes from its templates while it is tested
+applications/test/
+
+# editors and operating systems
+.vscode/
+.idea/
+.cursor/
+.obsidian/
+.DS_Store
+Thumbs.db
+
+# LaTeX by-products
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.bbl
+*.blg
+
+# the worktrees coding agents create
+.claude/worktrees/

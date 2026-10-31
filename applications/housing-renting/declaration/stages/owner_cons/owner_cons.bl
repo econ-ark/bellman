@@ -1,0 +1,25 @@
+@stage: owner_cons
+
+β : (0,1)    :: ["discount factor"]
+α : (0,1)    :: ["weight of non-durable consumption in utility"]
+κ : ℝ₊₊      :: ["housing services per unit of housing"]
+ι : ℝ₊₊      :: ["shift of housing in the services term, which keeps utility finite at zero housing"]
+
+𝑢(c : ℝ₊₊, h : ℝ₊) := α*log(c) + (1 - α)*log(κ*(h + ι))    :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := α/c                                        :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := α/x                                     :: [id=inv_marg_util]
+Γ(x : ℝ₊₊) := (0, x]                                      :: [id=feasible]
+
+[id=dcsn_to_cntn, (w_d : ℝ₊₊, H_d : ℝ₊, y_d : ℝ₊₊, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a_nxt_o : ℝ₊, H_nxt_o : ℝ₊, y_nxt_o : ℝ₊₊) : !cntn] {
+    a_nxt_o = w_d - c    :: [id=savings]
+    H_nxt_o = H_d
+    y_nxt_o = y_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = 𝑢(c, H_d) + β*V[>]    :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{c : Γ(w_d)}(𝑢(c, H_d) + β*V[>])    :: [id=optimality]
+}

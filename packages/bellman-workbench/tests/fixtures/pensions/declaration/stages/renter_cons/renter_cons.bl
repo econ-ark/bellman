@@ -1,0 +1,52 @@
+@stage: renter_cons
+
+Plan := {DB, DC}
+
+γ   : (1, inf)     :: ["curvature of utility, 1/γ the intertemporal elasticity, equation (1)"]
+ρ   : ℝ, < 1       :: ["1/(1 − ρ) the elasticity of substitution between consumption and housing services, equation (1)"]
+φ_S : ℝ₊₊          :: ["rental rate per unit of the house price, Section 4.D"]
+
+𝑢(c : ℝ₊₊, S : ℝ₊₊, α : (0,1))   := (((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ) - 1)/(1 - γ)                 :: [id=util]
+𝑢_c(c : ℝ₊₊, S : ℝ₊₊, α : (0,1)) := (1 - α)*c^(ρ - 1)*((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ - 1)        :: [id=marg_util_cons]
+𝑢_S(c : ℝ₊₊, S : ℝ₊₊, α : (0,1)) := α*S^(ρ - 1)*((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ - 1)              :: [id=marg_util_services]
+Γ_c(x : ℝ₊) := (0, x]                                                                                :: [id=feasible_consumption]
+Γ_S(x : ℝ₊, P : ℝ₊₊) := (0, x/(φ_S*P)]                                                               :: [id=feasible_services]
+
+[id=arvl_to_dcsn, (w_rt : ℝ₊, adc_rt : ℝ₊, π_rt : [0,1], P_rt : ℝ₊₊, ξ_rt : ℝ, α_rt : (0,1), β_rt : (0,1), plan_rt : Plan) : !arvl -> (w_d : ℝ₊, adc_d : ℝ₊, π_d : [0,1], P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan) : !dcsn] {
+    w_d    = w_rt
+    adc_d  = adc_rt
+    π_d    = π_rt
+    P_d    = P_rt
+    ξ_d    = ξ_rt
+    α_d    = α_rt
+    β_d    = β_rt
+    plan_d = plan_rt
+}
+
+[id=dcsn_to_cntn, (w_d, adc_d, π_d, P_d, ξ_d, α_d, β_d, plan_d, c : ℝ₊₊ @ !ctrl, S : ℝ₊₊ @ !ctrl) : !dcsn -> (a_nxt_rt : ℝ₊, adc_nxt_rt : ℝ₊, π_nxt_rt : [0,1], h_nxt_rt : ℝ₊, m_nxt_rt : ℝ₊, P_nxt_rt : ℝ₊₊, ξ_nxt_rt : ℝ, α_nxt_rt : (0,1), β_nxt_rt : (0,1), plan_nxt_rt : Plan) : !cntn] {
+    a_nxt_rt = w_d - c - φ_S*P_d*S                       :: [id=savings]
+    h_nxt_rt = 0                                         :: [id=no_housing]
+    m_nxt_rt = 0                                         :: [id=no_mortgage]
+    adc_nxt_rt = adc_d
+    π_nxt_rt = π_d
+    P_nxt_rt = P_d
+    ξ_nxt_rt = ξ_d
+    α_nxt_rt = α_d
+    β_nxt_rt = β_d
+    plan_nxt_rt = plan_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c, S) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = 𝑢(c, S, α_d) + β_d*V[>]                    :: [id=value]
+    D_{w_d}V = 𝑢_c(c, S, α_d)                             :: [id=marginal_cash]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                             :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, S : ℝ₊₊ @ !ctrl) : !dcsn] {
+    (c, S) = argmax_{c : Γ_c(w_d), S : Γ_S(w_d, P_d)}(𝑢(c, S, α_d) + β_d*V[>])   :: [id=optimality]
+    𝑢_c(c, S, α_d) = β_d*D_{a_nxt_rt}V[>] ⟂ w_d - c - φ_S*P_d*S >= 0                  :: [id=optimality.euler_liquid]
+    𝑢_S(c, S, α_d) = φ_S*P_d*𝑢_c(c, S, α_d)                                          :: [id=optimality.intratemporal]
+}

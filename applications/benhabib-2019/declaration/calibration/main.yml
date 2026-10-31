@@ -1,0 +1,28 @@
+# Parameters of the two stages, stages/benhabib_bellman/benhabib_bellman.bl and stages/bequest/bequest.bl,
+# from Table 4 of Benhabib, Bisin and Luo (2019); a value in brackets there is
+# fixed outside the estimation, the others are estimated by simulated method of
+# moments. One mapping serves both stages, and each stage binds the parameters
+# it declares. The earnings of each age bracket are in calibration/wage/, and
+# the horizon and the ages, which no stage declares, in calibration/horizon.yml.
+
+calibration:
+  # Preferences: u(c) = c^(1 - σ)/(1 - σ), discounted by β.
+  β: 0.97          # Table 4, "[0.97]", fixed
+  σ: 2.0           # Table 4, "[2]", fixed
+
+  # The warm-glow bequest e(a) = A a^(1 - μ)/(1 - μ), valued by stages/bequest/bequest.bl.
+  μ: 0.5993        # Table 4, estimated (s.e. 0.0061)
+  A: 0.0006        # Table 4, estimated (s.e. 0.0004)
+
+  # Gross returns 1 + r of the five return types r1 to r5, from the "State
+  # space" row of Table 4: the net rates 0.0011, 0.0094, 0.0258, 0.0560 and
+  # 0.0841, with standard errors 0.0069, 0.0118, 0.0004, 0.0059 and 0.0043.
+  R_vec: [1.0011, 1.0094, 1.0258, 1.0560, 1.0841]
+
+  # The instance: one earnings decile, q1 to q10, and one return type, r1 to r5,
+  # "drawn at birth, fixed within life". The paper solves the fifty pairs, one
+  # finite-horizon problem each. The legacy registry names no default, so this
+  # file holds the first pair of its enumeration, decile 1 and return type 1; a
+  # fill of tau and r_type selects any other (economics.md, "The instances").
+  tau: q1
+  r_type: r1

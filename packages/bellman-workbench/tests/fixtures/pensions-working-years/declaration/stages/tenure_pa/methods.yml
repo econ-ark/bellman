@@ -1,0 +1,17 @@
+stage: tenure_pa
+
+# The comparison of the three branch values, renting, adjusting and keeping;
+# the branch values are read by linear interpolation; forward, the policy
+# splits the households among the three branches.
+methods:
+  - on: policy
+    method: !max
+  - on: cntn_to_dcsn
+    method: !Linear
+  - on: dcsn_to_cntn
+    method: !monte-carlo
+    settings:
+      n_paths: 10000
+      seed: 42
+  - on: arvl_to_dcsn
+    method: !deterministic

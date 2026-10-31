@@ -1,0 +1,20 @@
+@stage: noport
+
+Xk := ℝ₊
+Xm := ℝ₊₊
+Θ  := ℝ₊₊
+
+R   : ℝ₊₊
+μ_θ : ℝ
+σ_θ : ℝ₊
+
+θ : Θ
+θ ~ LogNormal(μ_θ, σ_θ)
+
+[id=dcsn_to_cntn, (k : Xk, θ) : !dcsn -> (m : Xm) : !cntn] {
+    m = k*R + θ
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = E_{θ}(V[>])                 :: [id=value]
+}

@@ -1,0 +1,10 @@
+# The consumption stage's numerical settings: the grid of resources on which the value is represented, the
+# default the earlier helper took (ffp_utils.py line 431), and the savings grid of the endogenous-grid method
+# (ffp_utils.py lines 713 to 715).
+settings:
+  n_m: 100
+  m_min: 0.01
+  m_max: 10.0
+  n_a: 800
+  a_min: 1.0e-6
+  a_max: 100.0

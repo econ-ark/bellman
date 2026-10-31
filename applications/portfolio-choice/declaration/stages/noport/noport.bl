@@ -1,0 +1,29 @@
+@stage: noport
+
+Xk := ℝ₊
+Xm := ℝ₊₊
+Θ  := ℝ₊₊
+
+R   : ℝ₊₊
+μ_θ : ℝ
+σ_θ : ℝ₊
+
+θ : Θ
+θ ~ LogNormal(μ_θ, σ_θ)
+
+[id=arvl_to_dcsn, (k : Xk) : !arvl -> (k_d : Xk) : !dcsn] {
+    k_d = k
+}
+
+[id=dcsn_to_cntn, (k_d, θ) : !dcsn -> (m : Xm) : !cntn] {
+    m = k_d*R + θ
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V        = E_{θ}(V[>])          :: [id=value]
+    D_{k_d}V = E_{θ}(D_{m}V[>]*R)   :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]  = V                       :: [id=value]
+}

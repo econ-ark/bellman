@@ -1,0 +1,43 @@
+stage: retiree_cons
+
+methods:
+  # The endogenous grid method opens the policy builder with the method block
+  # of retiree_cons_egm.bl, whose implicit statement c = c[>] gives the
+  # policy; the stage file states the maximization alone. The retiree's
+  # continuation value is concave, so no envelope operation is needed.
+  - on: policy
+    method: !egm
+    block: ../../methods/retiree_cons_egm.bl
+    handler: asva:make_egm_1d
+
+  # The derivatives of the decision value and the arrival value are stated by
+  # the two marginal blocks of marginals_retiree_cons.bl, one for each value
+  # builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_retiree_cons.bl
+
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: ../../methods/marginals_retiree_cons.bl
+
+  # The arrival value is tabulated on the asset grid; the entry on the line
+  # dcsn_to_arvl.marginal represents the stated derivative of the arrival
+  # value in assets on the same grid.
+  - on: dcsn_to_arvl.value
+    method: !Linear
+    handler: dcsmm:interp_as_3
+    settings:
+      orders:
+        a_ret: n_a_ret
+      bounds:
+        a_ret: [a_ret_min, a_ret_max]
+
+  - on: dcsn_to_arvl.marginal
+    method: !Linear
+    handler: dcsmm:interp_as_3
+    settings:
+      orders:
+        a_ret: n_a_ret
+      bounds:
+        a_ret: [a_ret_min, a_ret_max]

@@ -1,0 +1,71 @@
+@stage: unit
+
+Sigma := {vol_low, vol_high}    :: ["the two values of the volatility regime, the paper's σ_t ∈ {σ_L, σ_H} (3.5)"]
+Mu    := {drift_low, drift_high}    :: ["the two values of the firm-level demand drift, the paper's μ_it ∈ {μ_L, μ_H} (3.6)"]
+XA := ℝ₊₊    :: ["business conditions, the paper's index A of unit productivity and demand"]
+XK := ℝ₊₊    :: ["capital"]
+XL := ℝ₊₊    :: ["labour, the number of workers"]
+
+α    : (0,1)      :: ["capital share in the Cobb-Douglas production function (3.1)"]
+ε    : (1, inf)   :: ["elasticity of the isoelastic demand curve"]
+w_1  : ℝ₊₊        :: ["level of the wage-hours function w(H) = w_1*(1 + w_2*H^γ)"]
+w_2  : ℝ₊₊        :: ["scale of the overtime term of the wage-hours function"]
+γ    : (1, inf)   :: ["curvature of the wage-hours function"]
+r    : ℝ₊₊        :: ["discount rate; the unit discounts by 1/(1+r) and is risk neutral"]
+δ_K  : (0,1)      :: ["capital depreciation at the end of the period"]
+δ_L  : (0,1)      :: ["labour attrition at the end of the period"]
+C_PL : ℝ₊         :: ["per capita hiring and firing cost, a fraction of annual wages"]
+C_FL : ℝ₊         :: ["fixed hiring and firing cost, a fraction of annual sales"]
+C_QL : ℝ₊         :: ["quadratic hiring and firing cost"]
+C_PK : [0,1)      :: ["resale loss on capital, a fraction of the purchase price"]
+C_FK : ℝ₊         :: ["fixed investment cost, a fraction of annual sales"]
+C_QK : ℝ₊         :: ["quadratic investment cost"]
+σ_L  : ℝ₊         :: ["standard deviation of the business-conditions innovation in the low regime"]
+σ_H  : ℝ₊         :: ["standard deviation of the business-conditions innovation in the high regime"]
+μ_L  : ℝ          :: ["firm-level drift in the low regime"]
+μ_H  : ℝ          :: ["firm-level drift in the high regime"]
+π_σ  : [0,1] × [0,1]    :: ["Pr(σ_{t+1} = σ_H | σ_t = σ_k) for k = L and k = H: the paper's π^σ_{L,H} and π^σ_{H,H} (3.5, Table II)"]
+π_μ  : [0,1] × [0,1]    :: ["Pr(μ_{it+1} = μ_H | μ_it = μ_k) for k = L and k = H: the paper's π^μ_{L,H} and 1 - π^μ_{H,L}, the two rows of the symmetric matrix (3.6, Table II)"]
+
+W_M : ℝ
+W_M ~ N(0, 1)    :: ["macro-level innovation to business conditions (3.2)"]
+W_F : ℝ
+W_F ~ N(0, 1)    :: ["firm-level innovation to business conditions (3.3)"]
+W_U : ℝ
+W_U ~ N(0, 1)    :: ["unit-level innovation to business conditions (3.4); the three innovations are independent"]
+s : Sigma
+s ~ DiscreteMarkov((1 - π_σ[s_pre], π_σ[s_pre]), Sigma)    :: ["the row of the two-state chain (3.5) that the preceding regime s_pre selects"]
+d : Mu
+d ~ DiscreteMarkov((1 - π_μ[d_pre], π_μ[d_pre]), Mu)    :: ["the row of the two-state chain (3.6) that the preceding drift d_pre selects"]
+
+𝑆(A : ℝ₊₊, K : ℝ₊₊, L : ℝ₊₊, H : ℝ₊₊) := A^(1 - α*(1-1/ε) - (1-α)*(1-1/ε)) * K^(α*(1-1/ε)) * (L*H)^((1-α)*(1-1/ε))    :: [id=revenue, "the paper's S(A,K,L,H) = A^(1-a-b) K^a (LH)^b with a = α(1-1/ε) and b = (1-α)(1-1/ε)"]
+𝑤(H : ℝ₊₊) := w_1*(1 + w_2*H^γ)    :: [id=wage, "the wage paid for a week of H hours"]
+𝐶(A : ℝ₊₊, K : ℝ₊₊, L : ℝ₊₊, H : ℝ₊₊, I : ℝ, E_hire : ℝ) := 52*𝑤(40)*C_PL*(positive_part(E_hire) + negative_part(E_hire)) + (positive_part(I) - (1 - C_PK)*negative_part(I)) + (C_FL*nonzero(E_hire) + C_FK*nonzero(I))*𝑆(A, K, L, H) + C_QL*L*(E_hire/L)^2 + C_QK*K*(I/K)^2    :: [id=adjustment_cost, "the paper's C of §3.3; positive_part, negative_part and nonzero stand for E+, E- and the indicator 1{E≠0}, which the grammar has no spelling for"]
+
+[id=arvl_to_dcsn, (A_pre : XA, K : XK, L : XL, s_pre : Sigma, d_pre : Mu, W_M, W_F, W_U, s, d) : !arvl -> (A : XA, K_d : XK, L_d : XL, s_d : Sigma, d_d : Mu) : !dcsn] {
+    A   = A_pre*(1 + (σ_L, σ_H)[s_pre]*W_M)*(1 + (μ_L, μ_H)[d] + (σ_L, σ_H)[s_pre]*W_F)*(1 + (σ_L, σ_H)[s_pre]*W_U)    :: [id=business_conditions, "the product of the three random walks (3.2) to (3.4); the preceding regime scales all three innovations and the current drift enters the firm-level walk"]
+    K_d = K      :: [id=capital, "capital is predetermined: investment takes one period to enter production"]
+    L_d = L      :: [id=labour, "labour is predetermined for the same reason"]
+    s_d = s      :: [id=volatility]
+    d_d = d      :: [id=drift]
+}
+
+[id=dcsn_to_cntn, (A, K_d, L_d, s_d, d_d, H : ℝ₊₊ @ !ctrl, I : ℝ @ !ctrl, E_hire : ℝ @ !ctrl) : !dcsn -> (A_c : XA, K_n : XK, L_n : XL, s_c : Sigma, d_c : Mu) : !cntn] {
+    K_n = K_d*(1 - δ_K) + I         :: [id=capital]
+    L_n = L_d*(1 - δ_L) + E_hire    :: [id=labour]
+    A_c = A      :: [id=business_conditions]
+    s_c = s_d    :: [id=volatility]
+    d_c = d_d    :: [id=drift]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, H, I, E_hire) -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑆(A, K_d, L_d, H) - 𝐶(A, K_d, L_d, H, I, E_hire) - 𝑤(H)*L_d + (1/(1+r))*V[>]    :: [id=value, "the braced expression of the Bellman equation of p. 638"]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{W_M,W_F,W_U,s,d}(V)    :: [id=value, "the expectation E of the Bellman equation, over the three innovations and the two regime draws"]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (H : ℝ₊₊ @ !ctrl, I : ℝ @ !ctrl, E_hire : ℝ @ !ctrl) : !dcsn] {
+    (H, I, E_hire) = argmax_{H, I, E_hire}(𝑆(A, K_d, L_d, H) - 𝐶(A, K_d, L_d, H, I, E_hire) - 𝑤(H)*L_d + (1/(1+r))*V[>])    :: [id=optimality, "the three controls are chosen at one information set; the construction refuses a tuple on the left side of a statement"]
+}

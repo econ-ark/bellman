@@ -1,0 +1,32 @@
+@stage: consumption_choice
+
+Xa := ℝ₊
+XH := linspace(H_min, H_max, n_H)
+Xw := ℝ₊
+Y  := ℕ
+
+
+β     : (0,1)
+γ     : ℝ₊ ::["curvature of the constant-relative-risk-aversion transform of the aggregate"]
+θ     : (0,1) ::["Cobb-Douglas weight on consumption; 1-θ is the weight on housing services"]
+κ     : ℝ₊ ::["housing services per unit of the housing stock"]
+ι     : ℝ₊ ::["constant in housing services, which keeps utility finite at zero housing"]
+n_H   : ℕ ::["Number of housing types"]
+H_min : ℝ₊ ::["Minimum housing size"]
+H_max : ℝ₊ ::["Maximum housing size"]
+
+[id=dcsn_to_cntn, (w_d : Xw, H_d : XH, y_d : Y, c : !ctrl @ ℝ₊) : !dcsn -> (a_nxt : Xa, H_c : XH, y_c : Y) : !cntn] {
+    a_nxt = w_d - c
+    H_c   = H_d
+    y_c   = y_d
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = ((c^θ * (κ*H_d + ι)^(1-θ))^(1-γ))/(1-γ) + β*V[>]          :: [id=value]
+}
+
+Γ(x : ℝ₊) := (0, x]                                                             :: [id=feasible]
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ(w_d)}(((cp^θ * (κ*H_d + ι)^(1-θ))^(1-γ))/(1-γ) + β*V[>])      :: [id=optimality]
+}

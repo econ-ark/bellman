@@ -1,0 +1,12 @@
+# The portfolio stage's numerical settings: the capital grid, the nodes per shock, and the shares searched
+# (ffp_utils.py line 853).
+settings:
+  n_k: 800
+  k_min: 1.0e-10
+  k_max: 1000.0
+  n_Ψ_nodes: 7
+  n_θ_nodes: 7
+  n_ς: 50
+  # the draws of the forward simulation, which the method !monte-carlo on dcsn_to_cntn names, and their seed
+  n_sim: 10000
+  sim_seed: 12345

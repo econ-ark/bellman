@@ -1,0 +1,16 @@
+stage: cons_savings_iid
+# The consumption-savings stage's methods. The stage file writes the values and
+# the maximization alone; the block file cons_savings_iid_egm.bl, beside this
+# file, opens the policy builder with the endogenous grid method, and the block
+# file marginals.bl states the derivatives of the decision value and the
+# arrival value, one marginal block for each value builder.
+methods:
+  - on: policy
+    method: !egm
+    block: cons_savings_iid_egm.bl
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: marginals.bl
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: marginals.bl

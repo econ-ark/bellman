@@ -1,0 +1,61 @@
+@stage: HAFiscal
+
+Xk := ℝ₊
+Xm := ℝ₊₊
+Xa := ℝ₊
+Z  := {emp, ub2, ub1, nb}   :: ["employment states in the order of the rows of Π: employed; unemployed with two quarters of benefits left, this one included; unemployed with one quarter of benefits left; unemployed without benefits"]
+
+β    : (0,1)      :: ["subjective discount factor of the type (code DiscFac); seven values per education group"]
+D    : [0,1)      :: ["probability of death each quarter, perpetual youth (code 1 - LivPrb)"]
+γ    : ℝ₊₊        :: ["coefficient of relative risk aversion (code CRRA); the power formula requires γ different from 1"]
+ς    : [0,1)      :: ["splurge: the share of current income consumed when it arrives (code Splurge)"]
+R    : ℝ₊₊        :: ["gross interest factor on liquid assets (code Rfree)"]
+Γ    : ℝ₊₊        :: ["mean growth factor of permanent income of the education group, the same in every employment state (code PermGroFac)"]
+σ_ψ  : ℝ₊         :: ["standard deviation of the log permanent shock while employed (code PermShkStd)"]
+σ_ξ  : ℝ₊         :: ["standard deviation of the log transitory shock while employed (code TranShkStd)"]
+ρ_b  : ℝ₊₊        :: ["income with unemployment benefits, as a share of permanent income (code IncUnemp)"]
+ρ_nb : ℝ₊₊        :: ["income without unemployment benefits, as a share of permanent income (code IncUnempNoBenefits)"]
+π_eu : [0,1]      :: ["probability of entering unemployment from employment, specific to the education group"]
+π_ue : [0,1]      :: ["probability of leaving unemployment, the same in every unemployment state"]
+
+z : Z
+z ~ Categorical(((1 - π_eu, π_eu, 0, 0), (π_ue, 0, 1 - π_ue, 0), (π_ue, 0, 0, 1 - π_ue), (π_ue, 0, 0, 1 - π_ue))[z_prev])   :: ["this quarter's employment state, drawn from the row of Π that the previous state z_prev selects"]
+ψ : ℝ₊₊
+ψ ~ LogNormal(-((σ_ψ, 0, 0, 0)[z]^2)/2, (σ_ψ, 0, 0, 0)[z])   :: ["mean-one permanent shock while employed; its standard deviation is zero, so ψ = 1, in the three unemployment states"]
+ξ : ℝ₊₊
+ξ ~ LogNormal(-((σ_ξ, 0, 0, 0)[z]^2)/2, (σ_ξ, 0, 0, 0)[z])   :: ["mean-one transitory shock while employed; ξ = 1, and unused, in the three unemployment states"]
+
+𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ)         :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-γ)               :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/γ)          :: [id=inv_marg_util]
+𝒞(x : ℝ₊₊) := (0, x]                 :: [id=feasible]
+
+[id=arvl_to_dcsn, (k : Xk, z_prev : Z, z, ψ, ξ) : !arvl -> (m_opt : Xm, z_d : Z) : !dcsn] {
+    y     = (ξ, ρ_b, ρ_b, ρ_nb)[z]      :: [id=income, "income divided by permanent income"]
+    m     = R*k/(Γ*ψ) + y                :: [id=market_resources]
+    c_sp  = ς*y                          :: [id=splurge]
+    m_opt = m - c_sp                     :: [id=resources_after_splurge]
+    z_d   = z                            :: [id=markov_state]
+}
+
+[id=dcsn_to_cntn, (m_opt, z_d, c_opt : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa, z_c : Z) : !cntn] {
+    a   = m_opt - c_opt                  :: [id=savings]
+    z_c = z_d                            :: [id=markov_state]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c_opt) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V            = 𝑢(c_opt) + β*(1 - D)*V[>] :: [id=value]
+    D_{m_opt}V   = 𝑑𝑢(c_opt)                 :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]      = E_{z,ψ,ξ}((Γ*ψ)^(1-γ) * V)              :: [id=value]
+    D_{k}V[<] = E_{z,ψ,ξ}(R * (Γ*ψ)^(-γ) * D_{m_opt}V)  :: [id=marginal]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c_opt : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c_opt    = argmax_{c_opt : 𝒞(m_opt)}(𝑢(c_opt) + β*(1 - D)*V[>])   :: [id=optimality, !doc]
+    c_opt[>] <= 𝑑𝑢𝑖𝑛𝑣(β*(1 - D)*D_{a}V[>])                           :: [id=InvEuler]
+    m_opt[>] = a + c_opt[>]                                           :: [id=endoggrid]
+    c_opt    = c_opt[>]                                               :: [id=cons_choice]
+}

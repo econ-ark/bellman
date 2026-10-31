@@ -1,0 +1,12 @@
+!period
+name: benhabib_period
+
+# The template lists both stages, the consumption and saving decision at one
+# age, stages/benhabib_bellman/benhabib_bellman.bl, and the bequest, stages/bequest/bequest.bl; the
+# recipe places the bequest in the terminal period alone and the decision in the
+# other thirty-six. The earnings type tau and the return type r_type are
+# parameters, fixed for a life, so no connector joins them.
+stages:
+  - benhabib_bellman
+  - bequest
+connectors: []

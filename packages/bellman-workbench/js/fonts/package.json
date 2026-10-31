@@ -1,0 +1,11 @@
+{
+  "name": "bellman-workbench-fonts",
+  "version": "0.1.0",
+  "description": "The text fonts of Bellman Workbench: Archivo and IBM Plex Mono, copied from their Fontsource packages.",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "@fontsource-variable/archivo": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0"
+  }
+}

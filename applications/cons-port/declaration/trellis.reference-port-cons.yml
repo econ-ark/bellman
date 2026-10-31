@@ -1,0 +1,19 @@
+!trellis
+name: reference_port_cons
+# The fixed reference's beginning-of-period returns with the endogenous-grid method (its configuration
+# beginning_egm): the portfolio stage as the reference solved it (methods/port_reference.yml), consumption by
+# the endogenous-grid method, discounting closing the period.
+# Six equal periods; the one inter-period mapping stands for every adjacent pair.
+periods:
+  - stages:
+      port: {stage: stages/port/port.bl, calibration: calibration/portfolio.yml,
+             settings: settings/port.yml, methods: methods/port_reference.yml}
+      cons: {stage: stages/cons/cons.bl, calibration: calibration/portfolio.yml,
+             settings: settings/cons.yml, methods: methods/cons.yml}
+      disc: {stage: stages/disc/disc.bl, calibration: calibration/portfolio.yml,
+             settings: {}, methods: methods/disc.yml}
+    connectors:
+      - {w: m}
+    repeat: 6
+inter_connectors:
+  - {disc.a: k}

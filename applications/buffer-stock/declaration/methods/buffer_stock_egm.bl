@@ -1,0 +1,10 @@
+@methods: buffer_stock
+# The endogenous grid method as the method block of the policy builder, whose
+# stage file states the maximization alone. The candidate line reads the
+# derivative of the continuation value by the term D_{a}V[>].
+
+[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    m[>] = a + c[>]                 :: [id=endoggrid]
+    c    = c[>]                     :: [id=cons_choice]
+}

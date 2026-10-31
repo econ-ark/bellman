@@ -1,0 +1,42 @@
+@stage: housing_choice
+
+Xa := ℝ₊
+XH := linspace(H_min, H_max, n_H)
+Xw := ℝ₊
+Y  := ℕ
+
+R      : ℝ₊₊
+φ      : ℝ₊
+n_H    : ℕ
+H_min  : ℝ₊
+H_max  : ℝ₊
+Pi     : ℝ
+z_vals : ℝ
+
+y : Y
+y ~ DiscreteMarkov(Pi, z_vals)
+
+[id=arvl_to_dcsn, (b : Xa, H : XH, y_pre : Y, y) : !arvl -> (w : Xa, H_d : XH, y_d : Y) : !dcsn] {
+    w   = R*b + z_vals[y]   :: [id=cash_on_hand]
+    H_d = H
+    y_d = y
+}
+
+[id=dcsn_to_cntn, (w, H_d, y_d, H_choice : !ctrl @ XH) : !dcsn -> (w_c : Xw, H_nxt : XH, y_c : Y) : !cntn] {
+    moved = I(H_choice, H_d)                                    :: [id=move_indicator]
+    w_c   = w + H_d - (1 + φ*moved)*H_choice                  :: [id=housing_budget]
+    H_nxt = H_choice
+    y_c   = y_d
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, H_choice) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = V[>]                :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{y}(V)               :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (H_choice : XH @ !ctrl) : !dcsn] {
+    H_choice = argmax_{H_choice}(V[>])   :: [id=choice]
+}

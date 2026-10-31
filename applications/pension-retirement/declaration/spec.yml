@@ -1,0 +1,20 @@
+# The recipe of the pension model: the trellis file and each stage's file,
+# by their paths from this folder, and for each stage and each kind the
+# ordered sources. The model has no calibration file: economics.md states that
+# none is written until the values are supplied, so the
+# calibration list of each stage that declares parameters holds the slot
+# `$fill` alone, which the values fill by keyword of load_recipe or
+# assemble_trellis. No settings file exists. Each stage's methods file binds
+# the marginal blocks of its derivative lines and, for the two saving stages,
+# the method block of their first-order conditions, from declaration/methods/;
+# the three stages beside the terminal stage have a methods slot of their own
+# after it, so that a method choice reaches one stage. retire_choice declares
+# no parameter. The terminal stage declares none and reads no setting, its
+# methods file binds the marginal block of its zero derivatives, and it is
+# active in the terminal period alone, periods: [0, 0].
+trellis: trellis.yml
+stages:
+  worker_saving:  {stage: stages/worker_saving/worker_saving.bl,   calibration: {all: [$fill]}, methods: {all: [stages/worker_saving/methods, $worker_saving_method]}}
+  retire_choice:  {stage: stages/retire_choice/retire_choice.bl,   methods: {all: [stages/retire_choice/methods, $retire_choice_method]}}
+  retiree_saving: {stage: stages/retiree_saving/retiree_saving.bl, calibration: {all: [$fill]}, methods: {all: [stages/retiree_saving/methods, $retiree_saving_method]}}
+  terminal:       {stage: stages/terminal/terminal.bl,             methods: {all: [stages/terminal/methods]}, periods: [0, 0]}

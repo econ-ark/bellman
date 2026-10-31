@@ -1,0 +1,45 @@
+@stage: cons_mother
+
+# Consumption and saving after a successful attempt: the paper's post-birth
+# programme [A] (p. 8). The return on wealth has the lower mean r2 < r1 and
+# carries the Wiener term, and the child costs a fraction β of the mother's
+# consumption. One date of length Δ; the paper's
+# da = (r2 a - (1+β)c)dt + σ a dz (equation 3, second line, p. 6) is the
+# limit as Δ → 0.
+
+Xa := ℝ₊₊
+
+ρ  : ℝ₊₊       :: ["psychological discount rate per unit of time (p. 6)"]
+Δ  : ℝ₊₊       :: ["length of one date; the paper's problem is the limit Δ → 0"]
+ε  : (1, inf)  :: ["relative risk aversion; the paper assumes ε > 1 (p. 6)"]
+r2 : ℝ         :: ["mean return on wealth of a mother, with r2 < r1 (p. 6)"]
+σ  : ℝ₊        :: ["standard deviation of the Wiener process affecting a mother's wealth (p. 6)"]
+β  : (0,1)     :: ["consumption cost of a child as a fraction of the mother's consumption (p. 6)"]
+
+𝑢(c : ℝ₊₊)  := c^(1-ε)/(1-ε)     :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ε)            :: [id=marg_util]
+
+R2 : ℝ₊₊
+R2 ~ LogNormal((r2 - σ^2/2)*Δ, σ*Δ^(1/2))    :: ["gross return over one date, drawn after the consumption choice; its limit as Δ → 0 is the Ito term σ a dz"]
+
+[id=arvl_to_dcsn, (a_mother : Xa) : !arvl -> (m_mother : Xa) : !dcsn] {
+    m_mother = a_mother                                     :: [id=wealth]
+}
+
+[id=dcsn_to_cntn, (m_mother, c : ℝ₊₊ @ !ctrl, R2) : !dcsn -> (b_mother : Xa) : !cntn] {
+    b_mother = (m_mother - (1+β)*c*Δ)*R2                    :: [id=budget]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V             = 𝑢(c)*Δ + exp(-ρ*Δ)*E_{R2}(V[>])         :: [id=value]
+    D_{m_mother}V = 𝑑𝑢(c)/(1+β)                             :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]  = V                                               :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{c}(𝑢(c)*Δ + exp(-ρ*Δ)*E_{R2}(V[>]))                  :: [id=optimality, !doc]
+    c = solve_{c}(𝑑𝑢(c) - (1+β)*exp(-ρ*Δ)*E_{R2}(R2*D_{b_mother}V[>]))  :: [id=euler]
+}

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 360"
+  role="img"
+  aria-label="Bellman recursive network: central ADC stage with neighboring stages">
+<defs>
+  <style><![CDATA[
+    .bc-dot       { fill: #1a1a1a; }
+    .bc-dot--sat  { fill: #1a1a1a; opacity: 0.50; }
+
+    .bc-edge--fwd {
+      stroke: #1a1a1a; stroke-width: 1.35;
+      fill: none; stroke-linecap: round;
+    }
+    .bc-edge--bwd {
+      stroke: #1a1a1a; stroke-width: 1.1;
+      fill: none; stroke-linecap: round;
+      stroke-dasharray: 6 4;
+    }
+    .bc-edge--ext {
+      stroke: #1a1a1a; stroke-width: 0.9;
+      fill: none; stroke-linecap: round;
+      opacity: 0.38;
+    }
+    .bc-edge--far {
+      stroke: #1a1a1a; stroke-width: 0.55;
+      fill: none; stroke-linecap: round;
+      opacity: 0.14;
+    }
+
+    .bc-label--eq {
+      font: italic 13px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-label--sm {
+      font: italic 14px "Computer Modern", "Latin Modern", Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-label--tag {
+      font: 600 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      fill: #1a1a1a;
+    }
+
+    .bc-ripple {
+      fill: none; stroke: #1a1a1a;
+      stroke-width: 0.8; stroke-dasharray: 4 3;
+      stroke-linecap: round;
+    }
+    .bc-ripple--sat {
+      fill: none; stroke: #1a1a1a;
+      stroke-width: 0.6; stroke-dasharray: 3 2;
+      stroke-linecap: round;
+    }
+
+    .bc-stage-halo {
+      fill: none; stroke: #1a1a1a;
+      stroke-width: 0.5; stroke-dasharray: 5 4;
+      opacity: 0.12;
+    }
+  ]]></style>
+
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="5.5" markerHeight="5.5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+  </marker>
+  <marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="5" markerHeight="5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a" opacity="0.65"/>
+  </marker>
+  <marker id="arr-e" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="4.5" markerHeight="4.5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a" opacity="0.38"/>
+  </marker>
+  <marker id="arr-f" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="3.5" markerHeight="3.5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a" opacity="0.14"/>
+  </marker>
+</defs>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 1: external edges (main stage ↔ satellites)
+     ════════════════════════════════════════════════════════ -->
+<!-- n1 → ≺  (incoming from top-left) -->
+<path d="M74,85 C110,115 140,150 172,188"
+      class="bc-edge--ext" marker-end="url(#arr-e)"/>
+<!-- n2 → ≺  (incoming from mid-left) -->
+<path d="M38,190 C75,192 125,192 172,192"
+      class="bc-edge--ext" marker-end="url(#arr-e)"/>
+<!-- n3 → ≺  (incoming from bottom-left) -->
+<path d="M68,296 C100,270 140,235 172,200"
+      class="bc-edge--ext" marker-end="url(#arr-e)"/>
+<!-- ≻ → n4  (outgoing to top-right) -->
+<path d="M392,160 C430,105 480,65 512,55"
+      class="bc-edge--ext" marker-end="url(#arr-e)"/>
+<!-- ≻ → n5  (outgoing to mid-right) -->
+<path d="M392,167 C430,165 500,158 548,155"
+      class="bc-edge--ext" marker-end="url(#arr-e)"/>
+<!-- ≻ → n6  (outgoing to bottom-right) -->
+<path d="M392,172 C425,225 490,260 528,270"
+      class="bc-edge--ext" marker-end="url(#arr-e)"/>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 2: satellite nodes (dot + ripples, no labels)
+     ════════════════════════════════════════════════════════ -->
+<!-- n1  (top-left) -->
+<circle cx="67"  cy="80"  r="20" class="bc-ripple--sat" opacity="0.08"/>
+<circle cx="67"  cy="80"  r="13" class="bc-ripple--sat" opacity="0.15"/>
+<circle cx="67"  cy="80"  r="3.5" class="bc-dot--sat"/>
+
+<!-- n2  (mid-left) -->
+<circle cx="30"  cy="190" r="18" class="bc-ripple--sat" opacity="0.08"/>
+<circle cx="30"  cy="190" r="11" class="bc-ripple--sat" opacity="0.15"/>
+<circle cx="30"  cy="190" r="3.5" class="bc-dot--sat"/>
+
+<!-- n3  (bottom-left) -->
+<circle cx="60"  cy="300" r="20" class="bc-ripple--sat" opacity="0.08"/>
+<circle cx="60"  cy="300" r="13" class="bc-ripple--sat" opacity="0.15"/>
+<circle cx="60"  cy="300" r="7"  class="bc-ripple--sat" opacity="0.25"/>
+<circle cx="60"  cy="300" r="3.5" class="bc-dot--sat"/>
+
+<!-- n4  (top-right) -->
+<circle cx="518" cy="52"  r="24" class="bc-ripple--sat" opacity="0.08"/>
+<circle cx="518" cy="52"  r="17" class="bc-ripple--sat" opacity="0.14"/>
+<circle cx="518" cy="52"  r="10" class="bc-ripple--sat" opacity="0.25"/>
+<circle cx="518" cy="52"  r="4"  class="bc-dot--sat"/>
+
+<!-- n5  (mid-right) -->
+<circle cx="555" cy="155" r="18" class="bc-ripple--sat" opacity="0.08"/>
+<circle cx="555" cy="155" r="11" class="bc-ripple--sat" opacity="0.15"/>
+<circle cx="555" cy="155" r="3.5" class="bc-dot--sat"/>
+
+<!-- n6  (bottom-right) -->
+<circle cx="535" cy="270" r="22" class="bc-ripple--sat" opacity="0.08"/>
+<circle cx="535" cy="270" r="15" class="bc-ripple--sat" opacity="0.14"/>
+<circle cx="535" cy="270" r="8"  class="bc-ripple--sat" opacity="0.24"/>
+<circle cx="535" cy="270" r="4"  class="bc-dot--sat"/>
+
+<!-- n7  (far bottom-right) -->
+<circle cx="480" cy="325" r="15" class="bc-ripple--sat" opacity="0.07"/>
+<circle cx="480" cy="325" r="9"  class="bc-ripple--sat" opacity="0.13"/>
+<circle cx="480" cy="325" r="3"  class="bc-dot--sat"/>
+
+<!-- n8  (far right) -->
+<circle cx="585" cy="312" r="14" class="bc-ripple--sat" opacity="0.07"/>
+<circle cx="585" cy="312" r="8"  class="bc-ripple--sat" opacity="0.12"/>
+<circle cx="585" cy="312" r="2.8" class="bc-dot--sat"/>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 3: thin halo around central stage
+     ════════════════════════════════════════════════════════ -->
+<ellipse cx="280" cy="178" rx="148" ry="62" class="bc-stage-halo"/>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 4: central stage — forward arcs (solid)
+     ════════════════════════════════════════════════════════ -->
+<!-- [<-] → [-]   (shock realisation) -->
+<path d="M182,190 C212,130 248,118 273,140"
+      class="bc-edge--fwd" marker-end="url(#arr)"/>
+<!-- [-] → [->]   (action taken) -->
+<path d="M288,137 C318,102 355,112 378,155"
+      class="bc-edge--fwd" marker-end="url(#arr)"/>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 5: central stage — backward arcs (dashed)
+     ════════════════════════════════════════════════════════ -->
+<!-- [->] → [-]   (T≻) -->
+<path d="M378,170 C365,220 312,205 284,148"
+      class="bc-edge--bwd" marker-end="url(#arr-d)"/>
+<!-- [-] → [<-]   (T≺) -->
+<path d="M275,150 C260,218 205,225 178,200"
+      class="bc-edge--bwd" marker-end="url(#arr-d)"/>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 6: shock ripples (between [<-] and [-])
+     ════════════════════════════════════════════════════════ -->
+<circle cx="222" cy="148" r="10" class="bc-ripple" opacity="0.35"/>
+<circle cx="222" cy="148" r="16" class="bc-ripple" opacity="0.22"/>
+<circle cx="222" cy="148" r="22" class="bc-ripple" opacity="0.12"/>
+<text   x="222" y="153" text-anchor="middle" class="bc-label--sm">shock</text>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 7: central-stage perch dots
+     ════════════════════════════════════════════════════════ -->
+<circle cx="175" cy="195" r="5.2" class="bc-dot"/>
+<circle cx="280" cy="142" r="5.2" class="bc-dot"/>
+<circle cx="385" cy="165" r="5.2" class="bc-dot"/>
+
+<!-- ════════════════════════════════════════════════════════
+     Layer 8: labels
+     ════════════════════════════════════════════════════════ -->
+<!-- perch tags (computational bracket notation) -->
+<text x="146" y="218" class="bc-label--tag">x[&lt;-]</text>
+<text x="265" y="125" class="bc-label--tag">x[-]</text>
+<text x="392" y="158" class="bc-label--tag">x[-&gt;]</text>
+
+<!-- forward-transition labels -->
+<text x="296" y="97" class="bc-label--sm">action</text>
+
+<!-- backward-builder labels -->
+<text x="210" y="236" class="bc-label--eq">B</text>
+<text x="340" y="225" class="bc-label--eq">B</text>
+</svg>

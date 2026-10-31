@@ -1,0 +1,11 @@
+!period
+name: pension_period
+stages:
+  - worker_saving
+  - retire_choice
+  - retiree_saving
+connectors:
+  # The worker's post-states (y_f, y_p) are the decision states (y_f_d, y_p_d)
+  # of the retirement choice, which has no arrival perch and is entered at its
+  # decision perch; the retiree's stage is reached only across periods.
+  - {y_f: y_f_d, y_p: y_p_d}

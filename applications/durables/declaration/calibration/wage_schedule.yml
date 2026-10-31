@@ -1,0 +1,24 @@
+# The income schedule and the ages of the durables model, the eight names no
+# stage declares. The recipe's `registry` block admits them, so a fill of one
+# is not refused; they are carried as data with their provenance and reach no
+# stage. The values are those of the replication code of Dobrescu and Shanker
+# (2026), Application 2.
+
+calibration:
+  # The income schedule. While the household works,
+  # Y = earnings_scale * exp(λ0 + λ1 t + λ2 t^2 + λ3 t^3 + λ4 t^4 + λ5 s + λ6 s^2)
+  # with s = min(tenure_cap, t - tenure_origin) and y_R = 0; from the year after
+  # retirement_age, Y = 0 and y_R = retirement_income. The coefficients are the
+  # female wage function of Dobrescu, Shanker, Bateman, Newell and Thorp (2025).
+  wage_coefficients: [4.329982, 0.610214, -0.0209832, 0.0003132, -0.00000172, 0.0199949, 0.0000476]
+  tenure_cap: 30
+  tenure_origin: 20
+  earnings_scale: 1.0e-05
+  retirement_income: 0.1
+
+  # Ages: the household works from first_age, retires after retirement_age and
+  # lives to last_age. The trellis has last_age minus first_age plus one
+  # periods, and periods[h] is age last_age - h.
+  first_age: 20
+  retirement_age: 60
+  last_age: 70

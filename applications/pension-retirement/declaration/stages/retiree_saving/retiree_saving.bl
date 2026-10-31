@@ -1,0 +1,35 @@
+@stage: retiree_saving
+
+Xf := ℝ₊
+Xp := ℝ₊
+
+β   : (0,1)      :: ["discount factor"]
+ρ   : (1, inf)   :: ["coefficient of relative risk aversion"]
+r_f : ℝ₊         :: ["rate of return on financial assets"]
+r_p : ℝ₊         :: ["rate of return on pension assets"]
+w_R : ℝ₊₊        :: ["benefit paid to a retiree each period"]
+
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)             :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)                   :: [id=marg_util]
+Γ(x : ℝ₊₊) := (0, x]                    :: [id=feasible]
+
+[id=arvl_to_dcsn, (y_f_r : Xf, y_p_r : Xp) : !arvl -> (m_r : ℝ₊₊) : !dcsn] {
+    m_r = (1 + r_f)*y_f_r + w_R + (1 + r_p)*y_p_r     :: [id=resources]
+}
+
+[id=dcsn_to_cntn, (m_r, c : ℝ₊₊ @ !ctrl) : !dcsn -> (y_f_ret : Xf, y_p_ret : Xp) : !cntn] {
+    y_f_ret = m_r - c                                 :: [id=financial_post_state]
+    y_p_ret = 0                                       :: [id=no_contribution]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]                                 :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                                          :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ(m_r)}(𝑢(cp) + β*V[>])           :: [id=optimality]
+}

@@ -1,0 +1,14 @@
+# The consumption stage's numerical settings.
+# The grid of resources and the savings grid of the endogenous-grid method are multi-exponential grids
+# (grid_spacing: expmult), dense near zero: 64,000 points of resources from 0.01 to 2,000, and 16,000 points of
+# savings from 1e-6 to 2,000, the points of the capital grid of settings/port_wide.yml.
+settings:
+  grid_spacing: expmult
+  n_m: 64000
+  m_min: 0.01
+  m_max: 2000.0
+  n_a: 16000
+  a_min: 1.0e-6
+  a_max: 2000.0
+  n_toll: 200
+  n_init: 20041

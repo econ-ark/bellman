@@ -1,0 +1,20 @@
+!trellis
+name: durables_life_cycle
+# periods[h] is age last_age - h (calibration/wage_schedule.yml): periods[0] is
+# the terminal period, age 70, and periods[50] the first, age 20; 51 periods.
+# The terminal period is written out: it adds the bequest, whose arrival fields
+# a_bq, h_bq and z_bq take the continuation fields of both consumption stages
+# through the first connector; the second is period.yml's. The fifty earlier
+# periods repeat the template.
+periods:
+  - stages: [tenure, keeper_cons, adjuster_cons, bequest]
+    connectors:
+      - {a_nxt_kp: a_bq, h_nxt_kp: h_bq, z_nxt_kp: z_bq, a_nxt_adj: a_bq, h_nxt_adj: h_bq, z_nxt_adj: z_bq}
+      - {w_kp: w_d, h_kp: h_d, z_kp: keeper_cons.z_d, w_adj: m, z_adj: adjuster_cons.z_d}
+  - {template: period.yml, repeat: 50}
+# One mapping stands for every adjacent pair: both consumption stages continue
+# to the next period's tenure stage, one route per branch. In the terminal
+# period the names a, h and z are tenure's alone, so the mapping reaches no
+# other stage.
+inter_connectors:
+  - {a_nxt_kp: a, h_nxt_kp: h, z_nxt_kp: z, a_nxt_adj: a, h_nxt_adj: h, z_nxt_adj: z}

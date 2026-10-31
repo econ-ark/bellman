@@ -1,0 +1,66 @@
+@stage: tenure_pa
+
+Plan := {DB, DC}
+
+[id=arvl_to_dcsn, (w_a : ℝ₊, adc_a : ℝ₊, π_a : [0,1], h_a : ℝ₊, m_a : ℝ₊, P_a : ℝ₊₊, ξ_a : ℝ, α_a : (0,1), β_a : (0,1), plan_a : Plan) : !arvl -> (w_d : ℝ₊, adc_d : ℝ₊, π_d : [0,1], h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan) : !dcsn] {
+    w_d    = w_a
+    adc_d  = adc_a
+    π_d    = π_a
+    h_d    = h_a
+    m_d    = m_a
+    P_d    = P_a
+    ξ_d    = ξ_a
+    α_d    = α_a
+    β_d    = β_a
+    plan_d = plan_a
+}
+
+[id=dcsn_to_cntn, (w_d, adc_d, π_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, d : !ctrl @ {rent, adjust, keep}) : !dcsn -> ()] {
+    [label=rent,   () -> (w_rt : ℝ₊, adc_rt : ℝ₊, π_rt : [0,1], P_rt : ℝ₊₊, ξ_rt : ℝ, α_rt : (0,1), β_rt : (0,1), plan_rt : Plan) : !cntn] {
+        w_rt = w_d + P_d*h_d - m_d                       :: [id=wealth_after_sale]
+        adc_rt = adc_d
+        π_rt = π_d
+        P_rt = P_d
+        ξ_rt = ξ_d
+        α_rt = α_d
+        β_rt = β_d
+        plan_rt = plan_d
+    }
+    [label=adjust, () -> (w_adj : ℝ₊, adc_adj : ℝ₊, π_adj : [0,1], P_adj : ℝ₊₊, ξ_adj : ℝ, α_adj : (0,1), β_adj : (0,1), plan_adj : Plan) : !cntn] {
+        w_adj = w_d + P_d*h_d - m_d                      :: [id=total_wealth]
+        adc_adj = adc_d
+        π_adj = π_d
+        P_adj = P_d
+        ξ_adj = ξ_d
+        α_adj = α_d
+        β_adj = β_d
+        plan_adj = plan_d
+    }
+    [label=keep,   () -> (w_kp : ℝ₊, h_kp : ℝ₊, m_kp : ℝ₊, adc_kp : ℝ₊, π_kp : [0,1], P_kp : ℝ₊₊, ξ_kp : ℝ, α_kp : (0,1), β_kp : (0,1), plan_kp : Plan) : !cntn] {
+        w_kp = w_d                                       :: [id=cash_on_hand]
+        h_kp = h_d                                       :: [id=housing_kept]
+        m_kp = m_d                                       :: [id=mortgage_due]
+        adc_kp = adc_d
+        π_kp = π_d
+        P_kp = P_d
+        ξ_kp = ξ_d
+        α_kp = α_d
+        β_kp = β_d
+        plan_kp = plan_d
+    }
+}
+
+[id=cntn_to_dcsn, (V_rt[>] : [-inf, inf) @ !vlu, V_adj[>] : [-inf, inf) @ !vlu, V_kp[>] : [-inf, inf) @ !vlu, d) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = (V_rt[>], V_adj[>], V_kp[>])[d]                                        :: [id=choice_value]
+    D_{w_d}V = (D_{w_rt}V_rt[>], D_{w_adj}V_adj[>], D_{w_kp}V_kp[>])[d]               :: [id=marginal_cash]
+    D_{h_d}V = (P_d*D_{w_rt}V_rt[>], P_d*D_{w_adj}V_adj[>], D_{h_kp}V_kp[>])[d]       :: [id=marginal_housing]
+    D_{m_d}V = (-D_{w_rt}V_rt[>], -D_{w_adj}V_adj[>], D_{m_kp}V_kp[>])[d]             :: [id=marginal_mortgage]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                     :: [id=value]
+}
+
+[id=policy, (V_rt[>] : [-inf, inf) @ !vlu, V_adj[>] : [-inf, inf) @ !vlu, V_kp[>] : [-inf, inf) @ !vlu) : !cntn -> (d : {rent, adjust, keep} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(V_rt[>], V_adj[>], V_kp[>])                                    :: [id=choice]
+}

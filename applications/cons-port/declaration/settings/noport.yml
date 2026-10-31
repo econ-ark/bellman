@@ -1,0 +1,10 @@
+# The numerical settings of the stage without a portfolio choice: its capital grid, the reference's dense grid,
+# and the nodes of the income shock.
+settings:
+  n_k: 8000
+  k_min: 0.01
+  k_max: 2000.0
+  n_θ_nodes: 7
+  # the draws of the forward simulation, which the method !monte-carlo on dcsn_to_cntn names, and their seed
+  n_sim: 10000
+  sim_seed: 12345

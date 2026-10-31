@@ -1,0 +1,8 @@
+@methods: terminal
+# The marginal block of the terminal stage's decision value builder, which
+# states the two derivatives of the terminal value, zero.
+
+[id=dcsn_marginal, () : !cntn -> (V) : !dcsn] {
+    D_{y_f_d}V = 0                                      :: [id=marginal_financial]
+    D_{y_h_d}V = 0                                      :: [id=marginal_housing]
+}

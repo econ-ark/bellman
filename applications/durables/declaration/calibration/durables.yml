@@ -1,0 +1,38 @@
+# Economic parameters of the durables model. The values are those of the
+# replication code of Dobrescu and Shanker (2026), Application 2, which produced
+# Table 2 of the paper; the table prints β = 0.94 and r = 0.04, the first two
+# values below to two decimal places. One mapping serves the four stages, and
+# each stage binds the parameters it declares. The income schedule and the
+# ages, which no stage declares, are in wage_schedule.yml.
+
+calibration:
+  # Returns. R is the gross return on financial assets and R_H the gross return
+  # on the housing stock when it is sold.
+  R: 1.045
+  R_H: 1.0
+
+  # Preferences: u(c, H) = α c^(1 - γ_c)/(1 - γ_c) + (1 - α)(κ H)^(1 - γ_h)/(1 - γ_h).
+  β: 0.945
+  α: 0.7
+  γ_c: 3.5
+  γ_h: 1.5
+  κ: 0.06
+
+  # Housing: the depreciation rate and the cost of adjusting, per unit of
+  # housing bought.
+  δ: 0.0
+  τ: 0.12
+
+  # Income: log z' = ρ_z log z + σ_z ε, with ε standard normal.
+  ρ_z: 0.82
+  σ_z: 0.11
+
+  # Income at the age of the occurrence, y(z) = Y z + y_R, is not here: Y and
+  # y_R vary with age, and wage_schedule.py writes them into each period's
+  # tenure record from the schedule of wage_schedule.yml, after every
+  # load_recipe and before the verbs.
+
+  # The bequest, the terminal stage bequest.bl: θ α (K + x)^(1 - γ_c)/(1 - γ_c)
+  # at the wealth x left after the last decision.
+  θ: 1.3498
+  K: 1.3

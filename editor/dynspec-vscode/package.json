@@ -1,0 +1,149 @@
+{
+  "name": "dynspec-lang",
+  "displayName": "Bellman-SYM (stage files)",
+  "description": "Language support for .bl stage files (Bellman-SYM): highlighting, comments, italic input, and the set-glyph input commands (\\Reals etc.)",
+  "version": "0.1.18",
+  "publisher": "bellman-ddsl",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:dynspec"
+  ],
+  "scripts": {
+    "test": "node --test tests/workbench.test.js"
+  },
+  "contributes": {
+    "configurationDefaults": {
+      "[dynspec]": {
+        "editor.unicodeHighlight.ambiguousCharacters": false,
+        "editor.language.colorizedBracketPairs": [
+          [
+            "{",
+            "}"
+          ]
+        ]
+      }
+    },
+    "configuration": {
+      "title": "dynspec",
+      "properties": {
+        "dynspec.collapseHeaders": {
+          "type": "boolean",
+          "default": false,
+          "description": "Display id=/label= bracket groups as [name] only, hiding signatures and annotation tails (cursor on a line reveals it)."
+        },
+        "dynspec.italicUnderscoreInput": {
+          "type": "boolean",
+          "default": true,
+          "description": "Replace a token-initial _letter with the mathematical-italic letter as you type (_c → 𝑐). Never fires when the underscore continues a name (μ_y, foc_ς) or a binder subscript (E_{y})."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "dynspec.openWorkbench",
+        "title": "Bellman: Open in Workbench"
+      },
+      {
+        "command": "dynspec.toggleHeaderCollapse",
+        "title": "dynspec: Toggle header collapsing (names only)"
+      },
+      {
+        "command": "dynspec.italicizeWord",
+        "title": "dynspec: Italicize word or selection (toggle)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dynspec.toggleHeaderCollapse",
+        "key": "ctrl+alt+h",
+        "when": "editorTextFocus && editorLangId == dynspec"
+      },
+      {
+        "command": "dynspec.italicizeWord",
+        "key": "ctrl+alt+i",
+        "when": "editorTextFocus && editorLangId == dynspec"
+      }
+    ],
+    "languages": [
+      {
+        "id": "dynspec",
+        "aliases": [
+          "Bellman-SYM",
+          "dynspec",
+          "stage file"
+        ],
+        "extensions": [
+          ".bl",
+          ".dynspec"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dynspec",
+        "scopeName": "source.dynspec",
+        "path": "./syntaxes/dynspec.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.dynspec.codeblock",
+        "path": "./syntaxes/dynspec-markdown.json",
+        "injectTo": [
+          "text.html.markdown"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.dynspec": "dynspec"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "dynspec",
+        "path": "./snippets/dynspec.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      {
+        "id": "blParameter",
+        "description": "A declared parameter, at every occurrence"
+      },
+      {
+        "id": "blShock",
+        "description": "A declared shock, at every occurrence"
+      },
+      {
+        "id": "blSpace",
+        "description": "A defined space, at every occurrence"
+      },
+      {
+        "id": "blFunction",
+        "description": "A defined function, at every occurrence"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "scopes": {
+          "blParameter": [
+            "constant.other.parameter.dynspec"
+          ],
+          "blShock": [
+            "variable.language.shock.dynspec",
+            "variable.language"
+          ],
+          "blSpace": [
+            "support.type.builtin.set.dynspec"
+          ],
+          "blFunction": [
+            "entity.name.function.call.dynspec"
+          ]
+        }
+      }
+    ]
+  }
+}

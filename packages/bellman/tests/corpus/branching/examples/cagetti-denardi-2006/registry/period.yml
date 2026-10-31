@@ -1,0 +1,42 @@
+!period
+# One model year of Cagetti and De Nardi (2006). A period begins with the
+# demographic events and the new draws of the two abilities, then the
+# occupational choices, then the problems of the four kinds of household.
+# The order of the list below is not the order of computation; the connectors
+# and the matching names of the stage files determine it.
+name: year
+stages:
+  - worker_ageing
+  - entrepreneur_ageing
+  - entrepreneur_death
+  - retiree_death
+  - young_choice
+  - old_choice
+  - young_entrepreneur
+  - old_entrepreneur
+  - worker
+  - retiree
+connectors:
+  # The young choice receives the young who remain young and the offspring of
+  # the old who die: four sources on mutually exclusive routes, one target.
+  - {a_wa_yc: a_yc, y_wa_yc: y_yc, θ_wa_yc: θ_yc}
+  - {a_ea_yc: a_yc, y_ea_yc: y_yc, θ_ea_yc: θ_yc}
+  - {a_ed_yc: a_yc, y_ed_yc: y_yc, θ_ed_yc: θ_yc}
+  - {a_rd_yc: a_yc, y_rd_yc: y_yc, θ_rd_yc: θ_yc}
+  # The old choice receives the young entrepreneurs who age and the old
+  # entrepreneurs who survive.
+  - {a_ea_oc: a_oc, θ_ea_oc: θ_oc}
+  - {a_ed_oc: a_oc, θ_ed_oc: θ_oc}
+  # The worker receives the young who choose to work and the young
+  # entrepreneurs who default, which the enforcement constraint rules out.
+  - {a_yc_wk: a_wk, y_yc_wk: y_wk, θ_yc_wk: θ_wk}
+  - {a_ye_wk: a_wk, y_ye_wk: y_wk, θ_ye_wk: θ_wk}
+  # The retiree receives the workers who age, the retirees who survive, the
+  # old entrepreneurs who retire and those who default, which the enforcement
+  # constraint likewise rules out.
+  - {a_wa_rt: a_rt}
+  - {a_rd_rt: a_rt}
+  - {a_oc_rt: a_rt}
+  - {a_oe_rt: a_rt}
+  # The entrepreneur branches of the two choices join the entrepreneurs'
+  # arrival fields by matching names (a_ye, y_ye, θ_ye and a_oe, θ_oe).

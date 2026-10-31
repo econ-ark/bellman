@@ -1,0 +1,31 @@
+@stage: retiree_cons
+
+Xa := ℝ₊
+
+β : (0,1)        :: ["discount factor"]
+R : ℝ₊₊          :: ["gross return on assets"]
+
+𝑢(c : ℝ₊₊) := log(c)                :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := 1/c                  :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := 1/x               :: [id=inv_marg_util]
+Γ(x : ℝ₊) := (0, x]                 :: [id=feasible, "empty at zero resources"]
+
+[id=arvl_to_dcsn, (a_ret : Xa) : !arvl -> (w_ret : Xa) : !dcsn] {
+    w_ret = R*a_ret                 :: [id=cash_on_hand]
+}
+
+[id=dcsn_to_cntn, (w_ret, c : ℝ₊₊ @ !ctrl) : !dcsn -> (b_ret : Xa) : !cntn] {
+    b_ret = w_ret - c               :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]               :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                        :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{c : Γ(w_ret)}(𝑢(c) + β*V[>])     :: [id=optimality]
+}

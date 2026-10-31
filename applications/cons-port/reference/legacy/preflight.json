@@ -1,0 +1,2151 @@
+{
+  "task": "P01",
+  "spec": "spec_0.3c",
+  "generated_at": "2026-09-02T16:50:48+10:00",
+  "repository": "/Users/akshayshanker/Research/Repos/bellman-ddsl",
+  "git": {
+    "head": "a22ec119e8c21937ddfd19d3a5381987bca85482",
+    "branch": "main",
+    "status_short": [],
+    "note": "Regenerated after commit 4ddb346d (which committed the 24 dirty entries the first P01 run observed at 683739fc) and updated after the applications/ tree returned to the repository root (a22ec119). Acceptance-input digests and notebook inventories are unchanged from the first run; only paths, the recorded HEAD, and the empty dirty-file list differ."
+  },
+  "dolo_checkouts": {
+    "packages/legacy/dolo (git ls-files, first ten)": [
+      "packages/legacy/dolo/.cursor/config.json",
+      "packages/legacy/dolo/.cursor/rules/dolo-code-files.mdc",
+      "packages/legacy/dolo/.cursor/rules/dolo-code-map-remember.mdc",
+      "packages/legacy/dolo/.cursor/rules/dolo-docs.mdc",
+      "packages/legacy/dolo/.cursorrules",
+      "packages/legacy/dolo/.devcontainer/Dockerfile",
+      "packages/legacy/dolo/.devcontainer/devcontainer.json",
+      "packages/legacy/dolo/.github/workflows/ci.yaml",
+      "packages/legacy/dolo/.github/workflows/mkdocs.yml",
+      "packages/legacy/dolo/.github/workflows/publish-to-pypi.yml"
+    ],
+    "packages/dolo (git ls-files, first ten)": [],
+    "packages/dolo exists on disk": false,
+    "packages/legacy/dolo exists on disk": true,
+    "D01": {
+      "status": "Ruled (AAS, 2026-09-02)",
+      "ruling": "The legacy checkout stays untouched at packages/legacy/dolo/ and packages/dolo/ is not restored. The stage, period, trellis (legacy nest_factory, renamed trellis_factory) and specification factories and the methodization loader are copied into packages/sym/bellman/sym/ and rewritten there. No task path for factory work points under packages/legacy/dolo/; the new path constructs no dolo model object and imports neither dolo nor dolang.",
+      "recorded_in": "AI/dev-specs/dolang+/spec_0.3/spec_0.3c-tasks/00-decisions-and-reference.md §2 D01"
+    }
+  },
+  "task_paths": {
+    "source": "every backticked path containing a slash in spec_0.3c-tasks/*.md after the docs/applications relocation of 2 Sep 2026",
+    "entries": [
+      {
+        "path": "../../code",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "../../syntax",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "/usr/bin/sandbox-exec",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "<output_dir>/execution-result.json",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "<temporary-root>/overlay/packages/legacy/dolo",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "AI/context/relevant-packages/FUES",
+        "classification": "existing directory"
+      },
+      {
+        "path": "AI/context/relevant-packages/FUES/examples/durables/model.py",
+        "classification": "existing file (gitignored; not listed by rg --files)"
+      },
+      {
+        "path": "AI/context/relevant-packages/FUES/examples/durables/solve.py",
+        "classification": "existing file (gitignored; not listed by rg --files)"
+      },
+      {
+        "path": "AI/context/relevant-packages/FUES/examples/retirement/model.py",
+        "classification": "existing file (gitignored; not listed by rg --files)"
+      },
+      {
+        "path": "AI/context/relevant-packages/FUES/examples/retirement/solve.py",
+        "classification": "existing file (gitignored; not listed by rg --files)"
+      },
+      {
+        "path": "AI/dev-specs/spec-status-overview.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "AI/rules/dolo-submodule-workflow.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "AI/rules/plain-language.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "AI/working/AAS/DDMMYYYY/session.md",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "derived/*.ast.json",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "docs/applications",
+        "classification": "existing directory"
+      },
+      {
+        "path": "applications/cons-port/code/capture_legacy_reference.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/ffp_utils.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/code/tests/evidence/acceptance_notebook.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_acceptance_notebook.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_graph_consumption_operators.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_graph_expectation_discount_operators.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_graph_period_dispatch.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_graph_portfolio_operator.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_graph_recipe_access.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_graph_stage_dispatch.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_graph_stage_loading.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/code/tests/test_legacy_reference.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/01-stage-pipeline.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/02-the-cons-port-and-disc-stages.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/03-consumption-stage.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/04-next-we-feed-the-math-description-to-mat.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/05-we-also-have-a-pre-loaded-version-of-the.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/08-building-stages.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/09-each-step-in-the-pipeline-is-a-functor-t.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/10a-desugaring-recipe.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/11a-from-syntax-to-callable.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/md-cells/17-appendix-seven-lives-detail.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/notebooks/port-cons/sync_md_to_notebook.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/reference/legacy/port_cons_h5.manifest.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/reference/legacy/port_cons_h5.npz",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/cons-port/syntax/calibration.yaml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/syntax/settings.yaml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/syntax/stages/*/*_methods.yml",
+        "classification": "glob",
+        "matches": [
+          "applications/cons-port/syntax/stages/cons/cons_stage_methods.yml",
+          "applications/cons-port/syntax/stages/disc/disc_stage_methods.yml",
+          "applications/cons-port/syntax/stages/noport/noport_stage_methods.yml",
+          "applications/cons-port/syntax/stages/port/port_stage_methods.yml"
+        ]
+      },
+      {
+        "path": "applications/cons-port/syntax/stages/cons/cons_stage.yaml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/syntax/stages/cons/cons_stage_methods.yml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/syntax/stages/disc/disc_stage_methods.yml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/syntax/stages/noport/noport_stage_methods.yml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port/syntax/stages/port/port_stage_methods.yml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/cons-port",
+        "classification": "existing directory"
+      },
+      {
+        "path": "applications/portfolio-choice",
+        "classification": "existing directory"
+      },
+      {
+        "path": "applications/portfolio-choice/cons.bl",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/derived/cons.bl.ast.json",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/derived/disc.bl.ast.json",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/derived/noport.bl.ast.json",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/derived/port.bl.ast.json",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/disc.bl",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/noport.bl",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/port.bl",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/portfolio-choice/test_port_ast.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/readonly_notebook_execution.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/retirement-choice",
+        "classification": "existing directory"
+      },
+      {
+        "path": "applications/retirement-choice/derived/ret_choice.bl.ast.json",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/retirement-choice/derived/retiree_cons.bl.ast.json",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/retirement-choice/derived/worker_cons.bl.ast.json",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/retirement-choice/ret_choice.bl",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/retirement-choice/retiree_cons.bl",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/retirement-choice/test_ret_choice_ast.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/retirement-choice/worker_cons.bl",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos",
+        "classification": "existing directory"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/durables/durables_pipeline.ipynb",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/durables/durables_pipeline.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/durables/tenure_tag_verification.ipynb",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/durables/tenure_tag_verification.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/egm_cons_stage_pipeline.ipynb",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/egm_cons_stage_pipeline.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/retirement-branching/lifecycle_retirement_branching.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/retirement-branching/registry/stages/retiree_consumption/retiree_consumption_methods.yml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/retirement-branching/registry/stages/worker_consumption/worker_consumption_methods.yml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/retirement-branching/registry/stages/worker_decision/worker_decision_methods.yml",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/spec_0.1c_demo.ipynb",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/stage_explorer.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/stage_pipeline.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/durables_pipeline_notebook.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/durables_pipeline_notebook.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/durables_pipeline_script.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/durables_pipeline_script.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/egm_cons_stage_pipeline.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/egm_cons_stage_pipeline.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/egm_cons_stage_pipeline_notebook.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/egm_cons_stage_pipeline_notebook.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/retirement_branching.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/retirement_branching.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/spec_0.1c_demo_notebook.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/spec_0.1c_demo_notebook.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/stage_explorer.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/stage_explorer.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/stage_pipeline.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/stage_pipeline.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/tenure_tag_verification_notebook.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/tenure_tag_verification_notebook.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/tenure_tag_verification_script.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/evidence/tenure_tag_verification_script.result.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/execution_evidence.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_durables_demo_notebook.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_egm_cons_script.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_egm_demo_notebook.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_entry_point_manifest.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_execution_evidence.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_legacy_durables_pipeline_script.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_legacy_route_allowlist.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_legacy_tenure_tag_script.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_retirement_branching_graph_path.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_spec_demo_notebook.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_stage_explorer_script.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_stage_pipeline_script.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "applications/stage-pipeline-demos/tests/test_tenure_demo_notebook.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "docs/changelog.md",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "durables/durables_pipeline.ipynb",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "durables/durables_pipeline.py",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "durables/tenure_tag_verification.ipynb",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "durables/tenure_tag_verification.py",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "packages/applications",
+        "classification": "named in the task text as an absent directory (D01 evidence); not to be created"
+      },
+      {
+        "path": "packages/bellman/bellman/cat/__init__.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/bellman/bellman/cat/elaborate",
+        "classification": "existing directory"
+      },
+      {
+        "path": "packages/bellman/bellman/cat/graph",
+        "classification": "existing directory"
+      },
+      {
+        "path": "packages/bellman/tests/cat/conftest.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/bellman/tests/cat/test_bellman_sym_branching.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/bellman/tests/cat/test_bellman_sym_import_boundary.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/bellman/tests/cat/test_bellman_sym_retention.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/bellman/tests/cat/test_bellman_sym_standard_stages.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/bellman",
+        "classification": "existing directory"
+      },
+      {
+        "path": "packages/dolo",
+        "classification": "named in the task text as an absent directory (D01 evidence); not to be created"
+      },
+      {
+        "path": "packages/legacy/dolo",
+        "classification": "existing directory"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler",
+        "classification": "existing directory"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/methodization.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/nest_factory/io.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/nest_factory/loader.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/nest_factory/maker.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/period_factory/graphs.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/period_factory/maker.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/stage_factory/__init__.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/stage_factory/calibrate.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/stage_factory/configure.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/stage_factory/loader.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/stage_factory/methodize.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/compiler/stage_factory/symbolic.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/calibration.yaml",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/nest.yaml",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/period.yaml",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/settings.yaml",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/stages/stage_a/stage_a.bl",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/stages/stage_a/stage_a_methods.yml",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/stages/stage_b/stage_b.bl",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fixtures/bellman_sym_syntax/stages/stage_b/stage_b_methods.yml",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/fues_reference_inventory.json",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_fues_graph_stage_structural.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_fues_reference_inventory.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_graph_stage_method_targets.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_methodization_no_schemes.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_nest_factory_bellman_sym.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_period_factory_graph_stage_flat.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_period_factory_graph_stage_spec.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_period_to_graph_bellman_sym.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_stage_factory_bellman_sym.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/legacy/dolo/dolo/tests/test_stage_factory_transient_ast.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/bellman/bellman/sym/__init__.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/bellman/bellman/sym",
+        "classification": "existing directory"
+      },
+      {
+        "path": "packages/bellman/bellman/sym/lower.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/bellman/bellman/sym/parse.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/bellman/bellman/sym/stage.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/bellman/bellman/sym/terms.py",
+        "classification": "existing file (listed by rg --files)"
+      },
+      {
+        "path": "packages/bellman/tests/sym/test_portfolio_choice_sources.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/bellman/tests/sym/test_stage_source_spans.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "packages/bellman/tests/sym/test_term_json_decode.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "retirement-branching/lifecycle_retirement_branching.py",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "stages/**/*.yaml",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "stages/<key>/<key>.bl",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "stages/<key>/<key>.yaml",
+        "classification": "not a repository path (relative, template, or tool path)"
+      },
+      {
+        "path": "tests/integration/test_cons_port_bellman_sym.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "tests/test_readonly_notebook_execution.py",
+        "classification": "to be created"
+      },
+      {
+        "path": "venv/bin/python",
+        "classification": "not a repository path (relative, template, or tool path)"
+      }
+    ],
+    "counts": {
+      "existing directory": 12,
+      "existing file (gitignored; not listed by rg --files)": 4,
+      "existing file (listed by rg --files)": 73,
+      "glob": 1,
+      "named in the task text as an absent directory (D01 evidence); not to be created": 2,
+      "not a repository path (relative, template, or tool path)": 16,
+      "to be created": 76
+    },
+    "note_on_legacy_dolo_paths": "At the first P01 run, task files 30, 50, 60 and 70 named Modify/Create paths under packages/legacy/dolo/dolo/compiler/ and packages/legacy/dolo/dolo/tests/, which D01 (ruled 2 Sep) forbids. Re-pointed the same afternoon: factory work now targets packages/sym/bellman/sym/<factory>/ and tests packages/sym/tests/; L00 restated as the copy of the legacy factories into bellman-sym (see D01's applied-to-task-files note in 00-decisions-and-reference.md). The path entries below still list the pre-re-pointing legacy test paths as 'to be created'; they are superseded by the packages/sym/tests/ paths and are not to be created."
+  },
+  "environment": {
+    "python": "Python 3.12.7",
+    "interpreter": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3",
+    "lark": "1.3.1",
+    "discopy": "1.2.2",
+    "numpy": "2.3.5",
+    "networkx": "3.6.1",
+    "pytest": "9.0.2",
+    "nbformat": "5.10.4",
+    "nbclient": "0.10.4",
+    "nbdime (informational)": "not installed in venv"
+  },
+  "acceptance_inputs": [
+    {
+      "path": "applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "0dd53ae8300abb9f8d4c1b32b5e43d7506213dc5e21efd052ed2ffaedee5eddb"
+    },
+    {
+      "path": "applications/cons-port/code/ffp_utils.py",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "02f7cf289759ff2cdfde0e0e49eb7f074a10a9360b2c2c7a4a7023d43e2219bb"
+    },
+    {
+      "path": "applications/portfolio-choice/cons.bl",
+      "exists": true,
+      "git": "tracked, modified in the working tree (EGM ruling and sub-choice (viii), 5 Sep 2026)",
+      "sha256": "3d68550ee67c253e97642d47fd06524eae9390197112859eddbe57b45f8232e3"
+    },
+    {
+      "path": "applications/portfolio-choice/disc.bl",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "ee7447e5d419f04e011e03f738076fb99fded664ad2939e7b8e4ecc19a0b9d07"
+    },
+    {
+      "path": "applications/portfolio-choice/noport.bl",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "5d11b9b9d3460fd4ddc04e21a2f958cfa7a331cd50de6bf786cf40ef5899fa17"
+    },
+    {
+      "path": "applications/portfolio-choice/port.bl",
+      "exists": true,
+      "git": "tracked, modified in the working tree (EGM ruling and sub-choice (viii), 5 Sep 2026)",
+      "sha256": "3e5a43dd7c261dd2fc2a251606e65222a4aa170f7a7f529bc1c9458cd98ca76f"
+    },
+    {
+      "path": "applications/portfolio-choice/derived/cons.bl.ast.json",
+      "exists": true,
+      "git": "tracked, modified in the working tree (EGM ruling and sub-choice (viii), 5 Sep 2026)",
+      "sha256": "57310a55d2ab902291c219235802e208e81a648e3d1a123354198d36d45c515d",
+      "sha256_at_p01": "bf93934de24336fcfbac93a253a73c46d61786abee2681449cdfd67f9252d9c3"
+    },
+    {
+      "path": "applications/portfolio-choice/derived/disc.bl.ast.json",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "c6f8c81df34157bb67d7b36741759a0a2fee170bea556f22a8e3e9a3132fe201"
+    },
+    {
+      "path": "applications/portfolio-choice/derived/noport.bl.ast.json",
+      "exists": true,
+      "git": "regenerated 4 Sep 2026 (S01: function definitions and laws lowered as Statement items with their annotations); tracked",
+      "sha256": "81ac529878d51e4f59ef03589d18ad61b153678c8f19b1f121b7f48dc05ae629",
+      "sha256_at_p01": "13abf163cdb54b30dbe39307155d16d04c93987f5b59b36f8355f19f27cd54a6"
+    },
+    {
+      "path": "applications/portfolio-choice/derived/port.bl.ast.json",
+      "exists": true,
+      "git": "tracked, modified in the working tree (EGM ruling and sub-choice (viii), 5 Sep 2026)",
+      "sha256": "4dde78b5150d073c1df06e98235d44eea7b91dd96c683eef1862206dc8828cfb",
+      "sha256_at_p01": "a1ff5fd9126411f35d4088370da140ebc6b634fe943a5cba8cc20a2f7bf14326"
+    },
+    {
+      "path": "applications/cons-port/syntax/stages/cons/cons_stage_methods.yml",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "598b21c30e22abf0193e04bb8f11dee2bf4cdf0ae49d622942662de23bcdbdd1"
+    },
+    {
+      "path": "applications/cons-port/syntax/stages/port/port_stage_methods.yml",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "ef4bac5c09dbe9b3b3ebf6ae8485019a8d729ce3d30d7a2c36cba07a732fdc9b"
+    },
+    {
+      "path": "applications/cons-port/syntax/stages/noport/noport_stage_methods.yml",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "219d4b50aef2491954d497dc5fd05c17ef73ae6f8b960a95ffaf91d4e7012b79"
+    },
+    {
+      "path": "applications/cons-port/syntax/stages/disc/disc_stage_methods.yml",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "9719c391910a48742cf739674b8cfaed42a7a29aba56544f083e86f225d4b47d"
+    },
+    {
+      "path": "applications/cons-port/syntax/calibration.yaml",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "7f8dbacf202f52a1ea3b45ba3a81e8126b45bb709b152d9d1250c82aa58c7cc6"
+    },
+    {
+      "path": "applications/cons-port/syntax/settings.yaml",
+      "exists": true,
+      "git": "tracked, identical to HEAD",
+      "sha256": "12702e10ef8d8b67cc96eae2280c70b3a4d771ad133b8c1265f1375b49ecab5c"
+    },
+    {
+      "path": "applications/cons-port/reference/legacy",
+      "exists": false,
+      "git": "absent — to be created by P02"
+    }
+  ],
+  "notebooks": {
+    "acceptance": [
+      {
+        "path": "applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb",
+        "exists": true,
+        "sha256": "0dd53ae8300abb9f8d4c1b32b5e43d7506213dc5e21efd052ed2ffaedee5eddb",
+        "nbformat": "4.5",
+        "cell_count": 55,
+        "cells_missing_id": 12,
+        "git": "tracked, identical to HEAD",
+        "notebook_aware_diff_from_git": "(no difference from HEAD)",
+        "cells": [
+          {
+            "index": 0,
+            "id": "zm5f1s5z2r",
+            "type": "markdown",
+            "first_line": "# Modular portfolio choice and consumption"
+          },
+          {
+            "index": 1,
+            "id": "kfg8kf7efb9",
+            "type": "markdown",
+            "first_line": "### Stage pipeline"
+          },
+          {
+            "index": 2,
+            "id": "cf296181",
+            "type": "markdown",
+            "first_line": "## The cons, port and disc stages "
+          },
+          {
+            "index": 3,
+            "id": "ad43b107",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 4,
+            "id": "bab0nyjnu7e",
+            "type": "markdown",
+            "first_line": "### Consumption stage"
+          },
+          {
+            "index": 5,
+            "id": "soz9ah785p",
+            "type": "code",
+            "first_line": "# Editable math description — edit this string then run the Matsya cell below."
+          },
+          {
+            "index": 6,
+            "id": "e771cf0b",
+            "type": "markdown",
+            "first_line": "Next, we feed the math description to **matsya** to produce a `dolo-plus` stage YAML.  "
+          },
+          {
+            "index": 7,
+            "id": "7876482fb8c7",
+            "type": "code",
+            "first_line": "# Matsya calls temporarily skipped — load from canonical YAML on disk"
+          },
+          {
+            "index": 8,
+            "id": "b7b2922b",
+            "type": "markdown",
+            "first_line": "We also have a pre-loaded version of the YAML in the next cell and load and display it via a simple wrapper (`display_stage_yaml`). "
+          },
+          {
+            "index": 9,
+            "id": "fd012560d0e8",
+            "type": "code",
+            "first_line": "# Consumption stage: canonical YAML (source of truth)"
+          },
+          {
+            "index": 10,
+            "id": "p134dqzlqds",
+            "type": "markdown",
+            "first_line": "### Portfolio stage"
+          },
+          {
+            "index": 11,
+            "id": "cell-5",
+            "type": "code",
+            "first_line": "# Editable math description — edit this string then run the Matsya cell below."
+          },
+          {
+            "index": 12,
+            "id": "b398efd60cdb",
+            "type": "code",
+            "first_line": "# Matsya calls temporarily skipped — load from canonical YAML on disk"
+          },
+          {
+            "index": 13,
+            "id": "a5a81e133314",
+            "type": "code",
+            "first_line": "# Portfolio stage: canonical YAML (source of truth)"
+          },
+          {
+            "index": 14,
+            "id": "cell-9",
+            "type": "markdown",
+            "first_line": "### Disc stage"
+          },
+          {
+            "index": 15,
+            "id": "5ea306f0c731",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 16,
+            "id": "1c8f73970918",
+            "type": "code",
+            "first_line": "# ---------------------------------------------------------------"
+          },
+          {
+            "index": 17,
+            "id": "5de898a1adbe",
+            "type": "code",
+            "first_line": "# ---------------------------------------------------------------"
+          },
+          {
+            "index": 18,
+            "id": "29b3301a8f6d",
+            "type": "code",
+            "first_line": "# ---------------------------------------------------------------"
+          },
+          {
+            "index": 19,
+            "id": "383dc02f3234",
+            "type": "markdown",
+            "first_line": "Each step in the pipeline is a **functor** that attaches metadata"
+          },
+          {
+            "index": 20,
+            "id": "b3d6d011cee6",
+            "type": "code",
+            "first_line": "# ---------------------------------------------------------------"
+          },
+          {
+            "index": 21,
+            "id": "cell-7",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 22,
+            "id": "cell-11",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 23,
+            "id": "8lyu33cq0hc",
+            "type": "markdown",
+            "first_line": "### De-sugaring: from stage YAML to solver expressions"
+          },
+          {
+            "index": 24,
+            "id": "648v74oqejv",
+            "type": "code",
+            "first_line": "# ── Whisperer de-sugaring: stage YAML → eval-able expressions ──"
+          },
+          {
+            "index": 25,
+            "id": "cell-9-3460a1a5",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 26,
+            "id": "k1hv6l6eg2k",
+            "type": "markdown",
+            "first_line": "## From syntax to callable: the whisperer builds $\\mathbb{T}^{\\text{CMP}}$"
+          },
+          {
+            "index": 27,
+            "id": "cell-13",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 28,
+            "id": "cell-11-7bc769d8",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 29,
+            "id": "cell-15",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 30,
+            "id": "cell-16",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 31,
+            "id": "cell-15-430ea6ef",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 32,
+            "id": "cell-15-b898647c",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 33,
+            "id": "cell-16-8aa21073",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 34,
+            "id": "cell-13-e922d1bd",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 35,
+            "id": "cell-14",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 36,
+            "id": "cell-15-efb484f3",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 37,
+            "id": "8hfyhy4vdri",
+            "type": "markdown",
+            "first_line": "## Order semiconjugacy between period configurations"
+          },
+          {
+            "index": 38,
+            "id": "hxhedo8y9dr",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 39,
+            "id": "3bz2oqjhw1n",
+            "type": "code",
+            "first_line": "# ── Semiconjugacy comparison plots (dual-theme) ──"
+          },
+          {
+            "index": 40,
+            "id": "cell-16-e93f2de6",
+            "type": "code",
+            "first_line": "# ═══════════════════════════════════════════════════════════════"
+          },
+          {
+            "index": 41,
+            "id": "cell-17",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 42,
+            "id": "mhvxl2lusj",
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 43,
+            "id": null,
+            "type": "markdown",
+            "first_line": "<div style=\"border-top: 2px solid rgba(0,0,0,0.15); margin: 2.5em 0 1em;\"></div>"
+          },
+          {
+            "index": 44,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 1. Change the method"
+          },
+          {
+            "index": 45,
+            "id": null,
+            "type": "code",
+            "first_line": "import copy"
+          },
+          {
+            "index": 46,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 2. Read the Rosetta card"
+          },
+          {
+            "index": 47,
+            "id": null,
+            "type": "code",
+            "first_line": "import yaml as _yaml"
+          },
+          {
+            "index": 48,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 3. Build the HARK interface from the contract"
+          },
+          {
+            "index": 49,
+            "id": null,
+            "type": "code",
+            "first_line": "from HARK.ConsumptionSaving.ConsIndShockModel import solve_one_period_ConsIndShock, ConsumerSolution"
+          },
+          {
+            "index": 50,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 4. Solve the lifecycle with HARK, and check it against EGM"
+          },
+          {
+            "index": 51,
+            "id": null,
+            "type": "code",
+            "first_line": "# Beginning-returns lifecycle, with M_cons realized by HARK.  S = E_port o M_cons^HARK o D."
+          },
+          {
+            "index": 52,
+            "id": null,
+            "type": "code",
+            "first_line": "# Consumption policy: EGM vs the HARK realization (they coincide)."
+          },
+          {
+            "index": 53,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 5. Change a setting"
+          },
+          {
+            "index": 54,
+            "id": null,
+            "type": "code",
+            "first_line": "# Move the Rho-level knob: aXtraGrid size, via the card's settings_map (a_grid_egm -> aXtraGrid)."
+          }
+        ]
+      }
+    ],
+    "included_demonstrations (B05)": [
+      {
+        "path": "applications/stage-pipeline-demos/egm_cons_stage_pipeline.ipynb",
+        "exists": true,
+        "sha256": "468404227d02793d37207916f3a9d3ed24510f1553bf3cf3dcdfa2e5e623b22c",
+        "nbformat": "4.5",
+        "cell_count": 5,
+        "cells_missing_id": 0,
+        "git": "tracked, identical to HEAD",
+        "notebook_aware_diff_from_git": "(no difference from HEAD)",
+        "cells": [
+          {
+            "index": 0,
+            "id": "88d0eb97",
+            "type": "markdown",
+            "first_line": "# EGM consumption stage (Dolo+) pipeline"
+          },
+          {
+            "index": 1,
+            "id": "ed3a0e57",
+            "type": "code",
+            "first_line": "# Setup paths (use in-repo packages)"
+          },
+          {
+            "index": 2,
+            "id": "d8b300c6",
+            "type": "code",
+            "first_line": "import yaml"
+          },
+          {
+            "index": 3,
+            "id": "a41178ab",
+            "type": "code",
+            "first_line": "from dolo.compiler.stage_factory import methodize"
+          },
+          {
+            "index": 4,
+            "id": "01888627",
+            "type": "code",
+            "first_line": "from dolo.compiler.stage_factory import calibrate, configure"
+          }
+        ]
+      },
+      {
+        "path": "applications/stage-pipeline-demos/spec_0.1c_demo.ipynb",
+        "exists": true,
+        "sha256": "3e5ac63219bb53c7b51e0b595279ee8f30828dea34b3fa0d53484191fb331786",
+        "nbformat": "4.4",
+        "cell_count": 26,
+        "cells_missing_id": 26,
+        "git": "tracked, identical to HEAD",
+        "notebook_aware_diff_from_git": "(no difference from HEAD)",
+        "cells": [
+          {
+            "index": 0,
+            "id": null,
+            "type": "markdown",
+            "first_line": "# Dolo+ spec_0.1c/0.1d Demo"
+          },
+          {
+            "index": 1,
+            "id": null,
+            "type": "code",
+            "first_line": "# Setup paths (robust: works regardless of notebook working directory)"
+          },
+          {
+            "index": 2,
+            "id": null,
+            "type": "markdown",
+            "first_line": "## 1. DDSL Registry (Primitive Objects)"
+          },
+          {
+            "index": 3,
+            "id": null,
+            "type": "code",
+            "first_line": "from dolang.registry import ("
+          },
+          {
+            "index": 4,
+            "id": null,
+            "type": "code",
+            "first_line": "# Alias handling: R_plus → R+"
+          },
+          {
+            "index": 5,
+            "id": null,
+            "type": "markdown",
+            "first_line": "## 2. Decorator Parser"
+          },
+          {
+            "index": 6,
+            "id": null,
+            "type": "code",
+            "first_line": "from dolang.decorator_parser import parse_decorator, get_decorator_name, get_domain_expr"
+          },
+          {
+            "index": 7,
+            "id": null,
+            "type": "code",
+            "first_line": "# View the full parse tree"
+          },
+          {
+            "index": 8,
+            "id": null,
+            "type": "markdown",
+            "first_line": "## 3. Split-file Stage Example"
+          },
+          {
+            "index": 9,
+            "id": null,
+            "type": "code",
+            "first_line": "import yaml"
+          },
+          {
+            "index": 10,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 3.1 `symbols_math`: The Typing Environment"
+          },
+          {
+            "index": 11,
+            "id": null,
+            "type": "code",
+            "first_line": "def format_domain(domain):"
+          },
+          {
+            "index": 12,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 3.2 Methodization: Attaching Numerical Schemes (spec_0.1d)"
+          },
+          {
+            "index": 13,
+            "id": null,
+            "type": "code",
+            "first_line": "from dolo.compiler.stage_factory import methodize"
+          },
+          {
+            "index": 14,
+            "id": null,
+            "type": "code",
+            "first_line": "# Show targets with schemes attached"
+          },
+          {
+            "index": 15,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 3.3 Functorial Stage Composition"
+          },
+          {
+            "index": 16,
+            "id": null,
+            "type": "code",
+            "first_line": "from dolo.compiler.stage_factory import calibrate, configure"
+          },
+          {
+            "index": 17,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 3.4 Raw Loaders (for direct dict access)"
+          },
+          {
+            "index": 18,
+            "id": null,
+            "type": "code",
+            "first_line": "from dolo.compiler.calibration import load_calibration, load_settings"
+          },
+          {
+            "index": 19,
+            "id": null,
+            "type": "markdown",
+            "first_line": "### 3.5 Constraint Validation (Υ-level Type Checking)"
+          },
+          {
+            "index": 20,
+            "id": null,
+            "type": "code",
+            "first_line": "def check_constraint(value, domain_type, domain_val):"
+          },
+          {
+            "index": 21,
+            "id": null,
+            "type": "markdown",
+            "first_line": "## 4. User-defined Spaces (Symbol Hierarchy)"
+          },
+          {
+            "index": 22,
+            "id": null,
+            "type": "code",
+            "first_line": "print(\"Spaces (user-defined domains):\")"
+          },
+          {
+            "index": 23,
+            "id": null,
+            "type": "markdown",
+            "first_line": "## 5. Legacy Compatibility"
+          },
+          {
+            "index": 24,
+            "id": null,
+            "type": "code",
+            "first_line": "from dolo import yaml_import"
+          },
+          {
+            "index": 25,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          }
+        ]
+      },
+      {
+        "path": "applications/stage-pipeline-demos/durables/durables_pipeline.ipynb",
+        "exists": true,
+        "sha256": "428d8e7820d7aa17a1659c750e3ba4bb8dadefab077e37aae3d11e3e85eee5d6",
+        "nbformat": "4.5",
+        "cell_count": 16,
+        "cells_missing_id": 0,
+        "git": "tracked, identical to HEAD",
+        "notebook_aware_diff_from_git": "(no difference from HEAD)",
+        "cells": [
+          {
+            "index": 0,
+            "id": "cell-0",
+            "type": "markdown",
+            "first_line": "# Durables (housing) pipeline walkthrough"
+          },
+          {
+            "index": 1,
+            "id": "cell-1",
+            "type": "code",
+            "first_line": "import sys"
+          },
+          {
+            "index": 2,
+            "id": "cell-2",
+            "type": "markdown",
+            "first_line": "## Helper: load and display a stage"
+          },
+          {
+            "index": 3,
+            "id": "cell-3",
+            "type": "code",
+            "first_line": "def load_stage(name):"
+          },
+          {
+            "index": 4,
+            "id": "cell-4",
+            "type": "markdown",
+            "first_line": "## Load calibration and settings"
+          },
+          {
+            "index": 5,
+            "id": "cell-5",
+            "type": "code",
+            "first_line": "with open(MODEL_DIR / 'calibration.yaml') as f:"
+          },
+          {
+            "index": 6,
+            "id": "cell-6",
+            "type": "markdown",
+            "first_line": "## Stage 1: AdjustmentDecision (branching)"
+          },
+          {
+            "index": 7,
+            "id": "cell-7",
+            "type": "code",
+            "first_line": "adj = load_stage('adjustment_decision')"
+          },
+          {
+            "index": 8,
+            "id": "cell-8",
+            "type": "markdown",
+            "first_line": "## Stage 2: KeeperConsumption (single-control EGM)"
+          },
+          {
+            "index": 9,
+            "id": "cell-9",
+            "type": "code",
+            "first_line": "keeper = load_stage('keeper_cons')"
+          },
+          {
+            "index": 10,
+            "id": "cell-10",
+            "type": "markdown",
+            "first_line": "## Stage 3: AdjusterConsumption (multi-control, `solve_{}` operator)"
+          },
+          {
+            "index": 11,
+            "id": "cell-11",
+            "type": "code",
+            "first_line": "adjuster = load_stage('adjuster_cons')"
+          },
+          {
+            "index": 12,
+            "id": "cell-12",
+            "type": "markdown",
+            "first_line": "## Test: `solve_{}` operator parses"
+          },
+          {
+            "index": 13,
+            "id": "cell-13",
+            "type": "code",
+            "first_line": "from dolang.grammar import parse_string, str_expression"
+          },
+          {
+            "index": 14,
+            "id": "cell-14",
+            "type": "markdown",
+            "first_line": "## Period and nest templates"
+          },
+          {
+            "index": 15,
+            "id": "cell-15",
+            "type": "code",
+            "first_line": "with open(MODEL_DIR / 'period.yaml') as f:"
+          }
+        ]
+      },
+      {
+        "path": "applications/stage-pipeline-demos/durables/tenure_tag_verification.ipynb",
+        "exists": true,
+        "sha256": "72ae01ddb1a917a9eb28e603be2dedf232308b43d90d8b1ececbc10f723651e5",
+        "nbformat": "4.4",
+        "cell_count": 2,
+        "cells_missing_id": 2,
+        "git": "tracked, identical to HEAD",
+        "notebook_aware_diff_from_git": "(no difference from HEAD)",
+        "cells": [
+          {
+            "index": 0,
+            "id": null,
+            "type": "markdown",
+            "first_line": "# Tenure stage: tag verification"
+          },
+          {
+            "index": 1,
+            "id": null,
+            "type": "code",
+            "first_line": "import yaml, sys, os"
+          }
+        ]
+      }
+    ],
+    "deferred_demonstrations (B05)": [
+      {
+        "path": "applications/stage-pipeline-demos/parse_doloplus_models.ipynb",
+        "exists": true,
+        "sha256": "fc3aacc4692426f4d70a5163a17a6b5f93f83ca853332a9707cce80b81a7548f",
+        "nbformat": "4.5",
+        "cell_count": 23,
+        "cells_missing_id": 0,
+        "git": "tracked, identical to HEAD",
+        "notebook_aware_diff_from_git": "(no difference from HEAD)",
+        "cells": [
+          {
+            "index": 0,
+            "id": "cell-0",
+            "type": "markdown",
+            "first_line": "# Parsing Dolo+ Models: The DDSL Pipeline"
+          },
+          {
+            "index": 1,
+            "id": "cell-1",
+            "type": "code",
+            "first_line": "import sys"
+          },
+          {
+            "index": 2,
+            "id": "cell-2",
+            "type": "markdown",
+            "first_line": "## Model Directories"
+          },
+          {
+            "index": 3,
+            "id": "cell-3",
+            "type": "code",
+            "first_line": "# Dolo+ example directories: the demos' local registry"
+          },
+          {
+            "index": 4,
+            "id": "cell-4",
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 5,
+            "id": "cell-5",
+            "type": "code",
+            "first_line": "# Parse stage"
+          },
+          {
+            "index": 6,
+            "id": "cell-6",
+            "type": "code",
+            "first_line": "# Show symbol avatars - each symbol carries: name, domain, decorator"
+          },
+          {
+            "index": 7,
+            "id": "cell-7",
+            "type": "code",
+            "first_line": "# Extract targets for methodization"
+          },
+          {
+            "index": 8,
+            "id": "cell-8",
+            "type": "code",
+            "first_line": "# Apply the full DDSL pipeline"
+          },
+          {
+            "index": 9,
+            "id": "cell-9",
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 10,
+            "id": "cell-10",
+            "type": "code",
+            "first_line": "# Parse B1 consumption stage"
+          },
+          {
+            "index": 11,
+            "id": "cell-11",
+            "type": "code",
+            "first_line": "# Show decorated symbols for B1 consumption stage"
+          },
+          {
+            "index": 12,
+            "id": "cell-12",
+            "type": "code",
+            "first_line": "# Parse B1 portfolio stage"
+          },
+          {
+            "index": 13,
+            "id": "cell-13",
+            "type": "code",
+            "first_line": "# Show decorated symbols for B1 portfolio stage"
+          },
+          {
+            "index": 14,
+            "id": "cell-14",
+            "type": "code",
+            "first_line": "# Apply full pipeline to B1 stages"
+          },
+          {
+            "index": 15,
+            "id": "cell-15",
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 16,
+            "id": "cell-16",
+            "type": "code",
+            "first_line": "# Parse B2 stages"
+          },
+          {
+            "index": 17,
+            "id": "cell-17",
+            "type": "code",
+            "first_line": "# Apply full pipeline to B2 stages"
+          },
+          {
+            "index": 18,
+            "id": "cell-18",
+            "type": "code",
+            "first_line": "# KEY COMPARISON: B1 vs B2 shock timing"
+          },
+          {
+            "index": 19,
+            "id": "cell-19",
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 20,
+            "id": "cell-20",
+            "type": "code",
+            "first_line": "def summarize_stage(stage, name):"
+          },
+          {
+            "index": 21,
+            "id": "cell-21",
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 22,
+            "id": "cell-22",
+            "type": "code",
+            "first_line": "print(\"\\n\" + \"=\"*60)"
+          }
+        ]
+      },
+      {
+        "path": "applications/stage-pipeline-demos/stage_pipeline.ipynb",
+        "exists": true,
+        "sha256": "c108929abe2e7a40dc87a850a023d25b05b1c2e5c1bd567fcfe540e615ebe7a4",
+        "nbformat": "4.4",
+        "cell_count": 22,
+        "cells_missing_id": 22,
+        "git": "tracked, identical to HEAD",
+        "notebook_aware_diff_from_git": "(no difference from HEAD)",
+        "cells": [
+          {
+            "index": 0,
+            "id": null,
+            "type": "markdown",
+            "first_line": "# Dolo+ Stage Pipeline"
+          },
+          {
+            "index": 1,
+            "id": null,
+            "type": "markdown",
+            "first_line": "## Setup"
+          },
+          {
+            "index": 2,
+            "id": null,
+            "type": "code",
+            "first_line": "from pathlib import Path"
+          },
+          {
+            "index": 3,
+            "id": null,
+            "type": "markdown",
+            "first_line": "## Define paths"
+          },
+          {
+            "index": 4,
+            "id": null,
+            "type": "code",
+            "first_line": "# Library directory (syntax collection)"
+          },
+          {
+            "index": 5,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 6,
+            "id": null,
+            "type": "code",
+            "first_line": "def load_stage(path: Path) -> SymbolicModel:"
+          },
+          {
+            "index": 7,
+            "id": null,
+            "type": "code",
+            "first_line": "# Load cons_stage as our running example"
+          },
+          {
+            "index": 8,
+            "id": null,
+            "type": "code",
+            "first_line": "# View equation blocks"
+          },
+          {
+            "index": 9,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 10,
+            "id": null,
+            "type": "code",
+            "first_line": "# Apply methodization"
+          },
+          {
+            "index": 11,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 12,
+            "id": null,
+            "type": "code",
+            "first_line": "# Apply calibration"
+          },
+          {
+            "index": 13,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 14,
+            "id": null,
+            "type": "code",
+            "first_line": "# Apply configuration"
+          },
+          {
+            "index": 15,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 16,
+            "id": null,
+            "type": "code",
+            "first_line": "def run_pipeline(stage_path, methods_path, calibration_path, settings_path):"
+          },
+          {
+            "index": 17,
+            "id": null,
+            "type": "code",
+            "first_line": "# Run pipeline on all stages in the library"
+          },
+          {
+            "index": 18,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          },
+          {
+            "index": 19,
+            "id": null,
+            "type": "code",
+            "first_line": "# Final stage object for inspection"
+          },
+          {
+            "index": 20,
+            "id": null,
+            "type": "code",
+            "first_line": "# Explore equations in detail"
+          },
+          {
+            "index": 21,
+            "id": null,
+            "type": "markdown",
+            "first_line": "---"
+          }
+        ]
+      }
+    ]
+  },
+  "observations": [
+    "Commit f0a71760 (2 Sep 2026, 16:30) moved applications/ to docs/applications/; at AAS's direction it was moved back to the repository root at 17:05 the same day. Spec 0.3c, the implementation map and the task files name every application path from the repository root as applications/…; the six per-application tests, packages/sym/tests/test_corpus.py, and the docs/notebooks symlink resolve the root at the pre-f0a71760 depth. File digests are unchanged by the move.",
+    "The acceptance notebook is also reachable through the symlink docs/notebooks/solve_port_cons_ffp.ipynb -> ../../applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb.",
+    "N01's overlay must reproduce applications/cons-port/… under overlay/; the notebook's ../../code and ../../syntax references resolve unchanged inside applications/cons-port/.",
+    "The full parser suite from the new root: venv/bin/python -m pytest packages/sym/tests docs/applications -q reported 47 passed, 6 skipped, 1 xfailed on 2 Sep 2026 (16:38).",
+    "Cell ids are recorded as stored in each file (raw JSON), not as nbformat reports them: nbformat.read assigns a random id to every id-less cell of a format-4.5 notebook, which made the first record's ids for such cells unstable (corrected 2 Sep, 17:55). Notebooks with id-less cells, whose P02 provenance must key those cells by index: applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb (12 of 55 cells); applications/stage-pipeline-demos/spec_0.1c_demo.ipynb (26 of 26 cells); applications/stage-pipeline-demos/durables/tenure_tag_verification.ipynb (2 of 2 cells); applications/stage-pipeline-demos/stage_pipeline.ipynb (22 of 22 cells).",
+    "4 Sep 2026: the AST-JSON fixtures were regenerated after the lowering change ruled in S01 (function definitions and laws are Statement items carrying their annotations); the entries above record both the P01 digest and the current one for applications/portfolio-choice/derived/cons.bl.ast.json, applications/portfolio-choice/derived/noport.bl.ast.json, applications/portfolio-choice/derived/port.bl.ast.json.",
+    "2026-09-05: cons.bl and port.bl and their derived encodings changed by the D06 rulings of 5 Sep 2026 (implicit Euler statement replaces the evaluate node; foc becomes a solve statement, argmax !doc); digests above refreshed for those four inputs, the rest of the record unchanged.",
+    "2026-09-05: task P04 merged the bellman-sym and bellman-cat distributions into one distribution named bellman, a regular package at packages/bellman/bellman/ with the subpackages sym and cat. packages/sym/bellman/sym/ is now packages/bellman/bellman/sym/, packages/cat/bellman/cat/ is packages/bellman/bellman/cat/, packages/sym/tests/ is packages/bellman/tests/sym/, packages/cat/tests/ is packages/bellman/tests/cat/, packages/sym/harness/ is packages/bellman/harness/, and packages/cat/notebooks/ is packages/bellman/notebooks/; module import paths (bellman.sym.…, bellman.cat.…) are unchanged. The nineteen task_paths entries under the two old directories were re-pointed in place (the two directory entries packages/sym and packages/cat became the one entry packages/bellman, so counts['existing directory'] fell from 13 to 12 and the entry total from 185 to 184); their classifications are those recorded on 2 Sep 2026 and were not re-checked. The quoted D01 ruling, the note on legacy dolo paths, and the earlier observations keep the paths as they stood on 2 Sep 2026."
+  ],
+  "commands": [
+    {
+      "command": "git rev-parse HEAD",
+      "exit_code": 0
+    },
+    {
+      "command": "git rev-parse --abbrev-ref HEAD",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files 'packages/legacy/dolo/**' | head",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files 'packages/dolo/**' | head",
+      "exit_code": 0
+    },
+    {
+      "command": "rg --files",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 --version",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import lark; print(getattr(lark, '__version__', 'no __version__'))",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import discopy; print(getattr(discopy, '__version__', 'no __version__'))",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import numpy; print(getattr(numpy, '__version__', 'no __version__'))",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import networkx; print(getattr(networkx, '__version__', 'no __version__'))",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import pytest; print(getattr(pytest, '__version__', 'no __version__'))",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import nbformat; print(getattr(nbformat, '__version__', 'no __version__'))",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import nbclient; print(getattr(nbclient, '__version__', 'no __version__'))",
+      "exit_code": 0
+    },
+    {
+      "command": "/Users/akshayshanker/Research/Repos/bellman-ddsl/venv/bin/python3 -c import nbdime; print(nbdime.__version__)",
+      "exit_code": 1
+    },
+    {
+      "command": "git status --short -- applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/cons-port/code/ffp_utils.py",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/code/ffp_utils.py",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/cons.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/cons.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/disc.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/disc.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/noport.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/noport.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/port.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/port.bl",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/derived/cons.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/derived/cons.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/derived/disc.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/derived/disc.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/derived/noport.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/derived/noport.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/portfolio-choice/derived/port.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/portfolio-choice/derived/port.bl.ast.json",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/cons-port/syntax/stages/cons/cons_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/syntax/stages/cons/cons_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/cons-port/syntax/stages/port/port_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/syntax/stages/port/port_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/cons-port/syntax/stages/noport/noport_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/syntax/stages/noport/noport_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/cons-port/syntax/stages/disc/disc_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/syntax/stages/disc/disc_stage_methods.yml",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/cons-port/syntax/calibration.yaml",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/syntax/calibration.yaml",
+      "exit_code": 0
+    },
+    {
+      "command": "git status --short -- applications/cons-port/syntax/settings.yaml",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/syntax/settings.yaml",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff -- applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff -- applications/stage-pipeline-demos/egm_cons_stage_pipeline.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/stage-pipeline-demos/egm_cons_stage_pipeline.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff -- applications/stage-pipeline-demos/spec_0.1c_demo.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/stage-pipeline-demos/spec_0.1c_demo.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff -- applications/stage-pipeline-demos/durables/durables_pipeline.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/stage-pipeline-demos/durables/durables_pipeline.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff -- applications/stage-pipeline-demos/durables/tenure_tag_verification.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/stage-pipeline-demos/durables/tenure_tag_verification.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff -- applications/stage-pipeline-demos/parse_doloplus_models.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/stage-pipeline-demos/parse_doloplus_models.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git diff -- applications/stage-pipeline-demos/stage_pipeline.ipynb",
+      "exit_code": 0
+    },
+    {
+      "command": "git ls-files --error-unmatch applications/stage-pipeline-demos/stage_pipeline.ipynb",
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+!trellis
+name: benhabib_life_cycle
+# periods[h] is age last_age - h (calibration/horizon.yml). periods[0] is the
+# terminal period, the paper's period T + 1, and holds the bequest alone;
+# periods[1], age 60, to periods[36], age 25, hold the within-life stage. The
+# template is repeated once per period, 37 periods.
+periods:
+  - {template: period.yml, repeat: 37}
+# One mapping for each adjacent pair, periods[h + 1] to periods[h]: the wealth
+# a at the continuation perch of one age is the wealth with which the next
+# period's stage is entered. The bequest, in periods[0], arrives with a_pre; the
+# within-life stage has no arrival perch and is entered at its decision perch,
+# with m, so that the first mapping differs from the other thirty-five.
+inter_connectors:
+  - {a: a_pre}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}
+  - {a: m}

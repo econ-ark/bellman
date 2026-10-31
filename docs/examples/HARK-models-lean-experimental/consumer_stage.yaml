@@ -1,0 +1,91 @@
+name: ConsumptionPortfolioChoice
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    Xm: "@def R++"
+    Xa: "@def R+"
+    Pi: "@def [0,1]"
+
+  prestate:
+    k: "@in Xk"
+
+  exogenous:
+    live:
+      - "@in {0,1}"
+      - "@dist Bernoulli(LivPrb)"
+    theta:
+      - "@in R++"
+      - "@dist LogNormal(-TranShkStd^2/2, TranShkStd)"
+    risky_return:
+      - "@in R++"
+      - "@dist LogNormal(log(Rfree + EqP) - RiskyStd^2/2, RiskyStd)"
+
+  states:
+    b: "@in R+"
+    m: "@in Xm"
+
+  controls:
+    c: "@in R+"
+    varsigma: "@in Pi"
+
+  poststates:
+    a: "@in Xa"
+    k_nxt: "@in Xk"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    DiscFac: "@in (0,1)"
+    CRRA: "@in R++"
+    Rfree: "@in R++"
+    EqP: "@in R"
+    LivPrb: "@in (0,1]"
+    PermGroFac: "@in R++"
+    TranShkStd: "@in R+"
+    RiskyStd: "@in R+"
+
+equations:
+  arvl_to_dcsn_transition: |
+    b = k * R[<] / PermGroFac
+    m = b + theta
+
+  dcsn_to_cntn_transition: |
+    a = m - c
+    R = Rfree + (risky_return - Rfree) * varsigma
+    k_nxt[>] = a * R / PermGroFac
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u = c^(1-CRRA)/(1-CRRA)
+      V = max_{c,varsigma}(u + DiscFac * live * E_{risky_return}(V[>]))
+      c = argmax_{c,varsigma}(u + DiscFac * live * E_{risky_return}(V[>]))
+      varsigma = argmax_{c,varsigma}(u + DiscFac * live * E_{risky_return}(V[>]))
+    InvEuler: |
+      c = (DiscFac * live * E_{risky_return}(R * dV[>]))^(-1/CRRA)
+    MarginalBellman: |
+      dV = c^(-CRRA)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{live,theta}(V)
+    ShadowBellman: |
+      dV[<] = E_{live,theta}(R[<] / PermGroFac * dV)
+
+calibration:
+  DiscFac: 0.96
+  CRRA: 2.0
+  Rfree: 1.03
+  EqP: 0.02
+  LivPrb: 0.98
+  PermGroFac: 1.01
+  TranShkStd: 0.1
+  RiskyStd: 0.1

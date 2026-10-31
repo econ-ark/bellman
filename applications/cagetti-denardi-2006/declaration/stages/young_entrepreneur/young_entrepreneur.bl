@@ -1,0 +1,47 @@
+@stage: young_entrepreneur
+
+Xa := ℝ₊
+Y  := ℝ₊₊        :: ["working ability; the positive reals stand in for its finite grid, whose number of points is a numerical choice"]
+Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
+
+σ : ℝ₊₊          :: ["relative risk aversion; the utility formula requires σ different from 1"]
+δ : [0,1]        :: ["depreciation rate of capital"]
+ν : [0,1]        :: ["degree of decreasing returns of the entrepreneurial technology"]
+f : [0,1]        :: ["fraction of working capital an entrepreneur keeps when he defaults"]
+r : (-1, inf)    :: ["risk-free interest rate, a price fixed by the stationary equilibrium"]
+
+𝑢(c : ℝ₊₊) := c^(1-σ)/(1-σ)                                        :: [id=util]
+Γ(a : ℝ₊, θ : ℝ₊, k : ℝ₊) := (0, (1 - δ)*k + θ*k^ν - (1 + r)*(k - a)]  :: [id=feasible]
+
+[id=arvl_to_dcsn, (a_ye : Xa, y_ye : Y, θ_ye : Θ) : !arvl -> (a : Xa, y : Y, θ : Θ) : !dcsn] {
+    a = a_ye
+    y = y_ye
+    θ = θ_ye
+}
+
+[id=dcsn_to_cntn, (a, y, θ, k : ℝ₊ @ !ctrl, c : ℝ₊₊ @ !ctrl, d : !ctrl @ {repay, default}) : !dcsn -> ()] {
+    [label=repay, () -> (a_ye_ea : Xa, y_ye_ea : Y, θ_ye_ea : Θ) : !cntn] {
+        a_ye_ea = (1 - δ)*k + θ*k^ν - (1 + r)*(k - a) - c       :: [id=budget]
+        y_ye_ea = y
+        θ_ye_ea = θ
+    }
+    [label=default, () -> (a_ye_wk : Xa, y_ye_wk : Y, θ_ye_wk : Θ) : !cntn] {
+        a_ye_wk = f*k                                          :: [id=kept_capital]
+        y_ye_wk = y
+        θ_ye_wk = θ
+    }
+}
+
+[id=cntn_to_dcsn, (V_repay[>] : ℝ @ !vlu, V_w[>] : ℝ @ !vlu, c, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = (𝑢(c) + V_repay[>], V_w[>])[d]                         :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                                                  :: [id=value]
+}
+
+[id=policy, (V_repay[>] : ℝ @ !vlu, V_w[>] : ℝ @ !vlu) : !cntn -> (k : ℝ₊ @ !ctrl, c : ℝ₊₊ @ !ctrl, d : {repay, default} @ !ctrl) : !dcsn] {
+    (k, c) = argmax_{k, c : Γ(a, θ, k)}(𝑢(c) + V_repay[>])      :: [id=optimality]
+    𝑢(c) + V_repay[>] >= V_w[>]                                 :: [id=enforcement]
+    d = argmax_{d}(𝑢(c) + V_repay[>], V_w[>])                   :: [id=repayment]
+}

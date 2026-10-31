@@ -1,0 +1,38 @@
+# The baseline calibration of Cagetti and De Nardi (2006), "Entrepreneurship,
+# Frictions, and Wealth", Journal of Political Economy 114(5), 835-870.
+# One mapping for all ten stages; a stage binds the names it declares.
+calibration:
+  # Table 5, panel A: parameters taken from other studies
+  σ: 1.5          # relative risk aversion
+  δ: 0.06         # depreciation rate of capital
+  π_y: 0.978      # probability of remaining young, an expected working life of 45 years
+  π_o: 0.911      # probability of surviving when old, an expected retirement of 11 years
+  η: 1.0          # weight on the utility of the descendants, perfect altruism
+  # Appendix A: the five-point Markov chain (Tauchen and Hussey 1991) that
+  # approximates the income process, a lognormal AR(1) whose persistence of
+  # 0.95 is given in Section III.G; the grid is normalised to an average of one
+  y_grid: [0.2468, 0.4473, 0.7654, 1.3097, 2.3742]
+  P_y:
+    - [0.7376, 0.2473, 0.0150, 0.0002, 0.0000]
+    - [0.1947, 0.5555, 0.2328, 0.0169, 0.0001]
+    - [0.0113, 0.2221, 0.5333, 0.2221, 0.0113]
+    - [0.0001, 0.0169, 0.2328, 0.5555, 0.1947]
+    - [0.0000, 0.0002, 0.0150, 0.2473, 0.7376]
+  # Table 5, panel B: parameters calibrated to the data
+  β: 0.865        # Table 5; the text of Section IV.D gives .867 for the baseline
+  θ_e: 0.514      # the positive ability level of Appendix A; Table 5 rounds it to .51
+  ρ_θ0: 0.964     # P_θ of Appendix A, first row [.964, .036]
+  ρ_θ1: 0.794     # P_θ of Appendix A, second row [.206, .794]
+  ν: 0.88         # degree of decreasing returns
+  f: 0.75         # fraction of working capital kept on default
+  # Section IV.B: the equilibrium interest rate of the baseline economy
+  r: 0.065
+  # Equation (1), the corporate sector: declared by no stage
+  α: 0.33
+  A: 1.0
+  # Not reported: the wage w, the payroll tax τ and the pension p. All three
+  # are fixed by the stationary equilibrium (Section III.F): w by the marginal
+  # product of labour in the corporate sector, τ by the balance of the social
+  # security budget, and p as 40 percent of average yearly income net of taxes
+  # (Table 5, with "net of taxes" in Section III.G). The paper reports none of
+  # their values, so none is written here.

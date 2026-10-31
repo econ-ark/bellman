@@ -1,0 +1,41 @@
+!trellis
+# The stationary model of Cagetti and De Nardi (2006) repeats one period. A
+# trellis of H years has H copies of the period below, periods[0] terminal, and
+# H - 1 copies of the inter-period connector. The terminal continuation values
+# of periods[0], one for each of the four households whose problems end the
+# period, are boundary data this file does not supply.
+name: cagetti_denardi_2006
+periods:
+  - !period
+    name: year
+    stages:
+      - worker_ageing
+      - entrepreneur_ageing
+      - entrepreneur_death
+      - retiree_death
+      - young_choice
+      - old_choice
+      - young_entrepreneur
+      - old_entrepreneur
+      - worker
+      - retiree
+    connectors:
+      - {a_wa_yc: a_yc, y_wa_yc: y_yc, θ_wa_yc: θ_yc}
+      - {a_ea_yc: a_yc, y_ea_yc: y_yc, θ_ea_yc: θ_yc}
+      - {a_ed_yc: a_yc, y_ed_yc: y_yc, θ_ed_yc: θ_yc}
+      - {a_rd_yc: a_yc, y_rd_yc: y_yc, θ_rd_yc: θ_yc}
+      - {a_ea_oc: a_oc, θ_ea_oc: θ_oc}
+      - {a_ed_oc: a_oc, θ_ed_oc: θ_oc}
+      - {a_yc_wk: a_wk, y_yc_wk: y_wk, θ_yc_wk: θ_wk}
+      - {a_ye_wk: a_wk, y_ye_wk: y_wk, θ_ye_wk: θ_wk}
+      - {a_wa_rt: a_rt}
+      - {a_rd_rt: a_rt}
+      - {a_oc_rt: a_rt}
+      - {a_oe_rt: a_rt}
+inter_connectors:
+  # The end-of-year assets and abilities of the four households of period h+1
+  # are the arrival fields of the demographic stages of period h.
+  - {a_wk_wa: a_wa, y_wk_wa: y_wa, θ_wk_wa: θ_wa,
+     a_ye_ea: a_ea, y_ye_ea: y_ea, θ_ye_ea: θ_ea,
+     a_oe_ed: a_ed, θ_oe_ed: θ_ed,
+     a_rt_rd: a_rd}

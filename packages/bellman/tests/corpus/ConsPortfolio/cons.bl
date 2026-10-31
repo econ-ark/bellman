@@ -1,0 +1,44 @@
+@stage: cons
+
+Xm := ℝ₊₊
+Xa := ℝ₊
+
+ρ     : (1, inf)  :: ["coefficient of relative risk aversion, HARK CRRA"]
+p_adj : [0,1]     :: ["probability that the risky share may be changed this period, HARK AdjustPrb"]
+
+Adjust : [0,1]    :: ["1 when the risky share may be changed this period and 0 otherwise; the law puts all its mass on 0 and 1"]
+Adjust ~ Bernoulli(p_adj)
+
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)          :: [id=inv_marg_util]
+Γ_c(x : ℝ₊₊) := (0, x]             :: [id=feasible_consumption]
+
+[id=arvl_to_dcsn, (m : Xm, S : [0,1], Adjust) : !arvl -> (m_d : Xm, S_d : [0,1], adj_d : [0,1]) : !dcsn] {
+    m_d   = m
+    S_d   = S
+    adj_d = Adjust
+}
+
+[id=dcsn_to_cntn, (m_d, S_d, adj_d, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : Xa, S_a : [0,1], adj_a : [0,1]) : !cntn] {
+    a     = m_d - c
+    S_a   = S_d
+    adj_a = adj_d
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V        = 𝑢(c) + V[>]           :: [id=value]
+    D_{m_d}V = 𝑑𝑢(c)                 :: [id=marginal]
+    D_{S_d}V = D_{S_a}V[>]           :: [id=marginal_share]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{Adjust}(V)             :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c      = argmax_{cp : Γ_c(m_d)}(𝑢(cp) + V[>])   :: [id=optimality, !doc]
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])       :: [id=InvEuler]
+    m_d[>] = a + c[>]                :: [id=endoggrid]
+    c      = c[>]                    :: [id=cons_choice]
+}

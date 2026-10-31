@@ -1,0 +1,18 @@
+!trellis
+name: reference_cons_port
+# The fixed reference's end-of-period returns (its configuration end_returns): consumption, then discounting,
+# then the portfolio stage as the reference solved it; the resources the draws give leave each period.
+# Six equal periods; the one inter-period mapping stands for every adjacent pair.
+periods:
+  - stages:
+      cons: {stage: stages/cons/cons.bl, calibration: calibration/portfolio.yml,
+             settings: settings/cons.yml, methods: methods/cons.yml}
+      disc: {stage: stages/disc/disc.bl, calibration: calibration/portfolio.yml,
+             settings: {}, methods: methods/disc.yml}
+      port: {stage: stages/port/port.bl, calibration: calibration/portfolio.yml,
+             settings: settings/port.yml, methods: methods/port_reference.yml}
+    connectors:
+      - {disc.a: k}
+    repeat: 6
+inter_connectors:
+  - {w: m}

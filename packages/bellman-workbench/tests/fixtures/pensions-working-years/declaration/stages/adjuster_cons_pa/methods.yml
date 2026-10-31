@@ -1,0 +1,16 @@
+stage: adjuster_cons_pa
+
+# The adjuster's consumption, new stock and mortgage: the endogenous grid
+# method at the maximization (Appendix D.2); the backward outputs read by
+# linear interpolation.
+methods:
+  - on: policy.optimality.argmax
+    method: !egm
+  - on: cntn_to_dcsn.value
+    method: !Linear
+  - on: cntn_to_dcsn.marginal_wealth
+    method: !Linear
+  - on: arvl_to_dcsn
+    method: !deterministic
+  - on: dcsn_to_cntn
+    method: !deterministic

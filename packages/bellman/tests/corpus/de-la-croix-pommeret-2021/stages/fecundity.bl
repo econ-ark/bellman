@@ -1,0 +1,44 @@
+@stage: fecundity
+
+# The one-shot procreation attempt. It succeeds with the age-dependent
+# probability π(τ) and fails with probability 1 - π(τ) (p. 5). Success sends the
+# woman into the motherhood regime and pays the lump-sum utility ω of having a
+# child; failure sends her into the childless regime, with no second chance.
+# Nothing is chosen here, so the stage has no policy block.
+
+Xa := ℝ₊₊
+Xt := ℝ₊
+
+ω   : ℝ₊       :: ["lump-sum utility of having children, received at the date of birth (p. 6)"]
+π_a : (0,1]    :: ["numerator coefficient of the fitted fecundity function, the paper's a = 0.96 (p. 16)"]
+π_b : ℝ        :: ["intercept of the fitted fecundity function, the paper's b: 3.53 in the text (p. 16), 3.5 in Table 1 (p. 15)"]
+π_c : ℝ₊       :: ["slope in age of the fitted fecundity function, the paper's c = 0.33 (p. 16)"]
+π_d : ℝ₊₊      :: ["denominator constant of the fitted fecundity function, the paper's d = 0.012 (p. 16)"]
+
+𝜋(t : Xt) := π_a*exp(π_b - π_c*t)/(π_d + exp(π_b - π_c*t))    :: [id=fecundity, "the paper's π(t) below menopause; its zero above the menopause age T is not written here"]
+
+s : {mother, childless} @ !shck
+s ~ Categorical((𝜋(age_fecd), 1 - 𝜋(age_fecd)))    :: ["success or failure of the single attempt at the fecundity of the current age, with probabilities in the order of the labels"]
+
+[id=arvl_to_dcsn, (a_fec : Xa, age_fec : Xt) : !arvl -> (a_fecd : Xa, age_fecd : Xt) : !dcsn] {
+    a_fecd   = a_fec                         :: [id=wealth]
+    age_fecd = age_fec                       :: [id=age]
+}
+
+[id=dcsn_to_cntn, (a_fecd, age_fecd, s) : !dcsn -> ()] {
+    [label=mother,    () -> (a_mth : Xa) : !cntn] {
+        a_mth = a_fecd                       :: [id=wealth]
+    }
+    [label=childless, () -> (a_chl : Xa) : !cntn] {
+        a_chl = a_fecd                       :: [id=wealth]
+    }
+}
+
+[id=cntn_to_dcsn, (V_mth[>] : [-inf, inf) @ !vlu, V_chl[>] : [-inf, inf) @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V           = E_{s}((V_mth[>] + ω, V_chl[>])[s])                :: [id=value]
+    D_{a_fecd}V = E_{s}((D_{a_mth}V_mth[>], D_{a_chl}V_chl[>])[s])  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]  = V                                :: [id=value]
+}

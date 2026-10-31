@@ -1,0 +1,25 @@
+stage: worker
+
+methods:
+  # Appendix B: value function iteration on a grid for assets.
+  - on: cntn_to_dcsn
+    method: !vfi
+    settings:
+      orders:
+        m: n_a
+      bounds:
+        m: [a_min, a_max]
+      tol: tol_v
+
+  - on: arvl_to_dcsn
+    method: !deterministic
+
+  # Appendix B: the transition matrix over the grid from which the invariant
+  # distribution is computed.
+  - on: dcsn_to_cntn
+    method: !histogram
+    settings:
+      orders:
+        a_wk_wa: n_a
+      bounds:
+        a_wk_wa: [a_min, a_max]

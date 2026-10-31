@@ -1,0 +1,7 @@
+stage: disc
+
+methods:
+  - on: cntn_to_dcsn
+
+  - on: dcsn_to_cntn
+    method: !deterministic

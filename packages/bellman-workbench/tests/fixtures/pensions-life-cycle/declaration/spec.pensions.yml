@@ -1,0 +1,22 @@
+# The recipe of the pension model of Dobrescu, Shanker, Bateman, Newell and
+# Thorp (2023), written as a second route of this folder: the trellis file and
+# each stage's file, by their paths from this folder, and for each stage and
+# each kind its sources. The `$…` entries are slots that no keyword of the page
+# binds. Each stage is active in the periods its `periods: [lo, hi]` names,
+# counted from the period after the last age, periods[0], to the year of
+# enrollment, periods[84]: survival and the bequest from the second year on,
+# the plan choice in the first year, the contribution and the allocation in
+# the working years, the payout at 65.
+trellis: trellis.pensions.yml
+stages:
+  shocks: {stage: stages/shocks/shocks.bl, calibration: {all: [calibration/shocks]}, settings: {all: [$shocks_settings]}, methods: {all: [stages/shocks/methods]}}
+  survival: {stage: stages/survival/survival.bl, calibration: {all: [calibration/survival]}, settings: {all: [$survival_settings]}, methods: {all: [stages/survival/methods]}, periods: [1, 83]}
+  tenure_pa: {stage: stages/tenure_pa/tenure_pa.bl, calibration: {all: [$tenure_pa_calibration]}, settings: {all: [$tenure_pa_settings]}, methods: {all: [stages/tenure_pa/methods]}, periods: [1, 84]}
+  renter_cons: {stage: stages/renter_cons/renter_cons.bl, calibration: {all: [calibration/renter_cons]}, settings: {all: [settings/renter_cons]}, methods: {all: [stages/renter_cons/methods]}, periods: [1, 84]}
+  keeper_cons_pa: {stage: stages/keeper_cons_pa/keeper_cons_pa.bl, calibration: {all: [calibration/renter_cons]}, settings: {all: [$keeper_cons_pa_settings]}, methods: {all: [stages/keeper_cons_pa/methods]}, periods: [1, 84]}
+  adjuster_cons_pa: {stage: stages/adjuster_cons_pa/adjuster_cons_pa.bl, calibration: {all: [calibration/renter_cons]}, settings: {all: [$adjuster_cons_pa_settings]}, methods: {all: [stages/adjuster_cons_pa/methods]}, periods: [1, 84]}
+  bequest_pa: {stage: stages/bequest_pa/bequest_pa.bl, calibration: {all: [calibration/bequest_pa]}, settings: {all: [$bequest_pa_settings]}, methods: {all: [stages/bequest_pa/methods]}, periods: [0, 83]}
+  contribution: {stage: stages/contribution/contribution.bl, calibration: {all: [$contribution_calibration]}, settings: {all: [$contribution_settings]}, methods: {all: [$contribution_methods]}, periods: [37, 84]}
+  allocation: {stage: stages/allocation/allocation.bl, calibration: {all: [$allocation_calibration]}, settings: {all: [$allocation_settings]}, methods: {all: [$allocation_methods]}, periods: [37, 84]}
+  payout: {stage: stages/payout/payout.bl, calibration: {all: [$payout_calibration]}, settings: {all: [$payout_settings]}, methods: {all: [$payout_methods]}, periods: [36, 36]}
+  plan_choice: {stage: stages/plan_choice/plan_choice.bl, calibration: {all: [$plan_choice_calibration]}, settings: {all: [$plan_choice_settings]}, methods: {all: [$plan_choice_methods]}, periods: [84, 84]}

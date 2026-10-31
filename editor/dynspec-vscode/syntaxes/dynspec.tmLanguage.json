@@ -1,0 +1,178 @@
+{
+  "name": "dynspec",
+  "scopeName": "source.dynspec",
+  "patterns": [
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#metadata"
+    },
+    {
+      "include": "#subscripted-operator"
+    },
+    {
+      "include": "#operator-head"
+    },
+    {
+      "include": "#space-constructor"
+    },
+    {
+      "include": "#classifier"
+    },
+    {
+      "include": "#marked-tag"
+    },
+    {
+      "include": "#id-value"
+    },
+    {
+      "include": "#kv-key"
+    },
+    {
+      "include": "#set-glyph"
+    },
+    {
+      "include": "#selection-bracket"
+    },
+    {
+      "include": "#builtin-call"
+    },
+    {
+      "include": "#call-head"
+    },
+    {
+      "include": "#operator"
+    },
+    {
+      "include": "#parameter-declaration"
+    },
+    {
+      "include": "#declared-name"
+    },
+    {
+      "include": "#string"
+    },
+    {
+      "include": "#number"
+    }
+  ],
+  "repository": {
+    "comment": {
+      "match": "#.*$",
+      "name": "comment.line.number-sign.dynspec"
+    },
+    "metadata": {
+      "match": "^\\s*(@[A-Za-z_][\\w]*)(:)\\s*(.*)$",
+      "captures": {
+        "1": {
+          "name": "keyword.control.directive.dynspec"
+        },
+        "2": {
+          "name": "punctuation.separator.dynspec"
+        },
+        "3": {
+          "name": "string.unquoted.metadata.dynspec"
+        }
+      }
+    },
+    "subscripted-operator": {
+      "begin": "([A-Za-z_][\\w]*)(_\\{)",
+      "beginCaptures": {
+        "1": {
+          "name": "support.function.builtin.operator.dynspec"
+        },
+        "2": {
+          "name": "punctuation.definition.subscript.dynspec"
+        }
+      },
+      "end": "\\}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.subscript.dynspec"
+        }
+      },
+      "patterns": [
+        {
+          "match": "∈",
+          "name": "keyword.operator.membership.dynspec"
+        },
+        {
+          "match": "[A-Za-z_][\\w]*",
+          "name": "variable.parameter.bound.dynspec"
+        }
+      ]
+    },
+    "operator-head": {
+      "match": "\\b(E|argmax|max|evaluate|upper_env|solve|Inv|D)\\b(?=\\s*\\()",
+      "name": "support.function.builtin.operator.dynspec"
+    },
+    "space-constructor": {
+      "match": "\\b(interval|labels|product|linspace|N|Mixture|LogNormal|Normal|UNormal|Bernoulli|MarkovChain|DiscreteMarkov|Uniform|TruncatedNormal|TruncatedLogNormal|TypeIExtremeValue|Categorical)\\b(?=\\s*\\()",
+      "name": "support.type.builtin.set.dynspec"
+    },
+    "classifier": {
+      "match": "@(in|dist|arvl|dcsn|cntn|control|marginal|state|value)\\b",
+      "name": "entity.name.function.decorator.dynspec"
+    },
+    "marked-tag": {
+      "match": "![A-Za-z_][\\w]*",
+      "name": "entity.name.tag.mark.dynspec"
+    },
+    "id-value": {
+      "match": "(?<=\\bid=)[^,\\]\\s]+",
+      "name": "entity.name.function.block.dynspec"
+    },
+    "kv-key": {
+      "match": "([A-Za-z_][\\w]*)(=)",
+      "captures": {
+        "1": {
+          "name": "variable.parameter.key.dynspec"
+        },
+        "2": {
+          "name": "keyword.operator.assignment.dynspec"
+        }
+      }
+    },
+    "set-glyph": {
+      "match": "ℝ_\\{[+\\-±]∞\\}|ℝ̄|ℝ₊₊|ℝ₊|ℝ|ℕ|ℤ|\\bR\\+\\+|\\bR\\+|∞",
+      "name": "support.type.builtin.set.dynspec"
+    },
+    "selection-bracket": {
+      "match": "(?<=[\\w\\)\\]])\\[[^\\[\\]\\r\\n]{1,12}\\]",
+      "name": "constant.language.selector.dynspec"
+    },
+    "operator": {
+      "match": "->|:=|<-|::|∈|⟂|×|≤|≥|<=|>=|=",
+      "name": "keyword.operator.dynspec"
+    },
+    "declared-name": {
+      "match": "[A-Za-z_ℽ\\w]+(?=\\s+@)",
+      "name": "variable.parameter.declaration.dynspec"
+    },
+    "string": {
+      "match": "\"[^\"\\r\\n]*\"|'[^'\\r\\n]*'",
+      "name": "string.quoted.dynspec"
+    },
+    "number": {
+      "match": "\\b\\d+(\\.\\d+)?\\b",
+      "name": "constant.numeric.dynspec"
+    },
+    "builtin-call": {
+      "match": "\\b(exp|log|sqrt|abs)\\b(?=\\s*\\()",
+      "name": "support.function.builtin.math.dynspec"
+    },
+    "call-head": {
+      "match": "[\\p{L}][\\p{L}\\p{Nd}_]*(?=\\s*\\()",
+      "name": "entity.name.function.call.dynspec"
+    },
+    "parameter-declaration": {
+      "match": "^\\s*([\\p{L}][\\p{L}\\p{Nd}_]*)\\s+(?=@in\\b)(?!.*@dist)",
+      "captures": {
+        "1": {
+          "name": "constant.other.parameter.dynspec"
+        }
+      }
+    }
+  }
+}

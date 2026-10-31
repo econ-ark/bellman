@@ -1,0 +1,31 @@
+@stage: retiree
+
+Xa := ℝ₊
+Xm := ℝ₊₊
+
+σ : ℝ₊₊          :: ["relative risk aversion; the utility formula requires σ different from 1"]
+r : (-1, inf)    :: ["risk-free interest rate, a price fixed by the stationary equilibrium"]
+p : ℝ₊₊          :: ["pension and social security payment, 40 percent of average yearly income net of taxes"]
+
+𝑢(c : ℝ₊₊) := c^(1-σ)/(1-σ)        :: [id=util]
+Γ(x : ℝ₊₊) := (0, x]                 :: [id=feasible]
+
+[id=arvl_to_dcsn, (a_rt : Xa) : !arvl -> (m : Xm) : !dcsn] {
+    m = (1 + r)*a_rt + p                 :: [id=cash_on_hand]
+}
+
+[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a_rt_rd : Xa) : !cntn] {
+    a_rt_rd = m - c                      :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + V[>]                      :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                             :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{c : Γ(m)}(𝑢(c) + V[>])   :: [id=choice]
+}

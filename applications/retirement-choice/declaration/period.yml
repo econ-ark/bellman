@@ -1,0 +1,16 @@
+!period
+name: retirement_period
+
+# One period of the retirement model: the choice between work and retirement,
+# then consumption on the branch that choice selects. The order of the stages
+# is derived from their fields, not from this list. The work branch joins the
+# worker's arrival assets by name (a_w); the retire branch connects to the
+# retiree's arrival assets. The terminal period, which adds the bequest, is
+# written out in trellis.yml, since its connector names the bequest's arrival
+# field and a connector to a stage absent from a period is refused.
+stages:
+  - ret_choice
+  - worker_cons
+  - retiree_cons
+connectors:
+  - {a_r: a_ret}

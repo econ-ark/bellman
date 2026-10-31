@@ -1,0 +1,16 @@
+# The portfolio stage's numerical settings.
+# The capital grid is a multi-exponential grid (grid_spacing: expmult) of 16,000 points from 1e-6 to 2,000, the
+# points of the savings grid of settings/cons_wide.yml, so that the marginal value the endogenous-grid method
+# reads at each saving stands at a grid point; seven Gauss-Hermite nodes per shock; n_ς is the number of
+# shares, 0.005 apart, that the share search compares.
+settings:
+  grid_spacing: expmult
+  n_k: 16000
+  k_min: 1.0e-6
+  k_max: 2000.0
+  n_Ψ_nodes: 7
+  n_θ_nodes: 7
+  n_ς: 201
+  # the draws of the forward simulation, which the method !monte-carlo on dcsn_to_cntn names, and their seed
+  n_sim: 10000
+  sim_seed: 12345

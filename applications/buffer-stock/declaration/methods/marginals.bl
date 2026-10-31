@@ -1,0 +1,14 @@
+@methods: buffer_stock
+# The derivatives of the two values of the buffer-stock stage, each stated by
+# the marginal block of the value builder that writes the value. The decision
+# value's line is the envelope condition. The arrival value's line keeps the
+# factor R/(Γ*ψ) of the law m = R*k/(Γ*ψ) + ξ and the normalization
+# (Γ*ψ)^(1-ρ) of the value, since that law is not the identity.
+
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{m}V = 𝑑𝑢(c)                                  :: [id=marginal]
+}
+
+[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+    D_{k}V[<] = E_{ψ,ξ}(R * (Γ*ψ)^(-ρ) * D_{m}V)    :: [id=marginal]
+}

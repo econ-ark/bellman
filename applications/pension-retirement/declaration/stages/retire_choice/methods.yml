@@ -1,0 +1,9 @@
+stage: retire_choice
+
+methods:
+  # The derivatives of the choice value in the two assets, those of the branch
+  # value the choice selects, are stated by the marginal block of
+  # marginals_retire_choice.bl on the decision value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_retire_choice.bl

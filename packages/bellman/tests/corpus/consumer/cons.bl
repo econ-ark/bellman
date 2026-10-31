@@ -1,0 +1,48 @@
+@stage: cons
+
+Xk := ℝ₊
+Xm := ℝ₊₊
+Xa := ℝ₊
+
+β : (0,1)        :: ["discount factor (HARK DiscFac)"]
+ℒ : (0,1]        :: ["probability of surviving to the next period (HARK LivPrb)"]
+ρ : (1, inf)     :: ["coefficient of relative risk aversion (HARK CRRA)"]
+Γ : ℝ₊₊          :: ["permanent income growth factor (HARK PermGroFac)"]
+σ_θ : ℝ₊         :: ["standard deviation of the log transitory shock (HARK TranShkStd)"]
+
+θ : ℝ₊₊
+θ ~ LogNormal(-(σ_θ^2)/2, σ_θ)
+
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
+𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]
+𝒞(x : ℝ₊₊) := (0, x]                 :: [id=feasible]
+
+# k is capital divided by permanent income of the previous period, and R is the
+# portfolio return realised in the previous period (HARK k and R).
+[id=arvl_to_dcsn, (k : Xk, R : ℝ₊₊, θ) : !arvl -> (m : Xm) : !dcsn] {
+    b = k*R/Γ                       :: [id=bank_balances]
+    m = b + θ                       :: [id=market_resources]
+}
+
+[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {
+    a = m - c                       :: [id=assets]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V      = 𝑢(c) + β*ℒ*V[>]        :: [id=value]
+    D_{m}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V : !dcsn) -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]      = Γ^(1-ρ)*E_{θ}(V)          :: [id=value]
+    D_{k}V[<] = Γ^(-ρ)*R*E_{θ}(D_{m}V)    :: [id=marginal]
+    D_{R}V[<] = Γ^(-ρ)*k*E_{θ}(D_{m}V)    :: [id=marginal_return]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c    = argmax_{c : 𝒞(m)}(𝑢(c) + β*ℒ*V[>])     :: [id=optimality, !doc]
+    c[>] <= 𝑑𝑢𝑖𝑛𝑣(β*ℒ*D_{a}V[>])                 :: [id=InvEuler]
+    m[>] = a + c[>]                                :: [id=endoggrid]
+    c    = c[>]                                    :: [id=cons_choice]
+}

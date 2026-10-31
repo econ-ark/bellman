@@ -1,0 +1,16 @@
+!period
+# Period name
+name: port_cons_period
+
+# Stage sequence within the period (this list is the BACKWARD solve order; the
+# forward economic order is its reverse — cons_stage then port_stage).
+stages:
+  - port_stage
+  - cons_stage
+
+# Intra-period connector: cons_stage runs first in forward time (consume out of
+# cash-on-hand m, save a), then its savings a feed port_stage as capital k.
+# A connector is its list of pairs; the field names route it (a is cons_stage's
+# continuation field, k is port_stage's arrival field).
+connectors:
+  - {a: k}

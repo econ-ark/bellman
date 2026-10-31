@@ -1,0 +1,11 @@
+!period
+name: durables_two_stages
+
+# The fifty periods before the terminal one of trellis.two-stages.yml: the two
+# consumption stages alone, the route that leaves out the
+# tenure stage. The two stages are independent of each other, each ending the
+# period at its own continuation fields.
+stages:
+  - keeper_cons
+  - adjuster_cons
+connectors: []

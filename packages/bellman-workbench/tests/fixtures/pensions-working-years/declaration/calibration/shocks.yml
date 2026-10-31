@@ -1,0 +1,27 @@
+# Parameters of the stage shocks of the pension model (Dobrescu, Shanker,
+# Bateman, Newell and Thorp 2023, Section 5 and Table 4, males), in units of
+# $100,000 as the code's settings use. Y is the earnings level at the age of
+# the period; it is zero in the retirement years.
+calibration:
+  R: 1.0223
+  δ: 0.011
+  Y: 0.0
+  φ: 0.9044
+  σ_u: 0.0922
+  r_r: 0.0476
+  r_s: 0.0193
+  scale_r: 1.68
+  scale_s: 0.54
+  σ_d: 0.064
+  β_m: 3.36
+  κ_m: 0.33
+  r_h: 0.032
+  σ_h: 0.042
+  # The housing taste: low with conviction, low with hesitation, high. The
+  # paper prints neither the discretized points nor the matrix; these are
+  # illustrative numbers that keep each row a probability vector.
+  Π_α: [[0.6, 0.1, 0.3], [0.05, 0.9, 0.05], [0.03, 0.02, 0.95]]
+  α_pts: [0.539, 0.539, 0.571]
+  # The discount factor on three points around 0.900; illustrative numbers.
+  Π_β: [[0.6, 0.3, 0.1], [0.2, 0.6, 0.2], [0.1, 0.3, 0.6]]
+  β_pts: [0.873, 0.900, 0.927]

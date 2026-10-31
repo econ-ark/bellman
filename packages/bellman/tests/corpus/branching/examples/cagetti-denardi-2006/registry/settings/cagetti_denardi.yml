@@ -1,0 +1,12 @@
+# Numerical settings named by the methods files, as
+# applications/cagetti-denardi-2006/declaration/settings/cagetti-denardi-2006.yml writes them. Appendix B of
+# Cagetti and De Nardi (2006) describes these choices without reporting their
+# values; null records a value the source does not give.
+settings:
+  n_a: null       # number of points of the asset grid
+  a_min: 0.0      # lowest point of the asset grid, the borrowing limit a' >= 0 of equation (6)
+  a_max: null     # highest point, "chosen so that it is not binding for the household's saving decisions"
+  n_k: null       # number of points of the capital grid of the entrepreneurs
+  k_max: null     # the maximum investment level, the first value of the bound k̂(x) on enforceable capital
+  tol_v: null     # convergence criterion of value function iteration
+  tol_k: null     # criterion for the bound k̂(x) not changing across iterations

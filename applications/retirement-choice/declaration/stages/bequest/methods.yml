@@ -1,0 +1,8 @@
+stage: bequest
+
+methods:
+  # The derivative of the terminal value in wealth, zero, is stated by the
+  # marginal block of marginals_bequest.bl on the decision value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_bequest.bl

@@ -1,0 +1,31 @@
+# Stage this methodization targets
+stage: cons_stage
+
+# Node-to-method-and-handler bindings
+methods:
+  - on: policy
+    method: !egm
+    handler: cons-port:egm   # LOCAL default: our in-house EGM (invert the Euler eqn → endogenous grid). §6 swaps to hark:solve_one_period_ConsPF (with the returns-timing s-transform).
+
+  - on: policy.InvEuler
+
+  - on: policy.reverse_state
+
+  - on: cntn_to_dcsn.dcsn_val, cntn_to_dcsn.marginal, policy.pol_func # AAS to AI: How do we know that these are relating to implicit evaluation at these nodes again?
+    method: !Cartesian
+    settings:
+      orders: [n_m]
+      bounds: [[m_min, m_max]]
+    handler: cons-port:_make_interp
+
+  - on: dcsn_to_arvl
+
+  - on: arvl_to_dcsn
+
+  - on: dcsn_to_cntn
+    handler: cons-port:transition_fwd #AAS to AI: this seems redundant for now? 
+
+  - on: arvl_to_dcsn_builder
+    method: !deterministic
+
+  - on: dcsn_to_cntn_builder

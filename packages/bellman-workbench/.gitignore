@@ -1,0 +1,3 @@
+# Solara's own interface files under bellman_workbench/solara-cdn/ are
+# tracked package data. This overrides the root dist/ rule only there.
+!bellman_workbench/solara-cdn/**/dist/

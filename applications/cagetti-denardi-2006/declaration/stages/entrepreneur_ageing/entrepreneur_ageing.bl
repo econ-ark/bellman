@@ -1,0 +1,46 @@
+@stage: entrepreneur_ageing
+
+Xa := ℝ₊
+Y  := ℝ₊₊        :: ["working ability; the positive reals stand in for its finite grid, whose number of points is a numerical choice"]
+Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
+
+β      : (0,1)   :: ["discount factor"]
+π_y    : [0,1]   :: ["probability that a young person remains young for another period"]
+P_y    : [0,1]   :: ["transition matrix of working ability; the set of one probability stands in for the matrix"]
+y_grid : ℝ₊₊     :: ["grid points of working ability, normalised to an average of one; the positive reals stand in for the vector"]
+ρ_θ0   : [0,1]   :: ["probability that zero entrepreneurial ability persists"]
+ρ_θ1   : [0,1]   :: ["probability that the positive entrepreneurial ability persists"]
+θ_e    : ℝ₊₊     :: ["the positive level of entrepreneurial ability"]
+
+y_n : Y
+y_n ~ MarkovChain(P_y, y_grid, y_ea)                                        :: ["this period's working ability, drawn from the row of P_y at last period's ability y_ea"]
+θ_n : Θ
+θ_n ~ MarkovChain(((ρ_θ0, 1 - ρ_θ0), (1 - ρ_θ1, ρ_θ1)), (0, θ_e), θ_ea)     :: ["this period's entrepreneurial ability, drawn from the row at last period's ability θ_ea"]
+s : {young, old}
+s ~ Categorical((π_y, 1 - π_y))                                             :: ["remaining young or ageing, with probabilities in the order of the labels"]
+
+[id=arvl_to_dcsn, (a_ea : Xa, y_ea : Y, θ_ea : Θ, y_n, θ_n) : !arvl -> (a : Xa, y : Y, θ : Θ) : !dcsn] {
+    a = a_ea
+    y = y_n
+    θ = θ_n
+}
+
+[id=dcsn_to_cntn, (a, y, θ, s) : !dcsn -> ()] {
+    [label=young, () -> (a_ea_yc : Xa, y_ea_yc : Y, θ_ea_yc : Θ) : !cntn] {
+        a_ea_yc = a
+        y_ea_yc = y
+        θ_ea_yc = θ
+    }
+    [label=old, () -> (a_ea_oc : Xa, θ_ea_oc : Θ) : !cntn] {
+        a_ea_oc = a
+        θ_ea_oc = θ
+    }
+}
+
+[id=cntn_to_dcsn, (V_young[>] : ℝ @ !vlu, W_old[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = β*E_{s}((V_young[>], W_old[>])[s])   :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{y_n,θ_n}(V)                    :: [id=value]
+}

@@ -1,0 +1,22 @@
+!period
+name: pension_period
+
+# A period of the pension model (Dobrescu, Shanker, Bateman, Newell and Thorp
+# 2023). The template lists all eleven stage keys; the recipe's `periods:`
+# ranges make each stage active where it belongs: the plan choice in the first
+# year, the contribution and the allocation in the working years, the payout
+# in the year of retirement, survival and the bequest from the second year on.
+# The order of the stages is derived from their fields.
+stages:
+  - shocks
+  - survival
+  - plan_choice
+  - contribution
+  - allocation
+  - payout
+  - tenure_pa
+  - renter_cons
+  - keeper_cons_pa
+  - adjuster_cons_pa
+  - bequest_pa
+connectors: []

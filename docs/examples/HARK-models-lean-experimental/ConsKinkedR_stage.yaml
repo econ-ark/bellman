@@ -1,0 +1,93 @@
+name: ConsKinkedR
+
+symbols:
+  spaces:
+    Xk: "@def R"
+    Xp: "@def R++"
+    Xb: "@def R"
+    Xm: "@def R"
+    Xa: "@def R"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+
+  exogenous:
+    PermShk:
+      - "@in R++"
+      - "@dist LogNormal(0, sigma_perm)"
+    TranShk:
+      - "@in R++"
+      - "@dist LogNormal(0, sigma_tran)"
+    live:
+      - "@in {0,1}"
+      - "@dist Bernoulli(LivPrb)"
+
+  states:
+    b: "@in Xb"
+    m: "@in Xm"
+    p: "@in Xp"
+
+  controls:
+    c: "@in R+"
+
+  poststates:
+    a: "@in Xa"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    beta: "@in (0,1)"
+    rho: "@in R++"
+    Rboro: "@in R++"
+    Rsave: "@in R++"
+    PermGroFac: "@in R++"
+    LivPrb: "@in (0,1)"
+    sigma_perm: "@in R+"
+    sigma_tran: "@in R+"
+
+equations:
+  arvl_to_dcsn_transition: |
+    y = TranShk
+    G = PermGroFac * PermShk
+    p = p_prev * G
+    boro = (k < 0)
+    Rfree = Rsave + (Rboro - Rsave) * boro
+    b = Rfree * k / G
+    m = b + y
+
+  dcsn_to_cntn_transition: |
+    a = m - c
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u = (c^(1-rho))/(1-rho)
+      V = max_{c}(u + beta * LivPrb * V[>])
+    InvEuler: |
+      c = (beta * LivPrb * dV[>])^(-1/rho)
+    MarginalBellman: |
+      dV = c^(-rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{PermShk, TranShk, live}[live * V]
+    ShadowBellman: |
+      dV[<] = E_{PermShk, TranShk, live}[live * (PermGroFac * PermShk)^(-rho) * Rfree * dV]
+
+calibration:
+  beta: 0.96
+  rho: 2.0
+  Rboro: 1.20
+  Rsave: 1.03
+  PermGroFac: 1.01
+  LivPrb: 0.98
+  sigma_perm: 0.1
+  sigma_tran: 0.1

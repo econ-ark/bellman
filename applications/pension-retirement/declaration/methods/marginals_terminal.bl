@@ -1,0 +1,9 @@
+@methods: terminal
+# The derivatives of the terminal value in the two assets, stated in closed
+# form as the marginal block of the arrival value builder (AMD-MB-001 §4.3):
+# the assets left after the last date have no value, so both are zero.
+
+[id=arvl_marginal, () : !dcsn -> (V[<]) : !arvl] {
+    D_{y_f_T}V[<] = 0                                 :: [id=marginal_financial]
+    D_{y_p_T}V[<] = 0                                 :: [id=marginal_pension]
+}

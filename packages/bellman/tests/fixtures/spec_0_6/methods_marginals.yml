@@ -1,0 +1,8 @@
+stage: cons
+methods:
+  - on: policy
+    method: !egm
+    block: methods/cons_egm.bl
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: methods/cons_egm.bl

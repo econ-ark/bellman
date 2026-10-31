@@ -1,0 +1,54 @@
+# Parameter values of the housing model with a capital income tax.
+#
+# Source: the configuration STD_RES_SETTINGS_4_TAXES of the replication code of
+# Dobrescu and Shanker, "A fast upper envelope scan method for
+# discrete-continuous dynamic programming" (2026). It is the configuration the
+# paper's tax runs name, whose experiment set has the grid sizes and numbers of
+# housing sizes of Table 4; Table 3 is the same model with the tax switched
+# off. The same values appear in the notes to Table 3, except the transaction
+# cost, which the paper writes τ = 0.07, and the services scale ϑ, which the
+# notes to Appendix Table 7 give as 0.5.
+# The interest rate, the discount factor, the consumption weight, the housing
+# scale and shift and the income process follow Fella, "A generalized
+# endogenous grid method for non-smooth and non-concave problems", Review of
+# Economic Dynamics 17(2), 2014, Table 1.
+calibration:
+  β: 0.93       # discount factor
+  r: 0.06       # interest rate on financial assets
+  α: 0.77       # weight of non-durable consumption in utility
+  κ: 0.075      # housing services per unit of housing
+  ι: 0.01       # shift of housing in the services term
+  φ: 0.07       # transaction cost per unit of housing bought when the stock changes
+  P_r: 0.1      # rental price of one unit of housing services
+  ϑ: 0.5        # housing enjoyed per unit of rented services; ϑ = 1 is the utility function as printed in the paper
+
+  # The housing sizes are the n_H equally spaced points of [H_min, H_max] and
+  # the rental quantities the n_S equally spaced points of [S_min, S_max]. The
+  # paper reports runs with three, five, seven and ten sizes; seven is the
+  # number in the configuration.
+  H_min: 0.0
+  H_max: 5.0
+  n_H: 7
+  S_min: 0.0
+  S_max: 5.0
+  n_S: 7
+
+  # The tax on assets. Bracket k runs from a0_T[k], excluded, to a0_T[k+1],
+  # included, and charges B_T[k] + τ_T[k]*(a - a0_T[k]). The base values make
+  # the schedule continuous except at three thresholds, where it jumps by
+  # +0.10 at 3.87, by -0.13852 at 6.97 and by +0.15 at 15. Setting every B_T
+  # and every τ_T to zero gives the model without the tax, the model of the
+  # paper's Table 3.
+  a0_T: [0.0, 2.2, 2.5, 2.75, 3.87, 6.97, 8.36, 12.0, 15.0, 20.0]
+  B_T: [0.0, 0.0, 0.00342, 0.00852, 0.11412, 0.05, 0.076688, 0.174968, 0.378968, 0.525968]
+  τ_T: [0.0, 0.0114, 0.0204, 0.005, 0.024, 0.0192, 0.027, 0.018, 0.0294, 0.0294]
+
+  # The income chain, the two parameters Π and z of tenure_choice.bl, has no
+  # values here: a transition matrix and a vector of levels whose length the
+  # discretisation fixes have no set in the language, so the stage declares
+  # each by a stand-in set and calibration refuses a matrix or a list for it.
+  # The chain of the runs discretises log y = ζ + ε, with ζ' = ρ*ζ + η,
+  # ρ = 0.977, the standard deviation of η equal to 0.024 and the standard
+  # deviation of ε equal to 0.063, by the Rouwenhorst method with seven points
+  # for each component, which gives 49 states, and divides the levels by their
+  # mean so that the mean level is one.

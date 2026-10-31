@@ -1,0 +1,8 @@
+# The recipe of the demonstration in the order portfolio first: the trellis file and each stage's file, by
+# their paths from this folder, and for each stage the sources of its calibration, settings and methods.
+# One calibration serves the three stages; each binds the parameters it declares.
+trellis: trellis.port-cons.yml
+stages:
+  cons: {stage: stages/cons/cons.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/cons_wide]}, methods: {all: [methods/cons]}}
+  disc: {stage: stages/disc/disc.bl, calibration: {all: [calibration/portfolio]}, methods: {all: [methods/disc]}}
+  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/port_wide]}, methods: {all: [methods/port]}}

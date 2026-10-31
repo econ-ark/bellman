@@ -1,0 +1,26 @@
+@stage: renter_cons
+
+β : (0,1)    :: ["discount factor"]
+α : (0,1)    :: ["weight of non-durable consumption in utility"]
+κ : ℝ₊₊      :: ["housing services per unit of housing"]
+ι : ℝ₊₊      :: ["shift of housing in the services term, which keeps utility finite at zero housing"]
+ϑ : ℝ₊₊      :: ["housing enjoyed per unit of rented services; the printed model is the case ϑ = 1"]
+
+𝑢(c : ℝ₊₊, h : ℝ₊) := α*log(c) + (1 - α)*log(κ*(h + ι))    :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := α/c                                        :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := α/x                                     :: [id=inv_marg_util]
+Γ(x : ℝ₊₊) := (0, x]                                      :: [id=feasible]
+
+[id=dcsn_to_cntn, (w_d : ℝ₊₊, S_d : ℝ₊, y_d : ℝ₊₊, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a_nxt_r : ℝ₊, H_nxt_r : ℝ₊, y_nxt_r : ℝ₊₊) : !cntn] {
+    a_nxt_r = w_d - c    :: [id=savings]
+    H_nxt_r = 0          :: [id=no_housing, "a renter holds no housing at the end of the period"]
+    y_nxt_r = y_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, c) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = 𝑢(c, ϑ*S_d) + β*V[>]    :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])    :: [id=optimality]
+}

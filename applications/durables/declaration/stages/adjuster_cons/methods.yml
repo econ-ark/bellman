@@ -1,0 +1,78 @@
+stage: adjuster_cons
+
+# Numerical choices for adjuster_cons.bl, taken from the replication code of
+# Dobrescu and Shanker (2026), Application 2, Box 2. The setting names on the
+# right of each entry are the keys of settings/durables.yml.
+
+methods:
+  # The method block of adjuster_cons_egm.bl opens the policy builder, whose
+  # stage file states the joint maximization alone. The endogenous grid method
+  # realizes the joint solution statement policy.choice: on a grid of new
+  # housing it finds the roots in savings of the housing first-order condition,
+  # takes consumption from the asset Euler equation, adds the point at the
+  # borrowing limit, forms the endogenous grid of total wealth, and selects
+  # among the pooled candidates by value with the fast upper envelope scan.
+  - on: policy
+    method: !egm
+    block: ../../methods/adjuster_cons_egm.bl
+    handler: fues-durables:make_adjuster_ops
+    settings:
+      housing_orders: [n_h]
+      housing_bounds: [[h_min, h_max]]
+      savings_orders: [n_a]
+      savings_bounds: [[a_min, a_max]]
+      savings_spacing: grid_phi
+      savings_floor: b
+      roots_per_housing_point: egm_n
+      root_scan_step: root_eps
+      upper_envelope: adj_upper_envelope
+      jump_threshold: m_bar
+      lookback: fues_lb
+      eps_d: fues_eps_d
+      eps_sep: fues_eps_sep
+      eps_fwd_back: fues_eps_fwd_back
+      parallel_guard: fues_parallel_guard
+      include_intersections: adj_include_intersections
+      no_double_jumps: adj_no_double_jumps
+      single_intersection: adj_single_intersection
+      disable_jump_checks: adj_disable_jump_checks
+      correct_jumps: correct_jumps
+      search_sections: n_sections
+
+  # The derivative of the decision value in total wealth is stated by the
+  # marginal block of marginals_adjuster_cons.bl on the decision value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_adjuster_cons.bl
+
+  # The value the backward block writes, on the line value, and the derivative
+  # of the value the marginal block states, on the line marginal_wealth, are
+  # each tabulated on a grid of total wealth, one table per income state; the
+  # second entry binds a representation of the stated derivative on the
+  # derivative line's id.
+  - on: cntn_to_dcsn.value
+    method: !Linear
+    handler: dcsmm:interp_as_3
+    settings:
+      orders:
+        m: n_w
+      bounds:
+        m: [w_min, w_max]
+      extrapolate: extrap_policy
+      clamp_factor: clamp_max_factor
+
+  - on: cntn_to_dcsn.marginal_wealth
+    method: !Linear
+    handler: dcsmm:interp_as_3
+    settings:
+      orders:
+        m: n_w
+      bounds:
+        m: [w_min, w_max]
+      extrapolate: extrap_policy
+      clamp_factor: clamp_max_factor
+
+# The alternative numerical scheme of the paper, the nested method, replaces the
+# endogenous grid entry above: it maximizes over new housing by a sectioned
+# golden-section search (settings n_sections) given the keeper's consumption
+# policy, and needs no upper envelope of its own.

@@ -1,0 +1,58 @@
+-- stage.asdl — the stage additions (typing) to the core.
+-- Commentary: spec_0.3-dynsym.md §3.2.
+
+entry     += Typer(typer typing)              -- the attachment
+index     += At(perch)                        -- placement open
+expr      += Space(setexpr set)               -- injection
+stmt      += CorrDef(identifier name, coordinate* params,
+                     setexpr body)            -- Γ(x) := {…}
+stmt      += Slack(stmt core, cond bound)     -- core ⟂ bound: complementary
+                                              -- slackness; the bound is held
+                                              -- and checked by nothing
+subscript += In(identifier var, expr set)     -- c ∈ Γ(m)
+
+typer = Declaration(subject subject, classifier* classifiers,
+                    expr? value)
+      | Marked(mark kind)
+      | Signature(subject source, classifier* source_types,
+                  subject target, classifier* target_types)
+      | Complementary(typer declaration, cond bound)  -- a declared multiplier with its
+                                              -- clause, μ[>] : ℝ₊ ⟂ a >= 0
+
+subject    = Subject(coordinate* coordinates)
+coordinate = Coordinate(identifier stem, index? at,
+                        classifier* classifiers)
+           | Group(subject inner, classifier* classifiers)
+
+law_stmt   = Law(identifier* subjects, expr law)
+funcdef    = FuncDef(identifier name, coordinate* params, expr body)
+
+classifier = Domain(setexpr space)
+           | Infoset(perch side)
+           | Role(role kind)
+
+perch = Arrival | Decision | Continuation
+role  = State | Control | Value(int order)    -- @value 0, @marginal 1
+      | Shock -- @dist N(μ, Σ)
+      | Parameter
+mark  = Node                                  -- Method later
+
+setexpr = Named(identifier name)
+        | Interval(range bounds)
+        | FiniteSet(identifier* members)
+        | Product(setexpr* factors)
+        | Comprehension(subject bound, setexpr? base,
+                        cond* conds)          -- { c ∈ B : … }
+        | IntegerRange(expr lower, expr upper)  -- {0, …, J}: the integers
+                                              -- from lower to upper inclusive
+        | Points(expr* members, setexpr? superset)
+                                              -- {0, 1}; {0, θ} ⊂ ℝ: numerical
+                                              -- members in authored order
+        | Functions(setexpr domain, setexpr codomain)
+                                              -- I_J → ℝ₊: the functions from
+                                              -- an index set to an entry set
+
+cond  = Rel(expr left, relop op, expr right)
+      | Between(expr lower, relop lo, expr middle, relop hi, expr upper)
+                                              -- a two-sided bound, 0 <= c_p <= w_d
+relop = Lt | Le | Eq | Ge | Gt

@@ -1,0 +1,10 @@
+@methods: retiree_cons
+# The endogenous grid method as the method block of the retiree's policy
+# builder, whose stage file states the maximization alone. The candidate line
+# reads the derivative of the continuation value by the term D_{b_ret}V[>].
+
+[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn, "method = egm! will look for policy[>] and x[>] grid and invert it. Important here that the grids contain all constrained sections"] {
+    c[>]     <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b_ret}V[>])                :: [id=InvEuler, "Implies a correspondence: where equality holds, c[>] takes on a single value, where inequality holds, it is multiple values"]
+    w_ret[>] = b_ret + c[>]                          :: [id=endoggrid]
+    c        = c[>]                                  :: [id=cons_choice]
+}

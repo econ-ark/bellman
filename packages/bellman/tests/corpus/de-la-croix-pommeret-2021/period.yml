@@ -1,0 +1,21 @@
+!period
+name: childbearing_period
+# One date of the discrete-time statement. The woman consumes at the childless
+# technology, then decides whether to try now or wait, and if she tries the
+# attempt resolves at the end of the date. The two post-attempt stages are the
+# regimes she may already be in; a woman who is still childless and has not yet
+# attempted uses the first three stages only.
+stages:
+  - cons_wait
+  - attempt
+  - fecundity
+  - cons_mother
+  - cons_childless
+connectors:
+  # Savings and age carried from the consumption stage to the attempt decision.
+  - {b_wait: a_att, age_c: age_att}
+  # The try branch of the attempt decision is the arrival of the fecundity draw.
+  - {a_try: a_fec, age_try: age_fec}
+  # The two branches of the fecundity draw are the arrivals of the two regimes.
+  - {a_mth: a_mother}
+  - {a_chl: a_childless}

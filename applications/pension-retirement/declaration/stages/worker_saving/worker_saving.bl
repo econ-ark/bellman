@@ -1,0 +1,45 @@
+@stage: worker_saving
+
+Xf := ℝ₊
+Xp := ℝ₊
+
+β   : (0,1)      :: ["discount factor"]
+ρ   : (1, inf)   :: ["coefficient of relative risk aversion"]
+r_f : ℝ₊         :: ["rate of return on financial assets"]
+r_p : ℝ₊         :: ["rate of return on pension assets"]
+χ_s : ℝ₊         :: ["scale of the incentive to contribute to the pension"]
+μ_w : ℝ          :: ["log-mean of earnings"]
+σ_w : ℝ₊         :: ["standard deviation of log earnings"]
+
+w : ℝ₊₊
+w ~ LogNormal(μ_w, σ_w)
+
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)             :: [id=util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)                   :: [id=marg_util]
+𝜒(x : ℝ₊) := χ_s*log(1 + x)             :: [id=incentive]
+𝑑𝜒(x : ℝ₊) := χ_s/(1 + x)               :: [id=marg_incentive]
+Γ_c(x : ℝ₊₊) := (0, x]                  :: [id=feasible_consumption]
+Γ_p(x : ℝ₊₊) := [0, x]                  :: [id=feasible_contribution]
+
+[id=arvl_to_dcsn, (y_f_w : Xf, y_p_w : Xp, w) : !arvl -> (m_f : ℝ₊₊, m_p : Xp, w_d : ℝ₊₊) : !dcsn] {
+    m_f = (1 + r_f)*y_f_w + w           :: [id=financial_assets]
+    m_p = (1 + r_p)*y_p_w               :: [id=pension_assets]
+    w_d = w                             :: [id=earnings]
+}
+
+[id=dcsn_to_cntn, (m_f, m_p, w_d, c : ℝ₊₊ @ !ctrl, c_p : ℝ₊ @ !ctrl) : !dcsn -> (y_f : Xf, y_p : Xp) : !cntn] {
+    y_f = m_f - c - c_p                 :: [id=financial_post_state]
+    y_p = m_p + c_p + 𝜒(c_p)            :: [id=pension_post_state]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c, c_p) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]                   :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{w}(V)                     :: [id=value]
+}
+
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, c_p : ℝ₊ @ !ctrl) : !dcsn] {
+    (c, c_p) = argmax_{c : Γ_c(m_f), c_p : Γ_p(w_d)}(𝑢(c) + β*V[>])   :: [id=optimality]
+}

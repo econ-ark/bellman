@@ -1,0 +1,70 @@
+!stage
+# Stage name
+name: port_stage
+
+# Symbol declarations
+symbols:
+  spaces:
+    Xk: "@def R++"
+    Xm: "@def R++"
+    Π:  "@def [0,1]"
+    Rp: "@def R++"
+    Θ:  "@def R++"
+
+  prestate:
+    k: "@in Xk"
+
+  states:
+    k_d: "@in Xk"
+
+  controls:
+    ς: "@in Π"
+
+  exogenous: #AAS to AI: need to take a look at this again; does not look like the correct final syntax. ie how to declare joint multivariate normals. There should be a much earlier note on this. 
+    Ψ: "@in Rp"
+    θ: "@in Θ"
+    ζ:
+      "@dist": Normal
+      Μ: [μ_Ψ, μ_θ]
+      Σ: [[σ_Ψ^2, ρ_ζ*σ_Ψ*σ_θ], [ρ_ζ*σ_Ψ*σ_θ, σ_θ^2]]
+
+  poststates:
+    m: "@in Xm"
+
+  values: #should be also have marginal values here>?
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  parameters:
+    R: "@in R++"
+    μ_Ψ: "@in R"
+    σ_Ψ: "@in R+"
+    μ_θ: "@in R"
+    σ_θ: "@in R+"
+    ρ_ζ: "@in [-1,1]"
+
+# Stage equations
+equations:
+  # Arrival to decision transition
+  arvl_to_dcsn:
+    - k_d = k
+
+  # Decision to continuation transition
+  dcsn_to_cntn:
+    - m = k_d*(ς*Ψ + (1-ς)*R) + θ
+
+  # Backward value aggregation
+  cntn_to_dcsn:
+    - V = E_{Ψ,θ}(V[>])
+
+  # Decision to arrival value
+  dcsn_to_arvl:
+    - V[<] = V
+
+  # Policy construction — the risky-share max and its first-order condition
+  policy:
+    - maximization: "ς = argmax_{ς}(E_{Ψ,θ}(V[>]))" #AAS to AI: maybe we need a different notation here for the bound control variable that is the policy vs the optimized policu. 
+    # FOC of the argmax (what the !rootfind method root-finds), via ∂m/∂ς = k_d(Ψ−R):
+    - foc_ς = E_{Ψ,θ}(dV[>]*(Ψ - R)) #AAS to AI: this is actually very odd if we want to think about the role of each line defining an operator in some sense; so what exactly is an FOC 
+                                      # if we are not doing EGM? is it actually a setting? How does it fit into the backward graph? What if we want to auto-diff this equation?

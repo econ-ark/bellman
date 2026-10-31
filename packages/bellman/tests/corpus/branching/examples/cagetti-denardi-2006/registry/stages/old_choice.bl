@@ -1,0 +1,31 @@
+@stage: old_choice
+
+Xa := ℝ₊
+Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
+
+[id=arvl_to_dcsn, (a_oc : Xa, θ_oc : Θ) : !arvl -> (a : Xa, θ : Θ) : !dcsn] {
+    a = a_oc
+    θ = θ_oc
+}
+
+[id=dcsn_to_cntn, (a, θ, d : !ctrl @ {entrepreneur, retiree}) : !dcsn -> ()] {
+    [label=entrepreneur, () -> (a_oe : Xa, θ_oe : Θ) : !cntn] {
+        a_oe = a
+        θ_oe = θ
+    }
+    [label=retiree, () -> (a_oc_rt : Xa) : !cntn] {
+        a_oc_rt = a
+    }
+}
+
+[id=cntn_to_dcsn, (W_e[>] : ℝ @ !vlu, W_r[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = (W_e[>], W_r[>])[d]              :: [id=choice_value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                             :: [id=value]
+}
+
+[id=policy, (W_e[>] : ℝ @ !vlu, W_r[>] : ℝ @ !vlu) : !cntn -> (d : {entrepreneur, retiree} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(W_e[>], W_r[>])       :: [id=choice]
+}

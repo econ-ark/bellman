@@ -1,0 +1,28 @@
+!period
+name: housing_tenure
+# One year of the housing model. The tenure choice draws income and splits the
+# household into an owner and a renter; the owner chooses a housing size and
+# then consumption, the renter a quantity of services and then consumption.
+# The two housing stages and the two consumption stages have no arrival
+# perch: each is entered at its decision perch, whose states several of them
+# name alike, so each join is written as a connector between two named
+# stages, from the continuation fields of one to the decision states of the
+# next:
+#   tenure_choice, branch own   (a_o, H_o, y_o)           -> owner_housing  (a_d, H_d, y_d)
+#   tenure_choice, branch rent  (w_r, y_r)                -> renter_housing (w_d, y_d)
+#   owner_housing               (w_own, H_own, y_own)     -> owner_cons     (w_d, H_d, y_d)
+#   renter_housing              (w_rent, S_rent, y_rent)  -> renter_cons    (w_d, S_d, y_d)
+# The list order below is not the economic order, which the shared fields fix:
+# tenure_choice first, then the two housing stages, then the two consumption
+# stages.
+stages:
+  - tenure_choice
+  - owner_housing
+  - owner_cons
+  - renter_housing
+  - renter_cons
+connectors:
+  - {from: tenure_choice, to: owner_housing, fields: {a_o: a_d, H_o: H_d, y_o: y_d}}
+  - {from: tenure_choice, to: renter_housing, fields: {w_r: w_d, y_r: y_d}}
+  - {from: owner_housing, to: owner_cons, fields: {w_own: w_d, H_own: H_d, y_own: y_d}}
+  - {from: renter_housing, to: renter_cons, fields: {w_rent: w_d, S_rent: S_d, y_rent: y_d}}

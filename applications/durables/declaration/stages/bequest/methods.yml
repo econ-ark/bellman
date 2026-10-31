@@ -1,0 +1,13 @@
+stage: bequest
+
+methods:
+  # The derivative of the terminal value in wealth and the derivatives of the
+  # arrival value are stated by the two marginal blocks of marginals_bequest.bl,
+  # one for each value builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_bequest.bl
+
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: ../../methods/marginals_bequest.bl

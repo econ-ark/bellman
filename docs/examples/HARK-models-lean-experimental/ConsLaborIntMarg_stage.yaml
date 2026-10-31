@@ -1,0 +1,103 @@
+name: ConsLaborIntMarg
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    Xp: "@def R++"
+    Xb: "@def R+"
+    Xm: "@def R+"
+    Xa: "@def R+"
+    Xc: "@def R+"
+    XL: "@def [0,1]"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+
+  exogenous:
+    psi:
+      - "@in R++"
+      - "@dist IncShkDstn[perm]"
+    theta:
+      - "@in R+"
+      - "@dist IncShkDstn[tran]"
+    live:
+      - "@in {0,1}"
+      - "@dist Bernoulli(LivPrb)"
+
+  states:
+    b: "@in Xb"
+    p: "@in Xp"
+    theta_d: "@in R+"
+
+  poststates:
+    a: "@in Xa"
+    p_nxt: "@in Xp"
+
+  controls:
+    c: "@in Xc"
+    Lbr: "@in XL"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dVdb[<]: "@in R+"
+    dVdb: "@in R+"
+    dVdtheta[<]: "@in R"
+    dVdtheta: "@in R"
+
+  parameters:
+    Rfree: "@in R++"
+    PermGroFac: "@in R++"
+    LivPrb: "@in [0,1]"
+    WageRte: "@in R++"
+    beta: "@in (0,1)"
+    rho: "@in R++"
+    alpha: "@in R++"
+
+equations:
+  arvl_to_dcsn_transition: |
+    G = PermGroFac * psi
+    p = p_prev * G
+    b = Rfree * k / G
+    theta_d = theta
+
+  dcsn_to_cntn_transition: |
+    Lsr = 1 - Lbr
+    LbrEff = theta_d * Lbr
+    y = WageRte * LbrEff
+    m = b + y
+    a = m - c
+    p_nxt[>] = p
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u = (c^(1-rho))/(1-rho) + alpha * (Lsr^(1-rho))/(1-rho)
+      V = max_{c,Lbr}(u + beta * LivPrb * V[>])
+    FOC_c: |
+      c^(-rho) = beta * LivPrb * dVdb[>]
+    FOC_Lbr: |
+      alpha * (1-Lbr)^(-rho) = beta * LivPrb * dVdb[>] * WageRte * theta_d
+    MarginalBellman: |
+      dVdb = c^(-rho)
+      dVdtheta = c^(-rho) * WageRte * Lbr + alpha * (1-Lbr)^(-rho) * (-1) * WageRte * Lbr / theta_d
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{psi,theta}[G^(1-rho) * V]
+    ShadowBellman: |
+      dVdb[<] = Rfree * E_{psi,theta}[G^(-rho) * dVdb]
+      dVdtheta[<] = E_{psi,theta}[G^(1-rho) * dVdtheta]
+
+calibration:
+  parameters:
+    Rfree: 1.03
+    PermGroFac: 1.01
+    LivPrb: 0.98
+    WageRte: 1.0
+    beta: 0.96
+    rho: 2.0
+    alpha: 0.5

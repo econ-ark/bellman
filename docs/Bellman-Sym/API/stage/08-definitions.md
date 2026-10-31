@@ -1,0 +1,184 @@
+---
+title: The definitions table
+tags:
+  - docs/api
+  - stage
+date: 2026-09-28
+audience: user
+type: api
+topic: [stage-object]
+---
+
+# The definitions table
+
+> [!summary]
+> `stage.definitions` is the read-only table of everything a stage file declares, each name once, and of every line its [blocks](../../01-stage.md#3-builder-blocks) write, in file order. A record is read by its identity as a key, `list()` answers the table grouped by kind and `denote(identity)` the card of one record. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`.
+
+> [!info]- Relationship with other documents
+> **Builds on** — [The stage](01-the-stage.md): the object `stage` below; [Stage tutorial](../../01-stage.md): the declarations as the file writes them.
+> **Used by** — [A piece](05-piece.md): the kernels an operation reads from this table.
+> **Formal account** — [Fields, functions and types](../../../bellman-calculus/04-fields,%20functions%20and%20types.md): the sets and functions a record denotes.
+> **See also** — [API](../index.md) §2.4: every path of the stage object in one table.
+
+The graphs of a stage refer to its definitions by **identity**, a key of the form `<stage>:<kind>:<name>`, `cons:parameter:ρ`, whose middle segment names the kind of the record; a line's record is keyed by the line's address instead, `cntn_to_dcsn.value`. Two kinds are made by the construction from the blocks: a record of kind `g` is a **law of motion**, the map a forward block applies to the state, and a record of kind `G` is a **value aggregator**, the pointwise function a backward block applies to the continuation value.
+
+```python
+from bellman.stage import elaborate_stage, load_stage
+
+stage = elaborate_stage(load_stage("applications/portfolio-choice/declaration/stages/cons/cons.bl"))
+```
+
+## 1 The table
+
+`stage.definitions` is a read-only mapping from each identity to its record, in file order. `list()` answers the records grouped by kind, each with the set, the map or the relation it denotes, so that the table says what the model is.
+
+```python
+print(repr(stage.definitions))
+print(stage.definitions.list())
+```
+
+```text
+Definitions('cons', 21 records)
+BELLMAN-SYM / STAGE cons / DEFINITIONS                          [RECORDS = 21]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SETS 2 ───────────────────────────────────────────────────────────────────────
+  cons:set:Xm   Xm  = ℝ₊₊
+  cons:set:Xa   Xa  = ℝ₊
+
+PARAMETERS 1 ─────────────────────────────────────────────────────────────────
+  cons:parameter:ρ   ρ  ∈ [1, ∞)
+
+FUNCTIONS 3 ──────────────────────────────────────────────────────────────────
+  cons:function:𝑢       𝑢  : ℝ₊₊ → ℝ,  c ↦ c^(1 − ρ)/(1 − ρ)
+                        conditions ¬(1 − ρ = 0)
+  cons:function:𝑑𝑢      𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)
+  cons:function:𝑑𝑢𝑖𝑛𝑣   𝑑𝑢𝑖𝑛𝑣  : ℝ₊₊ → ℝ₊₊,  x ↦ x^(−1/ρ)
+
+CORRESPONDENCES 1 ────────────────────────────────────────────────────────────
+  cons:correspondence:Γ   Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
+
+LAWS OF MOTION 2 ─────────────────────────────────────────────────────────────
+  cons:g:arvl_to_dcsn   𝑔≺  : Xm → Xm,  m ↦ m
+  cons:g:dcsn_to_cntn   𝑔≻  : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → Xa,
+                              (m_d, c) ↦ m_d − c
+
+VALUE AGGREGATORS 3 ──────────────────────────────────────────────────────────
+  cons:G:cntn_to_dcsn   𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)}
+                                → [−∞, ∞),
+                              (V≻, m_d, c) ↦ 𝑢(c) + V≻
+                        conditions 𝑉(m_d) ∈ [−∞, ∞)
+  cons:G:dcsn_to_arvl   𝐺≺  : [−∞, ∞) × Xm → ℝ,  (V, m) ↦ V
+                        conditions 𝑉≺(m) ∈ ℝ
+  cons:G:policy         𝐺_InvEuler≻   : ℝ₊₊ × Xa → ℝ₊₊,
+                                        (D_{a}𝑉≻, a) ↦ 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻)
+                        𝐺_endoggrid≻  : ℝ₊₊ × Xa → Xm,  (c≻, a) ↦ a + c≻
+                        conditions 𝑚_d≻(a) ∈ Xm
+
+BLOCK LINES 9 ────────────────────────────────────────────────────────────────
+  arvl_to_dcsn.1          m_d = m
+  dcsn_to_cntn.1          a = m_d - c
+  cntn_to_dcsn.value      V        = 𝑢(c) + V[>]          :: [id=value]
+                          conditions 𝑉(m_d) ∈ [−∞, ∞)
+  cntn_to_dcsn.marginal   D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]
+                          conditions 𝑉(m_d) ∈ [−∞, ∞)
+  dcsn_to_arvl.value      V[<] = V                        :: [id=value]
+                          conditions 𝑉≺(m) ∈ ℝ
+  policy.optimality       c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])
+                            :: [id=optimality, !doc]
+  policy.InvEuler         c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0
+                            :: [id=InvEuler]
+  policy.endoggrid        m_d[>] = a + c[>]                :: [id=endoggrid]
+                          conditions 𝑚_d≻(a) ∈ Xm
+  policy.cons_choice      c      = c[>]                    :: [id=cons_choice]
+```
+
+The answer of `list()` also reads as a mapping from each kind to the identities of its records:
+
+```python
+for kind, identities in stage.definitions.list().items():
+    print(f"{kind:<14} {', '.join(identities)}")
+```
+
+```text
+set            cons:set:Xm, cons:set:Xa
+parameter      cons:parameter:ρ
+function       cons:function:𝑢, cons:function:𝑑𝑢, cons:function:𝑑𝑢𝑖𝑛𝑣
+correspondence cons:correspondence:Γ
+line           arvl_to_dcsn.1, dcsn_to_cntn.1, cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice
+g              cons:g:arvl_to_dcsn, cons:g:dcsn_to_cntn
+G              cons:G:cntn_to_dcsn, cons:G:dcsn_to_arvl, cons:G:policy
+```
+
+## 2 One record
+
+A record is read by its identity as a key and has eight attributes, which are attributes and not fields, a field being an economic quantity of the model: `identity`; `kind`, one of `set`, `parameter`, `distribution`, `function`, `function_alias`, `correspondence`, `g`, `G`, `line` and `multiplier`; `coordinates`, the record's named coordinates, each with its declared set where the file declares one; `equations`, which for a law of motion or an aggregator holds the addresses of the block's lines and no copy of their algebra; `tags`, the entries of a line's annotation; `address`, where the file writes the record, the block for a law of motion or an aggregator; `ordinal`, the position of a line among the items of its block's body, counted from 1 with the branches of a branching block counted in turn, which outside a branch is the `n` of an unnamed line's address `<block>.<n>` and is the number a refusal names a line by, and `None` on a record of any other kind; and `categories`, on a set marked `!categories` ([Symbol conventions](../../reference/symbols-conventions.md) §9.2), its category map as one frozen `CategoryCodes` record of the identifier written after the marker, or `None`, and the pairs of a code and its category's name in increasing code order, `CategoryCodes(identifier='household_status', codes=((0, 'newborn'), (1, 'old')))` for the set `HouseholdStatus` of that section, and `None` on every other record.
+
+```python
+record = stage.definitions["cons:G:cntn_to_dcsn"]
+for attribute in ("identity", "kind", "equations", "tags", "address", "ordinal"):
+    print(f"{attribute:<12} {getattr(record, attribute)!r}")
+print(f"{'coordinates':<12} {[name for name, _ in record.coordinates]!r}")
+```
+
+```text
+identity     'cons:G:cntn_to_dcsn'
+kind         'G'
+equations    ('cntn_to_dcsn.value',)
+tags         ()
+address      'cntn_to_dcsn'
+ordinal      None
+coordinates  ['V', 'c']
+```
+
+## 3 The card of a record
+
+`stage.definitions.denote(identity)` answers the card of one record: the function or set it defines, the conditions on its values, the lines of the file it comes from and the records of the declared names it refers to. The card is asked of the table, since a record does not hold the stage it belongs to. The card of a set marked `!categories` prints the set's category map, the second object the set denotes ([A piece](05-piece.md) §6), on the row under the set, `0 ↦ newborn, 1 ↦ old (categories household_status)`, and `list()` prints the same row. The card of a distribution declared by `N`, `LogNormal`, `Uniform`, `TruncatedNormal` or `TypeIExtremeValue` prints in the same way the second object the declaration denotes, its measure at the written arguments ([Shock distributions](../../reference/laws.md) §1), on the row under the law: `y ~ N(0, 1)` is followed by `P_y = measure on ℝ given by B ↦ …`, and `list()` prints the same row. The row stands on the declaration's own card alone: the card of another record that reads the declaration lists it by its law.
+
+```python
+print(stage.definitions.denote("cons:G:cntn_to_dcsn"))
+```
+
+```text
+STAGE cons / VALUE AGGREGATOR cntn_to_dcsn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)} → [−∞, ∞),
+        (V≻, m_d, c) ↦ 𝑢(c) + V≻
+
+Conditions
+  𝑉(m_d) ∈ [−∞, ∞)
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  22  V        = 𝑢(c) + V[>]  :: [id=value]
+
+Definitions referenced
+  Xm    cons:set:Xm
+  𝑢     cons:function:𝑢
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+The card of a law of motion states the map on the feasible pairs, since the policy block binds the control to a correspondence; its type is derived when the card is asked for and stored nowhere, and its `Source` section holds the line of the file with its number:
+
+```python
+print(stage.definitions.denote("cons:g:dcsn_to_cntn"))
+```
+
+```text
+STAGE cons / LAW OF MOTION dcsn_to_cntn
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  𝑔≻  : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → Xa,  (m_d, c) ↦ m_d − c
+──────────────────────────────────────────────────────────────────────────────
+Source  cons.bl
+  18  a = m_d - c
+
+Definitions referenced
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  Γ     cons:correspondence:Γ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+A parameter's declaration is a record of this table; its value is not, since calibration binds the values, and [Parameters and settings](06-par-and-settings.md) reads the two together.

@@ -1,0 +1,36 @@
+@stage: young_choice
+
+Xa := ℝ₊
+Y  := ℝ₊₊        :: ["working ability; the positive reals stand in for its finite grid, whose number of points is a numerical choice"]
+Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
+
+[id=arvl_to_dcsn, (a_yc : Xa, y_yc : Y, θ_yc : Θ) : !arvl -> (a : Xa, y : Y, θ : Θ) : !dcsn] {
+    a = a_yc
+    y = y_yc
+    θ = θ_yc
+}
+
+[id=dcsn_to_cntn, (a, y, θ, d : !ctrl @ {entrepreneur, worker}) : !dcsn -> ()] {
+    [label=entrepreneur, () -> (a_ye : Xa, y_ye : Y, θ_ye : Θ) : !cntn] {
+        a_ye = a
+        y_ye = y
+        θ_ye = θ
+    }
+    [label=worker, () -> (a_yc_wk : Xa, y_yc_wk : Y, θ_yc_wk : Θ) : !cntn] {
+        a_yc_wk = a
+        y_yc_wk = y
+        θ_yc_wk = θ
+    }
+}
+
+[id=cntn_to_dcsn, (V_e[>] : ℝ @ !vlu, V_w[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = (V_e[>], V_w[>])[d]              :: [id=choice_value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                             :: [id=value]
+}
+
+[id=policy, (V_e[>] : ℝ @ !vlu, V_w[>] : ℝ @ !vlu) : !cntn -> (d : {entrepreneur, worker} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(V_e[>], V_w[>])       :: [id=choice]
+}

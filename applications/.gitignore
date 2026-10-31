@@ -1,0 +1,4 @@
+# Python's cache of compiled modules
+__pycache__/
+# what the code of a model folder writes (the model folder layout, 2 October 2026)
+*/results/

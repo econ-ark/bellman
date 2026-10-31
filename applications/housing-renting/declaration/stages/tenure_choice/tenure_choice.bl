@@ -1,0 +1,53 @@
+@stage: tenure_choice
+
+r      : ℝ₊       :: ["interest rate on financial assets"]
+Π      : [0,1]    :: ["transition matrix of the income chain, one row for each income level; the set of one probability stands in for the matrix, which the language cannot yet type"]
+z      : ℝ₊₊      :: ["the income levels of the chain, in the order of the rows of Π; ℝ₊₊ stands in for the vector, whose length the discretisation of the income process fixes"]
+a0_T   : ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊ × ℝ₊                                  :: ["lower asset threshold of each of the ten tax brackets, in increasing order"]
+B_T    : ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ × ℝ                                            :: ["tax due at the lower threshold of each bracket"]
+τ_T    : [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1) × [0,1)    :: ["marginal tax rate on assets within each bracket"]
+
+y : ℝ₊₊
+y ~ MarkovChain(Π, z, y_pre)    :: ["this period's income, drawn from the row of Π at last period's income y_pre"]
+
+𝑇(x : ℝ₊) := ((step(x - a0_T[1]) - step(x - a0_T[2]))*(B_T[1] + τ_T[1]*(x - a0_T[1]))
+            + (step(x - a0_T[2]) - step(x - a0_T[3]))*(B_T[2] + τ_T[2]*(x - a0_T[2]))
+            + (step(x - a0_T[3]) - step(x - a0_T[4]))*(B_T[3] + τ_T[3]*(x - a0_T[3]))
+            + (step(x - a0_T[4]) - step(x - a0_T[5]))*(B_T[4] + τ_T[4]*(x - a0_T[4]))
+            + (step(x - a0_T[5]) - step(x - a0_T[6]))*(B_T[5] + τ_T[5]*(x - a0_T[5]))
+            + (step(x - a0_T[6]) - step(x - a0_T[7]))*(B_T[6] + τ_T[6]*(x - a0_T[6]))
+            + (step(x - a0_T[7]) - step(x - a0_T[8]))*(B_T[7] + τ_T[7]*(x - a0_T[7]))
+            + (step(x - a0_T[8]) - step(x - a0_T[9]))*(B_T[8] + τ_T[8]*(x - a0_T[8]))
+            + (step(x - a0_T[9]) - step(x - a0_T[10]))*(B_T[9] + τ_T[9]*(x - a0_T[9]))
+            + step(x - a0_T[10])*(B_T[10] + τ_T[10]*(x - a0_T[10])))    :: [id=tax, "the tax on assets x: B_T[k] + τ_T[k]*(x - a0_T[k]) in bracket k, which runs from a0_T[k], excluded, to a0_T[k+1], included; step(u) is one when u is positive and zero otherwise"]
+𝑑𝑇 := D_{x}(𝑇)    :: [id=marginal_tax, "the marginal tax rate, the derivative of the tax away from the bracket thresholds"]
+
+[id=arvl_to_dcsn, (a : ℝ₊, H : ℝ₊, y_pre : ℝ₊₊, y) : !arvl -> (a_d : ℝ₊, H_d : ℝ₊, y_d : ℝ₊₊) : !dcsn] {
+    a_d = a
+    H_d = H
+    y_d = y
+}
+
+[id=dcsn_to_cntn, (a_d, H_d, y_d, d : !ctrl @ {own, rent}) : !dcsn -> ()] {
+    [label=own,  () -> (a_o : ℝ₊, H_o : ℝ₊, y_o : ℝ₊₊) : !cntn] {
+        a_o = a_d
+        H_o = H_d
+        y_o = y_d
+    }
+    [label=rent, () -> (w_r : ℝ₊, y_r : ℝ₊₊) : !cntn] {
+        w_r = (1 + r)*a_d - 𝑇(a_d) + H_d    :: [id=liquidation, "a renter sells the house; income is added in the renter's rental stage"]
+        y_r = y_d
+    }
+}
+
+[id=cntn_to_dcsn, (V_o[>] : [-inf, inf) @ !vlu, V_r[>] : [-inf, inf) @ !vlu, d) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = (V_o[>], V_r[>])[d]                                         :: [id=choice_value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = E_{y}(V)     :: [id=value]
+}
+
+[id=policy, (V_o[>] : [-inf, inf) @ !vlu, V_r[>] : [-inf, inf) @ !vlu) : !cntn -> (d : {own, rent} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(V_o[>], V_r[>])    :: [id=choice]
+}

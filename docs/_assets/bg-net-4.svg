@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Network progression 4/4 — backward nest traversal complete.
+  Full chain: 320 → 540/720 → 950 → 1150.  Arrival node (320) highlighted.
+  Branches visible from 720 and 540 downward.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 480"
+  preserveAspectRatio="xMidYMid slice">
+
+  <!-- ═══ Ambient network ═══ -->
+  <g stroke="#1a1a1a" stroke-width="0.6" fill="none" opacity="0.04">
+    <line x1="95"  y1="110" x2="320" y2="185"/>
+    <line x1="1150" y1="240" x2="1320" y2="130"/>
+    <line x1="260" y1="360" x2="620" y2="330"/>
+    <line x1="620" y1="330" x2="850" y2="380"/>
+    <line x1="850" y1="380" x2="1050" y2="360"/>
+    <line x1="95"  y1="110" x2="60"  y2="290"/>
+    <line x1="1320" y1="130" x2="1360" y2="320"/>
+  </g>
+
+  <g fill="#1a1a1a" opacity="0.05">
+    <circle cx="95"   cy="110" r="3"/>
+    <circle cx="1320" cy="130" r="3"/>
+    <circle cx="260"  cy="360" r="3"/>
+    <circle cx="60"   cy="290" r="2.5"/>
+    <circle cx="1360" cy="320" r="2.5"/>
+  </g>
+
+  <!-- ═══ Full traversed chain: 320 → 540 → 720 → 950 → 1150 ═══ -->
+  <g stroke="#1a1a1a" stroke-width="0.7" fill="none">
+    <line x1="950"  y1="140" x2="1150" y2="240" opacity="0.05"/>
+    <line x1="720"  y1="210" x2="950"  y2="140" opacity="0.06"/>
+    <line x1="540"  y1="95"  x2="720"  y2="210" opacity="0.07"/>
+    <line x1="320"  y1="185" x2="540"  y2="95"  opacity="0.09"/>
+  </g>
+
+  <!-- Branch edges -->
+  <g stroke="#1a1a1a" stroke-width="0.5" fill="none">
+    <line x1="950" y1="140" x2="1050" y2="360" opacity="0.04"/>
+    <line x1="720" y1="210" x2="850"  y2="380" opacity="0.045"/>
+    <line x1="540" y1="95"  x2="620"  y2="330" opacity="0.04"/>
+    <line x1="320" y1="185" x2="260"  y2="360" opacity="0.04"/>
+  </g>
+
+  <!-- Oldest visited: 1150 -->
+  <circle cx="1150" cy="240" r="3" fill="#1a1a1a" opacity="0.05"/>
+
+  <!-- Visited: 950 -->
+  <circle cx="950" cy="140" r="3" fill="#1a1a1a" opacity="0.06"/>
+
+  <!-- Visited: 720 -->
+  <circle cx="720" cy="210" r="3.5" fill="#1a1a1a" opacity="0.07"/>
+
+  <!-- Visited: 540 -->
+  <circle cx="540" cy="95" r="3.5" fill="#1a1a1a" opacity="0.08"/>
+  <g fill="none" stroke="#1a1a1a" stroke-width="0.5"
+     stroke-dasharray="3 2" stroke-linecap="round">
+    <circle cx="540" cy="95" r="10" opacity="0.03"/>
+  </g>
+
+  <!-- Branch nodes (faint) -->
+  <circle cx="620"  cy="330" r="2.5" fill="#1a1a1a" opacity="0.04"/>
+  <circle cx="850"  cy="380" r="2.5" fill="#1a1a1a" opacity="0.04"/>
+  <circle cx="1050" cy="360" r="2.5" fill="#1a1a1a" opacity="0.04"/>
+
+  <!-- ═══ Highlighted node: 320,185 (arrival — leftmost) ═══ -->
+  <circle cx="320" cy="185" r="4.5" fill="#1a1a1a" opacity="0.13"/>
+  <g fill="none" stroke="#1a1a1a" stroke-width="0.6"
+     stroke-dasharray="3 2" stroke-linecap="round">
+    <circle cx="320" cy="185" r="12" opacity="0.10"/>
+    <circle cx="320" cy="185" r="20" opacity="0.07"/>
+    <circle cx="320" cy="185" r="30" opacity="0.04"/>
+  </g>
+</svg>

@@ -1,0 +1,41 @@
+@stage: attempt
+
+# The choice of the date τ at which the woman starts trying to have children,
+# written as the binary choice made at each date: try now, or wait one date.
+# The paper writes τ as a switching time chosen at date 0 and solved by optimal
+# control with regime switching (programme [C], p. 9); the two statements agree
+# because the paper proves the plan time consistent (p. 10).
+
+Xa := ℝ₊₊
+Xt := ℝ₊
+
+Δ : ℝ₊₊       :: ["length of one date; the paper's problem is the limit Δ → 0"]
+
+[id=arvl_to_dcsn, (a_att : Xa, age_att : Xt) : !arvl -> (a_attd : Xa, age_attd : Xt) : !dcsn] {
+    a_attd   = a_att                         :: [id=wealth]
+    age_attd = age_att                       :: [id=age]
+}
+
+[id=dcsn_to_cntn, (a_attd, age_attd, n : !ctrl @ {try, wait}) : !dcsn -> ()] {
+    [label=try,  () -> (a_try : Xa, age_try : Xt) : !cntn] {
+        a_try   = a_attd                     :: [id=wealth]
+        age_try = age_attd                   :: [id=age]
+    }
+    [label=wait, () -> (a_next : Xa, age_next : Xt) : !cntn] {
+        a_next   = a_attd                    :: [id=wealth]
+        age_next = age_attd + Δ              :: [id=age]
+    }
+}
+
+[id=cntn_to_dcsn, (V_try[>] : [-inf, inf) @ !vlu, V_wait[>] : [-inf, inf) @ !vlu, n) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V           = (V_try[>], V_wait[>])[n]                     :: [id=choice_value]
+    D_{a_attd}V = (D_{a_try}V_try[>], D_{a_next}V_wait[>])[n]  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]  = V                                :: [id=value]
+}
+
+[id=policy, (V_try[>], V_wait[>]) : !cntn -> (n : {try, wait} @ !ctrl) : !dcsn] {
+    n = argmax_{n}(V_try[>], V_wait[>])      :: [id=choice]
+}

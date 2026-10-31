@@ -1,0 +1,65 @@
+@stage: invest
+
+# The investment-allocation choice of one working-age period (Dobrescu, Fan,
+# Bateman, Newell, Ortmann and Thorp, equations 7, 20, 24 and 26). The menu has
+# three options: the balanced default, a higher-risk option and a lower-risk
+# option. The allocation changes no state here; it fixes which of the three
+# return laws of equations 12 to 14 applies to the defined-contribution balance
+# in the consumption stage that follows.
+
+σ_r  : ℝ₊₊   :: ["scale of the allocation taste shocks ζ_r, written σ_r^j in equation 24 and estimated separately for DB and DC members"]
+ψ    : ℝ₊    :: ["the individual's default-preference type, ψ_H or ψ_L (section 3.3)"]
+ν_r0 : ℝ     :: ["constant of the allocation switching cost (equation 7)"]
+ν_r1 : ℝ     :: ["age coefficient of the allocation switching cost"]
+ν_r2 : ℝ     :: ["squared-age coefficient of the allocation switching cost"]
+ν_r3 : ℝ     :: ["coefficient on the log defined-contribution balance in the allocation switching cost"]
+ν_r4 : ℝ     :: ["coefficient on the plan switching cost in the allocation switching cost"]
+ν_p0 : ℝ     :: ["constant of the plan switching cost (equation 5), which equation 7 reads"]
+ν_p1 : ℝ     :: ["age coefficient of the plan switching cost"]
+ν_p2 : ℝ     :: ["squared-age coefficient of the plan switching cost"]
+t_age : ℝ₊₊  :: ["the age of this period; the trellis supplies one value per period"]
+
+𝑢p(x : ℝ₊₊) := ψ + exp(ν_p0 + ν_p1*x + ν_p2*x^2)   :: [id=plan_cost, "equation 5, evaluated at the enrolment age t_0 = t_age − τ"]
+𝑢r(x : ℝ₊, s : ℝ₊) := ψ + exp(ν_r0 + ν_r1*t_age + ν_r2*t_age^2 + ν_r3*max(0, log(x)) + ν_r4*𝑢p(t_age - s))   :: [id=alloc_cost, "equation 7; x is the defined-contribution balance and s is tenure"]
+𝑙𝑠𝑢𝑚3(x : ℝ, y : ℝ, z : ℝ, σ : ℝ₊₊) := σ*log(exp(x/σ) + exp(y/σ) + exp(z/σ))   :: [id=logsum, "equation 24 without the contribution cost, which is charged one stage earlier"]
+
+[id=arvl_to_dcsn, (a : ℝ₊, aDC : ℝ₊, ξ : ℝ, τ : ℝ₊) : !arvl -> (a_d : ℝ₊, aDC_d : ℝ₊, ξ_d : ℝ, τ_d : ℝ₊) : !dcsn] {
+    a_d   = a                                 :: [id=wealth]
+    aDC_d = aDC                               :: [id=dc_balance]
+    ξ_d   = ξ                                 :: [id=wage_shock]
+    τ_d   = τ                                 :: [id=tenure]
+}
+
+[id=dcsn_to_cntn, (a_d, aDC_d, ξ_d, τ_d, ς : !ctrl @ {bal, high, low}) : !dcsn -> ()] {
+    [label=bal, () -> (a_b : ℝ₊, aDC_b : ℝ₊, ξ_b : ℝ, τ_b : ℝ₊) : !cntn] {
+        a_b = a_d
+        aDC_b = aDC_d
+        ξ_b = ξ_d
+        τ_b = τ_d
+    }
+    [label=high, () -> (a_h : ℝ₊, aDC_h : ℝ₊, ξ_h : ℝ, τ_h : ℝ₊) : !cntn] {
+        a_h = a_d
+        aDC_h = aDC_d
+        ξ_h = ξ_d
+        τ_h = τ_d
+    }
+    [label=low, () -> (a_l : ℝ₊, aDC_l : ℝ₊, ξ_l : ℝ, τ_l : ℝ₊) : !cntn] {
+        a_l = a_d
+        aDC_l = aDC_d
+        ξ_l = ξ_d
+        τ_l = τ_d
+    }
+}
+
+[id=cntn_to_dcsn, (V_b[>] : ℝ @ !vlu, V_h[>] : ℝ @ !vlu, V_l[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V        = 𝑙𝑠𝑢𝑚3(V_b[>], V_h[>] - 𝑢r(aDC_d, τ_d), V_l[>] - 𝑢r(aDC_d, τ_d), σ_r)                                                                               :: [id=value, "equation 24; the cost of equation 7 is charged on the two options away from the balanced default"]
+    D_{a_d}V = exp((V_b[>] - V)/σ_r)*D_{a_b}V_b[>] + exp((V_h[>] - 𝑢r(aDC_d, τ_d) - V)/σ_r)*D_{a_h}V_h[>] + exp((V_l[>] - 𝑢r(aDC_d, τ_d) - V)/σ_r)*D_{a_l}V_l[>]  :: [id=marginal, "the derivative of the line above; each weight is the choice probability of equation 26"]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]  = V                                 :: [id=value]
+}
+
+[id=policy, (V_b[>], V_h[>], V_l[>]) : !cntn -> (ς : {bal, high, low} @ !ctrl) : !dcsn] {
+    ς = argmax_{ς}(V_b[>], V_h[>] - 𝑢r(aDC_d, τ_d), V_l[>] - 𝑢r(aDC_d, τ_d))   :: [id=choice, "equation 20 read with ζ_r = 0; the paper's selection is the logit of equation 26"]
+}

@@ -1,0 +1,6 @@
+/node_modules/
+/src-tauri/target/
+/src-tauri/gen/
+
+# Commercial brand fonts stay local (AAS, 7 October 2026).
+/assets/fonts/PPMonument*.otf

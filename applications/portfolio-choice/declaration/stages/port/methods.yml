@@ -1,0 +1,36 @@
+stage: port
+
+methods:
+  - on: E_Ψ_θ
+    method: !gauss-hermite
+    handler: cons-port:_build_joint_quadrature
+    settings:
+      n_nodes: [n_Ψ_nodes, n_θ_nodes]
+
+  - on: cntn_to_dcsn
+    method: !vfi
+    # The alternative root-finding handler remains unspecified.
+    #   on: policy.foc.solve
+    #   method: !root-find
+    #   handler: hark:solve_stage_rootfind
+
+  - on: evaluate
+    method: !Linear
+    handler: cons-port:_make_interp
+    settings:
+      orders:
+        k_d: n_k
+      bounds:
+        k_d: [k_min, k_max]
+
+  - on: dcsn_to_arvl
+
+  - on: arvl_to_dcsn
+    method: !deterministic
+
+  - on: dcsn_to_cntn
+    handler: cons-port:transition
+    method: !monte-carlo
+    settings:
+      n_paths: n_sim
+      seed: sim_seed

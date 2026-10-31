@@ -1,0 +1,60 @@
+-- The internal extension of the parsed AST: the expressions the elaboration adds.
+-- expr and setexpr extend the exact bases in syntax.terms; their old
+-- constructors embed by identity and are not repeated or regenerated here.
+-- External primitives: reference = existing Identity or nonempty string;
+-- resolved_input = the existing native.records.ResolvedName.
+-- Expression positions additionally admit retained setexpr, resolved_input,
+-- and native.predicates.Predicate values (the existing internal record forms).
+-- binding is a tuple product, not an additional constructor class.
+-- Unresolved inhabits both existing bases; it is emitted once under expr.
+-- This is an internal extension profile, with no concrete source spellings.
+-- StochasticKernelSet(H, Z) denotes probability kernels from H to Z: for each measurable
+-- B in Z, h maps to P(h, B) measurably. It does not impose a chosen sigma
+-- algebra on the set ProbabilityMeasureSet(Z). typing.primitive_definitions._kernel
+-- expands this meaning into FunctionSet, ProbabilityMeasureSet and MeasurableMapSet expressions.
+--
+-- Constructor checking requires immutable children and typed bindings with
+-- distinct identities within one Lambda. Domains are set expressions.
+-- Every binding scopes over body only. All Lambda domains are outside its
+-- scope; Integral.measure is outside its scope too. Measure's binding domain
+-- specifies measurable subsets of domain (countable additivity is a rule
+-- requirement, not established by constructing this expression).
+-- Nested scopes can shadow identities. Alpha comparison and substitution
+-- enforce these scopes separately from the first-order ASDL field structure.
+-- Unresolved.missing is a nonempty description such as arguments or results.
+-- Compose(outer, inner, outputs) is the composition outer ∘ inner of two maps
+-- held by reference: outputs are the coordinates the
+-- inner map writes, one binding each, which bind nothing inside the term; a
+-- consumer that applies the composition at a point reads outer(inner(p)), and,
+-- where the inner map writes several coordinates, the let-form
+-- ((outputs) ↦ outer(outputs))(inner(p)), so that the record names the
+-- coordinates and no projection is written.
+-- ProductMeasure(binding, body) is the finite product of the probability
+-- measures body(i), i in the binding's domain I, a finite set: the unique
+-- probability measure on the functions e : I -> Z, with the sigma algebra the
+-- coordinate maps generate, whose value at every rectangle
+-- {e | e(i) in B_i for all i in I} is the product over i of body(i)(B_i). The
+-- binding's domain is outside its scope; the body may read the index, parents
+-- and parameters, never another coordinate. For empty I it is the point mass
+-- on the empty function.
+
+module semantic
+{
+  binding = (resolved_input variable, setexpr domain)
+
+  expr = Apply(expr function, expr* args)
+       | Lambda(binding* bindings, expr body)
+       | Compose(expr outer, expr inner, binding* outputs)
+       | Integral(binding binding, expr measure, expr body)
+       | Sup(binding binding, expr body)
+       | Measure(setexpr domain, binding binding, expr body)
+       | ProductMeasure(binding binding, expr body)
+       | Unresolved(reference identity, string missing)
+
+  setexpr = FunctionSet(setexpr domain, setexpr codomain)
+          | MeasurableMapSet(setexpr domain, setexpr codomain)
+          | StochasticKernelSet(setexpr domain, setexpr codomain)
+          | FiniteMeasureSet(setexpr domain)
+          | ProbabilityMeasureSet(setexpr domain)
+          | PowerSet(setexpr domain)
+}

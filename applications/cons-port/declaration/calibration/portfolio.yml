@@ -1,0 +1,11 @@
+# The parameter values of the portfolio-consumption model, those the fixed reference was computed with
+# (reference/legacy/syntax/calibration.yaml). One mapping serves the four stages; each stage binds the parameters it declares.
+calibration:
+  β: 0.96
+  ρ: 6.0
+  R: 1.02
+  μ_Ψ: 0.028927
+  σ_Ψ: 0.143486
+  μ_θ: -0.01125
+  σ_θ: 0.15
+  ρ_ζ: 0.0

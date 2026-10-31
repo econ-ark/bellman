@@ -1,0 +1,31 @@
+!trellis
+name: pension_lifecycle
+# periods[0] is the terminal period and periods[h] lies h periods before it.
+# The trellis has 15 periods: economics.md states no horizon, and the paper
+# it cites takes T finite and solves the model "for 15 periods" (Dobrescu and
+# Shanker 2024, §6.1). The terminal period is written out, since one of its
+# connectors names the terminal stage, which no other period holds: it
+# holds the three stages of period.yml and the terminal stage. Its first
+# connector maps the six continuation fields that leave the period, both
+# branches of retire_choice and the retiree's own savings, to the terminal
+# stage's arrival fields y_f_T and y_p_T, names of its own, since the assets
+# left after the last date begin no further period. Its second is
+# period.yml's, written again since a period's connectors replace the
+# template's: the worker's post-states to the decision states of
+# retire_choice, which has no arrival perch. The fourteen earlier periods
+# repeat period.yml.
+periods:
+  - stages: [worker_saving, retire_choice, retiree_saving, terminal]
+    connectors:
+      - {y_f_wk: y_f_T, y_p_wk: y_p_T, y_f_rt: y_f_T, y_p_rt: y_p_T, y_f_ret: y_f_T, y_p_ret: y_p_T}
+      - {y_f: y_f_d, y_p: y_p_d}
+  - {template: period.yml, repeat: 14}
+# One mapping stands for every adjacent pair. The retirement choice's work
+# branch carries the post-states to next period's worker stage, its retire
+# branch to next period's retiree stage, where the pension balance is paid
+# out with the benefit; the retiree's post-states return to the retiree
+# stage, so no path leads back to work (z_{t+1} = d_t z_t in the paper). Into
+# the terminal period the mapping reaches worker_saving and retiree_saving
+# alone, the terminal stage arriving at other names.
+inter_connectors:
+  - {y_f_wk: y_f_w, y_p_wk: y_p_w, y_f_rt: y_f_r, y_p_rt: y_p_r, y_f_ret: y_f_r, y_p_ret: y_p_r}

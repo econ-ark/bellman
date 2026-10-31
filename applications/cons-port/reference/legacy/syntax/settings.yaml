@@ -1,0 +1,22 @@
+# Numerical settings block — assets/capital grids matched to SolvingMicroDSOPs portfolio config
+# (a_grid_size=800, a_max=100, multi-exponentially nested via setup_grids_expMult).
+settings:
+  # a, k use SolvingMicroDSOPs multi-exponential nesting; the cash-on-hand grid m stays linear.
+  grid_spacing: expmult
+  n_m: 8000      # dense linear m-grid: the share FOC interpolates the continuation over m, and the
+                 # low-capital FOC lives at low m where a coarse grid made the share wobble
+  m_min: 0.01
+  m_max: 2000.0  # covers next-period m = k·(ς·Ψ+(1−ς)·R)+θ at k up to k_max (avoids clipping the share FOC)
+  n_a: 800
+  a_min: 1.0e-10
+  a_max: 100.0
+  n_k: 800
+  k_min: 1.0e-10
+  k_max: 1000.0  # high enough for the risky share to flatten to its Merton–Samuelson asymptote
+  n_θ_nodes: 7
+  n_Ψ_nodes: 7
+  n_joint_nodes: 49
+  n_sim: 10000
+  sim_seed: 42
+  tol_vfi: 1.0e-8
+  max_iter: 1000

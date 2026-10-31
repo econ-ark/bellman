@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 260 395">
+  <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <defs>
+    <style>
+      .st0 {
+        stroke-linecap: round;
+      }
+
+      .st0, .st1, .st2 {
+        fill: none;
+        stroke: #1a1a1a;
+      }
+
+      .st0, .st2 {
+        stroke-width: 1px;
+      }
+
+      .st3 {
+        font-family: Georgia-Italic, Georgia, serif;
+        font-style: italic;
+        font-size: 7.5px;
+        font-weight: 400;
+        opacity: 0.4;
+      }
+
+      .st4, .st5, .st6 {
+        font-family: Menlo-Regular, Menlo, Consolas, monospace;
+        font-weight: 700;
+      }
+
+      .st4 {
+        letter-spacing: 0em;
+      }
+
+      .st7, .st1, .st8, .st9, .st10, .st11, .st12 {
+        isolation: isolate;
+      }
+
+      .st7, .st8, .st10, .st11, .st12, .st13 {
+        fill: #1a1a1a;
+      }
+
+      .st7, .st14, .st15 {
+        font-family: Inter, Helvetica, sans-serif;
+      }
+
+      .st7, .st10, .st12 {
+        font-size: 8.5px;
+      }
+
+      .st5, .st15 {
+        letter-spacing: 0em;
+      }
+
+      .st1 {
+        opacity: .22;
+        stroke-dasharray: 3 3;
+        stroke-width: .6px;
+      }
+
+      .st8 {
+        font-family: Inter, HelveticaNeue-Medium, 'Helvetica Neue', sans-serif;
+        font-size: 10.5px;
+        font-weight: 500;
+      }
+
+      .st11 {
+        font-family: 'JetBrains Mono', Menlo-Regular, Menlo, Consolas, monospace;
+        font-size: 9.5px;
+      }
+
+      .st12 {
+        font-family: Georgia-Italic, Georgia;
+        font-style: italic;
+      }
+    </style>
+  </defs>
+  <g class="st9">
+    <text/>
+  </g>
+  <circle class="st2" cx="36" cy="42" r="3.5"/>
+  <text class="st11" transform="translate(50 46)"><tspan x="0" y="0">SYNTAX</tspan></text>
+  <line class="st0" x1="36" y1="46" x2="36" y2="68"/>
+  <g class="st9">
+    <text class="st12" transform="translate(44 60)"><tspan x="0" y="0">parse</tspan></text>
+  </g>
+  <circle class="st13" cx="36" cy="74" r="3.5"/>
+  <g class="st9">
+    <text class="st8" transform="translate(50 78)"><tspan x="0" y="0">1 Symbolic stage</tspan></text>
+  </g>
+  <g class="st9">
+    <text class="st10" transform="translate(50 90)"><tspan class="st14" x="0" y="0">structured syntax &#xB7;</tspan><tspan class="st5" x="72" y="0">.mod file</tspan></text>
+  </g>
+  <line class="st0" x1="36" y1="96" x2="36" y2="114"/>
+  <g class="st9">
+    <text class="st12" transform="translate(44 108)"><tspan x="0" y="0">calibrate</tspan></text>
+  </g>
+  <circle class="st13" cx="36" cy="120" r="3.5"/>
+  <g class="st9">
+    <text class="st8" transform="translate(50 124)"><tspan x="0" y="0">2 Parameterized stage</tspan></text>
+  </g>
+  <g class="st9">
+    <text class="st10" transform="translate(50 136)"><tspan class="st14" x="0" y="0">parameters mapped &#xB7;</tspan><tspan class="st4" x="83" y="0">stage.param</tspan></text>
+  </g>
+  <line class="st0" x1="36" y1="142" x2="36" y2="160"/>
+  <g class="st9">
+    <text class="st12" transform="translate(44 154)"><tspan x="0" y="0">methodize</tspan></text>
+  </g>
+  <circle class="st13" cx="36" cy="166" r="3.5"/>
+  <g class="st9">
+    <text class="st8" transform="translate(50 170)"><tspan x="0" y="0">3 Methodized stage</tspan></text>
+  </g>
+  <g class="st9">
+    <text class="st10" transform="translate(50 182)"><tspan class="st14" x="0" y="0">methods mapped &#xB7;</tspan><tspan class="st6" x="73" y="0">stage.methods</tspan></text>
+  </g>
+  <line class="st0" x1="36" y1="188" x2="36" y2="206"/>
+  <g class="st9">
+    <text class="st12" transform="translate(44 200)"><tspan x="0" y="0">configure</tspan></text>
+  </g>
+  <circle class="st13" cx="36" cy="212" r="3.5"/>
+  <g class="st9">
+    <text class="st8" transform="translate(50 216)"><tspan x="0" y="0">4 Configured stage</tspan></text>
+  </g>
+  <g class="st9">
+    <text class="st10" transform="translate(50 228)"><tspan class="st14" x="0" y="0">settings mapped &#xB7;</tspan><tspan class="st4" x="70" y="0">stage.settings</tspan></text>
+  </g>
+  <line class="st1" x1="14" y1="242" x2="246" y2="242"/>
+  <line class="st0" x1="36" y1="234" x2="36" y2="258"/>
+  <g class="st9">
+    <text class="st12" transform="translate(44 252)"><tspan x="0" y="0">build</tspan></text>
+  </g>
+  <circle class="st13" cx="36" cy="264" r="3.5"/>
+  <g class="st9">
+    <text class="st8" transform="translate(50 268)"><tspan x="0" y="0">5 Callable stage</tspan></text>
+  </g>
+  <g class="st9">
+    <text class="st7" transform="translate(50 280)"><tspan x="0" y="0">grids, interpolants </tspan></text>
+  </g>
+  <line class="st0" x1="36" y1="286" x2="36" y2="329"/>
+  <line class="st1" x1="14" y1="300" x2="246" y2="300"/>
+  <g class="st9">
+    <text class="st12" transform="translate(44 323)"><tspan x="0" y="0">solve</tspan></text>
+  </g>
+  <circle class="st13" cx="36" cy="335" r="3.5"/>
+  <g class="st9">
+    <text class="st8" transform="translate(50 339)"><tspan x="0" y="0">6 Solved stage</tspan></text>
+  </g>
+  <g class="st9">
+    <text class="st7" transform="translate(50 351)"><tspan x="0" y="0">policy + value mapped </tspan></text>
+  </g>
+  <line class="st0" x1="36" y1="357" x2="36" y2="365"/>
+  <g class="st9">
+    <text class="st12" transform="translate(44 369)"><tspan x="0" y="0">simulate</tspan></text>
+  </g>
+  <circle class="st13" cx="36" cy="375" r="3.5"/>
+  <g class="st9">
+    <text class="st8" transform="translate(50 379)"><tspan x="0" y="0">7 Simulated stage</tspan></text>
+  </g>
+  <text class="st3" transform="translate(196.36 235.52)"><tspan x="0" y="0">Syntax layer</tspan></text>
+  <text class="st3" transform="translate(162.89 252.13)"><tspan x="0" y="0">Comp. representation</tspan></text>
+  <text class="st3" transform="translate(196 310)"><tspan x="0" y="0">Application</tspan></text>
+</svg>

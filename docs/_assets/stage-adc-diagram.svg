@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 230"
+  role="img"
+  aria-label="One stage: arrival [&lt;] (state k), decision [.] (state m) and continuation [&gt;] (state a) perches; forward transitions f (carrying the pre-decision shock) and g; backward builders I and B">
+<defs>
+  <style><![CDATA[
+    .bc-dot { fill: #1a1a1a; }
+
+    .bc-edge--fwd {
+      stroke: #1a1a1a; stroke-width: 1.2;
+      fill: none; stroke-linecap: round;
+    }
+    .bc-edge--bwd {
+      stroke: #1a1a1a; stroke-width: 1.0;
+      fill: none; stroke-linecap: round;
+      stroke-dasharray: 5 4;
+    }
+
+    .bc-ring {
+      fill: none; stroke: #1a1a1a;
+      stroke-width: 0.8; stroke-dasharray: 3 3;
+    }
+
+    .bc-state {
+      font: italic 16px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-tag {
+      font: 13px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-arrow {
+      font: italic 15px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-builder {
+      font: bold 15px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+    .bc-shock {
+      font: italic 12px Georgia, "Times New Roman", serif;
+      fill: #1a1a1a;
+    }
+  ]]></style>
+
+  <marker id="head" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="5.5" markerHeight="5.5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/>
+  </marker>
+  <marker id="head-d" viewBox="0 0 10 10" refX="9" refY="5"
+    markerWidth="5" markerHeight="5" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a" opacity="0.7"/>
+  </marker>
+</defs>
+
+<!-- forward transitions (solid, arcing over the top) -->
+<!-- f : arrival -> decision (carries the pre-decision shock) -->
+<path d="M101,134 C140,92 215,92 252,133" class="bc-edge--fwd" marker-end="url(#head)"/>
+<!-- g : decision -> continuation -->
+<path d="M268,133 C305,92 380,92 419,134" class="bc-edge--fwd" marker-end="url(#head)"/>
+
+<!-- backward builders (dashed, arcing under the bottom) -->
+<!-- I : decision -> arrival -->
+<path d="M252,147 C215,188 140,188 101,148" class="bc-edge--bwd" marker-end="url(#head-d)"/>
+<!-- B : continuation -> decision -->
+<path d="M419,147 C380,188 305,188 268,148" class="bc-edge--bwd" marker-end="url(#head-d)"/>
+
+<!-- pre-decision shock: faint rings on the midpoint of the arrival -> decision (f) leg -->
+<circle cx="177" cy="102" r="5"  class="bc-ring" opacity="0.32"/>
+<circle cx="177" cy="102" r="9"  class="bc-ring" opacity="0.20"/>
+<circle cx="177" cy="102" r="13" class="bc-ring" opacity="0.11"/>
+
+<!-- perch dots -->
+<circle cx="95"  cy="140" r="5.2" class="bc-dot"/>
+<circle cx="260" cy="140" r="5.2" class="bc-dot"/>
+<circle cx="425" cy="140" r="5.2" class="bc-dot"/>
+
+<!-- perch tag + state labels (beside the dots) -->
+<text x="95"  y="178" text-anchor="middle" class="bc-state">k</text>
+<text x="95"  y="194" text-anchor="middle" class="bc-tag">[&lt;]</text>
+<text x="260" y="178" text-anchor="middle" class="bc-state">m</text>
+<text x="260" y="194" text-anchor="middle" class="bc-tag">[&#183;]</text>
+<text x="425" y="178" text-anchor="middle" class="bc-state">a</text>
+<text x="425" y="194" text-anchor="middle" class="bc-tag">[&gt;]</text>
+
+<!-- forward-transition labels (above the solid arcs); shock sits on the f leg -->
+<text x="177" y="80"  text-anchor="middle" class="bc-arrow">f</text>
+<text x="177" y="130" text-anchor="middle" class="bc-shock">shock</text>
+<text x="341" y="84"  text-anchor="middle" class="bc-arrow">g</text>
+
+<!-- backward-builder labels (below the dashed arcs); identically styled I and B -->
+<text x="176" y="208" text-anchor="middle" class="bc-builder">I</text>
+<text x="341" y="208" text-anchor="middle" class="bc-builder">B</text>
+</svg>

@@ -1,0 +1,16 @@
+!period
+name: housing_period
+
+# One period of the housing model: the choice of keeping or adjusting the
+# house, then saving on the branch that choice selects. The connector joins
+# the keep branch's fields w_kp and h_kp to the decision states of
+# keeper_saving and the adjust branch's w_adj to that of adjuster_saving, the
+# decision perch being each saving stage's entry perch. The order of the
+# stages is derived from their fields, not from this list. The terminal
+# period, which adds the terminal stage, is written out in trellis.yml.
+stages:
+  - house_choice
+  - keeper_saving
+  - adjuster_saving
+connectors:
+  - {w_kp: m_d, h_kp: h_d, w_adj: m}

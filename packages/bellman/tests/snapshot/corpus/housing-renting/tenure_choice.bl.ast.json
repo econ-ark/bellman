@@ -1,0 +1,3153 @@
+{
+  "__class__": "FILE",
+  "items": [
+    {
+      "__class__": "Metadata",
+      "key": "stage",
+      "value": "tenure_choice"
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "r",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Named",
+              "name": "ℝ₊"
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"interest rate on financial assets\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "Π",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Closed"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 0
+                },
+                "upper": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "right": {
+                  "__class__": "Closed"
+                }
+              }
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"transition matrix of the income chain, one row for each income level; the set of one probability stands in for the matrix, which the language cannot yet type\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "z",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Named",
+              "name": "ℝ₊₊"
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"the income levels of the chain, in the order of the rows of Π; ℝ₊₊ stands in for the vector, whose length the discretisation of the income process fixes\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "a0_T",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Product",
+              "factors": [
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                }
+              ]
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"lower asset threshold of each of the ten tax brackets, in increasing order\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "B_T",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Product",
+              "factors": [
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                },
+                {
+                  "__class__": "Named",
+                  "name": "ℝ"
+                }
+              ]
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"tax due at the lower threshold of each bracket\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "τ_T",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Product",
+              "factors": [
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                },
+                {
+                  "__class__": "Interval",
+                  "bounds": {
+                    "__class__": "Range",
+                    "left": {
+                      "__class__": "Closed"
+                    },
+                    "lower": {
+                      "__class__": "Number",
+                      "value": 0
+                    },
+                    "upper": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Open"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"marginal tax rate on assets within each bracket\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "y",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Named",
+              "name": "ℝ₊₊"
+            }
+          }
+        ],
+        "value": null
+      },
+      "annot": null
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "Law",
+        "subjects": [
+          "y"
+        ],
+        "law": {
+          "__class__": "Call",
+          "fun": "MarkovChain",
+          "args": [
+            {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "Π"
+              }
+            },
+            {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "z"
+              }
+            },
+            {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "y_pre"
+              }
+            }
+          ]
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"this period's income, drawn from the row of Π at last period's income y_pre\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "FuncDef",
+        "name": "𝑇",
+        "params": [
+          {
+            "__class__": "Coordinate",
+            "stem": "x",
+            "at": null,
+            "classifiers": [
+              {
+                "__class__": "Domain",
+                "space": {
+                  "__class__": "Named",
+                  "name": "ℝ₊"
+                }
+              }
+            ]
+          }
+        ],
+        "body": {
+          "__class__": "Add",
+          "left": {
+            "__class__": "Add",
+            "left": {
+              "__class__": "Add",
+              "left": {
+                "__class__": "Add",
+                "left": {
+                  "__class__": "Add",
+                  "left": {
+                    "__class__": "Add",
+                    "left": {
+                      "__class__": "Add",
+                      "left": {
+                        "__class__": "Add",
+                        "left": {
+                          "__class__": "Add",
+                          "left": {
+                            "__class__": "Mul",
+                            "left": {
+                              "__class__": "Sub",
+                              "left": {
+                                "__class__": "Call",
+                                "fun": "step",
+                                "args": [
+                                  {
+                                    "__class__": "Sub",
+                                    "left": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "x"
+                                      }
+                                    },
+                                    "right": {
+                                      "__class__": "Select",
+                                      "family": {
+                                        "__class__": "Sym",
+                                        "symbol": {
+                                          "__class__": "Constant",
+                                          "name": "a0_T"
+                                        }
+                                      },
+                                      "sel": {
+                                        "__class__": "Pos",
+                                        "at": 1
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "right": {
+                                "__class__": "Call",
+                                "fun": "step",
+                                "args": [
+                                  {
+                                    "__class__": "Sub",
+                                    "left": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "x"
+                                      }
+                                    },
+                                    "right": {
+                                      "__class__": "Select",
+                                      "family": {
+                                        "__class__": "Sym",
+                                        "symbol": {
+                                          "__class__": "Constant",
+                                          "name": "a0_T"
+                                        }
+                                      },
+                                      "sel": {
+                                        "__class__": "Pos",
+                                        "at": 2
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "right": {
+                              "__class__": "Add",
+                              "left": {
+                                "__class__": "Select",
+                                "family": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "B_T"
+                                  }
+                                },
+                                "sel": {
+                                  "__class__": "Pos",
+                                  "at": 1
+                                }
+                              },
+                              "right": {
+                                "__class__": "Mul",
+                                "left": {
+                                  "__class__": "Select",
+                                  "family": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "τ_T"
+                                    }
+                                  },
+                                  "sel": {
+                                    "__class__": "Pos",
+                                    "at": 1
+                                  }
+                                },
+                                "right": {
+                                  "__class__": "Sub",
+                                  "left": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "x"
+                                    }
+                                  },
+                                  "right": {
+                                    "__class__": "Select",
+                                    "family": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "a0_T"
+                                      }
+                                    },
+                                    "sel": {
+                                      "__class__": "Pos",
+                                      "at": 1
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right": {
+                            "__class__": "Mul",
+                            "left": {
+                              "__class__": "Sub",
+                              "left": {
+                                "__class__": "Call",
+                                "fun": "step",
+                                "args": [
+                                  {
+                                    "__class__": "Sub",
+                                    "left": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "x"
+                                      }
+                                    },
+                                    "right": {
+                                      "__class__": "Select",
+                                      "family": {
+                                        "__class__": "Sym",
+                                        "symbol": {
+                                          "__class__": "Constant",
+                                          "name": "a0_T"
+                                        }
+                                      },
+                                      "sel": {
+                                        "__class__": "Pos",
+                                        "at": 2
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "right": {
+                                "__class__": "Call",
+                                "fun": "step",
+                                "args": [
+                                  {
+                                    "__class__": "Sub",
+                                    "left": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "x"
+                                      }
+                                    },
+                                    "right": {
+                                      "__class__": "Select",
+                                      "family": {
+                                        "__class__": "Sym",
+                                        "symbol": {
+                                          "__class__": "Constant",
+                                          "name": "a0_T"
+                                        }
+                                      },
+                                      "sel": {
+                                        "__class__": "Pos",
+                                        "at": 3
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "right": {
+                              "__class__": "Add",
+                              "left": {
+                                "__class__": "Select",
+                                "family": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "B_T"
+                                  }
+                                },
+                                "sel": {
+                                  "__class__": "Pos",
+                                  "at": 2
+                                }
+                              },
+                              "right": {
+                                "__class__": "Mul",
+                                "left": {
+                                  "__class__": "Select",
+                                  "family": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "τ_T"
+                                    }
+                                  },
+                                  "sel": {
+                                    "__class__": "Pos",
+                                    "at": 2
+                                  }
+                                },
+                                "right": {
+                                  "__class__": "Sub",
+                                  "left": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "x"
+                                    }
+                                  },
+                                  "right": {
+                                    "__class__": "Select",
+                                    "family": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "a0_T"
+                                      }
+                                    },
+                                    "sel": {
+                                      "__class__": "Pos",
+                                      "at": 2
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "right": {
+                          "__class__": "Mul",
+                          "left": {
+                            "__class__": "Sub",
+                            "left": {
+                              "__class__": "Call",
+                              "fun": "step",
+                              "args": [
+                                {
+                                  "__class__": "Sub",
+                                  "left": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "x"
+                                    }
+                                  },
+                                  "right": {
+                                    "__class__": "Select",
+                                    "family": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "a0_T"
+                                      }
+                                    },
+                                    "sel": {
+                                      "__class__": "Pos",
+                                      "at": 3
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "right": {
+                              "__class__": "Call",
+                              "fun": "step",
+                              "args": [
+                                {
+                                  "__class__": "Sub",
+                                  "left": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "x"
+                                    }
+                                  },
+                                  "right": {
+                                    "__class__": "Select",
+                                    "family": {
+                                      "__class__": "Sym",
+                                      "symbol": {
+                                        "__class__": "Constant",
+                                        "name": "a0_T"
+                                      }
+                                    },
+                                    "sel": {
+                                      "__class__": "Pos",
+                                      "at": 4
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "right": {
+                            "__class__": "Add",
+                            "left": {
+                              "__class__": "Select",
+                              "family": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "B_T"
+                                }
+                              },
+                              "sel": {
+                                "__class__": "Pos",
+                                "at": 3
+                              }
+                            },
+                            "right": {
+                              "__class__": "Mul",
+                              "left": {
+                                "__class__": "Select",
+                                "family": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "τ_T"
+                                  }
+                                },
+                                "sel": {
+                                  "__class__": "Pos",
+                                  "at": 3
+                                }
+                              },
+                              "right": {
+                                "__class__": "Sub",
+                                "left": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "x"
+                                  }
+                                },
+                                "right": {
+                                  "__class__": "Select",
+                                  "family": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "a0_T"
+                                    }
+                                  },
+                                  "sel": {
+                                    "__class__": "Pos",
+                                    "at": 3
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "right": {
+                        "__class__": "Mul",
+                        "left": {
+                          "__class__": "Sub",
+                          "left": {
+                            "__class__": "Call",
+                            "fun": "step",
+                            "args": [
+                              {
+                                "__class__": "Sub",
+                                "left": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "x"
+                                  }
+                                },
+                                "right": {
+                                  "__class__": "Select",
+                                  "family": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "a0_T"
+                                    }
+                                  },
+                                  "sel": {
+                                    "__class__": "Pos",
+                                    "at": 4
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          "right": {
+                            "__class__": "Call",
+                            "fun": "step",
+                            "args": [
+                              {
+                                "__class__": "Sub",
+                                "left": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "x"
+                                  }
+                                },
+                                "right": {
+                                  "__class__": "Select",
+                                  "family": {
+                                    "__class__": "Sym",
+                                    "symbol": {
+                                      "__class__": "Constant",
+                                      "name": "a0_T"
+                                    }
+                                  },
+                                  "sel": {
+                                    "__class__": "Pos",
+                                    "at": 5
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "right": {
+                          "__class__": "Add",
+                          "left": {
+                            "__class__": "Select",
+                            "family": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "B_T"
+                              }
+                            },
+                            "sel": {
+                              "__class__": "Pos",
+                              "at": 4
+                            }
+                          },
+                          "right": {
+                            "__class__": "Mul",
+                            "left": {
+                              "__class__": "Select",
+                              "family": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "τ_T"
+                                }
+                              },
+                              "sel": {
+                                "__class__": "Pos",
+                                "at": 4
+                              }
+                            },
+                            "right": {
+                              "__class__": "Sub",
+                              "left": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "x"
+                                }
+                              },
+                              "right": {
+                                "__class__": "Select",
+                                "family": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "a0_T"
+                                  }
+                                },
+                                "sel": {
+                                  "__class__": "Pos",
+                                  "at": 4
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "right": {
+                      "__class__": "Mul",
+                      "left": {
+                        "__class__": "Sub",
+                        "left": {
+                          "__class__": "Call",
+                          "fun": "step",
+                          "args": [
+                            {
+                              "__class__": "Sub",
+                              "left": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "x"
+                                }
+                              },
+                              "right": {
+                                "__class__": "Select",
+                                "family": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "a0_T"
+                                  }
+                                },
+                                "sel": {
+                                  "__class__": "Pos",
+                                  "at": 5
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        "right": {
+                          "__class__": "Call",
+                          "fun": "step",
+                          "args": [
+                            {
+                              "__class__": "Sub",
+                              "left": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "x"
+                                }
+                              },
+                              "right": {
+                                "__class__": "Select",
+                                "family": {
+                                  "__class__": "Sym",
+                                  "symbol": {
+                                    "__class__": "Constant",
+                                    "name": "a0_T"
+                                  }
+                                },
+                                "sel": {
+                                  "__class__": "Pos",
+                                  "at": 6
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "right": {
+                        "__class__": "Add",
+                        "left": {
+                          "__class__": "Select",
+                          "family": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "B_T"
+                            }
+                          },
+                          "sel": {
+                            "__class__": "Pos",
+                            "at": 5
+                          }
+                        },
+                        "right": {
+                          "__class__": "Mul",
+                          "left": {
+                            "__class__": "Select",
+                            "family": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "τ_T"
+                              }
+                            },
+                            "sel": {
+                              "__class__": "Pos",
+                              "at": 5
+                            }
+                          },
+                          "right": {
+                            "__class__": "Sub",
+                            "left": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "x"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Select",
+                              "family": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "a0_T"
+                                }
+                              },
+                              "sel": {
+                                "__class__": "Pos",
+                                "at": 5
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "right": {
+                    "__class__": "Mul",
+                    "left": {
+                      "__class__": "Sub",
+                      "left": {
+                        "__class__": "Call",
+                        "fun": "step",
+                        "args": [
+                          {
+                            "__class__": "Sub",
+                            "left": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "x"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Select",
+                              "family": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "a0_T"
+                                }
+                              },
+                              "sel": {
+                                "__class__": "Pos",
+                                "at": 6
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "right": {
+                        "__class__": "Call",
+                        "fun": "step",
+                        "args": [
+                          {
+                            "__class__": "Sub",
+                            "left": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "x"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Select",
+                              "family": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "a0_T"
+                                }
+                              },
+                              "sel": {
+                                "__class__": "Pos",
+                                "at": 7
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "right": {
+                      "__class__": "Add",
+                      "left": {
+                        "__class__": "Select",
+                        "family": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "B_T"
+                          }
+                        },
+                        "sel": {
+                          "__class__": "Pos",
+                          "at": 6
+                        }
+                      },
+                      "right": {
+                        "__class__": "Mul",
+                        "left": {
+                          "__class__": "Select",
+                          "family": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "τ_T"
+                            }
+                          },
+                          "sel": {
+                            "__class__": "Pos",
+                            "at": 6
+                          }
+                        },
+                        "right": {
+                          "__class__": "Sub",
+                          "left": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "x"
+                            }
+                          },
+                          "right": {
+                            "__class__": "Select",
+                            "family": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "a0_T"
+                              }
+                            },
+                            "sel": {
+                              "__class__": "Pos",
+                              "at": 6
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "right": {
+                  "__class__": "Mul",
+                  "left": {
+                    "__class__": "Sub",
+                    "left": {
+                      "__class__": "Call",
+                      "fun": "step",
+                      "args": [
+                        {
+                          "__class__": "Sub",
+                          "left": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "x"
+                            }
+                          },
+                          "right": {
+                            "__class__": "Select",
+                            "family": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "a0_T"
+                              }
+                            },
+                            "sel": {
+                              "__class__": "Pos",
+                              "at": 7
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "right": {
+                      "__class__": "Call",
+                      "fun": "step",
+                      "args": [
+                        {
+                          "__class__": "Sub",
+                          "left": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "x"
+                            }
+                          },
+                          "right": {
+                            "__class__": "Select",
+                            "family": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "a0_T"
+                              }
+                            },
+                            "sel": {
+                              "__class__": "Pos",
+                              "at": 8
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "right": {
+                    "__class__": "Add",
+                    "left": {
+                      "__class__": "Select",
+                      "family": {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "B_T"
+                        }
+                      },
+                      "sel": {
+                        "__class__": "Pos",
+                        "at": 7
+                      }
+                    },
+                    "right": {
+                      "__class__": "Mul",
+                      "left": {
+                        "__class__": "Select",
+                        "family": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "τ_T"
+                          }
+                        },
+                        "sel": {
+                          "__class__": "Pos",
+                          "at": 7
+                        }
+                      },
+                      "right": {
+                        "__class__": "Sub",
+                        "left": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "x"
+                          }
+                        },
+                        "right": {
+                          "__class__": "Select",
+                          "family": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "a0_T"
+                            }
+                          },
+                          "sel": {
+                            "__class__": "Pos",
+                            "at": 7
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "right": {
+                "__class__": "Mul",
+                "left": {
+                  "__class__": "Sub",
+                  "left": {
+                    "__class__": "Call",
+                    "fun": "step",
+                    "args": [
+                      {
+                        "__class__": "Sub",
+                        "left": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "x"
+                          }
+                        },
+                        "right": {
+                          "__class__": "Select",
+                          "family": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "a0_T"
+                            }
+                          },
+                          "sel": {
+                            "__class__": "Pos",
+                            "at": 8
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "right": {
+                    "__class__": "Call",
+                    "fun": "step",
+                    "args": [
+                      {
+                        "__class__": "Sub",
+                        "left": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "x"
+                          }
+                        },
+                        "right": {
+                          "__class__": "Select",
+                          "family": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "a0_T"
+                            }
+                          },
+                          "sel": {
+                            "__class__": "Pos",
+                            "at": 9
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "right": {
+                  "__class__": "Add",
+                  "left": {
+                    "__class__": "Select",
+                    "family": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "B_T"
+                      }
+                    },
+                    "sel": {
+                      "__class__": "Pos",
+                      "at": 8
+                    }
+                  },
+                  "right": {
+                    "__class__": "Mul",
+                    "left": {
+                      "__class__": "Select",
+                      "family": {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "τ_T"
+                        }
+                      },
+                      "sel": {
+                        "__class__": "Pos",
+                        "at": 8
+                      }
+                    },
+                    "right": {
+                      "__class__": "Sub",
+                      "left": {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "x"
+                        }
+                      },
+                      "right": {
+                        "__class__": "Select",
+                        "family": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "a0_T"
+                          }
+                        },
+                        "sel": {
+                          "__class__": "Pos",
+                          "at": 8
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "right": {
+              "__class__": "Mul",
+              "left": {
+                "__class__": "Sub",
+                "left": {
+                  "__class__": "Call",
+                  "fun": "step",
+                  "args": [
+                    {
+                      "__class__": "Sub",
+                      "left": {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "x"
+                        }
+                      },
+                      "right": {
+                        "__class__": "Select",
+                        "family": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "a0_T"
+                          }
+                        },
+                        "sel": {
+                          "__class__": "Pos",
+                          "at": 9
+                        }
+                      }
+                    }
+                  ]
+                },
+                "right": {
+                  "__class__": "Call",
+                  "fun": "step",
+                  "args": [
+                    {
+                      "__class__": "Sub",
+                      "left": {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "x"
+                        }
+                      },
+                      "right": {
+                        "__class__": "Select",
+                        "family": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "a0_T"
+                          }
+                        },
+                        "sel": {
+                          "__class__": "Pos",
+                          "at": 10
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "right": {
+                "__class__": "Add",
+                "left": {
+                  "__class__": "Select",
+                  "family": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "B_T"
+                    }
+                  },
+                  "sel": {
+                    "__class__": "Pos",
+                    "at": 9
+                  }
+                },
+                "right": {
+                  "__class__": "Mul",
+                  "left": {
+                    "__class__": "Select",
+                    "family": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "τ_T"
+                      }
+                    },
+                    "sel": {
+                      "__class__": "Pos",
+                      "at": 9
+                    }
+                  },
+                  "right": {
+                    "__class__": "Sub",
+                    "left": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "x"
+                      }
+                    },
+                    "right": {
+                      "__class__": "Select",
+                      "family": {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "a0_T"
+                        }
+                      },
+                      "sel": {
+                        "__class__": "Pos",
+                        "at": 9
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "right": {
+            "__class__": "Mul",
+            "left": {
+              "__class__": "Call",
+              "fun": "step",
+              "args": [
+                {
+                  "__class__": "Sub",
+                  "left": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "x"
+                    }
+                  },
+                  "right": {
+                    "__class__": "Select",
+                    "family": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "a0_T"
+                      }
+                    },
+                    "sel": {
+                      "__class__": "Pos",
+                      "at": 10
+                    }
+                  }
+                }
+              ]
+            },
+            "right": {
+              "__class__": "Add",
+              "left": {
+                "__class__": "Select",
+                "family": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "B_T"
+                  }
+                },
+                "sel": {
+                  "__class__": "Pos",
+                  "at": 10
+                }
+              },
+              "right": {
+                "__class__": "Mul",
+                "left": {
+                  "__class__": "Select",
+                  "family": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "τ_T"
+                    }
+                  },
+                  "sel": {
+                    "__class__": "Pos",
+                    "at": 10
+                  }
+                },
+                "right": {
+                  "__class__": "Sub",
+                  "left": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "x"
+                    }
+                  },
+                  "right": {
+                    "__class__": "Select",
+                    "family": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "a0_T"
+                      }
+                    },
+                    "sel": {
+                      "__class__": "Pos",
+                      "at": 10
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "tax"
+          },
+          {
+            "__class__": "Tag",
+            "tag": "\"the tax on assets x: B_T[k] + τ_T[k]*(x - a0_T[k]) in bracket k, which runs from a0_T[k], excluded, to a0_T[k+1], included; step(u) is one when u is positive and zero otherwise\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Statement",
+      "core": {
+        "__class__": "Assignment",
+        "target": {
+          "__class__": "Constant",
+          "name": "𝑑𝑇"
+        },
+        "value": {
+          "__class__": "Operator",
+          "head": "D",
+          "subs": [
+            {
+              "__class__": "Var",
+              "name": "x"
+            }
+          ],
+          "args": [
+            {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "𝑇"
+              }
+            }
+          ]
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "marginal_tax"
+          },
+          {
+            "__class__": "Tag",
+            "tag": "\"the marginal tax rate, the derivative of the tax away from the bracket thresholds\""
+          }
+        ]
+      }
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "arvl_to_dcsn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "a",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "H",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "y_pre",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "y",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "a_d",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "H_d",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "y_d",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Named",
+                          "name": "ℝ₊₊"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "a_d"
+              }
+            },
+            "rhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "a"
+              }
+            }
+          },
+          "annot": null
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "H_d"
+              }
+            },
+            "rhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "H"
+              }
+            }
+          },
+          "annot": null
+        },
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "y_d"
+              }
+            },
+            "rhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "y"
+              }
+            }
+          },
+          "annot": null
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "dcsn_to_cntn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "a_d",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "H_d",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "y_d",
+                    "at": null,
+                    "classifiers": []
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "d",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Control"
+                        }
+                      },
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "FiniteSet",
+                          "members": [
+                            "own",
+                            "rent"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": []
+              },
+              "target_types": []
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Block",
+          "tag": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "label",
+                "value": "own"
+              },
+              {
+                "__class__": "Typer",
+                "typing": {
+                  "__class__": "Signature",
+                  "source": {
+                    "__class__": "Subject",
+                    "coordinates": []
+                  },
+                  "source_types": [],
+                  "target": {
+                    "__class__": "Subject",
+                    "coordinates": [
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "a_o",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "ℝ₊"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "H_o",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "ℝ₊"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "y_o",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "ℝ₊₊"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "target_types": [
+                    {
+                      "__class__": "Infoset",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "body": [
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "a_o"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "a_d"
+                  }
+                }
+              },
+              "annot": null
+            },
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "H_o"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "H_d"
+                  }
+                }
+              },
+              "annot": null
+            },
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "y_o"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "y_d"
+                  }
+                }
+              },
+              "annot": null
+            }
+          ]
+        },
+        {
+          "__class__": "Block",
+          "tag": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "label",
+                "value": "rent"
+              },
+              {
+                "__class__": "Typer",
+                "typing": {
+                  "__class__": "Signature",
+                  "source": {
+                    "__class__": "Subject",
+                    "coordinates": []
+                  },
+                  "source_types": [],
+                  "target": {
+                    "__class__": "Subject",
+                    "coordinates": [
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "w_r",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "ℝ₊"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "__class__": "Coordinate",
+                        "stem": "y_r",
+                        "at": null,
+                        "classifiers": [
+                          {
+                            "__class__": "Domain",
+                            "space": {
+                              "__class__": "Named",
+                              "name": "ℝ₊₊"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "target_types": [
+                    {
+                      "__class__": "Infoset",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "body": [
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "w_r"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Add",
+                  "left": {
+                    "__class__": "Sub",
+                    "left": {
+                      "__class__": "Mul",
+                      "left": {
+                        "__class__": "Add",
+                        "left": {
+                          "__class__": "Number",
+                          "value": 1
+                        },
+                        "right": {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "r"
+                          }
+                        }
+                      },
+                      "right": {
+                        "__class__": "Sym",
+                        "symbol": {
+                          "__class__": "Constant",
+                          "name": "a_d"
+                        }
+                      }
+                    },
+                    "right": {
+                      "__class__": "Call",
+                      "fun": "𝑇",
+                      "args": [
+                        {
+                          "__class__": "Sym",
+                          "symbol": {
+                            "__class__": "Constant",
+                            "name": "a_d"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "right": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "H_d"
+                    }
+                  }
+                }
+              },
+              "annot": {
+                "__class__": "Annotation",
+                "entries": [
+                  {
+                    "__class__": "KeyValue",
+                    "key": "id",
+                    "value": "liquidation"
+                  },
+                  {
+                    "__class__": "Tag",
+                    "tag": "\"a renter sells the house; income is added in the renter's rental stage\""
+                  }
+                ]
+              }
+            },
+            {
+              "__class__": "Statement",
+              "core": {
+                "__class__": "Equation",
+                "lhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "y_r"
+                  }
+                },
+                "rhs": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "y_d"
+                  }
+                }
+              },
+              "annot": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "cntn_to_dcsn"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V_o",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Closed"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "inf"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Open"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V_r",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Closed"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "inf"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Open"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "d",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Continuation"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Closed"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "inf"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Open"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "V"
+              }
+            },
+            "rhs": {
+              "__class__": "Select",
+              "family": {
+                "__class__": "Tuple",
+                "items": [
+                  {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Variable",
+                      "name": "V_o",
+                      "when": {
+                        "__class__": "At",
+                        "side": {
+                          "__class__": "Continuation"
+                        }
+                      },
+                      "shift": 0
+                    }
+                  },
+                  {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Variable",
+                      "name": "V_r",
+                      "when": {
+                        "__class__": "At",
+                        "side": {
+                          "__class__": "Continuation"
+                        }
+                      },
+                      "shift": 0
+                    }
+                  }
+                ]
+              },
+              "sel": {
+                "__class__": "Key",
+                "at": "d"
+              }
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "choice_value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "dcsn_to_arvl"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": null,
+                    "classifiers": []
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Arrival"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Closed"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "inf"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Open"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Variable",
+                "name": "V",
+                "when": {
+                  "__class__": "At",
+                  "side": {
+                    "__class__": "Arrival"
+                  }
+                },
+                "shift": 0
+              }
+            },
+            "rhs": {
+              "__class__": "Operator",
+              "head": "E",
+              "subs": [
+                {
+                  "__class__": "Var",
+                  "name": "y"
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "V"
+                  }
+                }
+              ]
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "value"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "__class__": "Block",
+      "tag": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "KeyValue",
+            "key": "id",
+            "value": "policy"
+          },
+          {
+            "__class__": "Typer",
+            "typing": {
+              "__class__": "Signature",
+              "source": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V_o",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Closed"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "inf"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Open"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "V_r",
+                    "at": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "Interval",
+                          "bounds": {
+                            "__class__": "Range",
+                            "left": {
+                              "__class__": "Closed"
+                            },
+                            "lower": {
+                              "__class__": "Neg",
+                              "operand": {
+                                "__class__": "Sym",
+                                "symbol": {
+                                  "__class__": "Constant",
+                                  "name": "inf"
+                                }
+                              }
+                            },
+                            "upper": {
+                              "__class__": "Sym",
+                              "symbol": {
+                                "__class__": "Constant",
+                                "name": "inf"
+                              }
+                            },
+                            "right": {
+                              "__class__": "Open"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Value",
+                          "order": 0
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "source_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Continuation"
+                  }
+                }
+              ],
+              "target": {
+                "__class__": "Subject",
+                "coordinates": [
+                  {
+                    "__class__": "Coordinate",
+                    "stem": "d",
+                    "at": null,
+                    "classifiers": [
+                      {
+                        "__class__": "Domain",
+                        "space": {
+                          "__class__": "FiniteSet",
+                          "members": [
+                            "own",
+                            "rent"
+                          ]
+                        }
+                      },
+                      {
+                        "__class__": "Role",
+                        "kind": {
+                          "__class__": "Control"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "target_types": [
+                {
+                  "__class__": "Infoset",
+                  "side": {
+                    "__class__": "Decision"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "body": [
+        {
+          "__class__": "Statement",
+          "core": {
+            "__class__": "Equation",
+            "lhs": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "d"
+              }
+            },
+            "rhs": {
+              "__class__": "Operator",
+              "head": "argmax",
+              "subs": [
+                {
+                  "__class__": "Var",
+                  "name": "d"
+                }
+              ],
+              "args": [
+                {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Variable",
+                    "name": "V_o",
+                    "when": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "shift": 0
+                  }
+                },
+                {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Variable",
+                    "name": "V_r",
+                    "when": {
+                      "__class__": "At",
+                      "side": {
+                        "__class__": "Continuation"
+                      }
+                    },
+                    "shift": 0
+                  }
+                }
+              ]
+            }
+          },
+          "annot": {
+            "__class__": "Annotation",
+            "entries": [
+              {
+                "__class__": "KeyValue",
+                "key": "id",
+                "value": "choice"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+@stage: retire_choice
+
+Xf := ℝ₊
+Xp := ℝ₊
+
+[id=dcsn_to_cntn, (y_f_d : Xf, y_p_d : Xp, d : !ctrl @ {work, retire}) : !dcsn -> ()] {
+    [label=work,   () -> (y_f_wk : Xf, y_p_wk : Xp) : !cntn] {
+        y_f_wk = y_f_d                                :: [id=financial_if_working]
+        y_p_wk = y_p_d                                :: [id=pension_if_working]
+    }
+    [label=retire, () -> (y_f_rt : Xf, y_p_rt : Xp) : !cntn] {
+        y_f_rt = y_f_d                                :: [id=financial_if_retiring]
+        y_p_rt = y_p_d                                :: [id=pension_paid_out]
+    }
+}
+
+[id=cntn_to_dcsn, (V_wk[>] : ℝ @ !vlu, V_rt[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = (V_wk[>], V_rt[>])[d]                         :: [id=choice_value]
+}
+
+[id=policy, (V_wk[>], V_rt[>]) : !cntn -> (d : {work, retire} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(V_wk[>], V_rt[>])                  :: [id=choice]
+}

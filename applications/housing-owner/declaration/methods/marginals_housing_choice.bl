@@ -1,0 +1,12 @@
+@methods: housing_choice
+# The two marginal blocks of the owner's housing choice, which state the
+# derivative of the decision value in cash on hand and the derivative of the
+# arrival value in assets with the factor R of the law w = R*b + z_vals[y].
+
+[id=dcsn_marginal, (V[>]) : !cntn -> (V) : !dcsn] {
+    D_{w}V = D_{w_c}V[>]    :: [id=marginal]
+}
+
+[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+    D_{b}V[<] = E_{y}(R*D_{w}V)   :: [id=marginal]
+}

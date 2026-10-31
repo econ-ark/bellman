@@ -1,0 +1,11 @@
+stage: bequest_pa
+
+# The bequest's value and its marginal value read by linear interpolation in
+# the bequest base; forward, the base is formed deterministically.
+methods:
+  - on: cntn_to_dcsn.value
+    method: !Linear
+  - on: cntn_to_dcsn.marginal_wealth
+    method: !Linear
+  - on: arvl_to_dcsn
+    method: !deterministic

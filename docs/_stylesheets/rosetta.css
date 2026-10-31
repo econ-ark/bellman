@@ -1,0 +1,589 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   ROSETTA STONE REGISTRY — "The Lexicon"
+   A glyph-indexed, drop-down catalogue of the five card kinds
+   (operator · method · handler · toolkit · example). Scholarly / editorial
+   register; cohesive with the site's teal–slate Material theme.
+   Scoped by the custom detail classes (.r-card …) and the page wrappers
+   (.r-lede, .r-grid …) so nothing leaks into the rest of the docs.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Abstract Bellman objects (toolkit-neutral, the Υ vocabulary) — COOL ── */
+  --r-op:      #0f766e;   /* teal  — operators (the verbs)           */
+  --r-method:  #0e7490;   /* cyan  — methods (algorithm tags)        */
+  /* ── Concrete toolkit code (per-toolkit realisations, Ρ) — WARM ── */
+  --r-toolkit: #b45309;   /* amber — toolkit cards                   */
+  --r-handler: #c2410c;   /* orange— handlers (toolkit callables)    */
+  --r-example: #15803d;   /* green — worked examples                 */
+  --r-hair:    color-mix(in srgb, var(--md-default-fg-color) 12%, transparent);
+}
+[data-md-color-scheme="slate"] {
+  --r-op:      #2dd4bf;   /* abstract — cool */
+  --r-method:  #38bdf8;
+  --r-toolkit: #f59e0b;   /* concrete — warm */
+  --r-handler: #fb923c;
+  --r-example: #4ade80;
+  --r-hair:    color-mix(in srgb, var(--md-default-fg-color) 18%, transparent);
+}
+
+/* ── Obsidian inline tags (site-wide) ─────────────────────────────────────
+   Standalone "#rosetta-stone #handler/hark …" tag lines are rewritten by the
+   docs/_hooks/obsidian_tags.py hook into this chip row, so they read as quiet
+   metadata under the title instead of a giant <h1>. ──────────────────────── */
+.md-typeset .obsidian-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  margin: -.2rem 0 1.2rem;
+}
+.md-typeset .obsidian-tag {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .58rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--light);
+  background: color-mix(in srgb, var(--md-default-fg-color) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-default-fg-color) 12%, transparent);
+  border-radius: .9rem;
+  padding: .06rem .5rem;
+  white-space: nowrap;
+}
+
+/* ── Page lede: the one-paragraph registry framing ────────────────────── */
+.md-typeset .r-lede {
+  font-size: .86rem;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--light);
+  max-width: 46rem;
+  border-left: 2px solid var(--md-primary-fg-color);
+  padding-left: .9rem;
+  margin: .2rem 0 1.4rem;
+}
+
+/* ── Category kicker: a small-caps section label above a card group ────── */
+.md-typeset .r-kicker {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+  margin: 1.7rem 0 .55rem;
+  padding-bottom: .35rem;
+  border-bottom: 1px solid var(--r-hair);
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+}
+.md-typeset .r-kicker .r-kicker__n {
+  font-size: .6rem;
+  color: var(--md-default-fg-color--lighter);
+  letter-spacing: .08em;
+}
+
+/* ═══ The card drop-down ══════════════════════════════════════════════════
+   Override Material's default <details> chrome: hairline frame, a coloured
+   left rule keyed to the card kind, tight rhythm, quiet hover. ──────────── */
+.md-typeset details.r-card {
+  --r-accent: var(--md-primary-fg-color);
+  border: 1px solid var(--r-hair);
+  border-left: 3px solid var(--r-accent);
+  border-radius: 0 .12rem .12rem 0;
+  background: color-mix(in srgb, var(--r-accent) 3.5%, var(--md-default-bg-color));
+  box-shadow: none;
+  margin: .3rem 0;
+  font-size: .76rem;
+  overflow: hidden;
+  transition: background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+.md-typeset details.r-card.r-op      { --r-accent: var(--r-op); }
+.md-typeset details.r-card.r-method  { --r-accent: var(--r-method); }
+.md-typeset details.r-card.r-handler { --r-accent: var(--r-handler); }
+.md-typeset details.r-card.r-toolkit { --r-accent: var(--r-toolkit); }
+.md-typeset details.r-card.r-example { --r-accent: var(--r-example); }
+
+.md-typeset details.r-card:hover {
+  background: color-mix(in srgb, var(--r-accent) 8%, var(--md-default-bg-color));
+  border-color: color-mix(in srgb, var(--r-accent) 40%, transparent);
+}
+.md-typeset details.r-card[open] {
+  background: var(--md-default-bg-color);
+  box-shadow: 0 1px 0 var(--r-hair), 0 6px 18px -14px color-mix(in srgb, var(--r-accent) 70%, transparent);
+}
+
+/* Summary row: kill Material's default note-icon, keep a tidy twisty. */
+.md-typeset details.r-card > summary {
+  font-weight: 500;
+  color: var(--md-default-fg-color);
+  background: transparent;          /* let the card tint show; no admonition title-bar */
+  padding: .46rem 2.1rem .46rem .72rem;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.md-typeset details.r-card > summary::before { display: none; }   /* no admonition icon */
+.md-typeset details.r-card > summary::after {                     /* chevron, right-aligned */
+  color: var(--r-accent);
+  opacity: .65;
+  top: .58rem;
+}
+.md-typeset details.r-card > summary:hover { background: transparent; }
+.md-typeset details.r-card > summary code {
+  font-size: .92em;
+  background: color-mix(in srgb, var(--r-accent) 11%, transparent);
+  color: color-mix(in srgb, var(--r-accent) 72%, var(--md-default-fg-color));
+  padding: .05em .34em;
+  border-radius: .18rem;
+}
+
+/* The glyph sigil that prefixes an operator summary (𝔼 𝔹 𝕀 𝔽 𝔾 …). */
+.md-typeset .r-sigil {
+  display: inline-block;
+  width: 2.1em;               /* fixed, so every sigil shares one axis and the codes line up */
+  margin-right: .35em;
+  font-weight: 700;
+  font-size: 1.04em;
+  color: var(--r-accent, var(--r-op));
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Card body: description + a meta strip + the "open full card" link. */
+.md-typeset details.r-card > summary ~ * { font-size: .98em; }
+.md-typeset details.r-card > p { margin: .55rem .8rem; color: var(--md-default-fg-color--light); }
+.md-typeset details.r-card > p:first-of-type { color: var(--md-default-fg-color); }
+
+/* Meta strip: a wrapping row of pills + a mono import/identifier. */
+.md-typeset .r-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .3rem .4rem;
+  margin: .55rem .8rem;
+}
+.md-typeset .r-meta code {
+  font-size: .76rem;
+  background: var(--md-code-bg-color);
+  padding: .08em .4em;
+  border-radius: .2rem;
+}
+
+/* Pills: small uppercase chips for grade / evidence / realised-operator. */
+.md-typeset .r-pill {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  padding: .14em .5em .1em;
+  border-radius: .9rem;
+  white-space: nowrap;
+  line-height: 1.5;
+  border: 1px solid transparent;
+}
+.md-typeset .r-pill--grade {
+  color: var(--r-accent, var(--r-op));
+  background: color-mix(in srgb, var(--r-accent, var(--r-op)) 12%, transparent);
+  border-color: color-mix(in srgb, var(--r-accent, var(--r-op)) 32%, transparent);
+}
+.md-typeset .r-pill--op {
+  color: var(--r-op);
+  background: color-mix(in srgb, var(--r-op) 11%, transparent);
+}
+.md-typeset .r-pill--ev {                          /* evidence: source-walked / verified */
+  color: var(--md-default-fg-color--light);
+  background: color-mix(in srgb, var(--md-default-fg-color) 8%, transparent);
+  border-color: var(--r-hair);
+}
+.md-typeset .r-pill--ok {                          /* verified */
+  color: var(--r-example);
+  background: color-mix(in srgb, var(--r-example) 13%, transparent);
+  border-color: color-mix(in srgb, var(--r-example) 30%, transparent);
+}
+
+/* The trailing "Open the full card →" affordance. */
+.md-typeset .r-open { margin: .5rem .8rem .6rem; font-size: .76rem; }
+.md-typeset .r-open a {
+  font-weight: 600;
+  color: var(--r-accent, var(--md-primary-fg-color));
+}
+
+/* ── Entry grid (the index): five tiles, one per card kind ─────────────── */
+.md-typeset .r-grid.grid.cards > ul > li,
+.md-typeset .r-grid > ul > li {
+  border: 1px solid var(--r-hair);
+  border-radius: .25rem;
+  padding: 1rem 1.05rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.md-typeset .r-grid > ul > li::before {            /* top accent hairline */
+  content: "";
+  position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: var(--tile-accent, var(--md-primary-fg-color));
+}
+/* Tile accents keyed to the conceptual layer (robust to tile order). */
+.md-typeset .r-grid--abstract > ul > li:nth-child(1) { --tile-accent: var(--r-op); }      /* Operators */
+.md-typeset .r-grid--abstract > ul > li:nth-child(2) { --tile-accent: var(--r-method); }  /* Methods   */
+.md-typeset .r-grid--concrete > ul > li { --tile-accent: var(--r-toolkit); }              /* Toolkits  */
+.md-typeset .r-grid--ref > ul > li      { --tile-accent: var(--md-primary-fg-color); }    /* Card schemas */
+
+/* Layer band label above each grid group. */
+.md-typeset .r-layer {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .6rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  margin: 1.4rem 0 .5rem; display: flex; align-items: center; gap: .55rem;
+}
+.md-typeset .r-layer::after { content: ""; flex: 1; height: 1px; background: var(--r-hair); }
+.md-typeset .r-layer--abstract { color: var(--r-op); }
+.md-typeset .r-layer--concrete { color: var(--r-toolkit); }
+.md-typeset .r-layer--ref { color: var(--md-default-fg-color--light); }
+.md-typeset .r-grid > ul > li:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--tile-accent) 45%, transparent);
+  box-shadow: 0 10px 26px -18px color-mix(in srgb, var(--tile-accent) 80%, transparent);
+}
+.md-typeset .r-grid .r-count {
+  display: block;
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--tile-accent, var(--md-primary-fg-color));
+  margin-bottom: .15rem;
+}
+.md-typeset .r-grid .r-tile-k {
+  font-size: .62rem; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--md-default-fg-color--light);
+}
+
+/* A compact stat line under the lede. */
+.md-typeset .r-stats {
+  display: flex; flex-wrap: wrap; gap: .35rem .5rem;
+  margin: 0 0 1.2rem; padding: 0; list-style: none;
+}
+.md-typeset .r-stats li {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .64rem; letter-spacing: .04em;
+  color: var(--md-default-fg-color--light);
+  border: 1px solid var(--r-hair);
+  border-radius: .9rem; padding: .12rem .6rem;
+}
+.md-typeset .r-stats li b { color: var(--md-default-fg-color); font-weight: 700; }
+
+/* ── Sidebar: the two Rosetta section leads as coloured group headers ──
+   "Bellman semantics" (teal) is a non-clickable section label — matched via the
+   Operators catalogue link it nests (`… > li(Operators) > div > a[href$="operators/"]`);
+   "Toolkits" (amber) links to the landing table. The child-combinator `:has()`
+   path matches only the section <li>, never the enclosing "Rosetta Stone" tab and never
+   the deeper "Operators" subsection. ──────────────────────────────────────────────── */
+.md-nav__item:has(> nav > ul > li > div > .md-nav__link[href$="operators/"]) > .md-nav__link {
+  color: var(--r-op) !important;          /* Bellman semantics — teal */
+  font-weight: 700 !important;
+}
+.md-nav__link[href$="toolkits/"] {
+  color: var(--r-toolkit) !important;     /* Toolkits — amber */
+  font-weight: 700 !important;
+}
+
+/* ── Item 1: Operators / Methods read as plain links, not headers ───────────────
+   They nest as single-index subsections (to dodge the navigation.indexes label-drop),
+   which makes them render as collapsible headers with an empty sub-list. They have
+   nothing to expand, so present them like the wiki concept links: drop the empty
+   sub-nav and the header weight. Scoped to the Bellman-semantics section via the
+   Operators catalogue link it nests. ──────────────────────────────────────────── */
+.md-nav__item:has(> nav > ul > li > div > .md-nav__link[href$="operators/"]) > nav > ul > li.md-nav__item--nested > nav.md-nav {
+  display: none !important;                       /* the empty expandable sub-list */
+}
+.md-nav__item:has(> nav > ul > li > div > .md-nav__link[href$="operators/"]) > nav > ul > li.md-nav__item--nested > .md-nav__container,
+.md-nav__item:has(> nav > ul > li > div > .md-nav__link[href$="operators/"]) > nav > ul > li.md-nav__item--nested > .md-nav__container > .md-nav__link {
+  font-weight: 400 !important;                    /* plain weight, like a wiki link */
+  text-transform: none !important;
+}
+
+/* Per-toolkit section overview line on the handlers page. */
+.md-typeset .r-tk-blurb {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .64rem;
+  letter-spacing: .03em;
+  color: var(--md-default-fg-color--light);
+  margin: -.45rem 0 .85rem;
+}
+.md-typeset .r-tk-blurb a { color: var(--r-toolkit); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Card-metadata panel — the raw frontmatter, appended by card_metadata.py.
+   A quiet, monospace-labelled, height-capped panel at the foot of each card.
+   ═══════════════════════════════════════════════════════════════════════ */
+.md-typeset details.r-meta-card {
+  border: 1px solid var(--r-hair);
+  border-radius: .2rem;
+  background: color-mix(in srgb, var(--md-default-fg-color) 2.5%, var(--md-default-bg-color));
+  box-shadow: none;
+  margin: .2rem 0 1.5rem;          /* sits at the top of the card, under the title */
+}
+.md-typeset details.r-meta-card > summary {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .6rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+  background: transparent;
+  padding: .55rem .8rem;
+}
+.md-typeset details.r-meta-card > summary::before { display: none; }
+.md-typeset details.r-meta-card > summary::after { color: var(--md-default-fg-color--light); }
+.md-typeset details.r-meta-card[open] > summary {
+  border-bottom: 1px solid var(--r-hair);
+}
+.md-typeset details.r-meta-card .highlight { max-height: 30rem; overflow: auto; }
+.md-typeset details.r-meta-card pre { margin: .5rem .2rem; }
+.md-typeset details.r-meta-card pre > code { font-size: .68rem; line-height: 1.5; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Refined polish (chosen direction) — precise typography & spacing, no new
+   fonts or motifs; everything stays Inter / JetBrains Mono / Material.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Landing hero: a confident, tightly-set title with a hairline rule. */
+.md-typeset h1.r-hero-title {
+  font-weight: 800;
+  font-size: 2.35rem;
+  letter-spacing: -.025em;
+  line-height: 1.05;
+  margin: .2rem 0 .7rem;
+  padding-bottom: .7rem;
+  border-bottom: 1px solid var(--r-hair);
+}
+
+/* Lede: an editorial measure and calmer leading. */
+.md-typeset .r-lede {
+  font-size: .82rem;
+  line-height: 1.65;
+  max-width: 42rem;
+  border-left-width: 2px;
+}
+
+/* Drop-down cards: a touch more readable, crisper open state. */
+.md-typeset details.r-card { font-size: .785rem; }
+.md-typeset details.r-card > summary { padding-top: .5rem; padding-bottom: .5rem; }
+.md-typeset details.r-card[open] > summary { border-bottom: 1px solid var(--r-hair); margin-bottom: .15rem; }
+.md-typeset .r-sigil { font-size: 1.08em; opacity: .92; }
+
+/* Category kickers: a hair more air above, finer rule. */
+.md-typeset .r-kicker { margin-top: 2rem; }
+.md-typeset .r-kicker:first-of-type { margin-top: 1rem; }
+
+/* Stat chips: align baseline, slightly quieter. */
+.md-typeset .r-stats { margin-top: .2rem; }
+.md-typeset .r-stats li { padding: .14rem .65rem; }
+
+/* Grid tiles: gentler lift, rounder rhythm. */
+.md-typeset .r-grid > ul > li { padding: 1.05rem 1.1rem; }
+.md-typeset .r-grid .r-count { font-size: 1.85rem; letter-spacing: -.02em; }
+
+/* ── "View handlers" jump button (top of toolkit overview pages) ───────────── */
+.md-typeset a.r-jump {
+  display: inline-block; margin: .1rem 0 1.4rem; padding: .32rem .9rem;
+  font-size: .72rem; font-weight: 600; letter-spacing: .02em;
+  color: #fff !important; background: var(--r-toolkit);
+  border-radius: .3rem; text-decoration: none; transition: background .15s ease;
+}
+.md-typeset a.r-jump:hover { background: color-mix(in srgb, var(--r-toolkit) 82%, #000); }
+.md-typeset a.r-jump::after { content: ""; }
+
+/* Operator-group heading card-count: quiet + inline (the TOC omits it via data-toc-label). */
+.md-typeset h3 > .r-kicker__n {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-weight: 400; font-size: .6em; letter-spacing: .04em;
+  color: var(--md-default-fg-color--lighter); margin-left: .55em; vertical-align: middle;
+}
+
+/* Tighter heading → text rhythm so a subsection sits close to its text (was a large gap). */
+/* Tighter heading→text rhythm — SCOPED to Rosetta content pages (those carrying a .r-lede
+   or card components) so the rest of the site keeps Material's default heading rhythm. */
+.md-typeset:has(.r-lede) h2, .md-typeset:has(.r-card) h2, .md-typeset:has(.r-meta-card) h2 { margin-bottom: .4rem; }
+.md-typeset:has(.r-lede) h3, .md-typeset:has(.r-card) h3, .md-typeset:has(.r-meta-card) h3 { margin-bottom: .35rem; }
+
+/* ── Card metadata box: parsed frontmatter as an Obsidian-style properties panel ──
+   Each key/value is a row: quiet mono key on the left, value on the right. Nested
+   blocks are inset sub-grids with a hairline rule; list values stack cleanly. ──── */
+.md-typeset details.r-meta-card > .r-meta-dl { max-height: 34rem; overflow: auto; padding-right: .3rem; }
+.md-typeset details.r-meta-card .r-meta-dl {
+  display: grid;
+  grid-template-columns: minmax(4rem, 11rem) 1fr;   /* capped key column — no blow-out */
+  gap: .14rem .9rem;
+  align-items: start;
+  margin: .45rem .85rem .75rem;
+  font-size: .72rem;
+  line-height: 1.5;
+}
+.md-typeset details.r-meta-card .r-meta-dl > dt {
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-weight: 600;
+  color: var(--md-default-fg-color--light);
+  overflow-wrap: anywhere;
+}
+.md-typeset details.r-meta-card .r-meta-dl > dd {
+  margin: 0;
+  color: var(--md-default-fg-color);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+/* A block-, list-, or long-text-valued field drops the key to its own row and lets the
+   value span the full width below it — keeps deep nesting / long prose (adapter_contract)
+   from jamming the narrow value column. */
+.md-typeset details.r-meta-card .r-meta-dl > dd:has(> .r-meta-dl),
+.md-typeset details.r-meta-card .r-meta-dl > dd:has(> .r-meta-ul),
+.md-typeset details.r-meta-card .r-meta-dl > dd:has(> .r-meta-long) {
+  grid-column: 1 / -1;
+  margin: .05rem 0 .4rem .9rem;
+}
+/* a long multi-line string value: a readable justified block */
+.md-typeset details.r-meta-card .r-meta-long {
+  display: block;
+  color: var(--md-default-fg-color--light);
+  max-width: 52rem;
+}
+/* a nested block: inset sub-grid with a hairline rule */
+.md-typeset details.r-meta-card dd > .r-meta-dl {
+  margin: .1rem 0 .25rem;
+  padding-left: .6rem;
+  border-left: 1px solid var(--r-hair);
+}
+/* list value: a clean vertical stack (no bullets) */
+.md-typeset details.r-meta-card .r-meta-ul {
+  margin: 0; padding: 0; list-style: none;
+  display: flex; flex-direction: column; gap: .08rem;
+}
+.md-typeset details.r-meta-card .r-meta-ul > li { margin: 0; }
+.md-typeset details.r-meta-card .r-meta-dim { color: var(--md-default-fg-color--lighter); }
+
+/* ════ Per-block expandables (2026-06-23) ═══════════════════════════════════
+   The larger card opens by default to a compact, scannable list: an always-on
+   identity header, then one <details> per block. Each block row is a quiet
+   hairline-separated toggle that expands to its rendered record — open just the
+   one you want; the others stay folded. ════════════════════════════════════ */
+.md-typeset details.r-meta-card[open] { max-height: none; overflow: visible; }
+.md-typeset details.r-meta-card .r-meta-card__body { max-height: none; overflow: visible; padding: 0; }
+.md-typeset details.r-meta-card > .r-meta-dl { max-height: none; overflow: visible; }
+
+/* Identity header (card_id / card_type / status / grain …): always visible, set off. */
+.md-typeset details.r-meta-card .r-meta-head {
+  margin: 0; padding: .6rem .85rem .65rem;
+  border-bottom: 1px solid var(--r-hair);
+  background: color-mix(in srgb, var(--md-default-fg-color) 1.5%, transparent);
+}
+
+/* A block row: reset Material's <details> chrome to a flush, hairline-ruled toggle. */
+.md-typeset details.r-meta-block {
+  border: 0; border-top: 1px solid var(--r-hair); border-radius: 0;
+  background: transparent; box-shadow: none; margin: 0; padding: 0;
+}
+.md-typeset details.r-meta-block:first-of-type { border-top: 0; }
+.md-typeset details.r-meta-block > summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; gap: .5rem;
+  padding: .44rem .85rem;
+  font-family: var(--md-code-font-family, "JetBrains Mono", monospace);
+  font-size: .6rem; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--md-primary-fg-color);
+  background: transparent; transition: background .12s ease;
+}
+.md-typeset details.r-meta-block > summary:hover {
+  background: color-mix(in srgb, var(--md-primary-fg-color) 6%, transparent);
+}
+.md-typeset details.r-meta-block > summary::-webkit-details-marker { display: none; }
+.md-typeset details.r-meta-block > summary::after { display: none; }   /* drop Material's twistie */
+.md-typeset details.r-meta-block > summary::before {
+  content: "›"; display: inline-block; width: .55rem; text-align: center;
+  font-size: .95rem; line-height: 1; color: var(--md-default-fg-color--light);
+  transition: transform .14s ease;
+}
+.md-typeset details.r-meta-block[open] > summary::before { transform: rotate(90deg); }
+.md-typeset details.r-meta-block[open] > summary {
+  color: var(--md-default-fg-color);
+  background: color-mix(in srgb, var(--md-primary-fg-color) 5%, transparent);
+}
+.md-typeset details.r-meta-block .r-meta-block__body { padding: .1rem .85rem .55rem 1.9rem; }
+.md-typeset details.r-meta-block .r-meta-block__body > .r-meta-dl { margin: .2rem 0 0; }
+
+/* Narrow the key column with depth; flatten the deepest level to stacked blocks. */
+.md-typeset details.r-meta-card dd > .r-meta-dl {
+  grid-template-columns: minmax(3.5rem, 8rem) minmax(0, 1fr);
+  gap: .12rem .65rem; margin: .16rem 0 .35rem; padding-left: .65rem; border-left: 1px solid var(--r-hair);
+}
+.md-typeset details.r-meta-card dd dd > .r-meta-dl {
+  grid-template-columns: minmax(3rem, 6.75rem) minmax(0, 1fr); gap: .1rem .55rem; padding-left: .55rem;
+}
+.md-typeset details.r-meta-card dd dd dd > .r-meta-dl { display: block; padding-left: .7rem; }
+.md-typeset details.r-meta-card dd dd dd > .r-meta-dl > dt { margin: .4rem 0 .08rem; font-size: .68rem; }
+
+/* A long SCALAR value stays in the value column on wide screens (clean rows, not a staircase). */
+@media (min-width: 60em) {
+  .md-typeset details.r-meta-card .r-meta-dl > dd:has(> .r-meta-long):not(:has(> .r-meta-dl)):not(:has(> .r-meta-ul)) {
+    grid-column: 2; margin: 0 0 .45rem;
+  }
+  .md-typeset details.r-meta-card .r-meta-long { max-width: 44rem; line-height: 1.62; overflow-wrap: normal; word-break: normal; hyphens: auto; }
+  .md-typeset details.r-meta-card .r-meta-dl > dd { overflow-wrap: break-word; }
+}
+
+/* Narrow-viewport fallback: stack key over value. */
+@media (max-width: 44em) {
+  .md-typeset details.r-meta-card .r-meta-dl { display: block; margin: .45rem .7rem .75rem; font-size: .7rem; }
+  .md-typeset details.r-meta-card .r-meta-dl > dt { margin: .45rem 0 .08rem; }
+  .md-typeset details.r-meta-card .r-meta-dl > dd,
+  .md-typeset details.r-meta-card .r-meta-dl > dd:has(> .r-meta-dl),
+  .md-typeset details.r-meta-card .r-meta-dl > dd:has(> .r-meta-ul),
+  .md-typeset details.r-meta-card .r-meta-dl > dd:has(> .r-meta-long) { margin: 0 0 .45rem; }
+}
+
+/* Jump button: a quiet outline chip (legible in dark mode), not a filled CTA. */
+.md-typeset a.r-jump {
+  display: inline-flex; align-items: center; gap: .35rem;
+  margin: .1rem 0 1.25rem; padding: .28rem .68rem;
+  font-size: .7rem; font-weight: 650;
+  color: var(--r-toolkit) !important;
+  background: color-mix(in srgb, var(--r-toolkit) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--r-toolkit) 38%, transparent);
+  border-radius: .18rem; text-decoration: none;
+}
+.md-typeset a.r-jump:hover {
+  background: color-mix(in srgb, var(--r-toolkit) 14%, transparent);
+  border-color: color-mix(in srgb, var(--r-toolkit) 55%, transparent);
+}
+
+/* ════ aris review — deferred items: schema tables, count alignment, anchor offset ════ */
+/* Rosetta wiki reference tables (tagged .r-schema-table by rosetta-card-nav.js): denser,
+   top-aligned, with a quiet uppercase header — they are mostly field | meaning | values. */
+.md-typeset table.r-schema-table { font-size: .76rem; line-height: 1.5; }
+.md-typeset table.r-schema-table th,
+.md-typeset table.r-schema-table td { vertical-align: top; padding: .42rem .7rem; }
+.md-typeset table.r-schema-table th {
+  font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 700;
+  color: var(--md-default-fg-color--light);
+  background: color-mix(in srgb, var(--md-default-fg-color) 3%, transparent);
+}
+.md-typeset table.r-schema-table :is(td, th) > code { white-space: nowrap; }
+.md-typeset table.r-schema-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--md-primary-fg-color) 4%, transparent);
+}
+
+/* Counts read as a column of figures — line them up. */
+.md-typeset .r-kicker__n,
+.md-typeset .r-grid .r-count,
+.md-typeset .r-pill { font-variant-numeric: tabular-nums; }
+
+/* Keep a jumped-to heading clear of the sticky header (the "View handlers" button etc.). */
+.md-typeset:has(.r-card) :is(h2, h3),
+.md-typeset:has(.r-meta-card) :is(h2, h3) { scroll-margin-top: 4rem; }
+
+/* Card-id links inside the metadata box — read as quiet links, not plain text. */
+.md-typeset .r-meta-card a.r-meta-link {
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--md-primary-fg-color) 45%, transparent);
+}
+.md-typeset .r-meta-card a.r-meta-link:hover {
+  border-bottom-style: solid;
+}

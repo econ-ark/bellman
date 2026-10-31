@@ -1,0 +1,37 @@
+@stage: port
+
+R   : ℝ₊₊
+μ_Ψ : ℝ
+σ_Ψ : ℝ₊
+μ_θ : ℝ
+σ_θ : ℝ₊
+ρ_ζ : [-1,1]
+
+Γ_ς(k : ℝ₊) := [0,1]
+
+(Ψ : ℝ₊₊, θ : ℝ₊₊)
+(Ψ, θ) ~ LogNormal((μ_Ψ, μ_θ),
+                   ((σ_Ψ^2,       ρ_ζ*σ_Ψ*σ_θ),
+                    (ρ_ζ*σ_Ψ*σ_θ, σ_θ^2)))
+
+[id=arvl_to_dcsn, (k : ℝ₊) : !arvl -> (k_d : ℝ₊) : !dcsn] {
+    k_d = k
+}
+
+[id=dcsn_to_cntn, (k_d, ς : !ctrl @ [0,1], Ψ, θ) : !dcsn -> (m_next : ℝ₊₊) : !cntn] {
+    m_next = k_d*(ς*Ψ + (1-ς)*R) + θ
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, ς) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V        = E_{Ψ,θ}(V[>])                            :: [id=value]
+    D_{k_d}V = E_{Ψ,θ}(D_{m_next}V[>]*(ς*Ψ + (1-ς)*R))   :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<]  = V                       :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> ς] {
+    ς = argmax_{ς : Γ_ς(k_d)}(E_{Ψ,θ}(V[>]))    :: [id=objective, !doc]
+    ς = solve_{ς}(E_{Ψ,θ}(D_{m_next}V[>]*(Ψ - R)))   :: [id=foc]
+}

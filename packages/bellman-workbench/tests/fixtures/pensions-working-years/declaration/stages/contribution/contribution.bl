@@ -1,0 +1,63 @@
+@stage: contribution
+
+Plan := {DB, DC}
+Vol  := {v0, v1, v2, v3, v4, v5}
+
+R     : ℝ₊₊      :: ["gross return on liquid assets, Section 4.E"]
+v_1   : [0,1]    :: ["voluntary contribution rate of the label v1"]
+v_2   : [0,1]    :: ["voluntary contribution rate of the label v2"]
+v_3   : [0,1]    :: ["voluntary contribution rate of the label v3"]
+v_4   : [0,1]    :: ["voluntary contribution rate of the label v4"]
+v_5   : [0,1]    :: ["voluntary contribution rate of the label v5"]
+v_S   : [0,1]    :: ["standard employee contribution rate, Section 4.C"]
+v_E   : [0,1]    :: ["employer contribution rate, Section 4.C"]
+o     : [0,1]    :: ["share of the employer's contribution the DB account absorbs, equation (6)"]
+ψ     : ℝ        :: ["inherent preference for defaults, equation (4)"]
+ν_v0  : ℝ        :: ["level of the contribution cost, equation (4)"]
+ν_v1  : ℝ        :: ["age at which the contribution cost is least, equation (4)"]
+ν_v2  : ℝ        :: ["curvature in age of the contribution cost, equation (4)"]
+ν_v3  : ℝ        :: ["liquidity term of the contribution cost, equation (4)"]
+t_age : ℝ₊       :: ["age of the period, written per period"]
+
+𝑢_v(a : ℝ₊₊) := ψ + exp(ν_v0 + ν_v2*(t_age - ν_v1)^2 + ν_v3*max(0, log(a)))     :: [id=cost_contribution]
+
+[id=arvl_to_dcsn, (a_sv : ℝ₊, y_sv : ℝ₊, adc_sv : ℝ₊, h_sv : ℝ₊, m_sv : ℝ₊, P_sv : ℝ₊₊, ξ_sv : ℝ, α_sv : (0,1), β_sv : (0,1), plan_sv : Plan) : !arvl -> (a_d : ℝ₊, y_d : ℝ₊, adc_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan) : !dcsn] {
+    a_d    = a_sv
+    y_d    = y_sv
+    adc_d  = adc_sv
+    h_d    = h_sv
+    m_d    = m_sv
+    P_d    = P_sv
+    ξ_d    = ξ_sv
+    α_d    = α_sv
+    β_d    = β_sv
+    plan_d = plan_sv
+}
+
+[id=dcsn_to_cntn, (a_d, y_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, v : !ctrl @ Vol) : !dcsn -> (w_c : ℝ₊, adc_c : ℝ₊, adc_pre_c : ℝ₊, h_c : ℝ₊, m_c : ℝ₊, P_c : ℝ₊₊, ξ_c : ℝ, α_c : (0,1), β_c : (0,1), plan_c : Plan) : !cntn] {
+    w_c       = a_d + (1 - v_S - (0, v_1, v_2, v_3, v_4, v_5)[v])*y_d                                                :: [id=take_home]
+    adc_c     = adc_d + (((1 - o)*v_E + (0, v_1, v_2, v_3, v_4, v_5)[v])*y_d, (v_E + v_S + (0, v_1, v_2, v_3, v_4, v_5)[v])*y_d)[plan_d]    :: [id=contributions]
+    adc_pre_c = adc_d                                                                       :: [id=balance_before_contributions]
+    h_c       = h_d
+    m_c       = m_d
+    P_c       = P_d
+    ξ_c       = ξ_d
+    α_c       = α_d
+    β_c       = β_d
+    plan_c    = plan_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, v) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = (0, -𝑢_v(a_d/R), -𝑢_v(a_d/R), -𝑢_v(a_d/R), -𝑢_v(a_d/R), -𝑢_v(a_d/R))[v] + V[>]   :: [id=value]
+    D_{a_d}V = D_{w_c}V[>]                                                                      :: [id=marginal_liquid]
+    D_{h_d}V = D_{h_c}V[>]                                                                      :: [id=marginal_housing]
+    D_{m_d}V = D_{m_c}V[>]                                                                      :: [id=marginal_mortgage]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                     :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (v : Vol @ !ctrl) : !dcsn] {
+    v = argmax_{v}((0, -𝑢_v(a_d/R), -𝑢_v(a_d/R), -𝑢_v(a_d/R), -𝑢_v(a_d/R), -𝑢_v(a_d/R))[v] + V[>])   :: [id=choice]
+}

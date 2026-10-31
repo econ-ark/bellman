@@ -1,0 +1,31 @@
+@stage: terminal_wait
+
+# The continuation of a woman who has not yet tried, after the last date of the
+# trellis. The paper's horizon is infinite and it states no terminal condition
+# (theory.md, "Conditions the paper omits"), so the trellis ends on the boundary
+# data its trellis file names: the value of wealth after the last date, V[>] at
+# this stage's continuation perch, a function of wealth and age supplied at
+# realization. The stage computes nothing. Its
+# arrival fields a_tw and age_tw differ from cons_wait's a_wait and age, so the
+# one inter-period mapping reaches cons_wait alone.
+
+Xa := ℝ₊₊
+Xt := ℝ₊
+
+[id=arvl_to_dcsn, (a_tw : Xa, age_tw : Xt) : !arvl -> (m_tw : Xa, age_twd : Xt) : !dcsn] {
+    m_tw    = a_tw                           :: [id=wealth]
+    age_twd = age_tw                         :: [id=age]
+}
+
+[id=dcsn_to_cntn, (m_tw, age_twd) : !dcsn -> (b_tw : Xa, age_twc : Xt) : !cntn] {
+    b_tw    = m_tw                           :: [id=wealth]
+    age_twc = age_twd                        :: [id=age]
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V  = V[>]                                :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<]  = V                                :: [id=value]
+}

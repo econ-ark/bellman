@@ -1,0 +1,14 @@
+@methods: cons_savings_iid
+# The derivatives of the two values of the consumption-savings stage, each
+# stated as a marginal block of the value builder that writes the value
+# (AMD-MB-001 §§3, 4.3). The decision value's line is the envelope condition;
+# the arrival value's line keeps the factor R of the law w = y + b*R, which
+# is not the identity.
+
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+
+[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+    D_{b}V[<] = E_{y}(R * D_{w}V)   :: [id=marginal]
+}

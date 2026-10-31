@@ -1,0 +1,52 @@
+---
+title: "The Benhabib–Bisin–Luo stage (benhabib_bellman.bl)"
+audience: developer
+type: model-note
+topic: [applications]
+---
+# The Benhabib–Bisin–Luo stage (benhabib_bellman.bl)
+
+The within-life consumption–savings stage of Benhabib, Bisin and Luo
+(2019): an earnings type entering the wage and a rate-of-return type
+entering the savings transition, both fixed within a life. Translated
+from the archived registry stage under
+`applications/pre-dynspec/benhabib-2019/`. The file is
+`declaration/stages/benhabib_bellman/benhabib_bellman.bl`; the model, its registry and its trellis are
+described in `economics.md`. A walkthrough of this stage is still to be written.
+
+## Notes
+
+- The two types are parameters of the instance, not shocks: `tau : Tau`
+  names the earnings decile and `r_type : R_type` the return type, and
+  neither carries a law. In the source model each pair `(tau, r_type)` is
+  one finite-horizon Bellman problem (the fifty-instance calibration
+  family of `dolo-plus-draft.yaml`, whose within-life stage has `r` and
+  `w` as parameters and no exogenous state); the intergenerational
+  Markov chains of the paper belong to the dynasty layer
+  (`dolo-plus-dynasty.yaml`), not to the within-life stage. The earlier
+  translation held the types fixed with identity Markov chains (`I_10`,
+  `I_5`); those declarations were removed on 9 September 2026.
+- `Tau := {q1, …, q10}` and `R_type := {r1, …, r5}` are finite sets
+  with named members; a finite set's members are names, so the paper's
+  integer labels are written `q1`…`q10` and `r1`…`r5`.
+- The families are declared with product sets of a fixed count,
+  `wage_fn : ℝ₊ × … × ℝ₊` (ten factors) and `R_vec : ℝ₊₊ × … × ℝ₊₊`
+  (five), so the source fixes the count and the selections `wage_fn[tau]`
+  and `R_vec[r_type]` are checked against it (AAS, 9 September 2026: a
+  family indexed by a model-content count is written with literal
+  members). The calibration supplies `tau`, `r_type`, the ten-entry wage
+  schedule of the period's age bracket (the source's `by_tau` table) and
+  the five gross returns (the source's `by_r_type` rates, as 1 + r).
+- `μ` and `A` are the parameters of the warm-glow bequest, declared here
+  because the source stage carries them. No line of this stage uses them;
+  the bequest stage `declaration/stages/bequest/bequest.bl`, in the terminal period, does.
+- The policy block states the maximization, as the source's argmax line
+  does. The method block of `declaration/methods/benhabib_bellman_egm.bl`,
+  which the methods file binds with `!egm`, writes the endogenous-grid form
+  of the portfolio corpus: the inverse Euler line, the endogenous grid
+  `m[>] = c[>] + (a - wage_fn[tau]) / R_vec[r_type]`, and `c = c[>]`; the
+  two coincide where the Euler equation characterizes the optimum.
+- The derivative of the decision value in wealth, `D_{m}V = c^(-σ)`, is
+  stated by the marginal block of
+  `declaration/methods/marginals_benhabib_bellman.bl`, which the methods
+  file binds with `!marginals`.

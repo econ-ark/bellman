@@ -1,0 +1,11 @@
+@methods: bellman
+# The endogenous grid method as the method block of the policy builder of the
+# within-life stage, whose stage file states the maximization alone
+# (AMD-MB-001 §4.1). The candidate line reads the derivative of the
+# continuation value by the term D_{a}V[>].
+
+[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : !ctrl) : !dcsn] {
+    c[>] = (β * R_vec[r_type] * D_{a}V[>])^(-1/σ)        :: [id=InvEuler, !node]
+    m[>] = c[>] + (a - wage_fn[tau]) / R_vec[r_type]     :: [id=inv_g_dcsn_to_cntn, !node]
+    c    = c[>]                                          :: [id=cons_choice]
+}

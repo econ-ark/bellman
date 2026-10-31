@@ -1,0 +1,7 @@
+# The benchmark calibration of the FUES retirement example, which reports the
+# interest rate r = 0.02, so that the gross return is R = 1 + r.
+calibration:
+  β: 0.96
+  R: 1.02
+  y: 20
+  δ: 1

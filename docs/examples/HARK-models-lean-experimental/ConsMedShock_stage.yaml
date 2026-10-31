@@ -1,0 +1,100 @@
+name: ConsMedShock
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    Xp: "@def R++"
+    Xm: "@def R+"
+    Xa: "@def R+"
+    Xc: "@def R+"
+    Xmu: "@def R+"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+
+  exogenous:
+    PermShk:
+      - "@in R++"
+      - "@dist IncShkDstn[0]"
+    TranShk:
+      - "@in R++"
+      - "@dist IncShkDstn[1]"
+    MedShk:
+      - "@in R++"
+      - "@dist MedShkDstn"
+
+  states:
+    m: "@in Xm"
+    p: "@in Xp"
+    xi: "@in R++"
+
+  poststates:
+    a: "@in Xa"
+
+  controls:
+    c: "@in Xc"
+    mu: "@in Xmu"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV_c[<]: "@in R+"
+    dV_c: "@in R+"
+    dV_c[>]: "@in R+"
+    dV_mu[<]: "@in R+"
+    dV_mu: "@in R+"
+    dV_mu[>]: "@in R+"
+
+  parameters:
+    Rfree: "@in R++"
+    LivPrb: "@in [0,1]"
+    MedPrice: "@in R++"
+    rho: "@in R+"
+    beta: "@in (0,1)"
+    G: "@in R++"
+
+equations:
+  arvl_to_dcsn_transition: |
+    p_temp = G * p_prev
+    p = p_temp * PermShk
+    y = TranShk * p
+    b = Rfree * k[<]
+    m = b + y
+    xi = MedShk
+
+  dcsn_to_cntn_transition: |
+    x = c + MedPrice * mu
+    a[>] = m - x
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u_c = (c^(1-rho))/(1-rho)
+      u_mu = xi * (mu^(1-rho))/(1-rho)
+      u = u_c + u_mu
+      V = max_{c,mu}(u + beta * LivPrb * V[>])
+    Euler_c: |
+      c^(-rho) = beta * LivPrb * dV_c[>]
+    Euler_mu: |
+      xi * mu^(-rho) = beta * LivPrb * MedPrice * dV_mu[>]
+    MarginalBellman: |
+      dV_c = c^(-rho)
+      dV_mu = xi * mu^(-rho) / MedPrice
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{PermShk, TranShk, MedShk}[V]
+    ShadowBellman: |
+      dV_c[<] = Rfree * E_{PermShk, TranShk, MedShk}[dV_c]
+      dV_mu[<] = Rfree * E_{PermShk, TranShk, MedShk}[dV_mu]
+
+calibration:
+  Rfree: 1.03
+  LivPrb: 0.98
+  MedPrice: 1.5
+  rho: 2.0
+  beta: 0.96
+  G: 1.01

@@ -1,0 +1,13 @@
+@methods: worker_cons
+# The derivatives of the worker's two values, each stated by the marginal
+# block of the value builder that writes the value. The decision value's line
+# is the envelope condition; the arrival value's line keeps the factor R of the
+# law w = R*a_w + y, which is not the identity.
+
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+
+[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+    D_{a_w}V[<] = R*D_{w}V          :: [id=marginal]
+}

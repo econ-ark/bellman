@@ -1,0 +1,22 @@
+@stage: bequest
+
+θ   : ℝ₊₊         :: ["weight of the bequest in utility"]
+K   : ℝ₊₊         :: ["shift of the bequest utility"]
+α   : (0,1)       :: ["weight of consumption in utility"]
+γ_c : (1, inf)    :: ["curvature of utility from consumption"]
+R   : ℝ₊₊         :: ["gross return on financial assets"]
+R_H : ℝ₊₊         :: ["gross return on housing, received when the house is sold"]
+δ   : [0,1)       :: ["depreciation rate of housing"]
+
+[id=arvl_to_dcsn, (a_bq : ℝ₊, h_bq : ℝ₊₊, z_bq : ℝ₊₊) : !arvl -> (x : ℝ₊₊) : !dcsn] {
+    x = R*a_bq + R_H*(1 - δ)*h_bq                      :: [id=wealth]
+}
+
+# V[>] is the terminal boundary data, zero, supplied at realization
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) -> (V : ℝ @ !vlu) : !dcsn] {
+    V = θ*α*(K + x)^(1-γ_c)/(1-γ_c) + V[>]             :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                                           :: [id=value]
+}

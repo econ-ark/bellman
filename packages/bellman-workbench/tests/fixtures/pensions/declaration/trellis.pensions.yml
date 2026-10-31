@@ -1,0 +1,15 @@
+!trellis
+name: pensions_australia_life_cycle
+# periods[0] is the period after the last age, in which the wealth of a
+# household that reached the last age is bequeathed with certainty; the
+# earlier periods repeat the retirement year of period.pensions.yml. The
+# working years are added once the retirement years construct.
+periods:
+  - stages: [shocks, bequest_pa]
+    connectors:
+      - {a_s: a_bq, adc_s: adc_bq, h_s: h_bq, m_s: m_bq, P_s: P_bq}
+  - {template: period.pensions.yml, repeat: 2}
+# One mapping stands for every adjacent pair: the three consumption stages
+# continue to the next period's shocks stage.
+inter_connectors:
+  - {a_nxt_rt: a, adc_nxt_rt: a_dc, π_nxt_rt: π_pre, h_nxt_rt: h, m_nxt_rt: m, P_nxt_rt: P_pre, ξ_nxt_rt: ξ_pre, α_nxt_rt: α_pre, β_nxt_rt: β_pre, plan_nxt_rt: plan, a_nxt_kp: a, adc_nxt_kp: a_dc, π_nxt_kp: π_pre, h_nxt_kp: h, m_nxt_kp: m, P_nxt_kp: P_pre, ξ_nxt_kp: ξ_pre, α_nxt_kp: α_pre, β_nxt_kp: β_pre, plan_nxt_kp: plan, a_nxt_adj: a, adc_nxt_adj: a_dc, π_nxt_adj: π_pre, h_nxt_adj: h, m_nxt_adj: m, P_nxt_adj: P_pre, ξ_nxt_adj: ξ_pre, α_nxt_adj: α_pre, β_nxt_adj: β_pre, plan_nxt_adj: plan}

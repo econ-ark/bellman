@@ -1,0 +1,11 @@
+@methods: owner_cons
+# The endogenous grid method as the method block of the owner's consumption
+# policy builder, whose stage file states the maximization alone (AMD-MB-001
+# §4.1). The candidate line reads the derivative of the continuation value by
+# the term D_{a_nxt_o}V[>].
+
+[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(β*D_{a_nxt_o}V[>])                 :: [id=InvEuler]
+    w_d[>] = a_nxt_o + c[>]                            :: [id=endoggrid]
+    c      = c[>]                                      :: [id=cons_choice]
+}

@@ -1,0 +1,38 @@
+@stage: worker
+
+Xa := ℝ₊
+Xm := ℝ₊₊
+Y  := ℝ₊₊        :: ["working ability; the positive reals stand in for its finite grid, whose number of points is a numerical choice"]
+Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
+
+σ : ℝ₊₊          :: ["relative risk aversion; the utility formula requires σ different from 1"]
+r : (-1, inf)    :: ["risk-free interest rate, a price fixed by the stationary equilibrium"]
+w : ℝ₊₊          :: ["wage rate, a price fixed by the stationary equilibrium"]
+τ : [0,1)        :: ["proportional payroll tax financing social security, fixed by the government budget"]
+
+𝑢(c : ℝ₊₊) := c^(1-σ)/(1-σ)        :: [id=util]
+Γ(x : ℝ₊₊) := (0, x]                 :: [id=feasible]
+
+[id=arvl_to_dcsn, (a_wk : Xa, y_wk : Y, θ_wk : Θ) : !arvl -> (m : Xm, y : Y, θ : Θ) : !dcsn] {
+    m = (1 + r)*a_wk + (1 - τ)*w*y_wk    :: [id=cash_on_hand]
+    y = y_wk
+    θ = θ_wk
+}
+
+[id=dcsn_to_cntn, (m, y, θ, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a_wk_wa : Xa, y_wk_wa : Y, θ_wk_wa : Θ) : !cntn] {
+    a_wk_wa = m - c                      :: [id=savings]
+    y_wk_wa = y
+    θ_wk_wa = θ
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + V[>]                      :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                             :: [id=value]
+}
+
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{c : Γ(m)}(𝑢(c) + V[>])   :: [id=choice]
+}

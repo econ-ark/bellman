@@ -1,0 +1,102 @@
+name: ConsMarkov
+
+symbols:
+  spaces:
+    Xk: "@def R+"
+    Xp: "@def R++"
+    Z: "@def {1, ..., N_z}"
+    Xm: "@def R+"
+    Xa: "@def R+"
+
+  prestate:
+    k: "@in Xk"
+    p_prev: "@in Xp"
+    z_prev: "@in Z"
+
+  exogenous:
+    z:
+      - "@in Z"
+      - "@dist Categorical(MrkvArray[z_prev])"
+    psi:
+      - "@in R++"
+      - "@dist IncShkDstn[z].marginal(0)"
+    theta:
+      - "@in R+"
+      - "@dist IncShkDstn[z].marginal(1)"
+
+  states:
+    z_d: "@in Z"
+    m: "@in Xm"
+    p: "@in Xp"
+
+  controls:
+    c: "@in R+"
+
+  poststates:
+    a: "@in Xa"
+    p_nxt: "@in Xp"
+    z_nxt: "@in Z"
+
+  values:
+    V[<]: "@in R"
+    V: "@in R"
+    V[>]: "@in R"
+
+  values_marginal:
+    dV[<]: "@in R+"
+    dV: "@in R+"
+    dV[>]: "@in R+"
+
+  parameters:
+    beta: "@in (0,1)"
+    rho: "@in R+"
+    Rfree: "@in R++"
+    PermGroFac: "@in R++"
+    LivPrb: "@in [0,1]"
+    MrkvArray: "@in [0,1]^(N_z, N_z)"
+    N_z: "@in Z++"
+
+equations:
+  arvl_to_dcsn_transition: |
+    z_d = z
+    G = PermGroFac[z_d] * psi
+    p = p_prev * G
+    b = Rfree[z_d] * k / G
+    y = theta
+    m = b + y
+
+  dcsn_to_cntn_transition: |
+    a = m - c
+    p_nxt[>] = p
+    z_nxt[>] = z_d
+
+  cntn_to_dcsn_builder:
+    Bellman: |
+      u = c^(1-rho) / (1-rho)
+      V = max_c{u + beta * LivPrb[z_d] * V[>]}
+    InvEuler: |
+      c = (beta * LivPrb[z_d] * dV[>])^(-1/rho)
+    MarginalBellman: |
+      dV = c^(-rho)
+
+  dcsn_to_arvl_builder:
+    Bellman: |
+      V[<] = E_{z, psi, theta}[V]
+    ShadowBellman: |
+      dV[<] = E_{z, psi, theta}[Rfree[z] * G^(-rho) * dV]
+
+calibration:
+  beta: 0.96
+  rho: 2.0
+  N_z: 7
+  Rfree: [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.03]
+  PermGroFac: [1.00, 1.01, 1.02, 1.03, 1.02, 1.01, 1.00]
+  LivPrb: [0.98, 0.98, 0.98, 0.98, 0.98, 0.98, 0.98]
+  MrkvArray: |
+    [[0.95, 0.05, 0.00, 0.00, 0.00, 0.00, 0.00],
+     [0.05, 0.90, 0.05, 0.00, 0.00, 0.00, 0.00],
+     [0.00, 0.05, 0.85, 0.10, 0.00, 0.00, 0.00],
+     [0.00, 0.00, 0.10, 0.80, 0.10, 0.00, 0.00],
+     [0.00, 0.00, 0.00, 0.10, 0.85, 0.05, 0.00],
+     [0.00, 0.00, 0.00, 0.00, 0.05, 0.90, 0.05],
+     [0.00, 0.00, 0.00, 0.00, 0.00, 0.05, 0.95]]

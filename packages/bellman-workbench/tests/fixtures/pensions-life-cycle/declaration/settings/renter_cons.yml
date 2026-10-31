@@ -1,0 +1,7 @@
+# Numerical settings of renter_cons: the grid of cash on hand on which the
+# renter's value and marginal value are tabulated, 35 points as Appendix D.1
+# of Dobrescu et al. (2023) takes for financial wealth, in units of $100,000.
+settings:
+  n_w: 50
+  w_min: 0.001
+  w_max: 30.0

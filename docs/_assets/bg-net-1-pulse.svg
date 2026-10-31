@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pulse 1/4 — first node appears (rightmost, continuation).
+     Single active node + one edge hint. Starting point of accretion. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 480"
+  preserveAspectRatio="xMidYMid slice">
+  <!-- Edge hint toward next node left -->
+  <line x1="950" y1="140" x2="1150" y2="240"
+    stroke="#1a1a1a" stroke-width="0.8" opacity="0.30"/>
+  <!-- Active node: 1150 -->
+  <circle cx="1150" cy="240" r="5" fill="#1a1a1a" opacity="0.85"/>
+  <g fill="none" stroke="#1a1a1a" stroke-width="0.7"
+     stroke-dasharray="3 2" stroke-linecap="round">
+    <circle cx="1150" cy="240" r="12" opacity="0.45"/>
+    <circle cx="1150" cy="240" r="20" opacity="0.30"/>
+    <circle cx="1150" cy="240" r="30" opacity="0.15"/>
+  </g>
+</svg>

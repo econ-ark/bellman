@@ -1,0 +1,20 @@
+stage: retiree_saving
+
+methods:
+  # Time iteration opens the policy builder with the method block of
+  # retiree_saving_foc.bl, the Euler equation of consumption; the stage file
+  # states the maximization alone.
+  - on: policy
+    method: !time-iteration
+    block: ../../methods/retiree_saving_foc.bl
+
+  # The derivatives of the decision value and the arrival value are stated by
+  # the two marginal blocks of marginals_retiree_saving.bl, one for each value
+  # builder.
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: ../../methods/marginals_retiree_saving.bl
+
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: ../../methods/marginals_retiree_saving.bl

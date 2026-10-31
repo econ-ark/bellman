@@ -1,0 +1,61 @@
+@stage: allocation
+
+Plan  := {DB, DC}
+Share := {π0, π1, π2, π3, π4, π5}
+
+π_1   : [0,1]    :: ["risky share of the label π1"]
+π_2   : [0,1]    :: ["risky share of the label π2"]
+π_def : [0,1]    :: ["the default risky share, 0.7, of the label π3, Section 4.C"]
+π_4   : [0,1]    :: ["risky share of the label π4"]
+π_5   : [0,1]    :: ["risky share of the label π5"]
+ψ     : ℝ        :: ["inherent preference for defaults, equation (4)"]
+ν_r0  : ℝ        :: ["level of the allocation cost, equation (4)"]
+ν_r1  : ℝ        :: ["linear age term of the allocation cost, equation (4)"]
+ν_r2  : ℝ        :: ["quadratic age term of the allocation cost, equation (4)"]
+ν_r3  : ℝ        :: ["balance term of the allocation cost, equation (4)"]
+ν_r4  : ℝ        :: ["weight of the plan-switching cost in the allocation cost, equation (4)"]
+u_p   : ℝ        :: ["the plan-switching cost u_p, equation (4)"]
+t_age : ℝ₊       :: ["age of the period, written per period"]
+
+𝑢_π(x : ℝ₊₊) := ψ + exp(ν_r0 + ν_r1*t_age + ν_r2*t_age^2 + ν_r3*max(0, log(x)) + ν_r4*u_p)     :: [id=cost_allocation]
+
+[id=arvl_to_dcsn, (w_c : ℝ₊, adc_c : ℝ₊, adc_pre_c : ℝ₊, h_c : ℝ₊, m_c : ℝ₊, P_c : ℝ₊₊, ξ_c : ℝ, α_c : (0,1), β_c : (0,1), plan_c : Plan) : !arvl -> (w_d : ℝ₊, adc_d : ℝ₊, adc_pre_d : ℝ₊, h_d : ℝ₊, m_d : ℝ₊, P_d : ℝ₊₊, ξ_d : ℝ, α_d : (0,1), β_d : (0,1), plan_d : Plan) : !dcsn] {
+    w_d       = w_c
+    adc_d     = adc_c
+    adc_pre_d = adc_pre_c
+    h_d       = h_c
+    m_d       = m_c
+    P_d       = P_c
+    ξ_d       = ξ_c
+    α_d       = α_c
+    β_d       = β_c
+    plan_d    = plan_c
+}
+
+[id=dcsn_to_cntn, (w_d, adc_d, h_d, m_d, P_d, ξ_d, α_d, β_d, plan_d, π : !ctrl @ Share) : !dcsn -> (w_a : ℝ₊, adc_a : ℝ₊, π_a : [0,1], h_a : ℝ₊, m_a : ℝ₊, P_a : ℝ₊₊, ξ_a : ℝ, α_a : (0,1), β_a : (0,1), plan_a : Plan) : !cntn] {
+    π_a    = (0, π_1, π_2, π_def, π_4, π_5)[π]   :: [id=share_chosen]
+    w_a    = w_d
+    adc_a  = adc_d
+    h_a    = h_d
+    m_a    = m_d
+    P_a    = P_d
+    ξ_a    = ξ_d
+    α_a    = α_d
+    β_a    = β_d
+    plan_a = plan_d
+}
+
+[id=cntn_to_dcsn, (V[>] : [-inf, inf) @ !vlu, π) -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V        = (-𝑢_π(adc_pre_d), -𝑢_π(adc_pre_d), -𝑢_π(adc_pre_d), 0, -𝑢_π(adc_pre_d), -𝑢_π(adc_pre_d))[π] + V[>]   :: [id=value]
+    D_{w_d}V = D_{w_a}V[>]                                                                                          :: [id=marginal_cash]
+    D_{h_d}V = D_{h_a}V[>]                                                                                          :: [id=marginal_housing]
+    D_{m_d}V = D_{m_a}V[>]                                                                                          :: [id=marginal_mortgage]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl] {
+    V[<] = V                                     :: [id=value]
+}
+
+[id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (π : Share @ !ctrl) : !dcsn] {
+    π = argmax_{π}((-𝑢_π(adc_pre_d), -𝑢_π(adc_pre_d), -𝑢_π(adc_pre_d), 0, -𝑢_π(adc_pre_d), -𝑢_π(adc_pre_d))[π] + V[>])   :: [id=choice]
+}
