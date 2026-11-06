@@ -246,6 +246,11 @@ def compile_kernel(stage, box):
     NumPy is reached by `np` alone. With array arguments it follows NumPy
     broadcasting, a value declared on a product of n sets carrying its n
     components on its last axis; it checks no declared set, shape or label.
+    A selection by a label is NumPy's `where` on the label, at each point of
+    an array of labels; where the key is one label and `where` refuses an
+    operand it cannot convert, as it refuses a value JAX is tracing, the
+    component the label selects is returned as it is, so that a caller can
+    trace a kernel with the label fixed.
     It returns one output as it is and several as a tuple. Retained
     arithmetic and calls to closed-form named functions, also through an
     alias of a function's name, are written through their definitions, and an
@@ -1269,15 +1274,16 @@ class _Writer:
         """The entry of a collection, or the component of a product value,
         that a key selects. For a collection on an index set the entry is
         found by the collection's own index set, the first factor of its
-        domain: by a label's position for a set of labels, by one `np.where`
+        domain: by a label's position for a set of labels, written as one
+        selection by a label for each (`_label_helper`), by one `np.where`
         for each integer member of a listed set, the members written from
         the parameters, and by the offset from the lower bound for an
         integer range, the bounds written from the parameters, so that the
         text holds no calibration and the parameters the index set reads
         become arguments; a key equal to no member, or outside the range,
         gives no value. For a product value the key's own declared finite set
-        of labels gives the component's position, written as one `np.where`
-        for each label; a key with no such set is refused."""
+        of labels gives the component's position, written as one selection by
+        a label for each; a key with no such set is refused."""
         ctx, name = self.ctx, term.sel.at
         key = self.expression(T.Sym(T.Constant(name)), env, domains)
         if key.axes:
@@ -1317,7 +1323,7 @@ class _Writer:
                     f"{to_source(indexed[0])}, which is no finite index set"
                 )
             components = [_component(family, index) for index in range(len(conditions))]
-            return self._cases(conditions, components)
+            return self._cases(conditions, components, by_label=isinstance(first, T.FiniteSet))
         declared = (
             domains[name]
             if name in domains
@@ -1346,7 +1352,9 @@ class _Writer:
                 )
             components = [_component(family, index) for index in range(len(labels))]
         return self._cases(
-            tuple(f"np.asarray({key.text}) == {label!r}" for label in labels), components
+            tuple(f"np.asarray({key.text}) == {label!r}" for label in labels),
+            components,
+            by_label=True,
         )
 
     def _index_expression(self, term, env, domains):
@@ -1521,19 +1529,52 @@ class _Writer:
             self.order.append(key)
         return self.functions[key].name
 
-    def _cases(self, conditions, components):
+    def _cases(self, conditions, components, by_label=False):
         """One `np.where` for each member of a finite index set, the component
         of the family at the member's position where the key equals the
-        member, and no value where it equals none."""
+        member, and no value where it equals none. With `by_label` the
+        members are labels, and each is written through the inner function
+        of a selection by a label (`_label_helper`) in place of `np.where`."""
         axes = max(component.axes for component in components)
+        where = self._label_helper() if by_label else "np.where"
         text = "np.nan"
         for condition, component in reversed(tuple(zip(conditions, components))):
             written = _Written(condition, _COMPARISON, 0, True)
             text = (
-                f"np.where({_aligned(written, axes).text}, "
+                f"{where}({_aligned(written, axes).text}, "
                 f"{_aligned(component, axes).text}, {text})"
             )
         return _Written(text, _ATOM, axes, True)
+
+    def _label_helper(self):
+        """The name of the inner function of a selection by a label, written
+        once before the first output that selects by one: NumPy's `where` on
+        the comparison of the key with the label, so that an array of labels
+        selects at each point and every operand NumPy takes gives what
+        `np.where` gives. Where `where` refuses an operand it cannot convert,
+        as it refuses a value JAX is tracing, and the key is one label, so
+        that the comparison is one truth value, the function returns the
+        component the label selects as it is, and with the label fixed the
+        kernel can be traced; with an array of labels the refusal stands."""
+        key = ("label_case",)
+        if key not in self.functions:
+            name = self.names.take("where_label", "function")
+            self.functions[key] = _Function(
+                name,
+                (
+                    f"def {name}(condition, value, otherwise):",
+                    "    try:",
+                    "        return np.where(condition, value, otherwise)",
+                    "    except TypeError:",
+                    "        if np.size(condition) != 1:",
+                    "            raise",
+                    "        return value if np.all(condition) else otherwise",
+                ),
+                0,
+                (),
+            )
+            self.order.append(key)
+        return self.functions[key].name
 
     def _family_set(self, family, domains):
         """The declared set of the family a selection reads: of a parameter,
