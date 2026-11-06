@@ -10,6 +10,10 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.03
 
+### 2026-11-11 — A selection by one label carries a value NumPy cannot convert
+
+- The text of a compiled kernel writes a selection by a label, `(θ, ξ_u)[j]`, through an inner function, `where_label`, in place of `np.where`. Every operand NumPy takes gives what `np.where` gave, at one label or at each point of an array of labels. Where `np.where` refuses an operand it cannot convert, as it refuses a value that JAX is tracing, and the key is one label, the function returns the component the label selects as it is, so that a caller can trace such a kernel with the label fixed, map it over quadrature nodes or differentiate it; before, JAX was refused at `np.where`. A selection by an integer key is written with `np.where` as before, and Numba compiles it as before (`packages/bellman/tests/test_finite_indexed_data.py`).
+
 ### 2026-11-11 — Homepage type, spacing and layout
 
 - The [homepage](index.md) sets its text in five sizes, stated for a window 1440 px wide: 96 px for the headline, 56 px for section headings, 24 px for titles and statements, 16 px for text, links and buttons, and 12 px for labels in capitals. Its distances are taken from eight steps between 4 px and 96 px, and every section stands on one grid of twelve columns. The sizes are stated at the head of `docs/_stylesheets/home.css`.
