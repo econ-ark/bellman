@@ -8,6 +8,10 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-11-06 — The agents' rule on parameters and settings
+
+- `AGENTS.md` gains a rule of usage after "The model and its numerics are kept apart": "parameter" names an input of the mathematical model and "setting" an input of a numerical method, in documentation, comments, docstrings, names, commit messages and chat, also where another toolkit's documentation calls a method's input a parameter. The two words are defined in the concept wiki and in Appendix E.4 of the Bellman calculus; that the word "parameter" is kept for the quantities that define the economy was stated until now only on the wiki's page on functional forms, where it concerns the arguments of a form (CDC, 6 November 2026).
+
 ### 2026-11-01 — The sculls in motion
 
 - The second slot of the homepage's sequence shows a video loop in place of the still: a single scull on the river Oria at Orio, filmed from directly above, the rings of its oars spreading on the water (Wikimedia Commons, Xabier Cañas, CC BY-SA 4.0, 2023), cut to 10.4 s, duotone navy to ice, 3.6 MB; the still stays as the fallback. The acknowledgments at the end of `README.md`, in §4 of the about page and in the brand folder's table name the video (AAS, 1 November 2026).
