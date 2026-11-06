@@ -118,11 +118,15 @@ def derivative_piece(stage, box):
     return None
 
 
-def derivative_pieces(stage, builder):
-    """The names of the derivative pieces of the builder `builder`, one per
-    entry of its Evaluation rows' `derivatives`, in row order."""
+def derivative_piece_addresses(stage, builder):
+    """The derivative pieces of the builder `builder`, each by its line's full
+    address, `<line address>:Derivative:1`, one per entry of its Evaluation
+    rows' `derivatives`, in row order. An address names one line of the
+    stage, where a line's id alone names a line of every block that uses it,
+    so `kernel` and `compile_kernel` resolve an address to this builder's
+    piece."""
     return tuple(
-        f"{entry[2].split('.', 1)[-1]}:Derivative:1"
+        f"{entry[2]}:Derivative:1"
         for row in rows_of(stage, builder)
         if row.kind == "Evaluation"
         for entry in row.derivatives

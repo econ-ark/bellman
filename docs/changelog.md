@@ -8,6 +8,10 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-11-05 — A builder's record of kernels holds its own derivative line
+
+- `kernels()` of a builder finds each derivative piece by its line's address. Where two value builders of a stage each state a derivative on a line of the same id, as the two marginal blocks of `applications/buffer-stock/` do on `marginal`, the record of the arrival builder listed the decision builder's line under `marginal:Derivative:1`, since the id alone names the first such line of the stage; each record now holds the piece of its own line under that name, the arrival builder's with the shocks it is integrated over. `derivative_piece_addresses` of `bellman.stage.kernels` replaces `derivative_pieces`, which only the record called (`packages/bellman/tests/test_amd_mb_001.py`).
+
 ### 2026-11-01 — The sculls in motion
 
 - The second slot of the homepage's sequence shows a video loop in place of the still: a single scull on the river Oria at Orio, filmed from directly above, the rings of its oars spreading on the water (Wikimedia Commons, Xabier Cañas, CC BY-SA 4.0, 2023), cut to 10.4 s, duotone navy to ice, 3.6 MB; the still stays as the fallback. The acknowledgments at the end of `README.md`, in §4 of the about page and in the brand folder's table name the video (AAS, 1 November 2026).
