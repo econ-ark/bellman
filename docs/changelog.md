@@ -8,6 +8,10 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-11-05 — A selection by one label carries a value NumPy cannot convert
+
+- The text of a compiled kernel writes a selection by a label, `(θ, ξ_u)[j]`, through an inner function, `where_label`, in place of `np.where`. Every operand NumPy takes gives what `np.where` gave, at one label or at each point of an array of labels. Where `np.where` refuses an operand it cannot convert, as it refuses a value that JAX is tracing, and the key is one label, the function returns the component the label selects as it is, so that a caller can trace such a kernel with the label fixed, map it over quadrature nodes or differentiate it; before, JAX was refused at `np.where`. A selection by an integer key is written with `np.where` as before, and Numba compiles it as before (`packages/bellman/tests/test_finite_indexed_data.py`).
+
 ### 2026-11-05 — A builder's record of kernels holds its own derivative line
 
 - `kernels()` of a builder finds each derivative piece by its line's address. Where two value builders of a stage each state a derivative on a line of the same id, as the two marginal blocks of `applications/buffer-stock/` do on `marginal`, the record of the arrival builder listed the decision builder's line under `marginal:Derivative:1`, since the id alone names the first such line of the stage; each record now holds the piece of its own line under that name, the arrival builder's with the shocks it is integrated over. `derivative_piece_addresses` of `bellman.stage.kernels` replaces `derivative_pieces`, which only the record called (`packages/bellman/tests/test_amd_mb_001.py`).

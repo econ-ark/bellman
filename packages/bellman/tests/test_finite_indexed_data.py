@@ -820,6 +820,114 @@ x : ℝ × ℝ
     assert refused.value.rule == "syntax" and "2.5" in refused.value.message
 
 
+# A stage whose law of motion selects a component of a pair by a label, the
+# draw of a shock on a declared set of two labels: the resources are
+#     m = R·k + θ  where j = emp,   m = R·k + ξ_u  where j = unemp.
+LABELLED = """@stage: labelled
+Emp := {emp, unemp}
+R   : ℝ₊₊
+ξ_u : ℝ₊
+p   : [0,1)
+θ : ℝ₊₊
+θ ~ LogNormal(0, 1)
+j : Emp
+j ~ Bernoulli(p)
+
+[id=arvl_to_dcsn, (k : ℝ₊, θ, j) : !arvl -> (m : ℝ₊₊) : !dcsn] {
+    m = R*k + (θ, ξ_u)[j]    :: [id=resources]
+}
+"""
+
+
+class _Unconverted:
+    """A value NumPy cannot convert and arithmetic carries, as a value that
+    JAX is tracing is: it holds a number, `np.asarray` of it raises
+    `TypeError`, and its sum with a number is another such value."""
+
+    __array_ufunc__ = None
+
+    def __init__(self, held):
+        self.held = held
+
+    def __array__(self, dtype=None, copy=None):
+        raise TypeError("this value has no array")
+
+    def __add__(self, other):
+        return _Unconverted(self.held + getattr(other, "held", other))
+
+    __radd__ = __add__
+
+
+def test_a_selection_by_one_label_is_made_where_numpy_refuses_an_operand():
+    """The law of motion of `LABELLED` selects by the label `j`, and its text
+    writes each label through the inner function `where_label`. Every operand
+    NumPy takes gives what `np.where` gives: with R = 1.02 and ξ_u = 0.3,
+    m(1, 0.9, emp) = 1.02 + 0.9 = 1.92 and m(1, 0.9, unemp) = 1.02 + 0.3 =
+    1.32; a label of neither name gives no value; a component not selected
+    still gives the result its shape, so three values of θ at the label
+    `unemp` give three resources of 1.32; and an array of labels selects at
+    each point, (1.02 + 0.8, 2.04 + 0.3) = (1.82, 2.34). Where an operand is
+    a value NumPy cannot convert and the key is one label, the component the
+    label selects is returned as it is, so the kernel carries such a value
+    through, as it carries a value JAX is tracing; with an array of labels
+    NumPy's refusal stands."""
+    stage = stage_from_text(LABELLED, "labelled.bl").calibrate({"R": 1.02, "ξ_u": 0.3, "p": 0.05})
+    law = pushforward(stage)
+    record = law.kernel()
+    written = (
+        "where_label(np.asarray(j) == 'emp', θ, "
+        "where_label(np.asarray(j) == 'unemp', ξ_u, np.nan))"
+    )
+    assert written in record.python
+    function, values = law.compile_kernel(), record.parameter_values
+    assert values == (1.02, 0.3)
+    assert float(function(1.0, 0.9, "emp", *values)) == pytest.approx(1.92)
+    assert float(function(1.0, 0.9, "unemp", *values)) == pytest.approx(1.32)
+    assert np.isnan(function(1.0, 0.9, "neither", *values))
+    unemployed = function(1.0, np.array([0.8, 1.0, 1.2]), "unemp", *values)
+    assert isinstance(unemployed, np.ndarray) and unemployed.shape == (3,)
+    np.testing.assert_allclose(unemployed, 1.32)
+    np.testing.assert_allclose(
+        function(np.array([1.0, 2.0]), np.array([0.8, 1.2]), np.array(["emp", "unemp"]), *values),
+        [1.82, 2.34],
+    )
+    # a value NumPy cannot convert: with one label the selected component is
+    # returned as it is, the employed draw itself and the unemployed income
+    carried = function(1.0, _Unconverted(0.9), "emp", *values)
+    assert isinstance(carried, _Unconverted) and carried.held == pytest.approx(1.92)
+    assert float(function(1.0, _Unconverted(0.9), "unemp", *values)) == pytest.approx(1.32)
+    assert np.isnan(function(1.0, _Unconverted(0.9), "neither", *values))
+    with pytest.raises(TypeError, match="no array"):
+        function(1.0, _Unconverted(0.9), np.array(["emp", "unemp"]), *values)
+    # a selection by an integer key is written with `np.where` as before, so
+    # that Numba compiles it
+    points = stage_from_text(POINTS, "points.bl")
+    assert "where_label" not in pushforward(points).kernel().python
+
+
+def test_a_kernel_that_selects_by_a_fixed_label_is_traced_by_jax():
+    """With JAX installed, which the package does not require, the law of
+    motion of `LABELLED` is traced with the label fixed: mapped over three
+    values of θ it gives NumPy's numbers at either label, it compiles, and
+    its derivative in θ is one where the label selects θ and zero where it
+    selects ξ_u. Without JAX the test is skipped."""
+    jax = pytest.importorskip("jax")
+    stage = stage_from_text(LABELLED, "labelled.bl").calibrate({"R": 1.02, "ξ_u": 0.3, "p": 0.05})
+    law = pushforward(stage)
+    function, values = law.compile_kernel(), law.kernel().parameter_values
+    draws = np.array([0.8, 1.0, 1.2])
+    for label in ("emp", "unemp"):
+        np.testing.assert_allclose(
+            jax.vmap(lambda draw, label=label: function(1.0, draw, label, *values))(draws),
+            function(1.0, draws, label, *values),
+            rtol=1e-6,
+        )
+    compiled = jax.jit(lambda k, draw: function(k, draw, "emp", *values))
+    assert float(compiled(1.0, 0.9)) == pytest.approx(1.92)
+    assert float(jax.grad(lambda draw: function(1.0, draw, "emp", *values))(0.9)) == 1.0
+    assert float(jax.grad(lambda draw: function(1.0, draw, "unemp", *values))(0.9)) == 0.0
+
+
 def test_item_6_the_notebook_is_executed_and_keeps_its_two_reserved_cells():
     """The notebook of the brief stands in the verification folder of the
     internal records, executed: every code cell ran, an error output stands
