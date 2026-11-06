@@ -81,6 +81,28 @@ GAUSS_HERMITE = {
 }
 
 
+# a stage with no control whose two value builders each state a derivative on
+# a line of the id `marginal`: the decision builder the derivative of the
+# decision value in the decision state, and the arrival builder the derivative
+# of the arrival value in the arrival state, an expectation over the shock
+# drawn between the two perches
+TWO_BUILDERS = (
+    "@stage: t\n"
+    "R : ℝ₊₊\n"
+    "θ : ℝ₊₊\n"
+    "θ ~ LogNormal(0, 1)\n"
+    "𝑤(m : ℝ₊₊) := m^(-2)\n"
+    "[id=arvl_to_dcsn, (k : ℝ₊, θ) : !arvl -> (m : ℝ₊₊) : !dcsn] {\n    m = k*R + θ\n}\n"
+    "[id=dcsn_to_cntn, (m) : !dcsn -> (a : ℝ₊₊) : !cntn] {\n    a = m\n}\n"
+    "[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n"
+    "    V      = V[>]    :: [id=value]\n"
+    "    D_{m}V = 𝑤(m)    :: [id=marginal]\n}\n"
+    "[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n"
+    "    V[<]      = E_{θ}(V)          :: [id=value]\n"
+    "    D_{k}V[<] = E_{θ}(D_{m}V*R)   :: [id=marginal]\n}\n"
+)
+
+
 def _text(term):
     return POLICY.replace("TERM", term)
 
@@ -230,6 +252,42 @@ def test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_poli
     integrand = compile_kernel(portfolio, "marginal:Derivative:1")
     assert integrand(0.5, 1.2, 1.0, 3.0, 1.1) == pytest.approx(3.0 * (0.5 * 1.2 + 0.5 * 1.1))
     assert [p.integrated for p in portfolio.builder["cntn", "dcsn"].kernels().pieces][-1] == ("Ψ", "θ")
+
+
+def test_each_builder_records_the_derivative_its_own_line_states_where_two_lines_share_an_id():
+    """Where two value builders of a stage each state a derivative on a line
+    of the same id, `kernels()` of each builder holds the piece of its own
+    line under the name `<line id>:Derivative:1`. A builder's pieces are found
+    by their lines' addresses, each of which names one line of the stage; the
+    id alone names the first such line of the stage, the decision builder's
+    here, and a record that found its pieces by it listed that line's
+    derivative under the arrival builder as well (MB-A14, MB-A18)."""
+    from conftest import stage_from_text
+
+    stage = stage_from_text(TWO_BUILDERS)
+    decision, arrival = (
+        [piece for piece in stage.builder[perches].kernels().pieces if piece.kind == "Derivative"]
+        for perches in (("cntn", "dcsn"), ("dcsn", "arvl"))
+    )
+    assert [piece.name for piece in decision] == ["marginal:Derivative:1"]
+    assert [piece.name for piece in arrival] == ["marginal:Derivative:1"]
+    (decision,), (arrival,) = decision, arrival
+    assert "stated at cntn_to_dcsn.marginal" in decision.kernel
+    assert (decision.arguments, decision.outputs) == (("V≻", "m"), ("D_{m}V",))
+    assert decision.integrated == ()
+    assert decision.function(0.0, 2.0) == 2.0**-2
+    # the arrival builder's piece is the integrand of its own line: its
+    # arguments are the shock and the derivative term the line reads, and it
+    # names the shock it is integrated over
+    assert "stated at dcsn_to_arvl.marginal" in arrival.kernel
+    assert (arrival.arguments, arrival.outputs) == (("θ", "D_{m}(V)"), ("D_{k}V[<]",))
+    assert (arrival.integrated, arrival.parameters) == (("θ",), ("R",))
+    assert arrival.function(1.5, 3.0, 1.02) == pytest.approx(3.0 * 1.02)
+    # a target written with the id alone still names the first such line of
+    # the stage, and a target written with a line's address names that line
+    assert kernel(stage, "marginal:Derivative:1").outputs == ("D_{m}V",)
+    assert kernel(stage, "cntn_to_dcsn.marginal:Derivative:1").outputs == ("D_{m}V",)
+    assert kernel(stage, "dcsn_to_arvl.marginal:Derivative:1").outputs == ("D_{k}V[<]",)
 
 
 # --- unit B: the trellis ---

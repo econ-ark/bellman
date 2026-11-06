@@ -133,7 +133,7 @@ from bellman.stage.grains import (
     wire_table,
 )
 from bellman.stage.inventory import definitions_listing
-from bellman.stage.kernels import compile_kernel, derivative_pieces, kernel
+from bellman.stage.kernels import compile_kernel, derivative_piece_addresses, kernel
 from bellman.stage.method_blocks import declared_version
 from bellman.stage.method_table import attachment_places
 from bellman.stage.method_targets import resolve_target
@@ -1211,8 +1211,8 @@ def builder_kernels(stage, builder):
         piece, declared = _piece_kernel(stage, entry.key, builder[entry.key], builder.box.name)
         pieces.append(piece)
         arguments.extend(declared)
-    for name in derivative_pieces(stage, builder.box.name):
-        piece, declared = _derivative_piece_kernel(stage, name)
+    for address in derivative_piece_addresses(stage, builder.box.name):
+        piece, declared = _derivative_piece_kernel(stage, address)
         pieces.append(piece)
         arguments.extend(declared)
     bound, unbound = {}, set()
@@ -1268,14 +1268,19 @@ def _piece_kernel(stage, key, piece, holder):
     return made, record.arguments
 
 
-def _derivative_piece_kernel(stage, name):
+def _derivative_piece_kernel(stage, address):
     """The `PieceKernel` of one derivative piece of a builder, `<line
     id>:Derivative:1`, the stated derivative of a value builder compiled
     from the author's right side (AMD-MB-001 §4.3; decision MB-A14), and the
-    pairs of argument name and declared set of its kernel. Its function is
-    None where the right side holds a form the text cannot write."""
-    record = kernel(stage, name)
-    function = None if record.python is None else compile_kernel(stage, name)
+    pairs of argument name and declared set of its kernel. The piece is
+    found by `address`, `<line address>:Derivative:1`, which names one line
+    of the stage, and is named in the record by its line's id, which names
+    one piece of the builder: two builders of a stage may each state a
+    derivative on a line of the same id. Its function is None where the
+    right side holds a form the text cannot write."""
+    name = address.split(".", 1)[-1]
+    record = kernel(stage, address)
+    function = None if record.python is None else compile_kernel(stage, address)
     made = PieceKernel(
         key=name,
         relative_name=name,
