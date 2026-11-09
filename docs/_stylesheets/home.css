@@ -693,7 +693,7 @@ body:has(.bellman-home) .md-top {
   .home-project__rows > a { grid-template-columns: minmax(0, 1fr) 24px; gap: 14px 20px; padding: 24px 0; }
   .home-project__rows h3 { font-size: 25px; }
   .home-project__rows p { grid-column: 1; grid-row: 2; padding-right: 0; font-size: 16px; }
-  .home-project__arrow { position: static; grid-row: 1; grid-column: 2; }
+  .home-project__arrow { position: static; grid-row: 1; grid-column: 2; align-self: start; margin-top: 6px; }
   .home-start { grid-template-columns: minmax(0, 1fr); }
   .home-start > a, .home-start > a + a { padding: 32px 40px 36px 0; border-left: 0; }
   .home-start > a + a { border-top: 1px solid rgb(237 247 252 / .35); }
