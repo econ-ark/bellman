@@ -33,10 +33,11 @@ def test_item_1_the_marginal_block_binds_at_the_evaluation_and_the_signature_hol
     backward signature hold values alone, the Evaluation writing `V` and
     nothing beside it; the Evaluation records the block's derivative line by
     the coordinate `m_d`, and the Sort of `V` names it; and a representation
-    line on the envelope line, a derivative line's id, stands beside
-    `!marginals` at that Evaluation, a binding of another kind (AMD-MB-001
-    §5.1, D4, D6; decision SD-15). The arrival builder `V[<] = V` passes the
-    derivative through and takes no marginal block (D3, P1)."""
+    of the stated derivative, written at the Evaluation,
+    `cntn_to_dcsn.evaluate.marginal`, stands beside `!marginals` there, a
+    binding of another kind (AMD-MB-001 §5.1, D4, D6; decision SD-15;
+    AMD-MB-002). The arrival builder `V[<] = V` passes the derivative through
+    and takes no marginal block (D3, P1)."""
     stage = elaborate_stage(load_stage(FIXTURES / "cons.bl"))
     assert stage.methodize(FIXTURES / "methods_marginals.yml") is stage
     assert str(stage.methods).splitlines() == [
@@ -66,14 +67,18 @@ def test_item_1_the_marginal_block_binds_at_the_evaluation_and_the_signature_hol
         {
             "methods": [
                 {
-                    "on": "cntn_to_dcsn.envelope",
-                    "method": "!Cartesian",
-                    "settings": {"orders": {"m_d": "n_m"}, "bounds": {"m_d": ["m_min", "m_max"]}},
+                    "on": "cntn_to_dcsn.evaluate.marginal",
+                    "method": "!Linear",
+                    "settings": {
+                        "grid": "!Cartesian",
+                        "orders": {"m_d": "n_m"},
+                        "bounds": {"m_d": ["m_min", "m_max"]},
+                    },
                 }
             ]
         }
     )
-    assert "cntn_to_dcsn:Evaluation   !Cartesian" in str(stage.methods)
+    assert "cntn_to_dcsn:Evaluation   !Linear" in str(stage.methods)
     assert "cntn_to_dcsn:Evaluation   !marginals   block methods/cons_egm.bl" in str(stage.methods)
 
 

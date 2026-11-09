@@ -287,8 +287,9 @@ def _two_stage_trellises(term, representation=None, disc_text=DISC_ENTRY):
     `term`, and the discounting stage `disc_text`, the consumption stage's
     continuation joined to the discounting stage's entry state `k` and the
     discounting stage's continuation to the consumption stage's decision
-    state `m`; with `representation`, that method is bound on the discounting
-    stage's value builder, at its Evaluation."""
+    state `m`; with `representation`, that method is bound at the Evaluation
+    of the discounting stage's value builder, `cntn_to_dcsn.evaluate.value`
+    (AMD-MB-002)."""
     from conftest import stage_from_text
 
     from bellman.factory.trellis import elaborate_trellis
@@ -298,7 +299,13 @@ def _two_stage_trellises(term, representation=None, disc_text=DISC_ENTRY):
         cons = stage_from_text(CONS_ENTRY.replace("TERM", term), "cons.bl")
         disc = stage_from_text(disc_text, "disc.bl")
         if representation is not None:
-            disc.methodize({"methods": [{"on": "cntn_to_dcsn", "method": representation}]})
+            # the representation names its grid by the setting `grid`, the
+            # kind as its tag and the fields beside it (AMD-MB-003)
+            grid = {"grid": "!Cartesian", "orders": {"k": "n_k"}, "bounds": {"k": ["k_min", "k_max"]}}
+            disc.methodize(
+                {"methods": [{"on": "cntn_to_dcsn.evaluate.value", "method": representation,
+                              "settings": grid}]}
+            )
         stages = {"cons": cons, "disc": disc}
         within = {"cons.a": "disc.k"} if order[0] == "cons" else {"disc.k_next": "cons.m"}
         between = {"k_next": "m"} if order[0] == "cons" else {"a": "k"}

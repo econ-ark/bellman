@@ -94,7 +94,7 @@ For a stage, a kind and a period, the list is the `all` list followed by the ran
 | Methods lists | Match entries by their `on` target; merge matching entries and append new targets. |
 | Scalars and ordinary lists | The later value replaces the earlier one. |
 
-A later source changes the entries it names and keeps the rest. A methods entry lacking `on` cannot be matched, and a list holding one replaces the earlier list whole. Methods use the [form of a methods entry](stage-factory.md#3-methodization), `on` required and `method`, `handler`, `grid` and `settings` optional. The merge resolves data; it does not check that a method suits the equations it is attached to, which is the stage's own methodize verb's work.
+A later source changes the entries it names and keeps the rest. A methods entry lacking `on` cannot be matched, and a list holding one replaces the earlier list whole. Methods use the [form of a methods entry](stage-factory.md#3-methodization), `on` required and `method`, `handler`, `block` and `settings` optional. The merge resolves data; it does not check that a method suits the equations it is attached to, which is the stage's own methodize verb's work.
 
 ### 2.3 Slots and fills
 

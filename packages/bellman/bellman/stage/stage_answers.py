@@ -74,8 +74,8 @@ from bellman.stage.grains import (
     stored_graph_name,
     wire_table,
 )
-from bellman.native.records import bound_at
-from bellman.stage.method_table import METHOD_TYPES, attachment_places
+from bellman.native.records import bound_at, setting_names
+from bellman.stage.method_table import GRID_KINDS, METHOD_TYPES, attachment_places, grid_kind
 from bellman.stage.method_targets import resolve_target, target_inventory
 from bellman.stage.term_operations import reference_term, relation_of, tuple_term
 from bellman.syntax import terms as T
@@ -718,6 +718,27 @@ def value_carries_derivative(stage, value, coordinates):
     return upstream is not None and value_carries_derivative(stage, *upstream)
 
 
+def value_builder(stage, value):
+    """The id of the builder whose Evaluation writes the value wire `value`,
+    the identity of a function wire of the stage, or None where no builder of
+    the stage writes it."""
+    table = construction_table(stage)
+    for box in blocks_in_file_order(stage):
+        for row in table.by_builder(box.name):
+            if row.kind == "Evaluation" and value in row.outputs:
+                return box.name
+    return None
+
+
+def evaluation_value_address(stage, value):
+    """The written address of the Evaluation of the builder that writes the
+    value wire `value`, `<block-id>.evaluate.value`, at which a representation
+    of the value is written (AMD-MB-002 §3); the placeholder `<block-id>`
+    stands where no builder of the stage writes the value."""
+    builder = value_builder(stage, value) if value is not None else None
+    return f"{builder or '<block-id>'}.evaluate.value"
+
+
 # the perch a value is passed through from, and the two perches of the forward
 # block whose lines carry the coordinates between them, by the perch of the
 # value passed to (D3, the plan's P1)
@@ -945,8 +966,9 @@ def _derivative_missing(stage, reads):
                 f"the value `{read.value.field}{WRITTEN_MARK[read.value.perch]}` carries no "
                 f"derivative in {', '.join(read.coordinates)}; state it with a derivative line "
                 "of the builder that writes the value, in the stage file or in a marginal "
-                "block bound with `!marginals`, or bind on that builder a representation whose "
-                "row of the method table evaluates it",
+                "block bound with `!marginals`, or write at that builder's Evaluation, "
+                f"`on: {evaluation_value_address(stage, value)}`, a representation whose row "
+                "of the method table evaluates it",
                 candidates=(str(value), *read.coordinates),
             )
         )
@@ -1175,10 +1197,13 @@ class Parameter(NamedTuple):
 
 class Setting(NamedTuple):
     """One setting of a version, `stage.settings["n_a"]`: its `name`, its
-    configured `value`, and `readers`, the pairs of the place that reads it
-    and the method there, `("cntn_to_dcsn:Evaluation", "!Cartesian")`, empty
+    configured `value`, and `readers`, the triples of the place that reads
+    it, the method there and the kind of the method's grid where the setting
+    is a field of that grid, `("policy", "!egm", "!Cartesian")`, the kind
+    empty otherwise, `("E_ψ_ξ", "!gauss-hermite", "")`; `readers` is empty
     for a setting no bound method names. It prints as one line,
-    `n_m = 8000, read at cntn_to_dcsn:Evaluation by !Cartesian`.
+    `n_a = 960, read at policy by !egm for its grid !Cartesian`
+    (AMD-MB-003 §3).
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
 
@@ -1187,7 +1212,10 @@ class Setting(NamedTuple):
     readers: tuple
 
     def __str__(self):
-        read = "; ".join(f"{place} by {by}" for place, by in self.readers)
+        read = "; ".join(
+            f"{place} by {by}" + (f" for its grid {grid}" if grid else "")
+            for place, by, grid in self.readers
+        )
         return f"{self.name} = {self.value!r}" + (f", read at {read}" if read else "")
 
     __repr__ = __str__
@@ -1257,7 +1285,11 @@ def settings_of(stage):
             name=name,
             value=value,
             readers=tuple(
-                (str(place), f"!{method.tag}" if method.tag else method.handler or "handler only")
+                (
+                    str(place),
+                    f"!{method.tag}" if method.tag else method.handler or "handler only",
+                    _grid_of_setting(method, name),
+                )
                 for place, method in readers.get(name, ())
             ),
         )
@@ -1265,19 +1297,39 @@ def settings_of(stage):
     }
 
 
+def _grid_of_setting(method, name):
+    """The kind of the grid of the bound method `method`, `!Cartesian`, where
+    the setting `name` is one of the grid's fields, the names written under
+    `orders`, `bounds`, `spacing` or `nodes` beside `grid: !Cartesian`;
+    the empty text otherwise (AMD-MB-003 §3)."""
+    kind = grid_kind(method.settings.get("grid"))
+    fields = GRID_KINDS.get(kind, ())
+    read = {
+        held
+        for field in fields
+        if field in method.settings
+        for held in setting_names(method.settings[field])
+    }
+    return f"!{kind}" if name in read else ""
+
+
 def setting_rows(stage):
     """The settings bound to this version, in settings binding order, the
     table `stage.settings` prints.
 
-    A setting has one read-only row per method reader. A setting with no reader
-    remains in the listing with empty `read at` and `by` entries.
+    A setting has one read-only row per method reader, with the kind of the
+    method's grid under `grid` where the setting is a field of that grid. A
+    setting with no reader remains in the listing with empty `read at`, `by`
+    and `grid` entries.
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
     return Rows(
         [
-            MappingProxyType({"name": record.name, "value": record.value, "read at": at, "by": by})
+            MappingProxyType(
+                {"name": record.name, "value": record.value, "read at": at, "by": by, "grid": grid}
+            )
             for record in settings_of(stage).values()
-            for at, by in record.readers or (("", ""),)
+            for at, by, grid in record.readers or (("", "", ""),)
         ]
     )
 
@@ -1363,10 +1415,11 @@ def combination(stage):
 
 
 def method_at(stage, box_name):
-    """The `Method` attached at the box named `box_name`, read from
-    `bindings.methods`, or None: a builder's box carries the method of the
-    whole builder or, for a backward builder named by `on: evaluate`, the
-    representation of its output."""
+    """The `Method` held under the key `box_name` of `bindings.methods`, or
+    None: a builder's box carries the method of the whole builder, and an
+    Evaluation, `<block-id>:Evaluation`, the first method bound there; a
+    method of another kind at that box stands under `(box_name, kind)` and is
+    not answered here."""
     require_stage(stage)
     return (stage.bindings.methods or {}).get(box_name)
 

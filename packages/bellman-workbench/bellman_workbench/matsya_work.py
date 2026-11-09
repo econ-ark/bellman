@@ -131,6 +131,14 @@ _KEPT = re.compile(
 RECIPE_NAME = "spec.yml"
 TRELLIS_NAME = "trellis.yml"
 
+# the one sentence that makes the job unavailable where the source selects
+# an addition, which the service does not read yet (decision S7-W5 of
+# specification 0.7); the service's change is the issue
+# `matsya-build-declaration-takes-a-bl-addition`
+ADDITION_UNSENT = (
+    "the service does not read a methods addition yet, so Build declaration cannot send {}"
+)
+
 # the folder of a model's programs, among them the code that writes values
 # into the syntactic trellis (the page Model directory layout)
 CODE_FOLDER = "code"
@@ -438,7 +446,10 @@ def prepare(
     buffer the guarded save refuses, a source the package refuses to read,
     a source named without its extension where both its `.yml` and its
     `.yaml` files stand, a file the source reads outside the folder's
-    `declaration/`, and a file the service reads under no name."""
+    `declaration/`, and a file the service reads under no name. A source
+    whose files hold an addition (`model.is_addition_file`) prepares
+    nothing and answers one sentence that names them (`ADDITION_UNSENT`),
+    whatever the buffers hold, since the service reads no addition yet."""
     rule = model.FACTORY_FOLDER
     displayed, differences = {}, {}
     for path, held in (buffers or {}).items():
@@ -459,6 +470,9 @@ def prepare(
     except recipe._REFUSALS as error:
         subject = str((folder.root / source.path).resolve())
         return Prepared(None, None, (model.refusal_of(error, source.path, subject).message,))
+    additions = [recipe.relative(folder, path) for path in paths if model.is_addition_file(path)]
+    if additions:
+        return Prepared(None, None, (ADDITION_UNSENT.format(", ".join(additions)),))
     named = {recipe.relative(folder, path) for path in paths}
     differences = {path: text for path, text in differences.items() if path in named}
     if differences and choice not in CHOICES:

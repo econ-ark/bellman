@@ -167,7 +167,7 @@ its row is held at, `Pullback at 𝑐`, and the head of the symbol the drawing
 shows for the box (`box_symbol`), in which no law and no aggregator is
 written out at a policy and a law of motion is named as the box's card
 names it, `𝑉≻ ∘ 𝑔≻`, followed by the tag of a method bound within the box,
-`𝑉(m_d), 𝑑𝑉(m_d) · !Cartesian`; the arguments stand in the box's `rule`
+`𝑉(m_d), 𝑑𝑉(m_d) · !Linear`; the arguments stand in the box's `rule`
 rows. A block of an initial diagram shows the drawing's symbol on one line.
 A port's label is the wire's label in the drawing (`wire_label`). The
 symbol and the port's label are read from what the drawing of the graph
@@ -654,15 +654,18 @@ def _opened_lines(stage):
 
 def _collection_label(stage):
     """The label of the collection: the stage's name followed by a word for
-    each binding the version holds, `cons` or `cons calibrated`."""
+    each binding the version holds, `cons` or `cons calibrated`. The version
+    is methodized where any of its operators carries a bound method, a
+    method word and not a handler alone, read from the stage's answer
+    `stage.methods` (decision S7-W7 of specification 0.7)."""
     bound = [
         word
-        for word, value in (
-            ("calibrated", stage.bindings.calibration),
-            ("methodized", stage.bindings.methods),
-            ("configured", stage.bindings.settings),
+        for word, held in (
+            ("calibrated", stage.bindings.calibration is not None),
+            ("methodized", any(method.tag for method in stage.methods.values())),
+            ("configured", stage.bindings.settings is not None),
         )
-        if value is not None
+        if held
     ]
     return " ".join([stage.name, *bound])
 
@@ -1374,7 +1377,7 @@ def node_label(stage, direction, sources, box) -> str:
     names, so that no law and no aggregator is written out at a policy,
     `𝑉≻ ∘ 𝑔≻`, `𝐺`, `𝑔≺∗μ`, followed, where a method is bound within the box,
     by ` · ` and its tag as its `method` row reads it (`_bound_method`),
-    `𝑉(m_d), 𝑑𝑉(m_d) · !Cartesian`. The kind of the operator and the
+    `𝑉(m_d), 𝑑𝑉(m_d) · !Linear`. The kind of the operator and the
     policies its row is held at are not written on the box (AAS, 4 October
     2026: "use clean symbols"); they stand in the box's `kind` and `policy`
     rows, which the card and the panel print, and the legend names the marks.
@@ -1657,7 +1660,7 @@ _BoundMethod = namedtuple("_BoundMethod", "tag handler options settings")
 def _bound_method(stage, handle, targets=None):
     """The methods bound within a piece (`_the_methods`), read from the
     piece's handle and its card, as one `_BoundMethod`: their tags joined by
-    `, `, `!marginals, !Cartesian` for an Evaluation that holds a marginal
+    `, `, `!marginals, !Linear` for an Evaluation that holds a marginal
     block and a representation (SE-26), their handlers likewise, and their
     options and settings in order; None where no method is bound. `targets`
     restricts the bindings read to those bound at these targets, as a layer

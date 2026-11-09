@@ -43,6 +43,7 @@ from bellman.native.identity import Identity
 from bellman.stage.stage_answers import (
     derivative_reads,
     entry_perch,
+    evaluation_value_address,
     fields,
     passed_through,
     value_carries_derivative,
@@ -447,8 +448,9 @@ def derivative_missing(trellis, selection=None):
                     f"value `{named}` carries no derivative in {', '.join(coordinates)}; state it "
                     f"with a derivative line of the builder that writes the value of stage "
                     f"{stage.name!r}, in its stage file or in a marginal block bound with "
-                    "`!marginals`, or bind on that builder a representation whose row of the "
-                    "method table evaluates it",
+                    "`!marginals`, or write at that builder's Evaluation, "
+                    f"`on: {evaluation_value_address(stage, value)}`, a representation whose "
+                    "row of the method table evaluates it",
                     candidates=(str(value) if value is not None else required, *coordinates),
                 )
             )

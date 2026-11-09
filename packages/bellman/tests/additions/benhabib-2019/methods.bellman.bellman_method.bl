@@ -1,0 +1,17 @@
+@methods: bellman
+# A second methods file of the within-life stage, for the recipe's slot
+# $bellman_method (applications/benhabib-2019/declaration/spec.yml, methods
+# all: [stages/benhabib_bellman/methods, $bellman_method]), which the
+# application leaves unbound. It is added after methods.bellman.bl, in the
+# recipe's order. It is no part of the application's selection: it carries
+# the two entries of the legacy registry that the comment of
+# stages/benhabib_bellman/methods.yml records as not copied and that have a
+# place once methods.bellman.bl is added, the linear reading of the
+# consumption function at the policy builder's Evaluation, whose knots the
+# endogenous grid method computes, and the analytic inverse at the node
+# InvEuler, which methods.bellman.bl appends. Both are file-level lines with
+# full paths, since a block of this file would have no line to append and an
+# empty body is refused.
+
+policy.evaluate.method : !Linear
+policy.InvEuler.method : !analytic_inverse

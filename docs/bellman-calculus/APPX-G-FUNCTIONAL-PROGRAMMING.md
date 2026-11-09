@@ -13,14 +13,14 @@ topic: [calculus]
 # Appendix G — Functional programming
 
 > [!summary]
-> A stage declares typed objects and equations from which Bellman operations are constructed. Calibration assigns economic parameter values; methodization assigns numerical procedures to specified operations; configuration supplies their numerical settings. This appendix defines those objects and maps, states the composition they preserve, and works through an income-and-consumption stage. Backus's functional programming supplies the distinction between functions, represented functions and forms for combining them.
+> A stage declares typed objects and equations from which Bellman operations are constructed. Calibration assigns economic parameter values; methodization writes a method and a grid into the signature of each operator a methods file names; configuration supplies the values of the settings they read. This appendix defines those objects and maps, states the composition they preserve, and works through an income-and-consumption stage. Backus's functional programming supplies the distinction between functions, represented functions and forms for combining them.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [Stages and perches](./03-Stages%20and%20perches.md) defines the economic data and information. [Fields, functions and types](./04-fields,%20functions%20and%20types.md) distinguishes fields from their representing functions.
 > **Formal account** — [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) gives the term-interpretation result. [Operator algebra](./APPX-F-OPERATOR-ALGEBRA.md) gives the economic and numerical conditions.
 > **Used by** — [Stages](../Bellman-Sym/01-stage.md) and [Methodization](../Bellman-Sym/04-methodization.md) give the concrete source and attachment rules, [Equation parsing rules](../Bellman-Sym/appendices/12-equation-parsing-rules.md) the admitted expression forms, and Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) the interpretation rules that §3 names. The notation below describes their mathematics, not an additional source format.
 
-## 1. Primitive objects and expressions
+## 1 Primitive objects and expressions
 
 The Bellman-Euler Domain-Specific Declarative Language (**BE-DDSL**) distinguishes data, representations of functions, and operations on functions. A representation is a finite expression with declared meaning; it is an object that can be inspected and transformed before the represented function is applied. A number, an expression denoting a number, and an expression denoting a function therefore have different roles.
 
@@ -48,7 +48,7 @@ A **function object** is an expression denoting a function with specified argume
 
 There are two different uses of “primitive.” A primitive *language operation*, such as multiplication, is supplied by the language. An economic *primitive*, such as a utility function or transition law, is supplied by the model and may itself be defined by an expression. Conversely, a supplied integration operation can be mathematically substantial. The [operator catalogue](./catalogues/operators.md) identifies the operations used in the calculus.
 
-## 2. Declarations and function objects
+## 2 Declarations and function objects
 
 A **declaration environment** $D$ records the names in scope, their types, roles, information requirements and defining expressions where supplied. It also includes shock-law declarations and stage-level domain restrictions, which need not occur inside a builder's equations. It distinguishes an economic parameter from a local function argument, a state field from its state space, and an input function from a function the stage constructs. A name introduced by the modeler extends $D$; it does not become a new built-in primitive.
 
@@ -76,7 +76,7 @@ An unbound economic parameter and a free continuation function are declared inpu
 
 **Parameters are not separate semgraph wires.** A **semgraph**, the semantic graph of the constructed stage, retains the full definitions using their named parameters, along with parameter declarations and calibration. For example, $u_\rho$ still has the consumption argument $c$; $\rho$ determines which function it is. The graph can display that function without a separate parameter input wire. This applies to the two initial diagrams, forward and backward, as well as to the two builders graphs. Parameters must be accounted for in the constructed graph's definitions, rather than removed from the drawing afterward.
 
-## 3. A stage as a declaration unit
+## 3 A stage as a declaration unit
 
 A symbolic **stage** is a finite collection of related declarations and typed equation groups. One way to record its structure mathematically is
 
@@ -138,7 +138,7 @@ Take $W$ continuous, so it is bounded on every compact savings interval. Because
 
 At the operation level, **Pullback along the law of motion** names composition with $g$, and **Value aggregation $G$** names the subsequent pointwise aggregation. A sub-builder is named by the function its complete equation and ordered arguments define. Keeping these operations inside their whole builders preserves both the Bellman decomposition and the equations defining it. Arithmetic inside $g$ or $G$ remains part of those definitions; it is not a further builder/primitive semgraph grain, or level of displayed decomposition.
 
-## 4. Forms and represented functions
+## 4 Forms and represented functions
 
 Backus distinguishes objects, functions, application, functional forms and definitions in an **FP system**.[^backus-fp] A functional form combines functions, or functions and objects, to produce another function. His **FFP systems** additionally represent functions systematically by objects.[^backus-ffp] The represented-function classes in §1 apply this distinction to a typed economic vocabulary.
 
@@ -167,7 +167,7 @@ In FFP an atom can represent a function, and a headed sequence can represent a f
 
 The project's mathematical interpretation Υ and numerical realization Ρ below are distinct from Backus's $\rho$ and $\mu$. Representation by objects also leaves the choice of parser open. The current `.bl` language parses arithmetic and binding into a temporary syntax tree and retains interpreted equations and operations in the semgraph.
 
-## 5. Interpretation and composition
+## 5 Interpretation and composition
 
 A **signature** $\Sigma$ specifies type names and operation symbols with ranks, their ordered input and output types. A **target algebra** assigns a mathematical set to each type and an operation of the corresponding rank to each symbol. A **homomorphism** preserves these operations. Given a target algebra and an environment assigning meanings to free inputs, interpretation of finite terms extends uniquely from their constituents.[^adj] We write this interpretation as $\Upsilon_\theta(e)$ when the economic parameter assignment is $\theta$.
 
@@ -191,7 +191,7 @@ The categorical product $A\times B$ has projections selecting its components; $[
 
 This construction is the setting in which calibration and methodization can be called functorial. Their formulas specify the object and arrow assignments. It is not a claim that every transformation of program records, or every interpretation of stochastic diagrams, preserves all categorical structure.
 
-## 6. Calibration
+## 6 Calibration
 
 Let $P$ be the declared economic parameter names. An **admissible calibration** $\theta$ assigns a value of the declared type to every required name in $P$, including any joint restrictions. For the stage in §3.1, $P=\{R,\beta,\rho,\mu_y,\sigma_y\}$. Let $\Theta$ be the set of admissible assignments. Writing only $P\to\mathbb O_P$ describes a name-to-value assignment; functoriality concerns its extension to the represented operations and their compositions.
 
@@ -237,11 +237,11 @@ $$
 
 The transition still takes beginning assets and income; the choice value still takes a continuation function, resources and consumption. Calibration selects the economic instance without supplying those arguments or solving the stage. When two stages share one economic parameter, compatible composition uses the same binding for it. Distinct stage-local parameters may instead have distinct calibrations.
 
-## 7. The binding maps
+## 7 The binding maps
 
-The three binding verbs with a source held fixed are maps from stage versions to stage versions, each writing one binding: $\mathcal C_c(S) = \mathrm{calibrate}(S, c)$, $M_m(S) = \mathrm{methodize}(S, m)$ and $K_s(S) = \mathrm{configure}(S, s)$. Here a **source** is the set of assignments of one kind that a verb binds, parameter values $c$, a method assignment $m$ or settings $s$; a **stage version** is a stage as it stands after its construction or after one of its bindings; and $\mathcal C_c$ is the calibration of §6 with $\bar\theta = c$. The bindings are made in the order calibrate, methodize, configure, so a specified stage is $S^{\mathrm{spec}} = K_s\, M_m\, \mathcal C_c(S)$. $\mathcal C$ commutes with $M$ and with $K$ in bindings and graphs; $K$ is defined on methodized versions only, since settings are read against the methods that name them; $M$ is applied once, a version holding one methods binding. Three laws hold, verified on `cons.bl` and `port.bl`: a verb binds once from a merged source and refuses one that values fewer names than the stage requires; for complete sources $c_1, c_2$ the versions $\mathcal C_{c_2}(\mathcal C_{c_1}(S))$ and $\mathcal C_{c_2}(S)$ have equal bindings and graphs; a binding changes no graph.
+The three binding verbs with a source held fixed are maps from stage versions to stage versions, each writing one binding: $\mathcal C_c(S) = \mathrm{calibrate}(S, c)$, $M_m(S) = \mathrm{methodize}(S, m)$ and $K_s(S) = \mathrm{configure}(S, s)$. Here a **source** is the set of assignments of one kind that a verb binds, parameter values $c$, a method assignment $m$ or settings $s$; a **stage version** is a stage as it stands after its construction or after one of its bindings; and $\mathcal C_c$ is the calibration of §6 with $\bar\theta = c$. The bindings are made in the order calibrate, methodize, configure, so a specified stage is $S^{\mathrm{spec}} = K_s\, M_m\, \mathcal C_c(S)$. $\mathcal C$ commutes with $M$ and with $K$ in bindings and graphs; $K$ is defined on methodized versions only, since settings are read against the methods that name them; $M$ is applied once, a version holding one methods binding. Three laws hold, verified on `cons.bl` and `port.bl`: a verb binds once from a merged source and refuses one that values fewer names than the stage requires; for complete sources $c_1, c_2$ the versions $\mathcal C_{c_2}(\mathcal C_{c_1}(S))$ and $\mathcal C_{c_2}(S)$ have equal bindings and graphs; a binding changes neither the initial diagrams nor the declared builders, and what a solution method changes stands in the operative builders alone ([Methods](./06-Methods.md) §9).
 
-A **method assignment** $m$ selects numerical methods for supported operation occurrences. Fix these occurrences and their identities, and write $\omega_i$ for one such operation symbol. A methodized signature $\Sigma_m$ records the same mathematical inputs and outputs, together with the selected method and the settings it requires. Distinct occurrences can be distinguished even when they denote the same mathematical operation.
+A **method assignment** $m$ is the set of entries of a methods file, read after its union with the stage file: for each operator occurrence it names, a method with its keyword arguments and a grid ([Methods](./06-Methods.md) §§2, 5). Fix the occurrences and their identities, and write $\omega_i$ for one such operation symbol. The **methodized signature** $\Sigma_m$ is the category of parametrized morphisms $\mathrm{Para}_{\mathcal M}(\Sigma)$ of [Methods](./06-Methods.md) §2, taken over the free category $\Sigma$ on the stage's operation symbols with the free monoid $\mathcal M$ on the labels, a label being a pair of a method and a grid, acting trivially: a methodized morphism is a path of operation symbols carrying the list of its labels, so that the mathematical inputs and outputs are unchanged and the settings a method reads are named by its label and valued at configuration. Distinct occurrences can be distinguished even when they denote the same mathematical operation.
 
 Methodization acts on generators by
 
@@ -249,15 +249,14 @@ $$
  M_m(\omega_i)=\omega_i^{m(i)},
 $$
 
-leaves unselected generators unchanged, and extends to composite expressions by
+assigns the **identity label**, the list with no entries, to every generator the assignment does not name, so that $M_m$ is total, and extends to composites by
 
 $$
  M_m(\mathrm{id}_A)=\mathrm{id}_A,\qquad
- M_m(f\circ g)=M_m(f)\circ M_m(g),\qquad
- M_m([f,g])=[M_m(f),M_m(g)].
+ M_m(f\circ g)=M_m(f)\circ M_m(g).
 $$
 
-Thus $M_m:\mathsf{Term}(\Sigma)\to\mathsf{Term}(\Sigma_m)$ is a functor once the selected generators have compatible ranks. The notation describes a fixed, consistent assignment: if the same represented occurrence is shared, its method is shared; different occurrence-specific choices require distinct occurrences in the source of this map. Bellman-SYM's authoring rules for [methodization](../wiki/methodization.md) resolve supported addresses and occurrence overrides before this mathematical assignment is considered.
+Thus $M_m:\Sigma\to\Sigma_m$ is a functor, since $\Sigma$ is free on its operation symbols: the parameter of a composite is the concatenation of its parts' parameters, the list of the labels along the path ([Methods](./06-Methods.md) §3). The notation describes a fixed, consistent assignment: if the same represented occurrence is shared, its method is shared; different occurrence-specific choices require distinct occurrences in the source of this map. The union of the stage file with its methods files resolves the operator each entry names before this mathematical assignment is considered ([addition](../wiki/addition.md)); Bellman-SYM's rules for [methodization](../wiki/methodization.md) state the places.
 
 For an expectation occurrence, for example,
 
@@ -265,24 +264,23 @@ $$
  E_y\longmapsto E_y^{\mathrm{GH}(n)}.
 $$
 
-Here $\mathrm{GH}$ denotes the Gauss–Hermite quadrature family and $n$ is its node-count setting. The tag retains expectation as its mathematical target. The node count does not become an additional economic input of that expectation, and numerical representation can still use a different carrier, such as sampled values on a grid.
+Here $\mathrm{GH}$ denotes the Gauss–Hermite quadrature family and $n$ is its node-count setting. The tag retains expectation as its mathematical target. The node count does not become an additional economic input of that expectation, and numerical representation can still use a different carrier, such as sampled values on a grid. Where an operator stores a function, the grid it stores it on is the second component of its label, written by its own entry, and no setting of the method ([Methods](./06-Methods.md) §5).
 
-Define **erasure** $U_m$ to forget the method annotations while preserving the underlying operation, its equations and economic inputs. Then
+Two erasures are defined. The **erasure of the labels** $U_m : \Sigma_m \to \Sigma$ forgets the method and grid components of every morphism, is the identity on sorts, and preserves the underlying operation, its equations and its economic inputs. Then
 
 $$
  U_m\circ M_m=\mathrm{id}
 $$
 
-on this represented term structure. The identity states what methodization retains. It does not say the numerical quadrature sum equals the exact expectation. A method assigned to a whole builder retains that builder's defining equations and must state how it accounts for required constituent computations. It does not authorize deletion of their definitions or conflicting duplication of their settings.
+on every path of $\Sigma$, the section law, which holds on every stage because $M_m$ assigns the identity label wherever no entry stands. The identity states what methodization retains. It does not say the numerical quadrature sum equals the exact expectation. $U_m$ keeps the lines an addition appends to a block, the derivative lines and the rows of a solution method. The **erasure of the addition** $U_a$ acts on the term before elaboration: the union $S \sqcup A$ of the stage file $S$ with a methods file $A$ keeps the file and position of every item, and $U_a$ removes the items written in $A$, so that $U_a(S \sqcup A) = S$; on the elaborated stage its result is the declared level, `stage.declared`, which the stage stores ([Methods](./06-Methods.md) §§8, 9). A solution method assigned to a whole builder supplies the lines by which the builder is computed at the operative level and leaves the declared lines at the declared level; it does not delete the builder's definitions.
 
-After $m$ is selected, let $N_m$ be its required setting names and let $s$ assign values of the required types to those names. **Configuration**, denoted $K_s$, specializes the settings of the methodized symbols; for example,
+After $m$ is selected, let $N_m$ be the names of the settings the methods file declares, each with its set, and let $s$ assign to each name a value of its set; a value outside the set is refused. **Configuration**, denoted $K_s$, binds the values the methodized symbols' labels name and leaves the labels as written; for example, with $s(n) = 3$,
 
 $$
- K_s\bigl(E_y^{\mathrm{GH}(n)}\bigr)=E_y^{\mathrm{GH}(3)}
- \quad\text{when }s(n)=3.
+ K_s\bigl(E_y^{\mathrm{GH}(n)}\bigr)=E_y^{\mathrm{GH}(n)}\quad\text{with the binding } n = 3,
 $$
 
-Its object assignment retains the declared economic types. Its action on expressions preserves identity, composition and construction by the same constituent-wise definition as $M_m$. Hence it is a functor between the corresponding categories of method-annotated terms. A numerical domain that belongs to the *model*, such as an explicitly discrete action set, remains economic data; a grid chosen only to approximate a continuous function belongs to numerical configuration.
+the value standing in the bindings of the stage version and not in the signature ([Methods](./06-Methods.md) §6). Its object assignment retains the declared economic types. Its action on expressions preserves identity and composition by the same constituent-wise definition as $M_m$. Hence it is a functor between the corresponding categories of method-annotated terms. A numerical domain that belongs to the *model*, such as an explicitly discrete action set, remains economic data; a grid chosen only to approximate a continuous function is the grid component of the operator's signature, whose bounds and count are settings ([Methods](./06-Methods.md) §5).
 
 Settings are read against the methods that name them, so $K$ is defined on methodized versions. For a constructed stage $S$, a specified stage has the form
 
@@ -292,7 +290,7 @@ $$
 
 It retains the model's equations together with $c$, $m$ and $s$. The order is calibrate, methodize, configure; each operation returns a distinct stage. Mathematical specialization of disjoint fixed assignments can commute—for example, $\mathcal C_c M_m=M_m\mathcal C_c$ when the same method assignment remains applicable on both sides. This does not assert that the public interface accepts every ordering, or that choosing a method according to parameter values is independent of calibration.
 
-## 8. Mathematical and numerical realization
+## 8 Mathematical and numerical realization
 
 Three mathematical objects are associated with a fully specified operation:
 

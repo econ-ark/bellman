@@ -1,0 +1,51 @@
+@methods: sa_savings
+# Deliberate refusals (aspect A24) on the stage sa_savings, whose stage file is
+# applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl.
+# No item of this file belongs to the application's methods; each is written
+# as an author might write it by mistake, and each comment names the rule of
+# the union (the proposal's §4) that refuses it.
+
+m_min : ℝ₊₊          :: ["lower bound of the grid of resources"]
+m_max : ℝ₊₊          :: ["upper bound of the grid of resources"]
+n_m : ℕ              :: ["number of points of the grid of resources"]
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the return given the mean of its log"]
+n_Ψ_wide : ℕ         :: ["quadrature nodes of a wider rule for the same expectation"]
+
+# Refused by rule 7 as the proposal stands: a file-level path whose first
+# segment names no block. A YAML file would write the stage-wide address
+# `on: E_Ψ`; rule 7 reads the first segment of a file-level path as a block
+# id, and E_Ψ is an operator of two blocks, not a block, so the union finds no
+# node to attach the entry to. F3, continued, recommends admitting this line
+# as the stage-wide address, every occurrence of E_Ψ, and the checker resolves
+# it so; it stays here as the case that the recommendation would change.
+E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+
+# Refused three times. First, two sets on one coordinate: the partial signature
+# gives the continuation value V[>] the set ℝ, as a stage with a CRRA value,
+# negative for ρ > 1, would, where this stage's Epstein-Zin aggregation keeps
+# it in ℝ₊₊ (rule 4, a coordinate of one name with different content). Second,
+# the same slot twice: in this block E_Ψ occurs once, in the line risk_ce, so
+# the operator's head and the line's path name one slot, and fill it with two
+# node counts (rule 4; F3). Third, the same slot twice if D4 reads the
+# unrefined slot as covering both refined ones: `evaluate.method` represents
+# the value and its derivative, so `evaluate[V].method` gives the value's
+# representation a second time (rule 4; D4).
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> ()
+    | E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+    | risk_ce.E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_wide)
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | evaluate[V].method : !pchip] {
+    D_{m_d}V = (1-β)*c^(-ρ)*V^ρ    :: [id=marginal]
+}
+
+# Refused twice. First, a subject naming another block: the group begins with
+# cntn_to_dcsn, a block other than the enclosing policy, as an author would
+# write who wished to bind every occurrence of E_Ψ from one place (rule 7).
+# Second, a line id twice: the author, believing that a method must stand
+# beside the line it solves, copies the maximization into the methods file
+# under its id objective, which the stage's block already holds (rule 5).
+[id=policy
+    | cntn_to_dcsn.risk_ce.E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)] {
+    c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) + β*E_{ν}(E_{Ψ}(V[>]^(1-γ))^((1-η)/(1-γ)))^((1-ρ)/(1-η)))^(1/(1-ρ))) :: [id=objective]
+}

@@ -1,5 +1,5 @@
 """Where a numerical method attaches in a stage: the targets of a methods file
-(spec 0.3c §3.4, §4.3).
+(spec 0.3c §3.4, §4.3; AMD-MB-002).
 
 A target is a place in the stage where a numerical method attaches. The
 places a stage has are: a builder — a whole forward step over states
@@ -9,22 +9,24 @@ modeler named with `[id=…]`; an operator inside a line — the expectation ove
 the shocks in `V = E_{Ψ,θ}(V[>])`, the root of a first-order condition in
 `ς = solve_{ς}(…)`, the `solve` that an implicit statement `c = c[>]`
 records, an `argmax`, an `upper_env`, an authored interpolation
-`evaluate(…)`; and the representation of a value function among a backward
-builder's outputs, the boundary representation — the interpolation that makes
-the value function V(m) of the decision state from the value field computed
-on the perch grid. A methods file names one place per entry (`on: policy`,
-`on: E_Ψ_θ`, `on: policy.foc.solve`, `on: evaluate`), and `methodize` records
-the entry's method in the stage's `methods`, the one record of attachments.
-This module resolves a name to its place (`resolve_target`), lists the places
-a stage has (`target_inventory`), and tells a line attached to another as its
-property (`is_property`, `properties_of`).
+`evaluate(…)`; and the Evaluation of a builder, the operation that closes the
+builder and stores what it writes, named by what it evaluates: the policy
+function, `policy.evaluate`; the value function a backward value builder
+writes, `cntn_to_dcsn.evaluate.value`; and the derivative of that value which
+a derivative line states, `cntn_to_dcsn.evaluate.marginal` (AMD-MB-002 §3).
+A methods file names one place per entry (`on: policy`, `on: E_Ψ_θ`,
+`on: policy.foc.solve`, `on: cntn_to_dcsn.evaluate.value`), and `methodize`
+records the entry's method in the stage's `methods`, the one record of
+attachments. This module resolves a name to its place (`resolve_target`),
+lists the places a stage has (`target_inventory`), and tells a line attached
+to another as its property (`is_property`, `properties_of`).
 
 The places in the graph. A builder is a `Builder` bubble of the stage
 hypergraph; a `!node` line is a bubble inside its builder, named by the
 line's address; every other line is a box named by its address inside the
 bubble that holds it; an operator occurrence is a query on the line's
-retained term; the boundary representation is a marker beside the backward
-builder (`ValueRepresentation`). A target resolves by these rules:
+retained term; the Evaluation of a builder is the row that closes the
+builder's bubble, `<block-id>:Evaluation`. A target resolves by these rules:
 
 (a) `<block-id>` is the builder box (`policy`, `dcsn_to_cntn`). The
     spelling `<block-id>_builder` names the same box when the block is a
@@ -41,18 +43,24 @@ builder (`ValueRepresentation`). A target resolves by these rules:
     resolves for inspection only — it is not a method target, and
     `methodize` refuses a method on it (spec 0.3c §4.3: "an alias with no
     operator in it is not a method target"). An output statement with no
-    operator occurrence — `cntn_to_dcsn.value`, `cntn_to_dcsn.marginal` in
-    `cons` — names the representation of the output field it defines on the
-    decision-perch grid; a method on it (the `!Cartesian` entry) is held in
-    `methods` under the statement's address. A positional address
-    `<block-id>.<n>` — the address of a line without an id — is refused with
-    a request for an id: an inserted `!doc` line would renumber what follows.
+    operator occurrence, the value line `cntn_to_dcsn.value` in `cons`, names
+    the line, and a representation named on it is held at the Evaluation
+    that closes the builder. A derivative line, `cntn_to_dcsn.marginal` in
+    `cons`, which states a derivative of the value and defines no field, is
+    addressable in the same way, and a representation named on it is refused
+    where the method is placed, since the derivative it states is
+    represented at `<block-id>.evaluate.marginal` (rule (i)). Under (c.ii), a
+    positional address `<block-id>.<n>` — the address of a line without an
+    id — is refused with a request for an id: an inserted `!doc` line would
+    renumber what follows.
     A line whose id is dotted, `x.y`, is attached to the line `x` of its
     block as a property (`optimality.euler`, the first-order condition of the
     maximization `optimality`): it forms no operation and is no place of its
     own, so no inventory lists it and a target naming it is refused. A dotted
     id whose block holds no line `x` is refused where the stage is
-    constructed.
+    constructed. A line of a branch is addressed under the branch's label,
+    `<block-id>.<label>.<statement-id>` (`dcsn_to_cntn.work.working`), and
+    an occurrence in it by the operator written after that.
 (d) `<operator>` — the stage-wide name of an operator, `E_` followed by its
     shock names in the authored order (`E_Ψ_θ`, `E_θ`), or `solve`, `argmax`,
     `upper_env` — is every occurrence of that operator in the stage, each as
@@ -64,31 +72,54 @@ builder (`ValueRepresentation`). A target resolves by these rules:
     line, naming that line and the block's defining statements: no operator
     is derived from a method name, and `upper_env` is an occurrence only
     where authored.
-(e) `<block-id>.<statement-id>.<operator>` is the one occurrence of that
-    operator in that line; the line must carry an id, and a line with two
-    occurrences of one operator is refused naming both, since no finer
-    address exists (the stage-wide name governs both). A line that carries
-    no occurrence of the named operator is refused naming where a method
-    attaches.
+(e) `<block-id>.<statement-id>.<operator>` is every occurrence of that
+    operator in that line, in the form of (d); the line must carry an id,
+    and a line that holds one head twice, `D_{a_d}V = (D_{a_w}V_w[>],
+    D_{a_r}V_r[>])[d]`, is one address that governs both occurrences, since
+    no finer address exists. A line that carries no occurrence of the named
+    operator is refused naming where a method attaches; an `evaluate`
+    named on a line that carries none, in the policy builder or a backward
+    value builder, is refused naming the written address of that builder's
+    Evaluation, rule (i).
 (f) Resolution is method-blind: a block id is the builder box under (a)
     whatever the entry's method. `methodize`, which reads the method table
-    (`method_table.METHOD_TYPES`), moves a method whose placement rule stands
-    inside the builder to its place there: `!egm` to the Evaluation that
-    closes a policy block which writes the grid line, or to the maximization
-    that carries its first-order condition as a property; a representation
-    to the closing Evaluation.
-(g) `evaluate`: in a stage that authors exactly one `evaluate` occurrence,
-    that occurrence, in the form of (d); in a stage that authors two or more,
-    refused naming their addresses `<block-id>.<statement-id>.evaluate`; in a
-    stage that authors none and has no implicit statement (`port`, `noport`,
-    `disc`), the boundary representation of the backward builder from the
-    continuation perch to the decision perch — the builder that writes the
-    decision-perch value fields, `cntn_to_dcsn` — returned as (that
-    box, `ValueRepresentation`); in a stage with an implicit statement and
-    no authored occurrence (`cons`, `cons_savings_iid`), refused naming the
-    implicit statement.
+    (`method_table.METHOD_TYPES`), moves a solution method whose placement
+    rule stands inside the builder to its place there: `!egm`, named with no
+    block file, to the Evaluation that closes a policy block which writes the
+    grid line, or to the maximization that carries its first-order condition
+    as a property. A representation named on a value line or a `!node` line
+    is held at the Evaluation that closes the builder or the node (rule
+    (c)); one named on a builder or on a derivative line is refused naming
+    the written address of the builder's Evaluation, rule (i) (AMD-MB-002
+    §4).
+(g) `evaluate` alone: in a stage that authors exactly one `evaluate`
+    occurrence, that occurrence, in the form of (d); in a stage that authors
+    two or more, refused naming their addresses
+    `<block-id>.<statement-id>.evaluate`; in a stage that authors none,
+    refused naming `<block-id>.evaluate.value` of the builder that writes
+    the value, the backward builder from the continuation perch to the
+    decision perch (`cntn_to_dcsn`), since the representation of that value
+    is written at its Evaluation (AMD-MB-002 §4).
 (h) A comma-separated entry is not one target: each part is an entry of its
     own, and `resolve_target` receives one target.
+(i) `<block-id>.evaluate`, `<block-id>.evaluate.value` and
+    `<block-id>.evaluate.marginal` name the Evaluation of the builder, and
+    are read before (b), (c) and (e), so that no line whose id is
+    `evaluate` is addressed; the resolution is `("evaluation", box, what)`,
+    `what` being `policy`, `value` or `marginal`. `policy.evaluate` names the
+    Evaluation of the policy builder, the builder that writes a control,
+    where the policy function is stored; `.evaluate.value` names the value
+    function a backward value builder writes, and `.evaluate.marginal` the
+    derivative of that value a derivative line of the builder states, in the
+    stage file or in a marginal block bound with `!marginals`. A form that
+    names what its builder does not write is refused naming the forms the
+    builder has: `.evaluate` alone for a backward value builder,
+    `.evaluate.value` and `.evaluate.marginal` for the policy builder,
+    `.evaluate.marginal` where no derivative line stands at the builder, any
+    of the three for a forward builder, the push-forward of a measure through
+    its law of motion, whose methods stand on the builder, and a third word
+    other than `value` and
+    `marginal` (AMD-MB-002 §§3, 4).
 
 A target that reaches two places — two lines with one id, which only a
 decoded saved term can carry to construction, since a fresh parse refuses
@@ -118,15 +149,14 @@ import dataclasses as _dc
 from bellman.fold.block_lines import (
     blocks_of,
     header_wire_sorts,
-    is_implicit_solve,
     node_address,
     perches_of,
     require_stage,
     symbol_groups,
 )
-from bellman.fold.stage_names import lines_of
+from bellman.fold.stage_names import branches_of, lines_of
+from bellman.fold.wire_terms import stated_derivative
 from bellman.native.identity import Identity
-from bellman.native.records import ValueRepresentation
 from bellman.refusals import (
     RULE_A,
     RULE_B_C,
@@ -135,6 +165,7 @@ from bellman.refusals import (
     RULE_FORM,
     RULE_G,
     RULE_H,
+    RULE_I,
     RULE_II,
     RULE_TWO,
     TargetError,
@@ -162,12 +193,16 @@ def resolve_target(stage, target):
     `<block-id>.<statement-id>`, the holder being the bubble that holds the
     line's box (c); a tuple of `(holder, Line, OperatorOccurrence)` for a
     stage-wide operator name, one entry per occurrence in source order (d);
-    one such triple for an occurrence address (e); for `evaluate`, the one
-    authored occurrence as a one-entry tuple, a refusal naming the occurrence
-    addresses when the stage authors two or more, or `(box,
-    ValueRepresentation)` for the backward builder's boundary
-    representation (g). A block id is the builder box whatever method the
-    entry carries (f). A name that reaches no place, a positional address, a
+    the same for an occurrence address, every occurrence of the operator in
+    that line (e); for `evaluate` alone, the
+    one authored occurrence as a one-entry tuple, and a refusal naming the
+    occurrence addresses when the stage authors two or more or the written
+    address of the value's representation when it authors none (g);
+    `("evaluation", box, what)` for the Evaluation of a builder named
+    `<block-id>.evaluate`, `<block-id>.evaluate.value` or
+    `<block-id>.evaluate.marginal`, `what` being `policy`, `value` or
+    `marginal` (i). A block id is the builder box whatever method the entry
+    carries (f). A name that reaches no place, a positional address, a
     comma-separated entry, a property of a line, or a name that reaches two
     places raises `TargetError`; an argument of the wrong type raises
     `TypeError`.
@@ -191,32 +226,59 @@ def resolve_target(stage, target):
             ),
         )
     parts = target.split(".")
-    if not target or any(part == "" for part in parts) or len(parts) > 3:
+    branch_line = len(parts) >= 3 and _names_branch_line(stage, parts)
+    if (
+        not target
+        or any(part == "" for part in parts)
+        or len(parts) > 4
+        or (len(parts) == 4 and not branch_line)
+    ):
         _refuse(
             stage,
             target,
             RULE_FORM,
             (
                 "is not the form of a target: a block id, `<block-id>."
-                "<statement-id>`, `<block-id>.<statement-id>.<operator>`, a "
-                "stage-wide operator name, or `evaluate`"
+                "<statement-id>`, `<block-id>.<statement-id>.<operator>`, a line of a "
+                "branch, `<block-id>.<label>.<statement-id>`, with its operator after it, the "
+                "Evaluation of a builder, `<block-id>.evaluate`, "
+                "`<block-id>.evaluate.value` or `<block-id>.evaluate.marginal`, or a "
+                "stage-wide operator name"
             ),
         )
     if len(parts) == 1:
         return _resolve_name(stage, target)
+    # the Evaluation of a builder is read before a line and an occurrence
+    # (rule (i))
+    if parts[1] == EVALUATE:
+        return _resolve_evaluation(stage, target, parts[0], parts[2] if len(parts) == 3 else None)
+    if branch_line:
+        # a line of a branch is addressed under its label, `dcsn_to_cntn.work.working`,
+        # and an occurrence in it by the operator after that (rules (c) and (e))
+        statement_id = f"{parts[1]}.{parts[2]}"
+        if len(parts) == 3:
+            return _resolve_line(stage, target, parts[0], statement_id)
+        return _resolve_occurrence(stage, target, parts[0], statement_id, parts[3])
     if len(parts) == 2:
         return _resolve_line(stage, target, *parts)
     return _resolve_occurrence(stage, target, *parts)
 
 
+def _names_branch_line(stage, parts) -> bool:
+    """Whether the second part of a target names a branch of the block its
+    first part names, so that the target addresses a line of that branch."""
+    box = next((box for box in blocks_of(stage) if box.name == parts[0]), None)
+    return box is not None and any(label == parts[1] for label, _ in branches_of(stage, box))
+
+
 def target_inventory(stage):
     """Every target string of `stage`, in source order: each builder box,
     then, line by line, the box's lines that carry `[id=…]` — a node bubble or
-    a line — each followed by the addresses of its operator occurrences; then
-    the stage-wide operator names in first-occurrence order, `evaluate` among
-    them only when the stage authors exactly one occurrence; then `evaluate`
-    where rule (g) admits the boundary representation; then the authored
-    functions. A line without an id is not listed (its address is
+    a line — each followed by the addresses of its operator occurrences, then
+    the written addresses of the builder's Evaluation (`evaluation_addresses`);
+    then the stage-wide operator names in first-occurrence order, `evaluate`
+    among them only when the stage authors exactly one occurrence; then the
+    authored functions. A line without an id is not listed (its address is
     positional), nor is the `_builder` spelling."""
     require_stage(stage)
     inventory = tuple(_TargetInventory(stage).inventory)
@@ -253,6 +315,40 @@ def _owner_address(record):
     return record.address.rpartition(".")[0]
 
 
+def evaluation_addresses(stage, box) -> tuple:
+    """The written addresses of the Evaluation of the builder `box`, the
+    operation that closes it (AMD-MB-002 §3): `<block-id>.evaluate` for the
+    policy builder, the builder that writes a control, whose Evaluation
+    stores the policy function; `<block-id>.evaluate.value` for a backward
+    value builder, the builder that writes a value, followed by
+    `<block-id>.evaluate.marginal` where a derivative line stands at it
+    (`derivative_lines`); none for a forward builder, whose methods realize
+    its law and stand on the builder."""
+    if _writes_role(stage, box, (VALUE,)):
+        marginal = (f"{box.name}.{EVALUATE}.{MARGINAL}",) if derivative_lines(stage, box) else ()
+        return (f"{box.name}.{EVALUATE}.{VALUE_WORD}",) + marginal
+    if _writes_role(stage, box, (CONTROL,)):
+        return (f"{box.name}.{EVALUATE}",)
+    return ()
+
+
+def derivative_lines(stage, box) -> tuple:
+    """The addresses of the derivative lines of the builder `box`, in the
+    order of its lines: each line that states a derivative of the value the
+    builder writes, `D_{m_d}V = 𝑑𝑢(c)`, written in the stage file or added by
+    a marginal block bound with `!marginals` (AMD-MB-001 §4.3). A `!doc` line
+    and a property of a line state nothing and are left out."""
+    lines = lines_of(stage, box)
+    return tuple(
+        record.address
+        for _, record in lines
+        if record.role != DOC
+        and record.core is not None
+        and not is_property(lines, record)
+        and stated_derivative(record.core) is not None
+    )
+
+
 # --- resolution by rule ---
 
 # The suffix of the spelling `<block-id>_builder` of a forward block's
@@ -260,8 +356,18 @@ def _owner_address(record):
 BUILDER_SUFFIX = "_builder"
 
 
-# The boundary-representation spelling, a target name with a rule of its own.
+# The name of the operator `evaluate`: alone, the authored occurrence of rule
+# (g); after a block id, the Evaluation of that builder, rule (i).
 EVALUATE = "evaluate"
+
+# The words written after `<block-id>.evaluate` for a backward value builder:
+# the value function it writes and the derivative of that value a derivative
+# line states (AMD-MB-002 §3).
+VALUE_WORD = "value"
+MARGINAL = "marginal"
+
+# What the Evaluation of the policy builder, `<block-id>.evaluate`, stores.
+POLICY_FUNCTION = "policy"
 
 
 def _resolve_name(stage, name):
@@ -311,18 +417,65 @@ def _resolve_name(stage, name):
         found.append(
             (f"the {len(occurrences)} occurrence(s) of the operator {name!r}", occurrences)
         )
-    if name == EVALUATE and not occurrences:
-        found.append(("the boundary representation `evaluate`", None))
     if len(found) > 1:
         _refuse_two_places(stage, name, [what for what, _ in found])
+    if not found and name == EVALUATE:
+        _refuse_evaluate_without_occurrence(stage, name)
     if not found:
         _refuse_unauthored_name(stage, name)
     if name == EVALUATE and len(occurrences) > 1:
         _refuse_several_evaluate(stage, name, occurrences)
     _, place = found[0]
-    if place is None:
-        return _resolve_value_representation(stage, name)
     return place
+
+
+def _resolve_evaluation(stage, target, block_id, word):
+    """Rule (i): the Evaluation of the builder `block_id`, named by what it
+    evaluates, `word` being the word written after `evaluate` or None, as
+    `("evaluation", box, what)`; a form that names what the builder does not
+    write is refused naming the written addresses the builder has."""
+    box = block_box(stage, target, block_id)
+    written = evaluation_addresses(stage, box)
+    if target in written:
+        return ("evaluation", box, word or POLICY_FUNCTION)
+    named = " or ".join(f"`on: {address}`" for address in written)
+    if not written and _is_transition(stage, box):
+        explanation = (
+            f"names an Evaluation of the forward builder {box.name!r}, which closes with no "
+            f"Evaluation, since it is the push-forward of a measure through its law of motion; "
+            f"a method of the law of motion, `!deterministic`, `!monte-carlo`, `!histogram` or "
+            f"`!identity`, stands on the builder, `on: {box.name}`"
+        )
+    elif not written:
+        explanation = (
+            f"names the Evaluation of {box.name!r}, {_what_block_is(stage, box)}, which writes "
+            f"neither a value nor a policy and has no Evaluation a representation is attached to"
+        )
+    elif word is not None and word not in (VALUE_WORD, MARGINAL):
+        explanation = (
+            f"names the Evaluation of {box.name!r} by the word {word!r}, but the word after "
+            f"`evaluate` must be `{VALUE_WORD}` or `{MARGINAL}`; the Evaluation of "
+            f"{box.name!r} is written {named}"
+        )
+    elif _writes_role(stage, box, (CONTROL,)):
+        what = "a value" if word == VALUE_WORD else "the stated derivative of a value"
+        explanation = (
+            f"names {what} at the Evaluation of the policy builder {box.name!r}, which writes "
+            f"the policy and neither a value nor its derivative; its Evaluation is written "
+            f"{named}"
+        )
+    elif word is None:
+        explanation = (
+            f"names the Evaluation of the backward value builder {box.name!r} without the word "
+            f"that says what it evaluates; write {named}"
+        )
+    else:
+        explanation = (
+            f"names the stated derivative of the value the builder {box.name!r} writes, and no "
+            f"derivative line stands at that builder, in the stage file or in a marginal block "
+            f"bound on it with `!marginals`; the value's representation is written {named}"
+        )
+    _refuse(stage, target, RULE_I, explanation)
 
 
 def _what_block_is(stage, box) -> str:
@@ -346,11 +499,42 @@ _OPERATOR_IS = {
 }
 
 
+def _refuse_evaluate_without_occurrence(stage, name) -> None:
+    """Rule (g) for a stage that authors no `evaluate` occurrence: the bare
+    name names no place, and the refusal names the written address of the
+    Evaluation at which the value the stage's backward builder from the
+    continuation perch to the decision perch writes is represented, or of
+    each backward value builder's value where the stage has not exactly one
+    such builder (AMD-MB-002 §4)."""
+    writing = backward_builders_to_decision(stage)
+    if len(writing) != 1:
+        writing = tuple(box for box in blocks_of(stage) if _writes_role(stage, box, (VALUE,)))
+    written = [f"`on: {box.name}.{EVALUATE}.{VALUE_WORD}`" for box in writing]
+    if len(writing) == 1:
+        where = (
+            f"the value the builder {writing[0].name!r} writes is represented at its "
+            f"Evaluation, {written[0]}"
+        )
+    elif writing:
+        where = (
+            "the value a backward builder writes is represented at its Evaluation, "
+            f"{' or '.join(written)}"
+        )
+    else:
+        where = "the stage has no backward builder that writes a value"
+    _refuse(
+        stage,
+        name,
+        RULE_G,
+        f"names no place, since the stage authors no `evaluate` occurrence, and {where}",
+    )
+
+
 def _refuse_unauthored_name(stage, name) -> None:
     """The refusal of a one-part target that reaches nothing: an operator
     that no statement records — one written only in a `!doc` line or in a
     top-level definition, or nowhere — or a name that is neither a builder
-    nor an operator nor `evaluate`."""
+    nor an operator."""
     head = "E" if name.startswith("E_") else name
     if head in OPERATOR_VOCABULARY:
         explanation = f"names {_OPERATOR_IS[head]}"
@@ -387,10 +571,7 @@ def _refuse_unauthored_name(stage, name) -> None:
         stage,
         name,
         RULE_A,
-        (
-            "names no builder of the stage, no operator a statement of it records, "
-            "and not its boundary representation"
-        ),
+        "names no builder of the stage and no operator a statement of it records",
     )
 
 
@@ -496,62 +677,6 @@ def _refuse_several_evaluate(stage, name, occurrences) -> None:
     )
 
 
-def _resolve_value_representation(stage, target):
-    """Rule (g) for a stage that authors no `evaluate` occurrence."""
-    places = _TargetInventory(stage)
-    kind, *rest = places.boundary
-    if kind == "implicit":
-        implicit = [
-            (box.name, record)
-            for box in blocks_of(stage)
-            for _, record, occurrence in _occurrences_of_box(stage, box)
-            if is_implicit_solve(occurrence)
-        ]
-        named = "; ".join(
-            f"{record.address} (`{_source(stage, record)}`)" for _, record in implicit
-        )
-        holders = ", ".join(
-            f"`on: {name}`" for name in dict.fromkeys(name for name, _ in implicit)
-        )
-        representation = [box.name for box in backward_builders_to_decision(stage)]
-        value_lines = [
-            address for address in places.lines if address.split(".")[0] in representation
-        ]
-        _refuse(
-            stage,
-            target,
-            RULE_G,
-            (
-                f"names no authored occurrence, and the stage has the implicit "
-                f"statement {named}: the representation of that policy is a method at "
-                f"the Evaluation of its block ({holders}), `!egm` among them where the "
-                f"block writes the grid line, and the representation of the value "
-                f"function at the decision perch is named by the lines of the "
-                f"backward builder"
-                + (f" ({', '.join(value_lines)})" if value_lines else "")
-                + " (the consequence for a stage with an implicit "
-                "statement; D07)"
-            ),
-        )
-    if kind == "builder":
-        return (rest[0], ValueRepresentation(rest[0].name))
-    if not rest[0]:
-        _refuse(
-            stage,
-            target,
-            RULE_G,
-            (
-                "names no authored occurrence, and the stage has no backward "
-                "builder from the continuation perch to the decision perch that "
-                "writes a value field, whose boundary representation `evaluate` "
-                "would name"
-            ),
-        )
-    _refuse_two_places(
-        stage, target, [f"the boundary representation of {box.name!r}" for box in rest[0]]
-    )
-
-
 def _resolve_line(stage, target, block_id, statement_id):
     """Rules (b) and (c): the node bubble, or the line with the box that
     holds it."""
@@ -565,11 +690,14 @@ def _resolve_line(stage, target, block_id, statement_id):
 
 
 def _resolve_occurrence(stage, target, block_id, statement_id, operator):
-    """Rule (e): the one occurrence of `operator` in the named line; a line
-    with no occurrence of it is refused naming where a method attaches and,
-    for a `!doc` line, the block's defining statements. A target that spells
-    the address of a property, `policy.optimality.euler`, is refused naming
-    the line the property is attached to."""
+    """Rule (e): every occurrence of `operator` in the named line, each as
+    `(holder, Line, OperatorOccurrence)` in the line's order, as rule (d)
+    answers for the stage; a line that holds one head twice,
+    `D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]`, is one address that
+    governs both. A line with no occurrence of it is refused naming where a
+    method attaches and, for a `!doc` line, the block's defining statements.
+    A target that spells the address of a property, `policy.optimality.euler`,
+    is refused naming the line the property is attached to."""
     box = block_box(stage, target, block_id)
     if statement_id.isdigit():
         _refuse_positional(stage, target, box, int(statement_id))
@@ -590,20 +718,22 @@ def _resolve_occurrence(stage, target, block_id, statement_id, operator):
                 ),
             )
     holder, record = _line(stage, target, box, f"{block_id}.{statement_id}")
-    hits = [o for o in record.operators if o.stage_wide_name == operator]
-    if len(hits) == 1:
-        return (holder, record, hits[0])
-    if len(hits) > 1:
-        positions = " and ".join(f"{o.position!r}" for o in hits)
+    hits = tuple((holder, record, o) for o in record.operators if o.stage_wide_name == operator)
+    if hits:
+        return hits
+    written_here = evaluation_addresses(stage, box)
+    if operator == EVALUATE and written_here:
+        # the policy builder and a backward value builder close with an
+        # Evaluation, which the methods file names by the builder's id and
+        # not by a line's (AMD-MB-002 §3)
         _refuse(
             stage,
             target,
             RULE_E,
             (
-                f"reaches two occurrences of {operator!r} in the line "
-                f"`{_source(stage, record)}`, at the positions {positions}; an occurrence "
-                f"address names one occurrence per line, and the stage-wide name "
-                f"{operator!r} governs both"
+                f"names an `evaluate` occurrence in `{_source(stage, record)}`, which carries "
+                f"none; the Evaluation of the builder {box.name!r}, where a representation is "
+                f"attached, is written {' or '.join(f'`on: {a}`' for a in written_here)}"
             ),
         )
     if not record.operators:
@@ -615,18 +745,27 @@ def _resolve_occurrence(stage, target, block_id, statement_id, operator):
             what = "a `!node` line, which carries no operator occurrence"
         else:
             what = "an alias, which carries no operator occurrence"
-        names_this = (
-            f" — `on: {record.address}` names this one"
-            if record.role in (OUTPUT_LINE, NODE)
-            else ""
-        )
+        names_this = f" — `on: {record.address}` names this one" if record.role == NODE else ""
         defining = f"; {_defining_statements(stage, box)}" if record.role == DOC else ""
         node_clause = f", to a node box{names_this}" if record.role == NODE else ", to a node box"
-        boundary_clause = (
-            f" (the representation of the field it defines{names_this})"
-            if record.role == OUTPUT_LINE
-            else " (the representation of the field it defines)"
-        )
+        # the representation of a field a builder writes is written at the
+        # builder's Evaluation; a value line's own address, which binds there
+        # too, is not offered (AMD-MB-002 §3)
+        if written_here:
+            representation_clause = (
+                f" (the representation of the field it defines, written at the builder's "
+                f"Evaluation, `on: {written_here[0]}`"
+            )
+        else:
+            representation_clause = " (the representation of the field it defines"
+        if record.role == OUTPUT_LINE and record.address in derivative_lines(stage, box):
+            # a derivative line defines no field; the derivative it states is
+            # represented at the builder's Evaluation (AMD-MB-002 §4)
+            representation_clause += (
+                f"; the derivative this line states is represented at "
+                f"`on: {box.name}.{EVALUATE}.{MARGINAL}`"
+            )
+        representation_clause += ")"
         _refuse(
             stage,
             target,
@@ -634,10 +773,12 @@ def _resolve_occurrence(stage, target, block_id, statement_id, operator):
             (
                 f"names an operator in `{_source(stage, record)}`, {what}; a method attaches "
                 f"to an operator occurrence, to the builder{node_clause}, to an "
-                f"output statement with no operator occurrence{boundary_clause}, "
+                f"output statement with no operator occurrence{representation_clause}, "
                 f"to one occurrence of a named line that carries it, by "
-                f"`<block-id>.<statement-id>.<operator>`, or to the boundary "
-                f"representation{defining}"
+                f"`<block-id>.<statement-id>.<operator>`, or to the Evaluation of a "
+                f"builder, written `<block-id>.evaluate` for the policy builder and "
+                f"`<block-id>.evaluate.value` or `<block-id>.evaluate.marginal` for a "
+                f"backward value builder{defining}"
             ),
         )
     others = ", ".join(f"{record.address}.{o.stage_wide_name}" for o in record.operators)
@@ -787,18 +928,15 @@ class _TargetInventory:
     """The places of one stage, from one walk in source order: `inventory`,
     the flat tuple `target_inventory` returns; and the same places grouped
     for a message — `builders`, `nodes`, `lines` (the named lines that are
-    not nodes), `operators` (stage-wide name -> the addresses of its
-    occurrences, a line without an id shown by its position), `implicit`
-    (the addresses of the implicit statements), and `boundary`, the outcome
-    of rule (g) for a bare `evaluate`: `("occurrences", addresses)` when the
-    stage authors one or more, `("implicit", addresses)` when it has an
-    implicit statement and no authored occurrence, `("builder", box)` when one
-    backward builder to the decision perch carries the representation, and
-    `("none", boxes)` otherwise, `boxes` the zero or several candidates. A
-    property of a line is no place, and the walk passes over it."""
+    not nodes), `evaluations` (the written addresses of the builders'
+    Evaluations, rule (i)), and `operators` (stage-wide name -> the addresses
+    of its occurrences, a line without an id shown by its position), whose
+    entry `evaluate`, where the stage authors one or more `evaluate`
+    occurrences, is the outcome of rule (g) for the bare name. A property of
+    a line is no place, and the walk passes over it."""
 
     def __init__(self, stage):
-        self.builders, self.nodes, self.lines, self.implicit = [], [], [], []
+        self.builders, self.nodes, self.lines, self.evaluations = [], [], [], []
         self.operators = {}
         inventory = []
         for box in blocks_of(stage):
@@ -814,27 +952,22 @@ class _TargetInventory:
                     (self.nodes if record.role == NODE else self.lines).append(record.address)
                 for occurrence in record.operators:
                     address = _occurrence_address(record, occurrence)
+                    addresses = self.operators.setdefault(occurrence.stage_wide_name, [])
+                    # two occurrences of one head in one line are one address (rule (e))
+                    if address in addresses:
+                        continue
                     if named:
                         inventory.append(address)
-                    self.operators.setdefault(occurrence.stage_wide_name, []).append(address)
-                    if is_implicit_solve(occurrence):
-                        self.implicit.append(record.address)
+                    addresses.append(address)
+            # the Evaluation of the builder, after its lines (AMD-MB-002 §4)
+            written = evaluation_addresses(stage, box)
+            inventory.extend(written)
+            self.evaluations.extend(written)
         inventory.extend(
             name
             for name, addresses in self.operators.items()
             if not (name == EVALUATE and len(addresses) > 1)
         )
-        if EVALUATE in self.operators:
-            self.boundary = ("occurrences", tuple(self.operators[EVALUATE]))
-        elif self.implicit:
-            self.boundary = ("implicit", tuple(self.implicit))
-        else:
-            candidates = backward_builders_to_decision(stage)
-            if len(candidates) == 1:
-                self.boundary = ("builder", candidates[0])
-                inventory.append(EVALUATE)
-            else:
-                self.boundary = ("none", candidates)
         self.inventory = tuple(inventory)
 
     def describe(self, stage_name) -> str:
@@ -849,39 +982,26 @@ class _TargetInventory:
             )
             or "none"
         )
-        kind, *rest = self.boundary
-        if kind == "occurrences" and len(rest[0]) == 1:
-            evaluate = f"the authored occurrence {rest[0][0]}"
-        elif kind == "occurrences":
+        occurrences = self.operators.get(EVALUATE, ())
+        if len(occurrences) == 1:
+            evaluate = f"the authored occurrence {occurrences[0]}"
+        elif occurrences:
             evaluate = (
-                f"not a target here: the stage authors {len(rest[0])} "
-                f"`evaluate` occurrences ({listed(rest[0])}), each named by "
+                f"not a target here: the stage authors {len(occurrences)} "
+                f"`evaluate` occurrences ({listed(occurrences)}), each named by "
                 f"its own address"
             )
-        elif kind == "implicit":
-            evaluate = (
-                f"not a target here, since the stage has the implicit statement {listed(rest[0])}"
-            )
-        elif kind == "builder":
-            evaluate = f"the boundary representation of {rest[0].name}"
-        elif not rest[0]:
-            evaluate = (
-                "not a target here: no backward builder from the "
-                "continuation to the decision perch writes a value field"
-            )
         else:
-            evaluate = (
-                f"not a target here: {len(rest[0])} backward builders to "
-                f"the decision perch ({listed(b.name for b in rest[0])})"
-            )
+            evaluate = "not a target here, since the stage authors no `evaluate` occurrence"
         parts = [f"builders: {listed(self.builders)}"]
         if self.nodes:
             parts.append(f"node boxes: {listed(self.nodes)}")
         parts.extend(
             [
                 f"named lines: {listed(self.lines)}",
+                f"Evaluations of the builders: {listed(self.evaluations)}",
                 f"operators: {operators}",
-                f"`evaluate`: {evaluate}",
+                f"`evaluate` alone: {evaluate}",
             ]
         )
         return f"The places of stage {stage_name!r} are — " + "; ".join(parts) + "."
@@ -942,11 +1062,11 @@ def _writes_role(stage, box, roles) -> bool:
 
 def backward_builders_to_decision(stage) -> tuple:
     """The builders from the continuation perch to the decision perch that
-    write a value or marginal-value field: the backward decision builder,
-    whose outputs carry the decision-perch value function that `on: evaluate`
-    represents and which a handler for the whole builder realizes
-    (`cntn_to_dcsn`). The policy block of a consumption stage has the same two
-    perches but writes a control, not a value."""
+    write a value field: the backward decision builder, whose outputs carry
+    the decision-perch value function, represented at
+    `<block-id>.evaluate.value`, and which a handler for the whole builder
+    realizes (`cntn_to_dcsn`). The policy block of a consumption stage has the
+    same two perches but writes a control, not a value."""
     ports = header_wire_sorts(stage)
     return tuple(
         box

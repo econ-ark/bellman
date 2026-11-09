@@ -287,8 +287,8 @@ following about each.
    as it stands after elaboration or after one of its three bindings, the
    [[calibration]], the methods and the settings. Methodization precedes
    configuration, because the methods name the settings, and calibration
-   may come at any point; each binding returns a new stage version and
-   changes nothing of the version it is given
+   may come at any point; each binding adds to the stage occurrence it is
+   called on and returns that stage
    ([The binding verbs](../Bellman-Sym/API/stage/09-binding-verbs.md) §§1 and 3;
    [[specified_stage|specified stage]]).
 2. **Statement order within a block.** The boxes of a builder are emitted in

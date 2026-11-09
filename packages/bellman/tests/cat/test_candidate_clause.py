@@ -68,7 +68,7 @@ OVER_THE_ADMITTED_PAIRS = re.compile(r"∀a∈Xa,(∀)?x∈𝑐≻\(a\):\(?f\(a\
 # the moved item 1 of AMD-SG-035: a representation of the policy at the
 # Evaluation that closes the policy builder, which binds on every spelling and
 # leaves every rule as it was
-LINEAR = [{"on": "policy", "method": "!Linear"}]
+LINEAR = [{"on": "policy.evaluate", "method": "!Linear"}]
 # the rule of `euler:Aggregation` on the card of `cons_kt` with its region
 # note, spelling A's clause read at the point
 CONS_KT_RULE = (

@@ -3,7 +3,9 @@ stage: renter_housing
 # The FUES solver searches over the rental quantities at every point of the
 # cash grid, reading the renter's consumption value at the cash each quantity
 # leaves by linear interpolation, and holds the resulting decision value and
-# its derivative on the cash grid.
+# its derivative on the cash grid. The cash grid is written by its kind, the
+# tag !Cartesian on the setting grid, with its order and bounds beside it, in
+# the settings of the two representations, whose basis is !Linear.
 methods:
   - on: policy
     method: !discrete-choice
@@ -14,15 +16,17 @@ methods:
     method: !marginals
     block: ../../methods/marginals_renter_housing.bl
 
-  - on: cntn_to_dcsn.value
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [w_points]
       bounds: [[w_min, w_max]]
 
-  - on: cntn_to_dcsn.marginal
+  - on: cntn_to_dcsn.evaluate.marginal
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [w_points]
       bounds: [[w_min, w_max]]
 

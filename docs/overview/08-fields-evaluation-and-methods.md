@@ -64,16 +64,17 @@ stage: sa_savings
 methods:
   - on: E_Ψ
     method: !gauss-hermite
-    options:
+    settings:
       n_nodes: [n_Ψ_nodes]
   - on: cntn_to_dcsn.risk_ce
-    method: !Cartesian
-    options:
+    method: !Linear
+    settings:
+      grid: !Cartesian
       orders: {m_d: n_m}
       bounds: {m_d: [m_min, m_max]}
 ```
 
-A method that computes an operation stands on the operator. Gauss–Hermite quadrature is a rule for one integral against a normal or lognormal distribution, and `E_Ψ` names the expectation. A method that stores a function stands where a function has a name: `!Cartesian` holds $CE$ by its values on a grid, and `cntn_to_dcsn.risk_ce` names the line that returns $CE$. A method of one kind is refused at a place of the other. Quadrature says how the expectation inside the line is computed and says nothing about how $CE$ is held, so the package refuses it on the line:
+A method that computes an operation stands on the operator. Gauss–Hermite quadrature is a rule for one integral against a normal or lognormal distribution, and `E_Ψ` names the expectation. A method that stores a function stands where a function has a name: `!Linear` holds $CE$ by its values on a grid and reads it between them by linear interpolation, and `cntn_to_dcsn.risk_ce` names the line that returns $CE$. The setting `grid` names the grid by its kind, `!Cartesian`, a product of one grid for each coordinate, and the grid's order and bounds stand beside it. A method of one kind is refused at a place of the other. Quadrature says how the expectation inside the line is computed and says nothing about how $CE$ is held, so the package refuses it on the line:
 
 ```text
 !gauss-hermite does not admit target kind node; method-attachment admits operator E
@@ -81,7 +82,7 @@ A method that computes an operation stands on the operator. Gauss–Hermite quad
 
 An option a method requires is written beside it, and `configure` refuses a value outside its type.
 
-The places a stage admits are its own answer, `stage.places()`, with the kind of each. A method that stores a function admits the evaluated fields, a declared function and the stored form of a builder's output; a method that computes an operation admits the operator. A function that the file does not name, such as $V_\succ \circ g_\succ$, is no place at all: an author who wants it stored writes it on a line of its own and marks the line `!node`.
+The places a stage admits are its own answer, `stage.places()`, with the kind of each. A method that stores a function admits the evaluated fields, a declared function and the stored form of a builder's output, at the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that closes the builder, which the methods file names by what it stores: `policy.evaluate` for the policy function, and `cntn_to_dcsn.evaluate.value` and `cntn_to_dcsn.evaluate.marginal` for a value function and the derivative of it that a derivative line states. A method that computes an operation admits the operator. A function that the file does not name, such as $V_\succ \circ g_\succ$, is no place at all: an author who wants it stored writes it on a line of its own and marks the line `!node`.
 
 ## References
 

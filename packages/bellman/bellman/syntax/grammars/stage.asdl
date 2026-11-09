@@ -56,3 +56,31 @@ cond  = Rel(expr left, relop op, expr right)
       | Between(expr lower, relop lo, expr middle, relop hi, expr upper)
                                               -- a two-sided bound, 0 <= c_p <= w_d
 relop = Lt | Le | Eq | Ge | Gt
+
+-- The typing entries of a methods file (methods as types, 4 November 2026):
+-- a method and a grid are classifier components of an operator's signature,
+-- each assigned by one typing entry whose subject is the path of the
+-- component; the handler is a binding beside the term, no classifier. The
+-- word with its keyword arguments is the core's `word` (dynsym_new.asdl).
+
+subject    += Path(segment* segments)         -- policy.evaluate[V[<]].method
+segment     = Segment(identifier name, selector* selectors)
+                                              -- evaluate[V], evaluate[D_{k}V[<]]
+selector   += Term(expr at)                   -- a selector that is a term, written
+                                              -- in the subject of a typing entry alone
+typer      += Handler(subject subject, string program)
+                                              -- policy.handler : "cons-port:egm"
+classifier += Method(word m)                  -- policy.method : !egm(tol=tol_v)
+classifier += Grid(grid g)                    -- policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+
+grid    = Cartesian(factor* factors)          -- one factor per coordinate, keyed by
+                                              -- its name; Smolyak is the later kind
+factor  = Spaced(identifier coordinate, argument lower, argument upper,
+                 argument count, word? spacing)
+                                              -- a=(a_min, a_max, n_a, !expmult(nest=grid_phi))
+        | Listed(identifier coordinate, identifier nodes)
+                                              -- m=M_nodes, a declared node set, or ν=E_ν,
+                                              -- the expectation operator whose quadrature
+                                              -- nodes the coordinate takes
+        | Feasible(identifier coordinate, identifier set, argument count)
+                                              -- c=(Γ_c, n_c), a control on its feasible set

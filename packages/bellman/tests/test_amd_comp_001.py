@@ -516,7 +516,8 @@ def test_item_6_one_reading_selects_once_and_constructs_each_text_once(tmp_path,
     monkeypatch.setattr(
         trellis_module,
         "construct_stage",
-        lambda text, origin: constructions.append(origin) or construct(text, origin),
+        lambda text, origin, additions=(): constructions.append(origin)
+        or construct(text, origin, additions),
     )
     registry = written(tmp_path / "once", REGISTRY)
     syntactic = load_recipe(registry, "spec.yml")

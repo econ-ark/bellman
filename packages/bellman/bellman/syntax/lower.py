@@ -14,10 +14,24 @@ of `terms.py`, which `gen_types.py` generates from
 `unlowered_parse_nodes` lists any parse-tree node left inside a term, none
 when the lowering is total.
 
-A form the grammar admits and the lowering reads no term from — a computed
+A typing entry types a component of an operator by the path of the
+component, `policy.method : !egm(tol=tol_v)`, `evaluate[V[<]].grid :
+!Cartesian(k=(k_min, k_max, n_k))`, inside a block header or at file level,
+and a handler binding names the program that realizes the operator,
+`policy.handler : "cons-port:egm"`. Each lowers to one `Typer`, or to one
+`Declare` at file level: a `Declaration` whose subject is the `Path` of
+segments the entry writes and whose one classifier is the `Method` or the
+`Grid` the last segment of the path names, or a `Handler` holding the path
+and the program. The word of the method is kept as written, with its keyword
+arguments, for the catalogue to judge; the grid's kind is `Cartesian` and
+each keyword argument is one factor of it, read by its shape (`_factor`).
+
+A form the grammar admits and the lowering reads no term from (a computed
 selector, a selection where a name is written, a comprehension binder typed by
 a role word, a condition tail with no declared set, two items under one
-address, a perch mark after a selector, a word no vocabulary holds — is
+address, a perch mark after a selector, a word no vocabulary holds, a path
+whose last segment names no component, a grid of no kind of the language or
+with a factor of no shape) is
 refused by `_refusal`: a `ConstructionError` under the rule `syntax`, at the
 line and column of the item being lowered, whose sentence quotes the author's
 text and whose `advice` says what to write, so that the author reads the
@@ -64,9 +78,11 @@ def parse_with_spans(text, filename=None):
     table of its authored items, each span naming `filename` (None for text
     with no file). After the items, the table holds the place of each side
     of a block header, each field the side lists and each component of that
-    field's typing (`_component_spans`). The parse tree and the identity
-    records from which the table was built are discarded on return; nothing
-    is stored on the term."""
+    field's typing, and the place of each typing entry and handler binding
+    of a header, under the block's address and the subject as written,
+    `policy.evaluate.method` (`_component_spans`). The parse tree and the
+    identity records from which the table was built are discarded on
+    return; nothing is stored on the term."""
     tree = build_parser().parse(text)
     lowering = _ToAstWithPositions(filename)
     term = lowering.transform(tree)
@@ -245,7 +261,9 @@ def _component_spans(term, position_of, file):
     the perch mark the term holds (`_written_name`); and for each component
     of that typing, `<field>.domain` for its set, `<field>.role` for its
     role word and `<field>.perch` for its perch word, the first where a kind
-    is written twice. A tuple of fields inside a side has no entries.
+    is written twice; and for each typing entry and handler binding of the
+    header, `<block>.<subject as written>`, the entry from its subject to
+    the end of its type. A tuple of fields inside a side has no entries.
     `position_of` answers the meta or the token the lowering kept for a
     part, None for a part it kept none for, which then has no entry."""
 
@@ -262,7 +280,18 @@ def _component_spans(term, position_of, file):
         if not isinstance(item, Block):
             continue
         for entry in item.tag.entries:
-            if not (isinstance(entry, Typer) and isinstance(entry.typing, Signature)):
+            if not isinstance(entry, Typer):
+                continue
+            # a typing entry or a handler binding of the header, under the
+            # block's address and its subject as written, `policy.method`
+            if isinstance(entry.typing, Handler) or (
+                isinstance(entry.typing, Declaration) and isinstance(entry.typing.subject, Path)
+            ):
+                place = position_of(entry)
+                if place is not None:
+                    yield f"{address}.{to_source(entry.typing.subject)}", span(place)
+                continue
+            if not isinstance(entry.typing, Signature):
                 continue
             for side, subject in (("in", entry.typing.source), ("out", entry.typing.target)):
                 side_address = f"{address}.{side}"
@@ -330,12 +359,30 @@ class _Condition(NamedTuple):
     bound: object
 
 
-@dataclass(frozen=True)
-class _Word:
+class _Word(NamedTuple):
     """A `!`-marked word of a typing, as its token, whose line and column a
-    refusal of the word names."""
+    refusal of the word names, with the `Keyword` arguments written after
+    it, `!egm(tol=tol_v)`."""
 
     token: object
+    arguments: tuple = ()
+
+
+class _Typing(NamedTuple):
+    """A typing as written, `: ℝ @ !vlu`: its components, each a `_Word` or
+    a set expression, which the consumer of the typing reads, as
+    classifiers of a field through the vocabulary (`ToAst._classifiers`) or
+    as the method or the grid of a typing entry (`ToAst._typer`)."""
+
+    components: tuple
+
+
+class _Path(NamedTuple):
+    """A dotted subject as written, `policy.evaluate[V[<]].method`: its
+    segments, each the head `subject_segment` lowers to, a bare name or the
+    selection `bracketed_name` builds."""
+
+    heads: tuple
 
 
 class ToAst(Transformer):
@@ -400,17 +447,22 @@ class ToAst(Transformer):
         `Declare` keeps as `annot` exactly as a `Statement` keeps a line's:
         the description an author writes on a parameter or a shock,
         `β : (0,1) :: ["discount factor"]`, is authored information the graph
-        does not determine and is retained."""
-        subject = self._subject(children[0])
-        classifiers = []
+        does not determine and is retained. A declaration whose subject is a
+        dotted path is a typing entry at file level, `cntn_to_dcsn.evaluate.grid
+        : !Cartesian(…)`, routed by its path to the operator it names."""
+        head, extras = children[0], children[1:]
+        typing = next((extra for extra in extras if isinstance(extra, _Typing)), None)
+        if isinstance(head, _Path):
+            entry = self._typer(self._path_term(head), typing, extras)
+            return Declare(entry.typing, self._trailing_annotation(children))
+        # the typing is read before the subject, so that a word no vocabulary
+        # holds is refused before a subject that names no field
+        classifiers = list(self._classifiers(typing)) if typing is not None else []
+        subject = self._subject(head)
         value = None
         conds = []
-        for extra in children[1:]:
-            if isinstance(extra, Token):
-                continue  # the trailing :: annotation, read below
-            if isinstance(extra, list):
-                classifiers.extend(extra)  # the typing's components
-            elif isinstance(extra, _DeclaredValue):
+        for extra in extras:
+            if isinstance(extra, _DeclaredValue):
                 value = extra.value
             elif isinstance(extra, _ConditionTail):
                 conds = extra.conditions
@@ -428,7 +480,7 @@ class ToAst(Transformer):
             return Subject((coordinate,))
         name = _selected_name(head)
         raise _refusal(
-            f"the declaration declares `{to_source(head)}`, a selection from {name}; a "
+            f"the declaration declares `{_written(head)}`, a selection from {name}; a "
             f"declaration names its parameter, shock or field by its name",
             f"declare the name, `{name} : …`, and select from it where it is used",
         )
@@ -450,7 +502,7 @@ class ToAst(Transformer):
         its classifiers, or a tuple of coordinates as a `Group`; a
         selection is refused."""
         head = children[0]
-        classifiers = children[1] if len(children) > 1 else []
+        classifiers = self._classifiers(children[1]) if len(children) > 1 else []
         coordinate = _coordinate(head, classifiers)
         if coordinate is not None:
             return coordinate
@@ -458,7 +510,7 @@ class ToAst(Transformer):
             return Group(head, tuple(classifiers))
         name = _selected_name(head)
         raise _refusal(
-            f"a side of a block header lists `{to_source(head)}`, a selection from {name}; "
+            f"a side of a block header lists `{_written(head)}`, a selection from {name}; "
             f"a side lists each field by its name",
             f"list the field by its name, `{name}`, with its perch mark where it needs one, "
             f"`{name}[>]`",
@@ -490,7 +542,7 @@ class ToAst(Transformer):
         else:
             name = _selected_name(subject)
             raise _refusal(
-                f"the distribution is declared for `{to_source(subject)}`, a selection from "
+                f"the distribution is declared for `{_written(subject)}`, a selection from "
                 f"{name}; a `~` line names its shocks by name",
                 f"write the shock's name, `{name} ~ …`, or the names of shocks drawn "
                 f"jointly as a tuple, `(y, z) ~ …`",
@@ -506,34 +558,25 @@ class ToAst(Transformer):
         return Statement(FuncDef(name, tuple(params), body), note)
 
     def function_parameter(self, children):
-        return Coordinate(children[0], None, tuple(children[1]))
+        return Coordinate(children[0], None, tuple(self._classifiers(children[1])))
 
     def comprehension(self, children):
         """`{c : ℝ₊₊ | c < x}`: the comprehension of a correspondence body,
         its one binder, the set that types it as the base, and the
         conditions in the order written."""
         parts = [c for c in children if not isinstance(c, Token)]
-        name, components, conds = parts[0], parts[1], parts[2:]
+        name, typing, conds = parts[0], parts[1], parts[2:]
+        components = self._classifiers(typing)
         if len(components) != 1 or not isinstance(components[0], Domain):
-            typing = " @ ".join(self._component_text(component) for component in components)
-            written = f"{{{name} : {typing} | {', '.join(to_source(cond) for cond in conds)}}}"
+            written_typing = " @ ".join(_component_text(c) for c in typing.components)
+            written = f"{{{name} : {written_typing} | {', '.join(to_source(cond) for cond in conds)}}}"
             raise _refusal(
-                f"the binder {name} of the set `{written}` is typed by `{typing}`; the binder "
-                f"of a set written by comprehension is typed by one set, with no role or "
+                f"the binder {name} of the set `{written}` is typed by `{written_typing}`; the "
+                f"binder of a set written by comprehension is typed by one set, with no role or "
                 f"perch word",
                 f"type the binder by its set alone, as in `{{{name} : ℝ₊ | …}}`",
             )
         return Comprehension(Subject((Coordinate(name),)), components[0].space, tuple(conds))
-
-    def _component_text(self, component):
-        """One component of a typing as written: a set, or a `!`-marked
-        word."""
-        if isinstance(component, Domain):
-            return to_source(component.space)
-        return next(
-            ("!" + word for word, make in self._VOCAB.items() if make() == component),
-            type(component).__name__,
-        )
 
     def comprehension_condition(self, children):
         return Rel(children[0], RELATION_OF_SYMBOL[str(children[1])](), children[2])
@@ -546,6 +589,8 @@ class ToAst(Transformer):
         return Block(children[0], tuple(children[1:]))
 
     def header(self, children):
+        # the groups a `|` opens are spelling: every entry of every group is
+        # an entry of the one annotation
         return Annotation(tuple(children))
 
     def key_value(self, children):
@@ -557,7 +602,161 @@ class ToAst(Transformer):
         return Typer(Marked(Node())) if text == "!node" else Tag(text)
 
     def bare_tag(self, children):
-        return Tag(children[0])
+        if len(children) == 1:
+            return Tag(children[0])
+        return Tagged(Word(children[0], children[1]))
+
+    def path(self, children):
+        return _Path(tuple(children))
+
+    def typing_entry(self, children):
+        return self._typer(self._path_term(children[0]), children[1])
+
+    def binding(self, children):
+        """A handler binding, `policy.handler : "cons-port:egm"`: the path of
+        the handler component and the program, the quotes removed."""
+        subject = self._path_term(children[0])
+        written = to_source(subject)
+        if subject.segments[-1].name != "handler":
+            raise _refusal(
+                f"the entry `{written} : {children[1]}` binds a quoted string to "
+                f"`{written}`; a quoted string names the program of the handler component "
+                f"alone, and a method or a grid is typed by a !-word",
+                f"write `{written}.handler : {children[1]}` for a handler, or a !-word, "
+                f"`{written} : !<word>`",
+            )
+        return Typer(Handler(subject, str(children[1]).strip("\"'")))
+
+    def file_binding(self, children):
+        return Declare(children[0].typing, self._trailing_annotation(children))
+
+    # --- the typing entries, and the terms their subjects and types lower to ---
+
+    def _path_term(self, head):
+        """The `Path` a subject as written names: the segments of a `_Path`,
+        or the one segment of a bare head, each a name with its selectors,
+        `Key` for a name, `Pos` for a number and `Term` for a term; a perch
+        mark is refused, since a path names an operator's component and a
+        field is named inside a selector, `evaluate[V[<]]`."""
+        heads = head.heads if isinstance(head, _Path) else (head,)
+        return Path(tuple(self._segment(each, heads) for each in heads))
+
+    def _segment(self, head, heads):
+        selectors = []
+        while isinstance(head, Select):
+            selectors.insert(0, head.sel)
+            head = head.family
+        if isinstance(head, str):
+            return Segment(head, tuple(selectors))
+        if isinstance(head, Sym) and isinstance(head.symbol, Constant):
+            return Segment(head.symbol.name, tuple(selectors))
+        written = ".".join(_written(each) for each in heads)
+        raise _refusal(
+            f"the path `{written}` carries the perch mark of `{_written(head)}`; a path names "
+            f"an operator's component by names, and a field with its perch mark is named "
+            f"inside a selector",
+            f"write the field inside the selector of the operator that stores it, "
+            f"`evaluate[{_written(head)}].method`",
+        )
+
+    _COMPONENTS = ("method", "grid")
+
+    def _typer(self, subject, typing, extras=()):
+        """The `Typer` of a typing entry: a `Declaration` of the path with
+        one classifier, the `Method` or the `Grid` that the last segment of
+        the path names and the one `!`-word of the typing supplies."""
+        written = to_source(subject)
+        component = subject.segments[-1].name
+        if any(isinstance(extra, (_DeclaredValue, _ConditionTail)) for extra in extras):
+            raise _refusal(
+                f"the typing entry of `{written}` carries a value or a condition; a typing "
+                f"entry types a component of an operator and takes neither",
+                f"write the entry alone, `{written} : …`",
+            )
+        if component not in self._COMPONENTS:
+            raise _refusal(
+                f"the entry types `{written}`, whose last segment `{component}` names no "
+                f"component of an operator; a typing entry types the method or the grid "
+                f"component, and a handler is bound by a quoted string",
+                f"write `{written}.method : !<word>`, `{written}.grid : !Cartesian(…)` or "
+                f'`{written}.handler : "…"`',
+            )
+        if len(typing.components) != 1 or not isinstance(typing.components[0], _Word):
+            written_typing = " @ ".join(_component_text(c) for c in typing.components)
+            raise _refusal(
+                f"the {component} component `{written}` is typed by `{written_typing}`; a "
+                f"{component} component is typed by one !-word",
+                f"write one word after the colon, `{written} : "
+                + ("!<word>(…)`" if component == "method" else "!Cartesian(…)`"),
+            )
+        word = typing.components[0]
+        name = str(word.token)[1:]
+        if component == "method":
+            classifier = Method(Word(name, word.arguments))
+        elif name != "Cartesian":
+            raise _refusal(
+                f"the grid component `{written}` is typed by `!{name}`, which is no grid "
+                f"kind of the language",
+                f"the grid kind is !Cartesian, `{written} : !Cartesian(a=(a_min, a_max, n_a))`",
+                word.token,
+            )
+        elif not word.arguments:
+            raise _refusal(
+                f"the grid `!Cartesian` of `{written}` names no factor; a grid names one "
+                f"factor per coordinate of the function the place holds",
+                f"write the factors, `{written} : !Cartesian(a=(a_min, a_max, n_a))`",
+                word.token,
+            )
+        else:
+            factors = tuple(self._factor(keyword, written) for keyword in word.arguments)
+            classifier = Grid(Cartesian(factors))
+        return Typer(Declaration(subject, (classifier,), None))
+
+    def _factor(self, keyword, written):
+        """One factor of a grid, read by the shape of its value: a name is
+        the node set or the expectation operator the coordinate takes its
+        nodes from, a pair is a feasible set with a count, a triple is the
+        bounds and the count, a fourth element the spacing word."""
+        coordinate, value = keyword.key, keyword.value
+        shapes = (
+            f"a factor of `{written}` is a triple, `{coordinate}=(lower, upper, count)`, with an "
+            f"optional spacing word, `{coordinate}=(lower, upper, count, !expmult)`, a pair, "
+            f"`{coordinate}=(set, count)`, or a name, `{coordinate}=nodes`"
+        )
+        if isinstance(value, Name):
+            return Listed(coordinate, value.name)
+        if not isinstance(value, Values) or not 2 <= len(value.items) <= 4:
+            raise _refusal(
+                f"the factor `{coordinate}={to_source(value)}` of `{written}` has no shape of a "
+                f"factor",
+                shapes,
+            )
+        items = value.items
+        settings = items[:3] if len(items) > 2 else items[1:]
+        if not all(isinstance(item, (Name, Literal)) for item in settings):
+            raise _refusal(
+                f"the factor `{coordinate}={to_source(value)}` of `{written}` writes a bound or "
+                f"a count that is no name of a setting and no number",
+                shapes,
+            )
+        if len(items) == 2:
+            if not isinstance(items[0], Name):
+                raise _refusal(
+                    f"the factor `{coordinate}={to_source(value)}` of `{written}` names no set "
+                    f"before its count",
+                    f"a control's factor is its feasible set with a count, `{coordinate}=(Γ, n)`",
+                )
+            return Feasible(coordinate, items[0].name, items[1])
+        spacing = None
+        if len(items) == 4:
+            if not isinstance(items[3], Nested):
+                raise _refusal(
+                    f"the factor `{coordinate}={to_source(value)}` of `{written}` writes "
+                    f"`{to_source(items[3])}` as its fourth element, which is no spacing word",
+                    f"a spacing is a !-word, `{coordinate}=(lower, upper, count, !expmult)`",
+                )
+            spacing = items[3].word
+        return Spaced(coordinate, items[0], items[1], items[2], spacing)
 
     def quoted_tag(self, children):
         return Tag(str(children[0]).strip("\"'"))
@@ -577,8 +776,8 @@ class ToAst(Transformer):
         if len(children) == 1 and isinstance(children[0], _Side):
             return children[0]  # the bare single-coordinate form
         coords = [c for c in children if isinstance(c, (Coordinate, Group))]
-        rest = [c for c in children if not isinstance(c, (Coordinate, Group)) and c is not None]
-        types = rest[0] if rest else []
+        rest = [c for c in children if isinstance(c, _Typing)]
+        types = self._classifiers(rest[0]) if rest else []
         return _Side(subject=Subject(tuple(coords)), types=types)
 
     def bare_side(self, children):
@@ -597,8 +796,10 @@ class ToAst(Transformer):
         a >= 0`: a `Complementary` holding the declared multiplier and its
         bound, the trailing annotation kept as a top-level declaration keeps
         it."""
+        classifiers = self._classifiers(
+            next(extra for extra in children[1:] if isinstance(extra, _Typing))
+        )
         subject = self._subject(children[0])
-        classifiers = next(extra for extra in children[1:] if isinstance(extra, list))
         bound = next(extra for extra in children[1:] if isinstance(extra, (Rel, Between)))
         return Declare(
             Complementary(Declaration(subject, tuple(classifiers), None), bound),
@@ -620,29 +821,35 @@ class ToAst(Transformer):
         )
 
     # typing: one colon, then an unordered @-joined conjunction of
-    # components; word-types classify through the vocabulary table
+    # components, kept as written and read by the consumer of the typing:
+    # a field's typing classifies its words through the vocabulary table
+    # (`_classifiers`), a typing entry reads its one word as a method or a
+    # grid (`_typer`)
     def typing(self, children):
         return children[0]
 
     def type(self, children):
-        out = []
-        for c in children:
-            if isinstance(c, _Word):
-                out.append(self._classifier_of_word(c.token))
-            else:
-                out.append(Domain(c))
-        return out
+        return _Typing(tuple(children))
+
+    def _classifiers(self, typing):
+        """The classifiers of a field's typing: each `!`-marked word through
+        the vocabulary table, each set expression as a `Domain`."""
+        return [
+            self._classifier_of_word(c) if isinstance(c, _Word) else Domain(c)
+            for c in typing.components
+        ]
 
     def _classifier_of_word(self, word):
         """The classifier the `!`-marked word names, or a refusal of a word
-        the vocabulary does not hold.
+        the vocabulary does not hold or of a word that carries arguments.
 
-        `word` is the TAGBANG token, so the refusal carries the line and the
-        column of the word itself, which `parse_with_spans` releases and
-        `factory/elaboration.py` writes as the position of the refusal. The
-        sentence written after the marked line stands on the refusal as
+        `word.token` is the TAGBANG token, so the refusal carries the line
+        and the column of the word itself, which `parse_with_spans` releases
+        and `factory/elaboration.py` writes as the position of the refusal.
+        The sentence written after the marked line stands on the refusal as
         `advice`."""
-        name = str(word)[1:]
+        token = word.token
+        name = str(token)[1:]
         if name in RETIRED_ROLE_WORDS:
             raise _refusal(
                 f"the file writes `!{name}` here, a role retired from the language: a "
@@ -651,21 +858,59 @@ class ToAst(Transformer):
                 f"of the value's perch, such as `D_{{m}}V` or `D_{{a}}V[>]` (AMD-MB-001 §4.1)",
                 "remove the field from the header; write the line that defined it as a "
                 "derivative line, `D_{m}V = …`, and read the derivative as the term `D_{a}V[>]`",
-                word,
+                token,
                 rule="marginal-role-retired",
             )
-        try:
-            return self._VOCAB[name]()
-        except KeyError:
+        if name not in self._VOCAB:
             raise _refusal(
                 f"the file writes `!{name}` here, which is no word-type of the language",
                 "the word-types are " + ", ".join("!" + w for w in sorted(self._VOCAB)),
-                word,
-            ) from None
+                token,
+            )
+        if word.arguments:
+            raise _refusal(
+                f"the file writes `!{name}` here with arguments; a role or a perch word "
+                f"takes none",
+                f"write the word alone, `!{name}`",
+                token,
+            )
+        return self._VOCAB[name]()
 
     def word_type(self, children):
-        # the token itself, whose line and column a refusal of the word names
-        return _Word(children[0])
+        # the token itself, whose line and column a refusal of the word
+        # names, with its keyword arguments
+        return _Word(children[0], children[1] if len(children) > 1 else ())
+
+    # the keyword arguments of a word, `(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)`
+    def arguments(self, children):
+        keys = [keyword.key for keyword in children]
+        repeated = next((key for n, key in enumerate(keys) if key in keys[:n]), None)
+        if repeated is not None:
+            raise _refusal(
+                f"the argument `{repeated}` is written twice in `({', '.join(to_source(k) for k in children)})`; "
+                f"each keyword argument is written once",
+                f"keep one `{repeated}=…`",
+            )
+        return tuple(children)
+
+    def keyword(self, children):
+        return Keyword(children[0], children[1])
+
+    def argument_name(self, children):
+        return Name(children[0])
+
+    def argument_number(self, children):
+        return Literal(number_value(children[0]))
+
+    def argument_string(self, children):
+        return Quoted(str(children[0]).strip("\"'"))
+
+    def argument_tuple(self, children):
+        return Values(tuple(children))
+
+    def argument_word(self, children):
+        word = children[0]
+        return Nested(Word(str(word.token)[1:], word.arguments))
 
     # set expressions
     def open_interval_factor(self, children):
@@ -803,6 +1048,10 @@ class ToAst(Transformer):
         )
 
     def bracketed_name(self, children):
+        """A name with its selectors: in a formula, a perch mark, a name key
+        or a position, `V[>]`, `x[work]`, `q[2]`; in the subject of a typing
+        entry also a term, `evaluate[V[<]]`, `evaluate[D_{k}V[<]]`, which
+        selects by `Term`."""
         stem, sels = children[0], children[1:]
         first = sels[0]
         if isinstance(first, Token) and first.type == "PMARK":
@@ -817,8 +1066,10 @@ class ToAst(Transformer):
             expr = Select(
                 Sym(Constant(stem)), Pos(_position_literal(number_value(first), stem, first))
             )
-        else:  # name key
+        elif isinstance(first, str):  # name key
             expr = Select(Sym(Constant(stem)), Key(first))
+        else:  # a term, in the subject of a typing entry
+            expr = Select(Sym(Constant(stem)), Term(first))
         for extra in sels[1:]:
             if isinstance(extra, Token) and extra.type == "PMARK":
                 keys = "".join(
@@ -831,11 +1082,12 @@ class ToAst(Transformer):
                     f"write one perch mark first, as `{stem}[{extra}]{keys}`",
                     extra,
                 )
-            sel = (
-                Pos(_position_literal(number_value(extra), to_source(expr), extra))
-                if isinstance(extra, Token)
-                else Key(extra)
-            )
+            if isinstance(extra, Token):
+                sel = Pos(_position_literal(number_value(extra), to_source(expr), extra))
+            elif isinstance(extra, str):
+                sel = Key(extra)
+            else:
+                sel = Term(extra)
             expr = Select(expr, sel)
         return expr
 
@@ -956,6 +1208,10 @@ class _ToAstWithPositions(ToAst):
     def statement(self, meta, children):
         return self._keep(super().statement(children), meta)
 
+    @v_args(meta=True)
+    def file_binding(self, meta, children):
+        return self._keep(super().file_binding(children), meta)
+
     def _keep(self, item, meta):
         self._positions[id(item)] = _Kept(item, meta)
         return item
@@ -990,15 +1246,22 @@ class _ToAstWithPositions(ToAst):
         self._keep_part(side.subject, meta)
         return side
 
-    @v_args(meta=True)
-    def type(self, meta, children):
+    def _classifiers(self, typing):
         # a word's token carries its place; a set's place is its rule's
-        components = super().type(children)
-        for component, child in zip(components, children):
-            place = child.token if isinstance(child, _Word) else self.part_position(child)
+        classifiers = super()._classifiers(typing)
+        for classifier, component in zip(classifiers, typing.components):
+            place = component.token if isinstance(component, _Word) else self.part_position(component)
             if place is not None:
-                self._keep_part(component, place)
-        return components
+                self._keep_part(classifier, place)
+        return classifiers
+
+    @v_args(meta=True)
+    def typing_entry(self, meta, children):
+        return self._keep_part(super().typing_entry(children), meta)
+
+    @v_args(meta=True)
+    def binding(self, meta, children):
+        return self._keep_part(super().binding(children), meta)
 
     @v_args(meta=True)
     def named_set(self, meta, children):
@@ -1084,7 +1347,7 @@ def _split_entries(body):
 def _coordinate(head, classifiers=()):
     """The coordinate a name as written declares, typed by `classifiers`: a
     bare name, a name with a perch mark, or a name marked `[~]`, which is the
-    bare name; None for any other head."""
+    bare name; None for any other head, a selection or a dotted path."""
     if isinstance(head, str):
         return Coordinate(head, None, tuple(classifiers))
     if isinstance(head, Sym) and isinstance(head.symbol, Variable):
@@ -1095,10 +1358,31 @@ def _coordinate(head, classifiers=()):
 
 
 def _selected_name(term):
-    """The name a selection selects from: `x` of `x[1]` and of `x[a][1]`."""
+    """The name a selection selects from: `x` of `x[1]`, of `x[a][1]` and of
+    the path `x.y`."""
+    if isinstance(term, _Path):
+        term = term.heads[0]
     while isinstance(term, Select):
         term = term.family
+    if isinstance(term, str):
+        return term
     return term.symbol.name if isinstance(term, Sym) else to_source(term)
+
+
+def _written(head):
+    """A subject as written: a name, a selection, or the segments of a path
+    joined by dots."""
+    if isinstance(head, _Path):
+        return ".".join(_written(each) for each in head.heads)
+    return head if isinstance(head, str) else to_source(head)
+
+
+def _component_text(component):
+    """One component of a typing as written: a `!`-marked word with its
+    arguments, or a set."""
+    if isinstance(component, _Word):
+        return to_source(Word(str(component.token)[1:], component.arguments))
+    return to_source(component)
 
 
 def condition_tail_domain(subject, classifiers, conds):

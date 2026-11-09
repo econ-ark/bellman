@@ -1,0 +1,67 @@
+@methods: tenure
+# Deliberate refusals (aspect A24) on the tenure stage, whose stage file is
+# applications/durables/declaration/stages/tenure/tenure.bl; it elaborates
+# today and stage.places() refuses it. No item of this file belongs to the
+# application's methods; each is written as an author rewriting
+# stages/tenure/methods.yml might write it by mistake, and each comment names
+# the rule of the union (the proposal's §4) that refuses it. A block carries a
+# line, since a body may not be empty. The settings the items read are declared
+# as in methods.tenure.bl (writer's sheet §6), so that only the deliberate
+# refusals are reported.
+
+N_wage : ℕ                                :: ["number of states of Tauchen's chain for the income state"]
+tauchen_n_std : ℝ₊₊                       :: ["number of unconditional standard deviations the chain spans"]
+tauchen_min_prob : (0,1)                  :: ["floor on the transition probabilities of the chain"]
+n_ε_nodes : ℕ                             :: ["quadrature nodes of the innovation to log income"]
+n_a : ℕ                                   :: ["number of points of the asset grid"]
+a_min : ℝ₊                                :: ["lower bound of the asset grid"]
+a_max : ℝ₊                                :: ["upper bound of the asset grid"]
+n_h : ℕ                                   :: ["number of points of the housing grid"]
+h_min : ℝ₊₊                               :: ["lower bound of the housing grid"]
+h_max : ℝ₊₊                               :: ["upper bound of the housing grid"]
+
+# Refused: the same slot twice. The two lines name one slot, the method slot of
+# the expectation E_ε in the line value of dcsn_to_arvl, by one path, and fill
+# it with two different methods: Tauchen's chain, as the YAML has it, and
+# Gauss-Hermite quadrature, the rule the declared law ε ~ N(0, 1) suggests to a
+# writer who keeps both. The box of §4 admits at most one entry on a slot, and
+# rule 4 refuses two entries of one key with different content, naming both.
+dcsn_to_arvl.value.E_ε.method : !tauchen(n_income_states=N_wage, n_std=tauchen_n_std, min_prob=tauchen_min_prob)
+dcsn_to_arvl.value.E_ε.handler : "fues-durables:make_conditioners"
+dcsn_to_arvl.value.E_ε.method : !gauss_hermite(n_ε=n_ε_nodes)
+
+# Refused twice. First, two sets on one coordinate: the partial signature, its
+# empty domain adding nothing, gives the decision state a_d the set ℝ₊₊, taken
+# from the lower bound a_min > 0 of the asset grid, where the stage's signature
+# of arvl_to_dcsn gives it ℝ₊; settings/durables.yml says that the model admits
+# zero saving and that the floor is numerical (rule 4, a coordinate of one name
+# with different content). Second, a line id twice: the block's one named line
+# is restated under its id income_state to give the block a body, and the
+# stage's block arvl_to_dcsn already holds that id (rule 5).
+[id=arvl_to_dcsn, () -> (a_d : ℝ₊₊) : !dcsn] {
+    z_d = z^ρ_z*exp(σ_z*ε)                              :: [id=income_state]
+}
+
+# Refused: a line id twice inside a branch (aspect A19). The nested block is
+# merged with the branch keep of dcsn_to_cntn by its label under the block's id
+# (F19), and its line, the branch's law of cash on hand copied to open the
+# branch, carries the id cash_on_hand, which that branch already holds (rule 5).
+[id=dcsn_to_cntn] {
+    [label=keep] {
+        w_kp = R*a_d + 𝑦(z_d)                           :: [id=cash_on_hand]
+    }
+}
+
+# Refused: a subject naming another block. The block dcsn_marginal of
+# marginals_tenure.bl is copied with its own id, and the YAML's representation
+# of the decision value at cntn_to_dcsn.evaluate.value, its method and its grid, is
+# written inside it; each subject begins with cntn_to_dcsn, a block other than the enclosing one
+# (rule 7). Without that entry the union would keep dcsn_marginal as a new block
+# (rule 3, aspect A9), a second builder from the continuation perch to the
+# decision perch beside cntn_to_dcsn (F17).
+[id=dcsn_marginal, (V_kp[>], V_adj[>], d) : !cntn -> (V) : !dcsn
+    | cntn_to_dcsn.evaluate[V].method : !Linear
+    | cntn_to_dcsn.evaluate[V].grid : !Cartesian(a_d=(a_min, a_max, n_a), h_d=(h_min, h_max, n_h))] {
+    D_{a_d}V = (R*D_{w_kp}V_kp[>], R*D_{w_adj}V_adj[>])[d]                          :: [id=marginal_assets]
+    D_{h_d}V = ((1 - δ)*D_{h_kp}V_kp[>], R_H*(1 - δ)*D_{w_adj}V_adj[>])[d]          :: [id=marginal_housing]
+}

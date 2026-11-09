@@ -45,6 +45,7 @@ module dynspec
   entry = Tag(string tag)
         | KeyValue(identifier key, scalar value)
         | Typer(typer typing)
+        | Tagged(word tag)                     -- (core) a tag with keyword arguments, capital(order=2)
 
   symbol = Constant(identifier name)
          | TimeValue(identifier name, int time)
@@ -67,6 +68,8 @@ module dynspec
        | Space(setexpr set)
 
   selector  = Pos(int at) | Key(identifier at)
+            | Term(expr at)                  -- (stage) a selector that is a term, in the
+                                             -- subject of a typing entry alone
   subscript = Var(identifier name)
             | In(identifier var, expr set)
 
@@ -77,8 +80,12 @@ module dynspec
                     subject target, classifier* target_types)
         | Complementary(typer declaration, cond bound)   -- a declared multiplier with its
                                                -- clause, μ[>] : ℝ₊ ⟂ a >= 0
+        | Handler(subject subject, string program)  -- (stage) the handler binding of a place,
+                                               -- policy.handler : "cons-port:egm"
 
   subject    = Subject(coordinate* coordinates)
+             | Path(segment* segments)             -- (stage) policy.evaluate[V[<]].method
+  segment    = Segment(identifier name, selector* selectors)
   coordinate = Coordinate(identifier stem, index? at,
                           classifier* classifiers)
              | Group(subject inner, classifier* classifiers)
@@ -86,6 +93,24 @@ module dynspec
   classifier = Domain(setexpr space)
              | Infoset(perch side)
              | Role(role kind)
+             | Method(word m)                -- (stage) policy.method : !egm(tol=tol_v)
+             | Grid(grid g)                  -- (stage) policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+
+  -- (core) a name with its keyword arguments, and the values an argument takes
+  word     = Word(identifier name, keyword* arguments)
+  keyword  = Keyword(identifier key, argument value)
+  argument = Name(identifier name)
+           | Literal(number value)
+           | Quoted(string text)
+           | Values(argument* items)
+           | Nested(word word)
+
+  -- (stage) the grid, one factor per coordinate
+  grid     = Cartesian(factor* factors)
+  factor   = Spaced(identifier coordinate, argument lower, argument upper,
+                    argument count, word? spacing)
+           | Listed(identifier coordinate, identifier nodes)
+           | Feasible(identifier coordinate, identifier set, argument count)
 
   perch = Arrival | Decision | Continuation
   role  = State | Control | Value(int order)

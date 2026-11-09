@@ -1,0 +1,64 @@
+@methods: tenure_choice
+# Deliberate refusals (aspect A24) on the branching stage tenure_choice, whose
+# stage file is
+# applications/housing-renting/declaration/stages/tenure_choice/tenure_choice.bl.
+# No item of this file belongs to the application's methods; each is written
+# as an author might write it by mistake in translating
+# stages/tenure_choice/methods.yml, and the comment above each item names the
+# rule of the union (the proposal's §4) that refuses it. The third block also
+# exercises aspect A19, a nested labeled block of a methods file under the
+# union, and aspect A14, a partial signature with an empty side. The settings,
+# the parameters and the grid entry are written as in methods.tenure_choice.bl,
+# so that only the refusals remain.
+
+a_points : ℕ       :: ["number of points of the asset grid"]
+a_min : ℝ₊         :: ["lower bound of the asset grid"]
+a_max : ℝ₊         :: ["upper bound of the asset grid"]
+H_min  : ℝ₊        :: ["smallest housing size"]
+H_max  : ℝ₊₊       :: ["largest housing size"]
+n_H    : ℕ         :: ["number of housing sizes"]
+
+# Refused twice. First, the same slot twice: the YAML's comment on E_y says
+# that the expectation over the finite income chain is the sum over the row of
+# Π at y_pre, and the author writes !sum at file level from the comment and the
+# YAML's !markov in the block's group. By rule 7 the file-level subject
+# dcsn_to_arvl.E_y.method and the group's relative subject E_y.method are one
+# path, the method slot of the operator E_y in dcsn_to_arvl, and rule 4 refuses
+# two entries of one key with different content, naming both. Second, a line
+# id twice: the derivative of the arrival value in the assets a, which the
+# YAML does not state, is written under the id value, which the stage's line
+# V[<] = E_{y}(V) of this block already carries (rule 5).
+dcsn_to_arvl.E_y.method : !sum
+
+[id=dcsn_to_arvl
+    | E_y.method : !markov] {
+    D_{a}V[<] = E_{y}(D_{a_d}V)    :: [id=value]
+}
+
+# Refused: a subject naming another block. The YAML's comment says that the
+# decision value and its derivative are held by linear interpolation, and the
+# author adds the arrival value's linear representation in the block that
+# holds the other entries; the subject's first segment is dcsn_to_arvl, a
+# block other than the enclosing cntn_to_dcsn (rule 7). The envelope line and
+# the grid entry are those methods.tenure_choice.bl writes.
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(a_d=(a_min, a_max, a_points), H_d=(H_min, H_max, n_H), y_d=E_y)
+    | dcsn_to_arvl.evaluate.method : !Linear] {
+    D_{a_d}V = (D_{a_o}V_o[>], (1 + r - 𝑑𝑇(a_d))*D_{w_r}V_r[>])[d]  :: [id=choice_marginal]
+}
+
+# Refused twice, on a nested labeled block. First, two sets on one coordinate:
+# the author restates the branch rent of the branching block dcsn_to_cntn to
+# narrow the liquidated wealth w_r to ℝ₊₊, the set renter_cons.bl gives cash
+# on hand, where the stage's branch gives ℝ₊. Merged with the stage's branch of
+# the same label under its parent (rule 3 read by label, finding F19), the
+# partial signature's empty domain adds nothing and its coordinate w_r meets
+# the stage's with a different set (rule 4). Second, a line id twice: since a
+# body may not be empty, the author copies the branch's line with its id
+# liquidation, which the stage's branch already carries (rule 5).
+[id=dcsn_to_cntn] {
+    [label=rent, () -> (w_r : ℝ₊₊) : !cntn] {
+        w_r = (1 + r)*a_d - 𝑇(a_d) + H_d    :: [id=liquidation]
+    }
+}

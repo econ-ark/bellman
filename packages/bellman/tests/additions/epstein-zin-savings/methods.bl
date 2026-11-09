@@ -1,0 +1,47 @@
+@methods: ez_savings
+# A first methods file for the Epstein–Zin savings stage, written as an
+# addition to
+# applications/epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl,
+# which no methods file accompanies. Value function iteration on the decision
+# value builder, with n_c candidate consumption levels at each point of the
+# builder's grid of resources; the expectation over the return Ψ by
+# Gauss-Hermite quadrature at both of its occurrences, in the value line and in
+# the objective; the decision value represented by a shape-preserving cubic and
+# its stated derivative by linear interpolation, each on its own grid of
+# resources; the policy represented linearly between the pairs of resources
+# and consumption that the method computes; and the forward builder simulated
+# by Monte Carlo draws from the declared law of Ψ. The one line added is the
+# envelope line of the decision value, the derivative of the Epstein–Zin
+# aggregator in c at the maximizer, written by hand. Under !vfi nothing reads
+# that line or the linear representation of its derivative; the two stand to
+# exercise aspects A4 and A11 of the writer's sheet. The partial signature of
+# the value builder adds nothing: its domain is empty and its one output is
+# the stage's coordinate written equal, so the union of the two signatures is
+# the stage's; it is kept as a specimen for D7.
+# The settings the file reads are declared first, with their sets (writer's
+# sheet §6); the bounds of the grids lie in ℝ₊₊, the set the stage declares
+# for the resources m_d. Each grid is a typing entry at its place, in the
+# econforge form, with one factor keyed by the coordinate m_d (sheet §7, D5
+# decided).
+
+n_m : ℕ              :: ["number of points of the grid of resources"]
+m_min : ℝ₊₊          :: ["lower bound of the grid of resources"]
+m_max : ℝ₊₊          :: ["upper bound of the grid of resources"]
+n_c : ℕ              :: ["number of points of the finite feasible set the search over consumption uses"]
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the gross return"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulation"]
+
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)
+policy.objective.E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+policy.evaluate.method : !Linear
+
+[id=cntn_to_dcsn, method : !vfi(n_c=n_c), () -> (V : ℝ @ !vlu) : !dcsn
+    | cntn_to_dcsn.grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+    | evaluate[V].method : !pchip
+    | evaluate[V].grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | evaluate[D_{m_d}V].method : !Linear
+    | evaluate[D_{m_d}V].grid : !Cartesian(m_d=(m_min, m_max, n_m))] {
+    D_{m_d}V = (1-β)*c^(-ρ)*V^ρ        :: [id=marginal]
+}

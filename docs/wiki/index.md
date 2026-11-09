@@ -14,6 +14,7 @@ The [Bellman-SYM guide](../Bellman-Sym/index.md) explains authoring and inspecti
 
 - [Abstract dynamic program (ADP)](abstract_decision_process.md)
 - [Accretion modules](accretion-modules.md)
+- [Addition](addition.md)
 - [adequacy](adequacy.md)
 - [aggregation](aggregation.md)
 - [ASDL](asdl.md)
@@ -36,6 +37,7 @@ The [Bellman-SYM guide](../Bellman-Sym/index.md) explains authoring and inspecti
 - [forward builder](forward_builder.md)
 - [Functional form](functional_form.md)
 - [Functional programming and FFP](ffp.md)
+- [Grid](grid.md)
 - [Handler](handler.md)
 - [Initial algebra](initial_algebra.md)
 - [Judge](judge.md)
@@ -44,6 +46,7 @@ The [Bellman-SYM guide](../Bellman-Sym/index.md) explains authoring and inspecti
 - [Matsya handler](matsya_handler.md)
 - [Matsya instructions](matsya_instructions.md)
 - [Methodization](methodization.md)
+- [Methods](methods.md)
 - [operator](operator.md)
 - [Ordering conventions](ordering_conventions.md)
 - [Parameters](parameters.md)

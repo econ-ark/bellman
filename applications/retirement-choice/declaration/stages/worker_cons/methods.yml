@@ -5,11 +5,20 @@ methods:
   # of worker_cons_egm.bl, which writes the grid line w[>] = b + c[>]; the
   # stage file states the maximization alone. The candidates the block
   # computes at each level of savings are selected by the upper envelope
-  # below, since the worker's continuation value need not be concave.
+  # below, since the worker's continuation value need not be concave. The
+  # setting grid names the exogenous grid of savings b by its kind,
+  # !Cartesian, with its order and bounds beside it, the asset grid of the
+  # settings file.
   - on: policy
     method: !egm
     block: ../../methods/worker_cons_egm.bl
     handler: asva:make_egm_1d
+    settings:
+      grid: !Cartesian
+      orders:
+        b: n_a
+      bounds:
+        b: [a_min, a_max]
 
   # The derivatives of the decision value and the arrival value are stated by
   # the two marginal blocks of marginals_worker_cons.bl, one for each value
@@ -30,22 +39,26 @@ methods:
     settings:
       m_bar: m_bar
 
-  # The arrival value is tabulated on the asset grid; the entry on the line
-  # dcsn_to_arvl.marginal represents the stated derivative of the arrival
-  # value in assets on the same grid.
-  - on: dcsn_to_arvl.value
+  # The arrival value and its stated derivative in assets are tabulated on the
+  # asset grid at the arrival builder's Evaluation, dcsn_to_arvl.evaluate.value
+  # and dcsn_to_arvl.evaluate.marginal, and read by linear interpolation, the
+  # basis !Linear; the setting grid names the asset grid by its kind,
+  # !Cartesian, with its order and bounds beside it.
+  - on: dcsn_to_arvl.evaluate.value
     method: !Linear
     handler: dcsmm:interp_as_2
     settings:
+      grid: !Cartesian
       orders:
         a_w: n_a
       bounds:
         a_w: [a_min, a_max]
 
-  - on: dcsn_to_arvl.marginal
+  - on: dcsn_to_arvl.evaluate.marginal
     method: !Linear
     handler: dcsmm:interp_as_2
     settings:
+      grid: !Cartesian
       orders:
         a_w: n_a
       bounds:

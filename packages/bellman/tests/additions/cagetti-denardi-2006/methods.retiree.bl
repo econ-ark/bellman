@@ -1,0 +1,19 @@
+@methods: retiree
+# The methods of the stage retiree as an addition to retiree.bl: value
+# function iteration for the decision value on a grid of cash on hand m
+# (Appendix B of the paper), the deterministic transition of the arrival
+# builder, and a histogram on a grid of end-of-year assets a_rt_rd for the
+# measure the decision builder pushes forward. Each grid is the grid entry of
+# its builder, its one factor keyed by the coordinate (D5). No method adds a
+# line, so every selection is a file-level line routed by its path (rule 7).
+
+n_a : ℕ        :: ["number of points of the grids of cash on hand and of assets"]
+a_min : Xa     :: ["lowest point of the two grids, the borrowing limit; a point of Xa, not of Xm, the set of cash on hand"]
+a_max : Xa     :: ["highest point of the two grids"]
+tol_v : ℝ₊₊    :: ["tolerance of value function iteration"]
+
+cntn_to_dcsn.method : !vfi(tol=tol_v)
+cntn_to_dcsn.grid : !Cartesian(m=(a_min, a_max, n_a))    # m is a state of the decision perch, not listed in the header of cntn_to_dcsn
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !histogram
+dcsn_to_cntn.grid : !Cartesian(a_rt_rd=(a_min, a_max, n_a))

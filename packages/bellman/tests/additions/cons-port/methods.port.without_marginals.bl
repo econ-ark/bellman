@@ -1,0 +1,25 @@
+@methods: port
+# The methods of the portfolio stage at the occurrences that
+# methods/port_without_marginals.yml serves, as an addition to port.bl: the
+# selections of methods.port.bl without the envelope line and without the
+# representation of the decision value, so that the value the stage exports
+# carries no stated derivative. The block cntn_to_dcsn receives no line, so its
+# one selection is a file-level line naming the expectation by its line.
+
+n_ς : ℕ              :: ["number of shares the search compares"]
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the return shock"]
+n_θ_nodes : ℕ        :: ["quadrature nodes of the income shock"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulation"]
+
+[id=policy, policy.method : !time_iteration
+    | policy.handler : "cons-port:share_search"
+    | policy.grid : !Cartesian(ς=(Γ_ς, n_ς))
+    | E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+    | E_Ψ_θ.handler : "cons-port:gauss_hermite"] {    # no form in §4: handler: cons-port:share_search; no grid in the entry, the handler reading n_ς by name; handler: cons-port:gauss_hermite; on: E_Ψ_θ, the stage-wide address
+    ς = solve_{ς}(E_{Ψ,θ}(D_{w}V[>]*(Ψ - R)))       :: [id=euler]
+}
+
+cntn_to_dcsn.value.E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)    # no form in §4: handler: cons-port:gauss_hermite; on: E_Ψ_θ, the stage-wide address
+cntn_to_dcsn.value.E_Ψ_θ.handler : "cons-port:gauss_hermite"
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)

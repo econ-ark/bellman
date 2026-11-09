@@ -31,7 +31,8 @@ from typing import NamedTuple
 
 import yaml
 
-from bellman.refusals import ConstructionError, FactoryError, TargetError
+from bellman.native.records import bound_at
+from bellman.refusals import ConstructionError, FactoryError
 from bellman.stage import admitted_methods, bind_stage, method_types, to_source
 from bellman.trellis import (
     append_to_mapping,
@@ -824,11 +825,14 @@ def _choice_paths(folder: model.Folder, kind: str) -> list[Path]:
     `trellis`, the YAML files of `declaration/` itself tagged `!trellis`
     (`_tagged_trellis`); for a kind of `KINDS`, the YAML files under the
     folder `<kind>/` of `declaration/` (`model.factory_path`) and, for the
-    methods, the methods file `methods.yml` of each stage's folder."""
+    methods, the methods file `methods.yml` of each stage's folder and each
+    addition beside a stage file, `methods.bl` or a replacing selection
+    `methods.<variant>.bl` (decision S7-W2), which is never a stage."""
     declaration = folder.root / model.FACTORY_FOLDER
+    stages = declaration / "stages"
     if kind == "stage":
-        stages = declaration / "stages"
-        return [path for path in stages.rglob("*.bl")] if stages.is_dir() else []
+        held = stages.rglob("*.bl") if stages.is_dir() else ()
+        return [path for path in held if not model.is_addition_file(path)]
     if kind == "trellis":
         held = declaration.glob("*") if declaration.is_dir() else ()
         return [
@@ -839,9 +843,15 @@ def _choice_paths(folder: model.Folder, kind: str) -> list[Path]:
             and _tagged_trellis(folder, path.relative_to(folder.root).as_posix())
         ]
     base = folder.root / model.factory_path(kind)
-    paths = list(base.rglob("*")) if base.is_dir() else []
+    paths = [path for path in base.rglob("*") if path.suffix in _YAML] if base.is_dir() else []
     if kind == "methods":
-        paths += (declaration / "stages").glob("*/methods.yml")
+        paths += stages.glob("*/methods.yml")
+        paths += (
+            path
+            for pattern in ("*/methods.bl", "*/methods.*.bl")
+            for path in stages.glob(pattern)
+            if model.is_addition_file(path)
+        )
     return paths
 
 
@@ -850,20 +860,16 @@ def choices(folder: model.Folder, kind: str) -> list[Choice]:
     9 §3), a kind of `KINDS`, `stage` or `trellis` (`_choice_paths`), in
     path order, names beginning with "." left out, each with its first
     comment line and, for a methods file, the stage it names and its
-    targets, read by the package's reader of YAML text. The listing is
-    total (specification §2.2 rule 4): a file that is no UTF-8 text is
-    listed with the sentence that it cannot be read, and a methods file
-    whose `methods` is no list names no target."""
+    targets, read by the package's reader of YAML text; an addition names
+    neither, since the Workbench reads nothing of it (decision S7-W1). The
+    listing is total (specification §2.2 rule 4): a file that is no UTF-8
+    text is listed with the sentence that it cannot be read, and a methods
+    file whose `methods` is no list names no target."""
     declaration = folder.root / model.FACTORY_FOLDER
-    suffixes = (".bl",) if kind == "stage" else _YAML
     found = []
     for path in sorted(_choice_paths(folder, kind)):
         inside = path.relative_to(declaration).parts
-        if (
-            not path.is_file()
-            or path.suffix not in suffixes
-            or any(p.startswith(".") for p in inside)
-        ):
+        if not path.is_file() or any(p.startswith(".") for p in inside):
             continue
         relpath = path.relative_to(folder.root).as_posix()
         try:
@@ -875,7 +881,7 @@ def choices(folder: model.Folder, kind: str) -> list[Choice]:
             (line.lstrip("#").strip() for line in text.split("\n") if line.startswith("#")), ""
         )
         stage, targets = "", ()
-        if kind == "methods":
+        if kind == "methods" and path.suffix in _YAML:
             try:
                 document = entry_value(text)
             except ValueError:
@@ -905,13 +911,14 @@ def written_name(folder: model.Folder, source: Source, entry: Entry, chosen: str
     writes the entry, from which the package reads that file's paths; in a
     recipe without its extension, `calibration/portfolio` or
     `stages/cons/methods` in `declaration/spec.yml`, as a recipe names a
-    source, but with it for the trellis file and a stage file
-    (`_names_a_file`), `trellis.yml`, `stages/tenure/tenure.bl`; and in a
-    trellis file or a period file with it, `methods/cons.yml`, as
-    `load_trellis` reads it."""
+    source, but with it for the trellis file, a stage file
+    (`_names_a_file`), `trellis.yml`, `stages/tenure/tenure.bl`, and an
+    addition, `stages/cons/methods.bl`, since the package reads a name
+    without its extension as a YAML file; and in a trellis file or a period
+    file with it, `methods/cons.yml`, as `load_trellis` reads it."""
     base = (folder.root / entry.file).parent
     name = Path(os.path.relpath(folder.root / chosen, base))
-    keeps = source.kind != "recipe" or _names_a_file(entry)
+    keeps = source.kind != "recipe" or _names_a_file(entry) or name.suffix == ".bl"
     return (name if keeps else name.with_suffix("")).as_posix()
 
 
@@ -1118,6 +1125,11 @@ UNVALUED = "unvalued"
 # and the refusal of a write asked there (AMD-MI-002 §5 rule 3; ruling R28)
 NO_RECIPE = "no recipe values them"
 
+# the words of the Methods tab of an occurrence whose methods source is an
+# addition of which the stage binds no method, until the package reads
+# additions (specification 0.7, unit U3)
+ADDITION_UNREAD = "addition, not read yet"
+
 # the addresses of the mapping that the package's reader of a calibration
 # or a settings source reads in its file, in the order in which
 # `load_calibration` and `load_settings` of `bellman.stage.sources` look
@@ -1192,27 +1204,24 @@ class SettingRow(NamedTuple):
 
 
 class MethodRow(NamedTuple):
-    """One row of the Methods tab (AMD-MI-002 §5 rule 5): `target`, the
-    target a methods entry names under `on`; `tag`, the entry's method as
-    the occurrence's record holds it, printed `!Linear` (`_shown`), the
-    empty text where the entry names none; `bound`, the method the stage
-    binds within the target (`stage.methods[target]`), printed as its tag
-    or as `handler only`, None where the stage answers none, `note` then
-    holding its refusal, or where `methodize` refuses the entry; `choices`,
-    the tags the package admits at the target (`admitted_methods` of
-    `bellman.stage`), none where it refuses the target; `place`, the entry's
-    method, or the entry where it names none, in the last methods file that
-    names the target (`_method_entry`), None where no file names it; and
-    `refused`, whether `methodize` refuses the entry, `note` then holding
-    the package's sentence (`_bound_methods`; unit L, Task 18)."""
+    """One row of the Methods tab (AMD-MI-002 §5 rule 5), one method the
+    stage binds (`stage.methods`): `target`, the target of the one YAML
+    entry of the occurrence's methods that binds it (`_written_target`),
+    else the place it is bound at, as the package prints it (`bound_at`);
+    `tag`, the method as that entry writes it, printed `!Linear`
+    (`_shown`), the empty text where the entry writes none, and the method
+    bound where no entry binds it; `bound`, the method bound, printed as
+    its tag or as `handler only`; `choices`, the tags the package admits at
+    the entry's target (`admitted_methods` of `bellman.stage`), none where
+    no entry binds it; and `place`, the entry's method, or the entry where
+    it names none, in the last methods file that names its target
+    (`_method_entry`), None where no file names it."""
 
     target: str
     tag: str
-    bound: str | None
-    note: str | None
+    bound: str
     choices: tuple
     place: Place | None
-    refused: bool
 
 
 class Tab(NamedTuple):
@@ -1482,36 +1491,6 @@ def settings_tab(folder: model.Folder, record: dict | None, key: str | None) -> 
     return Tab(tuple(rows), relative(folder, last), None)
 
 
-def _bound_methods(stage, record: dict):
-    """The version of `stage` whose methods the Methods tab reads, with the
-    refusal of each entry of the record's methods that `methodize` refuses,
-    by its target (unit L, Task 18; defect 8 of the UX simulation). Where
-    the stage binds its methods, or the record's methods hold no entry, the
-    stage itself and no refusal. Where `methodize` refused the record's
-    methods when the stage was bound, so that the stage binds none, the
-    stage methodized by the package with the refused entries left out: each
-    refusal, a `TargetError`, names the target of the entry it refuses, which
-    is left out before the next attempt, so that the other entries keep the
-    methods they bind. A refusal that names no target of the entries left,
-    as that of two entries reaching one box, ends the attempts, the stage
-    then answered as it is, binding no method."""
-    entries = list(record["methods"]["methods"])
-    refusals = {}
-    if stage.bindings.methods is not None or not entries:
-        return stage, refusals
-    while entries:
-        try:
-            return stage.methodize({**record["methods"], "methods": entries}), refusals
-        except TargetError as error:
-            if not any(entry["on"] == error.target for entry in entries):
-                break
-            refusals[error.target] = _reason(error)
-            entries = [entry for entry in entries if entry["on"] != error.target]
-        except _REFUSALS:
-            break
-    return stage, refusals
-
-
 def _method_entry(folder: model.Folder, record: dict, target: str):
     """The entry of the last methods file of the record's list that names
     `target` under `on`, a file before its parents (`_list_files`), in which
@@ -1519,7 +1498,8 @@ def _method_entry(folder: model.Folder, record: dict, target: str):
     the entry's `method` where it names one and else at the entry itself,
     its index in the file's `methods`, and the entry as the file writes it;
     None where no file names the target, a file that cannot be read naming
-    none."""
+    none. It reads the YAML form alone, which goes when the corpus moves to
+    additions (decision S7-W6)."""
     for path in _list_files(record, "methods"):
         try:
             text = Path(path).read_text(encoding="utf-8")
@@ -1538,66 +1518,78 @@ def _method_entry(folder: model.Folder, record: dict, target: str):
     return None
 
 
+def _written_target(stage, entries: list, place: str, method) -> str | None:
+    """The target of the YAML entry among `entries`, the record's methods,
+    that binds `method`, which the stage binds at `place`: the entry that
+    names `place` itself, else the one entry whose target the package
+    resolves to that method (`stage.methods[target]`), as `E_ε` resolves to
+    the expectation it names; None where no entry or several do, as the
+    value and the marginal of one Evaluation, at one of which a choice
+    would leave the two apart. The YAML entries go when the corpus moves to
+    additions (decision S7-W6)."""
+    targets = [entry["on"] for entry in entries]
+    if place in targets:
+        return place
+    reaching = []
+    for target in targets:
+        try:
+            if stage.methods[target] is method:
+                reaching.append(target)
+        except _REFUSALS:
+            # the target names no method, or several
+            continue
+    return reaching[0] if len(reaching) == 1 else None
+
+
 def methods_tab(folder: model.Folder, stage, record: dict | None, key: str | None) -> Tab:
     """The Methods tab of the BellmanType panel for a stage shown as the
     occurrence `key` that `record` binds (AMD-MI-002 §5 rule 5): one row per
-    entry of the record's methods, `record["methods"]["methods"]`, the
-    merge of the methods sources the recipe lists for the occurrence, in its
-    order, with the entry's target and method tag, the method the stage
-    binds within that target (`stage.methods[target]`), the tags the package
-    admits there, read by trying each method of the method table at the
-    target's place under its placement rule (`admitted_methods` of
-    `bellman.stage`; unit L, Task 18), and the place, in the last methods
-    file that names the target, at which a choice is written
-    (`_method_entry`, `write_method`). Each target is resolved on its own,
-    so that the rows of a branching stage, whose places `stage.places()`
-    refuses to list, offer their tags too, that refusal standing under the
-    error mark and not in the tab (`places_refusal`); a target the package
-    refuses offers none. Where `methodize` refuses an entry, its row alone is
-    refused, the package's sentence its note, and the other rows show the
-    methods the stage binds with the refused entries left out
-    (`_bound_methods`); the sentence of the first entry refused is the
-    binding's note, which stands under the error mark. The tab names the
-    last file of the occurrence's methods list. Where the list names no
-    file the tab has no row and says `the recipe lists no methods source for
-    <key>` (§5 rule 6); where no record is given, `no recipe values them`.
-    The grammar admits no method tag in a stage's text, so no row is a
-    method the text tags (A2-D9)."""
+    method the stage binds, read from the package's answer `stage.methods`
+    in its order, so that the tab shows nothing the elaboration does not
+    answer (decision S7-W1). Where the occurrence's last methods file is a
+    YAML file, a row whose method one YAML entry of the occurrence binds is
+    named by that entry's target, once for all the places the entry binds,
+    offers the tags the package admits there (`admitted_methods` of
+    `bellman.stage`) and links the entry, at which a choice is written
+    (`_written_target`, `_method_entry`, `write_method`); every other row
+    is named by the place the method is bound at and shows it as text.
+    Where that file is an addition, each row shows its method as text with
+    no choice, since no writer of the `.bl` declaration exists yet
+    (decision S7-W3), and where the stage binds no method the tab says
+    `addition, not read yet` (`ADDITION_UNREAD`). The tab names the last
+    file of the occurrence's methods list. Where the list names no file the
+    tab has no row and says `the recipe lists no methods source for <key>`
+    (§5 rule 6); where no record is given, `no recipe values them`. A
+    refusal of `methodize` stands under the error mark (`bind_occurrence`),
+    and the stage then binds no method."""
     if record is None:
         return Tab((), None, NO_RECIPE)
     last = _last_file(record, "methods")
     if last is None:
         return Tab((), None, _no_source("methods", key))
-    version, refusals = _bound_methods(stage, record)
+    addition = model.is_addition_file(Path(last))
+    entries = [] if addition else record["methods"]["methods"]
     rows = []
-    for entry in record["methods"]["methods"]:
-        target = entry["on"]
-        refused = target in refusals
-        if refused:
-            bound, note = None, refusals[target]
-        else:
-            try:
-                method = version.methods[target]
-                bound, note = (f"!{method.tag}" if method.tag else "handler only"), None
-            except _REFUSALS as error:
-                bound, note = None, _reason(error)
+    for name, method in stage.methods.items():
+        place = str(bound_at(name))
+        bound = f"!{method.tag}" if method.tag else "handler only"
+        target = _written_target(stage, entries, place, method)
+        if target is not None and any(row.target == target for row in rows):
+            # one entry that binds several places is one row
+            continue
+        held = None if target is None else _method_entry(folder, record, target)
+        if held is None:
+            rows.append(MethodRow(place, bound, bound, (), None))
+            continue
+        written, _, entry = held
         try:
             choices = admitted_methods(stage, target)
         except _REFUSALS:
             choices = ()
-        held = _method_entry(folder, record, target)
-        rows.append(
-            MethodRow(
-                target,
-                _shown(entry["method"]) if "method" in entry else "",
-                bound,
-                note,
-                choices,
-                None if held is None else held[0],
-                refused,
-            )
-        )
-    return Tab(tuple(rows), relative(folder, last), None)
+        tag = _shown(entry["method"]) if "method" in entry else ""
+        rows.append(MethodRow(target, tag, bound, choices, written))
+    sentence = ADDITION_UNREAD if addition and not rows else None
+    return Tab(tuple(rows), relative(folder, last), sentence)
 
 
 def places_refusal(stage) -> str | None:

@@ -25,7 +25,8 @@ prose of the page is kept and no table is edited by hand:
   (`syntax/grammars/stage.lark`) and the laws;
 - `reference/methods.md`: the method types of `METHOD_TYPES`
   (`stage/method_table.py`), each with the places it may be bound at, its
-  options and the line that defines it;
+  options, among them the setting `grid` with the fields each kind of grid of
+  `GRID_KINDS` admits beside it, and the line that defines it;
 - `reference/refusals.md`: the rules of graph construction, `RULES`
   (`refusals.py`), each with the claim its comment states;
 - `API/index.md`: every public name of `bellman.stage`, `bellman.period` and
@@ -181,7 +182,7 @@ from bellman.fold.table import KINDS  # noqa: E402
 from bellman.refusals import METHOD_CONDITIONS, RULES, ConstructionError, FactoryError  # noqa: E402
 from bellman.stage import elaborated, pieces  # noqa: E402
 from bellman.stage.builder_pairs import DIRECTION_WORDS  # noqa: E402
-from bellman.stage.method_table import METHOD_TYPES  # noqa: E402
+from bellman.stage.method_table import GRID_KINDS, METHOD_TYPES  # noqa: E402
 from bellman.syntax import terms as T  # noqa: E402
 from bellman.syntax.lower import parse_with_spans  # noqa: E402
 from bellman.syntax.source import to_source  # noqa: E402
@@ -908,6 +909,16 @@ def realized(row):
     return ()
 
 
+def grid_fields(kind):
+    """The fields a kind of grid of `GRID_KINDS` admits beside the setting
+    `grid`, as the options cell of a method that takes a grid prints them:
+    beside `grid: !Cartesian`, each field with the kind of value it takes."""
+    fields = ", ".join(
+        f"{code(name)}: {prose(str(option))}" for name, option in GRID_KINDS[kind].items()
+    )
+    return f"beside {code(f'grid: !{kind}')}: {fields}"
+
+
 def methods_table(page, source_ref=SOURCE_REF):
     """The table of the methods page: one row for each method type of
     `METHOD_TYPES` and no other, with the places it may be bound at, its
@@ -922,6 +933,11 @@ def methods_table(page, source_ref=SOURCE_REF):
             raise SystemExit(f"stage/method_table.py defines no `_method_type` call for !{tag}")
         options = [
             f"{code(name)}: {prose(str(option))}" for name, option in row["options"].items()
+        ] + [
+            grid_fields(kind)
+            for name, option in row["options"].items()
+            if option.kind.startswith("grid kind")
+            for kind in GRID_KINDS
         ]
         link = SOURCE.format(ref=source_ref, module="stage/method_table.py", line=lines[tag])
         rows.append(

@@ -27,6 +27,9 @@ FIXTURES = Path(__file__).parent / "fixtures" / "spec_0_6"
 # the inverse Euler lines and the grid line, as it stood before the application
 # moved those lines to a method block (decision MB-S13)
 BUFFER_STOCK = FIXTURES / "buffer_stock_explicit.bl"
+# the exogenous grid of savings `!egm` requires, by its kind and its fields
+# (AMD-MB-003 §1)
+SAVINGS = {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}
 
 
 def test_item_1_methodize_opens_the_policy_builder_with_the_block_and_returns_the_same_stage():
@@ -154,8 +157,9 @@ def test_item_3_a_later_block_replaces_the_earlier_and_the_explicit_writing_bind
     and the cash on hand, stand as one Aggregation at the builder grain, as
     the fold merges compatible pointwise lines; the buffer-stock stage file
     written the explicit way, whose policy block writes the grid line, binds `!egm` at
-    `policy:Evaluation`, and its card gains the `Method` section and nothing
-    else; a binding of another kind stands beside one at its box, and a line
+    `policy:Evaluation`, and its card gains the `Method` section and the
+    `Options` of the method's grid of savings and nothing else; a binding of
+    another kind stands beside one at its box, and a line
     the block adds is the target of a later line of the same source
     (decision SD-15)."""
     stage = elaborate_stage(load_stage(FIXTURES / "cons.bl"))
@@ -169,21 +173,28 @@ def test_item_3_a_later_block_replaces_the_earlier_and_the_explicit_writing_bind
     buffer_stock = elaborate_stage(load_stage(BUFFER_STOCK))
     before = str(buffer_stock.builder.policy.denote()).splitlines()
     assert (
-        buffer_stock.methodize({"methods": [{"on": "policy", "method": "!egm"}]}) is buffer_stock
+        buffer_stock.methodize({"methods": [{"on": "policy", "method": "!egm", "settings": SAVINGS}]})
+        is buffer_stock
     )
     assert str(buffer_stock.methods) == "policy:Evaluation   !egm"
     after = str(buffer_stock.builder.policy.denote()).splitlines()
     at = after.index("Method")
-    assert after[at - 1 : at + 2] == [
+    assert after[at - 1 : at + 7] == [
         "",
         "Method",
         "  !egm   handler                                             policy:Evaluation",
+        "",
+        "Options",
+        "  grid = !Cartesian",
+        "  orders = {'a': 'n_a'}",
+        "  bounds = {'a': ('a_min', 'a_max')}",
     ]
-    assert after[: at - 1] + after[at + 2 :] == before
-    # a binding of another kind stands beside it at the box, and a later
-    # binding of one kind replaces the earlier (decision SD-15)
-    buffer_stock.methodize({"methods": [{"on": "policy", "method": "!Linear"}]})
-    buffer_stock.methodize({"methods": [{"on": "policy", "method": "!pchip"}]})
+    assert after[: at - 1] + after[at + 7 :] == before
+    # a binding of another kind stands beside it at the box, written at the
+    # policy builder's Evaluation (AMD-MB-002), and a later binding of one
+    # kind replaces the earlier (decision SD-15)
+    buffer_stock.methodize({"methods": [{"on": "policy.evaluate", "method": "!Linear"}]})
+    buffer_stock.methodize({"methods": [{"on": "policy.evaluate", "method": "!pchip"}]})
     assert str(buffer_stock.methods) == "policy:Evaluation   !egm\npolicy:Evaluation   !pchip"
     # a line a block adds is the target of a later line of the same source
     block = str(FIXTURES / "methods" / "cons_egm.bl")
@@ -191,7 +202,7 @@ def test_item_3_a_later_block_replaces_the_earlier_and_the_explicit_writing_bind
         {
             "stage": "cons",
             "methods": [
-                {"on": "policy", "method": "!egm", "block": block},
+                {"on": "policy", "method": "!egm", "block": block, "settings": SAVINGS},
                 {"on": "policy.identification", "method": "!Linear"},
             ],
         }
@@ -276,7 +287,8 @@ def test_item_4_a_function_the_block_file_writes_with_its_argument_is_a_name_it_
     assert "D_{c}" not in closed and "Inv(" not in closed
     (tmp_path / "egm.bl").write_text(closed, encoding="utf-8")
     stage = elaborate_stage(load_stage(FIXTURES / "cons.bl"))
-    stage.methodize({"methods": [{"on": "policy", "method": "!egm", "block": str(tmp_path / "egm.bl")}]})
+    stage.methodize({"methods": [{"on": "policy", "method": "!egm", "block": str(tmp_path / "egm.bl"),
+                                  "settings": SAVINGS}]})
     assert str(stage.methods).startswith("policy   !egm   block ")
 
 
@@ -382,25 +394,37 @@ def test_item_4_a_marginal_block_shares_its_builder_with_another_method():
 
 
 def test_item_4_one_entry_of_each_kind_stands_on_one_target_in_one_source():
-    """A methods source may hold a solution method and a representation on one
-    target, since each kind has its own place: `!egm` on `policy` stands on the
-    builder and a representation named on `policy` at the Evaluation that
-    closes it; a second entry of one kind on one target is refused (MB-U53).
-    The buffer-stock application itself binds its interpolation on the authored
-    operator occurrence `policy.cons_choice.evaluate` (MB-U54)."""
+    """A methods source may hold a solution method and a marginal block on one
+    builder, since each kind has its own place: `!vfi` on `cntn_to_dcsn`
+    stands on the builder and `!marginals` on `cntn_to_dcsn` adds its lines at
+    the builder's Evaluation; a representation names that Evaluation itself,
+    `policy.evaluate` beside `!egm` on `policy` (AMD-MB-002); a second entry
+    of one kind on one target is refused (MB-U53). The buffer-stock
+    application binds its interpolation of consumption at `policy.evaluate`."""
     folder = ROOT / "applications/buffer-stock/declaration"
+    stage_file = folder / "stages/buffer_stock/buffer_stock.bl"
+
+    def printed(source):
+        stage = elaborate_stage(load_stage(stage_file)).methodize(source)
+        return [line.split()[:2] for line in str(stage.methods).splitlines()]
+
+    marginals = str(folder / "methods/marginals.bl")
+    pair = printed({"methods": [{"on": "cntn_to_dcsn", "method": "!vfi"},
+                                {"on": "cntn_to_dcsn", "method": "!marginals", "block": marginals}]})
+    assert ["cntn_to_dcsn", "!vfi"] in pair
+    assert ["cntn_to_dcsn:Evaluation", "!marginals"] in pair
     block = str(folder / "methods/buffer_stock_egm.bl")
-    pair = {"methods": [{"on": "policy", "method": "!egm", "block": block}, {"on": "policy", "method": "!Linear"}]}
-    stage = elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl")).methodize(pair)
-    printed = [line.split()[:2] for line in str(stage.methods).splitlines()]
-    assert ["policy", "!egm"] in printed
-    assert ["policy:Evaluation", "!Linear"] in printed
-    twice = {"methods": [{"on": "policy", "method": "!Linear"}, {"on": "policy", "method": "!pchip"}]}
-    with pytest.raises(ValueError, match="Duplicate methodization target 'policy'"):
-        elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl")).methodize(twice)
-    bound = elaborate_stage(load_stage(folder / "stages/buffer_stock/buffer_stock.bl")).methodize(folder / "methods/buffer_stock.yml")
-    assert ["policy.cons_choice", "!Linear"] in [line.split()[:2] for line in str(bound.methods).splitlines()]
-    assert "policy.cons_choice.evaluate" in str(bound.places())
+    beside = printed({"methods": [{"on": "policy", "method": "!egm", "block": block, "settings": SAVINGS},
+                                  {"on": "policy.evaluate", "method": "!Linear"}]})
+    assert ["policy", "!egm"] in beside
+    assert ["policy:Evaluation", "!Linear"] in beside
+    twice = {"methods": [{"on": "policy.evaluate", "method": "!Linear"},
+                         {"on": "policy.evaluate", "method": "!pchip"}]}
+    with pytest.raises(ValueError, match="Duplicate methodization target 'policy.evaluate'"):
+        elaborate_stage(load_stage(stage_file)).methodize(twice)
+    bound = elaborate_stage(load_stage(stage_file)).methodize(folder / "methods/buffer_stock.yml")
+    assert ["policy:Evaluation", "!Linear"] in [line.split()[:2] for line in str(bound.methods).splitlines()]
+    assert "policy.evaluate" in str(bound.places())
 
 
 def test_item_4_a_method_choice_on_a_builder_keeps_the_marginal_block_bound_there():

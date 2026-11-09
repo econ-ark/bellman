@@ -1860,9 +1860,14 @@ def _method_documents(method):
 
 
 def _option_value(value, values):
-    """Display nested options after substituting supplied setting values."""
+    """Display nested options after substituting supplied setting values; a
+    tag written alone, the kind of a grid, as the methods file writes it,
+    `!Cartesian` (AMD-MB-003 §3)."""
     if isinstance(value, str) and value in values:
         value = values[value]
+    tag = value.get("__yaml_tag__") if isinstance(value, Mapping) else None
+    if tag is not None and set(value) == {"__yaml_tag__", "value"} and value["value"] == "":
+        return f"!{tag}"
     if isinstance(value, Mapping):
         return (
             "{"

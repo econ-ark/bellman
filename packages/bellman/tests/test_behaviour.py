@@ -45,6 +45,7 @@ from snapshot.record import recording_path
 
 import bellman
 from bellman.stage import elaborate_stage, load_stage, make_stage, method_types
+from bellman.stage.method_table import GRID_KINDS
 from bellman.trellis import (
     accrete,
     assemble_trellis,
@@ -790,19 +791,19 @@ def test_methodize_binds_each_method_to_the_box_its_target_resolves_to(cons, con
     # Evaluation (lane K of the internal developer release 0.01, sub-brief §3)
     assert attached == [
         ("policy:Evaluation", "egm", "cons-port:egm"),
-        ("cntn_to_dcsn:Evaluation", "Cartesian", "cons-port:_make_interp")]
+        ("cntn_to_dcsn:Evaluation", "Linear", "cons-port:_make_interp")]
     # The two source lines request one complete representation. Their initial
     # block exposes the one method stored at the closing Evaluation.
     initial = cons_methodized.initial.backward["cntn_to_dcsn"].methods
     assert [(str(box), method.tag, method.handler) for box, method in initial.items()] == [
-        ("cntn_to_dcsn:Evaluation", "Cartesian", "cons-port:_make_interp")]
+        ("cntn_to_dcsn:Evaluation", "Linear", "cons-port:_make_interp")]
 
     # a method that computes the policy binds at the identification, the
     # Pullback of the line's `solve`, and a representation written on the line
     # binds at the Evaluation that stores the line's output
     policy = copy_native(cons).methodize({"stage": "cons", "methods": [
         {"on": "policy.cons_choice.solve", "method": "root-find"},
-        {"on": "policy.cons_choice", "method": "Linear"},
+        {"on": "policy.cons_choice", "method": "Linear", "settings": {"grid": "!Cartesian", "orders": {"m_d": "n_m"}, "bounds": {"m_d": ["m_min", "m_max"]}}},
     ]})
     computed = policy.builder.bwd["policy", "cons_choice:Pullback"].denote()
     stored = policy.builder.bwd["policy", "Evaluation"].denote()
@@ -811,8 +812,9 @@ def test_methodize_binds_each_method_to_the_box_its_target_resolves_to(cons, con
 
 
 def test_a_representation_method_accepts_declared_functions_and_function_aliases(cons_savings_iid):
+    grid = {"grid": "!Cartesian", "orders": {"c": "n_c"}, "bounds": {"c": ["c_min", "c_max"]}}
     version = copy_native(cons_savings_iid).methodize({"stage": "cons_savings_iid", "methods": [
-        {"on": name, "method": "Linear"} for name in ("𝑢", "𝑑𝑢", "𝑑𝑢𝑖𝑛𝑣")
+        {"on": name, "method": "Linear", "settings": grid} for name in ("𝑢", "𝑑𝑢", "𝑑𝑢𝑖𝑛𝑣")
     ]})
     assert {str(place): method.tag for place, method in version.methods.items()} == {
         "cons_savings_iid:function:𝑢": "Linear",
@@ -834,8 +836,8 @@ def test_methodize_refuses_an_unknown_or_positional_target_a_duplicate_target_an
     assert "builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy" in str(refused.value)
     with pytest.raises(TargetError, match="'policy.1' in stage 'cons' is a positional address.*named 'policy.optimality'"):
         methodize(copy_native(cons), changed("on: policy\n", "on: policy.1\n"))
-    with pytest.raises(ValueError, match="Duplicate methodization target 'cntn_to_dcsn.value'"):
-        methodize(copy_native(cons), changed("on: cntn_to_dcsn.marginal\n", "on: cntn_to_dcsn.value\n"))
+    with pytest.raises(ValueError, match="Duplicate methodization target 'cntn_to_dcsn.evaluate.value'"):
+        methodize(copy_native(cons), changed("on: cntn_to_dcsn.evaluate.marginal\n", "on: cntn_to_dcsn.evaluate.value\n"))
     with pytest.raises(ValueError, match="scheme"):
         methodize(copy_native(cons), {"stage": "cons", "methods": [{"on": "policy", "scheme": "interpolation"}]})
     with pytest.raises((TypeError, ValueError)):
@@ -882,7 +884,7 @@ def test_configure_refuses_a_version_without_methods_and_a_source_missing_a_name
     with pytest.raises(ValueError, match=r"no methods are bound, so no setting is named.*apply methodize\(stage, source\) first"):
         configure(copy_native(cons), {})
     with pytest.raises(ValueError, match=r"box 'cntn_to_dcsn:Evaluation': the settings source supplies no value for 'm_min'.*write `m_min: <value>`"):
-        configure(copy_native(cons_methodized), {"n_m": 10})
+        configure(copy_native(cons_methodized), {"n_m": 10, "n_a": 10, "a_min": 0.1, "a_max": 1.0})
 
 
 def test_the_bindings_leave_every_view_of_cons_as_recorded(cons, cons_configured):
@@ -981,6 +983,69 @@ def test_a_parent_chain_of_a_methods_file_merges_its_entries_by_on(registry, tmp
     assert record["calibration"] == {"β": 0.96, "R": 1.03}
     # the child's entry for cntn_to_dcsn replaces the handler and keeps the parent's settings
     assert record["methods"]["methods"] == [{"on": "cntn_to_dcsn", "handler": "test:replaced", "settings": {"points": "n_k"}}]
+
+
+def test_an_earlier_representation_is_checked_again_where_egm_is_added_or_replaced():
+    """A representation bound at the policy builder's Evaluation by one
+    `methodize` is checked again by a later one that adds `!egm` in that
+    builder or replaces it by another solution method (AMD-MB-003 §1): with a
+    grid, it is refused under `grid-under-egm` where `!egm` comes later;
+    without one, under `method-attachment` where `!max` replaces `!egm`. Each
+    refusal names the entry of the solution method, asks for the
+    representation at `policy.evaluate` to be written again, and leaves the
+    stage as it was; written again in the same source, it binds."""
+    from conftest import ROOT, fresh_stage
+    stage_file = "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl"
+    block = str(ROOT / "applications/buffer-stock/declaration/methods/buffer_stock_egm.bl")
+    resources = {"grid": "!Cartesian", "orders": {"m": "n_m"}, "bounds": {"m": ["m_min", "m_max"]}}
+    savings = {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}
+    egm = {"on": "policy", "method": "!egm", "block": block, "settings": savings}
+    gridded = {"on": "policy.evaluate", "method": "!Linear", "settings": resources}
+    gridless = {"on": "policy.evaluate", "method": "!Linear"}
+    for first, later, rule, words, again in (
+        ([gridded], [egm], "grid-under-egm",
+         ("writes a grid there", "at `policy.evaluate` without a grid"), gridless),
+        ([egm, gridless], [{"on": "policy", "method": "!max"}], "method-attachment",
+         ("!max replaces !egm", "at `policy.evaluate` with its grid"), gridded),
+    ):
+        stage = fresh_stage(stage_file)
+        stage.methodize({"methods": first})
+        bound = str(stage.methods)
+        with pytest.raises(TargetError) as refused:
+            stage.methodize({"methods": later})
+        assert (refused.value.rule, refused.value.target) == (rule, "policy")
+        assert all(word in str(refused.value) for word in words), str(refused.value)
+        assert str(stage.methods) == bound
+        stage.methodize({"methods": [*later, again]})
+        assert "policy:Evaluation   !Linear" in str(stage.methods)
+
+
+def test_a_parent_chain_keeps_the_kind_of_a_grid_and_merges_the_fields_beside_it(registry, tmp_path):
+    """The kind of a grid, a tag written alone, `grid: !Cartesian`, is a value
+    the recipe's merge keeps: a child's entry of the parent's target and kind
+    of method replaces the field it writes, `orders`, and keeps the tag and
+    the other field, `bounds` (AMD-MB-003 §3)."""
+    from bellman.refusal_examples import write_registry
+    files = {
+        "methods/grid_parent.yml": (
+            "stage: two_nodes\nmethods:\n  - on: cntn_to_dcsn.evaluate.value\n    method: !Linear\n"
+            "    settings: {grid: !Cartesian, orders: {k_d: n_k}, bounds: {k_d: [k_min, k_max]}}\n"),
+        "methods/grid_child.yml": (
+            "parent: methods/grid_parent\nstage: two_nodes\nmethods:\n"
+            "  - on: cntn_to_dcsn.evaluate.value\n    method: !Linear\n    settings: {orders: {k_d: n_fine}}\n"),
+        "spec.yml": ("trellis: trellis.yml\nstages:\n  two_nodes:\n"
+                     "    stage: stages/two_nodes/two_nodes.bl\n"
+                     "    calibration: {all: [calibration/main]}\n"
+                     "    settings: {all: [settings/main]}\n    methods: {all: [methods/grid_child]}\n"),
+    }
+    directory = write_registry(tmp_path / "grid", {**SMALL_REGISTRY, **files})
+    record = load_recipe(directory, "spec.yml")["periods"][0]["stages"]["two_nodes"]
+    assert record["methods"]["methods"] == [{
+        "on": "cntn_to_dcsn.evaluate.value",
+        "method": {"__yaml_tag__": "Linear", "value": ""},
+        "settings": {"grid": {"__yaml_tag__": "Cartesian", "value": ""},
+                     "orders": {"k_d": "n_fine"}, "bounds": {"k_d": ["k_min", "k_max"]}},
+    }]
 
 
 def test_load_recipe_reads_a_file_by_its_top_key_and_refuses_one_of_another_kind_in_a_list(registry, tmp_path):
@@ -1728,11 +1793,15 @@ def test_every_statement_and_distribution_declaration_of_the_corpus_prints_to_so
 # the target inventory and the queries of AMD-SG-006 §5
 
 def test_the_target_inventory_lists_where_a_method_can_attach_in_source_order_and_each_place_resolves(cons):
+    # after each builder's lines, the written addresses of its Evaluation
+    # (AMD-MB-002): the value and, where a derivative line stands, its stated
+    # derivative for a value builder, the policy function for the policy builder
     inventory = target_inventory(cons)
     assert inventory == (
-        "arvl_to_dcsn", "dcsn_to_cntn", "cntn_to_dcsn", "cntn_to_dcsn.value", "cntn_to_dcsn.marginal", "dcsn_to_arvl",
-        "dcsn_to_arvl.value", "policy", "policy.optimality", "policy.InvEuler",
-        "policy.endoggrid", "policy.cons_choice", "policy.cons_choice.solve", "solve", "𝑢", "𝑑𝑢", "𝑑𝑢𝑖𝑛𝑣", "Γ")
+        "arvl_to_dcsn", "dcsn_to_cntn", "cntn_to_dcsn", "cntn_to_dcsn.value", "cntn_to_dcsn.marginal",
+        "cntn_to_dcsn.evaluate.value", "cntn_to_dcsn.evaluate.marginal", "dcsn_to_arvl", "dcsn_to_arvl.value",
+        "dcsn_to_arvl.evaluate.value", "policy", "policy.optimality", "policy.optimality.argmax",
+        "policy.evaluate", "argmax", "𝑢", "𝑑𝑢", "Γ")
     for target in inventory:
         resolve_target(cons, target)
 
@@ -1746,13 +1815,16 @@ def test_fields_carry_the_meet_of_the_sets_a_field_is_declared_with(elaborate_te
     def domains(text):
         return {identity: None if sort.domain is None else to_source(sort.domain)
                 for identity, sort in fields(elaborate_text(text)).items()}
-    narrowed = domains("@stage: t\n[id=b, (x : ℝ, y : [0, 2), z : Xa) : !arvl -> (w : ℝ) : !dcsn] {\n    w = x\n}\n"
+    # the named set Xa is defined by a comprehension, a form the rules of the
+    # meet do not decide; a set a typing names is defined (rule name-in-scope)
+    narrowed = domains("@stage: t\nXa := {q : ℝ | q >= 1}\n"
+                       "[id=b, (x : ℝ, y : [0, 2), z : Xa) : !arvl -> (w : ℝ) : !dcsn] {\n    w = x\n}\n"
                        "[id=d, (x : R++, y : (1, 3], z : Xa) : !arvl -> (v : ℝ) : !dcsn] {\n    v = x\n}\n")
     assert (narrowed["t:arvl:x"], narrowed["t:arvl:y"], narrowed["t:arvl:z"]) == ("ℝ₊₊", "(1, 2)", "Xa")
     assert domains("@stage: t\n[id=b, (x : [-inf, inf)) : !arvl -> (w : ℝ) : !dcsn] {\n    w = x\n}\n"
                    "[id=d, (x : ℝ) : !arvl -> (v : ℝ) : !dcsn] {\n    v = x\n}\n")["t:arvl:x"] == "ℝ"
     # a pair the rules do not meet leaves the field without a set
-    assert domains("@stage: t\n[id=b, (x : Xa) : !arvl -> (w : ℝ) : !dcsn] {\n    w = x\n}\n"
+    assert domains("@stage: t\nXa := {q : ℝ | q >= 1}\n[id=b, (x : Xa) : !arvl -> (w : ℝ) : !dcsn] {\n    w = x\n}\n"
                    "[id=d, (x : ℝ₊) : !arvl -> (v : ℝ) : !dcsn] {\n    v = x\n}\n")["t:arvl:x"] is None
 
 
@@ -3290,21 +3362,31 @@ def test_relations_types_and_definitions_keep_non_snapshot_semantics(
 
 
 def test_a_grid_named_in_a_methods_file_is_a_setting_bound_by_configure(elaborate_text):
+    """A grid is a setting of a methods entry, its kind the tag on the value of
+    `grid` and its fields beside it; the names the fields write are settings
+    `configure` binds, and the kind names none (AMD-MB-003 §3). The key
+    `grid` written beside `method`, the untyped grid, is refused."""
     stage = elaborate_text(_NOPORT.read_text(encoding="utf-8"),
                            "applications/portfolio-choice/declaration/stages/noport/noport.bl")
-    entry = {"on": "evaluate", "method": "Linear", "handler": "factory",
-             "settings": {"vendor_flag": True}, "grid": "wealth"}
+    entry = {"on": "cntn_to_dcsn.evaluate.value", "method": "Linear", "handler": "factory",
+             "settings": {"vendor_flag": True, "grid": "!Cartesian", "orders": {"k_d": "wealth_points"},
+                          "bounds": {"k_d": ["wealth_min", "wealth_max"]}}}
     methodized = methodize(stage, {"methods": [entry]})
     method = methodized.bindings.methods["cntn_to_dcsn:Evaluation"]
     assert (method.tag, method.handler, dict(method.settings)) == (
-        "Linear", "factory", {"vendor_flag": True, "grid": "wealth"})
-    assert method_types["!Linear"].options["grid"].kind == "untyped"
+        "Linear", "factory", {"vendor_flag": True, "grid": {"__yaml_tag__": "Cartesian", "value": ""},
+                              "orders": {"k_d": "wealth_points"},
+                              "bounds": {"k_d": ("wealth_min", "wealth_max")}})
+    assert method_types["!Linear"].options["grid"].kind == "grid kind"
     assert "vendor_flag" not in method_types["!Linear"].options
-    assert symbols(methodized)["settings"] == ("wealth",)
-    with pytest.raises(ValueError, match="wealth"):
+    assert symbols(methodized)["settings"] == ("wealth_points", "wealth_min", "wealth_max")
+    with pytest.raises(ValueError, match="wealth_points"):
         configure(methodized, {})
-    configured = configure(methodized, {"wealth": [0, 1, 2]})
-    assert configured.bindings.settings["wealth"] == (0, 1, 2)
+    configured = configure(methodized, {"wealth_points": 3, "wealth_min": 0.5, "wealth_max": 2.0})
+    assert configured.bindings.settings["wealth_points"] == 3
+    with pytest.raises(TargetError, match="writes `grid` beside `method`"):
+        methodize(elaborate_text(_NOPORT.read_text(encoding="utf-8"), "noport.bl"),
+                  {"methods": [{**entry, "grid": "wealth"}]})
 
 
 def test_public_method_types_and_stage_places_retain_their_contract(cons):
@@ -3348,11 +3430,13 @@ def test_admitted_methods_answers_the_tags_methodize_attaches_at_a_target(cons, 
     written, binds. The forward block `arvl_to_dcsn` admits neither `!egm`
     nor `!vfi`, the backward decision builder `cntn_to_dcsn` admits `!vfi`
     and the policy block does not, and the output statement
-    `cntn_to_dcsn.value` admits the three representations alone. On the
+    `cntn_to_dcsn.value` admits the two representations alone, `!Linear` and
+    `!pchip`, and the methods source writes the grid each requires. On the
     branching `tenure.bl` of the durables model, whose places `places()`
-    refuses to list, each target its methods file names answers its tags,
-    the expectation `E_ε` those whose `admits` holds the operator `E`. A
-    target that reaches no place is refused by its `TargetError`."""
+    lists with the branch lines under their labels, each target its methods
+    file names answers its tags, the expectation `E_ε` those whose `admits`
+    holds the operator `E`. A target that reaches no place is refused by its
+    `TargetError`."""
     from bellman.stage import admitted_methods
     from bellman.stage.binding_verbs import methodized_version
 
@@ -3361,6 +3445,12 @@ def test_admitted_methods_answers_the_tags_methodize_attaches_at_a_target(cons, 
         for tag, rule in method_types.items():
             entry = {"on": target, "method": {"__yaml_tag__": tag[1:], "value": ""}}
             required = {name: "x" for name, option in rule.options.items() if option.required}
+            # a grid is written by its kind and the fields that kind requires
+            # (AMD-MB-003 §3)
+            if "grid" in required:
+                fields = GRID_KINDS["Cartesian"]
+                required.update({name: "x" for name, option in fields.items() if option.required})
+                required["grid"] = "!Cartesian"
             if required:
                 entry["settings"] = required
             try:
@@ -3373,10 +3463,9 @@ def test_admitted_methods_answers_the_tags_methodize_attaches_at_a_target(cons, 
     assert {"!egm", "!vfi"}.isdisjoint(admitted_methods(cons, "arvl_to_dcsn"))
     assert "!vfi" in admitted_methods(cons, "cntn_to_dcsn")
     assert "!vfi" not in admitted_methods(cons, "policy")
-    assert admitted_methods(cons, "cntn_to_dcsn.value") == ("!Cartesian", "!Linear", "!pchip")
+    assert admitted_methods(cons, "cntn_to_dcsn.value") == ("!Linear", "!pchip")
 
-    with pytest.raises(TargetError):
-        tenure.places()
+    assert "dcsn_to_cntn.keep.cash_on_hand" in [row["address"] for row in tenure.places()]
     expectations = tuple(tag for tag in method_types if ("operator", "E") in method_types[tag]["admits"])
     assert admitted_methods(tenure, "E_ε") == expectations
     for target in ("policy", "cntn_to_dcsn", "arvl_to_dcsn"):
@@ -3401,8 +3490,8 @@ def test_method_attachments_add_no_conditions(cons, port):
 
 def test_typed_configuration_lists_readers_and_unread_settings(cons):
     source = {"stage": "cons", "methods": [{
-        "on": "cntn_to_dcsn.value", "method": "Cartesian",
-        "settings": {"orders": {"m_d": "n_m"},
+        "on": "cntn_to_dcsn.value", "method": "Linear",
+        "settings": {"grid": "!Cartesian", "orders": {"m_d": "n_m"},
                      "bounds": {"m_d": ["m_min", "m_max"]}},
     }]}
     specified = copy_native(cons).methodize(source).configure({"settings": {
@@ -3411,8 +3500,9 @@ def test_typed_configuration_lists_readers_and_unread_settings(cons):
     rows = specified.settings.list()
     assert [row["name"] for row in rows] == ["n_m", "m_min", "m_max", "unused"]
     for row in rows[:3]:
-        assert (row["read at"], row["by"]) == ("cntn_to_dcsn:Evaluation", "!Cartesian")
-    assert (rows[3]["read at"], rows[3]["by"]) == ("", "")
+        assert (row["read at"], row["by"], row["grid"]) == (
+            "cntn_to_dcsn:Evaluation", "!Linear", "!Cartesian")
+    assert (rows[3]["read at"], rows[3]["by"], rows[3]["grid"]) == ("", "", "")
     assert all(name in str(specified) for name in ("n_m", "m_min", "m_max", "unused"))
 
 
@@ -3420,14 +3510,16 @@ def test_method_choices_leave_graphs_types_and_equations_unchanged(cons):
     # `!egm` stands on the policy block, which writes the grid line, and
     # `!vfi` on the backward decision builder alone (lane K of the internal
     # developer release 0.01, sub-brief §3)
-    for target, solver, representation in (("policy", "egm", "Cartesian"),
+    savings = {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}
+    for target, solver, representation in (("policy", "egm", "Linear"),
                                            ("cntn_to_dcsn", "vfi", "pchip")):
         version = copy_native(cons).methodize({"stage": "cons", "methods": [
-            {"on": target, "method": solver},
+            {"on": target, "method": solver, **({"settings": savings} if solver == "egm" else {})},
             {"on": "cntn_to_dcsn.value", "method": representation,
-             "settings": {"orders": {"m_d": "n_m"},
+             "settings": {"grid": "!Cartesian", "orders": {"m_d": "n_m"},
                           "bounds": {"m_d": ["m_min", "m_max"]}}},
-        ]}).configure({"settings": {"n_m": 8, "m_min": 0.1, "m_max": 10.0}})
+        ]}).configure({"settings": {"n_m": 8, "m_min": 0.1, "m_max": 10.0,
+                                    "n_a": 8, "a_min": 0.1, "a_max": 10.0}})
         assert version.builder.bwd.graph == cons.builder.bwd.graph
         assert version.builder.fwd.graph == cons.builder.fwd.graph
         for kind in ("Pullback", "Aggregation", "Evaluation"):
@@ -3875,7 +3967,7 @@ def test_the_navigation_is_the_interface_and_the_box_queries_are_implementation(
     assert cons.dcsn.builder.bwd.methods == {} and box.methods == {}
     assert {name: method.tag for name, method
             in cons_methodized.dcsn.builder.bwd.methods.items()} == {
-        "cntn_to_dcsn:Evaluation": "Cartesian"}
+        "cntn_to_dcsn:Evaluation": "Linear"}
     assert {name: method.tag for name, method in cons_methodized.builder.policy.methods.items()} == {
         "policy:Evaluation": "egm"}
     assert [method.tag for method in
@@ -4118,7 +4210,7 @@ def test_method_at_answers_with_the_bound_record_and_symbols_lists_the_settings_
     assert method_at(cons_methodized, "cntn_to_dcsn:Evaluation") is cons_methodized.bindings.methods[
         "cntn_to_dcsn:Evaluation"]
     assert method_at(cons_methodized, "dcsn_to_arvl") is None and method_at(cons, "policy") is None
-    assert symbols(cons_methodized)["settings"] == ("n_m", "m_min", "m_max")
+    assert symbols(cons_methodized)["settings"] == ("n_a", "a_min", "a_max", "n_m", "m_min", "m_max")
 
 
 def test_parameters_prints_a_declared_parameter_unbound_and_then_the_value_calibration_binds(cons, cons_calibrated):
@@ -4249,7 +4341,7 @@ def test_item_1_the_bound_sheet_stamps_the_version_and_lists_each_binding(cons, 
     assert "!egm" in " ".join(body["BINDINGS"])
     # every entry of a bound source on its own line, nothing abbreviated
     assert sum(1 for line in body["BINDINGS"]
-               if "cntn_to_dcsn:Evaluation" in line and "!Cartesian" in line) == 1
+               if "cntn_to_dcsn:Evaluation" in line and "!Linear" in line) == 1
     # the stamp of a version whose bindings are an initial segment of D36's order
     assert str(calibrate(copy_native(cons), cons_sources["calibration"])).splitlines()[0].endswith("[VERSION = CALIBRATED]")
     assert str(methodize(calibrate(copy_native(cons), cons_sources["calibration"]), cons_sources["methods"])).splitlines()[0].endswith("[VERSION = METHODIZED]")
@@ -4372,8 +4464,9 @@ def test_item_4_a_bound_method_stands_on_every_card_of_what_it_realises(cons, co
     method = bound.builder.bwd["cntn_to_dcsn"]["Evaluation"].methods[
         "cntn_to_dcsn:Evaluation"]
     assert (method.tag, method.handler, dict(method.settings)) == (
-        "Cartesian", "cons-port:_make_interp",
-        {"orders": {"m_d": "n_m"}, "bounds": {"m_d": ("m_min", "m_max")}})
+        "Linear", "cons-port:_make_interp",
+        {"grid": {"__yaml_tag__": "Cartesian", "value": ""},
+         "orders": {"m_d": "n_m"}, "bounds": {"m_d": ("m_min", "m_max")}})
     assert bound.bindings.settings["n_m"] == 8000
     # the policy's Evaluation, which stores the policy, carries the `!egm`
     # entry bound at itself, and the identification Pullback before it
@@ -4381,7 +4474,9 @@ def test_item_4_a_bound_method_stands_on_every_card_of_what_it_realises(cons, co
     # §3)
     stored = bound.builder.policy["policy:Evaluation"].methods["policy:Evaluation"]
     assert (stored.tag, stored.handler, dict(stored.settings)) == (
-        "egm", "cons-port:egm", {})
+        "egm", "cons-port:egm",
+        {"grid": {"__yaml_tag__": "Cartesian", "value": ""},
+         "orders": {"a": "n_a"}, "bounds": {"a": ("a_min", "a_max")}})
     assert bound.builder.policy["policy.cons_choice:Pullback"].methods == {}
     # Each source-line handle exposes the same Evaluation method.
     block = bound.initial.backward["cntn_to_dcsn"]
@@ -4560,7 +4655,7 @@ def test_item_2_a_wrapped_column_wraps_under_itself_and_keeps_a_set_whole(
     first = next(index for index, line in enumerate(body) if "n_m " in line)
     settings = body[first:first + 6]
     assert all(line.endswith("cntn_to_dcsn:Evaluation") for line in settings[::2])
-    assert all(line.strip() == "!Cartesian" for line in settings[1::2])
+    assert all(line.strip() == "!Linear" for line in settings[1::2])
     assert len({line.index("cntn_to_dcsn:Evaluation") for line in settings[::2]}) == 1
 
     rates = elaborate_text("@stage: t\nrates : " + " × ".join(["[0,1]"] * 11) + "\n")
@@ -4785,18 +4880,25 @@ def test_nested_authored_method_settings_have_valid_encodings(cons):
     from importlib.resources import files
     from jsonschema import Draft202012Validator
 
+    # a mapping under a key the handler reads, beside the grid the method
+    # requires (AMD-MB-003 §3)
+    authored = {"grid": "!Cartesian", "orders": {"m_d": "n_points"},
+                "bounds": {"m_d": ["m_min", "m_max"]}, "layout": {"orders": ["n_m"]}}
     stage = copy_native(cons).methodize({"methods": [{"on": "cntn_to_dcsn.value", "method": "Linear",
-                                        "settings": {"grid": {"orders": ["n_m"]}}}]})
-    with pytest.raises(ValueError, match="n_m"):
+                                        "handler": "test:interpolate", "settings": authored}]})
+    with pytest.raises(ValueError, match="n_points"):
         stage.configure({})
     schema = json.loads(files("bellman.display").joinpath("stage-encoding-2.6.schema.json").read_text())
     Draft202012Validator.check_schema(schema)
     validator = Draft202012Validator(schema)
-    for version in (stage, copy_native(stage).configure({"n_m": 10})):
+    configured = copy_native(stage).configure({"n_m": 10, "n_points": 8, "m_min": 0.1, "m_max": 10.0})
+    for version in (stage, configured):
         encoded = json.loads(str(version.encoding()))
         validator.validate(encoded)
         method = encoded["bindings"]["methods"]["cntn_to_dcsn:Evaluation"]
-        assert method["settings"] == {"grid": {"orders": ["n_m"]}}
+        assert method["settings"] == {
+            "grid": {"__yaml_tag__": "Cartesian", "value": ""}, "orders": {"m_d": "n_points"},
+            "bounds": {"m_d": ["m_min", "m_max"]}, "layout": {"orders": ["n_m"]}}
         method["unexpected"] = None
         assert not validator.is_valid(encoded)
 
@@ -4856,18 +4958,27 @@ def test_encoding_recurses_through_reserved_method_and_configured_values(cons, s
     from importlib.resources import files
     from jsonschema import Draft202012Validator
 
-    raw = {"grid": {"$bellman": 3, "orders": ["n_m"]}}
+    # the reserved key in a mapping under a key the handler reads, beside the
+    # grid the method requires (AMD-MB-003 §3)
+    grid = {"grid": "!Cartesian", "orders": {"m_d": "n_points"}, "bounds": {"m_d": ["m_min", "m_max"]}}
+    raw = {**grid, "layout": {"$bellman": 3, "orders": ["n_m"]}}
     stage = copy_native(cons).methodize({"methods": [{"on": "cntn_to_dcsn.value", "method": "Linear",
-                                        "settings": raw}]})
+                                        "handler": "test:interpolate", "settings": raw}]})
     tag = {"$bellman": ["float", spelling]}
-    configured = stage.configure({"n_m": float(spelling), "extra": {"$bellman": ["float", spelling]}})
+    configured = stage.configure({"n_points": 8, "m_min": 0.1, "m_max": 10.0, "n_m": float(spelling),
+                                  "extra": {"$bellman": ["float", spelling]}})
     answer = configured.encoding()
     assert answer["bindings"]["settings"] == {
-        "n_m": tag, "extra": {"$bellman": ["mapping", [["$bellman", ["float", spelling]]]]}}
-    authored = {"grid": {"$bellman": ["mapping", [["$bellman", 3], ["orders", ["n_m"]]]]}}
+        "n_points": 8, "m_min": 0.1, "m_max": 10.0, "n_m": tag,
+        "extra": {"$bellman": ["mapping", [["$bellman", ["float", spelling]]]]}}
+    kind = {"__yaml_tag__": "Cartesian", "value": ""}
+    authored = {"grid": kind, "orders": {"m_d": "n_points"}, "bounds": {"m_d": ["m_min", "m_max"]},
+                "layout": {"$bellman": ["mapping", [["$bellman", 3], ["orders", ["n_m"]]]]}}
     assert answer["bindings"]["methods"]["cntn_to_dcsn:Evaluation"]["settings"] == authored
-    expected = {"grid": {"$bellman": ["mapping", [
-        ["$bellman", 3], ["orders", [{"name": "n_m", "value": tag}]]]]}}
+    expected = {"grid": kind, "orders": {"m_d": {"name": "n_points", "value": 8}},
+                "bounds": {"m_d": [{"name": "m_min", "value": 0.1}, {"name": "m_max", "value": 10.0}]},
+                "layout": {"$bellman": ["mapping", [
+                    ["$bellman", 3], ["orders", [{"name": "n_m", "value": tag}]]]]}}
     builder = next(box for box in answer["builders"]["backward"]["boxes"]
                    if box["name"] == "cntn_to_dcsn")
     assert builder["methods"][0]["settings"] == expected
@@ -5978,7 +6089,7 @@ def test_the_egm_row_keeps_two_parts_and_prints_no_derivation(port):
     # the card's section headings as lane P prints them
     assert "\nAdmits\n" in printed and "argmax" in printed
     assert "Derivation" not in printed and "Theorem 2" not in printed
-    with pytest.raises(TargetError, match="a block that writes the grid line"):
+    with pytest.raises(TargetError, match="where the policy block writes the grid line"):
         copy_native(port).methodize({"stage": "port", "methods": [{"on": "policy", "method": "egm"}]})
 
 
@@ -5989,15 +6100,17 @@ def test_egm_on_the_declared_multiplier_binds_the_policy_evaluation(cons_obs):
     which supersedes AMD-SG-035 §7), and changes no rule, no condition and
     no obligation."""
     methodized = copy_native(cons_obs).methodize({"stage": "cons_obs", "methods": [
-        {"on": "policy", "method": "egm", "handler": "cons-port:egm"}]})
+        {"on": "policy", "method": "egm", "handler": "cons-port:egm",
+         "settings": {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}}]})
     assert [box for box, m in methodized.builder.bwd.methods.items() if m.tag == "egm"] == [
         "policy:Evaluation"]
     from sheets_parse import parse_card
     before, after = parse_card(str(cons_obs.builder.policy)), parse_card(str(methodized.builder.policy))
-    # the operations and the conditions as before, the method's section after them
+    # the operations and the conditions as before, the method's sections after
+    # them, its options, the grid of savings, among them (AMD-MB-003 §1)
     assert all(after["sections"][heading] == before["sections"][heading] for heading in ("Operations", "Conditions"))
     last = before["order"].index("Conditions") + 1
-    assert after["order"] == before["order"][:last] + ["Method"] + before["order"][last:]
+    assert after["order"] == before["order"][:last] + ["Method", "Options"] + before["order"][last:]
     assert [i.condition for i in obligations(methodized)] == [i.condition for i in obligations(cons_obs)]
 
 
@@ -6708,10 +6821,10 @@ def test_item_5_a_binding_report_names_the_failure_and_the_two_successes(cons, c
                                "methods": str(cons_sources["methods"]), "settings": {"nonsense": 1}})
     assert (report.bound, report.skipped, list(report.failed)) == (("calibrate", "methodize"), (), ["configure"])
     assert report.failed["configure"] == (
-        "stage 'cons', box 'cntn_to_dcsn:Evaluation': the settings source supplies no value "
-        "for 'n_m', which the method !Cartesian at that place names; every setting an attached "
+        "stage 'cons', box 'policy': the settings source supplies no value "
+        "for 'n_a', which the method !egm at that place names; every setting an attached "
         "method names is valued when settings are bound (AMD-SG-006 §4); "
-        "write `n_m: <value>` in the settings source")
+        "write `n_a: <value>` in the settings source")
     assert report.stage is not cons
     assert report.stage.bindings.calibration is not None
     assert report.stage.bindings.methods is not None
@@ -7213,18 +7326,19 @@ def test_an_entry_is_appended_to_a_mapping_or_a_list_of_a_models_file_keeping_ev
     )
     new = append_to_sequence(methods, "methods", "{on: dcsn_to_cntn}")
     # the entry stands after the list's last entry, before the comment lines that close the file
-    last = "    settings: {orders: {m: n_m}, bounds: {m: [m_min, m_max]}}\n"
+    last = "    settings: {grid: !Cartesian, orders: {m: n_m}, bounds: {m: [m_min, m_max]}}\n"
     assert methods.count(last) == 1
     assert new == methods.replace(last, last + "  - {on: dcsn_to_cntn}\n")
     read = entry_value(new, "methods")
     assert read == [*entry_value(methods, "methods"), {"on": "dcsn_to_cntn"}]
     # the file's three tags in order: it binds `!egm` with its block, one
-    # `!marginals` line and one `!Cartesian` on the envelope line; the
-    # arrival builder's entries left with the arrival blocks (AMD-MB-001, D8)
+    # `!marginals` line and one `!Linear` at the decision builder's
+    # Evaluation; the arrival builder's entries left with the arrival blocks
+    # (AMD-MB-001, D8)
     assert [entry["method"]["__yaml_tag__"] for entry in read[:-1]] == [
         "egm",
         "marginals",
-        "Cartesian",
+        "Linear",
     ]
     with pytest.raises(ValueError, match="holds the key 'worker_saving'"):
         append_to_mapping(recipe, ("stages",), "worker_saving", "{}")
@@ -9185,19 +9299,6 @@ def test_comp_a_bound_named_by_a_parameter_is_one_bound_within_a_period_and_prov
                 assert pair.basis[0][2] != pair.basis[1][2]
 
 
-def test_comp_a_set_a_stage_names_and_defines_by_no_rule_is_not_established_on_either_side(comp_unchanged):
-    """Two stages that both write `a : X` and define `X` by no rule do not agree on a set by the spelling:
-    the pair is not established, naming the set and the stage, and so is a pair against a stage whose set
-    is defined."""
-    undefined = stage_from_text(UNCHANGED.replace("@stage: unchanged", "@stage: undefined").replace("a : ℝ₊", "a : X"), "undefined.bl")
-    selection = comp_selection([comp_period({"S": undefined, "T": undefined}, [{"S.a": "T.a"}])])
-    (pair,) = [pair for pair in selection.pairs if pair.origin == "authored"]
-    assert pair.compatibility == "not-established" and "names the set X, which periods[0].S defines by no rule" in pair.reason
-    assert [d.rule for d in selection.diagnostics] == ["pair-not-established", "route-not-established"]
-    mixed = comp_selection([comp_period({"S": undefined, "T": comp_unchanged}, [{"S.a": "T.a"}])])
-    assert mixed.pairs[0].compatibility == "not-established"
-
-
 def test_comp_an_undecided_competitor_leaves_an_arrival_use_disputed_until_a_value_decides_it(comp_unchanged, comp_positive, comp_bounded):
     """Where `T` arrives at `a` in ℝ₊ and both `S`, continuing in ℝ₊₊, and `U`, continuing in `[a_min, inf)`,
     offer it, the compatible candidate is not selected while the other is undecided: the two are disputed,
@@ -9296,3 +9397,86 @@ def test_marginal_blocks_bound_on_one_stage_file_read_under_two_spellings_of_its
     assert bound[0].bindings == bound[1].bindings
     for block in bound[0].bindings.blocks.values():
         assert {span.file for span in block.spans.values()} <= {block.origin}
+
+
+# --- the union of a stage file and its additions (specification 0.7 §4) ---
+
+
+def test_union_is_the_identity_on_a_stage_file_alone_and_carries_the_file_of_every_item():
+    """`union` on the parsed trees (`bellman.syntax.union`): with no addition
+    the stage file comes back as it was, term and span table; with an
+    addition, the block of the same id gains the addition's lines and
+    entries, a file-level entry is attached to the block its path names, and
+    the span table names, for every item and entry, the file it was written
+    in, which is the provenance the declared level reads."""
+    from bellman.syntax.lower import parse_with_spans
+    from bellman.syntax.union import union
+
+    stage = parse_with_spans(corpus_text("cons"), "cons.bl")
+    alone = union(stage, [])
+    assert alone.term == stage.term and dict(alone.spans) == dict(stage.spans)
+    addition = ROOT / "packages/bellman/tests/additions/portfolio-choice/methods.cons.bl"
+    added = parse_with_spans(addition.read_text(encoding="utf-8"), "methods.cons.bl")
+    unioned = union(stage, [added])
+    files = {address: span.file for address, span in unioned.spans.items()}
+    assert files["policy"] == "cons.bl" and files["policy.optimality"] == "cons.bl"
+    assert files["policy.InvEuler"] == files["policy.identification"] == "methods.cons.bl"
+    # the entries of the policy block, relative and absolute, and the
+    # file-level entries routed to the blocks their paths name
+    assert files["policy.method"] == files["policy.grid"] == files["policy.handler"] == "methods.cons.bl"
+    assert files["cntn_to_dcsn.evaluate.method"] == files["dcsn_to_cntn.handler"] == "methods.cons.bl"
+    # the addition's seven file-level items, appended after the stage's
+    held = len(stage.term.items)
+    assert len(unioned.term.items) == held + 7
+    assert all(files[str(n)] == "methods.cons.bl" for n in range(held + 1, held + 8))
+    assert "arvl_to_dcsn.method" in files
+
+
+def test_union_appends_the_lines_of_an_addition_and_its_span_table_carries_both_files():
+    """Rules 5 and 6 of the union: the lines of an addition's block are
+    appended after the block's lines, every line of both files standing in
+    the one block, so that a row that defines the declared output beside the
+    maximization is refused by the construction under `defined-once`; and
+    the span table names the file of every item, the items whose file is
+    the stage file's being the stage file's own items, which is the
+    erasure."""
+    from bellman.syntax.lower import parse_with_spans
+    from bellman.syntax.union import union
+
+    stage = parse_with_spans(corpus_text("cons"), "cons.bl")
+    addition = ROOT / "packages/bellman/tests/additions/portfolio-choice/methods.cons.bl"
+    added = parse_with_spans(addition.read_text(encoding="utf-8"), "methods.cons.bl")
+    appended = union(stage, [added])
+    files = {address: span.file for address, span in appended.spans.items()}
+    assert files["policy.optimality"] == "cons.bl" and files["policy.InvEuler"] == "methods.cons.bl"
+    assert {address for address, file in files.items() if file == "cons.bl"} == set(stage.spans)
+    assert set(files.values()) == {"cons.bl", "methods.cons.bl"}
+    with pytest.raises(ConstructionError) as refused:
+        make_stage(appended.term, appended.spans)
+    assert refused.value.rule == "defined-once"
+
+
+def test_the_operative_level_leaves_out_the_stage_files_rows_of_a_block_whose_addition_brings_rows_under_a_solution_method():
+    """Rule 5 as decided (`bellman.stage.method_blocks.operative_level`):
+    given the solution words, the rows an addition brings to a block whose
+    own method component holds one stand in place of the stage file's rows
+    at the operative level, the block's derivative lines kept, the span
+    table rebuilt at the kept items' addresses, and the construction reads
+    the result; given no solution word, the union is answered as it is."""
+    from bellman.stage.method_blocks import operative_level
+    from bellman.syntax.lower import parse_with_spans
+    from bellman.syntax.union import union
+
+    stage = parse_with_spans(corpus_text("cons"), "cons.bl")
+    addition = ROOT / "packages/bellman/tests/additions/portfolio-choice/methods.cons.bl"
+    added = parse_with_spans(addition.read_text(encoding="utf-8"), "methods.cons.bl")
+    appended = union(stage, [added])
+    assert operative_level(appended, "cons.bl", frozenset()) is appended
+    operative = operative_level(appended, "cons.bl", {"egm"})
+    assert "policy.optimality" not in operative.spans and "policy.InvEuler" in operative.spans
+    assert set(appended.spans) - set(operative.spans) == {"policy.optimality"}
+    built = make_stage(operative.term, operative.spans)
+    addresses = [row["address"] for row in built.places()]
+    assert "policy.optimality" not in addresses
+    assert {"policy.InvEuler", "policy.grid", "policy.identification", "cntn_to_dcsn.marginal"} <= set(addresses)
+

@@ -1,0 +1,25 @@
+@methods: buffer_stock
+# Value function iteration at the last working occurrence, read after
+# pension.bl in place of egm.bl: the decision value is built by maximization on
+# the grid of resources and balances, the builder's own grid entry (D5, AAS,
+# 4 November 2026; sheet §7), the maximization operator of the policy line
+# solved by bounded scalar maximization, and the decision value and its two
+# stated derivatives represented by one unrefined entry at the decision
+# builder's Evaluation, whose grid entry names the same two factors (F47,
+# F29). Flat declarations with full addresses and no block, since no line is
+# added and a block with an empty body has no form (F24); one names an
+# operator inside a line. The three declarations of the balance grid's
+# settings repeat pension.bl's word for word, so that rule 2 merges them.
+
+n_m : ℕ              :: ["number of points of the resources grid"]
+m_min : Xm           :: ["lower bound of the resources grid"]
+m_max : Xm           :: ["upper bound of the resources grid"]
+n_p : ℕ              :: ["number of points of the pension-balance grid"]
+p_min : Xp           :: ["lower bound of the pension-balance grid"]
+p_max : Xp           :: ["upper bound of the pension-balance grid"]
+
+cntn_to_dcsn.method : !vfi
+cntn_to_dcsn.grid : !Cartesian(m=(m_min, m_max, n_m), p_d=(p_min, p_max, n_p))
+policy.optimality.argmax.method : !scipy_bounded
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(m=(m_min, m_max, n_m), p_d=(p_min, p_max, n_p))

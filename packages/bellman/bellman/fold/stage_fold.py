@@ -671,6 +671,10 @@ def _declared_definitions(term, ctx, spans):
     for address, item in item_addresses(term):
         written = _written_at(address, spans)
         _misplaced_marker(item, ctx, address, written)
+        if isinstance(item, T.Declare) and _is_typing_entry(item.declaration):
+            # a typing entry or a handler binding the union left at file
+            # level, which the semantics reads (specification 0.7, unit U3)
+            continue
         if isinstance(item, T.Declare):
             definitions.extend(_declaration_definitions(item, ctx, address, written))
         elif isinstance(item, T.Statement):
@@ -828,11 +832,21 @@ def _misplaced_marker(item, ctx, address, written):
     )
 
 
+def _is_typing_entry(declaration) -> bool:
+    """Whether a top-level declaration is a typing entry or a handler
+    binding, `policy.method : !egm`, whose subject is a path."""
+    return isinstance(declaration, T.Handler) or (
+        isinstance(declaration, T.Declaration) and isinstance(declaration.subject, T.Path)
+    )
+
+
 def _item_words(item) -> str:
     """A top-level statement or declaration in words, `the function alias 𝑑𝑢`,
     as a refusal names it."""
     if isinstance(item, T.Declare):
         declaration = item.declaration
+        if _is_typing_entry(declaration):
+            return f"the entry of {to_source(declaration.subject)}"
         if isinstance(declaration, T.Complementary):
             declaration = declaration.declaration
         stems = [c.stem for c in declaration.subject.coordinates if isinstance(c, T.Coordinate)]
@@ -907,6 +921,7 @@ def _site_address(site, stem, term, spans):
             address.isdigit()
             and isinstance(item, T.Declare)
             and isinstance(item.declaration, T.Declaration)
+            and isinstance(item.declaration.subject, T.Subject)
             and any(
                 isinstance(c, T.Coordinate) and c.stem == stem
                 for c in item.declaration.subject.coordinates

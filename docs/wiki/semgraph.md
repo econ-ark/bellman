@@ -380,7 +380,7 @@ Elaboration stores the two initial diagrams and the builder grain of each
 builders graph, or a refusal where one cannot be constructed. A query derives
 the requested grain from those retained objects and caches it for the stage
 version. `ElaboratedStage` has seven attributes: `name`, `metadata`,
-`definitions`, `initial`, `_builders`, `bindings` and `provenance`, the fifth the stored record of the two builders graphs, which `stage.builder` reads. The object is a [[stage|stage occurrence]], one stage file elaborated at one position of a [[period]], and it is not adjusted in place: a binding gives a new stage version, and a different text is elaborated again as its own stage occurrence. Definitions retain
+`definitions`, `initial`, `_builders`, `bindings` and `provenance`, the fifth the stored record of the two builders graphs, which `stage.builder` reads. The object is a [[stage|stage occurrence]], one stage file elaborated at one position of a [[period]]; a binding adds to it in place and returns it, and a different text is elaborated again as its own stage occurrence. Definitions retain
 source equations; queries derive their mathematical and display information.
 <!-- /synth -->
 

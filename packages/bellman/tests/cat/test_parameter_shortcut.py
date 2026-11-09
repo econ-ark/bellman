@@ -132,7 +132,8 @@ def test_item_6_a_setting_answers_its_value_alone(cons, cons_methodized, cons_co
     no Python identifier is read by `getattr` or by the key and is not
     listed."""
     assert cons_configured.settings.n_a == cons_configured.settings["n_a"].value == 800
-    assert str(cons_configured.settings["n_a"]) == "n_a = 800"
+    assert str(cons_configured.settings["n_a"]) == (
+        "n_a = 800, read at policy by !egm for its grid !Cartesian")
     assert "n_a" in dir(cons_configured.settings)
     with pytest.raises(AttributeError) as refused:
         cons.settings.n_a

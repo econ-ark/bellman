@@ -1,0 +1,38 @@
+@methods: noport
+# The methods of the stage without a portfolio choice as an addition to
+# applications/portfolio-choice/declaration/stages/noport/noport.bl, rewritten
+# from stages/noport/methods.yml: Gauss-Hermite quadrature of the income shock
+# θ at the expectation, with its node count; the linear representation of the
+# decision value on a grid of capital; the deterministic arrival builder; and
+# the forward law of motion drawn by Monte Carlo. The one handler of the YAML,
+# solve_nest_egm of cons-port, stands beside three methods at three places of
+# three kinds. No line is added, so every selection is a file-level line routed
+# by its path (rule 7). The YAML's stage-wide entry on E_θ is written once, for
+# the one block that holds the operator, cntn_to_dcsn, whose lines value and
+# marginal each read it, and the relative operator address names both
+# occurrences (finding F3). The YAML binds the value at
+# cntn_to_dcsn.evaluate.value and not the stated derivative D_{k_d}V, so the
+# Evaluation is refined by its object (D4). The YAML keys its grid to the
+# coordinate k_d and names the three settings of resources, n_m, m_min and
+# m_max; the grid entry keys its factor to k_d, as the YAML did, with the three
+# settings the YAML named (writer's sheet §7; D5, decided). The entry on dcsn_to_arvl, which binds nothing, is
+# not written (sheet §5).
+# Every setting the file reads is declared above the lines with
+# its set, a bound as a point of Xk, the set of k_d, a count, a node count and a
+# seed in ℕ (writer's sheet §6).
+
+n_m : ℕ            :: ["number of points of the grid of capital, named in the YAML for resources"]
+m_min : Xk         :: ["lower bound of the grid of capital, named in the YAML for resources"]
+m_max : Xk         :: ["upper bound of the grid of capital, named in the YAML for resources"]
+n_θ_nodes : ℕ      :: ["quadrature nodes of the income shock"]
+n_sim : ℕ          :: ["number of simulated paths"]
+sim_seed : ℕ       :: ["seed of the simulation's draws"]
+
+cntn_to_dcsn.E_θ.method : !gauss_hermite(n_θ=n_θ_nodes)    # no form in §4: handler: cons-port:solve_nest_egm; on: E_θ, the stage-wide address; n_nodes: [n_θ_nodes]
+cntn_to_dcsn.E_θ.handler : "cons-port:solve_nest_egm"
+cntn_to_dcsn.evaluate[V].method : !Linear    # no form in §4: handler: cons-port:solve_nest_egm
+cntn_to_dcsn.evaluate[V].grid : !Cartesian(k_d=(m_min, m_max, n_m))
+cntn_to_dcsn.evaluate[V].handler : "cons-port:solve_nest_egm"
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)    # no form in §4: handler: cons-port:solve_nest_egm
+dcsn_to_cntn.handler : "cons-port:solve_nest_egm"

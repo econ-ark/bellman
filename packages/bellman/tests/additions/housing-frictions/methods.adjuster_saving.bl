@@ -1,0 +1,47 @@
+@methods: adjuster_saving
+# The methods of the adjuster's saving stage as an addition to
+# applications/housing-frictions/declaration/stages/adjuster_saving/adjuster_saving.bl,
+# rewritten from stages/adjuster_saving/methods.yml and the block file
+# methods/marginals_adjuster_saving.bl: the envelope line of the decision value
+# in total resources, appended to the decision value builder under the
+# builder's id, in place of the block file's id dcsn_marginal (writer's sheet
+# §5). The block file's signature equals the stage's and is not restated,
+# since a methods-file block that adds no coordinate carries no signature
+# (sheet §1). Every entry introduced by a comment beginning "Addition" is no
+# part of the application's selection: it is written to exercise an aspect of
+# the writer's sheet at a place the stage has, and the YAML binds nothing
+# there. The stage file's Euler lines euler_financial and euler_housing stand
+# in its policy block beside the maximization, which it marks !doc, with no
+# method word; nothing is added to that block (sheet §5, finding F14).
+
+# Addition: the settings that the grid entries below read, declared with their sets (writer's
+# sheet §6): the bounds are points of ℝ₊₊, the set the stage gives the total
+# resources m, and the count is in ℕ. The application has no settings file.
+n_m : ℕ          :: ["number of points of the grid of total resources"]
+m_min : ℝ₊₊      :: ["lower bound of the grid of total resources"]
+m_max : ℝ₊₊      :: ["upper bound of the grid of total resources"]
+
+# Addition: time iteration on the policy builder, whose operative lines are
+# the two Euler relations euler_financial and euler_housing and whose joint
+# maximization the stage file marks !doc, so that a method says how the
+# relations are solved for c and h_choice at each point of the grid of the
+# one decision state m (finding F69), the grid its own typing entry with one
+# factor keyed by the coordinate (D5, writer's sheet §7); file-level lines,
+# since no line is added to the block and an empty body is refused.
+policy.method : !time_iteration
+policy.grid : !Cartesian(m=(m_min, m_max, n_m))
+
+# The envelope line of the decision value. Addition: the decision value V
+# represented linearly and its derivative D_{m}V by the shape-preserving
+# cubic, each named at its own Evaluation with its own grid entry on m
+# beside it (D4's second form, writer's sheet §7). The
+# derivative, which the choice stage reads as D_{w_adj}V_adj[>] in both of its
+# derivative lines, takes the cubic because it keeps the derivative decreasing
+# between knots at which its values decrease.
+[id=cntn_to_dcsn
+    | evaluate[V].method : !Linear
+    | evaluate[V].grid : !Cartesian(m=(m_min, m_max, n_m))
+    | evaluate[D_{m}V].method : !pchip
+    | evaluate[D_{m}V].grid : !Cartesian(m=(m_min, m_max, n_m))] {
+    D_{m}V = 𝑢_c(c)                                     :: [id=marginal_resources]
+}

@@ -3,16 +3,10 @@ window.MathJax = {
     inlineMath: [["\\(", "\\)"], ["$", "$"]],
     displayMath: [["\\[", "\\]"], ["$$", "$$"]],
     processEscapes: true,
-    processEnvironments: true,
-    packages: {'[+]': ['extpfeil']}
+    processEnvironments: true
   },
   options: {
-    // MathJax v3 already skips <pre>, <code>, <script>, <style> by default.
-    // Only ignore syntax-highlighted code blocks explicitly.
-    ignoreHtmlClass: "highlight|highlight-ipynb|codehilite"
+    ignoreHtmlClass: ".*|",
+    processHtmlClass: "arithmatex"
   }
 };
-
-document$.subscribe(() => {
-  MathJax.typesetPromise()
-})

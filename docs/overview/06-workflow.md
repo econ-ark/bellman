@@ -27,7 +27,7 @@ type: overview
 | **Specifying the stages** | [Parameter values](../wiki/calibration.md), [numerical methods](../wiki/methodization.md) for the operators and [settings](../wiki/settings.md) are attached, in that order ([The binding verbs](../Bellman-Sym/API/stage/09-binding-verbs.md)). | `stage.calibrate`, `stage.methodize` and `stage.configure` for one stage; `bellman.trellis.calibrate_trellis`, `bellman.trellis.methodize_trellis` and `bellman.trellis.configure_trellis` for a trellis, each given the dictionary of records it binds with; or the single call `bellman.trellis.assemble_trellis(directory, recipe)` for a registry and its recipe |
 | **Realization** | A [numerical routine](../wiki/handler.md) is supplied for each operator, and the routines together perform, for example, value iteration, policy iteration or simulation. | Code that you write, or a toolkit recorded in the Rosetta stone. |
 
-Each attachment returns a new version of the stage, with its own copy of the graphs, and leaves the earlier version unchanged. Realization lies outside Bellman-SYM.
+Each attachment adds its binding to the stage it is called on and returns that stage; nothing is copied, and a later binding at a target replaces the earlier one. Realization lies outside Bellman-SYM.
 
 ## 2 Structuring a project
 

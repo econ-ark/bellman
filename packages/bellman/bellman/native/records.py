@@ -20,9 +20,8 @@ builder, a sub-builder and a statement. A wire carries its whole type in one
 - the records of a version: `Bindings`, `Method`, `MethodOption`, `Metadata`
   and `Provenance`;
 - the records of the construction: a block (`BlockData`, `NodeData`,
-  `BlockHeader`), a line (`Line`, `OperatorOccurrence`, `ResolvedName`,
-  `ExpressionType`) and the representation at a builder's output
-  (`ValueRepresentation`);
+  `BlockHeader`) and a line (`Line`, `OperatorOccurrence`, `ResolvedName`,
+  `ExpressionType`);
 - the validators and the equality of records.
 
 Every record a stage holds is immutable, and its fields take part in its
@@ -967,9 +966,13 @@ def _broken_at_spaces(text, room):
 def setting_names(value):
     """A string under an authored settings entry is one setting name; the names
     a bound method's settings hold, which `Bindings.settings_readers` and
-    `block_lines.symbols` read."""
+    `block_lines.symbols` read. A tagged value, the kind of a grid written
+    `grid: !Cartesian` and held `{"__yaml_tag__": "Cartesian", "value": ""}`,
+    names no setting (AMD-MB-003 §3)."""
     if isinstance(value, str):
         yield value
+    elif hasattr(value, "values") and "__yaml_tag__" in value:
+        return
     elif hasattr(value, "values"):
         for item in value.values():
             yield from setting_names(item)
@@ -985,8 +988,9 @@ class Method(Record):
     expectation, the interpolation scheme at a builder's output. `tag` is
     the method tag without its `!`; `handler` the handler name; `settings`
     the entry's settings by name, the values naming the settings `configure`
-    binds, and the grid the entry names under `grid`, since a grid named in
-    a methods file is a setting. Held in `Bindings.methods` under the name of
+    binds, beside the kind of a grid under `grid`, a tag the entry writes,
+    `grid: !Cartesian`, which names no setting (AMD-MB-003 §3). Held in
+    `Bindings.methods` under the name of
     the box the target resolves to. `block` is the path of the block file
     the entry names under `block`, as the methods file writes it, relative to
     that file, or None for a method that binds no block (specification 0.6
@@ -997,6 +1001,13 @@ class Method(Record):
     handler: str | None
     settings: Mapping
     block: str | None = None
+
+    def __repr__(self):
+        """The record as `canonical_text` writes it, but each tag written
+        alone under `settings`, the kind of a grid, as the methods file
+        writes it, `'grid': '!Cartesian'` (AMD-MB-003 §3); `canonical_text`,
+        which the hash and the equality read, is unchanged."""
+        return canonical_text(dataclasses.replace(self, settings=_tags_written(self.settings)))
 
     def __post_init__(self):
         if self.tag is not None and (not isinstance(self.tag, str) or not self.tag):
@@ -1010,6 +1021,19 @@ class Method(Record):
         if not isinstance(self.settings, Mapping):
             raise TypeError("Method.settings must map setting names to their authored values")
         object.__setattr__(self, "settings", freeze(dict(self.settings)))
+
+
+def _tags_written(value):
+    """`value` with each tag written alone, `{"__yaml_tag__": "Cartesian",
+    "value": ""}`, replaced by the text a methods file writes, `!Cartesian`,
+    at every depth of its mappings and sequences."""
+    if isinstance(value, Mapping):
+        if set(value) == {"__yaml_tag__", "value"} and value["value"] == "":
+            return f"!{value['__yaml_tag__']}"
+        return {key: _tags_written(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list)):
+        return type(value)(_tags_written(item) for item in value)
+    return value
 
 
 @dataclasses.dataclass(frozen=True, eq=False, repr=False)
@@ -1402,21 +1426,6 @@ class ExpressionType(Record):
                 f"ExpressionType.domain must be None for {self.kind!r}; its ordered "
                 f"arguments and results carry the boundary"
             )
-
-
-@dataclasses.dataclass(frozen=True, eq=False, repr=False)
-class ValueRepresentation(Record):
-    """The representation at a backward builder's output: the place where
-    the value function, and the marginal-value function, is made from the
-    value field computed on the perch grid at the builder's output, the
-    interpolation a methods file names by `on: evaluate` in a stage that
-    writes no `evaluate` occurrence (`cntn_to_dcsn` in `port` and `noport`).
-    `block_id` is that builder. This record stands for the representation in
-    a resolution, so that `resolve_target` can name the place before any
-    method is attached; the attachment is held in the stage's `methods`. It
-    holds no method itself."""
-
-    block_id: str
 
 
 # --- the validators and the equality of records ---

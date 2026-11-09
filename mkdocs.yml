@@ -1,6 +1,6 @@
 site_name: Project Bellman
 site_description: Build rich, dynamic heterogeneous agent models from reusable stages—in a language both humans and AI can understand.
-site_url: https://econ-ark.github.io/bellman/
+site_url: https://bellman.io/
 
 repo_name: econ-ark/bellman
 repo_url: https://github.com/econ-ark/bellman
@@ -109,9 +109,6 @@ extra_css:
   - _stylesheets/bellman.css?v=20261031a
 
 extra_javascript:
-  - _javascripts/mathjax.js
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-  - _javascripts/meaning_map.js
   - _javascripts/figure_sequences.js   # the figures' assembly sequences wait until the figure is on screen
   - _javascripts/rosetta-card-nav.js   # keep the left nav visible + highlighted on Rosetta card pages
 
@@ -275,6 +272,7 @@ nav:
       - wiki/index.md
       - wiki/abstract_decision_process.md
       - wiki/accretion-modules.md
+      - wiki/addition.md
       - wiki/adequacy.md
       - wiki/aggregation.md
       - wiki/asdl.md
@@ -297,6 +295,7 @@ nav:
       - wiki/forward_builder.md
       - wiki/functional_form.md
       - wiki/ffp.md
+      - wiki/grid.md
       - wiki/handler.md
       - wiki/initial_algebra.md
       - wiki/judge.md
@@ -305,6 +304,7 @@ nav:
       - wiki/matsya_handler.md
       - wiki/matsya_instructions.md
       - wiki/methodization.md
+      - wiki/methods.md
       - wiki/operator.md
       - wiki/ordering_conventions.md
       - wiki/parameters.md

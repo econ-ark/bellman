@@ -907,7 +907,7 @@ def test_item_3_every_bound_method_stands_in_its_nodes_row_and_mark_or_on_its_la
     # two backward evaluations hold a tag, since the methods of the forward
     # graph are bound at its builders alone
     assert {node_id: tag for node_id, tag in rows.items() if tag} == {
-        "cntn_to_dcsn:Evaluation": "!Cartesian",
+        "cntn_to_dcsn:Evaluation": "!Linear",
         "policy:Evaluation": "!egm",
     }
     # a bound method colors no node: each node keeps the style it has in the
@@ -924,11 +924,17 @@ def test_item_3_every_bound_method_stands_in_its_nodes_row_and_mark_or_on_its_la
     (options,) = [held for heading, held in printed_sections(card) if heading == "Options"]
     assert numbered(evaluation, "option") == [one_line(row) for row in options]
     assert numbered(evaluation, "option") == [
+        "grid = !Cartesian",
         "orders = {'m_d': 'n_m'}",
         "bounds = {'m_d': ('m_min', 'm_max')}",
     ]
     assert not numbered(evaluation, "setting")  # this version configures no setting
-    assert not numbered(attributes(nodes["policy:Evaluation"]), "option")  # `!egm` names none
+    # `!egm` names its exogenous grid of savings (AMD-MB-003 §1)
+    assert numbered(attributes(nodes["policy:Evaluation"]), "option") == [
+        "grid = !Cartesian",
+        "orders = {'a': 'n_a'}",
+        "bounds = {'a': ('a_min', 'a_max')}",
+    ]
     # a method bound at a builder, and at none of its primitives, stands on
     # the builder's layer
     layers = graph_named(bound, "forward").groupNodeAttributes
@@ -942,6 +948,7 @@ def test_a_configured_version_shows_the_settings_its_options_name(cons_configure
     attrs = me.box_attributes(cons_configured, "backward", box)
     # the card writes the configured values into the options
     assert numbered(attrs, "option") == [
+        "grid = !Cartesian",
         "orders = {'m_d': 8000}",
         "bounds = {'m_d': (0.01, 2000.0)}",
     ]
@@ -950,7 +957,8 @@ def test_a_configured_version_shows_the_settings_its_options_name(cons_configure
     assert numbered(attrs, "setting") == [
         str(cons_configured.settings[name]) for name in ("n_m", "m_min", "m_max")
     ]
-    assert attrs["setting 1"] == "n_m = 8000, read at cntn_to_dcsn:Evaluation by !Cartesian"
+    assert attrs["setting 1"] == (
+        "n_m = 8000, read at cntn_to_dcsn:Evaluation by !Linear for its grid !Cartesian")
     # the method's rows stand after the kernel and before the lines
     assert list(attrs) == [
         "kind",
@@ -961,6 +969,7 @@ def test_a_configured_version_shows_the_settings_its_options_name(cons_configure
         "handler",
         "option 1",
         "option 2",
+        "option 3",
         "setting 1",
         "setting 2",
         "setting 3",
@@ -2109,7 +2118,7 @@ def test_line_7_a_builders_layer_lists_the_parameters_its_primitives_read_and_ev
     assert layers["cntn_to_dcsn"]["parameter"] == str(cons_configured.par["ρ"])
     assert layers["cntn_to_dcsn"]["parameter"] == "ρ = 6.0 : [1, inf)"
     settings = [str(cons_configured.settings[name]) for name in cons_configured.settings]
-    assert "n_a = 800" in settings
+    assert "n_k = 800" in settings
     for graph in builders_graphs(bound):
         for namespace, shown in graph.groupNodeAttributes.items():
             assert numbered(shown, "setting") == settings, namespace

@@ -48,7 +48,7 @@ where:
 
 ## Files
 
-The application folder holds the stage file and its note in the stage's folder, the methods file and the two block files it binds under `declaration/methods/`, and the structural test:
+The application folder holds the stage file and its note in the stage's folder, the methods file and the two block files it binds under `declaration/methods/`, the settings file under `declaration/settings/`, and the structural test:
 
 | File | Purpose |
 |------|---------|
@@ -57,6 +57,7 @@ The application folder holds the stage file and its note in the stage's folder, 
 | `declaration/methods/cons_savings_iid.yml` | The methods file: the endogenous grid method on the policy builder and the marginal blocks on the two value builders |
 | `declaration/methods/cons_savings_iid_egm.bl` | The method block of the policy builder: the inverse Euler line, the endogenous grid and the identification of the policy |
 | `declaration/methods/marginals.bl` | The marginal blocks: the derivatives of the decision value and the arrival value |
+| `declaration/settings/cons_savings_iid.yml` | The settings file: the exogenous grid of savings of the endogenous grid method, `n_a`, `a_min` and `a_max` |
 | `tests/test_cons_savings_iid_ast.py` | The structural test, which parses the stage file and compares its terms with terms written by hand |
 
 The earlier dolo-plus form, from which the listings below are taken, kept the model in four YAML files:

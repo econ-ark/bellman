@@ -86,7 +86,7 @@ The factory has five verbs, each with one meaning. To *load* is to read files an
 | `bellman.trellis.diagram_trellis(trellis, periods=None)` | a drawing | shows the periods of an elaborated trellis, all of them or those whose indices `periods` lists, each as `diagram_period` shows it, and every inter-period connector between two of those periods as wires from the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, labeled with its index and its field pairs (§7); stores nothing |
 | `bellman.trellis.changed_positions(before, after)` | the list of positions `(h, key)` | the positions whose stage occurrence in `after` is a new version of the one in `before`, read from the provenance of the two trellises; its length is the count of what a verb bound, a copy of a binding among them, since it is a new version of its position (§6) |
 
-The stage's own verbs are unchanged: `stage.calibrate(values or path)`, `stage.methodize(methods or path)` and `stage.configure(settings or path)` each return a new version of one stage ([The binding verbs](API/stage/09-binding-verbs.md)), and the trellis verbs apply them once for each distinct stage occurrence and mapping, copying the result to the other positions of that pair (§6).
+The stage's own verbs are unchanged: `stage.calibrate(values or path)`, `stage.methodize(methods or path)` and `stage.configure(settings or path)` each add their binding to the one stage they are called on and return it ([The binding verbs](API/stage/09-binding-verbs.md)), and the trellis verbs apply them once for each distinct stage occurrence and mapping, copying the result to the other positions of that pair (§6).
 
 ## 3 The registry and the recipe
 

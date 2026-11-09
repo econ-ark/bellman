@@ -1,0 +1,47 @@
+@methods: cons_savings_iid
+# A second methods file of the stage cons_savings_iid, added after methods.bl
+# (aspect A7; finding F18). No entry of it belongs to the application's
+# selection: applications/consumption-savings-iid/declaration/methods/cons_savings_iid.yml
+# binds nothing at these places, and each entry is written to exercise an
+# aspect of the writer's sheet at a place the stage has. Every entry is a
+# file-level line with its full path, since a block of this file would append
+# no line and an empty body is refused (finding F24). Two slots name places
+# that exist only once methods.bl has appended its lines (finding F2).
+
+# The settings this file reads, declared with their sets (writer's sheet §6):
+# the bounds of the grid of the arrival assets b are points of ℝ₊, the set the
+# stage gives b, and the counts are in ℕ. The settings file
+# applications/consumption-savings-iid/declaration/settings/cons_savings_iid.yml
+# holds none of them; an author would add their values there.
+n_b : ℕ          :: ["number of points of the grid of the arrival assets"]
+b_min : ℝ₊       :: ["lower bound of the grid of the arrival assets"]
+b_max : ℝ₊       :: ["upper bound of the grid of the arrival assets"]
+n_y_nodes : ℕ    :: ["quadrature nodes of the lognormal component of the income"]
+
+# The linear reading of the consumption function at the policy builder's
+# Evaluation, with no grid: its knots are the pairs (w[>], c[>]) that !egm
+# stores.
+policy.evaluate.method : !Linear
+
+# The inverse of the marginal utility in closed form, at the definition
+# 𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢) of the stage file. The files realize 𝑑𝑢 := D_{c}(𝑢) by no
+# method.
+𝑑𝑢𝑖𝑛𝑣.method : !analytic_inverse    # no form in §4: a method at a definition; the YAML binds none (sheet §5, F13)
+
+# Gauss-Hermite quadrature at each of the two occurrences of the expectation
+# over y, in the line value of the stage and the line marginal of methods.bl;
+# one node count for the one shock, counting the nodes of the lognormal
+# component, the atom at zero carried exactly.
+dcsn_to_arvl.value.E_y.method : !gauss_hermite(n_y=n_y_nodes)
+dcsn_to_arvl.marginal.E_y.method : !gauss_hermite(n_y=n_y_nodes)
+
+# The arrival value represented linearly and its derivative, which the
+# inverted Euler equation of the previous period reads, by the
+# shape-preserving cubic, each named at its own Evaluation (D4), with a grid
+# entry beside each method entry on the coordinate b of the arrival perch
+# (D5, decided; writer's sheet §7). The income y, the other state of that
+# perch, is integrated out by the expectation and takes no factor.
+dcsn_to_arvl.evaluate[V[<]].method : !Linear
+dcsn_to_arvl.evaluate[V[<]].grid : !Cartesian(b=(b_min, b_max, n_b))
+dcsn_to_arvl.evaluate[D_{b}V[<]].method : !pchip
+dcsn_to_arvl.evaluate[D_{b}V[<]].grid : !Cartesian(b=(b_min, b_max, n_b))

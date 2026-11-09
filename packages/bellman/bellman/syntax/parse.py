@@ -27,13 +27,22 @@ _GRAMMAR = pathlib.Path(__file__).parent / "grammars" / "stage.lark"
 # --- the parser ---
 
 
-@functools.lru_cache(maxsize=1)
-def build_parser():
-    """The parser of `stage.lark`, built once: LALR, with the position of every
-    node kept and `NewlinesInsideBrackets` as its postlex."""
+@functools.lru_cache(maxsize=2)
+def build_parser(strict=False):
+    """The parser of `stage.lark`, built once for each value of `strict`:
+    LALR with the contextual lexer, the position of every node kept, an
+    absent optional group a `None` child, and `NewlinesInsideBrackets` as
+    its postlex. Every option is written, so that a change of a library
+    default changes nothing here. The package parses with `strict=False`;
+    `strict=True`, which needs `interegular`, is the certificate that the
+    grammar has no parser-table conflict and no lexer collision, built by
+    `tests/test_spec07_u1_grammar.py` and not re-checked at every import."""
     return Lark(
         _GRAMMAR.read_text(),
         parser="lalr",
+        lexer="contextual",
+        strict=strict,
+        maybe_placeholders=True,
         propagate_positions=True,
         postlex=NewlinesInsideBrackets(),
     )
@@ -86,6 +95,7 @@ FORMS = {
     "_COLON": ":",
     "_AT": "@",
     "VBAR": "|",
+    "DOT": ".",
     "TILDE": "~",
     "_PERP": "⟂",
     "__ANON_1": "->",

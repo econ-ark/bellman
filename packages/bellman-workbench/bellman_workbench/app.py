@@ -209,12 +209,12 @@ CSS class names the tests rely on:
                      .bl-values-file with data-path (the file the tab
                      writes), .bl-values-sentence, .bl-values-table with one
                      .bl-values-row per row, data-name naming its
-                     parameter, setting or target, its cells
-                     .bl-values-name, holding the name's button with
-                     data-path and data-line and the accessible description
-                     `<file>:<line>` (opens the file at that line) where a
-                     file writes the row, .bl-values-detail (the set, the
-                     kind, or the method bound, else .bl-values-refusal),
+                     parameter, setting or the place of a bound method,
+                     its cells .bl-values-name, holding the name's button
+                     with data-path and data-line and the accessible
+                     description `<file>:<line>` (opens the file at that
+                     line) where a file writes the row, .bl-values-detail
+                     (the set, the kind, or the method bound),
                      .bl-values-value (the input of a value) and
                      .bl-values-method (the select of the methods admitted)
                      or .bl-values-tag; the panel's data-panel is types on
@@ -1321,8 +1321,16 @@ MATSYA_ACTIONS = matsya_window.Actions(
 
 
 def _is_stage(path: str | None) -> bool:
-    """Whether `path` names a stage file."""
-    return path is not None and path.endswith(".bl")
+    """Whether `path` names a stage file: a `.bl` file that is no addition
+    (`model.is_addition`), read from the editor's buffer of it where one is
+    held and else from disk. An addition opens as text, the view unchanged,
+    and is read by the package with its stage (decision S7-W1)."""
+    if path is None or not path.endswith(".bl"):
+        return False
+    held = buffers.value.get(path)
+    if held is not None:
+        return not model.is_addition(held["text"])
+    return not model.is_addition_file(tab_folder.value.root / path)
 
 
 def _counter(value: dict | None) -> int:
@@ -7779,7 +7787,8 @@ def FolderRegion(dirty: set):
         naming = tuple(
             (path, held["text"])
             for path, held in buffers.value.items()
-            if model._role(Path(path)) in ("recipe", "trellis", "period")
+            if model._role(Path(path), tab_folder.value.root)
+            in ("recipe", "trellis", "period")
         )
         removable = solara.use_memo(
             lambda: creation.removable_files(
@@ -9275,23 +9284,19 @@ def _naming_note(notes, name: str) -> str | None:
 
 def _tab_rows(tab: recipe.Tab, queued: tuple = (), notes: tuple = ()) -> list[dict]:
     """The rows of a value tab as values.vue takes them: `name`, the
-    parameter, the setting or the target; `detail`, the parameter's set,
-    the setting's kind or the method the stage binds at the target;
+    parameter, the setting or the place of a bound method; `detail`, the
+    parameter's set, the setting's kind or the method the stage binds there;
     `value`, the value as the file writes it or the method's tag, the empty
     text where none is shown, and for a row of which `queued`, values typed
     in the tab and not yet written, holds a value, the text last typed
     (unit L, Task 16); `choices`, the tags the package admits at the
-    target (`recipe.MethodRow`; unit L, Task 18); `note`, the stage's
-    refusal where it binds no method at the target, or the package's
-    refusal of the target's entry, and for a parameter the sentence of
-    `notes`, the notes of the binding of the stage shown, that names it
-    (`_naming_note`), the package's refusal of its value, which the row's
-    input then shows (unit L, Task 16), each with its paths printed from
-    the folder (`folder_relative`; K-D11); `refused`, whether `methodize`
-    refuses the target's entry, the row's choice then marked with `note` as
-    its hover (unit L, Task 18), false for a parameter or a setting; and
-    `file` and `line`, where the value or the method is written, None where
-    no file writes it."""
+    place (`recipe.MethodRow`; unit L, Task 18); `note`, for a parameter,
+    the sentence of `notes`, the notes of the binding of the stage shown,
+    that names it (`_naming_note`), the package's refusal of its value,
+    which the row's input then shows (unit L, Task 16), with its paths
+    printed from the folder (`folder_relative`; K-D11), None for any other
+    row; and `file` and `line`, where the value or the method is written,
+    None where no file writes it."""
     typed = {entry["name"]: entry["typed"] for entry in queued}
     rows = []
     for row in tab.rows:
@@ -9303,11 +9308,10 @@ def _tab_rows(tab: recipe.Tab, queued: tuple = (), notes: tuple = ()) -> list[di
         if isinstance(row, recipe.MethodRow):
             shown_row = {
                 "name": row.target,
-                "detail": row.bound or "",
+                "detail": row.bound,
                 "value": row.tag,
                 "choices": list(row.choices),
-                "note": folder_relative(row.note),
-                "refused": row.refused,
+                "note": None,
             }
         else:
             parameter = isinstance(row, recipe.ParameterRow)
@@ -9317,7 +9321,6 @@ def _tab_rows(tab: recipe.Tab, queued: tuple = (), notes: tuple = ()) -> list[di
                 "value": typed.get(row.name, row.value or ""),
                 "choices": [],
                 "note": _naming_note(notes, row.name) if parameter else None,
-                "refused": False,
             }
         rows.append({**shown_row, **where})
     return rows

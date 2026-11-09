@@ -13,7 +13,7 @@ topic: [stage-object]
 # Parameters and settings
 
 > [!summary]
-> `stage.par` answers the parameters of a stage and `stage.settings` the settings bound to it, each a read-only mapping read by the name the file writes, `stage.par["ρ"]` and `stage.settings["n_a"]`. A parameter is part of the economic problem; a setting is a numerical choice of the method that computes it. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, calibrated and configured by `applications/cons-port/reference/legacy/syntax/calibration.yaml` and `settings.yaml`, and methodized by `applications/portfolio-choice/declaration/stages/cons/methods.yml`, whose methods fill the settings table's last two columns, the place at which each setting is read and the method that reads it.
+> `stage.par` answers the parameters of a stage and `stage.settings` the settings bound to it, each a read-only mapping read by the name the file writes, `stage.par["ρ"]` and `stage.settings["n_a"]`. A parameter is part of the economic problem; a setting is a numerical choice of the method that computes it. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, calibrated and configured by `applications/cons-port/reference/legacy/syntax/calibration.yaml` and `settings.yaml`, and methodized by `applications/portfolio-choice/declaration/stages/cons/methods.yml`, whose methods fill the settings table's last three columns: the place at which each setting is read, the method that reads it and, where the setting is a field of that method's grid, the grid's kind.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [The stage](01-the-stage.md): the object `stage` below; [The binding verbs](09-binding-verbs.md): `calibrate` and `configure`, which bind the values these tables read.
@@ -70,7 +70,7 @@ except KeyError as refusal:
 
 ## 2 The settings
 
-`stage.settings` answers one row for each method that reads a setting, with the setting's name, its configured value, the place it is read at and the method that reads it; a setting that no method reads has one row with the last two empty. One settings file may serve every stage of an application, so a stage can be bound settings that no method bound to it reads, here among others `n_k`, `n_θ_nodes` and `n_Ψ_nodes`, the grid and quadrature sizes of the application's portfolio stage. `stage.settings["n_m"]` answers the record of one setting, and its `value` is the configured value.
+`stage.settings` answers one row for each method that reads a setting, with the setting's name, its configured value, the place it is read at, the method that reads it and, where the setting is a field of that method's grid, the grid's kind; a setting that no method reads has one row with the last three empty. A method that takes a grid names it by the setting `grid`, whose value is the grid's kind written as a tag, `grid: !Cartesian`, with the grid's fields beside it ([Methodization](../../04-methodization.md) §3); the kind is no setting, and the column `grid` gives it on the row of each setting that one of the fields names. Here the representation at the decision builder's Evaluation reads `n_m`, `m_min` and `m_max` as its grid of resources, and the endogenous grid method on the policy builder reads `n_a`, `a_min` and `a_max` as its exogenous grid of savings. One settings file may serve every stage of an application, so a stage can be bound settings that no method bound to it reads, here among others `n_k`, `n_θ_nodes` and `n_Ψ_nodes`, the grid and quadrature sizes of the application's portfolio stage. `stage.settings["n_m"]` answers the record of one setting, and its `value` is the configured value.
 
 ```python
 print(specified.settings)
@@ -79,14 +79,14 @@ print(specified.settings["n_m"].value)
 ```
 
 ```text
-name           value    read at                  by
+name           value    read at                  by       grid
 grid_spacing   expmult
-n_m            8000     cntn_to_dcsn:Evaluation  !Cartesian
-m_min          0.01     cntn_to_dcsn:Evaluation  !Cartesian
-m_max          2000.0   cntn_to_dcsn:Evaluation  !Cartesian
-n_a            800
-a_min          1e-10
-a_max          100.0
+n_m            8000     cntn_to_dcsn:Evaluation  !Linear  !Cartesian
+m_min          0.01     cntn_to_dcsn:Evaluation  !Linear  !Cartesian
+m_max          2000.0   cntn_to_dcsn:Evaluation  !Linear  !Cartesian
+n_a            800      policy                   !egm     !Cartesian
+a_min          1e-10    policy                   !egm     !Cartesian
+a_max          100.0    policy                   !egm     !Cartesian
 n_k            800
 k_min          1e-10
 k_max          1000.0
@@ -97,7 +97,7 @@ n_sim          10000
 sim_seed       42
 tol_vfi        1e-08
 max_iter       1000
-n_m = 8000, read at cntn_to_dcsn:Evaluation by !Cartesian
+n_m = 8000, read at cntn_to_dcsn:Evaluation by !Linear for its grid !Cartesian
 8000
 ```
 

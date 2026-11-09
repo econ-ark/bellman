@@ -1,0 +1,9 @@
+@methods: ret_choice
+# A deliberate conflict: the line id choice_value is written in choice.bl
+# already. The union must refuse this file naming both lines (rule 5, A24);
+# today's reader, given the unioned text, refuses it at the syntax stage. The
+# checker exits 1 on it.
+
+[id=cntn_to_dcsn] {
+    V = (V_w[>], V_r[>])[d]                           :: [id=choice_value]
+}

@@ -1,0 +1,21 @@
+@methods: cons
+# The methods of the consumption stage at the occurrences that methods/cons_vfi.yml
+# serves, as an addition to cons.bl: value function iteration on the decision
+# value builder, realized by the function consumption_search of
+# cons_port_tool.py, which compares n_c candidate levels of consumption on the
+# feasible set at each point of the grid of resources; and the linear
+# representation of the decision value on that grid. No line is added, so no
+# block is written: a block with an empty body is refused, and each selection is
+# a file-level line routed by its path. Each grid is its own typing entry at its
+# place (D5, decided).
+
+n_m : ℕ              :: ["number of points of the grid of resources"]
+m_min : Xm           :: ["lower bound of the grid of resources"]
+m_max : Xm           :: ["upper bound of the grid of resources"]
+n_c : ℕ              :: ["number of candidate levels of consumption"]
+
+cntn_to_dcsn.method : !vfi    # no form in §4: handler: cons-port:consumption_search, with no settings
+cntn_to_dcsn.handler : "cons-port:consumption_search"
+cntn_to_dcsn.grid : !Cartesian(c=(Γ, n_c))    # no form in §4: no grid in the entry; the handler reads n_c by name
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(m=(m_min, m_max, n_m, !expmult))    # no form in §4: grid_spacing: expmult, in settings/cons_vfi.yml and not in settings/cons_vfi_reference.yml

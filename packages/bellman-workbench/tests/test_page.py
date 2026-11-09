@@ -1480,7 +1480,7 @@ def test_b_item_1_a_methods_file_chosen_for_an_occurrence_binds_it_and_keeps_the
     folder, its comments and the other entries kept, the stage files
     untouched, and the recipe saved writes it; with `cons.bl` open again,
     the stage's view
-    then shows `!egm` on the policy's Evaluation and `!Cartesian` on the
+    then shows `!egm` on the policy's Evaluation and `!Linear` on the
     continuation's, and the trellis holds the same `method` rows at every
     consumption occurrence; `declaration/stages/disc/disc.bl` opened as
     `periods[1] / disc` and as `periods[0] / disc` shows the discount
@@ -1575,7 +1575,7 @@ def test_b_item_1_a_methods_file_chosen_for_an_occurrence_binds_it_and_keeps_the
             "!egm on the policy's Evaluation",
         )
         wait_until(
-            lambda: row("cntn_to_dcsn:Evaluation", "method") == "!Cartesian", 30.0, "!Cartesian"
+            lambda: row("cntn_to_dcsn:Evaluation", "method") == "!Linear", 30.0, "!Linear"
         )
         folder = model.open_folder(scratch_lifecycle)
         whole = trellis.show_trellis(folder, recipe.Source("recipe", RECIPE_FILE)).shown
@@ -2273,7 +2273,7 @@ def test_amd_mi_001_item_5_the_legend_lists_what_the_graph_holds_and_the_selecti
     `declaration/spec.yml`, with its calibration, settings and methods, the
     legend of `backward` is titled `cons calibrated methodized configured`
     and holds the three levels the graph draws, each with its swatch,
-    `!egm  policy:Evaluation`, `!Cartesian  cntn_to_dcsn:Evaluation` and the
+    `!egm  policy:Evaluation`, `!Linear  cntn_to_dcsn:Evaluation` and the
     three marks, and no other tag; the perches appear with `perch
     overlays`, each by its name and colored by its custom property; the
     levels and the perches in sentence case (design pass 13 §3; C12);
@@ -2318,14 +2318,14 @@ def test_amd_mi_001_item_5_the_legend_lists_what_the_graph_holds_and_the_selecti
         ) == ["builder", "operator", "output"]
         assert tab.locator(".bl-legend-swatch[style]").count() == 0
         assert sorted(text for text, _, _ in groups["methods"]) == [
-            "!Cartesian  cntn_to_dcsn:Evaluation",
+            "!Linear  cntn_to_dcsn:Evaluation",
             "!egm  policy:Evaluation",
         ]
         assert [text for text, _, _ in groups["marks"]] == ["· !tag", "at 𝑐", "𝑔≺, 𝑔≻"]
         # the tags the legend's whole text holds: the two methods' and the
         # mark's own
         legend = tab.locator(".bl-legend").text_content()
-        assert set(re.findall(r"!\w[\w-]*", legend)) == {"!egm", "!Cartesian", "!tag"}
+        assert set(re.findall(r"!\w[\w-]*", legend)) == {"!egm", "!Linear", "!tag"}
 
         tab.click(".bl-overlays-button")
         wait_until(

@@ -296,9 +296,13 @@ def test_item_4_a_state_of_the_input_perch_read_directly_is_refused(elaborate_te
         elaborate_text(fake_candidate, "keeper_saving.bl")
     assert (refused.value.rule, refused.value.address) == ("input-perch-state", "policy.fake_candidate")
     assert "`y_f_kp = m_d - c`. Write `m_d - c` in its place" in refused.value.message
+    # a candidate line names a control or a decision state at the candidate
+    # points (rule candidate-coordinate) and is read by a later line (rule
+    # candidate-read): the candidate of the control, read by the grid line
     policy_candidate = replaced(
         saving, "    𝑢_c(c) = β*D_{y_f_kp}V[>] ⟂ m_d - c >= 0",
-        "    local[>] = y_f_kp                            :: [id=candidate]\n"
+        "    c[>] = 𝑢_c(y_f_kp)                           :: [id=candidate]\n"
+        "    m_d[>] = y_f_kp + c[>]                       :: [id=grid]\n"
         "    𝑢_c(c) = β*D_{y_f_kp}V[>] ⟂ m_d - c >= 0",
     )
     assert elaborate_text(policy_candidate, "keeper_saving.bl").name == "keeper_saving"

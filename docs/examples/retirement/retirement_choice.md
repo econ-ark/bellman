@@ -483,11 +483,20 @@ methods:
   # of worker_cons_egm.bl, which writes the grid line w[>] = b + c[>]; the
   # stage file states the maximization alone. The candidates the block
   # computes at each level of savings are selected by the upper envelope
-  # below, since the worker's continuation value need not be concave.
+  # below, since the worker's continuation value need not be concave. The
+  # setting grid names the exogenous grid of savings b by its kind,
+  # !Cartesian, with its order and bounds beside it, the asset grid of the
+  # settings file.
   - on: policy
     method: !egm
     block: ../../methods/worker_cons_egm.bl
     handler: asva:make_egm_1d
+    settings:
+      grid: !Cartesian
+      orders:
+        b: n_a
+      bounds:
+        b: [a_min, a_max]
 
   # The derivatives of the decision value and the arrival value are stated by
   # the two marginal blocks of marginals_worker_cons.bl, one for each value
@@ -508,22 +517,26 @@ methods:
     settings:
       m_bar: m_bar
 
-  # The arrival value is tabulated on the asset grid; the entry on the line
-  # dcsn_to_arvl.marginal represents the stated derivative of the arrival
-  # value in assets on the same grid.
-  - on: dcsn_to_arvl.value
+  # The arrival value and its stated derivative in assets are tabulated on the
+  # asset grid at the arrival builder's Evaluation, dcsn_to_arvl.evaluate.value
+  # and dcsn_to_arvl.evaluate.marginal, and read by linear interpolation, the
+  # basis !Linear; the setting grid names the asset grid by its kind,
+  # !Cartesian, with its order and bounds beside it.
+  - on: dcsn_to_arvl.evaluate.value
     method: !Linear
     handler: dcsmm:interp_as_2
     settings:
+      grid: !Cartesian
       orders:
         a_w: n_a
       bounds:
         a_w: [a_min, a_max]
 
-  - on: dcsn_to_arvl.marginal
+  - on: dcsn_to_arvl.evaluate.marginal
     method: !Linear
     handler: dcsmm:interp_as_2
     settings:
+      grid: !Cartesian
       orders:
         a_w: n_a
       bounds:
@@ -539,11 +552,20 @@ methods:
   # The endogenous grid method opens the policy builder with the method block
   # of retiree_cons_egm.bl, whose implicit statement c = c[>] gives the
   # policy; the stage file states the maximization alone. The retiree's
-  # continuation value is concave, so no envelope operation is needed.
+  # continuation value is concave, so no envelope operation is needed. The
+  # setting grid names the exogenous grid of savings b_ret by its kind,
+  # !Cartesian, with its order and bounds beside it, the asset grid of the
+  # settings file.
   - on: policy
     method: !egm
     block: ../../methods/retiree_cons_egm.bl
     handler: asva:make_egm_1d
+    settings:
+      grid: !Cartesian
+      orders:
+        b_ret: n_a_ret
+      bounds:
+        b_ret: [a_ret_min, a_ret_max]
 
   # The derivatives of the decision value and the arrival value are stated by
   # the two marginal blocks of marginals_retiree_cons.bl, one for each value
@@ -556,22 +578,26 @@ methods:
     method: !marginals
     block: ../../methods/marginals_retiree_cons.bl
 
-  # The arrival value is tabulated on the asset grid; the entry on the line
-  # dcsn_to_arvl.marginal represents the stated derivative of the arrival
-  # value in assets on the same grid.
-  - on: dcsn_to_arvl.value
+  # The arrival value and its stated derivative in assets are tabulated on the
+  # asset grid at the arrival builder's Evaluation, dcsn_to_arvl.evaluate.value
+  # and dcsn_to_arvl.evaluate.marginal, and read by linear interpolation, the
+  # basis !Linear; the setting grid names the asset grid by its kind,
+  # !Cartesian, with its order and bounds beside it.
+  - on: dcsn_to_arvl.evaluate.value
     method: !Linear
     handler: dcsmm:interp_as_3
     settings:
+      grid: !Cartesian
       orders:
         a_ret: n_a_ret
       bounds:
         a_ret: [a_ret_min, a_ret_max]
 
-  - on: dcsn_to_arvl.marginal
+  - on: dcsn_to_arvl.evaluate.marginal
     method: !Linear
     handler: dcsmm:interp_as_3
     settings:
+      grid: !Cartesian
       orders:
         a_ret: n_a_ret
       bounds:
@@ -600,7 +626,7 @@ retiree_cons  binds
 bequest       binds
 ```
 
-The four files bind. The worker's endogenous grid entry opens the policy builder with the method block of `worker_cons_egm.bl`, whose four lines become the builder's operations, and the upper envelope over the candidates is the method `!FUES` on the block's line `envelope`, as the comment in the file records. The retiree's entry opens its policy builder with the method block of `retiree_cons_egm.bl`, which holds the identification `c = c[>]`. Each `!marginals` entry records the lines of a marginal block at the Evaluation of the value builder it names, as stated derivatives of the value, and adds no operation; the entries on `dcsn_to_arvl.marginal` represent the stated derivative of the arrival value on the asset grid. The worker's stage prints its methods, `str(stage.methods)`, as
+The four files bind. The worker's endogenous grid entry opens the policy builder with the method block of `worker_cons_egm.bl`, whose four lines become the builder's operations, and the upper envelope over the candidates is the method `!FUES` on the block's line `envelope`, as the comment in the file records. The retiree's entry opens its policy builder with the method block of `retiree_cons_egm.bl`, which holds the identification `c = c[>]`. Each endogenous grid entry names its exogenous grid of savings, `b` for the worker and `b_ret` for the retiree, by the setting `grid`, whose value is the grid's kind, the tag `!Cartesian`, with the grid's order and bounds beside it. Each `!marginals` entry records the lines of a marginal block at the Evaluation of the value builder it names, as stated derivatives of the value, and adds no operation; the entries on `dcsn_to_arvl.evaluate.value` and `dcsn_to_arvl.evaluate.marginal` represent the arrival value and its stated derivative by the basis `!Linear` on the asset grid that their setting `grid` names in the same way, one method at the arrival builder's Evaluation. The worker's stage prints its methods, `str(stage.methods)`, as
 
 ```text
 policy.envelope           !FUES
@@ -641,7 +667,7 @@ settings:
   m_bar: 1.01
 ```
 
-The calibration is the benchmark of the FUES retirement example. The settings are numerical choices and no part of the model: the asset grids on which the methods tabulate the arrival values, and the jump-detection threshold of the upper envelope scan. The number of dates is not a setting; it is the number of periods the trellis holds.
+The calibration is the benchmark of the FUES retirement example. The settings are numerical choices and no part of the model: the asset grids on which the methods tabulate the arrival values, which serve also as the exogenous grids of savings of the endogenous grid entries, and the jump-detection threshold of the upper envelope scan. The number of dates is not a setting; it is the number of periods the trellis holds.
 
 The recipe, `applications/retirement-choice/declaration/spec.yml`, names the trellis file and, for each stage, its stage file and the calibration, settings and methods files it reads, each by its path from the recipe's folder, and `load_recipe` reads it with the trellis file ([The Bellman factory](../../Bellman-Sym/08-bellman-factory.md)):
 

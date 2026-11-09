@@ -1131,12 +1131,6 @@ button.bl-crumb:focus-visible {
 .bl-window vscode-toolbar-button.bl-refusal-mark {
   --vscode-icon-foreground: var(--bl-alarm);
 }
-/* The tag of a Methods row that offers no choice, where the package
-   refuses the row's entry, in orange (unit L, Task 18). */
-.bl-values-tag.bl-refusal-mark {
-  color: var(--bl-orange);
-}
-
 /* The handles on the regions' edges (AMD-MI-002 §6 rule 2): each a strip
    seven pixels across, from whose drag window.vue sizes the region. A
    handle on a right edge stands in its region, centered in the column gap

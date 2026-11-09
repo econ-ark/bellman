@@ -1,0 +1,49 @@
+@methods: ret_choice
+# Deliberate refusals (aspect A24) on the branching stage ret_choice, whose
+# stage file is
+# applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl.
+# No item of this file belongs to the application's methods; each is written
+# as an author might write it by mistake, and each comment names the rule of
+# the union (the proposal's §4) that refuses it. The third block also
+# exercises aspect A19, a nested labeled block of a methods file under the
+# union.
+
+n_a : ℕ              :: ["number of points of the asset grid"]
+a_min : ℝ₊           :: ["lower bound of the asset grid"]
+a_max : ℝ₊           :: ["upper bound of the asset grid"]
+
+# Refused: the same slot twice. Two file-level lines whose paths both route to
+# the method slot of the block policy (rule 7, a file-level path attached to
+# the node it names) fill it with two different methods, the discrete maximum
+# with its handler and the catalogue's other word for a discrete choice; rule 4
+# refuses two entries of one key with different content, naming both, and the
+# box of §4 admits at most one method on a block's own slot.
+policy.method : !max
+policy.handler : "fues-retirement:dcsn_mover"
+policy.method : !discrete_choice
+
+# Refused twice. First, a line id twice: the derivative of the arrival value,
+# D_{a}V[<] = D_{a_d}V, which follows from the law a_d = a, is written under
+# the id value, which the stage's line V[<] = V of this block already holds
+# (rule 5). Second, a subject naming another block: the two group subjects begin
+# with policy, a block other than the enclosing dcsn_to_arvl, so they would
+# place the representation of the policy builder's Evaluation and its grid
+# (D5) from inside the arrival value builder (rule 7).
+[id=dcsn_to_arvl
+    | policy.evaluate.method : !Linear
+    | policy.evaluate.grid : !Cartesian(a_d=(a_min, a_max, n_a))] {
+    D_{a}V[<] = D_{a_d}V                        :: [id=value]
+}
+
+# Refused: two sets on one coordinate, on a nested labeled block. The author
+# restates the work branch of the branching block dcsn_to_cntn to narrow the
+# set of the continuation assets a_w to ℝ₊₊, where the stage's branch gives
+# ℝ₊, and copies the branch's line, since a body may not be empty. Merged with
+# the stage's branch of the same label under its parent (rule 3, read with a
+# label keying a nested block as an id keys a block, F19), the partial
+# signature's coordinate a_w meets the stage's with a different set (rule 4).
+# The copied line, which carries no id, would define a_w a second time in the
+# branch, which the elaborator refuses by defined-once.
+[id=dcsn_to_cntn] {
+    [label=work, () -> (a_w : ℝ₊₊) : !cntn] { a_w = a_d }
+}

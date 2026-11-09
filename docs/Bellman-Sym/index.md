@@ -54,7 +54,7 @@ Inspection is part of using Bellman-SYM. The [API](API/index.md) lists every fun
 | [Period functions](API/factory/period-factory.md) | Append a period, derive the order of its stages from their fields, and make the drawing of the period. |
 | [The trellis factory](API/factory/trellis-factory.md) | Read a trellis file, elaborate and bind every period, and make the drawing of the trellis. |
 
-For a new stage occurrence, loading and elaboration come first, then calibration, methodization and configuration, the order the factory uses. Each of the three bindings returns a new stage version, the stage occurrence with that binding added, and leaves the version it was given unchanged; methodization must still precede configuration, since the methods name the settings ([Methodization](04-methodization.md) §5). Inspecting the equations and attachments is separate from obtaining numerical policies.
+For a new stage occurrence, loading and elaboration come first, then calibration, methodization and configuration, the order the factory uses. Each of the three bindings adds its binding to the stage occurrence it is called on and returns that stage; methodization must precede configuration, since the methods name the settings ([Methodization](04-methodization.md) §5). Inspecting the equations and attachments is separate from obtaining numerical policies.
 
 ## 4 Mathematical reference
 

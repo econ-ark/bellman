@@ -1188,6 +1188,36 @@ def classifier_set(classifiers):
     return None
 
 
+def named_sets(term) -> list:
+    """The names of the sets a set term reads, each once, in the order
+    written: a bare name, `Foo`; the factors of a product, `Xm × Foo`; the
+    base of a comprehension, `{i : Foo | i >= 0}`; the superset of listed
+    points, `{0, θ} ⊂ Foo`; and the domain and the codomain of a set of
+    functions. The endpoints of an interval and the members of a finite set
+    are no sets, and a term that is no set term reads none."""
+    found = []
+
+    def visit(t):
+        if isinstance(t, terms.Space):
+            visit(t.set)
+        elif isinstance(t, terms.Named):
+            if t.name not in found:
+                found.append(t.name)
+        elif isinstance(t, terms.Product):
+            for factor in t.factors:
+                visit(factor)
+        elif isinstance(t, terms.Comprehension):
+            visit(t.base)
+        elif isinstance(t, terms.Points):
+            visit(t.superset)
+        elif isinstance(t, terms.Functions):
+            visit(t.domain)
+            visit(t.codomain)
+
+    visit(term)
+    return found
+
+
 # --- small readers: spellings, coordinates, classifiers and positions ---
 
 

@@ -155,7 +155,7 @@ oracle of §6 reads this order from the first column of this table:
 
 | Folder | Modules | Open it to learn |
 |---|---|---|
-| `syntax` | `grammars/`, `parse`, `lower`, `terms`, `decode`, `source`, `vocabulary`, `layout`, `walk` | why a text is refused as ill-formed; the words of the language; how text is set in 78 columns; how a term is walked |
+| `syntax` | `grammars/`, `parse`, `lower`, `union`, `terms`, `decode`, `source`, `vocabulary`, `layout`, `walk` | why a text is refused as ill-formed; how a stage file and its additions are unioned on their terms; the words of the language; how text is set in 78 columns; how a term is walked |
 | `native` | `identity`, `predicates`, `frozen`, `hypergraphs`, `labels`, `records`, `versions`, `provenance` | what an identity, a condition, a sort, a box and a stored record are; the stage version that holds them |
 | `distributions` | `families`, `edges`, `conditionals` | what the arguments of a shock family mean; on which edge a shock is drawn; the conditional distribution an expectation selects |
 | `typing` | `sets`, `category_codes`, `ranges`, `typed_expressions`, `line_unknowns`, `declarations`, `context`, `primitive_definitions` | why a declaration is refused; a line's operators, unknowns and type; the algebra of the declared sets; the category codes of a named set; how a formula is written |

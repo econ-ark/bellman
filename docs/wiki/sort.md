@@ -28,6 +28,6 @@ An operation's type lists ordered input sorts and an output sort. Its interpreta
 
 In a [[stage]], a grammar sort classifies a source constructor. A [[field]] domain constrains the quantity it denotes. An economic role, such as control or value, and an information context supply further meaning. A state value, a scalar payoff, a function on states and a measure over states therefore cannot be interchanged merely because a diagram connects them.
 
-The [[semgraph|builders graphs]], the graphs of the [[builder|builders]], keep state-space, value and function-space types explicit: the sort of a function [[semgraph|wire]] holds its coordinates and its value set. A numerical grid representation is not automatically a subsort of the exact function space: such a claim needs an embedding and its interpretation. Method labels alone do not establish carrier inclusion or derivative agreement.
+The [[semgraph|builders graphs]], the graphs of the [[builder|builders]], keep state-space, value and function-space types explicit: the sort of a function [[semgraph|wire]] holds its coordinates and its value set. A numerical [[grid]] representation is not automatically a subsort of the exact function space: such a claim needs an embedding and its interpretation. Method labels alone do not establish carrier inclusion or derivative agreement.
 
 See [[semgraph|initial diagrams]], [[parameters]], [[settings]] and [Fields and types](../Bellman-Sym/reference/symbols-conventions.md).

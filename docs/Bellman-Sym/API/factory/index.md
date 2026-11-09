@@ -49,7 +49,7 @@ Every function that elaborates or binds reads records of one form: `{"stage": {"
 
 ## 3 The order of the bindings
 
-The bindings are made in the order calibrate, methodize, configure, on a trellis as on a stage. Configuration is defined on methodized versions only, because the settings are read against the methods that name them. Each verb returns a new version and leaves its argument unchanged; a trellis verb binds a stage occurrence where the mapping the syntactic trellis holds at its key differs from what the stage occurrence holds, and copies it where it does not. The four stopping points, the symbolic trellis and the trellis after each verb, are therefore the results of the four calls, `elaborate_trellis` and then the three trellis verbs, each reading its mapping from the syntactic trellis given as its second argument. No call solves a model.
+The bindings are made in the order calibrate, methodize, configure, on a trellis as on a stage. Configuration is defined on methodized versions only, because the settings are read against the methods that name them. A stage verb adds its binding to the stage it is called on and returns it; a trellis verb returns a new elaborated trellis and leaves its argument unchanged, and it binds a stage occurrence where the mapping the syntactic trellis holds at its key differs from what the stage occurrence holds, and copies it where it does not. The four stopping points, the symbolic trellis and the trellis after each verb, are therefore the results of the four calls, `elaborate_trellis` and then the three trellis verbs, each reading its mapping from the syntactic trellis given as its second argument. No call solves a model.
 
 ## 4 The refusals
 

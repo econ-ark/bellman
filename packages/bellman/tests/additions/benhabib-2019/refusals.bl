@@ -1,0 +1,43 @@
+@methods: bellman
+# Deliberate refusals (aspect A24) on the within-life stage `bellman`, whose
+# stage file is
+# applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl.
+# No block of this file belongs to the application's methods; each is written
+# as an author might write it by mistake, and each comment names the rule of
+# the union (the proposal's §4) that refuses it.
+
+n_a : ℕ        :: ["number of points of the savings grid"]
+a_min : Xa     :: ["lower bound of the savings grid"]
+a_max : Xa     :: ["upper bound of the savings grid"]
+
+# Refused: the same slot twice. The relative subject `method` and the absolute
+# subject `policy.method` name one slot, the method slot of the block policy
+# (rule 7, a path inside a block read from the block), and fill it with two
+# different methods; the box of §4 admits at most one typing entry on the
+# block's own method slot, and rule 4 refuses two entries of one key with
+# different content, naming both.
+[id=policy, method : !egm, policy.method : !vfi
+    | grid : !Cartesian(a=(a_min, a_max, n_a))] {
+    c[>] = (β * R_vec[r_type] * D_{a}V[>])^(-1/σ)        :: [id=InvEuler, !node]
+    c    = c[>]                                          :: [id=cons_choice]
+}
+
+# Refused twice. First, two sets on one coordinate: the partial signature
+# gives the control c the set ℝ₊₊, where the stage's signature of
+# dcsn_to_cntn gives it ℝ₊ (rule 4, a coordinate of one name with different
+# content). Second, a line id twice: the line restates the stage's law of
+# motion under its id `savings`, which the stage's block already holds
+# (rule 5).
+[id=dcsn_to_cntn, (c : !ctrl @ ℝ₊₊) : !dcsn -> ()] {
+    a = R_vec[r_type] * (m - c) + wage_fn[tau]    :: [id=savings]
+}
+
+# Refused: a subject naming another block. The group's subject begins with
+# `policy`, a block other than the enclosing cntn_to_dcsn, so it would place
+# the representation of the policy builder's Evaluation from inside the value
+# builder (rule 7). The derivative line itself is the one methods.bellman.bl
+# appends.
+[id=cntn_to_dcsn
+    | policy.evaluate.method : !Linear] {
+    D_{m}V = c^(-σ)                    :: [id=marginal]
+}

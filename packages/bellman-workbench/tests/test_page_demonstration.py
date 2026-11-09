@@ -103,7 +103,7 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
     line 18, column 15, the line then restored; the nine slots filled in
     spec 0.2 §11's order, cons, port and disc, the count falling from nine
     to six, three and zero, and cons.bl bound with `!egm` on the policy's
-    Evaluation and `!Cartesian` on the continuation's; the connectors typed
+    Evaluation and `!Linear` on the continuation's; the connectors typed
     and the trellis of six periods drawn with the joins they make, the
     period periods[0] listing its three stages; the view exported, the
     folder's files committed alone and pushed, with git's sentence and the
@@ -203,7 +203,7 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
         # 4:30 the nine slots filled stage by stage in spec 0.2 §11's order,
         # the recipe saved after each stage; the slots' keywords of its Recipe
         # tab fall from nine to six, three and zero; cons.bl
-        # bound, `!Cartesian` on the continuation's Evaluation and `!egm` on
+        # bound, `!Linear` on the continuation's Evaluation and `!egm` on
         # the policy's, which stays selected for the screenshot
         open_text(RECIPE_FILE)
         for key, left in (("cons", 6), ("port", 3), ("disc", 0)):
@@ -222,7 +222,7 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
         )
         wait_until(lambda: view_laid_out(tab, "cons", since), 60.0, "the bound graph laid out")
         for node_id, method in (
-            ("cntn_to_dcsn:Evaluation", "!Cartesian"),
+            ("cntn_to_dcsn:Evaluation", "!Linear"),
             ("policy:Evaluation", "!egm"),
         ):
             select_until(

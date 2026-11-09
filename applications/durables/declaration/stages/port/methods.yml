@@ -1,8 +1,9 @@
 stage: port
 # The portfolio stage's methods: Gauss-Hermite quadrature of the declared distribution at the expectations, a grid
 # search over the share at the policy block, the derivative of the decision value from the derivative line
-# marginal of marginals_port.bl at the chosen share; the value represented on the grid of capital the
-# settings name.
+# marginal of marginals_port.bl at the chosen share; the value represented at the decision builder's Evaluation,
+# cntn_to_dcsn.evaluate.value, by the basis !Linear on the grid of capital k_d that the setting grid names by its
+# kind, !Cartesian, with its order and bounds, the settings n_k, k_min and k_max, beside it.
 methods:
   - on: E_Ψ_θ
     method: !gauss-hermite
@@ -15,6 +16,6 @@ methods:
     method: !vfi
     handler: cons-port:share_search
     settings: {orders: {k_d: n_k}, bounds: {k_d: [k_min, k_max]}}
-  - on: evaluate
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
-    settings: {orders: {k_d: n_k}, bounds: {k_d: [k_min, k_max]}}
+    settings: {grid: !Cartesian, orders: {k_d: n_k}, bounds: {k_d: [k_min, k_max]}}

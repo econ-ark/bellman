@@ -25,11 +25,14 @@ dependencies = [
 # The tests, run in parallel by pytest-xdist; the acceptance tests of the
 # compiled kernels as functions, tests/cat/test_kernel_functions.py, which
 # compile the kernels with Numba and save them with cloudpickle (numba,
-# cloudpickle); the formatter and linter (ruff); and the two generators of the
+# cloudpickle); the formatter and linter (ruff); the two generators of the
 # term classes from the ASDL listings, gen_types.py and gen_semantic_types.py
-# (pyasdl).
+# (pyasdl); and the strict build of the grammar that certifies it free of
+# parser-table conflicts and lexer collisions, tests/test_spec07_u1_grammar.py
+# (interegular, which Lark's strict mode requires).
 dev = [
     "cloudpickle==3.1.2",
+    "interegular==0.3.3",
     "mpmath==1.3.0",
     "numba==0.63.1",
     "pyasdl==22.1.23",

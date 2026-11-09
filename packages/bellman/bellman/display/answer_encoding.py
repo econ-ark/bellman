@@ -576,7 +576,6 @@ KINDS = {
     R.Bindings: "records.Bindings",
     R.BlockData: "records.BlockData",
     R.BlockHeader: "records.BlockHeader",
-    R.ValueRepresentation: "records.ValueRepresentation",
     R.Builders: "records.Builders",
     R.CategoryCodes: "records.CategoryCodes",
     C.Composite: "records.Composite",

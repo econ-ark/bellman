@@ -28,7 +28,7 @@ type: concept
 
 ## Parameters versus settings
 
-A discrete set of housing choices can be part of the model itself; the scalars defining that set are parameters. A finite grid used only to approximate a continuous savings domain is a numerical representation; its size belongs to the [[settings]]. The classification depends on what the quantity means, not whether it happens to be an integer or is called a grid size.
+A discrete set of housing choices can be part of the model itself; the scalars defining that set are parameters. A finite [[grid]] used only to approximate a continuous savings domain is a numerical representation; its bounds and size belong to the [[settings]]. The classification depends on what the quantity means, not whether it happens to be an integer or is called a grid size.
 
 In the constrained consumption example, `ρ : (1, inf)` declares risk aversion above one. A calibration mapping can supply `ρ: 2`. The domain belongs to the equation's meaning; a [[handler]] option cannot silently replace it. See [Stages](../Bellman-Sym/01-stage.md) and [Field equations](../Bellman-Sym/03-field-equations.md).
 

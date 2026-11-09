@@ -1094,28 +1094,6 @@ def _bounds(term):
     return frozenset(found)
 
 
-def _undefined(term):
-    """The names a resolved set term still writes that are no primitive
-    set: the sets a stage names and defines by no rule, a name whose
-    definitions return to it included."""
-    found = set()
-
-    def walk(value):
-        if isinstance(value, T.Named):
-            if value.name not in PRIMITIVE_SETS:
-                found.add(str(value.name))
-            return
-        if dataclasses.is_dataclass(value) and not isinstance(value, type):
-            for field in dataclasses.fields(value):
-                walk(getattr(value, field.name))
-        elif isinstance(value, tuple):
-            for item in value:
-                walk(item)
-
-    walk(term)
-    return frozenset(found)
-
-
 def _valued(term, values):
     """The set term with each bound named in `values` replaced by its
     number, `[a_min, inf)` at `a_min = 1` being `[1, inf)` and at
@@ -1286,9 +1264,7 @@ def _included(
     the same spelling in two periods proves nothing. A term that writes a
     bound is otherwise compared at the values the effective bindings
     supply, and the result names them; without a value the comparison is
-    not established. A name a stage defines by no rule is not established,
-    the same spelling on both sides included. Terms without bounds are
-    decided by `_within`."""
+    not established. Terms without bounds are decided by `_within`."""
     if inner_term is None or outer_term is None:
         return (
             NOT_ESTABLISHED,
@@ -1298,18 +1274,6 @@ def _included(
     inner_text, outer_text = types.text(inner_position), types.text(outer_position)
     inner = _resolved(inner_term, inner_text.definitions)
     outer = _resolved(outer_term, outer_text.definitions)
-    for position, term, said in (
-        (inner_position, inner, inner_said),
-        (outer_position, outer, outer_said),
-    ):
-        undefined = _undefined(term)
-        if undefined:
-            return (
-                NOT_ESTABLISHED,
-                f"{said}, {to_source(term)}, names the set{'s' if len(undefined) > 1 else ''} "
-                f"{', '.join(sorted(undefined))}, which {_at(position)} defines by no rule",
-                (),
-            )
     inner_bounds, outer_bounds = _bounds(inner), _bounds(outer)
     if inner == outer and not inner_bounds:
         return COMPATIBLE, f"{inner_said} and {outer_said} are one set, {to_source(inner)}", ()

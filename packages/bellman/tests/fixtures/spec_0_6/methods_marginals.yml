@@ -3,6 +3,7 @@ methods:
   - on: policy
     method: !egm
     block: methods/cons_egm.bl
+    settings: {grid: !Cartesian, orders: {a: n_a}, bounds: {a: [a_min, a_max]}}
   - on: cntn_to_dcsn
     method: !marginals
     block: methods/cons_egm.bl

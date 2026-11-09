@@ -28,7 +28,12 @@ two levels (specification 0.6 §1): `declared_definitions` and the declared
 construction table are those the stage file states, and the operative ones
 add what each bound block adds. `declared_version` is the stage as its stage
 file declares it, holding the same initial diagrams and the same stored
-builders graphs, which `stage.declared` reads.
+builders graphs, which `stage.declared` reads. For a stage written as a
+stage file and its additions (specification 0.7 §4), `operative_level` reads
+the union of the files at the operative level: in a block whose method
+component is typed by a solution method and whose additions bring rows, the
+stage file's lines are left out, and `declared_version` is the stage file
+elaborated alone.
 """
 
 from __future__ import annotations
@@ -53,7 +58,7 @@ from bellman.stage.grains import (
     declared_table,
 )
 from bellman.syntax import terms as T
-from bellman.syntax.lower import parse_with_spans
+from bellman.syntax.lower import ParsedFile, item_addresses, parse_with_spans
 from bellman.syntax.source import to_source
 from bellman.syntax.vocabulary import (
     ARRIVAL,
@@ -71,6 +76,7 @@ __all__ = (
     "declared_version",
     "held_source",
     "is_declared_version",
+    "operative_level",
     "read_blocks",
 )
 
@@ -811,6 +817,109 @@ def _of_builder(record, builder):
 # --- the two levels of the stage ---
 
 
+def operative_level(parsed, origin, solution):
+    """The union of a stage file and its additions at the operative level
+    (specification 0.7 §4 rule 5 as decided, D8): `parsed` is the pair of
+    term and span table that `bellman.syntax.union.union` answers, `origin`
+    the stage file's origin, which the spans of its items name, and
+    `solution` the method words, in the spelling of a stage file, whose row
+    is of the kind solution. In a top-level block whose own method component
+    is typed by one of those words and whose body holds a row of another
+    file, a line that is neither a nested block nor a derivative line
+    (`stated_derivative`), the stage file's rows are left out at the
+    operative level, since the addition's rows compute the builder's output
+    in their place; the block's nested blocks and derivative lines stay.
+    Every other item stays, and the span table is rebuilt at the kept items'
+    addresses. A pair with no such block is answered as given."""
+    term, spans = parsed
+    addressed = item_addresses(term)
+    left_out = set()
+    for address, item in addressed:
+        if "." in address or not _solution_block(item, solution):
+            continue
+        rows = [(key, line) for key, line in _direct(addressed, address) if _is_row(line)]
+        if any(_file_of(spans, key) != origin for key, _ in rows):
+            left_out.update(key for key, _ in rows if _file_of(spans, key) == origin)
+    if not left_out:
+        return parsed
+    items = tuple(
+        T.Block(
+            item.tag,
+            tuple(line for key, line in _direct(addressed, address) if key not in left_out),
+        )
+        if isinstance(item, T.Block) and any(key.startswith(address + ".") for key in left_out)
+        else item
+        for address, item in addressed
+        if "." not in address
+    )
+    kept = T.FILE(items)
+    renamed = {
+        before: after
+        for (before, _), (after, _) in zip(
+            [(key, item) for key, item in addressed if key not in left_out], item_addresses(kept)
+        )
+    }
+    table = {
+        _kept_key(key, renamed): span for key, span in spans.items() if key not in left_out
+    }
+    return ParsedFile(kept, MappingProxyType(table))
+
+
+# the subject of the typing entry of a block's own method component
+_OWN_METHOD = T.Path((T.Segment("method", ()),))
+
+
+def _solution_block(item, solution):
+    """Whether `item` is a block whose own method component is typed by a
+    word of `solution`."""
+    if not isinstance(item, T.Block):
+        return False
+    for entry in item.tag.entries:
+        typing = getattr(entry, "typing", None)
+        if isinstance(typing, T.Declaration) and typing.subject == _OWN_METHOD:
+            word = typing.classifiers[0] if typing.classifiers else None
+            return isinstance(word, T.Method) and word.m.name in solution
+    return False
+
+
+def _is_row(line):
+    """Whether a line of a block is a row: neither a nested block nor a
+    derivative line."""
+    return not isinstance(line, T.Block) and not (
+        isinstance(line, T.Statement) and stated_derivative(line.core) is not None
+    )
+
+
+def _direct(addressed, address):
+    """The addressed items of the body of the block at `address`: its lines
+    and its nested blocks, in order, without the items of a nested block."""
+    prefix = address + "."
+    return [
+        (key, item)
+        for key, item in addressed
+        if key.startswith(prefix) and "." not in key[len(prefix) :]
+    ]
+
+
+def _file_of(spans, key):
+    """The file the span of the item at `key` names, or None."""
+    span = spans.get(key)
+    return span.file if span is not None else None
+
+
+def _kept_key(key, renamed):
+    """A key of the span table at the kept items' addresses: an item's key
+    is its new address, and a key under a block's address, the place of a
+    side, a field or a typing entry of its header, keeps its tail under the
+    block's new address."""
+    parts = key.split(".")
+    for n in range(len(parts), 0, -1):
+        head = ".".join(parts[:n])
+        if head in renamed:
+            return renamed[head] + key[len(head) :]
+    return key
+
+
 def operative_definitions(stage, blocks):
     """The definitions table of `stage` with the bound blocks `blocks`: the
     declared table with each block's records written into it, a record
@@ -824,15 +933,20 @@ def operative_definitions(stage, blocks):
 
 def declared_version(stage):
     """The stage as its stage file declares it and elaboration builds it:
-    `stage` itself while it holds no binding, and otherwise a version
-    holding the same initial diagrams and stored builders graphs, the
-    declared definitions table and the methods the stage binds, with no
-    block, calibration or settings, kept for the version (specification 0.6
-    §7). `stage.declared` reads it, so that `methods` at the declared level
-    answers the methods the stage binds (decision SC-24); its cards print no
-    binding (`is_declared_version`), and the cards of the blocks and the
-    lines of the initial diagrams read it, so that no binding changes them
-    (decisions SC-13 and SC-22)."""
+    for a stage built from the union of its stage file and its additions,
+    whose provenance records the additions, the stage file's own text
+    elaborated alone, with no binding (specification 0.7 §4 rule 6, the
+    erasure); otherwise `stage` itself while it holds no binding, and
+    otherwise a version holding the same initial diagrams and stored
+    builders graphs, the declared definitions table and the methods the
+    stage binds, with no block, calibration or settings, kept for the version
+    (specification 0.6 §7). `stage.declared` reads it, so that `methods` at
+    the declared level answers the methods the stage binds (decision SC-24);
+    its cards print no binding (`is_declared_version`), and the cards of the
+    blocks and the lines of the initial diagrams read it, so that no binding
+    changes them (decisions SC-13 and SC-22)."""
+    if stage.provenance.get("additions"):
+        return kept_answer(stage, "declared version", lambda: _declared_alone(stage))
     bindings = stored(stage, "bindings")
     if all(getattr(bindings, name) is None for name in _BINDING_NAMES):
         return stage
@@ -850,6 +964,17 @@ def is_declared_version(stage):
 # version's provenance records
 _BINDING_NAMES = ("calibration", "methods", "settings", "blocks")
 _DECLARED = "declared"
+
+
+def _declared_alone(stage):
+    """The stage file of `stage` elaborated alone, the declared level of a
+    stage built from a union, under the stage's provenance without the
+    additions and marked as the declared level, so that the declared version
+    of a declared version is itself."""
+    term, spans = parse_with_spans(stage.provenance["text"], stage.provenance["origin"])
+    alone = type(stage)(**stage_fields(term, spans))
+    provenance = {key: value for key, value in stage.provenance.items() if key != "additions"}
+    return replace_stage(alone, provenance=freeze({**provenance, "level": _DECLARED}))
 
 
 def _declared(stage):

@@ -1,9 +1,11 @@
 stage: noport
 # The methods of the stage without a portfolio choice: Gauss-Hermite quadrature of the declared distribution of income
 # at the expectation; the marginal block of noport_envelope.bl, beside this file, which states the derivative of the
-# decision value; the value represented on the grid of capital the settings name; and the forward law drawn by
-# Monte Carlo, n_sim paths from the seed the settings name. In one dimension the rule of the fixed reference and
-# the rule of the declared distribution agree, so one handler serves both.
+# decision value; the value represented at the decision builder's Evaluation, cntn_to_dcsn.evaluate.value, by the
+# basis !Linear on the grid of capital k that the setting grid names by its kind, !Cartesian, with its order and
+# bounds, the settings n_k, k_min and k_max, beside it; and the forward law drawn by Monte Carlo, n_sim paths from the
+# seed the settings name. In one dimension the rule of the fixed reference and the rule of the declared distribution
+# agree, so one handler serves both.
 methods:
   - on: E_θ
     method: !gauss-hermite
@@ -12,9 +14,9 @@ methods:
   - on: cntn_to_dcsn
     method: !marginals
     block: noport_envelope.bl
-  - on: evaluate
-    method: !Cartesian
-    settings: {orders: {k: n_k}, bounds: {k: [k_min, k_max]}}
+  - on: cntn_to_dcsn.evaluate.value
+    method: !Linear
+    settings: {grid: !Cartesian, orders: {k: n_k}, bounds: {k: [k_min, k_max]}}
   - on: dcsn_to_cntn
     method: !monte-carlo
     settings: {n_paths: n_sim, seed: sim_seed}

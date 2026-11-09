@@ -1,0 +1,48 @@
+@methods: cons
+# Deliberate refusals (aspect A24) on the consumption stage, whose stage file is
+# applications/portfolio-choice/declaration/stages/cons/cons.bl. No block of
+# this file belongs to the application's methods; each is written as an author
+# rewriting stages/cons/methods.yml might write it by mistake, and each comment
+# names the rule of the union (the proposal's §4) that refuses it. The inverse
+# marginal utility is written inline in the candidate line, (D_{a}V[>])^(-1/ρ),
+# so that the file adds no function definition.
+# The settings the two grid entries read are declared as in methods.cons.bl
+# (writer's sheet §6), so that only the deliberate refusals are reported.
+
+n_a : ℕ        :: ["number of points of the savings grid"]
+a_min : Xa     :: ["lower bound of the savings grid"]
+a_max : Xa     :: ["upper bound of the savings grid"]
+n_m : ℕ        :: ["number of points of the grid of resources"]
+m_min : Xm     :: ["lower bound of the grid of resources"]
+m_max : Xm     :: ["upper bound of the grid of resources"]
+
+# Refused twice. First, the same slot twice: the relative subject `grid` and
+# the absolute subject `policy.grid` name one slot, the grid of the block policy
+# (rule 7, a path inside a block read from the block), and type it with two
+# different grids on the savings a, the second built from the settings of
+# resources that the YAML gives the decision value's Evaluation; rule 4 refuses
+# two entries of one key with different content, naming both (D5). Second,
+# a subject naming another block: the group places the YAML's representation of
+# the decision value in the one block of the file that has a body, and its
+# subject begins with cntn_to_dcsn, a block other than the enclosing policy
+# (rule 7).
+[id=policy, method : !egm
+    | grid : !Cartesian(a=(a_min, a_max, n_a))
+    | policy.grid : !Cartesian(a=(m_min, m_max, n_m))
+    | handler : "cons-port:egm"
+    | cntn_to_dcsn.evaluate.method : !Linear] {
+    c[>]   <= (D_{a}V[>])^(-1/ρ) ⟂ a >= 0    :: [id=InvEuler]
+    m_d[>] = a + c[>]                        :: [id=grid]
+}
+
+# Refused twice. First, two sets on one coordinate: the partial signature gives
+# the decision value V the set ℝ, as noport.bl, port.bl and disc.bl type their
+# decision values, where cons.bl gives it [-inf, inf) (rule 4, a coordinate of
+# one name with different content; the empty domain () adds nothing). Second, a
+# line id twice: the line restates the envelope condition under its id
+# marginal, which cons.bl already writes in this block, as buffer-stock's
+# methods file must for a stage that states no derivative and this stage need
+# not (rule 5).
+[id=cntn_to_dcsn, () -> (V : ℝ @ !vlu) : !dcsn] {
+    D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]
+}

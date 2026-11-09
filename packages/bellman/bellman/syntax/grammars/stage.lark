@@ -11,10 +11,18 @@
 // type, is the vocabulary's ruling, checked after parsing); the
 // tilde assigns a law on its own line; := defines; <- is written by
 // calibration.
+//
+// The typing entries of a methods file (4 November 2026): a typing entry
+// types a component of an operator by the path of the component,
+// `policy.method : !egm(tol=tol_v)`, `evaluate[V[<]].grid : !Cartesian(…)`,
+// written inside a header bracket, in a group that `|` opens, or at file
+// level; a handler binding names, by a quoted string, the program that
+// realizes the operator, `policy.handler : "cons-port:egm"`; a !-word
+// carries keyword arguments in parentheses.
 
 ?start: file
 file: _NL? file_item (_NL file_item)* _NL?
-?file_item: metadata | assignment | function_definition | declaration | law | block
+?file_item: metadata | assignment | function_definition | declaration | file_binding | law | block
 
 // space-defining assignment: Y := R, D := {work, retire}, X := R+,
 // Xa := [0, ā], H := {i : ℤ | i >= 0, i <= 1}. An interval body lowers to
@@ -55,9 +63,13 @@ metadata: _AT NAME ":" METADATA_SCALAR
 // types per coordinate, so the tuple-level typing is optional.
 // The colon binds to the smallest complete object on its left:
 // w, c : T types c alone; (w, c) : T types the tuple as one
-// object, and tuples nest wherever a name may stand.
-declaration: single_subject typing declared_value? condition_tail? STMT_META?
+// object, and tuples nest wherever a name may stand. A subject with a
+// dot, `cntn_to_dcsn.evaluate.grid : !Cartesian(…)`, is a typing entry
+// at file level, routed by its path to the operator it names.
+declaration: subject_path typing declared_value? condition_tail? STMT_META?
     | tuple_subject typing? declared_value? condition_tail? STMT_META?
+// a handler binding at file level, `dcsn_to_cntn.handler : "cons-port:transition"`
+file_binding: binding STMT_META?
 condition_tail: ("," tail_condition)+
 tail_condition: RELOP formula
 RELOP: "<=" | ">=" | "≤" | "≥" | "<" | ">"
@@ -67,8 +79,19 @@ coordinate: bracketed_name typing? | plain_name typing? | tuple_subject typing?
 declared_value: _ASSIGN formula
 _ASSIGN.2: "<-" | ":="
 
+// the subject of a declaration, of a law, of a bare side and of a typing
+// entry: a path of segments joined by dots, each a name with selectors in
+// brackets. A name alone or with its perch mark, `V[>]`, names a field and
+// parses as it did before paths were admitted; a dotted path names the
+// component of an operator, `policy.evaluate.method`, and a selector of a
+// segment names the object an Evaluation stores, by its name or by its
+// term, `evaluate[V].method`, `evaluate[D_{k}V[<]].grid`.
+?subject_path: subject_segment | subject_segment ("." subject_segment)+ -> path
+?subject_segment: plain_name | plain_name ("[" selector "]")+ -> bracketed_name
+?selector: PMARK | plain_name | NUMBER | bracketed_name | operator_call
+
 // the law statement: y ~ N(μ, σ); a joint law takes a tuple subject
-law: single_subject "~" formula STMT_META?
+law: subject_path "~" formula STMT_META?
    | tuple_subject "~" formula STMT_META?
 
 // a function definition: 𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ); every binder
@@ -104,21 +127,38 @@ comprehension_condition: formula RELOP formula
 
 // blocks: parsed header + body
 block: header _body
-header: "[" header_entry ("," header_entry)* "]"
-?header_entry: key_value | word_tag | signature | bare_tag | quoted_tag
+// the header holds the block's own entries, then the groups that `|`
+// opens, each holding typing entries of the block's operators and their
+// handler bindings; `]` closes the whole annotation, and every entry of
+// every group is an entry of the one annotation
+header: "[" header_entry ("," header_entry)* ("|" _group)* "]"
+_group: group_entry ("," group_entry)*
+?group_entry: typing_entry | binding
+?header_entry: key_value | word_tag | signature | bare_tag | quoted_tag | typing_entry | binding
 key_value: plain_name "=" header_value
 ?header_value: plain_name | NUMBER
 // the ! mark spells vocabulary words; in a header it is the
-// statement- and block-level type register (!node; method tags later)
+// statement- and block-level type register (!node; a method is written
+// as a typing entry)
 word_tag: TAGBANG
-bare_tag: plain_name
+// a bare tag, or a tag with keyword arguments, `capital(order=2)`
+bare_tag: plain_name arguments?
 // a quoted string in a header bracket is a tag (dyno tip 312e8ea)
 quoted_tag: STAGE_STRING
+// a typing entry types a component of an operator of the block by its
+// path: the block's own, `policy.method : !egm` or the relative `method :
+// !egm`; an operator's inside the block, `evaluate.method : !Linear`,
+// `E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes)`; a grid,
+// `evaluate[V[<]].grid : !Cartesian(k=(k_min, k_max, n_k))`
+typing_entry: subject_path typing
+// the handler binding of a place: the program that realizes the
+// operator, named by a quoted string, `policy.handler : "cons-port:egm"`
+binding: subject_path _COLON STAGE_STRING
 signature: side "->" side
 // a side is parenthesized in general; a single coordinate may stand
 // bare (V : !dcsn -> …)
 side: "(" [coordinate ("," coordinate)*] ")" typing? | bare_side
-bare_side: plain_name typing? | bracketed_name typing?
+bare_side: subject_path typing?
 
 _body: "{" _NL? block_item (_NL block_item)* _NL? "}"
 ?block_item: block | function_definition | statement | block_declaration
@@ -137,7 +177,19 @@ _PERP: "⟂"
 typing: _COLON type
 type: component (_AT component)*
 ?component: word_type | setexpr
-word_type: TAGBANG
+// a !-marked word with its keyword arguments, `!egm(tol=tol_v)`; a role
+// or a perch word takes none, which the lowering checks
+word_type: TAGBANG arguments?
+// keyword arguments, `(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)`: a value is a name,
+// a number, a quoted string, a tuple of values, or a !-word with its own
+// arguments, `(a_min, a_max, n_a, !expmult(nest=grid_phi))`
+arguments: "(" keyword ("," keyword)* ")"
+keyword: plain_name "=" argument
+?argument: plain_name -> argument_name
+    | NUMBER -> argument_number
+    | STAGE_STRING -> argument_string
+    | "(" argument ("," argument)+ ")" -> argument_tuple
+    | word_type -> argument_word
 
 ?setexpr: set_product_level
     | set_product_level "→" setexpr   -> set_functions

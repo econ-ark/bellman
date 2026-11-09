@@ -1,0 +1,53 @@
+@methods: buffer_stock
+# The compulsory pension account, added to the buffer-stock stage by the union
+# of this file with buffer_stock.bl. The employer pays τ times the transitory
+# income draw into an account that earns the gross return R_p; the household can
+# neither draw on it nor add to it, so the balance is carried to the
+# continuation perch untouched and reaches the decision only through the
+# continuation value, now a function of savings and of the balance. Every
+# quantity is a ratio to permanent income, as in the base. No line of the base
+# changes: the two forward builders gain a coordinate on each side and one line,
+# the two value builders gain their derivative lines, the policy builder
+# nothing here. The arrival value and its two stated derivatives are
+# represented by one unrefined entry at the arrival builder's Evaluation, whose
+# grid is its own typing entry, one factor per coordinate of the arrival perch
+# keyed by name (D5, AAS, 4 November 2026; sheet §7), so that the balance
+# derivative reaches a stage that reads it across a connector (F47, F6, F29);
+# the quadrature of the arrival expectation takes one node count per shock
+# (F4). The settings this file reads are declared with their domains
+# (sheet §6); their values and those of R_p and τ are the sketch's.
+
+Xp := ℝ₊
+
+R_p : ℝ₊₊            :: ["gross return on the pension account"]
+τ : [0,1)            :: ["employer contribution rate, paid on the transitory income draw"]
+
+n_k : ℕ              :: ["number of points of the asset grid"]
+k_min : Xa           :: ["lower bound of the asset grid"]
+k_max : Xa           :: ["upper bound of the asset grid"]
+n_p : ℕ              :: ["number of points of the pension-balance grid"]
+p_min : Xp           :: ["lower bound of the pension-balance grid"]
+p_max : Xp           :: ["upper bound of the pension-balance grid"]
+n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
+n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
+
+[id=arvl_to_dcsn, (p : Xp) : !arvl -> (p_d : Xp) : !dcsn] {
+    p_d = R_p*p/(Γ*ψ) + τ*ξ                          :: [id=pension_balance]
+}
+
+[id=dcsn_to_cntn, (p_d) : !dcsn -> (q : Xp) : !cntn] {
+    q = p_d                                          :: [id=pension_carried]
+}
+
+[id=cntn_to_dcsn] {
+    D_{m}V = 𝑑𝑢(c)                                   :: [id=envelope_resources]
+    D_{p_d}V = β*D_{q}V[>]                           :: [id=envelope_pension]
+}
+
+[id=dcsn_to_arvl
+    | E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k), p=(p_min, p_max, n_p))] {
+    D_{k}V[<] = E_{ψ,ξ}(R*(Γ*ψ)^(-ρ)*D_{m}V)         :: [id=marginal_assets]
+    D_{p}V[<] = E_{ψ,ξ}(R_p*(Γ*ψ)^(-ρ)*D_{p_d}V)     :: [id=marginal_pension]
+}

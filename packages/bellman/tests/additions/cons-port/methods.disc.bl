@@ -1,0 +1,9 @@
+@methods: disc
+# The methods of the discount stage, as an addition to disc.bl: the two forward
+# builders are deterministic, a representation of a forward builder's measure
+# without a grid. The two entries of methods/disc.yml with on alone, on
+# cntn_to_dcsn and on dcsn_to_arvl, bind nothing and are written as nothing
+# (writer's sheet §5); the README records them.
+
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !deterministic

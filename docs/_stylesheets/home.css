@@ -130,8 +130,8 @@ body:has(.bellman-home) .md-top {
 .bellman-home__hero {
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   padding: clamp(48px, 7vw, 96px) var(--bellman-home-pad) clamp(48px, 6vw, 88px);
-  background: #214eda;
-  color: #fff;
+  background: var(--bl-ice);
+  color: #172a52;
 }
 
 .bellman-home__art {
@@ -139,9 +139,9 @@ body:has(.bellman-home) .md-top {
   min-width: 0;
 }
 
-.bellman-home__art--arrival {
+.bellman-home__art--pair {
   justify-content: flex-start;
-  margin-left: calc(-1 * var(--bellman-home-pad) - 160px);
+  margin: 0;
 }
 
 .bellman-home__loop {
@@ -150,6 +150,11 @@ body:has(.bellman-home) .md-top {
   max-width: 560px;
   height: auto;
   overflow: visible;
+}
+
+.bellman-home__loop--pair {
+  max-width: 520px;
+  aspect-ratio: 362 / 328;
 }
 
 /* The stationary polygon keeps hover stable while the orange faces move. */
@@ -174,7 +179,7 @@ body:has(.bellman-home) .md-top {
 
 .bellman-home h1 {
   margin: 0;
-  color: #fff;
+  color: #172a52;
   font-family: "PP Monument Extended", Archivo, Helvetica, Arial, sans-serif;
   font-size: clamp(40px, 6.4vw, 110px);
   font-weight: 400;
@@ -191,7 +196,7 @@ body:has(.bellman-home) .md-top {
 .bellman-home__modular > span {
   display: inline-block;
   padding: 0 .08em;
-  border: 1px solid #fff;
+  border: 1px solid rgba(23, 42, 82, .3);
   line-height: 1.02;
   animation: bellman-module-z .6s cubic-bezier(.2,1.35,.3,1) var(--letter-delay) both;
 }
@@ -220,25 +225,29 @@ body:has(.bellman-home) .md-top {
   display: inline-flex;
   align-items: center;
   padding: 12px 20px;
-  border: 1px solid #fff;
-  color: #fff;
+  border: 1px solid #172a52;
+  color: #172a52;
   transition: background .15s, color .15s;
 }
 
 .bellman-home__button:hover {
-  background: #fff;
-  color: #214eda;
+  background: #c5e5f1;
+  color: #172a52;
 }
 
 .bellman-home__button--primary {
-  background: #fff;
-  color: #214eda;
+  background: #172a52;
+  color: #fff;
 }
 
 .bellman-home__button--primary:hover {
-  border-color: #172a52;
-  background: #172a52;
+  border-color: #22397a;
+  background: #22397a;
   color: #fff;
+}
+
+.bellman-home__button:active {
+  transform: translateY(1px);
 }
 
 .bellman-home__band {
@@ -394,7 +403,7 @@ body:has(.bellman-home) .md-top {
   78% { transform: translateY(0) rotate(1deg); }
 }
 
-@media (max-width: 899px) {
+@media (max-width: 900px) {
   .bellman-home-header__nav {
     flex-wrap: wrap;
     column-gap: 20px;
@@ -413,8 +422,8 @@ body:has(.bellman-home) .md-top {
     padding-block: 40px;
   }
 
-  .bellman-home__art--arrival {
-    margin-left: calc(-1 * var(--bellman-home-pad) - 40px);
+  .bellman-home__art--pair {
+    margin: 0;
   }
 
   .bellman-home__loop {
@@ -441,8 +450,8 @@ body:has(.bellman-home) .md-top {
 }
 
 @media (max-width: 479px) {
-  .bellman-home__art--arrival .bellman-home__loop {
-    max-width: 280px;
+  .bellman-home__art--pair .bellman-home__loop {
+    max-width: 300px;
   }
 
   .bellman-home__properties dl > div {
@@ -456,6 +465,10 @@ body:has(.bellman-home) .md-top {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html:has(.bellman-home) {
+    scroll-behavior: auto;
+  }
+
   .bellman-home *,
   .bellman-home-header *,
   .bellman-home-footer * {
@@ -507,7 +520,6 @@ body:has(.bellman-home) .md-top {
   @keyframes pm-tip { 0%, 50% { transform: scaleX(0); } 75%, 100% { transform: scaleX(1); } }
   @keyframes pm-copy { from { opacity: 0; transform: translateY(-46%); } to { opacity: 1; transform: translateY(-50%); } }
 }
-@media (max-width: 900px) { .pm-dis__copy { left: 16px; right: 16px; width: auto; top: auto; bottom: 48px; transform: none; } .pm-figure { display: none; } }
 /* The photographic sequence. The .pm-img of a slot is a photograph or, in the second slot, a video loop; the rules
    select by class, so the cover fit and the settle animation apply to the video as to the photographs. */
 .pm-sequence { position: relative; background: #172a52; }
@@ -521,3 +533,77 @@ body:has(.bellman-home) .md-top {
 .pm-statement { margin: 0 0 20px; font-family: "PP Monument", Archivo, Helvetica, Arial, sans-serif; font-size: clamp(19px, 1.7vw, 25px); font-weight: 300; line-height: 1.35; letter-spacing: -.01em; text-wrap: balance; color: #fff; }
 .pm-link { color: #c5e5f1; font-family: Archivo, Helvetica, Arial, sans-serif; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
 @media (max-width: 720px) { .pm-panel { left: 16px; right: 16px; bottom: 56px; max-width: none; padding: 20px; } }
+
+/* Phones, touch devices and reduced-motion views use still images and ordinary scrolling. */
+@media (max-width: 900px), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .pm-dis,
+  .pm-slot {
+    height: auto;
+    view-timeline-name: none;
+  }
+
+  .pm-slot + .pm-slot {
+    margin-top: 0;
+  }
+
+  .pm-dis__stage,
+  .pm-frame {
+    position: relative;
+    top: auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .pm-field,
+  .pm-veil {
+    display: none;
+  }
+
+  .pm-dis *,
+  .pm-sequence * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .pm-dis__video,
+  .pm-img {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    transform: none;
+  }
+
+  .pm-dis__copy,
+  .pm-panel {
+    position: relative;
+    inset: auto;
+    width: auto;
+    max-width: none;
+    padding: 28px var(--bellman-home-pad, 24px);
+    transform: none;
+    opacity: 1;
+  }
+
+  .pm-dis__stage {
+    display: grid;
+    align-content: center;
+    min-height: 100svh;
+    padding: 24px var(--bellman-home-pad, 24px);
+  }
+
+  .pm-dis__video {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .pm-dis__copy {
+    width: 100%;
+    max-width: 560px;
+    padding: 28px 24px;
+  }
+}

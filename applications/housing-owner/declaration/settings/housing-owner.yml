@@ -1,0 +1,9 @@
+# The owner's numerical settings: the exogenous grid of savings a_nxt of the
+# endogenous grid method of the consumption choice, which its entry in
+# stages/consumption_choice/methods.yml names. No code of this application
+# reads a grid, so the values are those of the savings grid of the consumption
+# stage of applications/cons-port/declaration/settings/cons.yml.
+settings:
+  n_a: 800
+  a_min: 1.0e-6
+  a_max: 100.0

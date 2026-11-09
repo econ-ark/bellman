@@ -11,3 +11,11 @@
   {% include "partials/parent-bar.html" %}
   {{ super() }}
 {% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {% if page and 'class="arithmatex"' in page.content %}
+    <script src="{{ '_javascripts/mathjax.js' | url }}"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  {% endif %}
+{% endblock %}

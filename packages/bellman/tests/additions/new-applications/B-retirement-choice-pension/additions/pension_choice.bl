@@ -1,0 +1,66 @@
+@methods: ret_choice
+# The pension balance at the retirement choice, and the arrival perch the base
+# omits, added by the union of this file with choice.bl. The balance is carried
+# through both branches unchanged and is paid out in the retiree's stage, which
+# reads it at its arrival (the pension application's retiree_saving.bl). The two
+# arrival builders are present in this file alone: the household reaches the
+# choice with probability s; otherwise its financial and pension wealth is
+# bequeathed with the warm-glow utility 𝑏, in the form the durables
+# application's bequest.bl writes. Since only a worker's path passes through
+# this stage, the survival risk and the bequest bind the worker's path alone
+# (F20). The derivative lines of the choice value in both assets are authored
+# lines of the value builders. The discrete maximum stands on the policy
+# builder's own slot by a file-level line, since the policy builder gains no
+# line and an empty body has no form (F24); its handler, the live methods
+# file's, is the handler binding of the same place, a quoted string that keeps
+# its spelling (D2, AAS, 4 November 2026; F7). The one representation at the
+# added arrival builder's Evaluation covers the value and its two stated
+# derivatives, so that the balance derivative, which the worker's pension
+# Euler equation reads across the connector, is represented (F47, F49); its
+# grid is its own typing entry, one factor per coordinate of the arrival perch
+# keyed by name (D5, AAS, 4 November 2026; sheet §7). The settings this file
+# reads are declared with their domains (sheet §6); s, θ, K and ρ stand in the
+# calibration file.
+
+Xp := ℝ₊
+
+s : (0,1]            :: ["probability of surviving to the retirement decision"]
+θ : ℝ₊₊              :: ["weight of the bequest in utility"]
+K : ℝ₊₊              :: ["shift of the bequest utility"]
+ρ : (1, inf)         :: ["curvature of the bequest utility, the period's coefficient of relative risk aversion that the saving stages declare"]
+
+n_a : ℕ              :: ["number of points of the asset grid"]
+a_min : ℝ₊           :: ["lower bound of the asset grid"]
+a_max : ℝ₊           :: ["upper bound of the asset grid"]
+n_p : ℕ              :: ["number of points of the pension-balance grid"]
+p_min : Xp           :: ["lower bound of the pension-balance grid"]
+p_max : Xp           :: ["upper bound of the pension-balance grid"]
+
+𝑏(x : ℝ₊) := θ*(K + x)^(1-ρ)/(1-ρ)                :: [id=bequest_util]
+𝑑𝑏(x : ℝ₊) := θ*(K + x)^(-ρ)                      :: [id=marg_bequest_util]
+
+[id=arvl_to_dcsn, (a : ℝ₊, p : Xp) : !arvl -> (a_d : ℝ₊, p_d : Xp) : !dcsn] {
+    a_d = a                                          :: [id=assets]
+    p_d = p                                          :: [id=pension]
+}
+
+[id=dcsn_to_cntn, (p_d) : !dcsn -> ()] {
+    [label=work,   () -> (p_w : Xp) : !cntn] { p_w = p_d   :: [id=pension_if_working] }
+    [label=retire, () -> (p_r : Xp) : !cntn] { p_r = p_d   :: [id=pension_if_retiring] }
+}
+
+[id=cntn_to_dcsn] {
+    D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]     :: [id=marginal_assets]
+    D_{p_d}V = (D_{p_w}V_w[>], D_{p_r}V_r[>])[d]     :: [id=marginal_pension]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : [-inf, inf) @ !vlu) : !arvl
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(a=(a_min, a_max, n_a), p=(p_min, p_max, n_p))] {
+    V[<] = s*V + (1 - s)*𝑏(a + p)                    :: [id=survival_value]
+    D_{a}V[<] = s*D_{a_d}V + (1 - s)*𝑑𝑏(a + p)       :: [id=marginal_assets]
+    D_{p}V[<] = s*D_{p_d}V + (1 - s)*𝑑𝑏(a + p)       :: [id=marginal_pension]
+}
+
+policy.method : !max
+policy.handler : "fues-retirement:dcsn_mover"

@@ -21,8 +21,20 @@ the builder, `!vfi` on the backward decision builder alone; a method that
 computes the row whose output is the policy on that row, a maximizer or a
 root finder on an `Argmax` row, and `!egm` on one that carries its
 first-order condition as a property; a method that stores a function at the
-Evaluation that closes it, a representation, and `!egm` at the Evaluation of
-a policy block that writes the grid line.
+Evaluation that closes it, a representation, and `!egm` named with no block
+file at the Evaluation of a policy block that writes the grid line. The
+author writes the place of a representation, the Evaluation of a builder
+by `<block-id>.evaluate`, `<block-id>.evaluate.value` or
+`<block-id>.evaluate.marginal` (AMD-MB-002 §3); a representation named on a
+builder or on a derivative line is refused naming that address.
+
+A representation names its basis as the method, `!Linear` or `!pchip`, and
+its grid under `settings`: the kind of the grid is the tag on the value of
+the setting `grid`, and the grid's fields, `orders` and `bounds`, stand
+beside it as settings of the entry; `!egm` names its exogenous grid of
+savings the same way (AMD-MB-003 §§1 to 3). The kinds of grid and the fields
+each admits are the table `GRID_KINDS`; `!Cartesian` is a kind of grid and
+no method.
 """
 
 import dataclasses
@@ -45,9 +57,18 @@ from bellman.fold.block_lines import (
 from bellman.fold.stage_names import StageNames, lines_of
 from bellman.native.identity import Identity, box_identity, piece_identity
 from bellman.native.labels import is_wiring
-from bellman.native.records import Line, Method, MethodOption, ValueRepresentation, bound_at
+from bellman.native.records import Line, Method, MethodOption, bound_at
 from bellman.native.versions import replace_stage, stored
-from bellman.refusals import METHOD_ATTACHMENT, ConstructionError, TargetError
+from bellman.refusals import (
+    GRID_KIND_AS_METHOD,
+    GRID_UNDER_EGM,
+    GRID_WITHOUT_KIND,
+    METHOD_ATTACHMENT,
+    REPRESENTATION_ON_BUILDER,
+    REPRESENTATION_ON_DERIVATIVE_LINE,
+    ConstructionError,
+    TargetError,
+)
 from bellman.stage.boxes import builder_rows_of, merged_lines, names_merged_line
 from bellman.stage.grains import graph_of
 from bellman.stage.method_blocks import (
@@ -57,18 +78,23 @@ from bellman.stage.method_blocks import (
     read_blocks,
 )
 from bellman.stage.method_targets import (
+    _is_transition,
+    _what_block_is,
+    _writes_role,
     backward_builders_to_decision,
+    derivative_lines,
+    evaluation_addresses,
     is_property,
     properties_of,
     resolve_target,
     target_inventory,
 )
-from bellman.syntax.vocabulary import CONTINUATION, DECISION, DOC, STATE, VALUE
+from bellman.syntax.vocabulary import CONTINUATION, CONTROL, DECISION, DOC, STATE, VALUE
 
 # --- attaching methods ---
 
 _RESERVED_ENTRY_KEYS = frozenset(("resolved", "attached", "diagnostic", "requirements", "record"))
-_BINDING_ENTRY_KEYS = frozenset(("method", "handler", "settings", "grid", "block"))
+_BINDING_ENTRY_KEYS = frozenset(("method", "handler", "settings", "block"))
 
 
 def attach_methods(stage, loaded, *, provenance, base=None):
@@ -95,8 +121,8 @@ def attached_bindings(stage, loaded, *, base=None, replace_all=False):
     the blocks bound before are left out, so that the source's bindings
     replace them as a whole.
 
-    An entry that names no method, handler, setting or grid is resolved and
-    binds nothing. An entry whose target resolves to no place is refused. A
+    An entry that names no method, handler or setting is resolved and binds
+    nothing. An entry whose target resolves to no place is refused. A
     target named by its address governs a box also named by a stage-wide
     operator name; two entries that otherwise reach one box are refused. The
     entries that name a block file are attached first, and the others are
@@ -189,13 +215,21 @@ def attached_bindings(stage, loaded, *, base=None, replace_all=False):
     _one_method_per_merged_box(placed, found, targets)
     if inadmissible:
         _refuse(stage, *inadmissible[0])
-    for entry in pending:
-        rule = METHOD_TYPES.get(entry.method.tag)
-        if rule is not None:
-            _check_authored_options(stage, entry.target, entry.method, rule)
     # the setting names the attachments reference and the conditions they
     # add are queries
     methods = _merged(held_methods, found)
+    # the options are checked against the methods bound after the binding,
+    # since a representation at the policy builder's Evaluation writes no
+    # grid where `!egm` stands in that builder (AMD-MB-003 §1)
+    knots = _evaluations_of_egm_pairs(stage, methods)
+    for entry in pending:
+        rule = METHOD_TYPES.get(entry.method.tag)
+        if rule is not None:
+            _check_authored_options(stage, entry, rule, knots)
+    # a representation an earlier source bound at a policy builder's
+    # Evaluation is checked again where this source adds `!egm` in that
+    # builder or replaces it by another solution method
+    _check_held_representations(stage, held_methods, methods, knots, pending)
     # a block stands while a method naming it holds its builder; a later
     # binding that replaces that method drops the block (decision SA-16)
     named = {_builder_of_box(bound_at(key)) for key, method in methods.items() if method.block}
@@ -344,7 +378,7 @@ def _merged(held, found):
 
 def binding_kind(method):
     """The kind of a bound method, its row's `kind`: a solution method, such
-    as `!egm` or `!vfi`, a representation method, such as `!Cartesian` or
+    as `!egm` or `!vfi`, a representation method, such as `!Linear` or
     `!deterministic`, or a marginal block, `!marginals` (decision SD-15). An
     entry that names a handler and no method is a solution."""
     rule = METHOD_TYPES.get(method.tag)
@@ -455,6 +489,25 @@ def _resolved_entry(stage, entry, blocks, order):
         )
     target, attach = entry["on"], bool(_BINDING_ENTRY_KEYS.intersection(entry))
     method = _method(entry)
+    if "grid" in entry:
+        _refuse(
+            stage,
+            target,
+            "the entry writes `grid` beside `method`, which is not read: a grid is a setting "
+            "of the entry, its kind the tag on the value of `grid` and its fields beside it; "
+            "write `grid: !Cartesian` under `settings`, with `orders` and `bounds` beside it",
+        )
+    if attach and method.tag in GRID_KINDS:
+        _refuse(
+            stage,
+            target,
+            f"!{method.tag} is a kind of grid and not a method; write the basis as the method, "
+            "`method: !Linear` for piecewise linear interpolation or `method: !pchip` for "
+            "shape-preserving cubic interpolation, and the grid as its setting, "
+            f"`grid: !{method.tag}` under "
+            "`settings` with `orders` and `bounds` beside it",
+            rule=GRID_KIND_AS_METHOD,
+        )
     rule = METHOD_TYPES.get(method.tag)
     places = attachment_places(
         stage,
@@ -463,13 +516,19 @@ def _resolved_entry(stage, entry, blocks, order):
         attach,
         representation=bool(rule and rule._place is _representation_place),
     )
-    components = frozenset(place.address for place in places if place.kind == "statement")
+    # the statements and the written Evaluations an entry names, by which two
+    # entries of one method at one Evaluation join (decision SD-15): the value
+    # and its stated derivative, `<block-id>.evaluate.value` and
+    # `<block-id>.evaluate.marginal`, are two such names of one box
+    components = frozenset(
+        place.address for place in places if place.kind == "statement"
+    ) | frozenset(target for place in places if place.evaluates)
     stage_wide = (
         "." not in target
         and target not in blocks
         and all(place.kind == "operator" for place in places)
     )
-    if places and all(place.kind == "operator" for place in places):
+    if places and all(place.kind == "operator" and not place.evaluates for place in places):
         places = tuple(
             sorted(places, key=lambda place: order[place.address, place.operator, place.position])
         )
@@ -484,6 +543,8 @@ def _resolved_entry(stage, entry, blocks, order):
         resolved = []
         for place in places:
             kind = _kind_of(place)
+            if place.kind == "builder" and rule._place is _representation_place:
+                _refuse_representation_on_builder(stage, target, place, method.tag, blocks)
             if kind not in rule.admits:
                 admitted = ", ".join(
                     " ".join(k) if isinstance(k, tuple) else k for k in rule.admits
@@ -556,9 +617,13 @@ def _box_assignments(stage, pending):
 
 def _method(entry):
     """The `Method` of an authored entry: its method tag without the `!`, its
-    handler, and its settings — the entry's `settings`, the payload of a
-    tagged method mapping (`!Linear {grid: wealth}`), and the grid it names
-    under `grid`, a setting bound by `configure` (AMD-SG-006 §4)."""
+    handler, and its settings — the entry's `settings` and the payload of a
+    tagged method mapping (`!Linear {grid: !Cartesian, orders: …, bounds: …}`).
+    A grid a mapping source
+    writes as the string `"!Cartesian"` is held as the reader holds the tag
+    `!Cartesian` a methods file writes, `{"__yaml_tag__": "Cartesian",
+    "value": ""}`, as a method written `"!Linear"` is read as the tag
+    `!Linear` (AMD-MB-003 §3)."""
     value = entry.get("method")
     settings = {}
     if isinstance(value, Mapping):
@@ -575,19 +640,22 @@ def _method(entry):
     if name is not None:
         name = name.removeprefix("!")
     settings.update(entry.get("settings", {}))
-    if entry.get("grid") is not None:
-        settings["grid"] = entry["grid"]
+    grid = settings.get("grid")
+    if isinstance(grid, str) and grid.startswith("!"):
+        settings["grid"] = {"__yaml_tag__": grid[1:], "value": ""}
     return Method(name, entry.get("handler"), settings, block=entry.get("block"))
 
 
 @dataclasses.dataclass(frozen=True)
 class _AttachmentPlace:
     """The place a method target resolves to (AMD-SG-018 §2): its `kind`, one
-    of `builder`, `node`, `statement`, `operator`, `definition` and
-    `boundary`; the `block` that holds it; the `address` of the line or of the
-    definition where it has one; the stage-wide name and the `position` of an
-    operator occurrence where it is one; and `box`, the name of the box the
-    attachment binds the method to. Exists during one attachment."""
+    of `builder`, `node`, `statement`, `operator` and `definition`; the
+    `block` that holds it; the `address` of the line or of the definition
+    where it has one; the stage-wide name and the `position` of an operator
+    occurrence where it is one; `box`, the name of the box the attachment
+    binds the method to; and `evaluates`, for the Evaluation of a builder
+    named by its written address, what it evaluates, `policy`, `value` or
+    `marginal` (AMD-MB-002 §3). Exists during one attachment."""
 
     kind: str
     block: str
@@ -596,6 +664,7 @@ class _AttachmentPlace:
     position: tuple = ()
     box: object = None
     head: str | None = None
+    evaluates: str | None = None
 
 
 def _kind_of(place):
@@ -622,8 +691,10 @@ def attachment_places(stage, target, resolved, attach, representation=False):
                 ),
             )
         return (_AttachmentPlace("builder", resolved.name, box=resolved.name),)
-    if len(resolved) == 2 and isinstance(resolved[1], ValueRepresentation):
-        return (_AttachmentPlace("boundary", resolved[0].name, box=resolved[0].name),)
+    if len(resolved) == 3 and isinstance(resolved[0], str) and resolved[0] == "evaluation":
+        # the Evaluation of a builder by its written address (AMD-MB-002 §3)
+        _, box, evaluates = resolved
+        return (_evaluation_place(box.name, box.name, evaluates),)
     if len(resolved) == 2 and isinstance(resolved[1], Line):
         holder, record = resolved
         implicit = [op for op in record.operators if is_implicit_solve(op)]
@@ -643,8 +714,6 @@ def attachment_places(stage, target, resolved, attach, representation=False):
                 "statement", _owner(stage, holder), record.address, box=record.address
             ),
         )
-    if len(resolved) == 3 and isinstance(resolved[1], Line):
-        return (_operator_place(stage, _owner(stage, resolved[0]), *resolved[1:]),)
     return tuple(_operator_place(stage, _owner(stage, place[0]), *place[1:]) for place in resolved)
 
 
@@ -657,6 +726,23 @@ def _operator_place(stage, block, statement, occurrence):
         position=occurrence.position,
         box=_operator_box(stage, block, statement, occurrence),
         head=occurrence.head,
+    )
+
+
+def _evaluation_place(block, address, evaluates=None):
+    """The place of the Evaluation that closes `address` in the builder
+    `block`, the builder itself or a `!node` line of it: the operator
+    `evaluate` whose box is `<address>:Evaluation`, with what it evaluates
+    where the target names the Evaluation of the builder by its written
+    address (AMD-MB-002 §3)."""
+    return _AttachmentPlace(
+        kind="operator",
+        block=block,
+        address=address,
+        operator="evaluate",
+        box=Identity("Evaluation", address=address),
+        head="evaluate",
+        evaluates=evaluates,
     )
 
 
@@ -696,14 +782,51 @@ def _owner(stage, holder):
     raise ValueError("a method target has no owning builder in this stage")
 
 
-def _refuse(stage, target, message, candidates=None):
+def _refuse(stage, target, message, candidates=None, rule=METHOD_ATTACHMENT):
     raise TargetError(
         target=target,
         stage=stage.name,
-        rule=METHOD_ATTACHMENT,
+        rule=rule,
         candidates=target_inventory(stage) if candidates is None else candidates,
         message=f"Method target {target!r} in stage {stage.name!r}: {message}",
     )
+
+
+def _refuse_representation_on_builder(stage, target, place, tag, blocks):
+    """The refusal of a representation named on a builder, in one sentence
+    naming the written address of the builder's Evaluation, where a
+    representation is attached (AMD-MB-002 §4)."""
+    box = blocks[place.block]
+    written = evaluation_addresses(stage, box)
+    if written:
+        named = " or ".join(f"`on: {address}`" for address in written)
+        sentence = (
+            f"!{tag} is a representation, attached to the Evaluation of a builder and not to "
+            f"the builder; write {named}"
+        )
+    elif _is_transition(stage, box):
+        evaluations = ", ".join(
+            f"`on: {address}`"
+            for other in blocks.values()
+            for address in evaluation_addresses(stage, other)
+        )
+        sentence = (
+            f"!{tag} is a representation, attached to the Evaluation of the policy builder or "
+            f"of a backward value builder, and {place.block!r} is a forward builder, the "
+            "push-forward of a measure through its law of motion, which closes with no "
+            "Evaluation; write the representation at one of the stage's Evaluations, "
+            f"{evaluations or 'of which the stage has none'}, or bind on {place.block!r} a "
+            "method of its law of motion, `!deterministic`, `!monte-carlo`, `!histogram` or "
+            "`!identity`"
+        )
+    else:
+        sentence = (
+            f"!{tag} is a representation, attached to the Evaluation of the policy builder or "
+            f"of a backward value builder, and {place.block!r} is "
+            f"{_what_block_is(stage, box)}, which writes neither a value nor a policy and has "
+            "no Evaluation a representation is attached to"
+        )
+    _refuse(stage, target, sentence, rule=REPRESENTATION_ON_BUILDER)
 
 
 def _one_method_per_merged_box(stage, found, targets):
@@ -745,22 +868,77 @@ def _one_method_per_merged_box(stage, found, targets):
         )
 
 
-def _check_authored_options(stage, target, method, rule):
+def _check_authored_options(stage, entry, rule, knots):
     """The check of the keys an entry writes against its method's option
-    record."""
+    record and the fields of the grid kind its setting `grid` names
+    (AMD-MB-003 §3). A grid written on the policy builder's Evaluation where
+    `!egm` stores the knots there (`knots`), the fields of a grid written
+    without its kind, and a value of `grid` that names no kind of the table
+    `GRID_KINDS` are refused, each in one sentence; a representation at such
+    an Evaluation writes no grid, and one at an authored `evaluate(knots,
+    values, x)` occurrence, whose first argument holds its knots, needs none.
+    Then a required key the entry omits is refused, and so is a key that
+    neither the row nor the grid's kind admits where the entry names no
+    handler to read it."""
+    target, method = entry.target, entry.method
     written = set(method.settings)
-    required = {name for name, option in rule.options.items() if option.required}
+    representation = "grid" in rule.options and rule.kind == "representation"
+    at_knots = representation and any(place.box in knots for place in entry.places)
+    authored = (
+        representation
+        and bool(entry.places)
+        and all(
+            place.kind == "operator"
+            and place.head == "evaluate"
+            and getattr(place.box, "kind", None) != "Evaluation"
+            for place in entry.places
+        )
+    )
+    fields = tuple(field for field in GRID_FIELDS if field in written)
+    if at_knots and ("grid" in written or fields):
+        shown = _listed(("grid",) * ("grid" in written) + fields)
+        _refuse(
+            stage,
+            target,
+            f"!{method.tag} at the Evaluation of the policy builder interpolates the policy "
+            "between the pairs of the decision state and the control that !egm computes at the "
+            "points of its exogenous grid and stores there, which are its knots, so the entry "
+            f"writes no grid; remove {shown} from its settings, the exogenous grid standing in "
+            "the settings of the !egm entry",
+            rule=GRID_UNDER_EGM,
+        )
+    if "grid" in rule.options and "grid" not in written and fields:
+        shown = _listed(fields)
+        _refuse(
+            stage,
+            target,
+            f"!{method.tag} writes {shown} without the setting `grid`; a grid is written by its "
+            "kind, the tag on the value of `grid`, with its fields beside it: write "
+            f"`grid: !Cartesian` in the entry's settings beside {shown}",
+            rule=GRID_WITHOUT_KIND,
+        )
+    if "grid" in rule.options and "grid" in written:
+        _check_grid_kind(stage, target, method)
+    options = admitted_options(
+        rule, method.settings, knots="stored" if at_knots else "authored" if authored else None
+    )
+    required = {name for name, option in options.items() if option.required}
     missing = tuple(sorted(required - written))
-    unknown = tuple(sorted(written - set(rule.options)))
+    unknown = tuple(sorted(written - set(options)))
     if missing:
         details = f"missing required option{'' if len(missing) == 1 else 's'} {', '.join(missing)}"
         if unknown:
             details += f"; unknown option{'' if len(unknown) == 1 else 's'} {', '.join(unknown)}"
+        grid = (
+            "; a grid is the setting `grid: !Cartesian` with `orders` and `bounds` beside it"
+            if "grid" in missing
+            else ""
+        )
         _refuse(
             stage,
             target,
             f"!{method.tag} has {details}; write every required option using "
-            "the keys shown by method_types of bellman.stage",
+            f"the keys shown by method_types of bellman.stage{grid}",
         )
     if unknown and method.handler is None:
         _refuse(
@@ -770,6 +948,159 @@ def _check_authored_options(stage, target, method, rule):
             f"{', '.join(unknown)} and names no handler; "
             "remove them or name the handler that reads them",
         )
+
+
+def _check_held_representations(stage, held, methods, knots, pending):
+    """The refusal of a representation an earlier source bound at the
+    Evaluation of a policy builder, which the source being bound leaves in
+    place, where that source makes the Evaluation a place whose knots `!egm`
+    computes (`knots`) or no longer one (AMD-MB-003 §1): a representation
+    that writes a grid where `!egm` now stands in the builder is refused
+    under `grid-under-egm`, and one that writes no grid where `!egm` no
+    longer stands there under `method-attachment`. Each refusal names, as its
+    target, the entry of the source that binds the solution method in that
+    builder, and asks in one sentence for the representation to be written
+    again in the same source at its written address, `<block-id>.evaluate`,
+    without a grid or with one."""
+    before = _evaluations_of_egm_pairs(stage, held or {})
+    for key, method in methods.items():
+        box = bound_at(key)
+        if box not in before ^ knots or (held or {}).get(key) is not method:
+            continue
+        if binding_kind(method) != "representation":
+            continue
+        builder = _builder_holding(box)
+        written = f"{builder}.evaluate"
+        solution = next(
+            (
+                entry
+                for entry in pending
+                if binding_kind(entry.method) == "solution"
+                and any(_builder_holding(place.box) == builder for place in entry.places)
+            ),
+            None,
+        )
+        target = solution.target if solution is not None else written
+        named = (
+            f"!{solution.method.tag}"
+            if solution is not None and solution.method.tag
+            else (solution.method.handler if solution is not None else "a solution method")
+        )
+        if box in knots and "grid" in method.settings:
+            _refuse(
+                stage,
+                target,
+                f"!egm now stands in the policy builder {builder!r}, and !{method.tag}, bound "
+                f"at its Evaluation by an earlier source, writes a grid there, where the knots of "
+                "its interpolant are the pairs of the decision state and the control that !egm "
+                f"computes; write the representation again in this source at `{written}` without "
+                "a grid",
+                rule=GRID_UNDER_EGM,
+            )
+        if box in before - knots and "grid" not in method.settings:
+            _refuse(
+                stage,
+                target,
+                f"{named} replaces !egm in the policy builder {builder!r}, and !{method.tag}, "
+                "bound at its Evaluation by an earlier source, writes no grid, which it needs "
+                "once !egm no longer computes its knots; write the representation again in this "
+                f"source at `{written}` with its grid, `grid: !Cartesian` with `orders` and "
+                "`bounds` beside it",
+            )
+
+
+def _listed(names):
+    """The names `names` in code type, the last two joined by `and`, the
+    others by commas."""
+    shown = [f"`{name}`" for name in names]
+    return " and ".join(shown) if len(shown) < 3 else ", ".join(shown[:-1]) + " and " + shown[-1]
+
+
+def _check_grid_kind(stage, target, method):
+    """The refusal of a value of the setting `grid` that names no kind of
+    grid: a value that is no tag written alone, such as a setting name
+    written in the place of the kind, a kind the table `GRID_KINDS` does not
+    hold, or the grid's fields written inside the tag, which stand beside it
+    (AMD-MB-003 §3)."""
+    value = method.settings["grid"]
+    kind = grid_kind(value)
+    if kind in GRID_KINDS:
+        return
+    if isinstance(value, Mapping) and "__yaml_tag__" in value and kind is None:
+        written = f"the fields of its grid inside the tag !{value['__yaml_tag__']}"
+    elif kind is not None:
+        written = f"the tag !{kind}, which is no kind of grid"
+    else:
+        written = f"{value!r}, which is no tag naming a kind of grid"
+    kinds = ", ".join(f"!{name}" for name in GRID_KINDS)
+    _refuse(
+        stage,
+        target,
+        f"!{method.tag} writes under `grid` {written}; the value of `grid` is the tag of the "
+        f"grid's kind written alone, one of {kinds}, and the grid's fields stand beside it in "
+        "the entry's settings: write `grid: !Cartesian` with `orders` and `bounds` beside it",
+    )
+
+
+def grid_kind(value):
+    """The kind of grid a value of the setting `grid` names, the tag on the
+    value without its `!`, `Cartesian`, where the value is a tag written
+    alone, as the reader of a methods file holds it,
+    `{"__yaml_tag__": "Cartesian", "value": ""}`; None for any other value.
+    The kind is a word of the entry and no setting name, so `configure` reads
+    no value for it (AMD-MB-003 §3)."""
+    if (
+        isinstance(value, Mapping)
+        and set(value) == {"__yaml_tag__", "value"}
+        and value["value"] == ""
+    ):
+        return value["__yaml_tag__"]
+    return None
+
+
+def admitted_options(rule, settings, *, knots=None):
+    """The options an entry of the method whose row is `rule` admits, each
+    with its `MethodOption`: the row's options, and beside a setting `grid`
+    that names a kind of `GRID_KINDS` the fields that kind admits
+    (AMD-MB-003 §3). Where the knots of a representation are given, it
+    admits no grid at the policy builder's Evaluation where `!egm` stores
+    them, `knots="stored"`, and requires none at an authored `evaluate`
+    occurrence, whose first argument holds them, `knots="authored"`.
+    `methodize` checks the keys an entry writes against these options and
+    `configure` the values it binds."""
+    options = {
+        name: replace(option, required=False) if knots == "authored" and name == "grid" else option
+        for name, option in rule.options.items()
+        if not (knots == "stored" and name == "grid")
+    }
+    kind = grid_kind(settings.get("grid")) if "grid" in options else None
+    if kind in GRID_KINDS:
+        options.update(GRID_KINDS[kind])
+    return options
+
+
+def _evaluations_of_egm_pairs(stage, methods):
+    """The Evaluations whose interpolant's knots `!egm` stores: the closing
+    Evaluation of each policy builder, a builder that writes a control, in
+    which `!egm` is bound, on the builder, at its Evaluation or on a row of
+    its lines, among the methods `methods` (AMD-MB-003 §1)."""
+    builders = {box.name: box for box in blocks_in_file_order(stage)}
+    held = {
+        _builder_holding(bound_at(key)) for key, method in methods.items() if method.tag == "egm"
+    }
+    return frozenset(
+        Identity("Evaluation", address=name)
+        for name in held
+        if name in builders and _writes_role(stage, builders[name], (CONTROL,))
+    )
+
+
+def _builder_holding(box):
+    """The block id of the builder a bound box stands in, the first part of
+    the box's address: the builder a box name names, or the builder whose
+    Evaluation, row or line the box is; None for a box with no address."""
+    address = box if isinstance(box, str) else getattr(box, "address", None)
+    return str(address).split(".")[0] if address else None
 
 
 # --- the method table, its parts first ---
@@ -887,7 +1218,7 @@ def _egm_place(stage, target, place, blocks, tag):
     gives the candidate and the cash on hand at each saving by its lines
     alone, and the relation of its identification holds at every such pair,
     so the method stores the policy from those pairs and stands at the
-    Evaluation that closes the block, which `_representation_place` finds. A
+    Evaluation that closes the block, which `_closing_evaluation` finds. A
     block whose maximization is operative and carries its first-order
     condition as a property, attached by a dotted id (`optimality.euler`),
     has that maximization as the row that outputs the policy; the method
@@ -896,7 +1227,7 @@ def _egm_place(stage, target, place, blocks, tag):
     block = blocks[place.block]
     if place.kind == "builder":
         if _grid_lines(stage, block):
-            return _representation_place(stage, target, place, blocks, tag)
+            return _closing_evaluation(stage, target, place.block, place.block)
         choices = _maximizations_with_a_property(stage, block)
         if len(choices) == 1:
             record, occurrence = choices[0]
@@ -913,13 +1244,15 @@ def _egm_place(stage, target, place, blocks, tag):
         _refuse(
             stage,
             target,
-            f"!{tag} stands at the Evaluation of a block that writes the grid line, a line "
-            "whose left side is a decision coordinate under the continuation mark such as "
-            "`m_d[>] = a + c[>]`, or on a maximization that carries its first-order "
-            "condition as a property by a dotted id such as `optimality.euler`; block "
-            f"{block.name!r} writes neither the grid line nor such a maximization; write the "
-            "grid line in the block, or attach to the row that outputs its policy a method "
-            "that computes it, such as a root finder",
+            f"!{tag} is written on the policy builder by its block id, `on: {block.name}`, "
+            "with `block:` naming a method block, or with no block where the policy block "
+            "writes the grid line, a line whose left side is a decision coordinate under the "
+            "continuation mark such as `m_d[>] = a + c[>]`, or on a maximization that "
+            "carries its first-order condition as a property by a dotted id such as "
+            f"`optimality.euler`; block {block.name!r} writes neither the grid line nor such "
+            "a maximization; name a method block under `block:`, write the grid line in the "
+            "block, or attach to the row that outputs its policy a method that computes it, "
+            "such as a root finder",
         )
     if _conditions_attached(stage, block, place.address):
         return place
@@ -1038,7 +1371,7 @@ def _marginal_block_place(stage, target, place, blocks, tag):
             "no value; write the value builder's block id as the target, such as "
             "`on: cntn_to_dcsn`",
         )
-    return _representation_place(stage, target, place, blocks, tag)
+    return _closing_evaluation(stage, target, place.block, place.block)
 
 
 def _backward_decision_builder_place(stage, target, place, blocks, tag):
@@ -1083,9 +1416,16 @@ def _write_instead(stage, rule):
         )
     if rule._place is _egm_place:
         return (
-            f"!{rule._tag} stands at the Evaluation of a block that writes the grid line, "
-            "named by the block id, or on a maximization that carries its first-order "
+            f"!{rule._tag} is written on the policy builder by its block id, `on: policy`, "
+            "with `block:` naming a method block, or with no block where the policy block "
+            "writes the grid line, or on a maximization that carries its first-order "
             "condition as a property; write an on: target of one of these kinds"
+        )
+    if rule._place is _representation_place:
+        return (
+            "a representation is attached to the Evaluation of a builder, "
+            "`<block-id>.evaluate`, `<block-id>.evaluate.value` or "
+            "`<block-id>.evaluate.marginal`; write an on: target of one of these kinds"
         )
     return "write an on: target of one of these kinds"
 
@@ -1093,8 +1433,14 @@ def _write_instead(stage, rule):
 def _representation_place(stage, target, place, blocks, tag):
     """The Evaluation that stores an evaluated field, or a named definition.
 
-    A declared function is stored at its definition. A builder, its output
-    statement and a `!node` name the Evaluation that closes that exact object.
+    A declared function is stored at its definition, and an authored
+    `evaluate` occurrence is its own place. The Evaluation of a builder named
+    by its written address, a `!node` line and a value line name the
+    Evaluation that closes the builder or the node. A derivative line is
+    refused naming `<block-id>.evaluate.marginal`, where the derivative it
+    states is represented, and is not moved to the Evaluation (AMD-MB-002
+    §4); a representation named on a builder is refused in `_resolved_entry`
+    before this rule is reached.
     """
 
     if place.kind == "definition":
@@ -1107,13 +1453,32 @@ def _representation_place(stage, target, place, blocks, tag):
                 "name a declared function or an evaluated field instead",
             )
         return _same_place(stage, target, place, blocks, tag)
+    if place.kind == "operator" and place.head == "evaluate" and place.evaluates:
+        return _closing_evaluation(stage, target, place.block, place.block, place.evaluates)
     if place.kind == "operator" and place.head == "evaluate":
         return _same_place(stage, target, place, blocks, tag)
-
+    if place.kind == "statement" and place.address in derivative_lines(stage, blocks[place.block]):
+        written = f"{place.block}.evaluate.marginal"
+        _refuse(
+            stage,
+            target,
+            f"!{tag} is a representation, and {place.address} is a derivative line, which "
+            f"states a derivative of the value the builder writes; write `on: {written}`, the "
+            f"Evaluation of the builder {place.block!r}, at which the stated derivative is "
+            "represented",
+            rule=REPRESENTATION_ON_DERIVATIVE_LINE,
+        )
     address = place.address if place.kind == "node" else place.block
+    return _closing_evaluation(stage, target, place.block, address)
+
+
+def _closing_evaluation(stage, target, block, address, evaluates=None):
+    """The place of the Evaluation that closes `address`, the builder
+    `block` itself or a `!node` line of it, read from the builder's closed
+    rows; refused where the builder holds no such Evaluation, or two."""
     identity = Identity("Evaluation", address=address)
     evaluations = tuple(
-        row for row in builder_rows_of(stage, place.block).closed if row.identity == identity
+        row for row in builder_rows_of(stage, block).closed if row.identity == identity
     )
     if len(evaluations) != 1:
         described = ", ".join(str(row.identity) for row in evaluations) or "none"
@@ -1123,16 +1488,10 @@ def _representation_place(stage, target, place, blocks, tag):
             f"names an evaluated field whose closing Evaluation is not unique; "
             f"the matching Evaluations are {described}",
         )
-    evaluation = evaluations[0]
-    destination = _AttachmentPlace(
-        kind="operator",
-        block=place.block,
-        address=evaluation.identity.address,
-        operator="evaluate",
-        box=evaluation.identity,
-        head="evaluate",
-    )
-    return destination
+    (evaluation,) = evaluations
+    place = _evaluation_place(block, evaluation.identity.address, evaluates)
+    # the box is the row's own identity, the object a binding is keyed by
+    return replace(place, box=evaluation.identity)
 
 
 def _same_place(stage, target, place, blocks, tag):
@@ -1147,22 +1506,49 @@ _GRID_OPTIONS = {
 }
 
 
-_CARTESIAN_OPTIONS = {
-    "orders": MethodOption("positive integers by coordinate", required=True),
-    "bounds": MethodOption(
-        "ordered pairs by coordinate",
-        required=True,
-        conditions=("ordered", "inside declared coordinate set"),
-    ),
-}
+# the kinds of grid a method names by the tag on the value of its setting
+# `grid`, each with the fields it admits beside `grid` as settings of the
+# entry (AMD-MB-003 §2): `!Cartesian`, a product of one grid per coordinate,
+# its order and its bounds in each coordinate and, where written, the spacing
+# of its points or the points themselves
+GRID_KINDS = MappingProxyType(
+    {
+        "Cartesian": MappingProxyType(
+            {
+                "orders": MethodOption("positive integers by coordinate", required=True),
+                "bounds": MethodOption(
+                    "ordered pairs by coordinate",
+                    required=True,
+                    conditions=("ordered", "inside declared coordinate set"),
+                ),
+                "spacing": MethodOption("spacing names by coordinate"),
+                "nodes": MethodOption(
+                    "increasing reals by coordinate",
+                    conditions=("increasing", "inside declared coordinate set"),
+                ),
+            }
+        ),
+    }
+)
+
+# the fields of every kind of grid, in the order the table writes them, by
+# which the fields written without the setting `grid` are found
+GRID_FIELDS = tuple(dict.fromkeys(field for fields in GRID_KINDS.values() for field in fields))
+
+# the setting `grid` of a representation, the kind of the grid on which the
+# represented function is stored, and of `!egm`, the kind of its exogenous
+# grid of savings, whose coordinates are the continuation states
+_REPRESENTATION_GRID = MethodOption("grid kind", required=True)
+_EXOGENOUS_GRID = MethodOption("grid kind on the continuation states", required=True)
 
 
+# the places a representation is attached to: a `!node` line, a value line, a
+# declared function, and the operator `evaluate`, an authored occurrence or the
+# Evaluation of a builder by its written address; not a builder (AMD-MB-002)
 _REPRESENTATION_ADMITS = (
-    "builder",
     "node",
     "statement",
     "definition",
-    "boundary",
     ("operator", "evaluate"),
 )
 
@@ -1175,7 +1561,7 @@ METHOD_TYPES = dict(
         _method_type(
             "egm",
             ("builder", ("operator", "argmax")),
-            options=_GRID_OPTIONS,
+            options={"grid": _EXOGENOUS_GRID},
             place=_egm_place,
             block=True,
             condition="egm-eligibility",
@@ -1213,21 +1599,14 @@ METHOD_TYPES = dict(
             place=_same_place,
             block=True,
         ),
-        # the derivatives a representation evaluates, by order, information
-        # for the stage that reads them and checked by nothing (AMD-MB-001
-        # §5.2, D6)
-        _method_type(
-            "Cartesian",
-            _REPRESENTATION_ADMITS,
-            options=_CARTESIAN_OPTIONS,
-            place=_representation_place,
-            derivatives=(1, 2),
-            evaluates="the first and second derivatives its basis admits",
-        ),
+        # a representation names its basis as the method and its grid by
+        # the setting `grid` (AMD-MB-003); the derivatives it evaluates, by
+        # order, are information for the stage that reads them and checked
+        # by nothing (AMD-MB-001 §5.2, D6)
         _method_type(
             "Linear",
             _REPRESENTATION_ADMITS,
-            options={**_GRID_OPTIONS, "grid": MethodOption("untyped")},
+            options={"grid": _REPRESENTATION_GRID},
             place=_representation_place,
             derivatives=(1,),
             evaluates=(
@@ -1239,7 +1618,7 @@ METHOD_TYPES = dict(
         _method_type(
             "pchip",
             _REPRESENTATION_ADMITS,
-            options=_GRID_OPTIONS,
+            options={"grid": _REPRESENTATION_GRID},
             place=_representation_place,
             derivatives=(1, 2),
             evaluates="the first and second derivatives its basis admits",
@@ -1332,3 +1711,14 @@ class _MethodTypes(Mapping):
 
 
 method_types = _MethodTypes()
+
+
+def solution_words():
+    """The method words whose row is of the kind `solution`, in the spelling
+    of a stage file, with an underscore for the hyphen of the tag: the words
+    under which the operative level of a stage file and its additions
+    (`method_blocks.operative_level`) reads the rows an addition brings in
+    place of the block's declared lines (specification 0.7 §4 rule 5, D8)."""
+    return frozenset(
+        tag.replace("-", "_") for tag, row in METHOD_TYPES.items() if row.kind == "solution"
+    )
