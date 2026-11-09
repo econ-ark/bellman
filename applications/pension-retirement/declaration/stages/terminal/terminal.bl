@@ -16,9 +16,9 @@ Xp := ℝ₊
 # The model states no terminal value: economics.md names none, and the paper's
 # agent maximizes lifetime utility of consumption with T finite and no bequest
 # term (Dobrescu and Shanker 2024, §6.1). The value after the last period is
-# therefore the boundary data V[>], zero, and its derivatives are zero, as
-# the arrival builder's marginal block, in
-# declaration/methods/marginals_terminal.bl, states.
+# therefore the boundary data V[>], zero, and its derivatives are zero, the
+# two lines of methods.bl beside this file, the addition to it, on the
+# arrival value builder.
 # AAS has not yet confirmed this terminal value.
 
 [id=arvl_to_dcsn, (y_f_T : Xf, y_p_T : Xp) : !arvl -> (y_f_d : Xf, y_p_d : Xp) : !dcsn] {

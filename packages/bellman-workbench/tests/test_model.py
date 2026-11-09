@@ -41,6 +41,7 @@ from workbench_support import (
     changed_lines,
     decision_fields,
     edited,
+    stage_files,
     tree_entries,
 )
 
@@ -126,6 +127,83 @@ def test_item_5_collection_equals_the_lessons(path):
     ) == json.dumps(expected, ensure_ascii=False)
 
 
+@pytest.mark.parametrize("stage_name", ["tenure", "joined", "unjoined"])
+def test_forward_display_names_the_native_measure_boundaries_of_tenure(stage_name):
+    path = ROOT / "applications/durables/declaration/stages/tenure/tenure.bl"
+    source = path.read_text(encoding="utf-8").replace("@stage: tenure", f"@stage: {stage_name}", 1)
+    original = model.collection(elaborate_text(source, str(path)))
+    snapshot = json.dumps(original, ensure_ascii=False)
+    display = model.forward_display_collection(original)
+
+    assert json.dumps(original, ensure_ascii=False) == snapshot
+    assert [g for g in display["graphs"] if g["id"] != "forward"] == [
+        g for g in original["graphs"] if g["id"] != "forward"
+    ]
+    before = next(g for g in original["graphs"] if g["id"] == "forward")
+    after = next(g for g in display["graphs"] if g["id"] == "forward")
+    native = {n["id"]: n for n in before["nodes"]}
+    drawn = {n["id"]: n for n in after["nodes"]}
+    expected = {
+        "GraphInputs": ("Input measure", "outputsMetadata", [f"{stage_name}:measure:arvl"]),
+        "GraphOutputs": (
+            "Output measures",
+            "inputsMetadata",
+            [f"{stage_name}:measure:cntn:keep", f"{stage_name}:measure:cntn:adjust"],
+        ),
+    }
+    assert list(native) == list(drawn)
+    for node_id, node in native.items():
+        shown = drawn[node_id]
+        if node_id not in expected:
+            assert shown == node
+            continue
+        title, side, measures = expected[node_id]
+        assert shown["label"] == title
+        assert [port["id"] for port in shown[side]] == measures
+        assert all(
+            {"key": "role", "value": "measure"} in port["attrs"] for port in shown[side]
+        )
+        assert "finite measures over the state spaces" in shown["description"]
+        assert {k: v for k, v in shown.items() if k not in {"label", "description"}} == {
+            k: v for k, v in node.items() if k != "label"
+        }
+
+
+def test_forward_boundary_display_names_only_native_ports():
+    def port(id_, role, perch, field=None):
+        attrs = [{"key": "role", "value": role}, {"key": "perch", "value": perch}]
+        if field is not None:
+            attrs.append({"key": "field", "value": field})
+        return {"id": id_, "attrs": attrs}
+
+    occurrence = "periods[0]/keeper_cons"
+    entry = {
+        "id": f"{occurrence}/GraphInputs",
+        "namespace": occurrence,
+        "inputsMetadata": [port(f"{occurrence}/joined:keeper_cons:dcsn:w_d", "state", "dcsn", "w_d")],
+    }
+    continuation = {
+        "id": f"{occurrence}/GraphOutputs",
+        "namespace": occurrence,
+        "outputsMetadata": [port(f"{occurrence}/unjoined:keeper_cons:cntn:a", "state", "cntn", "a")],
+    }
+    mixed = {
+        **entry,
+        "inputsMetadata": [
+            port(f"{occurrence}/joined:measure:dcsn", "measure", "dcsn"),
+            *entry["inputsMetadata"],
+        ],
+    }
+    assert model.forward_boundary_display(entry) is None
+    assert model.forward_boundary_display(continuation) is None
+    title, explanation = model.forward_boundary_display(mixed)
+    assert title == "Input measure"
+    assert "finite measures over the state spaces" in explanation
+
+    operator = {**mixed, "id": f"{occurrence}/dcsn_to_cntn:Pushforward"}
+    assert model.forward_boundary_display(operator) is None
+
+
 # --- acceptance item 2 of stage P ---
 
 
@@ -187,7 +265,6 @@ def test_a1_item_2_counts_of_cons_are_the_objects(cons):
     counts the builders of the backward graph alone; `builders` counts
     both graphs, and the page prints what it needs from the record."""
     found = model.counts(cons)
-    print(found)
     assert found == CONS_COUNTS
     assert len(cons.builder.bwd.list().names) == 3
     assert len(cons.builder.fwd.list().names) == 2
@@ -240,34 +317,36 @@ def test_elaborate_buffer_answers_the_stage_and_its_counts(cons_text):
 
 def test_elaborate_buffer_syntax_refusal_at_line_18_column_15(cons_text):
     """The line `a = m_d - - c` is refused under the rule `syntax` at line
-    18, column 15, with no end and no address, and the package's sentence;
-    no term exists, so the counts are empty."""
+    18, column 15, ending at column 18, the end of the token `- c` the
+    parser could not read, with no address, no action and the package's
+    sentence, under the operation `parse`; no term exists, so the counts
+    are empty."""
     result = model.elaborate_buffer(edited(cons_text, 18, "    a = m_d - - c"), CONS_PATH)
     assert result.stage is None
     assert result.counts == {}
     (diagnostic,) = result.diagnostics
     assert (diagnostic.file, diagnostic.line, diagnostic.column) == (CONS_PATH, 18, 15)
-    assert (diagnostic.end_line, diagnostic.end_column, diagnostic.address) == (None, None, None)
-    assert diagnostic.rule == "syntax"
+    assert (diagnostic.end_line, diagnostic.end_column, diagnostic.address) == (18, 18, None)
+    assert (diagnostic.rule, diagnostic.kind, diagnostic.operation) == ("syntax", "refusal", "parse")
     assert diagnostic.message.startswith(
         "the file writes `- c` here, and the language admits `(`, a name, a number or `inf`"
     )
-    assert diagnostic.advice is None
+    assert diagnostic.write is None
 
 
 def test_elaborate_buffer_name_refusal_at_line_35(cons_text):
     """The line `c = q[>]`, written in place of the policy's line 30, is
-    refused under `name-in-scope` from 30:5 to 30:57 at the address
-    `policy.cons_choice`; the term parsed, so the counts hold its five
-    blocks."""
+    refused under `name-in-scope` at the name `q[>]`, from 30:14 to 30:18,
+    at the address `policy.cons_choice`; the term parsed, so the counts
+    hold its five blocks."""
     line = "    c      = q[>]                    :: [id=cons_choice]"
     result = model.elaborate_buffer(edited(cons_text, 30, line), CONS_PATH)
     (diagnostic,) = result.diagnostics
     assert (diagnostic.line, diagnostic.column, diagnostic.end_line, diagnostic.end_column) == (
         30,
-        5,
+        14,
         30,
-        57,
+        18,
     )
     assert diagnostic.rule == "name-in-scope"
     assert diagnostic.address == "policy.cons_choice"
@@ -318,16 +397,16 @@ def test_refused_directions_of_entrepreneur_death(cons, entrepreneur_death):
     print(found)
     (refusal,) = found.values()
     assert list(found) == ["forward"]
-    assert (refusal["line"], refusal["column"], refusal["end_line"], refusal["end_column"]) == (
+    assert (refusal.line, refusal.column, refusal.end_line, refusal.end_column) == (
         17,
         1,
         17,
         165,
     )
-    assert refusal["rule"] == "not-constructed"
-    assert refusal["file"] == ENTREPRENEUR_DEATH_PATH
-    assert refusal["address"] == f"{ENTREPRENEUR_DEATH_PATH}:17"
-    assert refusal["message"].startswith("the forward measures are not constructed")
+    assert refusal.rule == "not-constructed"
+    assert refusal.file == ENTREPRENEUR_DEATH_PATH
+    assert refusal.address == f"{ENTREPRENEUR_DEATH_PATH}:17"
+    assert refusal.message.startswith("the forward measures are not constructed")
 
 
 def test_input_digests_name_the_text_and_the_bound_sources(cons, cons_text, pension_folder):
@@ -397,9 +476,9 @@ def test_open_folder_refuses_a_file(model_folder):
 
 
 def test_folder_tree_roles_and_hidden_names(scratch_folder):
-    """The tree names cons.bl as a stage and the methods.yml of its stage
-    folder as methods, and leaves out model-explorer/, __pycache__/ and names
-    beginning with "."."""
+    """The tree names cons.bl as a stage and the addition methods.bl of its
+    stage folder as methods, and leaves out model-explorer/, __pycache__/ and
+    names beginning with "."."""
     (scratch_folder / "model-explorer").mkdir()
     (scratch_folder / "model-explorer" / "cons.graph.json").write_text("{}")
     (scratch_folder / "__pycache__").mkdir()
@@ -409,7 +488,7 @@ def test_folder_tree_roles_and_hidden_names(scratch_folder):
     entries = tree_entries(tree)
     roles = {path: entry["role"] for path, entry in entries.items()}
     assert roles[CONS] == "stage"
-    assert roles["declaration/stages/cons/methods.yml"] == "methods"
+    assert roles["declaration/stages/cons/methods.bl"] == "methods"
     assert roles["declaration/stages/cons/cons.md"] == "other"
     assert "model-explorer" not in roles
     assert "__pycache__" not in roles
@@ -1527,7 +1606,7 @@ def test_t_every_set_written_back_to_itself_leaves_the_fields_of_the_corpus():
     edits of every set to its own printed set, made at once, give a text
     whose fields table prints as before (unit T, rules 1 to 3, on the
     corpus)."""
-    files = sorted(ROOT.glob("applications/*/declaration/stages/*/*.bl"))
+    files = stage_files()
     elaborated = 0
     for path in files:
         relpath = str(path.relative_to(ROOT))
@@ -1562,7 +1641,7 @@ def test_r_the_tables_read_from_a_text_are_those_its_construction_gives():
     the construction is refused, the rows are read from the parse of the
     text, so that a text the package accepts reads as it does from its
     stage)."""
-    files = sorted(ROOT.glob("applications/*/declaration/stages/*/*.bl"))
+    files = stage_files()
     compared = 0
     for path in files:
         relpath = str(path.relative_to(ROOT))

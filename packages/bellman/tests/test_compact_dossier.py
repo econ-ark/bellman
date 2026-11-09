@@ -6,9 +6,9 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from pathlib import Path
 
 import pytest
+from conftest import ROOT, STAGE_FILES
 
 from bellman.dossier import (
     RULE_CHARACTERS,
@@ -20,8 +20,6 @@ from bellman.dossier import (
 from bellman.factory.elaboration import elaborate_text
 from bellman.refusals import ConstructionError
 
-ROOT = Path(__file__).resolve().parents[3]
-STAGE_FILES = sorted(ROOT.glob("applications/*/declaration/**/*.bl"))
 # a numbered line: four digits, then two spaces and the text, or nothing
 NUMBERED = re.compile(r"^(\d{4})(?:  (.*))?$")
 
@@ -37,15 +35,15 @@ def _bodies(lines):
     return bodies
 
 
-def _elaborated(path):
+def _elaborated(path, application_stage):
     try:
-        return elaborate_text(path.read_text(encoding="utf-8"), str(path))
+        return application_stage(path)
     except ConstructionError:
         return None
 
 
 @pytest.mark.parametrize("path", STAGE_FILES, ids=lambda path: path.name)
-def test_the_compact_dossier_states_each_fact_once_and_no_rule_line(path):
+def test_the_compact_dossier_states_each_fact_once_and_no_rule_line(path, application_stage):
     """For each stage file of the applications the elaborator constructs: the
     compact dossier is numbered like the full one and is less than half its
     size; it holds no line drawn with rule characters alone; it holds the
@@ -54,7 +52,7 @@ def test_the_compact_dossier_states_each_fact_once_and_no_rule_line(path):
     condition the full dossier prints is a condition of the compact one, and
     a condition printed under a builders graph is printed under no
     definition; and the stage's name is hidden as in the full dossier."""
-    stage = _elaborated(path)
+    stage = _elaborated(path, application_stage)
     if stage is None:
         pytest.skip(f"{path.name} is refused by the elaborator")
     full = dossier_lines(stage, path)
@@ -90,12 +88,12 @@ def test_the_compact_dossier_states_each_fact_once_and_no_rule_line(path):
     assert bodies[0] == "stage"
 
 
-def test_the_full_dossier_keeps_its_cards_beside_the_compact_one():
+def test_the_full_dossier_keeps_its_cards_beside_the_compact_one(application_stage):
     """The full dossier of a stage still prints the definitions table, the
     builders' primitives and the two diagrams' cards, which the compact one
     leaves out, and its rule lines; the two forms hide the same name."""
     path = ROOT / "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl"
-    stage = _elaborated(path)
+    stage = _elaborated(path, application_stage)
     assert stage is not None
     full = _bodies(dossier_lines(stage, path))
     compact = _bodies(compact_dossier_lines(stage, path))

@@ -22,6 +22,7 @@ from workbench_support import (  # noqa: F401  (the fixtures, found here by pyte
     entrepreneur_death,
     git_identity,
     lifecycle_folder,
+    matsya_durables,
     matsya_state,
     matsya_stub,
     model_folder,

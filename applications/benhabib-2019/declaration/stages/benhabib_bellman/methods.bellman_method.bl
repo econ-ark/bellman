@@ -1,0 +1,13 @@
+@methods: bellman
+# A second methods file of the within-life stage, which the recipe does not
+# name: an author who names it after methods.bl in the stage's methods list
+# binds both, in that order. It carries the two entries of the legacy
+# registry that methods.bl leaves out and that have a place once methods.bl
+# is read: the linear reading of the consumption function at the policy
+# builder's Evaluation, whose knots the endogenous grid method computes, and
+# the analytic inverse at the node InvEuler, which methods.bl appends. Both
+# are file-level entries with full paths, since a block of this file would
+# have no line to append and an empty body is refused.
+
+policy.evaluate.method : !Linear
+policy.InvEuler.method : !analytic_inverse

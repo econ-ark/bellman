@@ -428,7 +428,7 @@ def session_shown(session_id: str) -> dict:
 
 
 def test_case_1_the_bytes_reviewed_are_the_bytes_sent_and_each_missing_input_is_named(
-    tmp_path, scratch_durables, monkeypatch, real_client, kept
+    tmp_path, matsya_durables, monkeypatch, real_client, kept
 ):
     """Amendment 06 §5 case 1 (§2 items 11 and 12). The named pensions
     recipe `spec.pensions.yml`, whose trellis file names two period
@@ -503,7 +503,7 @@ def test_case_1_the_bytes_reviewed_are_the_bytes_sent_and_each_missing_input_is_
     assert (pensions.root / SHOCKS).read_text(encoding="utf-8") == disk
     assert work.record["accepted"] == "job-1"
 
-    durables = model.open_folder(scratch_durables)
+    durables = model.open_folder(matsya_durables)
     declared = matsya_work.prepare(durables, DURABLES, "recipe", session_of(durables), 1)
     assert declared.refusals == ()
     [missing] = declared.record["missing"]
@@ -546,7 +546,7 @@ def test_case_1_the_bytes_reviewed_are_the_bytes_sent_and_each_missing_input_is_
 
 
 def test_case_2_the_reviewed_history_is_read_one_reply_continues_once_and_results_stand_apart(
-    tmp_path, scratch_durables, monkeypatch, real_client, kept, matsya_state
+    tmp_path, matsya_durables, monkeypatch, real_client, kept, matsya_state
 ):
     """Amendment 06 §5 case 2 (§2 items 13, 16 and 25), end to end through
     the Workbench's adapter, the client's command line and the local
@@ -563,7 +563,7 @@ def test_case_2_the_reviewed_history_is_read_one_reply_continues_once_and_result
     answer starts nothing either. Then, on the stand-in, a job that did not
     converge keeps its provisional files in the saved copy, and its result
     stands in five parts apart."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     with local_service(tmp_path / "service") as (address, processor):
         real_client(address, AUTHOR_TOKEN)
         project, refusal = matsya_work.connect(folder)
@@ -689,7 +689,8 @@ def test_case_2_the_reviewed_history_is_read_one_reply_continues_once_and_result
         (comment,),
         (assumption,),
     )
-    assert found[3].details == inspected.construction and inspected.missing == ()
+    assert inspected.missing == ()
+    assert found[3].details == (*inspected.construction, "External terminal input V[>] · bequest")
     kept(
         "case-2",
         {"durables": folder.root},
@@ -717,7 +718,7 @@ def test_case_2_the_reviewed_history_is_read_one_reply_continues_once_and_result
 
 
 def test_case_3_accepted_work_is_recovered_after_the_page_closes_and_following_changes_nothing(
-    tmp_path, scratch_durables, monkeypatch, real_client, kept, matsya_state
+    tmp_path, matsya_durables, monkeypatch, real_client, kept, matsya_state
 ):
     """Amendment 06 §5 case 3 (§2 items 17 and 18). On the stand-in: a job
     whose client exits with the warning that the service used its own key
@@ -734,7 +735,7 @@ def test_case_3_accepted_work_is_recovered_after_the_page_closes_and_following_c
     job's cancellation takes effect."""
     log = tmp_path / "client-calls.jsonl"
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_LOG", str(log))
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = connected(folder)
     prepared = matsya_work.prepare(folder, DURABLES, "recipe", session, 1)
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_WARN", "1")
@@ -805,11 +806,16 @@ def test_case_3_accepted_work_is_recovered_after_the_page_closes_and_following_c
     assert reopened.follow(job.record)["state"] == "running"
     matsya_window.recover_jobs(folder)
     assert "job-1" in matsya_window.jobs.value
-    assert [exchange.job for exchange in matsya_window.exchanges.value] == ["job-1"]
+    assert [exchange.job for exchange in matsya_window.exchanges.value if exchange.job] == ["job-1"]
+    assert [exchange.answer for exchange in matsya_window.exchanges.value if exchange.turn] == [
+        "Whether to keep the house or to adjust it.",
+    ]
     assert every_file(folder.root) == following
     assert not (folder.root / model.OUTPUT_FOLDER).exists()
     followed = calls_of(log)
-    assert followed and all(call[:2] == ["job", "status"] for call in followed), followed
+    assert {tuple(call[:2]) for call in followed} == {
+        ("job", "status"), ("session", "show"), ("turn", "status"),
+    }, followed
 
     with local_service(tmp_path / "service") as (address, processor):
         real_client(address, AUTHOR_TOKEN)
@@ -874,7 +880,7 @@ def test_case_3_accepted_work_is_recovered_after_the_page_closes_and_following_c
 
 
 def test_case_4_a_second_account_is_refused_the_author_s_session_and_keeps_local_inspection(
-    tmp_path, scratch_durables, real_client, kept
+    tmp_path, matsya_durables, real_client, kept
 ):
     """Amendment 06 §5 case 4 (§2 item 19), on the local service through the
     client. The author connects the folder, submits a job and asks a
@@ -889,7 +895,7 @@ def test_case_4_a_second_account_is_refused_the_author_s_session_and_keeps_local
     folder's model is constructed and its records read without the service;
     the client refuses to connect the folder again, since it is already a
     project, and the colleague's own session is made by the client."""
-    author = model.open_folder(scratch_durables)
+    author = model.open_folder(matsya_durables)
     with local_service(tmp_path / "service") as (address, processor):
         real_client(address, AUTHOR_TOKEN)
         project, refusal = matsya_work.connect(author)
@@ -965,7 +971,7 @@ def test_case_4_a_second_account_is_refused_the_author_s_session_and_keeps_local
 
 
 def test_case_5_a_saved_copy_is_its_own_model_and_only_the_reviewed_files_are_adopted(
-    tmp_path, scratch_durables, kept, matsya_state
+    tmp_path, matsya_durables, kept, matsya_state
 ):
     """Amendment 06 §5 case 5 (§2 items 20 to 24; §2 item 6, the citations).
     On the stand-in: a saved copy whose calibration lowers τ to 0.08 is
@@ -979,7 +985,7 @@ def test_case_5_a_saved_copy_is_its_own_model_and_only_the_reviewed_files_are_ad
     its record, and the restore returns the originals; and an adoption of
     the reviewed iteration writes its text, not that of a newer iteration
     downloaded during the review."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = session_of(folder)
     prepared = matsya_work.prepare(folder, DURABLES, "recipe", session, 1)
     number = int(matsya_work.submit(folder, prepared.path, session).record["accepted"][4:])
@@ -1125,7 +1131,7 @@ def _chips(rendered) -> dict:
 
 
 def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
-    tmp_path, scratch_durables, monkeypatch, real_client, kept, matsya_state
+    tmp_path, matsya_durables, monkeypatch, real_client, kept, matsya_state
 ):
     """Amendment 06 §5 case 6 (§2 items 6, 9 and 10). The column drawn in
     this process with the stand-in. The connection shows the folder's name,
@@ -1146,7 +1152,7 @@ def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
 
     log = tmp_path / "client-calls.jsonl"
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_LOG", str(log))
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     requests = folder.root / matsya_work.REQUESTS_FOLDER
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_REQUESTS", str(requests))
     opened: list = []
@@ -1180,7 +1186,7 @@ def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
         assert connection == ["durables · economics.md · 127.0.0.1:8710"]
         assert _chips(rendered)["session"] == ["not connected"]
         _click(rendered, "bl-text-button bl-matsya-connect-button")
-        assert calls_of(log) == [["project", "init", str(folder.root), "--json"]]
+        assert calls_of(log)[0] == ["project", "init", str(folder.root), "--json"]
         session = matsya_work.connected_session(folder)
         wait_until(lambda: "durables" in _chips(rendered)["session"], 10.0, "the session's chip")
         chips = _chips(rendered)
@@ -1193,7 +1199,8 @@ def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
         matsya_state.set_collection("literature")
         matsya_state.send("Euler equation with a borrowing constraint")
         wait_until(lambda: matsya_state.exchanges.value[-1].answer is not None, 20.0, "the search")
-        assert calls_of(log) == [
+        search_calls = [call for call in calls_of(log) if call[:2] != ["session", "show"]]
+        assert search_calls == [
             [
                 "search",
                 "--json",
@@ -1206,7 +1213,7 @@ def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
         observed["search"] = {
             "collection": "literature",
             "service": chips["service"],
-            "sent": calls_of(log)[0],
+            "sent": search_calls[0],
         }
 
         log.unlink()
@@ -1239,7 +1246,7 @@ def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
             }
         )
         wait_until(lambda: matsya_state.exchanges.value[-1].answer is not None, 20.0, "the answer")
-        asked = calls_of(log)[0]
+        asked = next(call for call in calls_of(log) if call[0] == "ask")
         assert asked == [
             "ask",
             session.id,
@@ -1275,10 +1282,11 @@ def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
         ).wait_for(timeout=10)
         assert f"{matsya_window.BUILD} · Recipe" in _texts_of(rendered, "bl-small")
         what = _texts_of(rendered, "bl-matsya-build-what bl-code-small")
-        assert what == [f"spec.yml · {len(record['files'])} files", "127.0.0.1:8710 · default"]
-        assert [call[:2] for call in calls_of(log)] == [["session", "add"]]
+        assert what == [f"spec.yml · {len(record['files'])} files", "http://127.0.0.1:8710 · default"]
+        assert not any(call[:2] in (["session", "add"], ["job", "submit-prepared"])
+                       for call in calls_of(log))
         _click(rendered, "bl-text-button bl-matsya-files-sent")
-        listed = rendered.find(ipyvue.Html, tag="li", class_="bl-code-small").wait_for(timeout=10)
+        listed = rendered.find(ipyvue.Html, tag="summary").wait_for(timeout=10)
         files_shown = [
             "".join(map(str, widget.children))
             for widget in listed.widgets
@@ -1286,15 +1294,19 @@ def test_case_6_each_request_shows_what_it_sends_and_where_before_it_is_sent(
             and "".join(map(str, widget.children)).startswith("declaration/")
         ]
         assert files_shown == [
-            f"{entry['path']} · {entry['sha256'][:12]}" for entry in record["files"]
+            f"{entry['path']} · sent {entry['sent_sha256'][:12]}" for entry in record["files"]
         ]
         _click(rendered, "bl-text-button bl-matsya-submit")
+        wait_until(
+            lambda: any(view.job for view in matsya_state.builds.value.values()),
+            20.0, "the submitted job",
+        )
         (sent,) = [entry["submitted"] for entry in stub_calls(log) if "submitted" in entry]
         inputs = json.loads((folder.root / record["inputs"]).read_text(encoding="utf-8"))
         assert sent == {
             name: sha256(text) for name, text in inputs["starting_declaration"].items()
         }
-        assert {entry["name"]: entry["sha256"] for entry in record["files"]} == sent
+        assert {entry["name"]: entry["sent_sha256"] for entry in record["files"]} == sent
         observed["build"] = {"shown": what, "files_sent": files_shown, "submitted": sent}
     finally:
         rendered.close()
@@ -1385,7 +1397,7 @@ def test_the_words_the_no_slop_review_changed_stand_on_the_page(
 
 
 def test_a_job_whose_answer_was_lost_is_recovered_by_its_delivery_identifier(
-    tmp_path, scratch_durables, monkeypatch
+    tmp_path, matsya_durables, monkeypatch
 ):
     """Decision SG5-16. A prepared submission carries its request's
     delivery identifier, the record standing before the client runs. When
@@ -1395,8 +1407,11 @@ def test_a_job_whose_answer_was_lost_is_recovered_by_its_delivery_identifier(
     it."""
     log = tmp_path / "client-calls.jsonl"
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_LOG", str(log))
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = connected(folder)
+    monkeypatch.setenv(
+        "BELLMAN_WORKBENCH_MATSYA_STUB_REQUESTS", str(folder.root / matsya_work.REQUESTS_FOLDER)
+    )
     prepared = matsya_work.prepare(folder, DURABLES, "recipe", session, 1)
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_LOST", "1")
     lost = matsya_work.submit(folder, prepared.path, session)
@@ -1443,7 +1458,7 @@ def test_the_client_refuses_a_delivery_identifier_over_64_characters_before_any_
 
 
 def test_a_reply_to_a_question_a_later_entry_overtook_is_historical_and_is_not_sent(
-    tmp_path, scratch_durables, real_client
+    tmp_path, matsya_durables, real_client
 ):
     """Decision SG5-19 (SG5-15; amendment 06 §2 item 16), on the local
     service through the client. A job reviewed through the session's last
@@ -1453,7 +1468,7 @@ def test_a_reply_to_a_question_a_later_entry_overtook_is_historical_and_is_not_s
     nothing, and the service starts no continuation. A reply to the
     question of a job that is current is sent with its delivery identifier,
     its record written first, and starts one continuation."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     with local_service(tmp_path / "service") as (address, processor):
         real_client(address, AUTHOR_TOKEN)
         matsya_work.connect(folder)

@@ -47,22 +47,19 @@ From the root of the repository, `pip install -e packages/asva` installs the pac
 
 ## 3 Asva and bellman
 
-A methods file may name an asva function as the [handler](../wiki/handler.md) of a method. The [retirement-choice application](../examples/retirement/retirement_choice.md) attaches the endogenous grid method to the consumption stages of its retiree and its worker with entries such as the worker's, which names the method block of `worker_cons_egm.bl` and the exogenous grid of savings by the setting `grid`, its kind the tag `!Cartesian` with the grid's order and bounds beside it ([Methodization](../Bellman-Sym/04-methodization.md) §3):
+A methods file may name an asva function as the [handler](../wiki/handler.md) of a method. The [retirement-choice application](../examples/retirement/retirement_choice.md) attaches the endogenous grid method to the consumption stages of its retiree and its worker by entries such as the worker's, written in the bracket of the block `policy` of its methods file `applications/retirement-choice/declaration/stages/worker_cons/methods.bl`, an addition to the stage file: the method `!egm`, its grid of savings, one factor keyed by the coordinate `b` with the bounds and the count as settings, and the handler, the asva function named as a quoted string ([Methodization](../Bellman-Sym/04-methodization.md)):
 
-```yaml
-  - on: policy
-    method: !egm
-    block: ../../methods/worker_cons_egm.bl
-    handler: asva:make_egm_1d
-    settings:
-      grid: !Cartesian
-      orders:
-        b: n_a
-      bounds:
-        b: [a_min, a_max]
+```bl
+[id=policy, method : !egm | grid : !Cartesian(b=(a_min, a_max, n_a)) | handler : "asva:make_egm_1d"
+    | upper_env.method : !FUES(m_bar=m_bar) | upper_env.handler : "dcsmm:EGM_UE"] {
+    c[>] <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])                 :: [id=InvEuler]
+    w[>] = b + c[>]                            :: [id=endoggrid]
+    v[>] = 𝑢(c[>]) + β*V[>]                    :: [id=cand_value]
+    c    = upper_env(w[>], c[>], v[>])          :: [id=envelope]
+}
 ```
 
-`bellman` keeps the method on the policy builder, `policy`, whose operations the method block writes ([the method type `!egm`](../Bellman-Sym/reference/methods.md#egm)), and records the handler's name with it; it neither imports the function nor calls it. The reader's own code builds the step and applies it: from the [specified stage](../wiki/specified_stage.md) it computes the arrays and the functions that `make_egm_1d` or another asva function takes, or it passes the records of the stage's kernels to `egm` ([Numerical steps](01-numerical-steps.md) §6).
+`bellman` keeps the method on the policy builder, `policy`, whose lines the block of the methods file writes ([the method type `!egm`](../Bellman-Sym/reference/methods.md#egm)), and records the handler's name with it; it neither imports the function nor calls it. The reader's own code builds the step and applies it: from the [specified stage](../wiki/specified_stage.md) it computes the arrays and the functions that `make_egm_1d` or another asva function takes, or it passes the records of the stage's kernels to `egm` ([Numerical steps](01-numerical-steps.md) §6).
 
 A test of the runner holds fills keyed by slot name, and these are the keyword arguments of `load_recipe` and `assemble_trellis` of `bellman.trellis`, so that one test selects one variant of the model that a registry's recipe describes ([The runner](02-the-runner.md) §2).
 

@@ -1,0 +1,26 @@
+@methods: noport
+# The methods of the stage without a portfolio choice, at its occurrences in
+# trellis.reference-cons-only.yml with the settings file settings/noport.yml:
+# Gauss-Hermite quadrature of the income shock at the expectation, realized by
+# the function gauss_hermite of code/cons_port_tool.py; the envelope line of the
+# decision value; the linear representation of the decision value and of its
+# stated derivative on the capital grid, its own typing entry; and the forward
+# law drawn by Monte Carlo. After the union the block cntn_to_dcsn holds the
+# expectation twice, in the lines value and envelope, and E_θ.method names both.
+
+n_k : ℕ              :: ["number of points of the capital grid"]
+k_min : Xk           :: ["lower bound of the capital grid"]
+k_max : Xk           :: ["upper bound of the capital grid"]
+n_θ_nodes : ℕ        :: ["quadrature nodes of the income shock"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulation"]
+
+[id=cntn_to_dcsn
+    | E_θ.method : !gauss_hermite(n_θ=n_θ_nodes)
+    | E_θ.handler : "cons-port:gauss_hermite"
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))] {
+    D_{k}V = E_{θ}(D_{m}V[>]*R)              :: [id=envelope]
+}
+
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)

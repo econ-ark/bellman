@@ -38,8 +38,8 @@ print(stage.definitions.list())
 ```
 
 ```text
-Definitions('cons', 21 records)
-BELLMAN-SYM / STAGE cons / DEFINITIONS                          [RECORDS = 21]
+Definitions('cons', 17 records)
+BELLMAN-SYM / STAGE cons / DEFINITIONS                          [RECORDS = 17]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SETS 2 ───────────────────────────────────────────────────────────────────────
@@ -49,17 +49,16 @@ SETS 2 ────────────────────────�
 PARAMETERS 1 ─────────────────────────────────────────────────────────────────
   cons:parameter:ρ   ρ  ∈ [1, ∞)
 
-FUNCTIONS 3 ──────────────────────────────────────────────────────────────────
-  cons:function:𝑢       𝑢  : ℝ₊₊ → ℝ,  c ↦ c^(1 − ρ)/(1 − ρ)
-                        conditions ¬(1 − ρ = 0)
-  cons:function:𝑑𝑢      𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)
-  cons:function:𝑑𝑢𝑖𝑛𝑣   𝑑𝑢𝑖𝑛𝑣  : ℝ₊₊ → ℝ₊₊,  x ↦ x^(−1/ρ)
+FUNCTIONS 2 ──────────────────────────────────────────────────────────────────
+  cons:function:𝑢    𝑢  : ℝ₊₊ → ℝ,  c ↦ c^(1 − ρ)/(1 − ρ)
+                     conditions ¬(1 − ρ = 0)
+  cons:function:𝑑𝑢   𝑑𝑢  : ℝ₊₊ → ℝ₊₊,  c ↦ c^(−ρ)
 
 CORRESPONDENCES 1 ────────────────────────────────────────────────────────────
   cons:correspondence:Γ   Γ  : ℝ₊₊ ⇉ ℝ₊₊,  x ↦ (0, x]
 
 LAWS OF MOTION 2 ─────────────────────────────────────────────────────────────
-  cons:g:arvl_to_dcsn   𝑔≺  : Xm → Xm,  m ↦ m
+  cons:g:arvl_to_dcsn   𝑔≺  : Xm × ℝ₊ → Xm,  (m, l) ↦ m
   cons:g:dcsn_to_cntn   𝑔≻  : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → Xa,
                               (m_d, c) ↦ m_d − c
 
@@ -68,29 +67,48 @@ VALUE AGGREGATORS 3 ────────────────────
                                 → [−∞, ∞),
                               (V≻, m_d, c) ↦ 𝑢(c) + V≻
                         conditions 𝑉(m_d) ∈ [−∞, ∞)
-  cons:G:dcsn_to_arvl   𝐺≺  : [−∞, ∞) × Xm → ℝ,  (V, m) ↦ V
-                        conditions 𝑉≺(m) ∈ ℝ
-  cons:G:policy         𝐺_InvEuler≻   : ℝ₊₊ × Xa → ℝ₊₊,
-                                        (D_{a}𝑉≻, a) ↦ 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻)
-                        𝐺_endoggrid≻  : ℝ₊₊ × Xa → Xm,  (c≻, a) ↦ a + c≻
-                        conditions 𝑚_d≻(a) ∈ Xm
+                                   marginal-reading: the right side of each
+                                     derivative line equals the derivative, in
+                                     the named coordinate, of the value the
+                                     builder writes, under the envelope
+                                     conditions: concavity of the continuation
+                                     value, interiority of the maximizer or
+                                     the multiplier's term at a binding
+                                     constraint, differentiability of the
+                                     reward in the control, a measurable
+                                     selection of the policy, and
+                                     differentiability of the value at the
+                                     point read; listed and not checked
+                                     [required]
+  cons:G:dcsn_to_arvl   𝐺≺  : [−∞, ∞) × Xm × ℝ₊ → ℝ,  (V, m, l) ↦ V
+                        conditions 𝑉≺(m, l) ∈ ℝ
+  cons:G:policy         𝐺≻  : {V≻, m_d, c ∈ [−∞, ∞) × Xm × ℝ₊₊ | c ∈ Γ(m_d)}
+                                → UNRESOLVED[𝐺; result set],
+                              (V≻, m_d, c) ↦ 𝑢(c) + V≻
 
-BLOCK LINES 9 ────────────────────────────────────────────────────────────────
+BLOCK LINES 6 ────────────────────────────────────────────────────────────────
   arvl_to_dcsn.1          m_d = m
   dcsn_to_cntn.1          a = m_d - c
   cntn_to_dcsn.value      V        = 𝑢(c) + V[>]          :: [id=value]
                           conditions 𝑉(m_d) ∈ [−∞, ∞)
   cntn_to_dcsn.marginal   D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]
-                          conditions 𝑉(m_d) ∈ [−∞, ∞)
+                          conditions marginal-reading: the right side of each
+                                       derivative line equals the derivative,
+                                       in the named coordinate, of the value
+                                       the builder writes, under the envelope
+                                       conditions: concavity of the
+                                       continuation value, interiority of the
+                                       maximizer or the multiplier's term at a
+                                       binding constraint, differentiability
+                                       of the reward in the control, a
+                                       measurable selection of the policy, and
+                                       differentiability of the value at the
+                                       point read; listed and not checked
+                                       [required]
   dcsn_to_arvl.value      V[<] = V                        :: [id=value]
-                          conditions 𝑉≺(m) ∈ ℝ
+                          conditions 𝑉≺(m, l) ∈ ℝ
   policy.optimality       c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])
-                            :: [id=optimality, !doc]
-  policy.InvEuler         c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0
-                            :: [id=InvEuler]
-  policy.endoggrid        m_d[>] = a + c[>]                :: [id=endoggrid]
-                          conditions 𝑚_d≻(a) ∈ Xm
-  policy.cons_choice      c      = c[>]                    :: [id=cons_choice]
+                            :: [id=optimality]
 ```
 
 The answer of `list()` also reads as a mapping from each kind to the identities of its records:
@@ -103,9 +121,9 @@ for kind, identities in stage.definitions.list().items():
 ```text
 set            cons:set:Xm, cons:set:Xa
 parameter      cons:parameter:ρ
-function       cons:function:𝑢, cons:function:𝑑𝑢, cons:function:𝑑𝑢𝑖𝑛𝑣
+function       cons:function:𝑢, cons:function:𝑑𝑢
 correspondence cons:correspondence:Γ
-line           arvl_to_dcsn.1, dcsn_to_cntn.1, cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice
+line           arvl_to_dcsn.1, dcsn_to_cntn.1, cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality
 g              cons:g:arvl_to_dcsn, cons:g:dcsn_to_cntn
 G              cons:G:cntn_to_dcsn, cons:G:dcsn_to_arvl, cons:G:policy
 ```
@@ -124,7 +142,7 @@ print(f"{'coordinates':<12} {[name for name, _ in record.coordinates]!r}")
 ```text
 identity     'cons:G:cntn_to_dcsn'
 kind         'G'
-equations    ('cntn_to_dcsn.value',)
+equations    ('cntn_to_dcsn.value', 'cntn_to_dcsn.marginal')
 tags         ()
 address      'cntn_to_dcsn'
 ordinal      None
@@ -148,9 +166,17 @@ Defines
 
 Conditions
   𝑉(m_d) ∈ [−∞, ∞)
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  22  V        = 𝑢(c) + V[>]  :: [id=value]
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
 
 Definitions referenced
   Xm    cons:set:Xm
@@ -172,7 +198,7 @@ Defines
   𝑔≻  : {m_d, c ∈ Xm × ℝ₊₊ | c ∈ Γ(m_d)} → Xa,  (m_d, c) ↦ m_d − c
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  18  a = m_d - c
+  17  a = m_d - c
 
 Definitions referenced
   Xm    cons:set:Xm

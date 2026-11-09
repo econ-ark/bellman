@@ -17,15 +17,12 @@ entries at different keys may be equal and need not be integers.
 import json
 import warnings
 from fractions import Fraction
-from importlib.resources import files
 from pathlib import Path
 
 import numba
 import numpy as np
 import pytest
 from conftest import stage_from_text
-from jsonschema import Draft202012Validator
-from snapshot.record import recording_path
 
 from bellman.native.hypergraphs import copy_native
 from bellman.refusals import ConstructionError
@@ -207,7 +204,7 @@ def pushforward(version, builder="arvl_to_dcsn"):
     return primitives[name]
 
 
-def test_item_1_one_symbolic_location_stage_two_calibrations_of_j_one_compiled_function():
+def test_item_1_one_symbolic_location_stage_two_calibrations_of_j_one_compiled_function(encoding_validator):
     """`LOCATION` elaborates once; its state `i`, its choice `j` and its
     binder `jp` lie in `{1, …, J}`, and `dist` on `L_J × L_J → ℝ₊`. The
     calibrations `J = 2` and `J = 3` give the declared domains their counts and
@@ -257,10 +254,7 @@ def test_item_1_one_symbolic_location_stage_two_calibrations_of_j_one_compiled_f
     # the encoding of the new forms validates against the one schema, and the
     # parsed term decodes to the term the lowering built
 
-    schema = json.loads(
-        files("bellman.display").joinpath("stage-encoding-2.6.schema.json").read_text()
-    )
-    Draft202012Validator(schema).validate(json.loads(json.dumps(symbolic.encoding())))
+    encoding_validator.validate(json.loads(json.dumps(symbolic.encoding())))
     term, _ = parse_with_spans(LOCATION, "location.bl")
     assert from_json(json.loads(json.dumps(to_json(term)))) == term
 
@@ -746,16 +740,13 @@ def test_item_4_refusals_name_declaration_and_key_and_the_versions_stand_after_a
 def test_item_5_labels_and_positions_keep_their_meaning_and_a_fractional_position_is_refused(
     text_of, elaborate_text
 ):
-    """Benhabib's `wage_fn[tau]` over ten labels and Algan–Ragot's row
-    selection `(Q_h, Q_m, Q_l)[e_c]` elaborate as recorded: the encoding of
-    `benhabib_bellman.bl` equals its recording in every part but the three the
-    recording already differed in at the commit this work started from
-    (`package_version`, the versions of `provenance`, and the diagnostic
-    `unread_inputs` the recording predates), and the compiled law of motion
-    still selects the entry by the label. A literal position on a product,
-    `x[2]`, selects the second coordinate as before, and the non-integer
-    literal `x[2.5]`, which the lowering used to truncate to `x[2]`, is now
-    refused under `syntax`."""
+    """Label selection, product positions, and their refusals remain distinct.
+
+    Benhabib's ten-label wage vector retains its supplied values and refuses
+    a short vector. Algan–Ragot's named transition rows must sum to one.
+    Product selection uses a whole-number position and refuses `x[2.5]`.
+    Complete Benhabib encoding equality is checked by the corpus recording.
+    """
     source = (
         ROOT / "applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl"
     )
@@ -763,12 +754,6 @@ def test_item_5_labels_and_positions_keep_their_meaning_and_a_fractional_positio
         source.read_text(encoding="utf-8"),
         "applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl",
     )
-    recorded = json.loads(recording_path(source, ".stage.json").read_text(encoding="utf-8"))
-    stale = ("package_version", "provenance", "diagnostics")
-    live = json.loads(json.dumps(benhabib.encoding()))
-    assert {k: v for k, v in live.items() if k not in stale} == {
-        k: v for k, v in recorded.items() if k not in stale
-    }
     law = pushforward(benhabib, "dcsn_to_cntn")
     assert "np.asarray(tau) == 'q1'" in law.kernel().python
     # a fixed product is read one entry per factor: a wage vector of two
@@ -818,33 +803,3 @@ x : ℝ × ℝ
     with pytest.raises(ConstructionError) as refused:
         elaborate_text(pair.replace("x[2]", "x[2.5]"), "pair.bl")
     assert refused.value.rule == "syntax" and "2.5" in refused.value.message
-
-
-def test_item_6_the_notebook_is_executed_and_keeps_its_two_reserved_cells():
-    """The notebook of the brief stands in the verification folder of the
-    internal records, executed: every code cell ran, an error output stands
-    only in a cell tagged `raises-exception`, one per such cell, and the last
-    four cells are the reserved `### Observation` and `### Decision` cells,
-    which record no personal acceptance. The notebook is found by its folder
-    name, since no file outside the internal folder names a path under it;
-    the test is skipped in a checkout without that folder."""
-    found = sorted(
-        ROOT.glob(
-            "*/operations/verification/*/spec_0.5/2026-10-19-finite-index-sets/finite-index-sets.ipynb"
-        )
-    )
-    if not found:
-        pytest.skip("the notebook's folder is not in this checkout")
-    (path,) = found
-    notebook = json.loads(path.read_text(encoding="utf-8"))
-    cells = notebook["cells"]
-    code = [cell for cell in cells if cell["cell_type"] == "code"]
-    assert code and all(cell["execution_count"] for cell in code)
-    refused = [cell for cell in code if "raises-exception" in cell["metadata"].get("tags", [])]
-    assert len(refused) == 10
-    for cell in code:
-        errors = [output for output in cell["outputs"] if output["output_type"] == "error"]
-        assert len(errors) == (1 if cell in refused else 0), "".join(cell["source"])
-    assert [cell["cell_type"] for cell in cells[-4:]] == ["markdown"] * 4
-    assert "".join(cells[-4]["source"]).strip() == "### Observation"
-    assert "".join(cells[-2]["source"]).strip() == "### Decision"

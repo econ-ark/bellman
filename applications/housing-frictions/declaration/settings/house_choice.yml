@@ -1,0 +1,13 @@
+# The numerical settings of the choice of keeping or adjusting the house: the
+# grid of the two arrival states, financial assets y_f and housing y_h, on
+# which the arrival value and its two derivatives are represented, as
+# stages/house_choice/methods.bl declares it. The values are placeholders
+# inside the declared sets, written so that the stage configures; the paper
+# states no grid, and AAS has not yet supplied one.
+settings:
+  n_y_f: 50
+  y_f_min: 0.0
+  y_f_max: 50.0
+  n_y_h: 20
+  y_h_min: 0.1
+  y_h_max: 10.0

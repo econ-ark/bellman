@@ -30,7 +30,7 @@ Not checked here: the documents that item 6 updates at merge; and the corpus
 stages' printed snapshot and recorded encodings, whose named differences
 (the family list of the `not-constructed` message and the second denoted
 object of `N` and `LogNormal` declarations) `test_snapshot.py` and
-`sym/test_corpus.py` compare.
+`test_snapshot.py` compare.
 """
 
 import json
@@ -736,7 +736,7 @@ def test_item_5_existing_families_mixtures_factorization_and_unknown_providers_k
     with pytest.raises(NotConstructed) as refused:
         stage_from_text(NO_LAW, "no_law.bl").builder.fwd.list()
     assert refused.value.rule == "not-constructed"
-    assert f"the families {', '.join(FAMILIES)};" in refused.value.message, refused.value.message
+    assert f"the families {', '.join(FAMILIES)}" in refused.value.message, refused.value.message
 
     lognormal = stage_from_text(indexed("LogNormal(0, 1)"), "chain.bl")
     first, second = lognormal.definitions.denote(EPSILON).denoted

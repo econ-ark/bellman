@@ -36,7 +36,6 @@ import importlib.metadata
 import importlib.util
 import itertools
 import json
-import logging
 import os
 import pickle
 import re
@@ -120,6 +119,7 @@ __all__ = [
     "files_of_refusal",
     "files_before_reading",
     "file_digests",
+    "digest_as_read",
     "inputs_current",
     "show_trellis",
     "address_place",
@@ -161,7 +161,7 @@ __all__ = [
     "added_stage_joins",
     "unjoined_count",
     "missing_joins",
-    "without_occurrence",
+    "failure_places",
     "refused_bindings",
     "join_wires",
     "removal_edit",
@@ -211,11 +211,6 @@ _TRELLIS_VERBS = (
 # raise; a target a methods file names and the stage lacks is a
 # `TargetError`, a LookupError, which `bind_stage` catches too
 _REFUSALS = (ConstructionError, FactoryError, ValueError, LookupError, TypeError)
-
-# The page's log, as `app.LOG` is: an exception of no class of the package's
-# refusals that a reading of the trellis meets is written there with its
-# traceback (unit L, Task 21; defect 18 of the UX simulation).
-LOG = logging.getLogger(__name__)
 
 # the keys of a port's row in the panel of a node of a trellis view: the
 # stage view's, and the three a join adds
@@ -386,7 +381,8 @@ class TrellisBinding(NamedTuple):
     succeeded; `bound`, those verbs, among `calibrate`, `methodize` and
     `configure`, in that order; `skipped`, the verbs to which no record
     gives a mapping to bind; and `failed`, each verb the package refused,
-    with the refusal's sentence and the position it names."""
+    with the `model.Diagnostic` of its refusal, under the verb as its
+    operation, at the occurrence the package names."""
 
     trellis: dict
     bound: tuple
@@ -395,12 +391,11 @@ class TrellisBinding(NamedTuple):
 
 
 def _binds_something(kind: str, record: dict) -> bool:
-    """Whether a record's mapping of `kind` binds something: a calibration or
-    a settings mapping that is not empty, a methods mapping whose list
-    `methods` is not empty, the form `load_recipe` and `load_trellis` write
-    for a slot or a source left unbound."""
-    mapping = record.get(kind) or {}
-    return bool(mapping.get("methods")) if kind == "methods" else bool(mapping)
+    """Whether a record's source of `kind` binds something: a calibration or
+    a settings mapping that is not empty, or a methods list that names an
+    addition; `load_recipe` and `load_trellis` write an empty mapping or an
+    empty list for a slot or a source left unbound."""
+    return bool(record.get(kind))
 
 
 def bind_trellis(elaborated: dict | None, syntactic: dict) -> TrellisBinding:
@@ -415,17 +410,24 @@ def bind_trellis(elaborated: dict | None, syntactic: dict) -> TrellisBinding:
     from what the occurrence holds. `kinds` are the kinds of binding source
     some record binds; a verb whose kind no record binds is skipped. A
     refusal whose notes name a kind, `Binding kind: <kind>`, records that
-    kind's verb as failed, with the package's sentence in the form
-    `model.refusal_of` gives it: the refusal's message, the words it says to
-    write on a line of their own, and its other notes on a line each, the
-    position among them (AMD-MI-002 §6a; ruling R51); `specify_trellis` is
-    then called again with the kinds less that one, so that the other verbs
-    still bind. A refusal that names no kind, a refusal of the elaboration,
-    is raised. The package binds every position under a kind or refuses, so
-    a failed verb binds no occurrence."""
+    kind's verb as failed, with the `model.Diagnostic` of the refusal under
+    the verb as its operation, at the occurrence the package's note `Stage
+    occurrence: <address>` names, matched against the addresses of the
+    trellis's own positions (`_positions_by_address`; AMD-MI-002 §6a;
+    ruling R51), an exception of no class of the package's refusals being
+    the internal failure the conversion logs (`model.diagnostic_of`), in
+    the file of the source read, the recipe or the trellis file the
+    syntactic trellis's provenance names (`_source_file`), which the record
+    and the log entry name where the refusal names no file;
+    `specify_trellis` is then called again with the kinds less that one,
+    so that the other verbs still bind. A refusal that names no kind, a
+    refusal of the elaboration, is raised. The package binds every position
+    under a kind or refuses, so a failed verb binds no occurrence."""
     skipped = _skipped_verbs(syntactic)
     verbs = [(verb, kind) for verb, kind in _TRELLIS_VERBS if verb not in skipped]
     failed = {}
+    positions = _positions_by_address(syntactic)
+    file = _source_file(syntactic)
     while True:
         try:
             specified = specify_trellis(syntactic, elaborated, [kind for _, kind in verbs])
@@ -435,17 +437,47 @@ def bind_trellis(elaborated: dict | None, syntactic: dict) -> TrellisBinding:
             if not refused:
                 raise
             verb, kind = refused[0]
-            found = model.diagnostic_of(refusal)
-            failed[verb] = "\n".join(
-                [
-                    found.message,
-                    *([found.advice] if found.advice else []),
-                    *(note for note in notes if note != f"Binding kind: {kind}"),
-                ]
+            position = positions.get(_noted(refusal, "Stage occurrence: "))
+            failed[verb] = model.diagnostic_of(refusal, verb, file)._replace(
+                stage=position[1] if position is not None else None,
+                occurrences=(position,) if position is not None else (),
             )
             verbs.remove((verb, kind))
         else:
             return TrellisBinding(specified, tuple(verb for verb, _ in verbs), skipped, failed)
+
+
+def _source_file(syntactic: dict) -> str:
+    """The path of the source the syntactic trellis `syntactic` was read
+    from, as its provenance records it: the recipe, under
+    `provenance["recipe"]["path"]`, where a recipe was read, and the
+    trellis file, under `provenance["trellis"]["path"]`, otherwise."""
+    provenance = syntactic["provenance"]
+    return (provenance.get("recipe") or provenance["trellis"])["path"]
+
+
+def _noted(error: BaseException, prefix: str) -> str | None:
+    """What the first note of `error` that begins with `prefix` says after
+    it, `periods[0].stages['disc']` for the package's note `Stage
+    occurrence: periods[0].stages['disc']`; None where no note begins so.
+    The factory writes the notes of a refused binding and of an exception
+    of a stage's construction or placement (`bellman.factory.trellis`),
+    and the Workbench reads them as the record of the positions and the
+    kind refused."""
+    for note in getattr(error, "__notes__", ()):
+        if note.startswith(prefix):
+            return note[len(prefix):]
+    return None
+
+
+def _positions_by_address(syntactic: dict) -> dict[str, tuple[int, str]]:
+    """Each position `(h, key)` of the syntactic trellis, by the address the
+    factory writes for it, `periods[h].stages['key']`."""
+    return {
+        f"periods[{h}].stages[{key!r}]": (h, key)
+        for h, period in enumerate(syntactic["periods"])
+        for key in period["stages"]
+    }
 
 
 def _skipped_verbs(syntactic: dict) -> tuple:
@@ -477,11 +509,10 @@ def bind_changed_stages(
     a change of one stage's sources, its text, a value, a method or a
     setting, binds that stage's occurrences and no other. The verbs bound,
     skipped and failed are those of `binding`, each failed verb with its
-    sentence. None where the whole binding could answer otherwise, so that
+    record. None where the whole binding could answer otherwise, so that
     the caller binds the whole trellis: where a verb `binding` skips is not
     skipped for `syntactic`, or the reverse; where the stage occurrence a
-    failed verb's sentence names (`_OCCURRENCE_NOTE`) is one whose record
-    changed, or stands after one, since the whole binding meets that
+    failed verb's record names is one whose record changed, or stands after one, since the whole binding meets that
     record first; where the package refuses a verb `binding` bound at an
     occurrence whose record changed, since the whole binding then binds no
     occurrence under that verb; and where the package refuses the two
@@ -504,9 +535,8 @@ def bind_changed_stages(
         raise
     order = [(h, key) for h, period in enumerate(syntactic["periods"]) for key in period["stages"]]
     first = min(map(order.index, changed_positions(binding.trellis, trellis)), default=len(order))
-    for sentence in binding.failed.values():
-        named = _OCCURRENCE_NOTE.search(sentence)
-        position = None if named is None else (int(named[1]), named[3])
+    for failure in binding.failed.values():
+        position = failure.occurrences[0] if failure.occurrences else None
         if position not in order or order.index(position) >= first:
             return None
     return TrellisBinding(trellis, binding.bound, binding.skipped, binding.failed)
@@ -519,14 +549,17 @@ _FRAME_RULES = ("trellis-file-shape", "record-shape")
 
 
 def binding_notes(binding: TrellisBinding) -> list[str]:
-    """One note for each verb the package refused in the trellis's binding,
-    in the verbs' order, the package's sentence and nothing added
+    """The sentence of each verb the package refused in the trellis's
+    binding, read from its record (`model.sentence`), in the verbs' order
     (AMD-MI-002 §6a rule 2). A verb skipped, to whose kind no record gives
     a mapping that binds something, as while every source of that kind is a
     slot or an empty file, is no refusal and has no note: a slot is a
     parameter of the load (K-D29), and the list under the error mark holds
     refusals alone (unit L, Task 21; defect 17 of the UX simulation)."""
-    return [binding.failed[verb] for verb, _ in _TRELLIS_VERBS if verb in binding.failed]
+    return [
+        model.sentence(binding.failed[verb]) for verb, _ in _TRELLIS_VERBS
+        if verb in binding.failed
+    ]
 
 
 # --- the paths a sentence writes ---
@@ -910,7 +943,11 @@ class TrellisOutcome(NamedTuple):
     strings, of the files whose unsaved text the package's readers take in
     place of the file, the source, the trellis file and the period files,
     with whose buffers the watcher compares them, every other file being
-    compared on disk (spec 0.4 §3.3; ruling J-P2)."""
+    compared on disk (spec 0.4 §3.3; ruling J-P2); and `read_under`, the
+    values the page's task read the trellis under, the watcher's count and
+    the unsaved inputs, so that a reading asked under newer values marks
+    the outcome's diagnostics stale until it answers (Model Interface 0.9
+    §4), None for an outcome no task of the page read."""
 
     shown: TrellisShown | None
     refusal: model.Diagnostic | None
@@ -919,6 +956,7 @@ class TrellisOutcome(NamedTuple):
     files: dict
     made: float = 0.0
     takeable: tuple = ()
+    read_under: tuple | None = None
 
 
 def _takeable_files(
@@ -1018,6 +1056,29 @@ def file_digests(paths, texts=None) -> dict[str, str]:
     return found
 
 
+def digest_as_read(folder: model.Folder, source: recipe.Source, file, texts=None) -> str | None:
+    """The SHA-256 digest of the file `file` as a reading of `source`
+    through the mapping of unsaved texts `texts` reads it, the revision of
+    a record of that reading (`model.Diagnostic`): of the text `texts`
+    holds for the file where the package's readers take that text in the
+    file's place, as for the source, the trellis file it names and the
+    period files that file names (`_takeable_files`), and else of the
+    file's bytes (`file_digests`). These are the digests `show_trellis`
+    records for a refused reading, so that the refusal a stage bound
+    through `source` meets and the one the trellis's reading meets carry
+    one revision. None where no file is given or it cannot be read."""
+    if not file:
+        return None
+    named = recipe.trellis_file(folder, source, texts)
+    takeable = (
+        _takeable_files(folder, source, folder.root / named, texts)
+        if named is not None
+        else [(folder.root / source.path).resolve()]
+    )
+    path = (folder.root / file).resolve()
+    return file_digests([path], _within(texts or {}, takeable)).get(str(path))
+
+
 def inputs_current(shown: TrellisShown, texts) -> bool:
     """Whether every file the reading `shown` read holds the text it read
     (spec 0.4 §3.3): `file_digests(shown.files, texts)` equals
@@ -1106,37 +1167,78 @@ def with_initial_diagrams(shown: TrellisShown) -> TrellisShown:
 
 
 def _reading_refusal(
-    folder: model.Folder, source: recipe.Source, error: Exception, syntactic: dict | None = None
+    folder: model.Folder,
+    source: recipe.Source,
+    error: Exception,
+    syntactic: dict | None = None,
+    operation: str = "read",
 ) -> model.Diagnostic:
     """The `Diagnostic` of the refusal `error` of a reading of `source`
-    (`model.refusal_of`). An exception of no class of the package's
-    refusals (`model.is_refusal`) is written to the page's log with its
-    traceback, and is printed in the file of the text whose reading raised
-    it (unit L, Task 21; defect 18 of the UX simulation): where its notes
-    name a stage occurrence (`_OCCURRENCE_NOTE`, `_CONSTRUCTION_NOTE`) that
-    the syntactic trellis `syntactic` records, that occurrence's stage file,
-    at the line of the address its message names in the span table of the
-    text the reading constructed, as the loop prints the same exception for
-    that text; else the source's file, with no line."""
-    if model.is_refusal(error):
-        return model.refusal_of(error, source.path)
-    path = str((folder.root / source.path).resolve())
-    LOG.error(model.EXCEPTION_LOGGED, path, exc_info=error)
-    notes = "\n".join(getattr(error, "__notes__", ()))
-    named = _OCCURRENCE_NOTE.search(notes) or _CONSTRUCTION_NOTE.search(notes)
-    periods = syntactic["periods"] if syntactic is not None else []
-    if named is None or int(named[1]) >= len(periods):
-        return model.refusal_of(error, source.path, path)
-    record = periods[int(named[1])]["stages"].get(named[3])
-    if not isinstance(record, dict):
-        # a stage object, which the reading did not construct
-        return model.refusal_of(error, source.path, path)
-    text, origin = record["stage"]["text"], record["stage"]["origin"]
-    try:
-        spans = source_spans(text, origin)
-    except ValueError:
-        spans = None
-    return model.refusal_of(error, source.path, origin, spans)
+    under `operation`, `read` of the source's files or `elaborate` of the
+    stages it names (`model.diagnostic_of`); an exception of no class of
+    the package's refusals is the internal failure the conversion logs,
+    with no position. Where the syntactic trellis `syntactic` is given, the
+    record lists the stage occurrences the factory's note names
+    (`_noted_occurrences`), and where the factory notes none, the
+    occurrences whose stage file or binding source files include the file
+    the refusal names (`_occurrences_of`), so that one refusal of a text
+    several periods hold stands once with every occurrence. Where the
+    package names no file, as for an internal failure, the record stands in
+    the stage file of the first noted occurrence, the file the loop's
+    record of the same text names, and else, as where that occurrence holds
+    a stage object and no record, in the source's file."""
+    noted = _noted_occurrences(error, syntactic) if syntactic is not None else ()
+    first = syntactic["periods"][noted[0][0]]["stages"][noted[0][1]] if noted else None
+    path = (
+        first["stage"]["origin"]
+        if isinstance(first, dict)
+        else str((folder.root / source.path).resolve())
+    )
+    found = model.diagnostic_of(error, operation, path)
+    if syntactic is None or not found.file:
+        return found
+    return found._replace(occurrences=noted or _occurrences_of(syntactic, found.file))
+
+
+# The notes the factory adds to an exception raised while it constructs or
+# places a stage, which name the stage occurrences the exception concerns
+# (`bellman.factory.trellis`): `Affected stage occurrences: <address>, …`
+# for a text whose construction raised, and `Stage occurrence: <address>`
+# for one position, each address `periods[h].stages['key']`.
+_OCCURRENCE_NOTES = ("Affected stage occurrences: ", "Stage occurrence: ")
+
+
+def _noted_occurrences(error: BaseException, syntactic: dict) -> tuple:
+    """The positions `(h, key)` of the syntactic trellis `syntactic` that
+    the first of the factory's occurrence notes `error` carries names
+    (`_OCCURRENCE_NOTES`, each read by its exact prefix, `_noted`), in the
+    note's order, each address matched exactly against the trellis's own
+    positions (`_positions_by_address`); none where `error` carries no such
+    note."""
+    positions = _positions_by_address(syntactic)
+    for prefix in _OCCURRENCE_NOTES:
+        noted = _noted(error, prefix)
+        if noted is not None:
+            return tuple(positions[address] for address in noted.split(", ")
+                         if address in positions)
+    return ()
+
+
+def _occurrences_of(syntactic: dict, file) -> tuple:
+    """The positions `(h, key)` of the syntactic trellis `syntactic` whose
+    record's stage file or binding source files (`recipe.record_files`)
+    resolve to `file`, in the order of the periods and of each period's
+    keys; a record that is a stage object names no file."""
+    target = Path(file).resolve()
+    found = []
+    for h, period in enumerate(syntactic["periods"]):
+        for key, record in period["stages"].items():
+            if not isinstance(record, dict):
+                continue
+            named = [Path(record["stage"]["origin"]), *recipe.record_files(record)]
+            if any(path.resolve() == target for path in named):
+                found.append((h, key))
+    return tuple(found)
 
 
 def show_trellis(
@@ -1287,7 +1389,7 @@ def show_trellis(
                 # verb this reading skips or refuses
                 binding = bind_trellis(None, syntactic)
         except _REFUSALS as error:
-            refusal = _reading_refusal(folder, source, error, syntactic)
+            refusal = _reading_refusal(folder, source, error, syntactic, "elaborate")
             if refusal.file:
                 named = [(folder.root / refusal.file).resolve()]
                 files = {**file_digests(named, used), **files}
@@ -1302,24 +1404,28 @@ def show_trellis(
     accepted = same.restriction if same is not None else None
     tried = [None] if restriction is None else list(dict.fromkeys((restriction, accepted, None)))
     sentence, view_refusal = None, None
-    for drawn in tried:
+    positions = [
+        (h, key) for h, period in enumerate(binding.trellis["periods"]) for key in period["stages"]
+    ]
+    drawn, collection = None, {"graphs": []}
+    for drawn in tried if positions else ():
         try:
             view = to_model_explorer(
                 binding.trellis, unjoined=True, selection=selected, initial=initial, **_selection(drawn)
             )
         except FactoryError as error:
             if drawn is None:
-                # The model was constructed, but this reading has no drawable graph.
-                view_refusal = model.refusal_of(error, source.path)
+                # the model was constructed, and this reading has no drawable
+                # graph: the refusal of the drawing, in the source's file
+                view_refusal = model.diagnostic_of(
+                    error, "draw", str((folder.root / source.path).resolve())
+                )
                 break
             if drawn is restriction:
                 sentence = error.message
             continue
+        collection = dataclasses.asdict(view)
         break
-    collection = {"graphs": []} if view_refusal is not None else dataclasses.asdict(view)
-    positions = [
-        (h, key) for h, period in enumerate(binding.trellis["periods"]) for key in period["stages"]
-    ]
     shown = TrellisShown(
         source=source,
         syntactic=syntactic,
@@ -1394,7 +1500,8 @@ class Subject(NamedTuple):
     them; `ports`, the rows of the ports (`port_rows`); `piece`, the
     occurrence's `model.Piece` of the node; and `occurrences`, the
     occurrences of a period the view holds, in the view's order, each
-    `(address, position)`."""
+    `(address, position)`. `boundary_display` holds the title and
+    explanation for a forward measure boundary."""
 
     kind: str
     node_id: str
@@ -1405,6 +1512,7 @@ class Subject(NamedTuple):
     ports: dict
     piece: object
     occurrences: tuple
+    boundary_display: tuple[str, str] | None = None
 
 
 def port_rows(collection: dict, graph: str, node_id: str) -> dict:
@@ -1618,8 +1726,17 @@ def describe_node(shown: TrellisShown, graph: str, node_id: str, stage_views: di
     inner = node_id[len(occurrence) + 1 :]
     if inner in BOUNDARY_IDS:
         kind = "inputs" if inner == BOUNDARY_IDS[0] else "outputs"
-        ports = port_rows(collection, graph, node_id)
-        return Subject(kind, node_id, graph, occurrence, position, {}, ports, None, ())
+        display = None
+        if graph == _FORWARD:
+            node = model._node(collection, graph, node_id)
+            display = model.forward_boundary_display(node)
+            ports = {
+                side: model._port_rows(model.operator_boundary_ports(node, side + "Metadata"), PORT_KEYS)
+                for side in ("inputs", "outputs")
+            }
+        else:
+            ports = port_rows(collection, graph, node_id)
+        return Subject(kind, node_id, graph, occurrence, position, {}, ports, None, (), display)
     h, key = position
     stage = shown.trellis["periods"][h]["stages"][key]
     if occurrence not in stage_views:
@@ -1874,6 +1991,16 @@ def _tuple_lines(stage) -> list[tuple]:
     return found
 
 
+def _typed_word(held) -> str:
+    """The component an occurrence row names at a place: the method word
+    (`Components.word`), else the handler's program,
+    `cons-port:transition_fwd`, else the grid as written, the one component
+    left (`Components.parts`)."""
+    if held.word:
+        return held.word
+    return held.handler or held.parts[0]
+
+
 def occurrence_rows(
     folder: model.Folder,
     shown: TrellisShown,
@@ -1899,8 +2026,9 @@ def occurrence_rows(
     with their sets, `outputs`, the continuation state fields by branch,
     each branch's label the head of its line, and `policies`, the
     controls, what the occurrence's own `Inputs` and `Outputs` held
-    (`_tuple_lines`; design pass 10 §8); `methods`, each method the version
-    binds, its tag, or its handler where it has none, and its target
+    (`_tuple_lines`; design pass 10 §8); `methods`, each place of the version
+    at which a component is typed, its method word, or its handler in
+    quotes where it has none, or else its grid, and the place
     (`stage.methods`); and `sources`, the binding source files its record
     names (`recipe.record_files`), relative to the folder, one a line. A
     row with nothing to print is left out, `fields` alone excepted. The
@@ -1946,10 +2074,7 @@ def occurrence_rows(
     rows.append(("fields", _field_lines(stage)))
     for label, lines in _tuple_lines(stage):
         rows.append((label, lines))
-    methods = tuple(
-        f"{f'!{method.tag}' if method.tag else method.handler} {target}"
-        for target, method in stage.methods.items()
-    )
+    methods = tuple(f"{_typed_word(method)} {target}" for target, method in stage.methods.items())
     if methods:
         rows.append(("methods", (Line("", methods),)))
     files = dict.fromkeys(recipe.relative(folder, file) for file in recipe.record_files(record))
@@ -2984,7 +3109,8 @@ def _checked_edit(shown: TrellisShown, gesture: Gesture, texts, expected=(), rel
         if any(item.basis for item in affected):
             return gesture._replace(edits=None, read=None, note=None, sentence=(
                 "Nothing was written. This connection depends on retained calibration values, "
-                "but the requested calibration was refused. " + shown.binding.failed["calibrate"]
+                "but the requested calibration was refused. "
+                + model.sentence(shown.binding.failed["calibrate"])
             ))
     prior = {(d.rule, d.address, d.message) for d in shown.selection.diagnostics}
     refused = next((d for d in selected.diagnostics
@@ -4168,39 +4294,6 @@ _LINE_BREAKS = re.compile(r"\r\n|[\r\n\x85  ]")
 
 # --- what the model lacks, as the folder's checklist lists it (unit K) ---
 
-# The note the factory adds to the refusal of a binding, naming the stage
-# occurrence refused, `Stage occurrence: periods[0].stages['disc']`: the
-# period's index, the quote and the stage's key.
-_OCCURRENCE_NOTE = re.compile(
-    r"^Stage occurrence: periods\[(\d+)\]\.stages\[(['\"])(.*)\2\]$", re.MULTILINE
-)
-# The note the factory adds to a refusal of the construction of a stage
-# text, naming the stage occurrences that hold that text, `Affected stage
-# occurrences: periods[4].stages['contribution'], periods[5].stages[…]`: the
-# first occurrence's period index, the quote and the stage's key.
-_CONSTRUCTION_NOTE = re.compile(
-    r"^Affected stage occurrences: periods\[(\d+)\]\.stages\[(['\"])(.*?)\2\]", re.MULTILINE
-)
-
-
-def without_occurrence(sentence: str) -> str:
-    """`sentence`, a refusal's sentence, with the line the factory adds
-    naming the stage occurrence refused (`_OCCURRENCE_NOTE`) or the stage
-    occurrences whose text it refused to construct (`_CONSTRUCTION_NOTE`)
-    taken out, so that one refusal reads as one sentence (unit L, Task 21;
-    defects 17 and 18 of the UX simulation): a binding's, which a stage's
-    binding gives without that line and the trellis's binding with it, and
-    a stage text's, which the loop gives without that line and the
-    trellis's reading with it; `sentence` itself where it holds no such
-    line."""
-    lines = sentence.split("\n")
-    return "\n".join(
-        line
-        for line in lines
-        if not (_OCCURRENCE_NOTE.fullmatch(line) or _CONSTRUCTION_NOTE.match(line))
-    )
-
-
 def _place_or_first_line(
     folder: model.Folder, file, address: str | None, expanded: bool, texts
 ) -> tuple[str, int]:
@@ -4211,13 +4304,20 @@ def _place_or_first_line(
     return found if found is not None else (recipe.relative(folder, file), 1)
 
 
-def _missing_fields(shown: TrellisShown) -> dict:
-    """Unjoined arrival fields of the whole model, grouped by stage and name.
+def has_occurrences(shown: TrellisShown) -> bool:
+    """Whether any period of the trellis contains a stage."""
+    return shown.counts["occurrences"] > 0
 
-    Initial-period inputs are exterior fields, not missing internal joins.
+
+def _missing_fields(shown: TrellisShown) -> dict:
+    """Unjoined entry fields of the whole model, grouped by stage and name.
+
+    The native report sets aside the earliest period's entry fields.
     The native report uses the held selection, independently of the graph
     drawn or its restriction. No stage is constructed or bound here.
     """
+    if not has_occurrences(shown):
+        return {}
     report = connection_report(shown.trellis, selection=shown.selection)
     held = {}
     for h, key, field in report.unjoined["internal"]["reading"]:
@@ -4226,12 +4326,12 @@ def _missing_fields(shown: TrellisShown) -> dict:
 
 
 def unjoined_count(shown: TrellisShown) -> int:
-    """The distinct unjoined internal arrival fields of the whole model."""
+    """The distinct unjoined internal entry fields of the whole model."""
     return len(_missing_fields(shown))
 
 
 def missing_joins(folder: model.Folder, shown: TrellisShown, texts=None) -> list[dict]:
-    """The whole model's unjoined arrival fields and their connector sources,
+    """The whole model's unjoined internal entry fields and their connector sources,
     by the native report's rule of `_missing_fields`. One record for each stage key and
     field, in the order of the graph's ports, `{"key", "field", "periods",
     "file", "line"}`: the periods at which the field is unjoined, as
@@ -4257,45 +4357,68 @@ def missing_joins(folder: model.Folder, shown: TrellisShown, texts=None) -> list
     return found
 
 
+def binding_places(folder: model.Folder, source: recipe.Source, kind: str,
+                   position=None, record=None, texts=None) -> tuple:
+    """Source controls for a binding refusal, with the recipe or trellis entry last."""
+    address, expanded = None, False
+    if position is not None:
+        h, key = position
+        if source.kind == "recipe":
+            address = f"stages.{key}.{kind}"
+        else:
+            address, expanded = f"periods[{h}].stages.{key}.{kind}", True
+    entry = _place_or_first_line(folder, folder.root / source.path, address, expanded, texts)
+    sources = (record or {}).get("provenance", {}).get("source_lists", {}).get(kind, ())
+    places = [
+        _place_or_first_line(folder, supplied, kind, False, texts)
+        for item in sources if (supplied := item.get("path"))
+    ]
+    return (*dict.fromkeys(place for place in places if place != entry), entry)
+
+
 def refused_bindings(folder: model.Folder, shown: TrellisShown, texts=None) -> list[dict]:
     """The bindings the package refused in the reading `shown`
     (`TrellisBinding.failed`), in the verbs' order, which the folder's
     checklist lists (unit K's decision K-D10): each `{"kind", "key",
-    "sentence", "file", "line"}`, the kind of the binding; the key of the
-    stage occurrence the package's note names (`_OCCURRENCE_NOTE`), None
-    where none is named; the package's sentence, as `binding_notes` gives
-    it; and the file, relative to the folder, and the line at which the
-    source names the sources of that kind for that occurrence, a recipe's
-    `stages.<key>.<kind>` or a trellis file's `periods[h].stages.<key>.<kind>`
-    where that file or its period file writes it, else the source's first
-    line. The files are read through `texts`, the mapping of unsaved
-    texts."""
-    source = str(folder.root / shown.source.path)
+    "sentence", "file", "line", "places", "diagnostic"}`, the kind of the
+    binding; the key of the stage occurrence the record names, None where
+    it names none; the record's sentence (`model.sentence`); the record
+    itself; and the places, first the file and the line the record itself
+    names, relative to the folder, where it names them, then the file and
+    the line at which the source names the sources of that kind for that
+    occurrence, a recipe's `stages.<key>.<kind>` or a trellis file's
+    `periods[h].stages.<key>.<kind>` where that file or its period file
+    writes it, else the source's first line (`binding_places`); `file` and
+    `line` are the first place. The files are read through `texts`, the
+    mapping of unsaved texts."""
     found = []
     for verb, kind in _TRELLIS_VERBS:
-        sentence = shown.binding.failed.get(verb)
-        if sentence is None:
+        failure = shown.binding.failed.get(verb)
+        if failure is None:
             continue
-        named = _OCCURRENCE_NOTE.search(sentence)
-        key = named[3] if named else None
-        if named is None:
-            address, expanded = None, False
-        elif shown.source.kind == "recipe":
-            address, expanded = f"stages.{key}.{kind}", False
-        else:
-            address, expanded = f"periods[{named[1]}].stages.{key}.{kind}", True
-        path, line = _place_or_first_line(folder, source, address, expanded, texts)
-        places = []
-        if named is not None:
-            record = shown.syntactic["periods"][int(named[1])]["stages"][key]
-            entries = record.get("provenance", {}).get("source_lists", {}).get(kind, ())
-            for entry in entries:
-                if supplied := entry.get("path"):
-                    places.append(_place_or_first_line(folder, supplied, kind, False, texts))
-        places.append((path, line))
-        found.append({"kind": kind, "key": key, "sentence": sentence, "file": path,
-                      "line": line, "places": tuple(dict.fromkeys(places))})
+        position = failure.occurrences[0] if failure.occurrences else None
+        key = position[1] if position is not None else None
+        record = shown.syntactic["periods"][position[0]]["stages"][key] if position else None
+        places = binding_places(folder, shown.source, kind, position, record, texts)
+        (path, line), places = failure_places(folder, failure, places)
+        found.append({"kind": kind, "key": key, "sentence": model.sentence(failure), "file": path,
+                      "line": line, "places": places, "diagnostic": failure})
     return found
+
+
+def failure_places(folder: model.Folder, failure: model.Diagnostic, places: tuple) -> tuple:
+    """The place a refused binding is listed at and the places of its
+    source controls, from `places`, the controls of its kind
+    (`binding_places`), the recipe's or the trellis file's entry last:
+    where the record `failure` names its own position, as the declaration
+    of a setting in an addition, that position, relative to the folder,
+    first among the places and the place it is listed at; otherwise the
+    entry. The stage's binding and the trellis's binding place one refusal
+    alike."""
+    if failure.file and failure.line is not None:
+        own = (recipe.relative(folder, folder.root / failure.file), failure.line)
+        return own, (own, *(place for place in places if place != own))
+    return places[-1], places
 
 
 class _Entry(NamedTuple):

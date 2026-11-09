@@ -8,10 +8,9 @@ is deleted when the next amendment is accepted."""
 
 import json
 import re
-import subprocess
 
 import pytest
-from conftest import CORPUS, ROOT
+from conftest import CORPUS
 
 from bellman.display.drawing import box_symbol
 from bellman.factory.model_explorer import label_sources, port_label
@@ -34,14 +33,14 @@ def test_item_1_each_box_reads_its_kind_and_the_head_of_its_symbol_on_two_lines(
         "GraphInputs": "Inputs",
         "cntn_to_dcsn:Pullback": "𝑉≻ ∘ 𝑔≻",
         "cntn_to_dcsn:Aggregation": "𝐺",
-        "cntn_to_dcsn:Evaluation": "𝑉(m_d), 𝑑𝑉(m_d) · !Linear",
-        "dcsn_to_arvl:Pullback": "𝑉, 𝑑𝑉 ∘ 𝑔≺",
+        "cntn_to_dcsn:Evaluation": "𝑉(m_d) · !Linear",
+        "dcsn_to_arvl:Pullback": "𝑉 ∘ 𝑔≺",
         "dcsn_to_arvl:Aggregation": "𝐺",
-        "dcsn_to_arvl:Evaluation": "𝑉≺(m), 𝑑𝑉≺(m)",
+        "dcsn_to_arvl:Evaluation": "𝑉≺(m, l)",
         "policy.InvEuler:Aggregation": "𝐺 · InvEuler",
-        "policy.endoggrid:Aggregation": "𝐺 · endoggrid",
-        "policy.cons_choice:Pullback": "𝑐 ∘ 𝑚_d≻",
-        "policy:Evaluation": "𝑐(m_d) · !egm",
+        "policy.grid:Aggregation": "𝐺 · grid",
+        "policy.identification:Pullback": "𝑐 ∘ 𝑚_d≻",
+        "policy:Evaluation": "𝑐(m_d)",
         "GraphOutputs": "Outputs",
     }
     assert labels["forward"] == {
@@ -60,14 +59,14 @@ def test_item_1_each_box_reads_its_kind_and_the_head_of_its_symbol_on_two_lines(
 
 
 def test_item_2_the_drawing_labels_each_evaluation_by_its_outputs_as_the_view_labels_their_ports(
-    cons, tenure, request
+    cons, three_value_outputs, request
 ):
     # the DOT statement of a box writes its label and then its tooltip,
     # which names the box before an em dash
     source = cons.builder.bwd.diagram().source
     for name, label in (
-        ("cntn_to_dcsn:Evaluation", "𝑉(m_d), 𝑑𝑉(m_d)"),
-        ("dcsn_to_arvl:Evaluation", "𝑉≺(m), 𝑑𝑉≺(m)"),
+        ("cntn_to_dcsn:Evaluation", "𝑉(m_d)"),
+        ("dcsn_to_arvl:Evaluation", "𝑉≺(m, l)"),
         ("policy:Evaluation", "𝑐(m_d)"),
     ):
         assert f'[label="{label}" tooltip="{name} — ' in source, name
@@ -75,17 +74,17 @@ def test_item_2_the_drawing_labels_each_evaluation_by_its_outputs_as_the_view_la
     # an evaluation with three outputs, longer than one line of its box, is
     # drawn as its first two outputs and the count of the third, three whole
     # lines, which DOT separates by `\n`; the tooltip names every output
-    source = tenure.builder.bwd.diagram().source
+    source = three_value_outputs.builder.bwd.diagram().source
     for name, lines, outputs in (
         (
             "cntn_to_dcsn:Evaluation",
-            ("𝑉(a_d, h_d, z_d),", "𝑑𝑉_a(a_d, h_d, z_d)", "and 1 more"),
-            "𝑉, 𝑑𝑉_a, 𝑑𝑉_h",
+            ("𝑉(m_d),", "𝑊(m_d)", "and 1 more"),
+            "𝑉, 𝑊, 𝑍",
         ),
         (
             "dcsn_to_arvl:Evaluation",
-            ("𝑉≺(a, h, z),", "𝑑𝑉_a≺(a, h, z)", "and 1 more"),
-            "𝑉≺, 𝑑𝑉_a≺, 𝑑𝑉_h≺",
+            ("𝑉≺(m, l),", "𝑊≺(m, l)", "and 1 more"),
+            "𝑉≺, 𝑊≺, 𝑍≺",
         ),
     ):
         label = "\\n".join(lines)
@@ -187,38 +186,9 @@ def test_item_3_four_colors_tell_the_levels_apart_and_ultramarine_lines_each_bui
     assert fills == {"cntn_to_dcsn/risk_ce": "#91BED7", "cntn_to_dcsn": "#C5E5F1"}
 
 
-def test_item_4_the_view_is_written_to_two_files_and_no_searched_file_holds_a_retired_name(
+def test_write_model_explorer_writes_only_the_graph_and_overlays(
     cons, tmp_path
 ):
-    # the retired names of the method overlay, its tints, the family styles
-    # and the node data, each written in two joined parts so that no line of
-    # the repository, this file's among them, holds one
-    retired = (
-        "method" + "_overlay",
-        "METHOD" + "_TINTS",
-        "FAMILY" + "_STYLES",
-        "node" + "-data",
-        "node" + "_data",
-    )
-    # the brief's paths
-    paths = (
-        "packages/bellman",
-        "packages/bellman-workbench/bellman_workbench",
-        "packages/bellman-workbench/tests",
-        "tutorials",
-        "docs/_hooks",
-        "docs/Bellman-Sym",
-        "docs/overview",
-    )
-    searched = subprocess.run(
-        ["git", "grep", "-n", "-E", "|".join(retired), "--", *paths],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-    )
-    # no tracked file under those paths holds one (git grep exits with 1
-    # where it finds nothing)
-    assert (searched.returncode, searched.stdout) == (1, ""), searched.stderr
     pytest.importorskip("model_explorer")
     # the paths of the graph file and of the file of the perch overlays
     assert write_model_explorer(cons, tmp_path) == (

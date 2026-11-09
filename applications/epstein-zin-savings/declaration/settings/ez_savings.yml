@@ -1,0 +1,17 @@
+# The Epstein-Zin savings stage's numerical settings, the values of the
+# settings its methods file declaration/stages/ez_savings/methods.bl
+# declares: the grid of resources of value function iteration and of the two
+# representations of the decision value, the number of candidate consumption
+# levels the iteration compares at each point of that grid, the quadrature
+# nodes of the gross return, and the number and the seed of the simulated
+# paths. No code of this application reads them, so the values are those of
+# the consumption and portfolio stages of applications/cons-port/, in
+# declaration/settings/cons.yml, cons_vfi.yml and port.yml there.
+settings:
+  n_m: 100
+  m_min: 0.01
+  m_max: 10.0
+  n_c: 200
+  n_Ψ_nodes: 7
+  n_sim: 10000
+  sim_seed: 12345

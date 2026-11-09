@@ -33,14 +33,13 @@ address, a perch mark after a selector, a word no vocabulary holds, a path
 whose last segment names no component, a grid of no kind of the language or
 with a factor of no shape) is
 refused by `_refusal`: a `ConstructionError` under the rule `syntax`, at the
-line and column of the item being lowered, whose sentence quotes the author's
-text and whose `advice` says what to write, so that the author reads the
-refusal in the language's words. `factory/elaboration.py` adds the file and
-the marked line.
+range of the item being lowered, whose sentence quotes the author's text and
+whose `write` says what to write, so that the author reads the refusal in the
+language's words. `factory/elaboration.py` adds the file and the marked line.
 """
 
 from collections.abc import Mapping
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from traceback import clear_frames
 from types import MappingProxyType
 from typing import NamedTuple
@@ -80,9 +79,10 @@ def parse_with_spans(text, filename=None):
     of a block header, each field the side lists and each component of that
     field's typing, and the place of each typing entry and handler binding
     of a header, under the block's address and the subject as written,
-    `policy.evaluate.method` (`_component_spans`). The parse tree and the
-    identity records from which the table was built are discarded on
-    return; nothing is stored on the term."""
+    `policy.evaluate.method` (`_component_spans`). The span of a line of a
+    block holds the place of each name the line writes (`_names_written`).
+    The parse tree and the identity records from which the table was built
+    are discarded on return; nothing is stored on the term."""
     tree = build_parser().parse(text)
     lowering = _ToAstWithPositions(filename)
     term = lowering.transform(tree)
@@ -98,6 +98,7 @@ def parse_with_spans(text, filename=None):
             column=meta.column,
             end_line=meta.end_line,
             end_column=meta.end_column,
+            names=_names_written(address, item, lowering.name_position),
         )
         if address in table:
             raise _refusal(
@@ -128,21 +129,22 @@ def _refusal(sentence, advice, at=None, rule="syntax"):
     """The refusal of a form the lowering reads no term from, under the rule
     `syntax`: `sentence` says what the file writes there and why no term is
     read from it, quoting the author's text, and `advice` what to write
-    instead, which `factory/elaboration.py` sets beneath the marked line.
-    `at` is the token or span whose line and column the refusal names;
-    without one, `_ToAstWithPositions.transform` gives it the position of the
-    item being lowered, and the file the parse names. `rule` is the rule the
-    refusal stands under, `syntax` for a form the grammar admits nowhere and
+    instead, the refusal's `write`. `at` is the token or span whose line,
+    column and end the refusal carries; without one,
+    `_ToAstWithPositions.transform` gives it the range of the item being
+    lowered, and the file the parse names. `rule` is the rule the refusal
+    stands under, `syntax` for a form the grammar admits nowhere and
     `marginal-role-retired` for a retired role word."""
-    refusal = ConstructionError(
+    return ConstructionError(
         sentence,
         rule=rule,
         file=getattr(at, "file", None),
         line=getattr(at, "line", None),
         column=getattr(at, "column", None),
+        end_line=getattr(at, "end_line", None),
+        end_column=getattr(at, "end_column", None),
+        write=advice,
     )
-    refusal.advice = advice
-    return refusal
 
 
 def _at(span):
@@ -160,13 +162,31 @@ class SourceSpan:
     1-based line and code-point column of the item's first character,
     `end_line` and `end_column` the line and the column just after its last
     character (a one-character item at column 4 has end_column 5, Lark's
-    token convention)."""
+    token convention). `names`, for a line of a block, holds the place of
+    each name the line writes (`_names_written`), from which `of_name`
+    answers a name's own span; it takes no part in a comparison or in the
+    printed form of the span."""
 
     file: "str | None"
     line: int
     column: int
     end_line: int
     end_column: int
+    names: tuple = field(default=(), compare=False, repr=False)
+
+    def of_name(self, written):
+        """The span of the name `written`, `q` or `V[>]`, where this line
+        first writes it, or None where the line writes no such name."""
+        for name, line, column, end_line, end_column in self.names:
+            if name == written:
+                return SourceSpan(
+                    file=self.file,
+                    line=line,
+                    column=column,
+                    end_line=end_line,
+                    end_column=end_column,
+                )
+        return None
 
 
 # The transient source-span table: a read-only mapping (a MappingProxyType
@@ -312,6 +332,25 @@ def _component_spans(term, position_of, file):
                             continue
                         written.add(kind)
                         yield f"{field}.{kind}", span(place)
+
+
+def _names_written(address, item, position_of):
+    """The places of the names a line of a block writes, each `(name as
+    written, line, column, end line, end column)` at the first place the line
+    writes it, `q` or `V[>]`, in the order of the text; empty for every other
+    item. `position_of` answers the meta the lowering kept for a name, None
+    for a term it kept none for."""
+    if "." not in address or not isinstance(item, Statement):
+        return ()
+    first = {}
+    for symbol in nodes(item.core):
+        place = position_of(symbol) if isinstance(symbol, Sym) else None
+        if place is None:
+            continue
+        written = to_source(symbol)
+        if written not in first or (place.line, place.column) < first[written][1:3]:
+            first[written] = (written, place.line, place.column, place.end_line, place.end_column)
+    return tuple(sorted(first.values(), key=lambda name: name[1:3]))
 
 
 def _written_name(coordinate):
@@ -693,6 +732,14 @@ class ToAst(Transformer):
         name = str(word.token)[1:]
         if component == "method":
             classifier = Method(Word(name, word.arguments))
+        elif name == "Smolyak":
+            raise _refusal(
+                f"the grid component `{written}` is typed by `!Smolyak`, the sparse grid kind, "
+                f"which is reserved by name and not built",
+                f"the one grid kind built is !Cartesian, "
+                f"`{written} : !Cartesian(a=(a_min, a_max, n_a))`",
+                word.token,
+            )
         elif name != "Cartesian":
             raise _refusal(
                 f"the grid component `{written}` is typed by `!{name}`, which is no grid "
@@ -846,18 +893,19 @@ class ToAst(Transformer):
         `word.token` is the TAGBANG token, so the refusal carries the line
         and the column of the word itself, which `parse_with_spans` releases
         and `factory/elaboration.py` writes as the position of the refusal.
-        The sentence written after the marked line stands on the refusal as
-        `advice`."""
+        The sentence written after the marked line is the action, which
+        stands on the refusal in `write`."""
         token = word.token
         name = str(token)[1:]
         if name in RETIRED_ROLE_WORDS:
             raise _refusal(
-                f"the file writes `!{name}` here, a role retired from the language: a "
+                f"the file writes `!{name}` here, a role word the language has retired: a "
                 f"backward header lists value fields and controls alone, and a derivative "
                 f"of a value is written as the term `D_{{x}}V`, with `x` a state coordinate "
-                f"of the value's perch, such as `D_{{m}}V` or `D_{{a}}V[>]` (AMD-MB-001 §4.1)",
-                "remove the field from the header; write the line that defined it as a "
-                "derivative line, `D_{m}V = …`, and read the derivative as the term `D_{a}V[>]`",
+                f"of the perch at which the value stands, such as `D_{{m}}V` or `D_{{a}}V[>]`",
+                "Remove the field from the header, write the line that defined it as a "
+                "derivative line of the value, such as `D_{m}V = …`, and read the derivative "
+                "where a line needs it as a term such as `D_{a}V[>]`",
                 token,
                 rule="marginal-role-retired",
             )
@@ -1151,6 +1199,9 @@ class _ToAstWithPositions(ToAst):
         # id(part) -> _Kept(part, place): a coordinate, a side's subject or
         # a typing's component, with the meta or the token of its text
         self._parts = {}
+        # id(symbol) -> _Kept(symbol, meta): a name a formula writes, bare or
+        # with its perch mark, for `_names_written`
+        self._names = {}
 
     def transform(self, tree):
         try:
@@ -1161,6 +1212,7 @@ class _ToAstWithPositions(ToAst):
             if isinstance(refusal, ConstructionError):
                 if refusal.line is None and meta is not None and not meta.empty:
                     refusal.line, refusal.column = meta.line, meta.column
+                    refusal.end_line, refusal.end_column = meta.end_line, meta.end_column
                 refusal.file = refusal.file or self._file
             clear_frames(wrapped.__traceback__)
             raise refusal from None
@@ -1215,6 +1267,28 @@ class _ToAstWithPositions(ToAst):
     def _keep(self, item, meta):
         self._positions[id(item)] = _Kept(item, meta)
         return item
+
+    # --- the names a formula writes (_names_written) ---
+
+    def name_position(self, symbol):
+        """The meta kept for a name a formula writes, a `Sym` this instance
+        constructed; None for a term it kept none for."""
+        kept = self._names.get(id(symbol))
+        return kept.meta if kept is not None and kept.item is symbol else None
+
+    @v_args(meta=True)
+    def constant(self, meta, children):
+        symbol = super().constant(children)
+        self._names[id(symbol)] = _Kept(symbol, meta)
+        return symbol
+
+    @v_args(meta=True)
+    def bracketed_name(self, meta, children):
+        # a name with its perch mark is kept; a selection, `q[2]`, is not
+        term = super().bracketed_name(children)
+        if isinstance(term, Sym):
+            self._names[id(term)] = _Kept(term, meta)
+        return term
 
     # --- the parts of a block header's sides (_component_spans) ---
 

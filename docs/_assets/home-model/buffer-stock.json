@@ -1,0 +1,3006 @@
+{
+  "collection": {
+    "label": "buffer_stock",
+    "graphs": [
+      {
+        "id": "backward initial diagram",
+        "nodes": [
+          {
+            "id": "buffer_stock:cntn:V",
+            "label": "V≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 34"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:cntn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:dcsn:V",
+            "label": "V",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 34"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn",
+                "sourceNodeOutputId": "buffer_stock:dcsn:V",
+                "targetNodeInputId": "buffer_stock:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:dcsn:c",
+            "label": "c",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "control"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 30"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy",
+                "sourceNodeOutputId": "buffer_stock:dcsn:c",
+                "targetNodeInputId": "buffer_stock:dcsn:c"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:c",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "c"
+                  },
+                  {
+                    "key": "label",
+                    "value": "c"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:arvl:V",
+            "label": "V≺",
+            "namespace": "arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "arvl"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 38"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl",
+                "sourceNodeOutputId": "buffer_stock:arvl:V",
+                "targetNodeInputId": "buffer_stock:arvl:V"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn",
+            "label": "cntn_to_dcsn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn"
+              },
+              {
+                "key": "statement",
+                "value": "35  V = 𝑢(c) + β*V[>]  :: [id=value]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 34–35"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "buffer_stock:cntn:V",
+                "sourceNodeOutputId": "buffer_stock:cntn:V",
+                "targetNodeInputId": "buffer_stock:cntn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:cntn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl",
+            "label": "dcsn_to_arvl",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl"
+              },
+              {
+                "key": "statement",
+                "value": "39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)  :: [id=value]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 38–39"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "buffer_stock:dcsn:V",
+                "sourceNodeOutputId": "buffer_stock:dcsn:V",
+                "targetNodeInputId": "buffer_stock:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy",
+            "label": "policy",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn"
+              },
+              {
+                "key": "statement",
+                "value": "43  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 42–43"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "buffer_stock:cntn:V",
+                "sourceNodeOutputId": "buffer_stock:cntn:V",
+                "targetNodeInputId": "buffer_stock:cntn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:c",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "c"
+                  },
+                  {
+                    "key": "label",
+                    "value": "c"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:cntn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "cntn": {},
+          "dcsn": {},
+          "arvl": {}
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 1,
+            "backgroundColor": "#EDF7FC",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "forward initial diagram",
+        "nodes": [
+          {
+            "id": "buffer_stock:arvl:k",
+            "label": "k≺",
+            "namespace": "arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "arvl"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xa"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 26"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:arvl:k",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xa"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:dcsn:m",
+            "label": "m",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xm"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 26"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn",
+                "sourceNodeOutputId": "buffer_stock:dcsn:m",
+                "targetNodeInputId": "buffer_stock:dcsn:m"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:m",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xm"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:m",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xm"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:cntn:a",
+            "label": "a≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xa"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 30"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "buffer_stock:cntn:a",
+                "targetNodeInputId": "buffer_stock:cntn:a"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:cntn:a",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "a≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "a≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xa"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:shck:ψ",
+            "label": "ψ",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "edge",
+                "value": "≺→∼"
+              },
+              {
+                "key": "role",
+                "value": "shock"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 26"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:shck:ψ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "ψ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "ψ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "shck"
+                  },
+                  {
+                    "key": "role",
+                    "value": "shock"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:shck:ξ",
+            "label": "ξ",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "edge",
+                "value": "≺→∼"
+              },
+              {
+                "key": "role",
+                "value": "shock"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 26"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:shck:ξ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "ξ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "ξ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "shck"
+                  },
+                  {
+                    "key": "role",
+                    "value": "shock"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "arvl_to_dcsn",
+            "label": "arvl_to_dcsn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn"
+              },
+              {
+                "key": "statement",
+                "value": "27  m = R*k/(Γ*ψ) + ξ  :: [id=market_resources]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 26–27"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "buffer_stock:arvl:k",
+                "sourceNodeOutputId": "buffer_stock:arvl:k",
+                "targetNodeInputId": "buffer_stock:arvl:k"
+              },
+              {
+                "sourceNodeId": "buffer_stock:shck:ψ",
+                "sourceNodeOutputId": "buffer_stock:shck:ψ",
+                "targetNodeInputId": "buffer_stock:shck:ψ"
+              },
+              {
+                "sourceNodeId": "buffer_stock:shck:ξ",
+                "sourceNodeOutputId": "buffer_stock:shck:ξ",
+                "targetNodeInputId": "buffer_stock:shck:ξ"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:m",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xm"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:arvl:k",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xa"
+                  }
+                ]
+              },
+              {
+                "id": "buffer_stock:shck:ψ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "ψ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "ψ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "shck"
+                  },
+                  {
+                    "key": "role",
+                    "value": "shock"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "buffer_stock:shck:ξ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "ξ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "ξ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "shck"
+                  },
+                  {
+                    "key": "role",
+                    "value": "shock"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_cntn",
+            "label": "dcsn_to_cntn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn"
+              },
+              {
+                "key": "statement",
+                "value": "31  a = m - c  :: [id=savings]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 30–31"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "buffer_stock:dcsn:m",
+                "sourceNodeOutputId": "buffer_stock:dcsn:m",
+                "targetNodeInputId": "buffer_stock:dcsn:m"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:cntn:a",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "a≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "a≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xa"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:m",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xm"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "arvl": {},
+          "dcsn": {},
+          "cntn": {}
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 1,
+            "backgroundColor": "#EDF7FC",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "backward",
+        "nodes": [
+          {
+            "id": "GraphInputs",
+            "label": "Inputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "inputs",
+                "value": "𝑉≻ : Xa → ℝ"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:function:cntn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≻(a)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≻(a)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Pullback",
+            "label": "𝑉≻ ∘ 𝑔≻",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "policy",
+                "value": "𝑐"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉≻ ∘ 𝑔≻(·, 𝑐))(m) = 𝑉≻(𝑔≻(m, 𝑐(m)))"
+              },
+              {
+                "key": "kernel",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m, c) = m - c"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 31"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "buffer_stock:function:cntn:V",
+                "targetNodeInputId": "buffer_stock:function:cntn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:function:cntn:V:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:cntn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≻(a)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≻(a)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Aggregation",
+            "label": "𝐺",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "policy",
+                "value": "𝑐"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of cntn_to_dcsn: 𝐺(V≻, m, c) = 𝑢(c) + β*V≻"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output V; unused m"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 35"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Pullback",
+                "sourceNodeOutputId": "buffer_stock:function:cntn:V:g",
+                "targetNodeInputId": "buffer_stock:function:cntn:V:g"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "cntn_to_dcsn:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m ↦ 𝑢(𝑐(m)) + β · 𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m ↦ 𝑢(𝑐(m)) + β · 𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:cntn:V:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Evaluation",
+            "label": "𝑉(m)",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉 : Xm → ℝ"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at m; no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Aggregation",
+                "sourceNodeOutputId": "cntn_to_dcsn:Aggregation:V:result",
+                "targetNodeInputId": "cntn_to_dcsn:Aggregation:V:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:function:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(m)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(m)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "cntn_to_dcsn:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m ↦ 𝑢(𝑐(m)) + β · 𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m ↦ 𝑢(𝑐(m)) + β · 𝑉≻(𝑔(m, 𝑐(m)))"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl:Pullback",
+            "label": "𝑉 ∘ 𝑔≺",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉 ∘ 𝑔≺)(k, ψ, ξ) = 𝑉(𝑔≺(k, ψ, ξ))"
+              },
+              {
+                "key": "kernel",
+                "value": "𝑔 of arvl_to_dcsn: 𝑔(k, ψ, ξ) = R*k/(Γ*ψ) + ξ"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 27"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Evaluation",
+                "sourceNodeOutputId": "buffer_stock:function:dcsn:V",
+                "targetNodeInputId": "buffer_stock:function:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:function:dcsn:V:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa × ℝ₊₊ × ℝ₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(m)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(m)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl.value:Aggregation:1",
+            "label": "𝐺 · value ¹",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "rule",
+                "value": "(k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of dcsn_to_arvl, segment dcsn_to_arvl.value:Aggregation:1: 𝐺(V, k, ψ, ξ) = (Γ*ψ)^(1 - ρ)*V"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output (Γ*ψ)^(1 - ρ)*V; unused k, ξ"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 39"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl:Pullback",
+                "sourceNodeOutputId": "buffer_stock:function:dcsn:V:g",
+                "targetNodeInputId": "buffer_stock:function:dcsn:V:g"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "dcsn_to_arvl.value:Aggregation:1:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa × ℝ₊₊ × ℝ₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:dcsn:V:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa × ℝ₊₊ × ℝ₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl.value:Expectation:1",
+            "label": "E ψ and ξ · value",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Expectation"
+              },
+              {
+                "key": "rule",
+                "value": "value:Expectation:1(k) = E_{ψ, ξ}[value:Aggregation:1(k, ψ, ξ)]"
+              },
+              {
+                "key": "kernel 1",
+                "value": "distribution of (ψ, ξ): ψ ~ LogNormal(-σ_ψ^2/2, σ_ψ) · ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))"
+              },
+              {
+                "key": "kernel 2",
+                "value": "conditioned on none declared; drawn on the edge arvl_to_dcsn; in dcsn_to_arvl at each point of k, integrates ψ, ξ; declared at buffer_stock:distribution:ψ, buffer_stock:distribution:ξ"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 16, 18, 39"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl.value:Aggregation:1",
+                "sourceNodeOutputId": "dcsn_to_arvl.value:Aggregation:1:result",
+                "targetNodeInputId": "dcsn_to_arvl.value:Aggregation:1:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "dcsn_to_arvl.value:Expectation:1:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k ↦ E_{ψ, ξ}[dcsn_to_arvl.value:Aggregation:1(k, ψ, ξ)]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k ↦ E_{ψ, ξ}[dcsn_to_arvl.value:Aggregation:1(k, ψ, ξ)]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "dcsn_to_arvl.value:Aggregation:1:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(k, ψ, ξ) ↦ (Γ · ψ)^(1 − ρ) · 𝑉(𝑔(k, ψ, ξ))"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa × ℝ₊₊ × ℝ₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl:Aggregation",
+            "label": "𝐺",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉≺(k) = E_{ψ, ξ}[(Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))]"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of dcsn_to_arvl: 𝐺(E_{ψ, ξ}((Γ*ψ)^(1 - ρ)*V), k) = E_{ψ, ξ}((Γ*ψ)^(1 - ρ)*V)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output V; unused k"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 39"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl.value:Expectation:1",
+                "sourceNodeOutputId": "dcsn_to_arvl.value:Expectation:1:result",
+                "targetNodeInputId": "dcsn_to_arvl.value:Expectation:1:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "dcsn_to_arvl:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k ↦ dcsn_to_arvl.value:Expectation:1(k)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k ↦ dcsn_to_arvl.value:Expectation:1(k)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "dcsn_to_arvl.value:Expectation:1:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k ↦ E_{ψ, ξ}[dcsn_to_arvl.value:Aggregation:1(k, ψ, ξ)]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k ↦ E_{ψ, ξ}[dcsn_to_arvl.value:Aggregation:1(k, ψ, ξ)]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl:Evaluation",
+            "label": "𝑉≺(k)",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉≺ : Xa → ℝ"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at k; no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl:Aggregation",
+                "sourceNodeOutputId": "dcsn_to_arvl:Aggregation:V:result",
+                "targetNodeInputId": "dcsn_to_arvl:Aggregation:V:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:function:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≺(k)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≺(k)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "dcsn_to_arvl:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k ↦ dcsn_to_arvl.value:Expectation:1(k)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k ↦ dcsn_to_arvl.value:Expectation:1(k)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Pullback",
+            "label": "𝑉≻ ∘ 𝑔≻",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉≻ ∘ 𝑔≻)(m, c) = 𝑉≻(𝑔≻(m, c))"
+              },
+              {
+                "key": "kernel",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m, c) = m - c"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 31"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "buffer_stock:function:cntn:V",
+                "targetNodeInputId": "buffer_stock:function:cntn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:function:cntn:V:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:cntn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≻(a)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≻(a)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy.optimality:Aggregation",
+            "label": "𝐺 · optimality",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "rule",
+                "value": "(m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔≻(m, c))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of policy, segment policy.optimality:Aggregation: 𝐺(V≻, m, c) = 𝑢(c) + β*V≻"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output 𝑢(c) + β*V≻; unused m"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 43"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy:Pullback",
+                "sourceNodeOutputId": "buffer_stock:function:cntn:V:g:policy",
+                "targetNodeInputId": "buffer_stock:function:cntn:V:g:policy"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy.optimality:Aggregation:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:cntn:V:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy.optimality:Argmax",
+            "label": "argmax · optimality",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Argmax"
+              },
+              {
+                "key": "rule",
+                "value": "𝑐(m) ∈ argmax_{cp ∈ Γ_c(m)} [𝑢(cp) + β · 𝑉≻(𝑔≻(m, cp))]"
+              },
+              {
+                "key": "kernel",
+                "value": "objective 𝑢(cp) + β*V[>]; objective function (m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔(m, c))(m, c); choice cp; feasible set Γ_c(m)"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 43"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy.optimality:Aggregation",
+                "sourceNodeOutputId": "policy.optimality:Aggregation:result",
+                "targetNodeInputId": "policy.optimality:Aggregation:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy.optimality:Argmax:c:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "{c ∈ (Xm → ℝ₊₊) | ∀ m ∈ Xm: (∀ c ∈ Γ_c(m): (policy.optimality:Aggregation(m, c(m)) ≥ policy.optimality:Aggregation(m, c)))}"
+                  },
+                  {
+                    "key": "label",
+                    "value": "{c ∈ (Xm → ℝ₊₊) | ∀ m ∈ Xm: (∀ c ∈ Γ_c(m): (policy.optimality:Aggregation(m, c(m)) ≥ policy.optimality:Aggregation(m, c)))}"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "policy.optimality:Aggregation:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(m, c) ↦ 𝑢(c) + β · 𝑉≻(𝑔(m, c))"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{m, c ∈ Xm × ℝ₊₊ | c ∈ Γ_c(m)} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Evaluation",
+            "label": "𝑐(m)",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑐 : Xm → ℝ₊₊,  𝑐(m) ∈ Γ_c(m)"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at m; no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy.optimality:Argmax",
+                "sourceNodeOutputId": "policy.optimality:Argmax:c:result",
+                "targetNodeInputId": "policy.optimality:Argmax:c:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy:Evaluation:c:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑐(m)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑐(m)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "policy.optimality:Argmax:c:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "{c ∈ (Xm → ℝ₊₊) | ∀ m ∈ Xm: (∀ c ∈ Γ_c(m): (policy.optimality:Aggregation(m, c(m)) ≥ policy.optimality:Aggregation(m, c)))}"
+                  },
+                  {
+                    "key": "label",
+                    "value": "{c ∈ (Xm → ℝ₊₊) | ∀ m ∈ Xm: (∀ c ∈ Γ_c(m): (policy.optimality:Aggregation(m, c(m)) ≥ policy.optimality:Aggregation(m, c)))}"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "GraphOutputs",
+            "label": "Outputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "outputs",
+                "value": "𝑉≺ : Xa → ℝ, 𝑐(m) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl:Evaluation",
+                "sourceNodeOutputId": "buffer_stock:function:arvl:V",
+                "targetNodeInputId": "buffer_stock:function:arvl:V"
+              },
+              {
+                "sourceNodeId": "policy:Evaluation",
+                "sourceNodeOutputId": "policy:Evaluation:c:result",
+                "targetNodeInputId": "policy:Evaluation:c:result"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≺(k)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≺(k)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "policy:Evaluation:c:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑐(m)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑐(m)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "cntn_to_dcsn": {
+            "inputs": "𝑉≻ : Xa → ℝ",
+            "outputs": "𝑉 : Xm → ℝ",
+            "parameter 1": "β : (0, 1), unbound",
+            "parameter 2": "ρ : (1, inf), unbound"
+          },
+          "dcsn_to_arvl": {
+            "inputs": "𝑉 : Xm → ℝ",
+            "outputs": "𝑉≺ : Xa → ℝ",
+            "parameter 1": "ρ : (1, inf), unbound",
+            "parameter 2": "R : ℝ₊₊, unbound",
+            "parameter 3": "Γ : ℝ₊₊, unbound",
+            "parameter 4": "σ_ψ : ℝ₊, unbound",
+            "parameter 5": "σ_ξ : ℝ₊, unbound",
+            "parameter 6": "μ_ξ : ℝ, unbound",
+            "parameter 7": "p_zero : (0, 1), unbound"
+          },
+          "policy": {
+            "inputs": "𝑉≻ : Xa → ℝ",
+            "outputs": "𝑐(m) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})",
+            "feasible set": "Γ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}",
+            "parameter 1": "β : (0, 1), unbound",
+            "parameter 2": "ρ : (1, inf), unbound"
+          }
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": "/",
+            "layoutDirection": 0,
+            "backgroundColor": "#91BED7",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          },
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 0,
+            "backgroundColor": "#C5E5F1",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "forward",
+        "nodes": [
+          {
+            "id": "GraphInputs",
+            "label": "Inputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "inputs",
+                "value": "μ≺ : finite measure on Xa"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:measure:arvl",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "arvl_to_dcsn:DistributionExtension:ψ",
+            "label": "μ ⊗ ψ",
+            "namespace": "arvl_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "DistributionExtension"
+              },
+              {
+                "key": "rule",
+                "value": "μ≺⊗P_ψ(B) = ∫_{k ∈ Xa} [P_ψ({ψ ∈ ℝ₊₊ | (k, ψ) ∈ B})] μ≺(dk)"
+              },
+              {
+                "key": "kernel 1",
+                "value": "distribution of ψ: ψ ~ LogNormal(-σ_ψ^2/2, σ_ψ)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "extends the measure by ψ; conditioning arguments none"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 16"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "buffer_stock:measure:arvl",
+                "targetNodeInputId": "buffer_stock:measure:arvl"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:measure:arvl:with-distribution:ψ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:measure:arvl",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "arvl_to_dcsn:DistributionExtension:ξ",
+            "label": "μ ⊗ ξ",
+            "namespace": "arvl_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "DistributionExtension"
+              },
+              {
+                "key": "rule",
+                "value": "μ≺⊗P_ψ⊗P_ξ(B) = ∫_{(k, ψ) ∈ Xa × ℝ₊₊} [P_ξ({ξ ∈ ℝ₊ | (k, ψ, ξ) ∈ B})] μ≺⊗P_ψ(d(k, ψ))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "distribution of ξ: ξ ~ Mixture((p_zero, point mass at 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))"
+              },
+              {
+                "key": "kernel 2",
+                "value": "extends the measure by ξ; conditioning arguments none"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 18"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn:DistributionExtension:ψ",
+                "sourceNodeOutputId": "buffer_stock:measure:arvl:with-distribution:ψ",
+                "targetNodeInputId": "buffer_stock:measure:arvl:with-distribution:ψ"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:measure:arvl:with-distribution:ξ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa × ℝ₊₊ × ℝ₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:measure:arvl:with-distribution:ψ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "arvl_to_dcsn:Pushforward",
+            "label": "𝑔≺∗μ",
+            "namespace": "arvl_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pushforward"
+              },
+              {
+                "key": "rule",
+                "value": "μ(B) = μ≺⊗P_ψ⊗P_ξ({k≺, ψ, ξ ∈ Xa × ℝ₊₊ × ℝ₊ | 𝑔≺(k≺, ψ, ξ) ∈ B})"
+              },
+              {
+                "key": "kernel",
+                "value": "𝑔 of arvl_to_dcsn: 𝑔(k, ψ, ξ) = R*k/(Γ*ψ) + ξ"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 27"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn:DistributionExtension:ξ",
+                "sourceNodeOutputId": "buffer_stock:measure:arvl:with-distribution:ξ",
+                "targetNodeInputId": "buffer_stock:measure:arvl:with-distribution:ξ"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:measure:dcsn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xm"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:measure:arvl:with-distribution:ξ",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa × ℝ₊₊ × ℝ₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_cntn:Pushforward",
+            "label": "𝑔≻∗μ",
+            "namespace": "dcsn_to_cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pushforward"
+              },
+              {
+                "key": "policy",
+                "value": "𝑐"
+              },
+              {
+                "key": "rule",
+                "value": "μ≻(B) = μ({m ∈ Xm | 𝑔≻(m, 𝑐(m)) ∈ B})"
+              },
+              {
+                "key": "kernel",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m, c) = m - c"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 31"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn:Pushforward",
+                "sourceNodeOutputId": "buffer_stock:measure:dcsn",
+                "targetNodeInputId": "buffer_stock:measure:dcsn"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:measure:cntn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:measure:dcsn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xm"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "GraphOutputs",
+            "label": "Outputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "outputs",
+                "value": "μ≻ : finite measure on Xa"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn:Pushforward",
+                "sourceNodeOutputId": "buffer_stock:measure:cntn",
+                "targetNodeInputId": "buffer_stock:measure:cntn"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:measure:cntn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xa"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "arvl_to_dcsn": {
+            "inputs": "μ≺ : finite measure on Xa",
+            "outputs": "μ : finite measure on Xm",
+            "parameter 1": "R : ℝ₊₊, unbound",
+            "parameter 2": "Γ : ℝ₊₊, unbound",
+            "parameter 3": "σ_ψ : ℝ₊, unbound",
+            "parameter 4": "σ_ξ : ℝ₊, unbound",
+            "parameter 5": "μ_ξ : ℝ, unbound",
+            "parameter 6": "p_zero : (0, 1), unbound"
+          },
+          "dcsn_to_cntn": {
+            "inputs": "μ : finite measure on Xm",
+            "outputs": "μ≻ : finite measure on Xa"
+          }
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": "/",
+            "layoutDirection": 0,
+            "backgroundColor": "#91BED7",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          },
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 0,
+            "backgroundColor": "#C5E5F1",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      }
+    ],
+    "graphSorting": "node_count_desc"
+  },
+  "graph": "forward initial diagram",
+  "layers": [
+    "arvl",
+    "dcsn",
+    "cntn"
+  ],
+  "source_path": "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
+  "source_sha256": "1c52da52a54b6f33350f5894625d9c2171c7ffaeb060fe3dece37d05b8f64bb8"
+}

@@ -1,0 +1,34 @@
+@methods: noport
+# The methods of the stage without a portfolio choice, written as an addition
+# to noport.bl beside this file: Gauss-Hermite quadrature of the income shock
+# θ at the expectation, with its node count; the linear representation of the
+# decision value on a grid of capital; the deterministic arrival builder; and
+# the forward law of motion drawn by Monte Carlo. The one handler,
+# solve_nest_egm of cons-port, stands beside three methods at three places of
+# three kinds. No line is added, so every entry is a file-level line routed
+# to its place by its path. The quadrature is written once, for the one block
+# that holds the operator, cntn_to_dcsn, whose lines value and marginal each
+# read it, and the operator's address in the block names both occurrences.
+# The representation names the value's Evaluation alone and not the stated
+# derivative D_{k_d}V, so the Evaluation is refined by its object. The grid
+# keys its factor to the capital coordinate k_d and names the three settings
+# n_m, m_min and m_max, as the stage's earlier methods file did; no settings
+# file is bound to this stage, which no recipe names. Every setting the file
+# reads is declared above the lines with its set, a bound as a point of Xk,
+# the set of k_d, a count, a node count and a seed in ℕ.
+
+n_m : ℕ            :: ["number of points of the grid of capital"]
+m_min : Xk         :: ["lower bound of the grid of capital"]
+m_max : Xk         :: ["upper bound of the grid of capital"]
+n_θ_nodes : ℕ      :: ["quadrature nodes of the income shock"]
+n_sim : ℕ          :: ["number of simulated paths"]
+sim_seed : ℕ       :: ["seed of the simulation's draws"]
+
+cntn_to_dcsn.E_θ.method : !gauss_hermite(n_θ=n_θ_nodes)
+cntn_to_dcsn.E_θ.handler : "cons-port:solve_nest_egm"
+cntn_to_dcsn.evaluate[V].method : !Linear
+cntn_to_dcsn.evaluate[V].grid : !Cartesian(k_d=(m_min, m_max, n_m))
+cntn_to_dcsn.evaluate[V].handler : "cons-port:solve_nest_egm"
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)
+dcsn_to_cntn.handler : "cons-port:solve_nest_egm"

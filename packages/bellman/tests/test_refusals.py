@@ -15,10 +15,10 @@ import pytest
 
 from bellman.native.hypergraphs import copy_native
 from bellman.refusal_examples import EXAMPLES, INVERSE_EULER
-from bellman.stage import admitted_methods, load_stage
+from bellman.stage import load_stage
 from bellman.trellis import load_recipe
-from bellman.refusal_catalogue import catalogue, refusal_of
-from bellman.refusals import (FACTORY_RULES, RULE_B_C, RULES, TARGET_RULES, ConstructionError, FactoryError,
+from bellman.refusal_catalogue import catalogue, entry, refusal_of
+from bellman.refusals import (FACTORY_RULES, RULES, TARGET_RULES, ConstructionError, FactoryError,
                               NotConstructed, TargetError)
 from bellman.stage.grains import graph_of
 from conftest import CORPUS, branching, cons_obs_text, corpus_text, shock_branching, stage_from_text
@@ -42,15 +42,22 @@ def cons_with(written, changed):
 def printed(error):
     """The refusal as `ConstructionError.__str__` writes it: the position, or
     the file and the address where it has none, then the message, then the
-    address and the rule."""
+    address and the rule, then one line per related location and one for
+    the action, where the refusal carries them."""
     if error.line is None:
-        return f"{error.file}: address {error.address!r}: {error.message} (rule {error.rule})"
-    where = f"{error.file}:{error.line}:{error.column}"
-    if error.end_line is not None:
-        where += f"-{error.end_line}:{error.end_column}"
-    if error.address is None:
-        return f"{where}: {error.message} (rule {error.rule})"
-    return f"{where}: {error.message} (address {error.address!r}; rule {error.rule})"
+        head = f"{error.file}: address {error.address!r}: {error.message} (rule {error.rule})"
+    else:
+        where = f"{error.file}:{error.line}:{error.column}"
+        if error.end_line is not None:
+            where += f"-{error.end_line}:{error.end_column}"
+        if error.address is None:
+            head = f"{where}: {error.message} (rule {error.rule})"
+        else:
+            head = f"{where}: {error.message} (address {error.address!r}; rule {error.rule})"
+    after = "".join(f"\n  {location}" for location in error.related)
+    if error.write:
+        after += f"\n  write: {error.write}"
+    return head + after
 
 
 @pytest.mark.parametrize("rule", RULES)
@@ -65,6 +72,16 @@ def test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_i
     for word in example.words:
         assert word in error.message, (word, error.message)
     assert str(error) == printed(error)
+    if rule in ("declared-twice", "label-not-in-parent", "type-conflict", "metadata-mismatch"):
+        # the earlier item of the pair is a related location under the role
+        # `original declaration`, with its file, its range and its term
+        # address, and the sentence still names its position in words
+        (earlier,) = error.related
+        assert earlier.role == "original declaration"
+        assert earlier.file in ("t.bl", "m.bl") and earlier.address is not None
+        assert None not in (earlier.line, earlier.column, earlier.end_line, earlier.end_column)
+        assert f"{earlier.file}:{earlier.line}:{earlier.column}" in error.message
+        assert (earlier.file, earlier.address) != (error.file, error.address)
     if rule == "syntax":
         from bellman.refusal_catalogue import text_of
 
@@ -72,6 +89,8 @@ def test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_i
         assert str(error).startswith("cons.bl:16:")
         assert text_of(example).splitlines()[15] in str(error)
         assert "\n" + " " * (4 + error.column - 1) + "^" in str(error)
+        # the grammar's sentence for the place is the action, held once
+        assert "a side of a block header" in error.write and error.write not in error.message
         with pytest.raises(ConstructionError) as refused:
             elaborate_text("@stage: t\n[id=b, (x : ℝ) : !contrl -> (y : ℝ) : !dcsn] {\n    y = x\n}\n")
         word = refused.value
@@ -80,33 +99,17 @@ def test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_i
         for refusal in (error, word):
             for internal in ("Error trying to process rule", "word_type", "TAGBANG"):
                 assert internal not in str(refusal)
-    if rule == "typing-entry-unattached":
-        # the same refusal for an entry of a block's header, a typing entry
-        # before the signature and a handler binding in a group, at the
-        # block's address
-        for header in ("[id=b, policy.method : !egm, (x : ℝ) : !arvl -> (y : ℝ) : !dcsn]",
-                       '[id=b, (x : ℝ) : !arvl -> (y : ℝ) : !dcsn | handler : "cons-port:egm"]'):
-            with pytest.raises(ConstructionError) as refused:
-                elaborate_text(f"@stage: t\n{header} {{\n    y = x\n}}\n")
-            assert (refused.value.rule, refused.value.address) == (rule, "b")
-        # and for an entry of a nested branch block's header, at the branch's address
-        written = "[label=work, () -> (a_w : ℝ₊) : !cntn]"
-        for nested in ("[label=work, () -> (a_w : ℝ₊) : !cntn | method : !egm]",
-                       '[label=work, () -> (a_w : ℝ₊) : !cntn | handler : "cons-port:egm"]',
-                       "[label=work, policy.method : !egm, () -> (a_w : ℝ₊) : !cntn]"):
-            with pytest.raises(ConstructionError) as refused:
-                elaborate_text(branching((written, nested)))
-            assert (refused.value.rule, refused.value.address) == (rule, "dcsn_to_cntn.work")
     if rule == "defined-once":
         assert (error.line, error.column) == (4, 5)
-        entry = next(item for item in catalogue() if item.rule == rule)
-        assert entry.where == "t.bl, line 4, column 5 (address 'b.second')"
-        assert "W = 2*V[>]" in entry.what and "^" in entry.what
-        assert entry.why == error.message
-        assert "t.bl:3:5 (term address 'b.first')" in entry.why
-        assert entry.write == example.write
-        assert all(word in entry.write
-                   for word in ("Remove one definition", "another name", "`!doc`"))
+        held = entry(rule)
+        assert held.where == "t.bl, line 4, column 5 (address 'b.second')"
+        assert "W = 2*V[>]" in held.what and "^" in held.what
+        assert held.why == error.message
+        assert "t.bl:3:5 (term address 'b.first')" in held.why
+        assert held.write == error.write
+        assert all(word in held.write
+                   for word in ("Remove one of the two definitions of W", "another name", "`!doc`"))
+        assert held.corrected == ""
         documentary = example.text.replace("[id=first, !node]", "[id=first, !doc]")
         assert elaborate_text(documentary).name == "t"
         # a derivative term stated twice in one block, the housing-frictions
@@ -218,7 +221,7 @@ def test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_decision_
     # expression by algebraic simplification, every function read as an opaque
     # symbol; the refusal names the line as written and the law of motion so
     # solved (RL5)
-    from conftest import ROOT
+    from conftest import ROOT, ADJUSTER_CONS_EXPLICIT
     from bellman.refusal_examples import INVERSE_EULER
 
     # the inverse Euler form of the consumption stage, whose policy block writes
@@ -249,8 +252,7 @@ def test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_decision_
     # a law of motion with several outputs is solved through its other lines:
     # on the durables adjuster the housing line gives the control without a
     # candidate
-    adjuster = (ROOT / "applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl"
-                ).read_text(encoding="utf-8")
+    adjuster = (ROOT / ADJUSTER_CONS_EXPLICIT).read_text(encoding="utf-8")
     line = "m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj"
     assert adjuster.count(line) == 1
     assert elaborate_text(adjuster).name == "adjuster_cons"
@@ -266,9 +268,9 @@ def test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_decision_
     # a law of motion in which the decision state occurs other than once and
     # affinely is not solved: the grid line is not checked, and no kind of
     # condition is added in the place of the check
-    unsolved = elaborate_text(with_grid("a + 5*c[>]").replace("    a = m_d - c\n", "    a = m_d*m_d - c\n"))
+    unsolved = elaborate_text(with_grid("a + 5*c[>]").replace(law, "    a = m*m - c\n"))
     assert ({item.condition for item in unsolved.obligations()}
-            == {item.condition for item in cons.obligations()})
+            == {item.condition for item in elaborate_text(text).obligations()})
 
 
 @pytest.mark.parametrize("rule", TARGET_RULES)
@@ -281,18 +283,6 @@ def test_the_smallest_example_breaking_a_rule_of_the_identity_table_is_refused_u
         assert error.stage == example.corpus
     for word in example.words:
         assert word in str(error), (word, str(error))
-    if rule == RULE_B_C:
-        # a line of a branch is addressed under its label and an occurrence in
-        # it by the operator after that (F12), and a line that holds one head
-        # twice is one address answering both occurrences, listed once among
-        # the places (F62): on the branching stage with a derivative line of
-        # the choice value, each target answers its admitted methods, where
-        # it was refused under a TargetError before
-        stage = stage_from_text(branching((CHOICE_VALUE, CHOICE_VALUE
-                                           + "    D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]  :: [id=marginal]\n")))
-        assert isinstance(admitted_methods(stage, "dcsn_to_cntn.work.working"), tuple)
-        assert isinstance(admitted_methods(stage, "cntn_to_dcsn.marginal.D"), tuple)
-        assert [row["address"] for row in stage.places()].count("cntn_to_dcsn.marginal.D") == 1
 
 
 @pytest.mark.parametrize("rule", FACTORY_RULES)
@@ -333,25 +323,23 @@ def test_a_key_written_twice_is_refused_on_every_path_that_reads_a_yaml_file(con
     written = cons_sources["settings"].read_text(encoding="utf-8")
     assert written.count("  n_m: 8000") == 1
     settings.write_text(written.replace("  n_m: 8000", "  n_m: 8000\n  n_m: 10"), encoding="utf-8")
-    methods = tmp_path / "methods.yml"
-    methods.write_text("stage: cons\nstage: cons\nmethods: []\n", encoding="utf-8")
     trellis = tmp_path / "trellis.yml"
     trellis.write_text(f"periods:\n  - stages:\n      cons: {{stage: {path_of('cons')}, calibration: calibration.yml}}\n"
                        "    connectors: []\ninter_connectors: []\n", encoding="utf-8")
     methodized = copy_native(cons).methodize(cons_sources["methods"])
     for call, path, key, line in ((lambda: copy_native(cons).calibrate(calibration), calibration, "ρ", 3),
                                   (lambda: methodized.configure(settings), settings, "n_m", 7),
-                                  (lambda: copy_native(cons).methodize(methods), methods, "stage", 2),
                                   (lambda: load_trellis(trellis), calibration, "ρ", 3)):
         with pytest.raises(FactoryError) as refused:
             call()
         assert (refused.value.rule, refused.value.file, refused.value.written, refused.value.write) == (
-            "readable-file", str(path), f"{key!r} at line {line}", "each key once")
-        assert f"the key {key!r} is written twice" in refused.value.message
+            "readable-file", str(path), f"{key!r} at line {line}", f"one `{key}:` entry")
+        written_twice = f"in {path.name}, at line {line - 1} and again at line {line}"
+        assert f"the key {key!r} is written twice {written_twice}" in refused.value.message
     registry = write_registry(tmp_path / "registry", {"calibration/main.yml": "calibration:\n  β: 0.96\n  β: 0.5\n"})
     with pytest.raises(FactoryError) as refused:
         load_recipe(registry, "spec.yml")
-    assert (refused.value.rule, refused.value.write) == ("recipe-source", "each key once")
+    assert (refused.value.rule, refused.value.write) == ("recipe-source", "one `β:` entry")
 
 
 # the smallest registry's recipe as a recipe writes it, its trellis file and its
@@ -465,100 +453,129 @@ def test_a_parameter_two_stages_of_a_period_declare_is_refused_where_their_sets_
     assert refused.value.__notes__ == ["Stage occurrence: periods[0].stages['two_nodes']", "Binding kind: calibration"]
 
 
-def test_a_method_the_target_does_not_admit_is_refused_at_its_attachment(cons):
-    for target, tag, settings, words in (
-        ("policy", "gauss-hermite", {},
-         ("Method target 'policy' in stage 'cons'", "builder", "admits", "operator", "E")),
-        ("cntn_to_dcsn.value", "egm", {}, ("cntn_to_dcsn.value",)),
-        ("policy.cons_choice.solve", "Linear", {}, ("operator", "solve")),
-        ("Γ", "Linear", {}, ("representation method", "definition", "correspondence")),
+def test_a_method_word_at_a_place_its_row_does_not_admit_and_a_word_no_row_holds_are_refused(cons):
+    """A method word typed at a place of a kind its row of the catalogue does
+    not admit is refused under `method-admission`, naming the place, its kind
+    and the kinds the row admits; a word no row holds is refused under
+    `syntax`, naming the words of the catalogue (specification 0.7 §5)."""
+    for entry, words in (
+        ("policy.method : !gauss_hermite", ("`policy`", "kind builder", "admits operator E")),
+        ("cntn_to_dcsn.value.method : !egm",
+         ("`cntn_to_dcsn.value`", "kind statement", "admits builder, operator argmax")),
+        ("cntn_to_dcsn.evaluate.method : !vfi",
+         ("`cntn_to_dcsn.evaluate`", "kind operator evaluate", "admits builder")),
     ):
-        with pytest.raises(TargetError) as refused:
-            copy_native(cons).methodize({"methods": [{"on": target, "method": tag,
-                                           "settings": settings}]})
-        error = refused.value
-        assert error.rule == "method-attachment"
-        assert error.target == target and error.stage == cons.name
-        assert all(word in str(error) for word in words)
-    for tag in ("unknown-method", "linear", "rootfind", "value-iteration"):
-        with pytest.raises(TargetError, match=rf"unknown method !{tag}.*`method_types` of bellman.stage") as refused:
-            copy_native(cons).methodize({"methods": [{"on": "policy", "method": tag}]})
-        assert refused.value.rule == "method-attachment"
-        assert refused.value.target == "policy" and refused.value.stage == cons.name
+        with pytest.raises(ConstructionError) as refused:
+            copy_native(cons).methodize({"text": f"@methods: cons\n{entry}\n", "origin": "cons.methods.bl"})
+        assert (refused.value.rule, refused.value.stage) == ("method-admission", cons.name)
+        assert all(word in str(refused.value) for word in words), str(refused.value)
+    for word in ("unknown_method", "linear", "rootfind", "value_iteration"):
+        with pytest.raises(ConstructionError) as refused:
+            copy_native(cons).methodize(
+                {"text": f"@methods: cons\npolicy.method : !{word}\n", "origin": "cons.methods.bl"})
+        assert refused.value.rule == "syntax"
+        assert f"`!{word}`, which no row of the catalogue holds" in str(refused.value)
 
 
 def test_method_options_refuse_invalid_authored_or_configured_values(cons, port):
-    typo = {"methods": [{"on": "cntn_to_dcsn.value", "method": "Linear",
-                          "handler": "test:interpolate",
-                          "settings": {"grid": "!Cartesian", "ordrs": {"m_d": "n_m"},
-                                       "bounds": {"m_d": ["m_min", "m_max"]}}}]}
-    with pytest.raises(TargetError) as refused:
-        copy_native(cons).methodize(typo)
-    assert all(word in str(refused.value)
-               for word in ("cntn_to_dcsn.value", "!Linear", "orders", "ordrs"))
-    unknown = {"methods": [{"on": "cntn_to_dcsn.value", "method": "Linear",
-                             "settings": {"grid": "!Cartesian", "orders": {"m_d": "n_m"},
-                                          "bounds": {"m_d": ["m_min", "m_max"]},
-                                          "vendor_flag": True}}]}
-    with pytest.raises(TargetError, match="unknown option.*vendor_flag.*handler"):
-        copy_native(cons).methodize(unknown)
-
-    source = {"stage": "cons", "methods": [{
-        "on": "cntn_to_dcsn.value", "method": "Linear",
-        "settings": {"grid": "!Cartesian", "orders": {"m_d": "n_m"},
-                     "bounds": {"m_d": ["m_min", "m_max"]}},
-    }]}
+    """`configure` refuses a setting a component names and the source does
+    not value (`setting-unvalued`); a keyword argument of a method word whose
+    value at the settings has not the kind the catalogue's row names
+    (`method-option-value`), for `!vfi` `n_c` a positive integer and `tol` a
+    positive real, for `!gauss_hermite` a node count per shock a positive
+    integer and for `!tauchen` `min_prob` a finite positive real; and a grid
+    whose count, bounds or node set at the settings are out of order
+    (`grid-bounds`). At binding, a factor on a coordinate the function at
+    the place lacks is refused (`grid-coordinate`), and a keyword the row
+    requires and the entry omits (`method-admission`)."""
     # each binding binds a stage of its own (specification 0.6 decision 1 and R4)
-    methodized = copy_native(cons).methodize(source)
-    with pytest.raises(ValueError, match="n_m"):
-        methodized.configure({"settings": {"m_min": 0.1, "m_max": 10.0}})
+    methodized = copy_native(cons).methodize({
+        "text": "@methods: cons\npoints : ℝ\ntolerance : [-inf, inf]\npolicy.method : !vfi(n_c=points, tol=tolerance)\n",
+        "origin": "cons.methods.bl"})
+    with pytest.raises(ConstructionError, match="points") as refused:
+        methodized.configure({"settings": {"tolerance": 1e-6}})
+    assert refused.value.rule == "setting-unvalued"
     for settings, message in (
-        ({"n_m": -5, "m_min": 0.1, "m_max": 10.0}, "positive integer"),
-        ({"n_m": 8, "m_min": 10.0, "m_max": 1.0}, "ordered pair"),
-        ({"n_m": 8, "m_min": float("nan"), "m_max": 10.0}, "ordered pair"),
-        ({"n_m": 8, "m_min": 0.1, "m_max": float("inf")}, "ordered pair"),
-        ({"n_m": 8, "m_min": -1.0, "m_max": 10.0}, "declared set"),
+        ({"points": -5, "tolerance": 1e-6}, "positive integer"),
+        ({"points": 8, "tolerance": float("inf")}, "positive real"),
+        ({"points": 8, "tolerance": -1.0}, "positive real"),
     ):
         with pytest.raises(ConstructionError, match=message) as refused:
             methodized.configure({"settings": settings})
-        assert (refused.value.rule, refused.value.stage,
-                refused.value.address) == (
-                    "method-option-value", "cons", "cntn_to_dcsn:Evaluation")
+        assert (refused.value.rule, refused.value.stage, refused.value.address) == (
+            "method-option-value", "cons", "policy")
+    configured = methodized.configure({"settings": {"points": 8, "tolerance": 1e-6}})
+    assert configured.bindings.settings["points"] == 8
+    assert "n_c = 8" in str(configured.builder.policy.denote())
 
-    wrong_coordinate = copy_native(cons).methodize({"stage": "cons", "methods": [{
-        "on": "cntn_to_dcsn.value", "method": "Linear",
-        "settings": {"grid": "!Cartesian", "orders": {"m": "n_m"},
-                     "bounds": {"m": ["m_min", "m_max"]}},
-    }]})
-    with pytest.raises(ValueError, match="coordinate.*m_d"):
-        wrong_coordinate.configure({"settings": {
-            "n_m": 8, "m_min": 0.1, "m_max": 10.0,
-        }})
+    # the grid of the value's representation at the settings: a count below
+    # two, bounds out of order or not finite, and a bound outside the
+    # coordinate's declared set
+    gridded = copy_native(cons).methodize({
+        "text": ("@methods: cons\nn_m : ℤ\nm_min : ℝ\nm_max : ℝ\n"
+                 "cntn_to_dcsn.evaluate.method : !Linear\n"
+                 "cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))\n"),
+        "origin": "cons.methods.bl"})
+    for settings, rule, message in (
+        ({"n_m": -5, "m_min": 0.1, "m_max": 10.0}, "grid-bounds", "count -5"),
+        ({"n_m": 8, "m_min": 10.0, "m_max": 1.0}, "grid-bounds", "in order"),
+        ({"n_m": 8, "m_min": -1.0, "m_max": 10.0}, "grid-bounds", "declared set"),
+        # a bound that is no number of the declared set is refused at the
+        # declaration before the grid is read
+        ({"n_m": 8, "m_min": float("nan"), "m_max": 10.0}, "setting-outside-set", "nan"),
+        ({"n_m": 8, "m_min": 0.1, "m_max": float("inf")}, "setting-outside-set", "inf"),
+    ):
+        with pytest.raises(ConstructionError, match=message) as refused:
+            gridded.configure({"settings": settings})
+        assert (refused.value.rule, refused.value.stage) == (rule, "cons")
+        if rule == "grid-bounds":
+            assert refused.value.address == "cntn_to_dcsn.evaluate"
+    # a factor on a coordinate the function at the place lacks is refused
+    # where the entry is read
+    with pytest.raises(ConstructionError, match="'m'.*no coordinate.*m_d") as refused:
+        copy_native(cons).methodize({
+            "text": ("@methods: cons\nn_m : ℕ\nm_min : ℝ₊\nm_max : ℝ₊\n"
+                     "cntn_to_dcsn.evaluate.method : !Linear\n"
+                     "cntn_to_dcsn.evaluate.grid : !Cartesian(m=(m_min, m_max, n_m))\n"),
+            "origin": "cons.methods.bl"})
+    assert refused.value.rule == "grid-coordinate"
 
-    quadrature = copy_native(port).methodize({"stage": "port", "methods": [{
-        "on": "E_Ψ_θ", "method": "gauss-hermite",
-        "settings": {"n_nodes": "nodes"},
-    }]})
-    for value in (49, [7], [7, 0], [7, True]):
-        with pytest.raises(ConstructionError, match="n_nodes"):
-            quadrature.configure({"settings": {"nodes": value}})
-
-    positive_real = copy_native(port).methodize({"stage": "port", "methods": [{
-        "on": "E_Ψ_θ", "method": "tauchen",
-        "settings": {"min_prob": "minimum_probability"},
-    }]})
+    # the node counts of a quadrature, one per shock, each a positive integer
+    # and every one of them written
+    quadrature = copy_native(port).methodize({
+        "text": "@methods: port\nnodes_Ψ : ℝ\nnodes_θ : ℝ\nE_Ψ_θ.method : !gauss_hermite(n_Ψ=nodes_Ψ, n_θ=nodes_θ)\n",
+        "origin": "port.methods.bl"})
+    for value, rule, message in (
+        (0, "method-option-value", "n_Ψ.*positive integer"),
+        ([7], "setting-outside-set", "nodes_Ψ"),
+        (7.5, "method-option-value", "n_Ψ.*positive integer"),
+        (True, "setting-outside-set", "nodes_Ψ"),
+    ):
+        with pytest.raises(ConstructionError, match=message) as refused:
+            quadrature.configure({"settings": {"nodes_Ψ": value, "nodes_θ": 7}})
+        assert refused.value.rule == rule
+    with pytest.raises(ConstructionError, match="without the keyword n_θ") as refused:
+        copy_native(port).methodize({
+            "text": "@methods: port\nnodes_Ψ : ℝ\nE_Ψ_θ.method : !gauss_hermite(n_Ψ=nodes_Ψ)\n",
+            "origin": "port.methods.bl"})
+    assert refused.value.rule == "method-admission"
+    positive_real = copy_native(port).methodize({
+        "text": "@methods: port\nminimum_probability : [-inf, inf]\nE_Ψ_θ.method : !tauchen(min_prob=minimum_probability)\n",
+        "origin": "port.methods.bl"})
     with pytest.raises(ConstructionError, match="finite value"):
         positive_real.configure({"settings": {"minimum_probability": float("inf")}})
 
 
-
-def test_every_rule_of_the_three_vocabularies_has_an_example_in_the_catalogue():
+def test_every_rule_of_the_three_vocabularies_has_an_example_in_the_catalogue(catalogue_entries):
     """A rule with no example is a gap in the catalogue and fails here
     (AMD-SG-022 §2). Each entry names its rule, the place the refusal is
     raised and the refusal as printed."""
-    without = [entry.rule for entry in catalogue() if not entry.refusal]
+    without = [item.rule for item in catalogue_entries if not item.refusal]
+    for item in catalogue_entries:
+        if item.rule in FACTORY_RULES:
+            assert all((item.where, item.what, item.why, item.write)), item.rule
     assert without == [], without
-    assert [entry.rule for entry in catalogue()] == list(RULES) + list(TARGET_RULES) + list(FACTORY_RULES)
+    assert [item.rule for item in catalogue_entries] == list(RULES) + list(TARGET_RULES) + list(FACTORY_RULES)
 
 
 # the forms a branching block may not take (B02's six, E28's four, E8, E30),
@@ -678,7 +695,7 @@ def test_mixture_weights_that_do_not_sum_to_one_are_refused_when_calibration_dec
         stage.calibrate({**MIXTURE_VALUES, "q": 0.5})
     error = refused.value
     assert error.rule == "distribution-domain"
-    for word in ("p_zero, q", "cons_savings_iid:distribution:y", "sum to 0.8", "not to one"):
+    for word in ("p_zero, q", "the Mixture declaration `y ~ Mixture(", "sum to 0.8", "not to one"):
         assert word in error.message, (word, error.message)
 
 
@@ -746,7 +763,7 @@ def test_a_weight_the_declaration_itself_fixes_outside_the_unit_interval_is_refu
         elaborate_text("@stage: t\ny : ℝ\ny ~ Mixture((1.5, 0), (-0.5, N(0, 1)))\n"
                        "[id=b, (x : ℝ, y) : !dcsn -> (w : ℝ) : !dcsn] {\n    w = x + y\n}\n")
     assert refused.value.rule == "distribution-domain"
-    for word in ("t:distribution:y", "1.5", "not a probability"):
+    for word in ("the Mixture declaration `y ~ Mixture(", "1.5", "not a probability"):
         assert word in refused.value.message, (word, refused.value.message)
 
 
@@ -774,7 +791,8 @@ def test_a_distribution_call_of_another_number_of_arguments_than_its_family_take
         # the declaration's address is its file position (AMD-SG-017 §4), so the
         # refusal names the line the declaration is written at
         assert refused.value.address == "t.bl:6"
-        for word in ("t:distribution:z", counted, "`DiscreteMarkov` takes 2 or 3 arguments",
+        for word in ("the DiscreteMarkov declaration `z ~ DiscreteMarkov(", counted,
+                     "`DiscreteMarkov` takes 2 or 3 arguments",
                      "the transition probabilities", "the chain's states", "the previous state"):
             assert word in refused.value.message, (declaration, word, refused.value.message)
     for admitted in ("z ~ DiscreteMarkov(Π, (z_lo, z_hi))", "z ~ DiscreteMarkov(Π, (z_lo, z_hi), x)"):
@@ -785,12 +803,14 @@ def test_two_lines_merged_into_one_box_bind_one_method(elaborate_text):
     """A merged box is one operator, so it holds one method (AMD-SG-011 §3);
     the author keeps two methods by keeping the two computations apart with
     `!node`. The two lines are the arrival builder's two value lines, which
-    integrate the same pair of shocks; under AMD-MB-001 a derivative line
-    forms no box, so the stage carries a second value `W` (MB-T215)."""
+    integrate the same pair of shocks, the second also as an iterated
+    expectation, so that the stage-wide places `E_y_z`, `E_y` and `E_z` reach
+    the one merged box; under AMD-MB-001 a derivative line forms no box, so
+    the stage carries a second value `W` (MB-T215)."""
     from bellman.stage.binding_verbs import methodize
     from conftest import bundles
-    text = bundles(backward="    V[<] = E_{y,z}(V)               :: [id=value]\n"
-                            "    W[<] = E_{y,z}(R*W)             :: [id=second]\n",
+    text = bundles(backward="    V[<] = E_{y,z}(V)                     :: [id=value]\n"
+                            "    W[<] = E_{y,z}(R*W) + E_{y}(E_{z}(W)) :: [id=second]\n",
                    decision="    V = c + β*V[>]                  :: [id=value]\n"
                             "    W = c + β*W[>]                  :: [id=second]\n")
     for old, new in (("(V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn]",
@@ -800,23 +820,38 @@ def test_two_lines_merged_into_one_box_bind_one_method(elaborate_text):
         assert text.count(old) == 1, old
         text = text.replace(old, new)
     stage = elaborate_text(text, "bundles.bl")
-    entries = [{"on": "dcsn_to_arvl.value.E_y_z", "method": "!quadrature"},
-               {"on": "dcsn_to_arvl.second.E_y_z", "method": "!exact"}]
-    with pytest.raises(TargetError) as refused:
-        methodize(stage, {"stage": "bundles", "methods": entries})
-    assert str(refused.value) == (
-        "Method target 'dcsn_to_arvl.second.E_y_z' in stage 'bundles': the lines dcsn_to_arvl.value and "
-        "dcsn_to_arvl.second are one box, dcsn_to_arvl:Expectation, at the primitive grain, and the targets "
-        "'dcsn_to_arvl.value.E_y_z' and 'dcsn_to_arvl.second.E_y_z' bind two methods to it; a box holds one "
-        "method (AMD-SG-006 §4, rule 9). Write one method for both lines, or write `!node` in the annotation of "
-        "one of them, so that the two computations stay two boxes.")
-    # one method for both lines is admitted, and the merged box answers with it
-    for entry in entries:
-        entry["method"] = "!quadrature"
-    bound = methodize(stage, {"stage": "bundles", "methods": entries})
+    entries = ("dcsn_to_arvl.value.E_y_z.method : !quadrature\n",
+               "dcsn_to_arvl.second.E_y_z.method : !exact\n")
+    with pytest.raises(ConstructionError) as refused:
+        methodize(stage, {"text": "@methods: bundles\n" + "".join(entries), "origin": "bundles.methods.bl"})
+    assert refused.value.rule == "component-typed-twice"
+    assert "which both reach the operator `E` of block 'dcsn_to_arvl'" in str(refused.value)
+    assert "dcsn_to_arvl.value.E_y_z.method : !quadrature" in str(refused.value)
+    assert "dcsn_to_arvl.second.E_y_z.method : !exact" in str(refused.value)
+    # an occurrence of the maximization in a named line reaches the box the
+    # line's row is, which the sentence names by the line's block
+    with pytest.raises(ConstructionError) as refused:
+        methodize(stage, {"text": "@methods: bundles\npolicy.argmax.method : !max\n"
+                                  "policy.objective.argmax.method : !golden_section(n_sections=5)\n",
+                          "origin": "bundles.methods.bl"})
+    assert "which both reach the operator `argmax` of block 'policy';" in str(refused.value)
+    # two stage-wide places of different names reach the one merged box, and
+    # neither stands in a block, so the sentence reads the block from the
+    # place of the block that holds the box
+    with pytest.raises(ConstructionError) as refused:
+        methodize(stage, {"text": "@methods: bundles\nE_y_z.method : !quadrature\n"
+                                  "E_y.method : !exact\n",
+                          "origin": "bundles.methods.bl"})
+    assert refused.value.rule == "component-typed-twice"
+    assert ("at `E_y_z` and at `E_y`, which both reach the operator `E` of block "
+            "'dcsn_to_arvl';") in str(refused.value)
+    # the head of the block names every occurrence in it, and the merged box
+    # answers with the one component
+    bound = methodize(stage, {"text": "@methods: bundles\ndcsn_to_arvl.E_y_z.method : !quadrature\n",
+                              "origin": "bundles.methods.bl"})
     merged = bound.builder.bwd.primitives["dcsn_to_arvl:Expectation"]
-    assert sorted(merged.methods) == ["dcsn_to_arvl.second:Expectation:1", "dcsn_to_arvl.value:Expectation:1"]
-    assert {method.tag for method in merged.methods.values()} == {"quadrature"}
+    assert {place: str(held) for place, held in merged.methods.items()} == {"dcsn_to_arvl.E_y_z": "!quadrature"}
+    assert str(merged.signature()).splitlines()[-1] == "method     !quadrature"
 
 
 # --- the two second cases of the retired acceptance files --------------------
@@ -884,7 +919,7 @@ def test_a_system_with_fewer_statements_than_unknowns_is_refused(elaborate_text)
         elaborate_text(TWO_CANDIDATES, "two.bl")
     error = refused.value
     assert (error.rule, error.address) == ("not-constructed", "policy.euler")
-    assert "1 statements of builder 'policy' (policy.euler)" in error.message
+    assert "1 statement of builder 'policy' (policy.euler) states" in error.message
     assert "a relation in 2 unknowns (c, h)" in error.message
     assert "`c, h = solve_{c, h}(…)`" in error.message
 
@@ -897,7 +932,7 @@ def test_the_reversed_order_of_the_expectations_is_refused_naming_the_undeclared
         stage_from_text(reversed_order)
     error = refused.value
     assert (error.rule, error.address) == ("conditional-not-declared", "cntn_to_dcsn.risk_ce")
-    assert "the expectation cntn_to_dcsn.risk_ce:Expectation:1 needs the distribution of ν given Ψ" in error.message
+    assert "the expectation over ν on line cntn_to_dcsn.risk_ce needs the distribution of ν given Ψ" in error.message
 
 
 # --- the malformed clauses of the retired acceptance file of AMD-SG-035 -------
@@ -940,8 +975,8 @@ def test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_refused_
         assert cons_obs_text().count(written[0]) == 1
         text = cons_obs_text().replace(*written)
     else:
-        assert cons_kt_text.count("⟂ a >= 0") == 1
-        text = cons_kt_text.replace("⟂ a >= 0", "⟂ " + written)
+        assert cons_kt_text.count("⟂ m_d - c >= 0") == 1
+        text = cons_kt_text.replace("⟂ m_d - c >= 0", "⟂ " + written)
     with pytest.raises(ConstructionError) as refused:
         stage_from_text(text, twin + ".bl")
     assert refused.value.rule == rule
@@ -987,27 +1022,38 @@ def test_methodize_replaces_a_second_binding_and_refuses_a_source_naming_another
     the rule and what to write."""
     from bellman.stage.binding_verbs import methodize
     stage = copy_native(cons)
-    grid = {"grid": "!Cartesian", "orders": {"m_d": "n_m"}, "bounds": {"m_d": ["m_min", "m_max"]}}
-    methodized = methodize(stage, {"stage": "cons", "methods": [
-        {"on": "cntn_to_dcsn.value", "method": "!Linear", "settings": grid}]})
-    assert methodize(methodized, {"stage": "cons", "methods": [
-        {"on": "cntn_to_dcsn.value", "method": "!pchip", "settings": grid}]}) is stage
-    assert str(stage.methods) == "cntn_to_dcsn:Evaluation   !pchip"
-    with pytest.raises(ValueError) as refused:
-        methodize(copy_native(cons), {"stage": "port", "methods": []})
-    assert str(refused.value) == (
-        "stage 'cons': the methods source names the stage 'port'; a methods file binds the stage it names "
-        "(spec 0.3c §4.3); write `stage: cons` in the source or apply it to the stage 'port'")
-    # the value and its stated derivative are two written addresses of one
-    # Evaluation, which holds one representation (AMD-MB-002)
-    with pytest.raises(ValueError) as refused:
-        methodize(copy_native(port), {"stage": "port", "methods": [
-            {"on": "cntn_to_dcsn.evaluate.value", "method": "!Linear", "handler": "h"},
-            {"on": "cntn_to_dcsn.evaluate.marginal", "method": "!pchip", "handler": "h"}]})
-    assert str(refused.value) == (
-        "stage 'port', box 'cntn_to_dcsn:Evaluation': the targets 'cntn_to_dcsn.evaluate.value' and "
-        "'cntn_to_dcsn.evaluate.marginal' conflict, both reaching it with a method; a box holds one method "
-        "(AMD-SG-006 §4, rule 9); write one entry for that box")
+
+    def addition(method):
+        return {"text": (f"@methods: cons\ncntn_to_dcsn.evaluate.method : {method}\n"
+                         "n_m : ℕ\nm_min : ℝ₊\nm_max : ℝ₊\n"
+                         "cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))\n"),
+                "origin": "cons.methods.bl"}
+    methodized = methodize(stage, addition("!Linear"))
+    assert methodize(methodized, addition("!pchip")) is stage
+    assert str(stage.methods) == "cntn_to_dcsn.evaluate   !pchip   !Cartesian(m_d=(m_min, m_max, n_m))"
+    with pytest.raises(ConstructionError) as refused:
+        methodize(copy_native(cons), {"text": "@methods: port\n", "origin": "port.methods.bl"})
+    assert refused.value.rule == "metadata-mismatch"
+    assert str(refused.value).startswith("port.methods.bl:1:1")
+    assert ("the addition names the stage 'port', and the stage file names itself 'cons'"
+            in str(refused.value))
+    assert "an addition's first line is `@methods: <stage>`" in str(refused.value)
+    # the whole of an Evaluation and one of the objects it stores share a
+    # key, so one component typed at both is typed twice (D4); the two
+    # objects, the value and its stated derivative, are represented apart
+    with pytest.raises(ConstructionError) as refused:
+        methodize(copy_native(port), {
+            "text": ("@methods: port\ncntn_to_dcsn.evaluate.method : !Linear\n"
+                     "cntn_to_dcsn.evaluate[V].method : !pchip\n"),
+            "origin": "port.methods.bl"})
+    assert refused.value.rule == "component-typed-twice"
+    assert "the object `V` stored at the operator `evaluate` of block 'cntn_to_dcsn'" in str(refused.value)
+    apart = methodize(copy_native(port), {
+        "text": ("@methods: port\ncntn_to_dcsn.evaluate[V].method : !Linear\n"
+                 "cntn_to_dcsn.evaluate[D_{k_d}V].method : !pchip\n"),
+        "origin": "port.methods.bl"})
+    assert {place: str(held) for place, held in apart.methods.items()} == {
+        "cntn_to_dcsn.evaluate[V]": "!Linear", "cntn_to_dcsn.evaluate[D_{k_d}V]": "!pchip"}
 
 
 # the names that would collide with the spelling of an identity (AMD-SG-016 §3),
@@ -1093,7 +1139,7 @@ def test_a_perch_mark_after_a_selector_is_a_positioned_syntax_refusal(
     error = refused.value
     assert (error.rule, error.file, error.line, error.column) == ("syntax", "selectors.bl", 4, column)
     assert "perch mark" in error.message and "first selector" in error.message
-    assert "write" in error.parts.write and remedy in error.parts.write
+    assert "write" in error.write and remedy in error.write
     assert "\n" + " " * (column + 3) + "^" in error.message
     assert "VisitError" not in str(error) and "Error trying to process rule" not in str(error)
 
@@ -1180,7 +1226,7 @@ def test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written(c
     error = refused.value
     assert (error.rule, error.file, error.line, error.column) == ("syntax", "t.bl", line, column)
     assert all(word in error.parts.why for word in words), (words, error.parts.why)
-    assert write in error.parts.write and "^" in error.parts.what
+    assert write in error.write and "^" in error.parts.what
     for internal in ("@in", "Select(", "Sym(", "NotImplementedError"):
         assert internal not in str(error), internal
 
@@ -1231,3 +1277,24 @@ def test_command_refuses_malformed_sources_unreadable_paths_and_invalid_argument
         assert answer.returncode == 2
         assert not answer.stdout
         assert answer.stderr.startswith("usage:")
+
+
+def test_method_keyword_names_must_be_declared_even_inside_nested_values(cons):
+    """Method arguments read declared names; quoted strings remain literal."""
+    for value in ("missing", "(2, !foo(inner=missing))"):
+        addition = {"text": "@methods: cons\n"
+                    f"policy.evaluate.method : !Linear(option={value})\n",
+                    "origin": "keywords.methods.bl"}
+        with pytest.raises(ConstructionError) as caught:
+            copy_native(cons).methodize(addition)
+        error = caught.value
+        assert error.rule == "name-in-scope"
+        assert error.file == "keywords.methods.bl" and error.line == 2
+        assert error.address == "policy.evaluate"
+        assert error.column is not None and error.write
+        assert "missing" in error.message
+    allowed = copy_native(cons).methodize({
+        "text": '@methods: cons\npolicy.evaluate.method : !Linear(option="literal", count=2)\n',
+        "origin": "keywords.methods.bl",
+    })
+    assert "policy.evaluate" in allowed.methods

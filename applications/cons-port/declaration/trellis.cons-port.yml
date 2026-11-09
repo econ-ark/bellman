@@ -2,7 +2,7 @@
 name: cons_port
 # Consumption first, the returns drawn at the end of the period: consumption is chosen on resources,
 # discounting follows, and the share is chosen on the savings, which the connector names capital; the draws
-# give the resources that leave each period and begin the next. Six equal periods; the one inter-period
+# give the resources that leave each period and begin the next. Three equal periods; the one inter-period
 # mapping stands for every adjacent pair.
 periods:
   - stages: [cons, disc, port]

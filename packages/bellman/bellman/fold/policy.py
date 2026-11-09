@@ -232,15 +232,21 @@ def _check_system(block, address, system):
     if system is not None and len(system.addresses) != len(system.unknowns):
         spelled = ", ".join(i.field for i in system.unknowns)
         listed = ", ".join(system.addresses)
+        statements, unknowns = len(system.addresses), len(system.unknowns)
         refuse_backward_block(
             block,
             "not-constructed",
             address,
-            f"{len(system.addresses)} statements of builder {block.name!r} ({listed}) state a "
-            f"relation in {len(system.unknowns)} unknowns ({spelled}); a system of implicit "
+            f"{statements} statement{'s' if statements != 1 else ''} of builder {block.name!r} "
+            f"({listed}) state{'' if statements != 1 else 's'} a relation in {unknowns} "
+            f"unknown{'s' if unknowns != 1 else ''} ({spelled}); a system of implicit "
             f"statements is constructed where its statements are exactly as many as its unknowns. "
             f"Write as many equations as there are unknowns, or name the unknowns a statement "
             f"determines by the solve_{{…}} spelling, `{spelled} = solve_{{{spelled}}}(…)`",
+            write=(
+                f"Write as many equations as there are unknowns, or name the unknowns a "
+                f"statement determines, `{spelled} = solve_{{{spelled}}}(…)`"
+            ),
         )
 
 
@@ -483,8 +489,13 @@ def _chosen(block, env, acc, choice, targets, address):
             block,
             "not-constructed",
             address,
-            f"the choice names {unknowns} in a different order from its outputs {names}; "
-            f"use the same order, or distinct dummy names to state the positional mapping",
+            f"the choice names the unknowns {', '.join(unknowns)} in a different order from "
+            f"its outputs {', '.join(names)}; use the same order, or distinct dummy names to "
+            f"state the positional mapping",
+            write=(
+                f"Name the unknowns in the order of the outputs, {', '.join(names)}, or name "
+                f"them by distinct dummy names to state the positional mapping"
+            ),
         )
     bindings = {name: ctx.symbol(identity) for name, identity in zip(unknowns, targets)}
     # what the argmax maximizes: its one argument, or the tuple of its
@@ -687,6 +698,10 @@ def _with_properties(block, rows, properties):
                 f"the line {address} states a property of the line {owner}, which forms no "
                 f"operation of builder {block.name!r}, so no row holds the property; attach it "
                 f"to a line that forms an operation, or give it a plain id without a dot",
+                write=(
+                    f"Attach the property to a line that forms an operation, or give line "
+                    f"{address} a plain id without a dot"
+                ),
             )
         rows[at] = dataclasses.replace(rows[at], properties=rows[at].properties + (address,))
     return tuple(rows)

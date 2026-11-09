@@ -42,7 +42,6 @@ from workbench_support import (
     NOPORT_ID,
     PENSION_RETIREMENT,
     PENSIONS_WORKING_YEARS,
-    PORT_CONS,
     PORT_CONS_RECORDS,
     PORT_CONS_RECIPE,
     PORT_ID,
@@ -81,7 +80,6 @@ from workbench_support import (
 
 from bellman.refusals import FactoryError
 from bellman.stage import source_spans
-from bellman.stage.sources import load_methods
 from bellman.trellis import (
     entry_span,
     entry_value,
@@ -116,8 +114,8 @@ def test_the_eight_templates_of_a_stage_are_read_from_the_corpus():
     """The templates of a stage are the eight stage files the three corpus
     files of TEMPLATE_SOURCES bind, in that order, each with its stage
     file, its model's title, the parameters its calibration must give and
-    the files its application binds it with, one methods file at most
-    (spec 0.3 §4, D6)."""
+    the files its application binds it with, the additions beside its stage
+    file among them (spec 0.3 §4, D6; decision S7-W2)."""
     templates = creation.stage_templates()
     assert [template.id for template in templates] == [
         "cons-port/declaration/spec.port-cons.yml#port",
@@ -139,32 +137,28 @@ def test_the_eight_templates_of_a_stage_are_read_from_the_corpus():
     assert cons.companions == {
         "calibration": (CONS_PORT / "calibration/portfolio.yml",),
         "settings": (CONS_PORT / "settings/cons_wide.yml",),
-        "methods": (CONS_PORT / "methods/cons.yml",),
+        "methods": (CONS_PORT / "stages/cons/methods.bl",),
     }
     assert by_key["disc"].companions["settings"] == ()
-    assert by_key["disc"].companions["methods"] == (CONS_PORT / "methods/disc.yml",)
+    assert by_key["disc"].companions["methods"] == (CONS_PORT / "stages/disc/methods.bl",)
     assert by_key["noport"].companions["settings"] == (CONS_PORT / "settings/noport.yml",)
-    assert all(len(template.companions["methods"]) <= 1 for template in templates)
     worker = by_key["worker_saving"]
     assert worker.stage == (
         CORPUS / "pension-retirement/declaration/stages/worker_saving/worker_saving.bl"
     )
     assert worker.model == "Savings and retirement choice with pension assets"
     assert worker.calibration == ("β", "ρ", "r_f", "r_p", "χ_s", "μ_w", "σ_w")
-    # each pension stage brings its methods file, which binds its marginal
-    # blocks and, for the two saving stages, its method block (decision
-    # MB-V38); the recipe binds the calibration by a slot alone
-    assert all(
-        template.companions
-        == {
+    # each pension stage brings its addition, and the two saving stages
+    # their settings files (decision S7-W2); the recipe binds the
+    # calibration by a slot alone
+    pension = CORPUS / "pension-retirement/declaration"
+    for template in templates[4:]:
+        settings = pension / f"settings/{template.key}.yml"
+        assert template.companions == {
             "calibration": (),
-            "settings": (),
-            "methods": (
-                CORPUS / f"pension-retirement/declaration/stages/{template.key}/methods.yml",
-            ),
-        }
-        for template in templates[4:]
-    )
+            "settings": (settings,) if template.key.endswith("_saving") else (),
+            "methods": (pension / f"stages/{template.key}/methods.bl",),
+        }, template.key
     assert creation.template_of("cons-port/declaration/spec.port-cons.yml#cons") is cons
     with pytest.raises(ValueError, match="no template of a stage is named"):
         creation.template_of("nowhere#cons")
@@ -175,12 +169,13 @@ def test_the_forms_read_back_through_the_factory(tmp_path):
     form of the three files of applications/pension-retirement/declaration/
     with one slot per stage and kind and empty connector mappings,
     read back through `load_recipe` in the folder's `declaration/`: six
-    periods of port, cons and disc, every slot unbound and every connector
-    mapping empty; answers.yml lists the nine slots as required and no
-    connector (decision C-D1). A row names its stage's file in the stage's
-    own folder, and the recipe's three comment lines, which name where the
-    files of each kind stand, a methods file in its stage's folder, are
-    within 79 characters for a folder name of 32 characters (C-K36)."""
+    periods of port, cons and disc, every slot unbound, each stage's methods
+    list naming no addition, and every connector mapping empty; answers.yml
+    lists the six slots as required and no connector (decision C-D1). A row
+    names its stage's file in the stage's own folder, and the recipe's five
+    comment lines, which name where the files of each kind stand, an
+    addition in its stage's folder, are within 79 characters for a folder
+    name of 32 characters (C-K36)."""
     folder = written_from_the_forms(tmp_path / "demo")
     read = load_recipe(folder / "declaration", "spec.yml")
     assert len(read["periods"]) == 6
@@ -189,26 +184,33 @@ def test_the_forms_read_back_through_the_factory(tmp_path):
     assert read["inter_connectors"][0] == {}
     lists = read["periods"][3]["stages"]["cons"]["provenance"]["source_lists"]
     assert lists == {
-        kind: [{"slot": f"cons_{kind}", "bound": False, "names": []}] for kind in creation.KINDS
+        **{
+            kind: [{"slot": f"cons_{kind}", "bound": False, "names": []}]
+            for kind in creation.SLOT_KINDS
+        },
+        "methods": [],
     }
     answers = (folder / creation.ANSWERS).read_text(encoding="utf-8")
     assert yaml.safe_load(answers)["required"] == {
-        "slots": [f"{key}_{kind}" for key in ("port", "cons", "disc") for kind in creation.KINDS],
+        "slots": [
+            f"{key}_{kind}" for key in ("port", "cons", "disc") for kind in creation.SLOT_KINDS
+        ],
         "connectors": [],
     }
     assert creation.recipe_row("cons") == (
         "{stage: stages/cons/cons.bl, calibration: {all: [$cons_calibration]}, "
-        "settings: {all: [$cons_settings]}, methods: {all: [$cons_methods]}}"
+        "settings: {all: [$cons_settings]}, methods: {all: []}}"
     )
-    comments = creation.recipe_text("m" * 32, ["cons"]).split("\n")[:3]
-    assert [line[0] for line in comments] == ["#", "#", "#"]
+    comments = creation.recipe_text("m" * 32, [("cons", ())]).split("\n")[:5]
+    assert [line[0] for line in comments] == ["#"] * 5
     assert max(len(line) for line in comments) <= 79
-    assert "stages/<stage>/methods" in "".join(comments)
+    assert "stages/<stage>/methods.bl" in "".join(comments)
 
 
 def test_item_1_a_slot_is_no_checklist_entry(tmp_path):
     """Unit K's decision K-D29, which amends C item 1 (spec 0.3 §4): the
-    nine slots the recipe of a new folder writes, each a place for values
+    six slots the recipe of a new folder writes, the calibration and the
+    settings of each stage (decision S7-F3), each a place for values
     supplied by the keyword of `load_recipe` that spells its name, are no
     entry of the checklist, whether answers.yml lists them under
     `required.slots`, as the form writes it, or is absent; filling them
@@ -216,7 +218,9 @@ def test_item_1_a_slot_is_no_checklist_entry(tmp_path):
     folder = written_from_the_forms(tmp_path / "demo")
     recipe = folder / creation.factory_path(creation.RECIPE)
     text = recipe.read_text(encoding="utf-8")
-    assert all(f"${key}_{kind}]" in text for key, _ in DEMO_STAGES for kind in creation.KINDS)
+    assert all(
+        f"${key}_{kind}]" in text for key, _ in DEMO_STAGES for kind in creation.SLOT_KINDS
+    )
     assert creation.checklist(folder) == ()
     (folder / creation.ANSWERS).unlink()
     assert creation.checklist(folder) == ()
@@ -373,7 +377,7 @@ def test_the_checklist_block_lists_the_entries_and_opens_the_file_at_one(tmp_pat
     """The page reads the checklist with the tree; in a new folder whose
     answers.yml requires the period file's connector and the trellis file's
     inter-period mapping, its block lists one button per entry, by file and
-    line, and none for the nine slots (K-D29); a click opens the file with
+    line, and none for the six slots (K-D29); a click opens the file with
     the editor at the entry's line and column (spec 0.3 §4)."""
     from workbench_support import composition_folder
 
@@ -463,16 +467,6 @@ def test_item_1_new_trellis_writes_the_folder_of_section_4_inside_a_repository(r
     }
     named |= {f"declaration/stages/{key}/{key}.bl" for key in ("port", "cons", "disc")}
     named |= {"declaration/spec.yml", "declaration/period.yml", "declaration/trellis.yml"}
-    # the block files a copied methods file names under `block:`, which the
-    # factory reads from that file's folder; the template `cons` brings
-    # one since decision SE-29 (SE-32)
-    named |= {
-        (methods.parent / line["block"]).resolve().relative_to(created.folder).as_posix()
-        for methods in (created.folder / path for path in named if "methods" in path)
-        if methods.suffix == ".yml"
-        for line in load_methods(methods)["methods"]
-        if "block" in line
-    }
     assert set(created.files) - named == {"answers.yml", ".gitignore", "README.md"}
     assert creation.checklist(created.folder) == ()
 
@@ -485,8 +479,8 @@ def test_new_trellis_add_stage_and_add_period_write_the_one_layout(repository):
     and the .gitignore excepted at its top: `declaration/` holds the recipe,
     the trellis and period files, `calibration/`, `settings/` and one
     folder per stage, `stages/<key>/`, with the stage file `<key>.bl` and
-    the methods file its template brings, copied as `methods.yml` and
-    naming the stage by its key (unit K, Task 12);
+    the addition its template brings, copied as `methods.bl` and naming
+    the stage by its key (unit K, Task 12);
     README.md stands at the top (merge note M8). Neither writer writes a
     file: "add period" reads the recipe "add stage" edited from the texts
     it answered, and the layout is that of the folder once the new files
@@ -516,40 +510,27 @@ def test_new_trellis_add_stage_and_add_period_write_the_one_layout(repository):
         "worker",
     ]
     for key, source in (
-        ("port", CONS_PORT / "methods/port.yml"),
-        ("consumption", CONS_PORT / "methods/cons.yml"),
-        ("disc", CONS_PORT / "methods/disc.yml"),
-        ("noport", CONS_PORT / "methods/noport.yml"),
-        ("worker", PENSION_RETIREMENT / "declaration/stages/worker_saving/methods.yml"),
+        ("port", CONS_PORT / "stages/port/methods.bl"),
+        ("consumption", CONS_PORT / "stages/cons/methods.bl"),
+        ("disc", CONS_PORT / "stages/disc/methods.bl"),
+        ("noport", CONS_PORT / "stages/noport/methods.bl"),
+        ("worker", PENSION_RETIREMENT / "declaration/stages/worker_saving/methods.bl"),
     ):
         assert sorted(path.name for path in (declaration / "stages" / key).iterdir()) == sorted(
-            [f"{key}.bl", "methods.yml"]
+            [f"{key}.bl", "methods.bl"]
         )
-        # the source's text with its `stage:` naming the key (unit K, Task 12),
-        # and each `block:` naming the block file's copy under
-        # `declaration/methods/` by its path from the copy's folder (SE-29)
+        # the source's text with its `@methods:` line naming the key (unit K,
+        # Task 12; specification 0.7 §4 rule 1)
         named = re.sub(
-            r"^stage: .*$",
-            f"stage: {key}",
+            r"^@methods: .*$",
+            f"@methods: {key}",
             source.read_text(encoding="utf-8"),
             count=1,
             flags=re.M,
         )
-        named = re.sub(
-            r"^(\s+block: )(?:.*/)?([^/\n]+\.bl)$", r"\1../../methods/\2", named, flags=re.M
-        )
-        assert (declaration / "stages" / key / "methods.yml").read_text(encoding="utf-8") == named
-    # the block file the consumption stage's methods file names, copied as
-    # the demonstration writes it (SE-29)
-    assert (declaration / "methods/cons_egm.bl").read_bytes() == (
-        CORPUS / "cons-port/declaration/methods/cons_egm.bl"
-    ).read_bytes()
-    # and the two block files the pension worker's methods file names, its
-    # method block and its marginal blocks (decision MB-V38)
-    for name in ("worker_saving_foc.bl", "marginals_worker_saving.bl"):
-        assert (declaration / "methods" / name).read_bytes() == (
-            PENSION_RETIREMENT / "declaration/methods" / name
-        ).read_bytes()
+        assert (declaration / "stages" / key / "methods.bl").read_text(encoding="utf-8") == named
+    # no folder of block files is written (decision S7-W2)
+    assert not (declaration / "methods").exists()
     assert sorted(path.name for path in created.folder.iterdir()) == [
         ".gitignore",
         "README.md",
@@ -591,7 +572,7 @@ def test_new_trellis_outside_a_repository_makes_one_with_its_destination(tmp_pat
         ({"stages": [("cons", "nowhere#cons")]}, "no template of a stage is named"),
         ({"label": "a period"}, "is no period label"),
         ({"repeat": 0}, "whole number of one or more"),
-        ({"destination": "https://me:token@example.org/model.git"}, "password"),
+        ({"destination": "https://user:password@example.org/model.git"}, "password"),
         (
             {"destination": "https://ghp_abcdef0123456789@github.com/me/model.git"},
             "user information before '@'",
@@ -644,12 +625,12 @@ PERIOD_WORDS = ("Every period", "Terminal period")
 def test_a_template_copied_under_another_key_names_that_key_in_its_files(repository):
     """Unit K, Task 12 (the usability walkthrough §4 item 17): a template
     copied under another key, by "new trellis" or by "add stage", names the
-    key on its stage file's `@stage:` line and, where it brings a methods
-    file, under that file's `stage:`, every other character of the
-    template kept, so that the stage and its methods file name the key the
-    tree and the recipe show, and the methods file binds the stage once its
-    slot names it; a template copied under its own key is copied byte for
-    byte."""
+    key on its stage file's `@stage:` line and, where it brings an
+    addition, on that file's `@methods:` line, every other character of the
+    template kept, so that the stage and its addition name the key the tree
+    and the recipe show, and the addition is unioned with the stage once
+    the recipe's row names it (decision S7-W2); a template copied under its
+    own key is copied byte for byte."""
     work, _ = repository
     created = creation.create_trellis(
         work,
@@ -666,16 +647,15 @@ def test_a_template_copied_under_another_key_names_that_key_in_its_files(reposit
         assert copied.split("\n", 1)[1] == source.split("\n", 1)[1]
     port = (declaration / "stages/port/port.bl").read_bytes()
     assert port == (CONS_PORT / "stages/port/port.bl").read_bytes()
-    methods = (declaration / "stages/discount/methods.yml").read_text(encoding="utf-8")
-    source = (CONS_PORT / "methods/disc.yml").read_text(encoding="utf-8")
-    assert methods == source.replace("stage: disc\n", "stage: discount\n", 1) != source
+    methods = (declaration / "stages/discount/methods.bl").read_text(encoding="utf-8")
+    source = (CONS_PORT / "stages/disc/methods.bl").read_text(encoding="utf-8")
+    assert methods == source.replace("@methods: disc\n", "@methods: discount\n", 1) != source
     recipe = declaration / "spec.yml"
     text = filled(recipe.read_text(encoding="utf-8"))
     for slot, written in (
         ("discount_calibration", "[calibration/portfolio]"),
         ("discount_settings", "[]"),
-        ("discount_methods", "[stages/discount/methods]"),
-        *((creation.slot_name("bequest", kind), "[]") for kind in creation.KINDS),
+        *((creation.slot_name("bequest", kind), "[]") for kind in creation.SLOT_KINDS),
     ):
         text = text.replace(f"[${slot}]", written)
     recipe.write_text(text, encoding="utf-8")
@@ -686,19 +666,17 @@ def test_a_template_copied_under_another_key_names_that_key_in_its_files(reposit
         ("discount", "discount"),
         ("bequest", "bequest"),
     ]
-    assert stages["discount"].bindings.methods is not None
+    assert stages["discount"].methods
     added = dict(creation.add_stage(created.folder, "renter", NOPORT_ID).new_files)
     stage = added["declaration/stages/renter/renter.bl"]
     assert stage == (CONS_PORT / "stages/noport/noport.bl").read_text(encoding="utf-8").replace(
         "@stage: noport\n", "@stage: renter\n", 1
     )
-    # the copy under the stage's folder names the block file's copy under
-    # `declaration/methods/` by its path from that folder (SE-29)
-    assert added["declaration/stages/renter/methods.yml"] == (
-        (CONS_PORT / "methods/noport.yml")
+    # the addition's copy names the key on its `@methods:` line
+    assert added["declaration/stages/renter/methods.bl"] == (
+        (CONS_PORT / "stages/noport/methods.bl")
         .read_text(encoding="utf-8")
-        .replace("stage: noport\n", "stage: renter\n", 1)
-        .replace("block: noport_envelope.bl", "block: ../../methods/noport_envelope.bl")
+        .replace("@methods: noport\n", "@methods: renter\n", 1)
     )
 
 
@@ -734,7 +712,7 @@ def test_new_trellis_writes_the_terminal_period_out_with_the_stages_marked_for_i
     assert creation.checklist(created.folder) == ()
     recipe = declaration / "spec.yml"
     text = filled(recipe.read_text(encoding="utf-8"))
-    for kind in creation.KINDS:
+    for kind in creation.SLOT_KINDS:
         text = text.replace(f"[${creation.slot_name('bequest', kind)}]", "[]")
     recipe.write_text(text, encoding="utf-8")
     read = load_recipe(declaration, "spec.yml")
@@ -832,16 +810,17 @@ def test_new_trellis_from_the_form_opens_the_recipe_and_offers_the_commit(
         for template_id in (PORT_ID, CONS_ID, DISC_ID):
             button(template_id).fire_event("click", {})
         brought = {
-            CONS_ID: "brings calibration/portfolio.yml, settings/cons_wide.yml, methods/cons.yml",
-            NOPORT_ID: "brings calibration/portfolio.yml, settings/noport.yml, methods/noport.yml",
+            CONS_ID: "brings calibration/portfolio.yml, settings/cons_wide.yml, stages/cons/methods.bl",
+            NOPORT_ID: "brings calibration/portfolio.yml, settings/noport.yml, stages/noport/methods.bl",
         }
         for template_id, text in brought.items():
             assert button(template_id).attributes["title"].endswith(f" · {text}")
-        # the pension worker brings its methods file (decision MB-V38)
+        # the pension worker brings its settings file and its addition
+        # (decision S7-W2)
         assert button(WORKER_ID).attributes["title"].endswith(
-            " · brings stages/worker_saving/methods.yml"
+            " · brings settings/worker_saving.yml, stages/worker_saving/methods.bl"
         )
-        disc_files = "brings calibration/portfolio.yml, methods/disc.yml"
+        disc_files = "brings calibration/portfolio.yml, stages/disc/methods.bl"
         assert button(DISC_ID).attributes["title"].endswith(f" · {disc_files}")
         disc = rendered.find(v.Html, attributes={"data-template": DISC_ID})
         enter_text(disc, "Stage key", "discount")
@@ -907,7 +886,7 @@ def test_new_trellis_form_asks_each_chosen_stage_for_the_periods_that_hold_it(
         assert terminal.find(v.Html, class_=calibration).widget.children == [""]
         # the terminal stage brings its methods file (decision MB-V38)
         assert button(rendered, TERMINAL_ID).attributes["title"].endswith(
-            " · brings stages/terminal/methods.yml"
+            " · brings stages/terminal/methods.bl"
         )
         assert not terminal.find(v.Html, tag="button", children=[PERIOD_WORDS[1]]).widgets
         enter_text(rendered, "Parent folder", str(work))
@@ -972,8 +951,13 @@ def test_add_stage_refuses_a_recipe_the_writer_cannot_extend_and_writes_nothing(
     the folder is unchanged on disk (spec 0.3 §3.2)."""
     folder = written_from_the_forms(tmp_path / "demo")
     recipe = folder / creation.factory_path(creation.RECIPE)
-    row = "  stage: stages/disc/disc.bl\n" + "".join(
-        f"  {kind}: {{all: [${creation.slot_name('disc', kind)}]}}\n" for kind in creation.KINDS
+    row = (
+        "  stage: stages/disc/disc.bl\n"
+        + "".join(
+            f"  {kind}: {{all: [${creation.slot_name('disc', kind)}]}}\n"
+            for kind in creation.SLOT_KINDS
+        )
+        + "  methods: {all: []}\n"
     )
     recipe.write_text(
         recipe.read_text(encoding="utf-8")
@@ -1010,33 +994,27 @@ def test_item_2_add_stage_copies_a_stage_and_its_companions(repository):
     assert [path for path, _ in added.new_files] == [
         "declaration/stages/noport/noport.bl",
         "declaration/settings/noport.yml",
-        "declaration/methods/noport_envelope.bl",
-        "declaration/stages/noport/methods.yml",
+        "declaration/stages/noport/methods.bl",
     ]
     new = dict(added.new_files)
     for path, source in (
         ("declaration/stages/noport/noport.bl", CONS_PORT / "stages/noport/noport.bl"),
-        ("declaration/stages/noport/methods.yml", CONS_PORT / "methods/noport.yml"),
+        ("declaration/stages/noport/methods.bl", CONS_PORT / "stages/noport/methods.bl"),
     ):
-        # the copy under the stage's folder names the block file's copy under
-        # `declaration/methods/` by its path from that folder (SE-29)
-        expected = source.read_bytes().replace(
-            b"block: noport_envelope.bl", b"block: ../../methods/noport_envelope.bl"
-        )
-        assert new[path].encode("utf-8") == expected
+        # copied under its own key, each file keeps every byte
+        assert new[path].encode("utf-8") == source.read_bytes()
     edited = [str(path.resolve()) for path in (recipe, period, answers)]
     assert list(added.edits) == list(added.read) == edited
     assert added.read == {path: Path(path).read_text(encoding="utf-8") for path in edited}
     assert added.edits[edited[0]] == (
-        added.read[edited[0]] + f"  noport: {creation.recipe_row('noport')}\n"
+        added.read[edited[0]] + NOPORT_ROW
     )
     assert added.edits[edited[1]] == added.read[edited[1]].replace(
         "  - disc\n", "  - disc\n  - noport\n"
     )
     assert added.notes == (
         "period.yml, stages: noport written, periods 0–5",
-        "new: stages/noport/noport.bl, settings/noport.yml, methods/noport_envelope.bl, "
-        "stages/noport/methods.yml",
+        "new: stages/noport/noport.bl, settings/noport.yml, stages/noport/methods.bl",
     )
     assert file_bytes(created.folder) == before
     assert creation.checklist(created.folder, added.edits) == ()
@@ -1074,7 +1052,7 @@ def other_project(parent: Path) -> Path:
     README.md titles the project `The other project`: the portfolio stage
     file `port.bl` and its page `port.md`; the four files a recipe binds,
     the calibration `calibration.yml` and the settings `wide.yml` of
-    cons-port's port, and the methods file `methods.yml` of the portfolio
+    cons-port's port, and the addition `methods.bl` of the portfolio
     model's port; and `notes.yml`, whose one top key names no kind."""
     project = parent / "other-project"
     folder = project / "declaration/stages/port"
@@ -1085,7 +1063,7 @@ def other_project(parent: Path) -> Path:
         ("port.md", PORT_FOLDER / "port.md"),
         ("calibration.yml", CONS_PORT / "calibration/portfolio.yml"),
         ("wide.yml", CONS_PORT / "settings/port_wide.yml"),
-        ("methods.yml", PORT_FOLDER / "methods.yml"),
+        ("methods.bl", PORT_FOLDER / "methods.bl"),
     ):
         (folder / name).write_bytes(source.read_bytes())
     (folder / "notes.yml").write_text("notes: [the grid is wide]\n", encoding="utf-8")
@@ -1098,11 +1076,12 @@ def test_k_a_stage_folder_of_the_disk_is_copied_as_a_template_with_its_origin(
     """Unit K, Task 25 (K-D26): a stage folder of another project, given by
     its full path, is read as a template of the corpus is read: its key the
     folder's name, its stage file, its project's title, the parameters the
-    stage declares, and the calibration, settings and methods files of the
-    folder, each told by its one top key, a page and a YAML file of another
-    key brought by none. "Add stage" copies it under another key through the
-    template's writers, writing nothing: the stage file and the methods
-    file in the stage's folder, naming the key, the calibration and the
+    stage declares, and the calibration and settings files of the folder,
+    each told by its one top key, and its addition, told by its first line,
+    a page and a YAML file of another key brought by none. "Add stage"
+    copies it under another key through the template's writers, writing
+    nothing: the stage file and the addition in the stage's folder, naming
+    the key, the calibration and the
     settings under `calibration/` and `settings/`; the recipe and the period
     file edited as for a template, neither naming the origin; and
     answers.yml records, in place of a template's id, the path as given and
@@ -1119,9 +1098,9 @@ def test_k_a_stage_folder_of_the_disk_is_copied_as_a_template_with_its_origin(
     assert record.companions == {
         "calibration": ((folder / "calibration.yml").resolve(),),
         "settings": ((folder / "wide.yml").resolve(),),
-        "methods": ((folder / "methods.yml").resolve(),),
+        "methods": ((folder / "methods.bl").resolve(),),
     }
-    assert creation.brought_files(record) == ("calibration.yml", "wide.yml", "methods.yml")
+    assert creation.brought_files(record) == ("calibration.yml", "wide.yml", "methods.bl")
     work, _ = repository
     created = creation.create_trellis(work, "lifecycle-demo", list(DEMO_STAGES), "demo_period", 6)
     before, origin_before = file_bytes(created.folder), file_bytes(disk)
@@ -1131,16 +1110,16 @@ def test_k_a_stage_folder_of_the_disk_is_copied_as_a_template_with_its_origin(
         "declaration/stages/renter/renter.bl",
         "declaration/calibration/calibration.yml",
         "declaration/settings/wide.yml",
-        "declaration/stages/renter/methods.yml",
+        "declaration/stages/renter/methods.bl",
     ]
     assert all(not Path(path).is_absolute() and ".." not in Path(path).parts for path in new)
     source = (folder / "port.bl").read_text(encoding="utf-8")
     assert new["declaration/stages/renter/renter.bl"] == source.replace(
         "@stage: port\n", "@stage: renter\n", 1
     )
-    methods = (folder / "methods.yml").read_text(encoding="utf-8")
-    assert new["declaration/stages/renter/methods.yml"] == methods.replace(
-        "stage: port\n", "stage: renter\n", 1
+    methods = (folder / "methods.bl").read_text(encoding="utf-8")
+    assert new["declaration/stages/renter/methods.bl"] == methods.replace(
+        "@methods: port\n", "@methods: renter\n", 1
     )
     for path, name in (
         ("declaration/calibration/calibration.yml", "calibration.yml"),
@@ -1153,22 +1132,23 @@ def test_k_a_stage_folder_of_the_disk_is_copied_as_a_template_with_its_origin(
     )
     assert list(added.edits) == [recipe, period, answers]
     assert added.edits[recipe] == (
-        added.read[recipe] + f"  renter: {creation.recipe_row('renter')}\n"
+        added.read[recipe]
+        + f"  renter: {creation.recipe_row('renter', ('stages/renter/methods.bl',))}\n"
     )
     assert all(given not in added.edits[path] for path in (recipe, period))
     assert entry_value(added.edits[answers], "stages.renter") == {
         "origin": given,
         "sha256": {
             name: sha256_of(folder / name)
-            for name in ("port.bl", "calibration.yml", "wide.yml", "methods.yml")
+            for name in ("port.bl", "calibration.yml", "wide.yml", "methods.bl")
         },
     }
     slots = entry_value(added.edits[answers], "required.slots")
-    assert slots[-3:] == [creation.slot_name("renter", kind) for kind in creation.KINDS]
+    assert slots[-2:] == [creation.slot_name("renter", kind) for kind in creation.SLOT_KINDS]
     assert added.notes == (
         "period.yml, stages: renter written, periods 0–5",
         "new: stages/renter/renter.bl, calibration/calibration.yml, settings/wide.yml, "
-        "stages/renter/methods.yml",
+        "stages/renter/methods.bl",
     )
     assert file_bytes(created.folder) == before
     assert file_bytes(disk) == origin_before
@@ -1217,9 +1197,10 @@ def test_k_a_stage_file_given_itself_brings_no_companion_from_a_folder_of_its_ow
 def test_k_a_folder_that_holds_no_single_stage_file_is_refused(tmp_path):
     """Unit K, Task 25 (K-D26): `folder_template` refuses, each in one
     sentence that names the path as given, a folder that holds no `.bl`
-    file, one that holds two, a file that is no `.bl` file, a path that
-    names nothing, a path that is not full, and a folder that holds two
-    methods files, since a stage's folder holds one."""
+    file, one that holds two stage files, a file that is no `.bl` file, a
+    path that names nothing, a path that is not full, a folder that holds
+    an addition and no stage file, and the path of an addition, which is
+    no stage file (decision S7-W11)."""
     empty = tmp_path / "empty"
     empty.mkdir()
     (empty / "notes.yml").write_text("notes: []\n", encoding="utf-8")
@@ -1227,23 +1208,22 @@ def test_k_a_folder_that_holds_no_single_stage_file_is_refused(tmp_path):
     two.mkdir()
     for name in ("a.bl", "b.bl"):
         (two / name).write_bytes((PORT_FOLDER / "port.bl").read_bytes())
-    methods = tmp_path / "methods"
-    methods.mkdir()
-    (methods / "port.bl").write_bytes((PORT_FOLDER / "port.bl").read_bytes())
-    for name in ("fast.yml", "methods.yml"):
-        (methods / name).write_bytes((PORT_FOLDER / "methods.yml").read_bytes())
+    addition = tmp_path / "addition"
+    addition.mkdir()
+    (addition / "methods.bl").write_text("@methods: port\n", encoding="utf-8")
     for path, sentence in (
-        (str(empty), f"{empty} holds no .bl file"),
+        (str(empty), f"{empty} holds no stage file"),
         (
             str(two),
-            f"{two} holds 2 .bl files, a.bl and b.bl: give the path of the one to copy",
+            f"{two} holds 2 stage files, a.bl and b.bl: give the path of the one to copy",
         ),
         (str(empty / "notes.yml"), f"{empty / 'notes.yml'} is no .bl file"),
         (str(tmp_path / "nowhere"), f"{tmp_path / 'nowhere'} does not exist"),
         ("stages/port", "stages/port is no full path: write it from / or from ~"),
+        (str(addition), f"{addition} holds no stage file"),
         (
-            str(methods),
-            f"{methods} holds 2 methods files, fast.yml and methods.yml, and a stage brings one",
+            str(addition / "methods.bl"),
+            f"{addition / 'methods.bl'} is an addition, not a stage file",
         ),
     ):
         with pytest.raises(ValueError) as refused:
@@ -1330,7 +1310,7 @@ def test_l_each_folder_of_the_library_that_holds_one_stage_file_is_a_stage_of_it
         (str(library / "port"), str(library / "port"), "port", "Portfolio share"),
     ]
     assert stages[1].calibration == creation.template_of(PORT_ID).calibration
-    assert [creation.brought_files(stage) for stage in stages] == [(), ("methods.yml",)]
+    assert [creation.brought_files(stage) for stage in stages] == [(), ("methods.bl",)]
     assert file_bytes(library) == before
     (library / "port/README.md").write_text(
         "---\ntitle: The share of risky assets\n---\n", encoding="utf-8"
@@ -1478,7 +1458,7 @@ def test_add_stage_edits_the_unsaved_recipe_in_its_buffer(repository, app_state)
     editor applies it the form closes and the status line names the period
     file, the periods it writes and the new files. No file the folder held
     changes on disk, and once the editor's change event brings the recipe's
-    new text, the checklist, read from the buffers, lists none of its twelve
+    new text, the checklist, read from the buffers, lists none of its eight
     slots (K-D29)."""
     work, _ = repository
     created = creation.create_trellis(work, "lifecycle-demo", list(DEMO_STAGES), "demo_period", 6)
@@ -1518,7 +1498,7 @@ def test_add_stage_edits_the_unsaved_recipe_in_its_buffer(repository, app_state)
         assert request["n"] != confirm["n"] and app.form_open.value == "add stage"
         new = applied(typed, [model.Replacement(**edit) for edit in request["edits"]])
         assert request["expected"] == typed and new.endswith("# typed\n")
-        assert f"  noport: {creation.recipe_row('noport')}\n" in new
+        assert NOPORT_ROW in new
         app.on_applied({**answer, "n": request["n"], "applied": True})
         assert (app.form_open.value, app.form_error.value, app.gesturing.value) == (None, "", None)
         on_disk = (created.folder / period).read_text(encoding="utf-8")
@@ -1528,14 +1508,13 @@ def test_add_stage_edits_the_unsaved_recipe_in_its_buffer(repository, app_state)
         assert "    - noport_calibration\n" in app.buffers.value[creation.ANSWERS]["text"]
         assert app.gesture_note.value["sentence"] == (
             "period.yml, stages: noport written, periods 0–5; new: stages/noport/noport.bl, "
-            "settings/noport.yml, methods/noport_envelope.bl, stages/noport/methods.yml"
+            "settings/noport.yml, stages/noport/methods.bl"
         )
         after = file_bytes(created.folder)
         assert {path: after[path] for path in before} == before
         assert sorted(set(after) - set(before)) == [
-            "declaration/methods/noport_envelope.bl",
             "declaration/settings/noport.yml",
-            "declaration/stages/noport/methods.yml",
+            "declaration/stages/noport/methods.bl",
             "declaration/stages/noport/noport.bl",
         ]
         app.on_change({**editor, "text": new})
@@ -1594,21 +1573,19 @@ def test_the_writers_edit_answers_only_where_it_exists(tmp_path):
     before = file_bytes(folder)
     assert creation.can_add(folder) and creation.period_files(folder) == ("period.yml",)
     stage = creation.add_stage(folder, "worker", WORKER_ID)
-    # the pension worker brings its methods file and the two block files it
-    # names (decision MB-V38)
+    # the pension worker brings its settings file and its addition (decision
+    # S7-W2)
     brought = [
         "declaration/stages/worker/worker.bl",
-        "declaration/methods/worker_saving_foc.bl",
-        "declaration/methods/marginals_worker_saving.bl",
-        "declaration/stages/worker/methods.yml",
+        "declaration/settings/worker_saving.yml",
+        "declaration/stages/worker/methods.bl",
     ]
     assert [path for path, _ in stage.new_files] == brought
     edited = [str((declaration / name).resolve()) for name in ("spec.yml", "period.yml")]
     assert list(stage.edits) == edited
     assert stage.notes == (
         "period.yml, stages: worker written, periods 0–5",
-        "new: stages/worker/worker.bl, methods/worker_saving_foc.bl, "
-        "methods/marginals_worker_saving.bl, stages/worker/methods.yml",
+        "new: stages/worker/worker.bl, settings/worker_saving.yml, stages/worker/methods.bl",
     )
     keys = ("port", "cons", "disc")
     assert creation.recipe_keys(folder) == keys
@@ -1703,7 +1680,7 @@ PAGE_HEADER = re.compile(r"^\[id=(\w+), .*\) : !(\w+) -> .*\) : !(\w+)\] \{$", r
 BUYER_SOURCES = {
     "calibration": ("declaration/calibration/buyer.yml", "calibration: {}\n"),
     "settings": ("declaration/settings/buyer.yml", "settings: {}\n"),
-    "methods": ("declaration/stages/buyer/methods.yml", "stage: buyer\nmethods: []\n"),
+    "methods": ("declaration/stages/buyer/methods.bl", "@methods: buyer\n"),
 }
 
 
@@ -1712,7 +1689,7 @@ def test_new_stage_answers_the_empty_stage_and_the_recipe_s_row(tmp_path):
     model, a recipe folder with no answers.yml, "new stage" answers, writing
     nothing, the stage file declaration/stages/buyer/buyer.bl, the stage's
     line and the four block headers as the page Stages writes them, each
-    with no field; the recipe with the stage's row and its three slots
+    with no field; the recipe with the stage's row and its two slots
     added, by its resolved path with the text it was made from; and
     the status line's parts. No slot of the edited text is a checklist
     entry (K-D29). The file parses, each block holding the equation `0 = 0`,
@@ -1771,10 +1748,11 @@ def test_new_stage_answers_the_empty_stage_and_the_recipe_s_row(tmp_path):
 
 def test_new_stage_adds_its_slots_to_answers_where_it_exists(repository):
     """K-D7: in a folder "new trellis" wrote, whose answers.yml lists the
-    slots the form wrote, "new stage" adds the new stage's three slots to
-    answers.yml's `required.slots` and no entry to its `stages`, which
-    records the templates copied; the checklist lists none of the twelve
-    slots (K-D29). Once the
+    slots the form wrote, "new stage" adds the new stage's two slots, its
+    calibration and its settings (decision S7-F3), to answers.yml's
+    `required.slots` and no entry to its `stages`, which records the
+    templates copied; the checklist lists none of the eight slots (K-D29).
+    Once the
     files are written, the factory refuses the recipe, which names a stage
     that no period holds, in its own sentence, until a period's list names
     the key."""
@@ -1784,7 +1762,7 @@ def test_new_stage_adds_its_slots_to_answers_where_it_exists(repository):
     paths = (created.folder / "declaration/spec.yml", created.folder / creation.ANSWERS)
     edited = [str(path.resolve()) for path in paths]
     assert list(added.edits) == list(added.read) == edited
-    slots = "".join(f"    - {creation.slot_name('buyer', kind)}\n" for kind in creation.KINDS)
+    slots = "".join(f"    - {creation.slot_name('buyer', kind)}\n" for kind in creation.SLOT_KINDS)
     assert added.edits[edited[1]] == added.read[edited[1]].replace(
         "  connectors: []\n", f"{slots}  connectors: []\n"
     )
@@ -1798,13 +1776,14 @@ def test_new_source_file_answers_the_empty_file_of_each_kind_at_its_place(tmp_pa
     """K-D7 (plan, Task 9): for the stage buyer, the file "new file" writes
     for each binding kind, answered and not written, at the folder's
     conventional place, declaration/calibration/buyer.yml,
-    declaration/settings/buyer.yml and the stage's methods file
-    declaration/stages/buyer/methods.yml, each the one top key of its kind
-    with nothing under it, the methods file also naming its stage. Written
-    and bound after the portfolio stage's own files, the calibration and
-    the settings add no value, and the package's reader of a methods source
-    reads no entry. A file that exists, a kind that is none of the three
-    and a key that is no stage key are refused."""
+    declaration/settings/buyer.yml, each the one top key of its kind with
+    nothing under it, and the stage's addition
+    declaration/stages/buyer/methods.bl, its first line alone, which names
+    the stage it is unioned with. Written and bound after the portfolio
+    stage's own files, the calibration and the settings add no value, and
+    the addition is one the Workbench lists for a methods cell. A file that
+    exists, a kind that is none of the three and a key that is no stage key
+    are refused."""
     folder = repository_copy(PORTFOLIO_CHOICE, tmp_path / "portfolio-choice")
     before = file_bytes(folder)
     answered = {kind: creation.new_source_file(folder, "buyer", kind) for kind in creation.KINDS}
@@ -1824,8 +1803,8 @@ def test_new_source_file_answers_the_empty_file_of_each_kind_at_its_place(tmp_pa
     )
     bound = load_recipe(declaration, "spec.yml")["periods"][0]["stages"]["port"]
     assert (bound["calibration"], bound["settings"]) == (port["calibration"], port["settings"])
-    assert load_methods(folder / BUYER_SOURCES["methods"][0]) == {"stage": "buyer", "methods": []}
-    with pytest.raises(ValueError, match="declaration/stages/buyer/methods.yml exists"):
+    assert model.is_addition_file(folder / BUYER_SOURCES["methods"][0])
+    with pytest.raises(ValueError, match="declaration/stages/buyer/methods.bl exists"):
         creation.new_source_file(folder, "buyer", "methods")
     with pytest.raises(ValueError, match="'grid' is no binding kind"):
         creation.new_source_file(folder, "buyer", "grid")
@@ -1927,17 +1906,50 @@ def test_new_stage_from_the_folder_bar_writes_the_stage_and_opens_it(
         app.sources.value, app.tree.value = [], []
 
 
-def test_l_17_new_stage_stays_open_where_its_recipe_changed_on_disk_before_the_save(
+def test_new_stage_refuses_a_changed_period_before_writing(tmp_path, app_state, monkeypatch):
+    folder = creation.create_trellis(tmp_path, "inventory", [], "year", 2).folder
+    app_state(folder)
+    path = "declaration/period.yml"
+    period = folder / path
+    recipe = folder / RECIPE_FILE
+    original = recipe.read_bytes()
+    other = period.read_text(encoding="utf-8") + "# written by another program\n"
+    app.open_file(path)
+    editor = app.buffers.value[path]
+    new_stage = creation.new_stage
+
+    def changed_after(*args, **kwargs):
+        added = new_stage(*args, **kwargs)
+        period.write_text(other, encoding="utf-8")
+        return added
+
+    monkeypatch.setattr(creation, "new_stage", changed_after)
+    try:
+        app.open_form("new stage")
+        app.submit_new_stage("inventory", "period.yml")
+        answer = {"path": path, "revision": editor["document_revision"]}
+        app.on_change({**answer, "text": editor["text"]})
+        app.on_applied({**answer, "n": app.edit_request.value["n"], "applied": True})
+        if app.gesturing.value is not None:
+            app.on_applied({**answer, "n": app.edit_request.value["n"], "applied": True})
+        assert app.form_open.value == "new stage"
+        assert path in app.form_error.value
+        assert recipe.read_bytes() == original
+        assert period.read_text(encoding="utf-8") == other
+        assert not (folder / "declaration/stages/inventory").exists()
+    finally:
+        clear_gesture_state()
+        clear_trellis_state()
+
+
+def test_l_17_new_stage_opens_the_unsaved_file_if_it_changes_during_the_write(
     scratch_folder, app_state, monkeypatch
 ):
     """Unit L, Task 17 (unit L's final judgment, §6 item 6): where the
     recipe changes on disk after `new stage` applied its row to the
     recipe's buffer and before the save, as a write by another program
-    changes it, the save writes nothing over that text: the form stays
-    open with the sentence `declaration/spec.yml: the file changed on
-    disk`, the status line prints no note of a write, the recipe on disk
-    holds the other program's text, its buffer holds the row unsaved, and
-    no file opens."""
+    changes it, the recipe on disk keeps the other program's text. The
+    editor opens the unsaved recipe and the status says the stage exists."""
     app_state(scratch_folder)
     app.source.value = None
     written = scratch_folder / RECIPE_FILE
@@ -1953,15 +1965,13 @@ def test_l_17_new_stage_stays_open_where_its_recipe_changed_on_disk_before_the_s
     try:
         app.open_form("new stage")
         app.submit_new_stage("buyer")
-        assert (app.form_open.value, app.form_error.value) == (
-            "new stage",
-            f"{RECIPE_FILE}: the file changed on disk",
-        )
-        assert (app.gesture_note.value, app.gesturing.value, app.open_path.value) == (
-            None,
-            None,
-            None,
-        )
+        assert app.form_open.value is None
+        assert app.gesturing.value is None
+        assert app.open_path.value == RECIPE_FILE
+        stage = "declaration/stages/buyer/buyer.bl"
+        assert (scratch_folder / stage).is_file()
+        assert stage in app.gesture_note.value["sentence"]
+        assert f"{RECIPE_FILE}: the file changed on disk" in app.gesture_note.value["sentence"]
         assert written.read_text(encoding="utf-8") == other
         held = app.buffers.value[RECIPE_FILE]
         assert held["text"].endswith(f"  buyer: {creation.recipe_row('buyer')}\n")
@@ -1978,21 +1988,23 @@ def test_new_file_in_a_slot_s_cell_writes_the_empty_file_and_fills_the_slot(
 ):
     """K-D7 (plan, Task 9), on the Recipe tab of unit M's Task 10 (AAS,
     M-D17; design pass 9 §§3 and 4): in the lifecycle registry's recipe,
-    the slot `$cons_method` of the methods of `cons`, whose methods file the
-    folder does not hold, has in cons's row opened by a click (design pass
-    11 §2) the icon button `New file` at the right of its select (unit N,
-    Task 2; design pass 10 §4), its hover naming the file it writes. Where
-    the recipe's text no longer writes the slot, it is refused in the
-    writer's sentence, its button marked, and nothing is written. Otherwise
-    it writes declaration/stages/cons/methods.yml, the empty methods file of
-    cons, writes its name in the slot's place in the recipe's buffer, one
-    edit of it, the recipe on disk unchanged, and opens the new file in the
-    editor. A slot whose file the folder holds, and an entry that is no
-    slot, have no `New file`, cons's row and port's opened in turn."""
+    the slot `$disc_settings` of the settings of `disc`, whose settings
+    file the folder does not hold, has in disc's row opened by a click
+    (design pass 11 §2) the icon button `New file` at the right of its
+    select (unit N, Task 2; design pass 10 §4), its hover naming the file it
+    writes. Where the recipe's text no longer writes the slot, it is refused
+    in the writer's sentence, its button marked, and nothing is written.
+    Otherwise it writes declaration/settings/disc.yml, the empty settings
+    file of disc, writes its name in the slot's place in the recipe's
+    buffer, one edit of it, the recipe on disk unchanged, and opens the new
+    file in the editor. A slot whose file the folder holds, and an entry
+    that is no slot, have no `New file`, disc's row and cons's opened in
+    turn; a methods list names additions and no slot (decision S7-F3), so
+    no row offers `New file` for the methods."""
     folder = model.open_folder(scratch_lifecycle)
     shown = Source("recipe", RECIPE_FILE)
-    methods = "declaration/stages/cons/methods.yml"
-    address = "stages.cons.methods.all[0]"
+    settings = "declaration/settings/disc.yml"
+    address = "stages.disc.settings.all[0]"
     recipe = scratch_lifecycle / RECIPE_FILE
     original = recipe.read_text(encoding="utf-8")
     app_state(scratch_lifecycle)
@@ -2003,17 +2015,17 @@ def test_new_file_in_a_slot_s_cell_writes_the_empty_file_and_fills_the_slot(
         _, rendered = solara.render(app.RecipeRegion(), handle_error=False)
         try:
             assert rendered.find(v.Html, class_="bl-new-file").widgets == []
-            open_rendered_recipe_row(rendered, "cons")
+            open_rendered_recipe_row(rendered, "disc")
             (button,) = rendered.find(v.Html, class_="bl-new-file").widgets
             assert (
                 button.tag,
                 button.attributes["label"],
                 button.attributes["title"],
                 button.attributes["data-address"],
-            ) == ("vscode-toolbar-button", "New file", f"Write {methods}", address)
+            ) == ("vscode-toolbar-button", "New file", f"Write {settings}", address)
             # the recipe's buffer no longer writes the slot
             on_disk = model.read_file(folder, RECIPE_FILE)
-            changed = original.replace("[$cons_method]", "[methods/cons]")
+            changed = original.replace("[$disc_settings]", "[settings/disc]")
             app.buffers.value = {
                 RECIPE_FILE: {
                     "text": changed,
@@ -2027,7 +2039,7 @@ def test_new_file_in_a_slot_s_cell_writes_the_empty_file_and_fills_the_slot(
             button.fire_event("click", {})
             refused = app.choice_refusal.value
             assert (refused["sentence"], refused["address"], refused["control"]) == (
-                f"the file no longer writes $cons_method at {address}",
+                f"the file no longer writes $disc_settings at {address}",
                 address,
                 "new file",
             )
@@ -2041,19 +2053,18 @@ def test_new_file_in_a_slot_s_cell_writes_the_empty_file_and_fills_the_slot(
         finally:
             rendered.close()
         assert app.choice_refusal.value is None
-        assert (scratch_lifecycle / methods).read_text(encoding="utf-8") == (
-            "stage: cons\nmethods: []\n"
-        )
+        assert (scratch_lifecycle / settings).read_text(encoding="utf-8") == "settings: {}\n"
         written = app.buffers.value[RECIPE_FILE]["text"]
-        assert entry_value(written, address) == "stages/cons/methods"
-        assert written == original.replace("[$cons_method]", "[stages/cons/methods]")
+        assert entry_value(written, address) == "settings/disc"
+        assert written == original.replace("[$disc_settings]", "[settings/disc]")
         assert recipe.read_text(encoding="utf-8") == original
-        assert app.open_path.value == methods
-        # the slot's file now stands, and port's entries are no slots
+        assert app.open_path.value == settings
+        # the slot's file now stands, and the entries of cons and port are
+        # no slots
         app.open_path.value, app.buffers.value = None, {}
         _, rendered = solara.render(app.RecipeRegion(), handle_error=False)
         try:
-            for key in ("cons", "port"):
+            for key in ("disc", "cons", "port"):
                 open_rendered_recipe_row(rendered, key)
                 assert rendered.find(v.Html, class_="bl-new-file").widgets == [], key
         finally:
@@ -2240,7 +2251,7 @@ def test_a_standing_mapping_is_expanded_where_the_new_periods_stages_differ(repo
     recipe = restricted.folder / "declaration/spec.yml"
     recipe.write_text(
         recipe.read_text(encoding="utf-8").replace(
-            "{all: [$disc_methods]}}", "{all: [$disc_methods]}, periods: [0, 0]}"
+            "disc/methods.bl]}}", "disc/methods.bl]}, periods: [0, 0]}"
         ),
         encoding="utf-8",
     )
@@ -2349,8 +2360,8 @@ def test_ranges_and_range_keys_at_or_above_the_new_index_rise_by_one(repository)
             "{all: [$cons_calibration]}",
             '{all: [$cons_calibration], "0-2": [$cons_late], "3-5": [$cons_early]}',
         )
-        .replace("{all: [$port_methods]}}", "{all: [$port_methods]}, periods: [2, 5]}")
-        .replace("{all: [$disc_methods]}}", "{all: [$disc_methods]}, periods: [1, 3]}"),
+        .replace("port/methods.bl]}}", "port/methods.bl]}, periods: [2, 5]}")
+        .replace("disc/methods.bl]}}", "disc/methods.bl]}, periods: [1, 3]}"),
         encoding="utf-8",
     )
 
@@ -2518,8 +2529,8 @@ def test_a_range_that_excludes_the_target_period_is_widened(repository):
     recipe = declaration / "spec.yml"
     recipe.write_text(
         recipe.read_text(encoding="utf-8")
-        .replace("{all: [$port_methods]}}", "{all: [$port_methods]}, periods: [5, 5]}")
-        .replace("{all: [$disc_methods]}}", "{all: [$disc_methods]}, periods: [0, 2]}"),
+        .replace("port/methods.bl]}}", "port/methods.bl]}, periods: [5, 5]}")
+        .replace("disc/methods.bl]}}", "disc/methods.bl]}, periods: [0, 2]}"),
         encoding="utf-8",
     )
     text = recipe.read_text(encoding="utf-8")
@@ -2605,7 +2616,7 @@ def test_a_variant_changes_its_own_three_files_and_nothing_of_the_first_recipe(r
     recipe = declaration / "spec.yml"
     recipe.write_text(
         recipe.read_text(encoding="utf-8").replace(
-            "{all: [$disc_methods]}}", "{all: [$disc_methods]}, periods: [0, 3]}"
+            "disc/methods.bl]}}", "disc/methods.bl]}, periods: [0, 3]}"
         ),
         encoding="utf-8",
     )
@@ -2795,16 +2806,13 @@ RECORDS_SOURCE = Source("trellis", PORT_CONS_RECORDS)
 NOPORT_FILES = (
     "declaration/stages/noport/noport.bl",
     "declaration/settings/noport.yml",
-    # the block file of the no-portfolio stage's marginal block, which its
-    # methods file names (28 October 2026)
-    "declaration/methods/noport_envelope.bl",
-    "declaration/stages/noport/methods.yml",
+    "declaration/stages/noport/methods.bl",
 )
 # the status line's part that names those files (brief §5)
-NOPORT_NEW = (
-    "new: stages/noport/noport.bl, settings/noport.yml, methods/noport_envelope.bl, "
-    "stages/noport/methods.yml"
-)
+NOPORT_NEW = "new: stages/noport/noport.bl, settings/noport.yml, stages/noport/methods.bl"
+# the recipe's row of the no-portfolio stage, which names the addition its
+# template brings (decision S7-W17)
+NOPORT_ROW = f"  noport: {creation.recipe_row('noport', ('stages/noport/methods.bl',))}\n"
 # the item that ends the stage list of a recipe's trellis, which opens the
 # form "add stage" on a folder of the disk (unit K, Task 25; K-D26), its
 # words in sentence case since design pass 13 §3
@@ -2854,7 +2862,7 @@ def test_item_5_cases_a_template_dropped_on_a_period(repository, own_cache_folde
     assert [path for path, _ in gesture.new_files] == list(NOPORT_FILES)
     assert list(gesture.edits) == list(gesture.read) == [recipe, period, answers]
     assert gesture.read == {path: Path(path).read_text(encoding="utf-8") for path in gesture.read}
-    row = f"  noport: {creation.recipe_row('noport')}\n"
+    row = NOPORT_ROW
     assert gesture.edits[recipe] == gesture.read[recipe] + row
     assert gesture.edits[period] == gesture.read[period].replace(
         "  - disc\n", "  - disc\n  - noport\n"
@@ -2924,7 +2932,7 @@ def test_item_5_cases_a_folder_stage_dropped_on_a_period_that_lists_it_and_one_t
     spec = declaration / "spec.yml"
     spec.write_text(
         spec.read_text(encoding="utf-8").replace(
-            "{all: [$port_methods]}}", "{all: [$port_methods]}, periods: [0, 5]}"
+            "port/methods.bl]}}", "port/methods.bl]}, periods: [0, 5]}"
         ),
         encoding="utf-8",
     )
@@ -3175,18 +3183,16 @@ def test_item_5_cases_a_recipe_folder_without_answers(tmp_path, own_cache_folder
     assert gesture.edits[trellis_file] == gesture.read[trellis_file].replace(
         listed + "]", listed + ", noport]"
     )
-    assert gesture.edits[recipe].endswith(f"  noport: {creation.recipe_row('noport')}\n")
+    assert gesture.edits[recipe].endswith(NOPORT_ROW)
     assert [path for path, _ in gesture.new_files] == [
         "declaration/stages/noport/noport.bl",
         "declaration/calibration/portfolio.yml",
         "declaration/settings/noport.yml",
-        "declaration/methods/noport_envelope.bl",
-        "declaration/stages/noport/methods.yml",
+        "declaration/stages/noport/methods.bl",
     ]
     assert (gesture.note, gesture.file, gesture.address) == (
         "trellis.yml, periods[0].stages: noport written, periods 0; new: stages/noport/noport.bl, "
-        "calibration/portfolio.yml, settings/noport.yml, methods/noport_envelope.bl, "
-        "stages/noport/methods.yml; "
+        "calibration/portfolio.yml, settings/noport.yml, stages/noport/methods.bl; "
         "noport unconnected",
         trellis_file,
         "periods[0].stages",
@@ -3387,6 +3393,7 @@ def test_new_variant_from_the_page_writes_the_variant_and_opens_its_recipe(
     _, rendered = solara.render(app.NewVariantForm(), handle_error=False)
     try:
         enter_text(rendered, "Name", "two-stages")
+        enter_text(rendered, "Binding files", "Share binding files")
         press_words(rendered, "Write the variant")
     finally:
         rendered.close()
@@ -3423,6 +3430,86 @@ def test_new_variant_refuses_while_a_file_it_copies_holds_unsaved_text(scratch_p
     assert app.buffers.value[recipe]["text"].endswith("# typed\n")
 
 
+def test_independent_variant_keeps_order_shared_files_and_copies_methods_bl_as_methods_variant_bl(
+    scratch_folder,
+):
+    declaration = scratch_folder / "declaration"
+    calibration = declaration / "calibration/portfolio.yml"
+    parent = declaration / "calibration/returns.yml"
+    parent.write_text("calibration: {R: 1.02}\n", encoding="utf-8")
+    calibration.write_text(
+        "parent: calibration/returns\n" + calibration.read_text().replace("  R: 1.02\n", ""),
+        encoding="utf-8",
+    )
+    registry = declaration / "calibration/age.yml"
+    registry.write_text("calibration: {age: 25}\n", encoding="utf-8")
+    recipe = declaration / "spec.yml"
+    recipe.write_text(
+        recipe.read_text().replace("calibration/portfolio]", "calibration/portfolio.yml]", 1)
+        + "registry: {calibration: [calibration/age]}\n",
+        encoding="utf-8",
+    )
+    before = file_bytes(scratch_folder)
+    written = creation.create_variant(scratch_folder, "alternative", "spec.yml", copy_bindings=True)
+    assert written[0] == "declaration/spec.alternative.yml"
+    assert all((scratch_folder / path).read_bytes() == data for path, data in before.items())
+
+    base = load_recipe(declaration, "spec.yml")
+    variant = load_recipe(declaration, "spec.alternative.yml")
+    assert variant["registry"] == base["registry"]
+    old_registry = base["provenance"]["registry"]["calibration"][0]["path"]
+    new_registry = variant["provenance"]["registry"]["calibration"][0]["path"]
+    assert new_registry != old_registry
+    stages = variant["periods"][0]["stages"]
+    sources = {key: stage["provenance"]["source_lists"] for key, stage in stages.items()}
+    assert len({source["calibration"][0]["path"] for source in sources.values()}) == 1
+    copied = sources["cons"]["calibration"][0]
+    assert copied["path"] != str(calibration)
+    assert copied["parents"][0] != str(parent)
+    for key, stage in stages.items():
+        assert stage["calibration"] == base["periods"][0]["stages"][key]["calibration"]
+        assert stage["settings"] == base["periods"][0]["stages"][key]["settings"]
+    old_methods = declaration / "stages/cons/methods.bl"
+    new_methods = Path(sources["cons"]["methods"][0]["path"])
+    assert new_methods == declaration / "stages/cons/methods.alternative.bl"
+    assert new_methods.read_bytes() == old_methods.read_bytes()
+    assert "!egm" in str(specify_trellis(variant)["periods"][0]["stages"]["cons"].methods)
+
+
+def test_independent_variant_refuses_an_unsupported_source_before_writing(scratch_folder):
+    declaration = scratch_folder / "declaration"
+    original = declaration / "calibration/portfolio.yml"
+    original.rename(original.with_suffix(""))
+    before = file_bytes(scratch_folder)
+    with pytest.raises(ValueError, match=r"cannot copy calibration source .*/calibration/portfolio"):
+        creation.create_variant(scratch_folder, "alternative", "spec.yml", copy_bindings=True)
+    assert file_bytes(scratch_folder) == before
+
+
+def test_independent_variant_refuses_dirty_binding_before_writing(scratch_folder, app_state):
+    path = "declaration/calibration/portfolio.yml"
+    app_state(scratch_folder)
+    app.open_file(path)
+    held = app.buffers.value[path]
+    app.buffers.value = {path: {**held, "text": held["text"] + "# typed\n"}}
+    before = file_bytes(scratch_folder)
+    app.submit_new_variant("alternative", copy_bindings=True)
+    assert app.form_error.value == f"{path} holds unsaved text"
+    assert file_bytes(scratch_folder) == before
+
+
+def test_handover_notebook_reads_the_named_variant_and_keeps_existing_notebooks(scratch_folder):
+    base = creation.write_notebook(scratch_folder, RECIPE_FILE, "recipe")
+    original = (scratch_folder / base).read_bytes()
+    variant, *_ = creation.create_variant(scratch_folder, "alternative", "spec.yml")
+    copied = creation.write_notebook(scratch_folder, variant, "recipe")
+    assert copied is not None and copied != base
+    notebook = nbformat.read(scratch_folder / copied, as_version=4)
+    assert f'"../{variant}"' in notebook.cells[0].source
+    assert creation.write_notebook(scratch_folder, variant, "recipe") is None
+    assert (scratch_folder / base).read_bytes() == original
+
+
 def test_r_write_notebook_keeps_the_first_cell_of_the_source_s_kind_and_writes_once(
     scratch_folder, scratch_consport, monkeypatch
 ):
@@ -3444,12 +3531,15 @@ def test_r_write_notebook_keeps_the_first_cell_of_the_source_s_kind_and_writes_o
         "trellis": ("load_trellis", "specify_trellis"),
     }
     cases = (
-        (scratch_folder, Source("recipe", RECIPE_FILE), CONS),
-        (scratch_consport, Source("recipe", PORT_CONS_RECIPE), SHARED_CONS),
+        (scratch_folder, Source("recipe", RECIPE_FILE), CONS, "notebooks/portfolio-choice.ipynb"),
+        (
+            scratch_consport, Source("recipe", PORT_CONS_RECIPE), SHARED_CONS,
+            "notebooks/cons-port.spec.port-cons.yml.ipynb",
+        ),
     )
-    for folder, source, cons_path in cases:
+    for folder, source, cons_path, expected in cases:
         written = creation.write_notebook(folder, source.path, source.kind)
-        assert written == f"notebooks/{folder.name}.ipynb"
+        assert written == expected
         data = (folder / written).read_bytes()
         text = data.decode("utf-8")
         notebook = nbformat.reads(text, as_version=4)
@@ -3634,7 +3724,7 @@ def test_l_13_new_trellis_writes_a_folder_with_no_stage_which_new_stage_fills(tm
     }
     assert list(entry_value(edited["declaration/spec.yml"], "stages")) == ["shocks"]
     assert entry_value(edited["answers.yml"], "required.slots") == [
-        creation.slot_name("shocks", kind) for kind in creation.KINDS
+        creation.slot_name("shocks", kind) for kind in creation.SLOT_KINDS
     ]
 
 
@@ -3671,8 +3761,8 @@ def test_l_13_the_form_new_trellis_writes_beside_the_open_model_with_one_templat
     and `refused · output-defined`, the package's sentence in its hover;
     `write the folder` does not act while no name is typed, its hover
     `type a name`, and acts once one is, no template chosen; it writes the
-    new folder beside the durables model, which is left as it was, opens the
-    new folder in the tab and offers the first commit."""
+    new folder beside the durables model, which is left as it was, and
+    opens the new folder's recipe for editing."""
     corpus = refused_corpus(tmp_path / "corpus")
     monkeypatch.setattr(creation, "CORPUS", corpus)
     models = tmp_path / "models"
@@ -3713,8 +3803,7 @@ def test_l_13_the_form_new_trellis_writes_beside_the_open_model_with_one_templat
         assert app.form_error.value == ""
         assert app.tab_folder.value.root == created
         assert app.open_path.value == "declaration/spec.yml"
-        assert app.form_open.value == "commit"
-        assert app.commit_message.value == "New trellis pension-model"
+        assert app.form_open.value is None
         assert sorted(
             path.relative_to(created).as_posix()
             for path in created.rglob("*")
@@ -3826,7 +3915,9 @@ def test_l_13_a_variant_s_labels_come_from_its_own_recipe_and_its_form_names_the
         rendered.close()
     assert notes == [
         "writes spec.<name>.yml, trellis.<name>.yml and period.<name>.yml in declaration/",
-        "copies the registry of spec.yml: calibration/wage_schedule",
+        "Copies calibration, settings and method assignments.",
+        "Stage declarations are shared in both modes. Slots keep their names.",
+        "Copies registry sources: calibration/wage_schedule",
     ]
     creation.create_variant(copy, "pensions", "spec.yml")
     folder = model.open_folder(copy)
@@ -3855,7 +3946,7 @@ def test_l_13_a_variant_s_labels_come_from_its_own_recipe_and_its_form_names_the
 # which `remove_stage` takes out (unit L, Task 25)
 PORT_ROW = (
     "  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, "
-    "settings: {all: [settings/port]}, methods: {all: [stages/port/methods]}}\n"
+    "settings: {all: [settings/port]}, methods: {all: [stages/port/methods.bl]}}\n"
 )
 PORT_LISTED = "  - port\n"
 # the portfolio model's period file, relative to the folder
@@ -3917,7 +4008,7 @@ def test_l_25_remove_stage_takes_its_row_and_keys_and_lists_the_files_only_it_na
 def test_l_25_remove_stage_takes_answers_records_of_the_stage(repository):
     """Unit L, Task 25: in a folder `new trellis` wrote, `remove_stage` of
     `port` also takes answers.yml's records of the stage, its entry under
-    `stages` and the names of its three slots in `required.slots`, the
+    `stages` and the names of its two slots in `required.slots`, the
     other stages' records kept; the stage's folder is listed as deleted on
     save, its bindings being slots that name no file."""
     work, _ = repository
@@ -3929,7 +4020,7 @@ def test_l_25_remove_stage_takes_answers_records_of_the_stage(repository):
     document = entry_value(answers)
     assert list(document["stages"]) == ["cons", "disc"]
     assert document["required"]["slots"] == [
-        creation.slot_name(key, kind) for key in ("cons", "disc") for kind in creation.KINDS
+        creation.slot_name(key, kind) for key in ("cons", "disc") for kind in creation.SLOT_KINDS
     ]
     assert "answers.yml: the records of port removed" in removed.notes
     assert removed.deleted == ("declaration/stages/port",)
@@ -4006,8 +4097,8 @@ def test_l_25_remove_period_takes_an_entry_out_or_lowers_its_repeat(scratch_fold
     recipe_text = (
         recipe_file.read_text(encoding="utf-8")
         .replace(
-            "methods: {all: [stages/port/methods]}}",
-            "methods: {all: [stages/port/methods]}, periods: [0, 6]}",
+            "methods: {all: [stages/port/methods.bl]}}",
+            "methods: {all: [stages/port/methods.bl]}, periods: [0, 6]}",
         )
         .replace(
             "cons: {stage: stages/cons/cons.bl, calibration: {all: [calibration/portfolio]}",
@@ -4084,7 +4175,7 @@ def test_l_25_the_tree_offers_the_period_files_and_stage_folders_nothing_names(
 
 def test_l_25_a_file_outside_the_model_folder_is_never_listed_or_deleted(scratch_folder):
     """Unit L, Task 25 (L-I360): where port's row names
-    its methods through `../`, `other/methods.yml` beside the model folder,
+    its addition through `../`, `other/methods.bl` beside the model folder,
     `remove_stage` of `port` lists the stage's folder and
     `settings/port.yml` and not that file, and once the edits stand on disk
     `deletable` answers the stage's folder and refuses that file; where the
@@ -4095,11 +4186,11 @@ def test_l_25_a_file_outside_the_model_folder_is_never_listed_or_deleted(scratch
     root = scratch_folder
     other = root.parent / "other"
     other.mkdir()
-    shutil.copyfile(root / "declaration/stages/port/methods.yml", other / "methods.yml")
+    shutil.copyfile(root / "declaration/stages/port/methods.bl", other / "methods.bl")
     recipe_file = root / RECIPE_FILE
     recipe_file.write_text(
         recipe_file.read_text(encoding="utf-8").replace(
-            "methods: {all: [stages/port/methods]}}", "methods: {all: [../../other/methods]}}"
+            "[stages/port/methods.bl]}}", "[../../other/methods.bl]}}"
         ),
         encoding="utf-8",
     )
@@ -4108,9 +4199,9 @@ def test_l_25_a_file_outside_the_model_folder_is_never_listed_or_deleted(scratch
     assert removed.notes[-1] == "deleted on save: stages/port/, settings/port.yml"
     for path, text in removed.edits.items():
         Path(path).write_text(text, encoding="utf-8")
-    listed = ["../other/methods.yml", "declaration/stages/port"]
+    listed = ["../other/methods.bl", "declaration/stages/port"]
     assert creation.deletable(root, listed) == ("declaration/stages/port",)
-    assert (other / "methods.yml").is_file()
+    assert (other / "methods.bl").is_file()
 
     trellis_file = root / "declaration" / creation.TRELLIS
     shutil.copyfile(root / PORTFOLIO_PERIOD, other / "period.yml")
@@ -4127,3 +4218,27 @@ def test_l_25_a_file_outside_the_model_folder_is_never_listed_or_deleted(scratch
         Path(path).write_text(text, encoding="utf-8")
     assert creation.deletable(root, ["../other/period.yml"]) == ()
     assert (other / "period.yml").is_file()
+
+
+def test_new_stage_refuses_a_period_file_whose_stage_list_is_overridden(scratch_folder):
+    trellis = scratch_folder / "declaration/trellis.yml"
+    before = trellis.read_text()
+    trellis.write_text(
+        before.replace(
+            "template: period.yml, repeat: 6",
+            "template: period.yml, repeat: 6, stages: [port, cons, disc]",
+        )
+    )
+    assert len(load_recipe(scratch_folder / "declaration", "spec.yml")["periods"]) == 6
+    saved = file_bytes(scratch_folder)
+    with pytest.raises(ValueError, match="no period .* uses the stages list from period.yml"):
+        creation.new_stage(scratch_folder, "new_choice", period_file="period.yml")
+    assert file_bytes(scratch_folder) == saved
+
+    trellis.write_text(trellis.read_text().replace(
+        "inter_connectors:",
+        "  - {template: period.yml}\ninter_connectors:",
+    ))
+    added = creation.new_stage(scratch_folder, "new_choice", period_file="period.yml")
+    period = str((scratch_folder / "declaration/period.yml").resolve())
+    assert "- new_choice" in added.edits[period]

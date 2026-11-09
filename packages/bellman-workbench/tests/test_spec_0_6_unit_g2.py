@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import re
 
 import pytest
 from workbench_support import (
@@ -44,13 +45,6 @@ PENSIONS_FILES = {
         for key in (
             "shocks", "survival", "plan_choice", "contribution", "allocation", "payout",
             "tenure_pa", "renter_cons", "keeper_cons_pa", "adjuster_cons_pa", "bequest_pa",
-        )
-    },
-    **{
-        f"declaration/stages/{key}/methods.yml": f"stages/{key}/methods.yml"
-        for key in (
-            "shocks", "survival", "tenure_pa", "renter_cons", "keeper_cons_pa",
-            "adjuster_cons_pa", "bequest_pa",
         )
     },
 }
@@ -150,14 +144,14 @@ def test_item_1_the_pensions_record_lists_the_reviewed_files_and_each_choice_sen
 
 
 def test_item_2_the_durables_declaration_only_submission_names_the_wage_inputs_missing(
-    scratch_durables,
+    matsya_durables,
 ):
     """The durables recipe's tenure stage declares Y and y_R, which no
     calibration file values; `write_wage_schedule` of the folder's code
     writes them after `load_recipe`, and a submission of the declaration
     alone omits that function, so the record names them missing, with the
     function, its file and line, and sends no code."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     prepared = matsya_work.prepare(folder, DURABLES, "recipe", session_of(folder.root), 1)
     assert prepared.refusals == ()
     assert prepared.record["missing"] == [
@@ -178,7 +172,7 @@ def test_item_2_the_durables_declaration_only_submission_names_the_wage_inputs_m
 
 
 def test_item_3_an_accepted_job_survives_a_client_exit_with_a_warning_and_a_nonzero_code(
-    scratch_durables, tmp_path, monkeypatch
+    matsya_durables, tmp_path, monkeypatch
 ):
     """The client prints the accepted job and then its warning that the
     service used its own key, with status 1: the request's record keeps the
@@ -186,8 +180,11 @@ def test_item_3_an_accepted_job_survives_a_client_exit_with_a_warning_and_a_nonz
     request's delivery identifier stood before the client ran."""
     log = tmp_path / "client-calls.jsonl"
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_LOG", str(log))
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = session_of(folder.root)
+    monkeypatch.setenv(
+        "BELLMAN_WORKBENCH_MATSYA_STUB_REQUESTS", str(folder.root / matsya_work.REQUESTS_FOLDER)
+    )
     prepared = matsya_work.prepare(folder, DURABLES, "recipe", session, 1)
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_WARN", "1")
     work = matsya_work.submit(folder, prepared.path, session)
@@ -201,7 +198,7 @@ def test_item_3_an_accepted_job_survives_a_client_exit_with_a_warning_and_a_nonz
 
 
 def test_item_4_on_reopening_the_saved_identifiers_are_polled_before_a_retry_is_offered(
-    scratch_durables, tmp_path, monkeypatch
+    matsya_durables, tmp_path, monkeypatch
 ):
     """An accepted job, an accepted turn and a turn whose answer was lost.
     After the module is loaded again, as on reopening the page, recovery
@@ -209,7 +206,7 @@ def test_item_4_on_reopening_the_saved_identifiers_are_polled_before_a_retry_is_
     identifiers before it offers anything: a retry is offered for the lost
     turn alone, and sends its delivery identifier again, which the service
     answers with the turn it already holds."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = session_of(folder.root)
     job = matsya_work.submit(
         folder, matsya_work.prepare(folder, DURABLES, "recipe", session, 1).path, session
@@ -328,19 +325,22 @@ def test_item_6_following_writes_nothing_and_a_download_writes_one_new_keyed_cop
 
 
 def test_prepare_refuses_a_file_outside_the_folder_a_missing_file_and_an_ambiguous_name(
-    tmp_path, scratch_durables
+    tmp_path, matsya_durables
 ):
     """Part 1's three refusals, each with nothing written: a trellis file of
     cons-port that reads the portfolio stage file of portfolio-choice,
-    outside its folder's declaration/; a recipe that names a calibration file
-    that does not exist is refused with the package's sentence; and a source
-    written without its extension where both its .yml and its .yaml files
-    stand, of which the package reads the first."""
+    outside its folder's declaration/, its records naming no addition,
+    which the service does not read yet (decision S7-W5); a recipe that
+    names a calibration file that does not exist is refused with the
+    package's sentence; and a source written without its extension where
+    both its .yml and its .yaml files stand, of which the package reads the
+    first."""
     consport = model.open_folder(applications_copy(tmp_path / "corpus"))
     # since the consolidation of 28 October 2026 the folder's trellis files
     # read its own stage files, so the test writes a file of records whose
     # portfolio stage is portfolio-choice's, outside the folder
     records = (consport.root / PORT_CONS_RECORDS).read_text(encoding="utf-8")
+    records = re.sub(r"methods: stages/\w+/methods[.\w]*\.bl", "methods: []", records)
     assert records.count("stages/port/port.bl") == 1
     (consport.root / "declaration/trellis.outside.yml").write_text(
         records.replace("stages/port/port.bl", "../../portfolio-choice/declaration/stages/port/port.bl"),
@@ -356,7 +356,7 @@ def test_prepare_refuses_a_file_outside_the_folder_a_missing_file_and_an_ambiguo
         "declaration/, and the service reads every file from that folder"
     ) in outside.refusals
 
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = session_of(folder.root)
     calibration = folder.root / "declaration/calibration/durables.yml"
     (folder.root / "declaration/calibration/durables.yaml").write_text(
@@ -401,12 +401,12 @@ def test_a_download_the_client_does_not_finish_leaves_no_copy_under_its_key(
 
 
 def test_a_request_is_sent_again_or_submitted_only_where_that_cannot_start_work_twice(
-    scratch_durables, monkeypatch
+    matsya_durables, monkeypatch
 ):
     """A prepared record of another session is not submitted, and an
     accepted turn or a job is not sent again: each is refused with a
     ValueError before the client runs or a record is written."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = session_of(folder.root)
     prepared = matsya_work.prepare(folder, DURABLES, "recipe", session, 1)
     other = matsya_work.Session("0123456789abcdef" * 2, session.service)

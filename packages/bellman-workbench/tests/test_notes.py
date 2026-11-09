@@ -35,10 +35,16 @@ BUNDLE = (
 RETIREE_CONS = (
     ROOT / "applications/retirement-choice/declaration/stages/retiree_cons/retiree_cons.bl"
 )
-# the retiree's method block, which holds the policy block's header note and
+# the retiree's methods file, the addition beside its stage file, which holds
 # the inverse Euler line with its note since the endogenous grid method moved
-# out of the stage file (decision MB-S24)
-RETIREE_EGM = ROOT / "applications/retirement-choice/declaration/methods/retiree_cons_egm.bl"
+# out of the stage file (decision MB-S24), and the three declarations of its
+# settings with their notes
+RETIREE_METHODS = (
+    ROOT / "applications/retirement-choice/declaration/stages/retiree_cons/methods.bl"
+)
+# the lines of the methods file that hold a note: the three declarations and
+# the inverse Euler line
+RETIREE_METHODS_NOTES = (19, 20, 21, 24)
 
 # lines written for the cases the rule decides, each with the texts the
 # glyphs replace on it: a `!` that begins no tag inside a note, a comma
@@ -102,12 +108,12 @@ NOTES = [
 @pytest.fixture(scope="module")
 def notes(node) -> dict:
     """The output of the Node module over `retiree_cons.bl`, keyed
-    `retiree_cons`, over its method block `retiree_cons_egm.bl`, keyed
-    `retiree_cons_egm`, and the edge lines, keyed `edge lines`, and the
+    `retiree_cons`, over its methods file `methods.bl`, keyed
+    `retiree_methods`, and the edge lines, keyed `edge lines`, and the
     previews of NOTES."""
     texts = {
         "retiree_cons": RETIREE_CONS.read_text(encoding="utf-8"),
-        "retiree_cons_egm": RETIREE_EGM.read_text(encoding="utf-8"),
+        "retiree_methods": RETIREE_METHODS.read_text(encoding="utf-8"),
         # the cursor's line, the first, is drawn in full
         "edge lines": "\n".join(["@stage: edge_lines", *EDGE_LINES]),
     }
@@ -117,12 +123,12 @@ def notes(node) -> dict:
 
 def test_the_glyph_replaces_exactly_the_quoted_explanation_of_retiree_cons(notes):
     """On `retiree_cons.bl` the decoration set replaces the quoted
-    explanation of lines 5, 6 and 11, and on its method block
-    `retiree_cons_egm.bl` that of line 7, each span from its opening to its
-    closing quote: line 5 is drawn `:: []`, and line 11 keeps its entry
-    `id=feasible`, `:: [id=feasible, ]`; the quoted string of the method
-    block's header on line 6 and every line holding no note are drawn as
-    written."""
+    explanation of lines 5, 6 and 11, and on its methods file `methods.bl`
+    those of its three declarations, lines 19 to 21, and of the inverse Euler
+    line, line 24, each span from its opening to its closing quote: line 5 is
+    drawn `:: []`, and line 11 keeps its entry `id=feasible`,
+    `:: [id=feasible, ]`; the quoted handler names in the block headers of
+    the methods file and every line holding no note are drawn as written."""
     lines = RETIREE_CONS.read_text(encoding="utf-8").split("\n")
     found = notes["markers"]["retiree_cons"]["found"]
     assert [(span["line"], span["text"]) for span in found] == [
@@ -137,14 +143,16 @@ def test_the_glyph_replaces_exactly_the_quoted_explanation_of_retiree_cons(notes
     assert [line for number, line in enumerate(drawn, 1) if number not in noted] == [
         line for number, line in enumerate(lines, 1) if number not in noted
     ]
-    lines = RETIREE_EGM.read_text(encoding="utf-8").split("\n")
-    found = notes["markers"]["retiree_cons_egm"]["found"]
+    lines = RETIREE_METHODS.read_text(encoding="utf-8").split("\n")
+    found = notes["markers"]["retiree_methods"]["found"]
     assert [(span["line"], span["text"]) for span in found] == [
-        (7, lines[6][lines[6].index('"') :].rstrip("]")),
+        (number, lines[number - 1][lines[number - 1].index('"') :].rstrip("]"))
+        for number in RETIREE_METHODS_NOTES
     ]
-    drawn = notes["markers"]["retiree_cons_egm"]["drawn"]
-    assert [line for number, line in enumerate(drawn, 1) if number != 7] == [
-        line for number, line in enumerate(lines, 1) if number != 7
+    drawn = notes["markers"]["retiree_methods"]["drawn"]
+    noted = set(RETIREE_METHODS_NOTES)
+    assert [line for number, line in enumerate(drawn, 1) if number not in noted] == [
+        line for number, line in enumerate(lines, 1) if number not in noted
     ]
 
 

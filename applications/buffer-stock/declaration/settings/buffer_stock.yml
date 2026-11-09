@@ -5,7 +5,8 @@
 # of the HARK solution of this model in the QuantEcon community library
 # (projects/HARK/buffer-stock/tutorial.ipynb): seven points per shock, and 960
 # asset points from 0.001 to 20, one grid in that solution for savings and for
-# assets.
+# assets. The separate cash representation grid uses the same illustrative
+# bounds and count; those cash-grid values are not attributed to HARK.
 settings:
   n_ψ_nodes: 7
   n_ξ_nodes: 7
@@ -15,3 +16,6 @@ settings:
   n_k: 960
   k_min: 0.001
   k_max: 20.0
+  m_a: 960
+  m_min: 0.001
+  m_max: 20.0

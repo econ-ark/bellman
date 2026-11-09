@@ -15,7 +15,8 @@
 //                 pair (path, revision) differs from the pair applied last,
 //                 so the text being typed is never replaced by an older
 //                 copy of itself
-//   diagnostics   the refusals of the buffer, a list of records
+//   diagnostics   the checked path, document_revision and text, with items
+//                 holding the refusals as records
 //                 {line, column, end_line, end_column, message, severity},
 //                 the positions counted from one in code points; the
 //                 stage loop's, and the trellis's refusal of its reading
@@ -115,7 +116,7 @@ module.exports = {
       onInput: (event) => this.notifyInput(event),
       onUndo: (event) => this.gesture_undo(event),
     });
-    this.handle.setDiagnostics(this.plain(this.diagnostics) || []);
+    this.applyDiagnostics(this.diagnostics);
     this.hostElement = this.$refs.host;
     this.hostElement.bellmanEditor = this.handle;
     this.hostElement.dataset.path = this.appliedPath == null ? "" : this.appliedPath;
@@ -134,7 +135,7 @@ module.exports = {
       this.applyDocument();
     },
     diagnostics(value) {
-      if (this.handle) this.handle.setDiagnostics(this.plain(value) || []);
+      this.applyDiagnostics(value);
     },
     goto(value) {
       if (this.handle && value && value.line) {
@@ -161,6 +162,7 @@ module.exports = {
         path: path == null ? null : path,
         revision: (applied ? this.appliedRevision : this.revision) || 0,
         text: applied ? this.handle.getDoc() : this.text || "",
+        flush: this.flush_request,
       });
     },
     hide_types(value) {
@@ -228,6 +230,14 @@ module.exports = {
       }
       return window.bellmanEditorLoading;
     },
+    // Only the checked document can carry these source positions.
+    applyDiagnostics(value) {
+      if (!this.handle) return;
+      const current = value && value.path === this.appliedPath
+        && value.document_revision === this.appliedRevision
+        && value.text === this.handle.getDoc();
+      this.handle.setDiagnostics(current ? (this.plain(value.items) || []) : []);
+    },
     // The document is given to the editor, with its path and revision, when
     // the pair (path, revision) differs from the pair applied last, whichever
     // of the three properties the browser received first. Within an applied
@@ -248,6 +258,7 @@ module.exports = {
         this.text || "",
       );
       this.hostElement.dataset.path = this.appliedPath == null ? "" : this.appliedPath;
+      this.applyDiagnostics(this.diagnostics);
     },
     // The event `change`; the next change of the document then dispatches
     // `input-edited` again.
@@ -259,6 +270,9 @@ module.exports = {
     // with the document's path, where none was dispatched since the last
     // `change` event or the last document Python gave.
     notifyInput(event) {
+      // The old positions no longer identify the checked text. Wait until
+      // CodeMirror finishes its current update before clearing them.
+      queueMicrotask(() => this.handle?.setDiagnostics([]));
       if (this.inputNotified) return;
       this.inputNotified = true;
       document.dispatchEvent(new CustomEvent("input-edited", { detail: { path: event.path } }));

@@ -4,25 +4,33 @@ A stage is built as the stage notebook builds it (`01-the-stage.ipynb`, code
 cells 1 and 3): `elaborate_stage` on the record of the file's text. The stage
 is given as its file's text with the file's path in the
 repository as its origin, so that its printed face names the same source in
-every checkout. The bound versions of `cons` apply `methodize`, `calibrate`
-and `configure` to the files the notebook names.
+every checkout. The bound versions of `cons` apply `calibrate`, `methodize`
+and `configure` to the calibration and settings files the notebook names and
+to the addition `CONS_METHODS`.
 
 `printed_cards(name)` is every card a stage prints, with its record, printed
-once in a process and kept. A test marked `sweep` is part of a sweep over the
-corpus stages, the refusal catalogue or a whole trellis; a run given no marker
-expression leaves the sweeps out, and `-m sweep` runs them.
+once in a process and kept. A test marked `sweep` checks the corpus stages, refusal catalogue or a whole
+trellis. Every test runs by default; `-m sweep` selects those checks alone.
 """
 from __future__ import annotations
 
 import functools
 import math
 import operator
+import os
+import tempfile
 import shutil
+import subprocess
 import types
 from fractions import Fraction
 from pathlib import Path
 
 import pytest
+
+# Matplotlib imports during collection. Reuse only its font metadata.
+_font_cache = Path(tempfile.gettempdir()) / "bellman-test-matplotlib"
+_font_cache.mkdir(exist_ok=True)
+os.environ.setdefault("MPLCONFIGDIR", str(_font_cache))
 
 # the two-node stage of AMD-SG-008 §2, whose backward block, transition line
 # and shock declarations the tests of passes B replace; the smallest stage of
@@ -32,19 +40,6 @@ import pytest
 from bellman.refusal_examples import BRANCHING, SHOCK_BRANCHING, TWO_NODES
 
 ROOT = Path(__file__).resolve().parents[3]
-
-
-def pytest_collection_modifyitems(config, items):
-    """Leave out every test marked `sweep` when the run gives no marker
-    expression, so that the fast core is the default selection; `-m sweep`
-    runs the sweeps alone and `-m "sweep or not sweep"` runs every test. A
-    sweep named by its node id is left out too unless `-m` selects it."""
-    if config.getoption("markexpr"):
-        return
-    sweeps = [item for item in items if item.get_closest_marker("sweep") is not None]
-    if sweeps:
-        config.hook.pytest_deselected(items=sweeps)
-        items[:] = [item for item in items if item.get_closest_marker("sweep") is None]
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -90,6 +85,21 @@ CORPUS = {
     "retiree_death": ("applications/cagetti-denardi-2006/declaration/stages/"
                       "retiree_death/retiree_death.bl"),
 }
+# the stage files of the applications, the corpus the tests, the hook
+# docs/_hooks/reference_pages.py and the tool elaboration_baseline.py read,
+# listed once: every tracked .bl file in a stage folder of the one layout,
+# applications/<model>/declaration/stages/<key>/, whose first line is
+# `@stage:`, by path. An addition beside a stage file, methods.bl, whose
+# first line is `@methods:`, is no stage file; the tracked files alone, since
+# a checkout may hold an ignored scratch folder under applications/
+STAGE_FILES = [
+    ROOT / name
+    for name in sorted(subprocess.run(
+        ["git", "-C", str(ROOT), "ls-files", "--", "applications/**/*.bl"],
+        capture_output=True, text=True, check=True).stdout.split())
+    if Path(name).match("applications/*/declaration/stages/*/*.bl")
+    and (ROOT / name).read_text(encoding="utf-8").startswith("@stage:")
+]
 # the two calibrations of the smooth-ambiguity stage (AMD-SG-009 §6); the
 # second changes only η, to γ
 SA_SAVINGS_CALIBRATIONS = (
@@ -118,7 +128,12 @@ def joint_normal(covariance="((1,r),(r,1))", backward="    V = E_{z}(E_{y}(V[>])
     one backward line."""
     return two_nodes(backward=backward, transition="    a = y\n",
                      declarations=f"z : ℝ\nr : {r_set}\n(y, z) ~ N((0,0),{covariance})\n")
-CONS_METHODS = ROOT / "applications/portfolio-choice/declaration/stages/cons/methods.yml"
+# The consumption methods are the application's addition. The portfolio
+# fixture types value function iteration on the backward decision builder,
+# quadrature on its expectation and the policy's first-order condition,
+# and linear representation on the Evaluation, with no policy solution method.
+CONS_METHODS = ROOT / "applications/portfolio-choice/declaration/stages/cons/methods.bl"
+PORT_METHODS = ROOT / "packages/bellman/tests/fixtures/spec_0_7/port.methods.bl"
 CONS_CALIBRATION = ROOT / "applications/cons-port/reference/legacy/syntax/calibration.yaml"
 CONS_SETTINGS = ROOT / "applications/cons-port/reference/legacy/syntax/settings.yaml"
 
@@ -173,10 +188,9 @@ def sa_savings():
     return corpus_stage("sa_savings")
 
 
-# the three inverse-Euler lines of `cons.bl` (spelling C, its first line
-# carrying the clause `⟂ a >= 0` of D13) and the lines the two twins of
-# AMD-SG-035 §2 put in their place: spelling B (`cons_obs.bl`, a corpus file)
-# and spelling A (`cons_kt`, a fixture and no file)
+# The alternative policy equations used by the clause tests: a candidate
+# with a borrowing clause, an explicit multiplier, and an Euler equation.
+# The inverse Euler equation now stands in the application's methods file.
 C_LINES = ("    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0       :: [id=InvEuler]\n"
            "    m_d[>] = a + c[>]                :: [id=endoggrid]\n"
            "    c      = c[>]                    :: [id=cons_choice]\n")
@@ -184,14 +198,38 @@ CONS_OBS_LINES = ("    μ[>]   : ℝ₊ ⟂ a >= 0             :: [id=slackness]
                   "    c[>]   = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>] + μ[>]) :: [id=InvEuler]\n"
                   "    m_d[>] = a + c[>]                :: [id=endoggrid]\n"
                   "    c      = c[>]                    :: [id=cons_choice]\n")
-CONS_KT_LINE = "    𝑑𝑢(c) = D_{a}V[>] ⟂ a >= 0       :: [id=euler]\n"
+CONS_KT_LINE = "    𝑑𝑢(c) = D_{a}V[>] ⟂ m_d - c >= 0       :: [id=euler]\n"
 
 
 def twin_text(name, lines):
-    """`cons.bl` renamed `name`, its three inverse lines replaced by `lines`."""
+    """The consumption stage with the alternative policy lines `lines`.
+
+    The application declares the maximization in its stage file and the
+    inverse Euler equation in its methods file. These alternative stages
+    retain the maximization as documentation beside their own policy lines.
+    """
     text = corpus_text("cons")
-    assert text.count(C_LINES) == 1
-    return text.replace("@stage: cons\n", f"@stage: {name}\n", 1).replace(C_LINES, lines)
+    assert text.count(ARGMAX_LINE) == 1
+    inverse = "𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)\n"
+    return (text.replace("@stage: cons\n", f"@stage: {name}\n" + inverse, 1)
+            .replace(ARGMAX_LINE, ARGMAX_DOC_LINE + lines, 1))
+
+
+@pytest.fixture(scope="session")
+def explicit_cons_text():
+    """A policy candidate declared in the stage, independent of method bindings."""
+    return twin_text("cons", C_LINES)
+
+
+@pytest.fixture(scope="session")
+def cons_explicit(explicit_cons_text):
+    return stage_from_text(explicit_cons_text, "cons_explicit.bl")
+
+
+@pytest.fixture(scope="session")
+def cons_candidate():
+    """The explicit candidate and identification used by the clause checks."""
+    return stage_from_text(twin_text("cons_candidate", C_LINES), "cons_candidate.bl")
 
 
 def cons_obs_text():
@@ -222,7 +260,7 @@ def cons_kt(cons_kt_text):
 # no row, no address and no method place
 ARGMAX_DOC_LINE = "    c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])   :: [id=optimality, !doc]\n"
 ARGMAX_LINE = "    c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])   :: [id=optimality]\n"
-EULER_PROPERTY_LINE = "    𝑑𝑢(c) = D_{a}V[>] ⟂ a >= 0                :: [id=optimality.euler]\n"
+EULER_PROPERTY_LINE = "    𝑑𝑢(c) = D_{a}V[>] ⟂ m_d - c >= 0                :: [id=optimality.euler]\n"
 
 # the policy card of `cons.bl` as drawn: the four rows of the standard kinds,
 # the candidate line's clause on the Aggregation that forms 𝑐≻, and the
@@ -587,6 +625,70 @@ def corpus_encodings(cons, port, ez_savings, cons_savings_iid, sa_savings):
 
 
 @pytest.fixture(scope="session")
+def encoding_validator():
+    """A checked JSON schema validator for newly constructed encodings."""
+    import json
+    from importlib.resources import files
+    from jsonschema import Draft202012Validator
+
+    schema = json.loads(files("bellman.display").joinpath(
+        "stage-encoding-2.6.schema.json").read_text())
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema)
+
+
+@pytest.fixture(scope="session")
+def catalogue_entries():
+    """The immutable public refusal entries shared by catalogue checks."""
+    from bellman.refusal_catalogue import catalogue
+    return catalogue()
+
+
+@pytest.fixture(scope="session")
+def parsed_source():
+    """Parsed application terms and source positions, shared by corpus checks."""
+    from bellman.syntax.lower import parse_with_spans
+
+    @functools.cache
+    def read(path):
+        path = Path(path).resolve()
+        return parse_with_spans(path.read_text(encoding="utf-8"),
+                                path.relative_to(ROOT).as_posix())
+
+    return read
+
+
+@pytest.fixture(scope="session")
+def application_stage():
+    """Read-only application stages, constructed once for the session.
+
+    Binding tests construct their own stages: a binding changes its argument.
+    These objects are shared only by queries and recording comparisons.
+    """
+    @functools.cache
+    def read(path):
+        path = Path(path).resolve()
+        return stage_from_text(path.read_text(encoding="utf-8"),
+                               path.relative_to(ROOT).as_posix())
+
+    return read
+
+
+@pytest.fixture(scope="session")
+def case_study_union():
+    """Read-only unions and their stage files, shared across acceptance claims."""
+    from bellman.stage import elaborate_stage, load_stage
+
+    @functools.cache
+    def read(path, additions=()):
+        return elaborate_stage(load_stage(path, list(additions)))
+
+    return read
+
+
+
+
+@pytest.fixture(scope="session")
 def path_of():
     """`path_of(name)`: the path of a corpus stage file."""
     return lambda name: ROOT / CORPUS[name]
@@ -597,6 +699,21 @@ def elaborate_text():
     """`elaborate_text(text, origin)`: the symbolic stage of a stage text the
     corpus does not contain."""
     return stage_from_text
+
+
+@pytest.fixture(scope="session")
+def with_addition():
+    """`with_addition(text, addition)`: the stage of a stage text unioned
+    with a methods file, an addition whose file-level declarations are the
+    stage's settings and whose entries type the components of its
+    signatures, the stage text named `t.bl` and the addition `methods.bl`
+    (`elaborate_stage` on a record that carries the addition)."""
+    from bellman.stage import elaborate_stage
+
+    return lambda text, addition: elaborate_stage({
+        "stage": {"text": text, "origin": "t.bl"}, "calibration": {}, "settings": {},
+        "methods": [{"text": addition, "origin": "methods.bl"}],
+    })
 
 
 @pytest.fixture(scope="session")
@@ -752,27 +869,37 @@ def bundles(backward=None, declarations=None, decision=None):
 
 # the files the tests add to the package's smallest registry
 # (`bellman.refusal_examples.REGISTRY_FILES`): a range source, a calibration
-# source with a parent beside its top key, a methods source with a parent, and
-# a recipe naming its trellis file, its stage's file and three slots, one of
-# them in a range list alone
+# source with a parent beside its top key, a replacing selection of the
+# two-node stage beside its addition, and a recipe naming its trellis file,
+# its stage's file and two slots, one of them in a range list alone; a
+# methods list takes no slot (specification 0.7, D3)
 SMALL_REGISTRY = {
     "calibration/terminal.yml": "calibration:\n  R: 1.04\n",
     "calibration/child.yml": "parent: calibration/main\ncalibration:\n  R: 1.03\n",
-    "methods/child.yml": ("parent: methods/two_nodes\nstage: two_nodes\nmethods:\n"
-                          "  - on: cntn_to_dcsn\n    handler: test:replaced\n"),
+    "stages/two_nodes/methods.other.bl": ("@methods: two_nodes\n"
+                                          "n_k : ℕ              :: [\"number of candidate levels of the search\"]\n"
+                                          "cntn_to_dcsn.method : !vfi(n_c=n_k)\n"
+                                          "cntn_to_dcsn.handler : \"test:other\"\n"),
     "spec.yml": ("trellis: trellis.yml\nstages:\n  two_nodes:\n"
                          "    stage: stages/two_nodes/two_nodes.bl\n"
                          "    calibration: {all: [calibration/main, $fill], '0-0': [calibration/terminal, $terminal]}\n"
                          "    settings: {all: [settings/main, $fill]}\n"
-                         "    methods: {all: [methods/two_nodes, $method_switch]}\n"),
+                         "    methods: {all: [stages/two_nodes/methods.bl]}\n"),
 }
+
+# The application registries and the two small applications written for
+# the tests. Each methods file stands beside the stage file it extends.
+CONS_PORT = ROOT / "applications/cons-port/declaration"
+PORTFOLIO = ROOT / "applications/portfolio-choice/declaration"
+NEW_APPLICATIONS = ROOT / "packages/bellman/tests/additions/new-applications"
 
 
 @pytest.fixture(scope="session")
 def registry(tmp_path_factory):
-    """The directory of the small registry: the two-node stage, one source of
-    each kind, a range source, two sources with a parent, a period template,
-    a trellis file of three periods and a recipe with three slots."""
+    """The directory of the small registry: the two-node stage with its
+    addition and a replacing selection, one source of each valued kind, a
+    range source, a source with a parent, a period template, a trellis file
+    of three periods and a recipe with two slots."""
     from bellman.refusal_examples import write_registry
     return write_registry(tmp_path_factory.mktemp("registry"), SMALL_REGISTRY)
 
@@ -782,19 +909,19 @@ def port_cons():
     """The trellis of the lesson `05-periods-and-trellises.ipynb`, bound as
     the lesson binds it in its cell `trellis-c21`: six periods of the stages
     `port`, `cons` and `disc`, each occurrence calibrated, methodized and
-    configured with the files its record names. The consumption stage is
-    the folder's own, which states no derivative until its methods bind
-    `!marginals`, so the trellis is read bound from its recipe: every route is then
+    configured with the files its record names in the application's
+    declaration folder. The consumption stage is the folder's own, which
+    states no derivative until its addition appends the envelope line, so
+    the trellis is read bound from its recipe: every route is then
     certified and the view draws both backward graphs (decision SD-63)."""
     from bellman.trellis import (
         calibrate_trellis,
         configure_trellis,
         elaborate_trellis,
-        load_trellis,
         methodize_trellis,
     )
     from bellman.trellis import load_recipe
-    syntactic = load_recipe(ROOT / "applications/cons-port/declaration", "spec.port-cons.yml")
+    syntactic = load_recipe(CONS_PORT, "spec.port-cons.yml")
     calibrated = calibrate_trellis(elaborate_trellis(syntactic), syntactic)
     return configure_trellis(methodize_trellis(calibrated, syntactic), syntactic)
 
@@ -1010,7 +1137,7 @@ SHARED_REGISTRY = {
                  "    stage: stages/two_nodes/two_nodes.bl\n"
                  "    calibration: {all: [calibration/main, $fill]}\n"
                  "    settings: {all: [settings/main, $fill]}\n"
-                 "    methods: {all: [methods/two_nodes, $method_switch]}\n"
+                 "    methods: {all: [stages/two_nodes/methods.bl]}\n"
                  "  disc:\n    stage: stages/disc/disc.bl\n"
                  "    calibration: {all: [$disc_fill]}\n"),
 }
@@ -1114,14 +1241,21 @@ def wage_schedule():
     spec.loader.exec_module(module)
     return module.write_wage_schedule
 
-# a methods source and a settings source for each of the four corpus stages, for the laws
-# L2 (K) and L3 (M, K): cons and port from their methods files and the cons-port settings;
-# the two stages whose folders hold no methods file take the empty methods mapping and one setting
+# an addition and a settings source for each of the four corpus stages, for the laws
+# L2 (K) and L3 (M, K): cons and port from their additions and the cons-port settings;
+# the two stages whose folders hold no addition take an unsaved one that
+# represents the decision value, and one setting
 CORPUS_METHODS = {
     "cons": CONS_METHODS,
-    "port": ROOT / "applications/portfolio-choice/declaration/stages/port/methods.yml",
-    "ez_savings": {"methods": []},
-    "cons_savings_iid": {"methods": []},
+    "port": PORT_METHODS,
+    "ez_savings": {
+        "text": "@methods: ez_savings\ncntn_to_dcsn.evaluate.method : !Linear\n",
+        "origin": "ez_savings.methods.bl",
+    },
+    "cons_savings_iid": {
+        "text": "@methods: cons_savings_iid\ncntn_to_dcsn.evaluate.method : !Linear\n",
+        "origin": "cons_savings_iid.methods.bl",
+    },
 }
 CORPUS_SETTINGS = {
     "cons": CONS_SETTINGS,
@@ -1265,7 +1399,7 @@ def name_at_numbers(reference):
     if isinstance(reference, T.Variable):
         side = type(getattr(reference.when, "side", None)).__name__
         return f"{reference.name}{PERCH_MARKS.get(side, '')}"
-    if isinstance(reference, T.Constant):
+    if isinstance(reference, (T.Constant, T.Var)):
         reference = reference.name
     if isinstance(reference, T.Coordinate):
         reference = reference.stem
@@ -1452,10 +1586,15 @@ def _value(term, values):
         # `kuhn_tucker` builds of the two, which defines the clause
         return _value(kuhn_tucker(term.core, term.bound), values)
     if isinstance(term, T.Operator) and term.head == "D" and len(term.args) == 1:
-        # a derivative of a value read at a point is an input value, supplied
-        # under the term's printed form, `D_{a_nxt_adj}𝑉≻`, as the compiled
-        # aggregation takes it as one argument (AMD-MB-001; MB-A16, MB-A19)
-        return _named(S.format_expression(term, width=None), values)
+        # The derivative is supplied by the test; this evaluates no derivative.
+        argument = term.args[0]
+        applied = isinstance(argument, (S.Apply, T.Call))
+        function = (argument.function if isinstance(argument, S.Apply) else argument.fun) if applied else argument
+        name = "D_{" + ", ".join(name_at_numbers(item) for item in term.subs) + "}" + name_at_numbers(function)
+        derivative = _named(name, values)
+        if applied:
+            return derivative(*_spread(_value(item, values) for item in argument.args))
+        return derivative
     raise TypeError(f"a {type(term).__name__} is not read at numbers here: {term!r}")
 
 
@@ -1577,8 +1716,13 @@ def _bare_names(statement):
     # the function position of every application, with the terms inside it
     applied = {id(inner) for term in terms_inside(statement) if isinstance(term, (S.Apply, T.Call))
                for inner in terms_inside(term.function if isinstance(term, S.Apply) else term.fun)}
-    return {name_at_numbers(term) for term in terms_inside(statement)
-            if isinstance(term, references) and id(term) not in applied}
+    names = {name_at_numbers(term) for term in terms_inside(statement)
+             if isinstance(term, references) and id(term) not in applied}
+    names.update("D_{" + ", ".join(name_at_numbers(item) for item in term.subs) + "}" + name_at_numbers(term.args[0])
+                 for term in terms_inside(statement)
+                 if isinstance(term, T.Operator) and term.head == "D" and len(term.args) == 1
+                 and not isinstance(term.args[0], (S.Apply, T.Call)) and id(term) not in applied)
+    return names
 
 
 def _at_point(rule, numbers):
@@ -1795,9 +1939,10 @@ def at_numbers():
 
 
 def declarations_copy(folder):
-    """Copies under `folder` of the portfolio model's registry and of
-    cons-port's `declaration/`, each at its path in the repository; answers
-    the copied registry and the copied trellis file of records
+    """Copies under `folder` of the portfolio model's declaration folder and
+    of cons-port's declaration folder (`PORTFOLIO`, `CONS_PORT`), each at
+    the path of the application's `declaration/` in the repository; answers the copied
+    registry and the copied trellis file of records
     `trellis.port-cons-vfi.yml`, the one trellis file of the two orders that
     is still written as records since the two cons-port folders became one
     on 28 October 2026 (the files of the orders themselves are recipes,
@@ -1805,9 +1950,9 @@ def declarations_copy(folder):
     stands inside the copied `declaration/` (unit J's plan, Task 1, and
     ruling J-P12; decisions SD-33 and SD-53 before the consolidation)."""
     registry = Path(folder) / "applications/portfolio-choice/declaration"
-    shutil.copytree(ROOT / "applications/portfolio-choice/declaration", registry)
+    shutil.copytree(PORTFOLIO, registry)
     declaration = Path(folder) / "applications/cons-port/declaration"
-    shutil.copytree(ROOT / "applications/cons-port/declaration", declaration)
+    shutil.copytree(CONS_PORT, declaration)
     return registry, declaration / "trellis.port-cons-vfi.yml"
 
 
@@ -1912,3 +2057,44 @@ def emptied_pension(folder):
         "  - {}\n",
     )
     return registry
+
+
+@pytest.fixture(scope="session")
+def three_value_outputs():
+    """Three authored value outputs exercise multiline evaluation labels."""
+    text = corpus_text("cons")
+    replacements = (
+        ("(V : [-inf, inf) @ !vlu) : !dcsn]",
+         "(V : [-inf, inf) @ !vlu, W : ℝ @ !vlu, Z : ℝ @ !vlu) : !dcsn]"),
+        ("V        = 𝑢(c) + V[>]          :: [id=value]",
+         "V = 𝑢(c) + V[>]\n    W = V\n    Z = V"),
+        ("(V) : !dcsn -> (V[<] : ℝ @ !vlu)",
+         "(V, W, Z) : !dcsn -> (V[<] : ℝ @ !vlu, W[<] : ℝ @ !vlu, Z[<] : ℝ @ !vlu)"),
+        ("V[<] = V                        :: [id=value]",
+         "V[<] = V\n    W[<] = W\n    Z[<] = Z"),
+    )
+    for before, after in replacements:
+        assert text.count(before) == 1, before
+        text = text.replace(before, after)
+    return stage_from_text(text, "three_value_outputs.bl")
+
+
+@pytest.fixture
+def durables_vfi_recipe(tmp_path):
+    """A copied registry adds value iteration to the adjuster's methods."""
+    registry = tmp_path / "durables"
+    shutil.copytree(DURABLES, registry)
+    addition = "stages/adjuster_cons/methods.vfi.bl"
+    (registry / addition).write_text(
+        '@methods: adjuster_cons\n'
+        'cntn_to_dcsn.method : !vfi\n'
+        'cntn_to_dcsn.handler : "fues-durables:make_adjuster_vfi"\n',
+        encoding="utf-8",
+    )
+    text = (registry / TWO_STAGES).read_text(encoding="utf-8")
+    before = "methods: {all: [stages/adjuster_cons/methods.bl]}"
+    assert text.count(before) == 1
+    recipe = "spec.two-stages.vfi.yml"
+    (registry / recipe).write_text(text.replace(before,
+        f"methods: {{all: [stages/adjuster_cons/methods.bl, {addition}]}}"), encoding="utf-8")
+    return registry, recipe

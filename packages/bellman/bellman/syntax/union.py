@@ -35,7 +35,7 @@ The rules, each on the constructors of the term and on nothing else:
 5. The lines of an addition's block are appended after the block's lines; a
    line id written twice in one block is refused. The reading of a block
    under the word of its method component at two levels is the elaborator's
-   (`bellman.stage.method_blocks.operative_level`), so that this module
+   (`bellman.stage.levels.operative_level`), so that this module
    knows no word of the vocabulary.
 6. The erasure: the stage file's own tree is the parsed pair the caller gave,
    and every item of the union carries its file, so that the items whose
@@ -47,11 +47,15 @@ The rules, each on the constructors of the term and on nothing else:
 8. An entry is appended to the annotation it is attached to; a coordinate is
    appended to the side of the signature its arrow names.
 
-A stage file elaborated alone carries no typing entry and no handler binding;
-one it carries is refused under `typing-entry-unattached`. The refusals of the
-union are `ConstructionError`s under `declared-twice`, `label-not-in-parent`,
-`type-conflict` and `metadata-mismatch`, each positioned at the item of the
-later file and naming the position of the earlier item in its sentence.
+A typing entry or a handler binding the stage file itself writes, in a header
+or at file level, is kept and attached as an addition's is (rules 7 and 8), the
+explicit way of writing the same entries, and the construction binds it with
+the additions' entries (`bellman.stage.places`).
+The refusals of the union are `ConstructionError`s under `declared-twice`,
+`label-not-in-parent`, `type-conflict` and `metadata-mismatch`, each positioned
+at the item of the later file, naming the position of the earlier item in its
+sentence and carrying that item as a related location under the role
+`original declaration` (Model Interface 0.9 §4).
 """
 
 from __future__ import annotations
@@ -60,13 +64,13 @@ import dataclasses
 from collections import Counter
 from types import MappingProxyType
 
-from bellman.refusals import construction_error
+from bellman.refusals import construction_error, location
 from bellman.syntax import terms as T
 from bellman.syntax.lower import ParsedFile, item_addresses
 from bellman.syntax.source import to_source
 from bellman.syntax.vocabulary import PERCH_OF_SIDE, ROLE_WORD, VALUE_ROLES, WRITTEN_MARK
 
-__all__ = ("ADDITION_KEY", "STAGE_KEY", "union")
+__all__ = ("ADDITION_KEY", "STAGE_KEY", "is_typing_entry", "union")
 
 # the metadata key of a stage file and that of an addition
 STAGE_KEY = "stage"
@@ -77,9 +81,7 @@ def union(stage, additions=()):
     """The union of the parsed stage file `stage` and the parsed `additions`,
     in order, as a `ParsedFile`: the stage file is the left unit, and each
     addition is added to the union of the files before it by the eight rules
-    of the module docstring. Refuses as the module docstring says, and
-    refuses a stage file that carries a typing entry or a handler binding
-    under `typing-entry-unattached`."""
+    of the module docstring. Refuses as the module docstring says."""
     files = [stage, *additions]
     working = _Union(files)
     working.read_stage()
@@ -161,6 +163,11 @@ class _Union:
     # --- the stage file ---
 
     def read_stage(self):
+        """The stage file, the left unit of the union: its items in order,
+        the entries of its headers keyed as an addition's are (rule 4), and a
+        typing entry or a handler binding written at its file level routed
+        after its blocks are read, as an addition's is (rule 7)."""
+        deferred = []
         for address, item in _top_level(self.files[0].term):
             if isinstance(item, T.Metadata):
                 if item.key == STAGE_KEY:
@@ -168,29 +175,16 @@ class _Union:
                 self.metadata[item.key] = (item.value, 0, address)
                 self.items.append(_Node(item, 0, address))
             elif isinstance(item, T.Block):
-                self.check_unattached(item, address)
                 node = self.new_block(0, address, item, _path_of(item))
                 self.items.append(node)
                 if _entry(item.tag, "id") is not None:
                     self.blocks[_entry(item.tag, "id")] = node
             elif _is_typing_entry(item):
-                raise self.refuse(
-                    "typing-entry-unattached", 0, address, _unattached(item.declaration.subject)
-                )
+                deferred.append((address, item))
             else:
                 self.add_definition(0, address, item)
-
-    def check_unattached(self, block, address):
-        """A typing entry or a handler binding in the header of a block of the
-        stage file, or of a nested block of it, is refused."""
-        for entry in block.tag.entries:
-            if isinstance(entry, T.Typer) and _is_typing(entry.typing):
-                raise self.refuse(
-                    "typing-entry-unattached", 0, address, _unattached(entry.typing.subject)
-                )
-        for n, item in enumerate(block.body, 1):
-            if isinstance(item, T.Block):
-                self.check_unattached(item, f"{address}.{_entry(item.tag, 'label') or n}")
+        for address, item in deferred:
+            self.route(0, address, item)
 
     # --- an addition ---
 
@@ -214,6 +208,11 @@ class _Union:
         """Rule 1: the addition names the stage, and a metadata line of another
         key agrees with the stage file's line of that key or is appended."""
         named = [(address, item) for address, item in items if isinstance(item, T.Metadata)]
+        first_line = (
+            None
+            if self.stage_name is None
+            else f"Write `@methods: {self.stage_name}` as the file's first line"
+        )
         if not any(item.key == ADDITION_KEY for _, item in named):
             raise self.refuse(
                 "metadata-mismatch",
@@ -221,6 +220,7 @@ class _Union:
                 items[0][0],
                 "the file names no stage: an addition begins with `@methods: <stage>`, the "
                 "name of the stage file it adds to",
+                write=first_line,
             )
         for address, item in named:
             if item.key == ADDITION_KEY:
@@ -234,6 +234,8 @@ class _Union:
                         f"itself {self.stage_name!r} at {self.where(source, held)}; an addition's "
                         f"first line is `@methods: <stage>` with the name of the stage file it "
                         f"adds to",
+                        related=(self.location(source, held),),
+                        write=f"Write `@methods: {self.stage_name}`",
                     )
             elif item.key == STAGE_KEY:
                 raise self.refuse(
@@ -243,6 +245,7 @@ class _Union:
                     f"the file names itself a stage, `@stage: {item.value}`; an addition names "
                     f"the stage it adds to, `@methods: {item.value}`, and a stage file is added "
                     f"to no stage",
+                    write=None if first_line is None else f"Remove the `@stage` line; {first_line}",
                 )
             elif item.key in self.metadata:
                 value, source, held = self.metadata[item.key]
@@ -254,6 +257,8 @@ class _Union:
                         f"the metadata line `@{item.key}` carries {item.value!r} here and "
                         f"{value!r} at {self.where(source, held)}; a key is written once over "
                         f"the files of a stage, or identically in each file",
+                        related=(self.location(source, held),),
+                        write=f"Write `@{item.key}: {value}`, or remove the line",
                     )
             else:
                 self.metadata[item.key] = (item.value, number, address)
@@ -270,6 +275,12 @@ class _Union:
                 continue
             if held.item == item:
                 return
+            # a law is keyed by its subjects, and named by them
+            defined = (
+                f"definition of {key!r}"
+                if isinstance(key, str)
+                else f"distribution declaration of {', '.join(map(str, key[1]))}"
+            )
             raise self.refuse(
                 "declared-twice",
                 number,
@@ -277,6 +288,11 @@ class _Union:
                 f"the name {key!r} is defined in two files with different content: at "
                 f"{self.where(held.source, held.address)} and here; a name defined in both "
                 f"files is one definition, written once or identically in each file",
+                related=(self.location(held.source, held.address),),
+                write=(
+                    f"Remove the {defined} from one of the two files, or write it identically "
+                    f"in both"
+                ),
             )
         for key in _defined_names(item):
             self.defined.setdefault(key, node)
@@ -321,6 +337,7 @@ class _Union:
                 nested_address = f"{address}.{label or n}"
                 nested = base.nested(label) if label is not None else None
                 if nested is None:
+                    labels = [node.label for node in base.body if node.label is not None]
                     raise self.refuse(
                         "label-not-in-parent",
                         number,
@@ -330,6 +347,13 @@ class _Union:
                         f"{self.where(base.source, base.address)}; a nested block of an "
                         f"addition merges with the branch of the same label under its parent, "
                         f"and the union adds no branch",
+                        related=(self.location(base.source, base.address),),
+                        write=(
+                            f"Write the nested block under one of the labels block "
+                            f"{base.address!r} holds: {', '.join(labels)}"
+                            if labels
+                            else None
+                        ),
                     )
                 self.merge(nested, number, nested_address, item, path + (label,))
                 continue
@@ -344,6 +368,8 @@ class _Union:
                     f"the line id {line_id!r} is written twice in block {base.address!r}: at "
                     f"{self.where(held.source, held.address)} and here; an id names one line "
                     f"of a block over the files of a stage, so give this line another id",
+                    related=(self.location(held.source, held.address),),
+                    write=f"Give this line an id other than {line_id!r}",
                 )
             node = _Node(item, number, line_address)
             base.body.append(node)
@@ -360,7 +386,7 @@ class _Union:
             self.attach_signature(node, entry, number, address)
             return
         span_key, text = None, _entry_text(entry)
-        if isinstance(entry, T.Typer) and _is_typing(entry.typing):
+        if isinstance(entry, T.Typer) and is_typing_entry(entry.typing):
             span_key = f"{address}.{to_source(entry.typing.subject)}"
             node, relative = self.resolve(node, path, entry.typing.subject, number, span_key)
             entry = T.Typer(dataclasses.replace(entry.typing, subject=relative))
@@ -398,6 +424,8 @@ class _Union:
             f"`{held.text}` at {self.where(held.source, held.span_key or node.address)} and "
             f"`{placed.text}` here; a component holds one entry over the files of a stage, "
             f"so keep one of the two",
+            related=(self.location(held.source, held.span_key or node.address),),
+            write=f"Keep one of the two entries, `{held.text}` or `{placed.text}`",
         )
 
     def resolve(self, node, path, subject, number, span_key):
@@ -431,6 +459,8 @@ class _Union:
                 f"{segments[0].name!r} by its first segment{where}; a path inside a block names "
                 f"a line or an operator of that block, so write the entry in block "
                 f"{segments[0].name!r} or at file level",
+                related=() if other is None else (self.location(other.source, other.address),),
+                write=f"Write the entry in block {segments[0].name!r} or at file level",
             )
         return self.descend(node, segments)
 
@@ -464,6 +494,12 @@ class _Union:
                     f"the component `{to_source(typing.subject)}` is typed twice at file level "
                     f"with different content: at {self.where(held.source, held.address)} and "
                     f"here; a component holds one entry over the files of a stage",
+                    related=(self.location(held.source, held.address),),
+                    write=(
+                        f"Keep one of the two entries, "
+                        f"`{_entry_text(T.Typer(held.item.declaration))}` or "
+                        f"`{_entry_text(T.Typer(typing))}`"
+                    ),
                 )
             node = _Node(item, number, address)
             self.defined.setdefault(key, node)
@@ -519,6 +555,12 @@ class _Union:
                         f"`{_typing_text(coordinate.classifiers)}` here; the field names "
                         f"determine the signature and the stage's typing is kept, so write the "
                         f"coordinate without a type or with the stage's",
+                        related=(self.location(held.source, f"{node.address}.{field}"),),
+                        write=(
+                            f"Write `{_written(coordinate)}` without a type, or with the "
+                            f"stage's, `{_written(coordinate)} : "
+                            f"{_typing_text(stated.classifiers)}`"
+                        ),
                     )
             base_types, added_types = getattr(merged, types), getattr(entry.typing, types)
             if added_types and base_types and added_types != base_types:
@@ -531,6 +573,11 @@ class _Union:
                     f"at {self.where(held.source, f'{node.address}.{side}')}; the perch of a side "
                     f"is the stage's, so write the side with the stage's perch word or without "
                     f"one",
+                    related=(self.location(held.source, f"{node.address}.{side}"),),
+                    write=(
+                        f"Write the side with the stage's perch word, "
+                        f"`{_typing_text(base_types)}`, or without one"
+                    ),
                 )
             merged = dataclasses.replace(
                 merged,
@@ -555,8 +602,22 @@ class _Union:
             return f"term address {key!r}"
         return f"{span.file}:{span.line}:{span.column} (term address {key!r})"
 
-    def refuse(self, rule, source, key, message):
-        """The refusal under `rule` at the item `key` of file `source`."""
+    def location(self, source, key):
+        """The `Location` of an item of file `source`, the earlier item of a
+        pair a refusal names beside the item it is raised at, under the role
+        `original declaration`."""
+        span = self.span(source, key)
+        return location(
+            "original declaration",
+            address=key,
+            span=span,
+            file=None if span is not None else _file_of(self.files[source]),
+        )
+
+    def refuse(self, rule, source, key, message, *, related=(), write=None):
+        """The refusal under `rule` at the item `key` of file `source`, with
+        the `related` locations its sentence names and the action `write`
+        where the union establishes the edit."""
         span = self.span(source, key)
         return construction_error(
             message,
@@ -565,6 +626,8 @@ class _Union:
             span=span,
             rule=rule,
             file=None if span is not None else _file_of(self.files[source]),
+            related=related,
+            write=write,
         )
 
     # --- the result ---
@@ -648,8 +711,13 @@ def _path_of(block):
     return (block_id,) if block_id is not None else ()
 
 
-def _is_typing(typing):
-    """Whether a typer is a typing entry or a handler binding."""
+def is_typing_entry(typing):
+    """Whether a `Typer`'s typing is a typing entry or a handler binding of
+    specification 0.7, `policy.method : !egm`, `policy.grid : !Cartesian(…)`
+    or `policy.handler : "cons-port:egm"`: a `Handler`, or a `Declaration`
+    whose subject is a `Path`; a signature and a field's declaration are
+    neither. The one predicate, read by the union, the declaration pass, the
+    fold and the writer of the typing entries."""
     return isinstance(typing, T.Handler) or (
         isinstance(typing, T.Declaration) and isinstance(typing.subject, T.Path)
     )
@@ -657,17 +725,7 @@ def _is_typing(typing):
 
 def _is_typing_entry(item):
     """Whether a file-level item is a typing entry or a handler binding."""
-    return isinstance(item, T.Declare) and _is_typing(item.declaration)
-
-
-def _unattached(subject):
-    """The sentence of the refusal of a typing entry a stage file carries."""
-    return (
-        f"the entry of `{to_source(subject)}` types a component of an operator or binds its "
-        f"handler; a typing entry or a handler binding is written in a methods file, which the "
-        f"union attaches to its stage and the semantics reads, and a stage elaborated alone "
-        f"carries none"
-    )
+    return isinstance(item, T.Declare) and is_typing_entry(item.declaration)
 
 
 def _defined_names(item):

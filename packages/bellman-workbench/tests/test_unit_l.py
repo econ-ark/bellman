@@ -75,6 +75,7 @@ from workbench_support import (
     dropped_event,
     edited,
     emptied_portfolio,
+    error_group_lines,
     error_lines,
     field_port,
     field_tables,
@@ -467,9 +468,10 @@ def test_task_6_from_a_folder_opens_from_the_head_s_list_with_a_period_and_the_c
     each period drawn, the terminal period first, the period's list as a
     drop on its layer names it, the drop on a period's layer answering as
     before; `folder_entries` reads a path from `~` and a path with spaces
-    around it. On the page, `+ stage` measures 24 px high on the screen, its
-    words 11 px in the face of the layer's name, between the name and the
-    toggle, its middle in its period's header row, G.periodHeader high, and
+    around it. On the page, `+ stage` has a press target at least 24 px high
+    on the screen and words in Archivo at 11 px times the graph's scale
+    (design pass 13 and Q3a), between the name and the toggle, its bottom
+    at the foot of its period's header row, G.periodHeader high, and
     taking a click, at the opening scale, 1 here (AAS, M-D15), where it
     stands inside the header row, at the scale of `fit` and at the reading
     scale of 0.6. Enter on the item in the head's
@@ -482,6 +484,9 @@ def test_task_6_from_a_folder_opens_from_the_head_s_list_with_a_period_and_the_c
     stage` copies `port` into the terminal period's list, drawn in
     periods[0], and writes `declaration/stages/port/`."""
     copy = scratch_durables
+    # The current corpus includes an unused port folder; this test imports it anew.
+    assert "port" not in creation.recipe_keys(copy)
+    shutil.rmtree(copy / "declaration/stages/port")
     folder = model.open_folder(copy)
     shown = trellis.show_trellis(
         folder, recipe.Source("recipe", RECIPE_FILE), trellis.parse_restriction("periods 0–2")
@@ -546,11 +551,12 @@ def test_task_6_from_a_folder_opens_from_the_head_s_list_with_a_period_and_the_c
             zoom = viewport(tab)["zoom"]
             scales.append(zoom)
             control = tab.evaluate(ADD_STAGE_SCREEN_JS, terminal)
-            assert abs(control["height"] - 24) < 0.5, (step, zoom, control)
-            assert abs(control["words"] - 11) < 0.1, (step, zoom, control)
-            assert control["face"] == control["nameFace"], control
+            assert abs(control["height"] - max(24, 24 * zoom)) < 0.5, (step, zoom, control)
+            assert abs(control["words"] - 11 * zoom) < 0.1, (step, zoom, control)
+            assert control["face"].split(",")[0].strip('"') == "Archivo", control
+            assert control["nameFace"].split(",")[0].strip('"') == "IBM Plex Mono", control
             assert control["afterName"] > 0 and control["beforeToggle"] >= 0, (step, zoom, control)
-            assert 0 < control["middle"] < layer_header * zoom, (step, zoom, control)
+            assert abs(control["bottom"] - layer_header * zoom) < 0.5, (step, zoom, control)
             assert control["taken"], (step, zoom, control)
             if step == "opening":
                 assert control["top"] >= 0, (zoom, control)
@@ -628,7 +634,7 @@ def test_task_6_from_a_folder_opens_from_the_head_s_list_with_a_period_and_the_c
         # names (unit N, Task 5; design pass 10 §7)
         note = (
             "trellis.yml, periods[0].stages: port written, periods 0; "
-            "new: stages/port/port.bl, stages/port/methods.yml; port unconnected"
+            "new: stages/port/port.bl, stages/port/methods.bl; port unconnected"
         )
         wait_until(
             lambda: gesture_note(tab) == note and tab.evaluate(FOLDER_PERIOD_FORM_JS) is None,
@@ -636,7 +642,7 @@ def test_task_6_from_a_folder_opens_from_the_head_s_list_with_a_period_and_the_c
             "the copy's note and the form closed",
         )
         assert (copy / "declaration/stages/port/port.bl").is_file()
-        assert (copy / "declaration/stages/port/methods.yml").is_file()
+        assert (copy / "declaration/stages/port/methods.bl").is_file()
         wait_until(
             lambda: "periods[0]/port"
             in occurrences_of(tab.evaluate(HELD_COLLECTION_JS), "forward"),
@@ -691,18 +697,21 @@ def test_task_7_a_stage_of_the_library_is_listed_under_library_and_copied_with_i
     the heading line `Library` and `port`, the stage of the library, by its
     folder's path, and last `From a folder…`, the words in sentence case
     (design pass 13 §3). `port`
-    dragged onto periods[1] copies `port.bl` and its methods file under
+    dragged onto periods[1] copies `port.bl` and its addition under
     `declaration/stages/port/` with the texts and the note the Workbench's
     drop answers for that event, and `port` is drawn in periods[1] and
     periods[2]; once the three files the tree marks unsaved are saved,
     answers.yml records the stage's origin, its folder in the library, and
-    the SHA-256 of `port.bl` and `methods.yml`, and the recipe names the
+    the SHA-256 of `port.bl` and `methods.bl`, and the recipe names the
     copy and never the library. Nothing in the library is written."""
     library = tmp_path / "library"
     shutil.copytree(PORT_FOLDER, library / "port")
     monkeypatch.setenv(creation.LIBRARY_VARIABLE, str(library))
     origin = str(library / "port")
     copy = scratch_durables
+    # The current corpus includes an unused port folder; this test imports it anew.
+    assert "port" not in creation.recipe_keys(copy)
+    shutil.rmtree(copy / "declaration/stages/port")
     (copy / creation.ANSWERS).write_text(DURABLES_ANSWERS, encoding="utf-8")
     folder = model.open_folder(copy)
     shown = trellis.show_trellis(
@@ -713,7 +722,7 @@ def test_task_7_a_stage_of_the_library_is_listed_under_library_and_copied_with_i
     expected = trellis.drop_edits(shown, event, {})
     assert [path for path, _ in expected.new_files] == [
         "declaration/stages/port/port.bl",
-        "declaration/stages/port/methods.yml",
+        "declaration/stages/port/methods.bl",
     ]
     lines = (
         [["section", "This folder's stages"]]
@@ -757,11 +766,12 @@ def test_task_7_a_stage_of_the_library_is_listed_under_library_and_copied_with_i
             "origin": origin,
             "sha256": {
                 name: hashlib.sha256((library / "port" / name).read_bytes()).hexdigest()
-                for name in ("port.bl", "methods.yml")
+                for name in ("port.bl", "methods.bl")
             },
         }
         spec = (copy / RECIPE_FILE).read_text(encoding="utf-8")
-        assert f"  port: {creation.recipe_row('port')}" in spec and origin not in spec
+        row = creation.recipe_row("port", ("stages/port/methods.bl",))
+        assert f"  port: {row}" in spec and origin not in spec
         assert file_bytes(library) == library_before
     finally:
         context.close()
@@ -1059,14 +1069,14 @@ def test_task_8_an_open_occurrence_is_drawn_compact_its_builders_coded_by_their_
         context.close()
 
     # the portfolio model, its builder `dcsn_to_cntn` of cons.bl named
-    # `solve` in the block's header and in the methods file that binds it
+    # `solve` in the block's header and in the addition that types it
     copy = tmp_path / "portfolio-choice"
     shutil.copytree(PORTFOLIO_CHOICE, copy, ignore=shutil.ignore_patterns("__pycache__"))
-    for relative in (CONS, "declaration/stages/cons/methods.yml"):
+    for relative in (CONS, "declaration/stages/cons/methods.bl"):
         path = copy / relative
         text = path.read_text(encoding="utf-8")
         named = text.replace("[id=dcsn_to_cntn,", "[id=solve,").replace(
-            "on: dcsn_to_cntn", "on: solve"
+            "dcsn_to_cntn.handler", "solve.handler"
         )
         assert named != text, relative
         path.write_text(named, encoding="utf-8")
@@ -1598,18 +1608,14 @@ DURABLES_RECIPE_LINES = {
             {
                 "calibration": ["durables", "$fill"],
                 "settings": ["durables", "$fill"],
-                "methods": ["methods", f"${method}"],
+                "methods": ["methods.bl"],
             },
         )
-        for key, method in (
-            ("tenure", "tenure_method"),
-            ("keeper_cons", "keeper_method"),
-            ("adjuster_cons", "adjuster_method"),
-        )
+        for key in ("tenure", "keeper_cons", "adjuster_cons")
     },
     "bequest": (
         "Listed in periods 0",
-        {"calibration": ["durables", "$fill"], "settings": ["—"], "methods": ["—"]},
+        {"calibration": ["durables", "$fill"], "settings": ["—"], "methods": ["methods.bl"]},
     ),
 }
 # keeper_cons's calibration in the variant spec.two-stages.yml, written with
@@ -2496,11 +2502,6 @@ def test_task_16_values_typed_a_second_apart_all_stand_and_a_matrix_gets_the_pac
         recipe_text.replace("$shocks_calibration", "calibration/shocks"), encoding="utf-8"
     )
     expected = {name: float(value) for name, value in SHOCKS_VALUES}
-    sentence = (
-        f"stage 'shocks', parameter 'Π_α' (address '{SHOCKS}:19'): the value {TASTE_MATRIX} "
-        "lies outside the declared set ℝ; a parameter's value lies in the set its "
-        "declaration names (AMD-SG-006 §2, the parameter record); write a value in ℝ"
-    )
     taste = '.bl-values-row[data-name="Π_α"] .bl-values-value'
     context, tab = new_tab(browser)
     try:
@@ -2559,17 +2560,23 @@ def test_task_16_values_typed_a_second_apart_all_stand_and_a_matrix_gets_the_pac
         tab.locator(taste).fill(TASTE_MATRIX)
         tab.locator(taste).press("Enter")
         wait_until(
-            lambda: tab.locator(taste).get_attribute("title") == sentence,
+            lambda: all(name in (tab.locator(taste).get_attribute("title") or "")
+                        for name in ("Π_α", TASTE_MATRIX)),
             180.0,
             "the package's sentence on the row of Π_α",
         )
         assert tab.locator(taste).input_value() == TASTE_MATRIX
         assert "bl-refusal-mark" in tab.locator(taste).get_attribute("class").split()
         lines = error_lines(tab)
-        # the refusal stands once, as the stage's or, once the trellis is
-        # read, as the trellis's line naming the occurrence (Task 21)
-        refused = [trellis.without_occurrence(line[0]) for line in lines]
-        assert refused.count(sentence) == 1, lines
+        # The sentence and affected occurrence are separate facts of one line.
+        refused = trellis.show_trellis(
+            model.open_folder(copy), recipe.Source("recipe", PENSIONS_RECIPE)
+        ).shown.binding.failed["calibrate"]
+        assert refused.occurrences == ((0, "shocks"),)
+        sentence = model.sentence(refused).replace(str(copy.resolve()) + "/", "")
+        assert tab.locator(taste).get_attribute("title") == sentence
+        assert [line[0] for line in lines].count(sentence) == 1, lines
+        assert "shocks at period 0" in tab.locator(".bl-error-occurrences").all_text_contents()
         assert not [line for line in lines if " reads as " in line[0]], lines
         assert written() == {**expected, "Π_α": entry_value(TASTE_MATRIX)}
     finally:
@@ -2582,8 +2589,8 @@ def test_task_16_values_typed_a_second_apart_all_stand_and_a_matrix_gets_the_pac
 # in the recipe (spec 0.4 §3.6); and the stage file `new stage` writes for
 # the key buyer (K-D7)
 PORTFOLIO_TRELLIS = "declaration/trellis.yml"
-PORT_ROW_END = "methods: {all: [stages/port/methods]}}"
-PORT_RANGE = "methods: {all: [stages/port/methods]}, periods: [0, %d]}"
+PORT_ROW_END = "methods: {all: [stages/port/methods.bl]}}"
+PORT_RANGE = "methods: {all: [stages/port/methods.bl]}, periods: [0, %d]}"
 BUYER_STAGE_FILE = "declaration/stages/buyer/buyer.bl"
 
 
@@ -2701,20 +2708,17 @@ def test_task_17_one_undo_per_gesture_in_every_file_and_new_stage_saved_and_pars
 
 
 # The stage files of the pension model whose Methods tabs defects 8 and 9
-# of the UX simulation name, with their methods files; the package's
-# refusal of `!monte-carlo` chosen at `arvl_to_dcsn` of `renter_cons`, whose
-# required option `n_paths` the entry does not write; and the rows of the
-# Methods tab shown, each as its target, the tags its select offers, the
-# tag it shows and the method bound as the row prints it (unit L, Task 18).
+# of the UX simulation name, with their additions; the names the package's
+# refusal of `!monte_carlo` chosen at `arvl_to_dcsn` of `renter_cons` gives,
+# whose entry then writes no `n_paths`, by which the refusal is read and
+# not by its wording; and the rows of the Methods tab shown, each as
+# its target, the words its select offers, the word it shows and the
+# method bound as the row prints it (unit L, Task 18).
 RENTER_CONS = "declaration/stages/renter_cons/renter_cons.bl"
-RENTER_CONS_METHODS = "declaration/stages/renter_cons/methods.yml"
+RENTER_CONS_METHODS = "declaration/stages/renter_cons/methods.bl"
 TENURE_PA = "declaration/stages/tenure_pa/tenure_pa.bl"
-TENURE_PA_METHODS = "declaration/stages/tenure_pa/methods.yml"
-MONTE_CARLO_REFUSED = (
-    "Method target 'arvl_to_dcsn' in stage 'renter_cons': !monte-carlo has missing required "
-    "option n_paths; write every required option using the keys shown by method_types of "
-    "bellman.stage"
-)
+TENURE_PA_METHODS = "declaration/stages/tenure_pa/methods.bl"
+MONTE_CARLO_NAMES = ("renter_cons", "arvl_to_dcsn.method : !monte_carlo", "n_paths")
 METHOD_ROWS_JS = r"""
 () => Array.from(document.querySelectorAll('.bl-values[data-tab="Methods"] .bl-values-row'),
   (row) => {
@@ -2738,38 +2742,30 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_empties_when_r
     (decision S7-W1 of specification 0.7). On a copy of the pension model
     the UX simulation's post-doc built, at its first build of the working
     years, `renter_cons.bl` bound as `periods[1] / renter_cons` shows in its
-    Methods tab the four methods it binds, the one representation that the
-    value's and the marginal's entries bind at its Evaluation in one row.
-    The row `arvl_to_dcsn`, a forward identity block, offers the tags the
-    package admits there, `admitted_methods` of `bellman.stage`, and no
-    `!egm` and no `!vfi`. `!monte-carlo`, which the block admits, chosen
-    there is written to the methods file, and the package refuses it, since
-    the entry writes no `n_paths`: the stage then binds no method, so that
-    the tab has no row, and the sentence stands in the list under the error
-    mark. `tenure_pa.bl`, a branching stage whose
-    places `places()` refuses to list, bound as `periods[1] / tenure_pa`
-    shows the four entries of its methods file, each with a choice among
-    the tags the package admits at its target, and no sentence in the tab;
-    the package's sentence of that refusal stands once in the list under
-    the error mark, with no file and no line (`recipe.places_refusal`)."""
+    Methods tab the four places its addition types, in the package's order,
+    each with the word bound there. The row `arvl_to_dcsn`, a forward
+    identity block, offers the words the package admits there,
+    `admitted_methods` of `bellman.stage`, `!monte_carlo` among them.
+    `!monte_carlo` chosen there is written into the addition in place of
+    `!deterministic`, and the package refuses it, since the entry writes no
+    `n_paths`: the stage then binds no method, so that the tab has no row,
+    and the sentence stands in the list under the error mark. `tenure_pa.bl`,
+    a branching stage, bound as `periods[1] / tenure_pa` shows the four
+    places of its addition, each with a choice among the words the package
+    admits at its target, and no sentence in the tab."""
     copy = pensions_copy(tmp_path / "models" / "durables", PENSIONS_WORKING_YEARS)
     renter = elaborate_text((copy / RENTER_CONS).read_text(encoding="utf-8"), RENTER_CONS)
     tenure = elaborate_text((copy / TENURE_PA).read_text(encoding="utf-8"), TENURE_PA)
     forward = admitted_methods(renter, "arvl_to_dcsn")
-    assert {"!egm", "!vfi"}.isdisjoint(forward) and "!monte-carlo" in forward
-    unlisted = recipe.places_refusal(tenure)
-    assert recipe.places_refusal(renter) is None and unlisted is not None
-    assert unlisted.startswith(
-        "'dcsn_to_cntn.rent.wealth_after_sale' in stage 'tenure_pa' names no line"
-    )
+    assert "!monte_carlo" in forward
     bound = {
-        "policy.optimality.argmax": "!root-find",
-        "cntn_to_dcsn:Evaluation": "!Linear",
         "arvl_to_dcsn": "!deterministic",
         "dcsn_to_cntn": "!deterministic",
+        "cntn_to_dcsn.evaluate": "!Linear",
+        "policy.optimality.argmax": "!root_find",
     }
     methods = (copy / RENTER_CONS_METHODS).read_text(encoding="utf-8")
-    entry = "  - on: arvl_to_dcsn\n    method: !deterministic\n"
+    entry = "arvl_to_dcsn.method : !deterministic\n"
     assert methods.count(entry) == 1
     context, tab = new_tab(browser)
     try:
@@ -2803,29 +2799,32 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_empties_when_r
 
         # a choice the block admits and the package refuses binds no method
         choice = '.bl-values-row[data-name="arvl_to_dcsn"] select.bl-values-method'
-        tab.locator(choice).select_option("!monte-carlo")
+        tab.locator(choice).select_option("!monte_carlo")
         wait_until(
             lambda: (copy / RENTER_CONS_METHODS).read_text(encoding="utf-8")
-            == methods.replace(entry, entry.replace("!deterministic", "!monte-carlo")),
+            == methods.replace(entry, entry.replace("!deterministic", "!monte_carlo")),
             30.0,
-            "!monte-carlo written for arvl_to_dcsn",
+            "!monte_carlo written for arvl_to_dcsn",
         )
 
         wait_until(
             lambda: not tab.evaluate(METHOD_ROWS_JS), 120.0, "the tab of renter_cons emptied"
         )
         lines = error_lines(tab)
-        # the refusal stands once, as the stage's or, once the trellis is
-        # read, as the trellis's line naming the occurrence (Task 21)
-        refused = [trellis.without_occurrence(line[0]) for line in lines]
-        assert refused.count(MONTE_CARLO_REFUSED) == 1, lines
+        refused = trellis.show_trellis(
+            model.open_folder(copy), recipe.Source("recipe", PENSIONS_RECIPE)
+        ).refusal
+        assert refused is not None and any(key == "renter_cons" for _, key in refused.occurrences)
+        sentence = model.sentence(refused).replace(str(copy.resolve()) + "/", "")
+        assert all(name in sentence for name in MONTE_CARLO_NAMES)
+        assert [line[0] for line in lines].count(sentence) == 1, lines
 
         # the branching stage's rows, each with its choices, and no sentence
         # in the tab
         shown(TENURE_PA, "tenure_pa", TENURE_PA_METHODS)
         wait_until(
             lambda: [row["target"] for row in tab.evaluate(METHOD_ROWS_JS)]
-            == ["policy", "cntn_to_dcsn.evaluate.value", "dcsn_to_cntn", "arvl_to_dcsn"],
+            == ["arvl_to_dcsn", "dcsn_to_cntn", "cntn_to_dcsn.evaluate", "policy"],
             30.0,
             "the four rows of tenure_pa",
         )
@@ -2835,13 +2834,6 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_empties_when_r
                 admitted_methods(tenure, row["target"])
             ), row
             assert row["bound"] == row["tag"], row
-        # the package's refusal to list its places, once under the error mark
-        wait_until(
-            lambda: (unlisted, None, None) in error_lines(tab),
-            30.0,
-            "the refusal of tenure_pa's places under the error mark",
-        )
-        assert error_lines(tab).count((unlisted, None, None)) == 1
     finally:
         context.close()
 
@@ -3239,17 +3231,15 @@ def test_task_20_a_setting_typed_on_85_periods_rebinds_its_stage_alone_in_under_
 # the recipe's sources all slots; the forward graph then marks 148 ports
 # unjoined, of which the checklist lists 25 fields (defect 20). The address
 # of the recipe's slot for the calibration of `shocks`, its button `New
-# file` in the Recipe tab (unit M, Task 10), and the occurrence the
-# package's note names.
+# file` in the Recipe tab (unit M, Task 10).
 STEP_19_JOINS = re.compile(r"^(\s*- )\{(?:a_s|a_sv|a_nxt_rt): .+\}$", re.MULTILINE)
 STEP_19_FIELDS = 25
 SHOCKS_CALIBRATION_SLOT = "stages.shocks.calibration.all[0]"
 SHOCKS_NEW_FILE = (
     f'.bl-recipe-row[data-stage="shocks"] .bl-new-file[data-address="{SHOCKS_CALIBRATION_SLOT}"]'
 )
-SHOCKS_OCCURRENCE = "Stage occurrence: periods[0].stages['shocks']"
 # the count of the status line's part and that of the checklist's head
-STATUS_FIELDS = re.compile(r" · (\d+) unjoined fields?\b")
+STATUS_FIELDS = re.compile(r" · (\d+) unjoined internal entry fields?\b")
 HEAD_FIELDS = re.compile(r"(\d+) fields? unjoined\b")
 # each row of a value tab whose input is marked, by its name, with the
 # input's hover
@@ -3278,8 +3268,11 @@ def test_task_21_a_refusal_stands_once_no_slot_is_one_and_the_counts_of_unjoined
     step 19 of the record, every source of the recipe a slot and every join
     written `{}`, the trellis's status line and the checklist's head count
     the same 25 unjoined fields, where the record read 148 and 25, and the
-    list under the error mark is empty, where the record listed three lines
-    about the sources no occurrence names, since a slot is no refusal.
+    list under the error mark holds no error, where the record listed three
+    lines about the sources no occurrence names, since a slot is no refusal
+    (the open continuation fields of the branches stand in the list as
+    items to review, under `Connections to check`, since the Workbench
+    interface review of 4 November 2026, item 3).
     `New file` beside the slot of the calibration of `shocks` in the Recipe
     tab (unit M, Task 10), shocks' row opened by a click (design pass 11
     §2), writes `calibration: {}` and names it in the recipe's text, which
@@ -3289,9 +3282,8 @@ def test_task_21_a_refusal_stands_once_no_slot_is_one_and_the_counts_of_unjoined
     post-doc typed, `R`, written by the tab (step 30), leaves the next
     parameter with no value, which the package refuses in the stage's
     binding and in the trellis's alike: the list under the error mark holds
-    that refusal alone, once, as the trellis's line naming the occurrence
-    `periods[0].stages['shocks']`, the stage's sentence its marked row's
-    hover. Back in the trellis view the status line and the checklist's
+    that refusal alone, once, with its affected occurrence, `shocks` at
+    period 0; the sentence is also the marked row's hover. Back in the trellis view the status line and the checklist's
     head still count the same 25 fields, the head counting the binding
     refused."""
     copy = pensions_copy(tmp_path / "models" / "durables")
@@ -3310,7 +3302,7 @@ def test_task_21_a_refusal_stands_once_no_slot_is_one_and_the_counts_of_unjoined
         counts, _ = wait_until(lambda: unjoined_counts(tab), 60.0, "the two counts")
         print(f"task 21: the first reading counts {counts}, the list holds {error_lines(tab)}")
         assert counts == (STEP_19_FIELDS, STEP_19_FIELDS)
-        assert error_lines(tab) == []
+        assert error_group_lines(tab, "Errors") == []
 
         # `New file` in the slot's place, shocks' row opened by a click
         # (design pass 11 §2), the file opened in the editor, its name
@@ -3359,21 +3351,25 @@ def test_task_21_a_refusal_stands_once_no_slot_is_one_and_the_counts_of_unjoined
         cell.press("Enter")
 
         def refused_once() -> tuple | None:
-            # the trellis's line naming the occurrence, once the stage's
-            # binding marks the row its sentence names
+            # The refusal and its occurrence stand separately on one line.
             lines = error_lines(tab)
-            named = [line for line in lines if line[0].endswith("\n" + SHOCKS_OCCURRENCE)]
             marked = tab.evaluate(MARKED_ROWS_JS)
-            if len(named) != 1 or trellis.without_occurrence(named[0][0]) not in marked.values():
+            named = [line for line in lines if line[0] in marked.values()]
+            occurrences = tab.locator(".bl-error-occurrences").all_text_contents()
+            if len(named) != 1 or "shocks at period 0" not in occurrences:
                 return None
             return lines, named[0][0], marked
 
         (lines, sentence, marked), _ = wait_until(refused_once, 180.0, "the binding refused")
         print(f"task 21: the list after R is typed: {lines}; the rows marked: {marked}")
-        refusal = trellis.without_occurrence(sentence)
-        assert refusal.startswith("stage 'shocks', parameter ")
-        assert [trellis.without_occurrence(line[0]) for line in lines].count(refusal) == 1
-        assert lines == [(sentence, SHOCKS_CALIBRATION, 1)]
+        refusal = trellis.show_trellis(
+            model.open_folder(copy), recipe.Source("recipe", PENSIONS_RECIPE)
+        ).shown.binding.failed["calibrate"]
+        assert refusal.occurrences == ((0, "shocks"),)
+        assert model.sentence(refusal).replace(str(copy.resolve()) + "/", "") == sentence
+        assert "stage 'shocks', parameter " in sentence
+        assert [line[0] for line in lines].count(sentence) == 1
+        assert error_group_lines(tab, "Errors") == [(sentence, SHOCKS_CALIBRATION, 1)]
 
         # the trellis view: the counts agree, the head counting the refusal
         tab.click(".bl-trellis-button")
@@ -4371,7 +4367,7 @@ def test_task_24_the_stage_frame_is_a_card_of_three_bands_and_the_main_bar_draws
 # trellis file names once the variant's recipe and trellis file are gone.
 BEQUEST_ROW = (
     "  bequest:       {stage: stages/bequest/bequest.bl,             calibration: "
-    "{all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods]}, "
+    "{all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods.bl]}, "
     "periods: [0, 0]}\n"
 )
 TERMINAL_LISTED = (
@@ -5062,7 +5058,7 @@ ROLE_HOVERS = {
 # (§3.1)
 VALUE_HEADS = {
     "Parameters": ["Parameter", "Set", "Value"],
-    "Settings": ["Setting", "Kind", "Value"],
+    "Settings": ["Setting", "Set", "Value"],
     "Methods": ["Target", "Method", "Bound"],
 }
 

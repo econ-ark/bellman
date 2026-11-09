@@ -1,0 +1,19 @@
+@methods: cons
+# The methods of methods.vfi.bl at the consumption occurrences of
+# trellis.reference-port-cons-vfi.yml, whose settings file
+# settings/cons_vfi_reference.yml values the evenly spaced grid the fixed
+# reference's grid search used: value function iteration on the decision value
+# builder, realized by the function consumption_search of
+# code/cons_port_tool.py, and the linear representation of the decision value
+# on the grid of resources, which carries no spacing word.
+
+n_m : ℕ              :: ["number of points of the grid of resources"]
+m_min : Xm           :: ["lower bound of the grid of resources"]
+m_max : Xm           :: ["upper bound of the grid of resources"]
+n_c : ℕ              :: ["number of candidate levels of consumption"]
+
+cntn_to_dcsn.method : !vfi
+cntn_to_dcsn.handler : "cons-port:consumption_search"
+cntn_to_dcsn.grid : !Cartesian(c=(Γ, n_c))
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(m=(m_min, m_max, n_m))

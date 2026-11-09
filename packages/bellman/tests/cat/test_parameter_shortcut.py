@@ -133,13 +133,13 @@ def test_item_6_a_setting_answers_its_value_alone(cons, cons_methodized, cons_co
     listed."""
     assert cons_configured.settings.n_a == cons_configured.settings["n_a"].value == 800
     assert str(cons_configured.settings["n_a"]) == (
-        "n_a = 800, read at policy by !egm for its grid !Cartesian")
+        "n_a = 800 : ℕ, read at policy by !egm for its grid !Cartesian")
     assert "n_a" in dir(cons_configured.settings)
     with pytest.raises(AttributeError) as refused:
         cons.settings.n_a
     assert str(refused.value) == (
-        "stage 'cons': 'n_a' is no setting of this version, which binds no settings; "
-        "configure(stage, source) binds them"
+        "stage 'cons': 'n_a' is no setting of this version; its settings are none; a setting "
+        "is declared in the methods file, and configure(stage, source) values it"
     )
     configured = {name: record.value for name, record in cons_configured.settings.items()}
     widened = copy_native(cons_methodized).configure({**configured, "n-points": 5})

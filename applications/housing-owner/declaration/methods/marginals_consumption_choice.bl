@@ -1,8 +1,0 @@
-@methods: consumption_choice
-# The marginal block of the owner's consumption decision value builder, which
-# states the derivative of the decision value in cash on hand, the envelope
-# condition.
-
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
-    D_{w_d}V = θ * c^(θ*(1-γ)-1) * (κ*H_d + ι)^((1-θ)*(1-γ))      :: [id=marginal]
-}

@@ -7,12 +7,13 @@ working directory, and writes what each printed into the `text` block that
 follows it. Nothing on such a page is described from a specification: a
 listing that changes when the package changes is regenerated here.
 
-The pages it prints are those `printed_pages` names: every page of the API,
-under `docs/Bellman-Sym/API/`, the nine pages of the stage object under
-`API/stage/` among them, and every reference page, under
-`docs/Bellman-Sym/reference/`, that holds a listing. `--page` names one page,
-of these or another written in the same way, and may be given more than
-once.
+The pages it prints are those `printed_pages` names: every page of the
+language guide, under `docs/Bellman-Sym/`, the overview under `docs/overview/`,
+and the model examples under `docs/examples/` that holds a listing, the pages
+of the API under `API/`, the nine pages of the stage object under
+`API/stage/` among them, and the reference pages under `reference/`
+included. `--page` names one page, of these or another written in the same
+way, and may be given more than once.
 
 Run from the repository root with the project interpreter:
 
@@ -37,10 +38,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]  # the repository root, above docs/_hooks/
 
-# the folders whose pages hold listings printed here: the API pages and the
-# reference pages
-API = "docs/Bellman-Sym/API"
-REFERENCE = "docs/Bellman-Sym/reference"
+# The guide, overview and model examples contain the package's listings.
+PAGE_FOLDERS = ("docs/Bellman-Sym", "docs/overview", "docs/examples")
 
 # every ```python block, with the ```text block that follows it when there
 # is one
@@ -62,11 +61,10 @@ def holds_a_listing(text):
 
 def printed_pages(root=ROOT):
     """The pages this script prints, as paths relative to the repository root
-    in sorted order: every page under `API` and `REFERENCE` that holds a
-    listing."""
+    in sorted order: every page of `PAGE_FOLDERS` that holds a listing."""
     found = [
         page
-        for folder in (API, REFERENCE)
+        for folder in PAGE_FOLDERS
         for page in sorted((root / folder).rglob("*.md"))
         if holds_a_listing(page.read_text(encoding="utf-8"))
     ]

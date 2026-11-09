@@ -1,0 +1,83 @@
+@methods: cons_savings_iid
+# The methods of the consumption-savings stage with independent income, an
+# addition to cons_savings_iid.bl, the stage file beside this one. The
+# endogenous grid method stands on the policy builder with its grid of
+# savings a; its three lines, the inverted Euler equation, the inverted law
+# of motion and the identification of the chosen consumption with the
+# candidate, stand in place of the maximization when the stage is solved,
+# and the maximization remains the stage's statement of the choice. Each
+# value builder gains its derivative line: the envelope condition of the
+# decision value, and the derivative of the arrival value, with the factor R
+# of the law w = y + b*R. The further selections of the stage, the readings
+# of the consumption function, of the inverse marginal utility, of the two
+# expectations over the income and of the arrival value and its derivative,
+# stand after the blocks as file-level entries, each with its full path,
+# since they append no line and a block with an empty body is refused; two
+# of the paths name places that exist once the blocks have appended their
+# lines, the derivative line of the arrival value and the expectation inside
+# it.
+
+# The settings this file reads, declared with their sets: the bounds of the
+# grid of savings are points of ℝ₊, the set the stage gives the savings a, the
+# bounds of the grid of the arrival assets are points of ℝ₊, the set the stage
+# gives the assets b, and the counts are in ℕ. Their values stand in
+# declaration/settings/cons_savings_iid.yml. The grid of savings is the entry
+# policy.grid of the policy block, and the grid of the arrival assets the two
+# grid entries at the arrival builder's Evaluation after the blocks.
+n_a : ℕ          :: ["number of points of the savings grid"]
+a_min : ℝ₊       :: ["lower bound of the savings grid"]
+a_max : ℝ₊       :: ["upper bound of the savings grid"]
+n_b : ℕ          :: ["number of points of the grid of the arrival assets"]
+b_min : ℝ₊       :: ["lower bound of the grid of the arrival assets"]
+b_max : ℝ₊       :: ["upper bound of the grid of the arrival assets"]
+n_y_nodes : ℕ    :: ["quadrature nodes of the lognormal component of the income"]
+
+# The endogenous grid method, its grid of savings on the coordinate a, and its
+# three lines: the inverted Euler equation, the inverted law of motion and the
+# identification of the decision's consumption with the candidate.
+[id=policy, method : !egm
+    | policy.grid : !Cartesian(a=(a_min, a_max, n_a))] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
+    c[~] = c[>]                     :: [id=cons_choice]
+}
+
+# The envelope line of the decision value.
+[id=cntn_to_dcsn] {
+    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+
+# The derivative line of the arrival value, with the factor R of the law of
+# motion w = y + b*R.
+[id=dcsn_to_arvl] {
+    D_{b}V[<] = E_{y}(R * D_{w}V)   :: [id=marginal]
+}
+
+# The linear reading of the consumption function at the policy builder's
+# Evaluation, with no grid: its knots are the pairs (w[>], c[>]) that !egm
+# stores.
+policy.evaluate.method : !Linear
+
+# The inverse of the marginal utility in closed form, at the definition
+# 𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢) of the stage file. No entry gives 𝑑𝑢 := D_{c}(𝑢) a
+# method.
+𝑑𝑢𝑖𝑛𝑣.method : !analytic_inverse
+
+# Gauss-Hermite quadrature at each of the two occurrences of the expectation
+# over y, in the line value of the stage and the line marginal of the block
+# dcsn_to_arvl above; one node count for the one shock, counting the nodes of
+# the lognormal component, the atom at zero carried exactly.
+dcsn_to_arvl.value.E_y.method : !gauss_hermite(n_y=n_y_nodes)
+dcsn_to_arvl.marginal.E_y.method : !gauss_hermite(n_y=n_y_nodes)
+
+# The arrival value represented linearly and its derivative, which the
+# inverted Euler equation of the previous period reads, by the
+# shape-preserving cubic, whose first derivative is continuous where that of
+# the linear basis is a step function, each named at its own Evaluation, with
+# a grid entry beside each method entry on the coordinate b of the arrival
+# perch. The income y, the other state of that perch, is integrated out by
+# the expectation and takes no factor.
+dcsn_to_arvl.evaluate[V[<]].method : !Linear
+dcsn_to_arvl.evaluate[V[<]].grid : !Cartesian(b=(b_min, b_max, n_b))
+dcsn_to_arvl.evaluate[D_{b}V[<]].method : !pchip
+dcsn_to_arvl.evaluate[D_{b}V[<]].grid : !Cartesian(b=(b_min, b_max, n_b))

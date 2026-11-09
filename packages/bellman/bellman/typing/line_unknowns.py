@@ -45,7 +45,7 @@ from bellman.typing.typed_expressions import substitute
 OPERATOR_VOCABULARY = ("E", "argmax", "solve", "D", "evaluate", "upper_env")
 OPERATOR_MEANINGS = {
     "E": "the expectation",
-    "argmax": "the maximiser",
+    "argmax": "the maximizer",
     "solve": "root finding",
     "D": "the derivative",
     "evaluate": "the interpolation",
@@ -130,7 +130,7 @@ def occurrence_paths(expr, path, *, slack=False, declarations=None, address=None
             raise unreadable_form_refusal(
                 declarations,
                 address,
-                (f"no construction rule reads the operators of a {type(e).__name__}"),
+                "no construction rule reads the operators of a term written on this line",
             )
 
     # `(*path,)` is a fresh tuple, so two builds share no position object.
@@ -152,9 +152,9 @@ def _operator_occurrence(e, path, *, slack, declarations=None, address=None) -> 
                 declarations,
                 address,
                 (
-                    f"no construction rule reads the subscript {type(s).__name__} "
-                    f"of the operator {e.head!r}; a subscript is a name (`E_{{θ}}`) "
-                    f"or a name in a set (`argmax_{{c : Γ(w)}}`)"
+                    f"no construction rule reads a subscript of the operator {e.head!r} "
+                    f"written on this line; a subscript is a name (`E_{{θ}}`) or a name in a "
+                    f"set (`argmax_{{c : Γ(w)}}`)"
                 ),
             )
     unknown = target = None
@@ -234,9 +234,12 @@ def _check_family_selection(select, local, *, address, declarations, local_value
     Domain terms are retained from declarations, never recovered from text.
     """
 
-    def refuse(reason):
+    def refuse(reason, write=None):
         raise declarations.error(
-            "family-selection", address, f"the selection {to_source(select)} {reason}"
+            "family-selection",
+            address,
+            f"the selection {to_source(select)} {reason}",
+            write=write,
         )
 
     def shape(e):
@@ -251,14 +254,23 @@ def _check_family_selection(select, local, *, address, declarations, local_value
         # set, never by a position, and the key's set lies in the index set
         first, _ = indexed
         index_set = sets.defined(first, declarations.space_terms)
+        by_name = (
+            f"Select by a name declared on the index set {to_source(index_set)}, such as "
+            f"`{to_source(select.family)}[j]`"
+        )
         if isinstance(select.sel, terms.Pos):
             refuse(
                 f"selects the position {select.sel.at} of {to_source(select.family)}, a "
                 f"collection on the index set {to_source(index_set)}; a collection on an index "
-                f"set is selected by a name declared on the set, `{to_source(select.family)}[j]`"
+                f"set is selected by a name declared on the set, `{to_source(select.family)}[j]`",
+                by_name,
             )
         if not isinstance(select.sel, terms.Key):
-            refuse(f"uses the unsupported selector {type(select.sel).__name__}")
+            refuse(
+                f"selects by a selector no construction rule reads; a collection on an index set "
+                f"is selected by a name declared on the set, `{to_source(select.family)}[j]`",
+                by_name,
+            )
         name = select.sel.at
         key_set = _local_domain(name, local, declarations)
         if key_set is None:
@@ -268,7 +280,8 @@ def _check_family_selection(select, local, *, address, declarations, local_value
             )
             refuse(
                 f"selects by {name!r}, {reason}; a key is a name declared on the index set "
-                f"{to_source(index_set)}"
+                f"{to_source(index_set)}",
+                f"Declare {name} on the index set {to_source(index_set)}",
             )
         decided = sets.index_within(key_set, first, declarations.space_terms)
         if decided is False:
@@ -276,12 +289,30 @@ def _check_family_selection(select, local, *, address, declarations, local_value
                 f"selects by {name!r}, declared in {to_source(key_set)}, which is not within "
                 f"the index set {to_source(index_set)} of {to_source(select.family)}; declare "
                 f"{name} on the index set, or select under a condition that establishes its "
-                f"membership"
+                f"membership",
+                f"Declare {name} on the index set {to_source(index_set)}, or select under a "
+                f"condition that establishes its membership",
             )
         return
     members = _coordinate_sets(family_shape, declarations)
+    family = to_source(select.family)
     if members is None:
-        refuse("selects from a family not declared with a product set and not written as a tuple")
+        index = None
+        if isinstance(select.sel, terms.Key):
+            key = select.sel.at
+            index = local[key] if key in local else declarations.declared_set_of(key)
+        refuse(
+            f"selects from {family}, which is written as no tuple and is declared on no product "
+            f"set and no set of functions; a selection reads a coordinate of a tuple, such as "
+            f"`(a, b)[1]`, a coordinate of a name declared on a product set, such as "
+            f"`{family} : ℝ × ℝ`, or an entry of a collection declared on a set of functions, "
+            f"such as `{family} : {'J' if index is None else to_source(index)} → ℝ`, at a name "
+            f"declared on its index set",
+            f"Select from a tuple, such as `(a, b)[1]`, declare {family} on a product set, such "
+            f"as `{family} : ℝ × ℝ`, or declare it on a set of functions, such as "
+            f"`{family} : {'J' if index is None else to_source(index)} → ℝ`, and select it "
+            f"at a name declared on the index set",
+        )
     n = len(members)
     if isinstance(select.sel, terms.Pos):
         if not 1 <= select.sel.at <= n:
@@ -300,8 +331,11 @@ def _check_family_selection(select, local, *, address, declarations, local_value
                 else "which is not declared with a suitable set"
             )
             refuse(
-                f"selects by {select.sel.at!r}, {reason}; "
-                f"a key requires a finite set of {n} members"
+                f"selects by {select.sel.at!r}, {reason}; a selection from a tuple of {n} "
+                f"coordinates reads a position, such as `{family}[1]`, or a name declared on a "
+                f"finite set of {n} members",
+                f"Select a position, such as `{family}[1]`, or select by a name declared on a "
+                f"finite set of {n} members",
             )
         if len(declared.members) != n:
             refuse(
@@ -309,7 +343,10 @@ def _check_family_selection(select, local, *, address, declarations, local_value
                 f"for {n} coordinates"
             )
     else:
-        refuse(f"uses the unsupported selector {type(select.sel).__name__}")
+        refuse(
+            "selects by a selector no construction rule reads; a selection reads a position or "
+            "a name"
+        )
 
 
 def _selection_shape(e, local, *, address, declarations, local_values, resolving=frozenset()):
@@ -458,9 +495,8 @@ def field_spelling(expr, address, declarations) -> MarkedName:
         declarations,
         address,
         (
-            f"this statement has a {type(expr).__name__} as its left side; a "
-            f"statement defines one field by name (`c`, `V[<]`, `a[>]`), and the "
-            f"construction reads no other left side"
+            "the left side of this line names no field; a line defines one field by name "
+            "(`c`, `V[<]`, `a[>]`), and the construction reads no other left side"
         ),
     )
 
@@ -693,8 +729,8 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
                     raise unreadable_form_refusal(
                         declarations,
                         address,
-                        f"no construction rule reads the subscript "
-                        f"{type(sub).__name__} of the operator {e.head!r}",
+                        f"no construction rule reads a subscript of the operator {e.head!r} "
+                        f"written on this line",
                     )
                 if contexts and e.head == "E":
                     if name not in declarations.law_of:
@@ -760,7 +796,7 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
         raise unreadable_form_refusal(
             declarations,
             address,
-            f"no construction rule reads the fields of a {type(e).__name__} in this statement",
+            "no construction rule reads the fields of a term written on this line",
         )
 
     return visit(expr, bound, frozenset(), {}, frozenset(), aliases)
@@ -933,9 +969,8 @@ def annotation_entries(annotation, address, declarations):
                 "readable-form",
                 address,
                 (
-                    f"no construction rule reads the annotation entry "
-                    f"{type(entry).__name__} on this statement; a line's "
-                    f"annotation carries `id=…`, `!doc`, `!node`, or a bare tag"
+                    "no construction rule reads an annotation entry written on this line; a "
+                    "line's annotation carries `id=…`, `!doc`, `!node`, or a bare tag"
                 ),
             )
     return tuple(marks), tuple(tags)
@@ -1080,6 +1115,10 @@ def group_coordinates(subject, declarations, address):
                 address,
                 "a grouped declaration requires one explicit product factor per name; "
                 "retain coupled feasible constraints on the choice binder",
+                write=(
+                    "Write one explicit product factor for each name, and retain coupled "
+                    "feasible constraints on the choice binder"
+                ),
             )
         for i, member in enumerate(members):
             classifiers = tuple(member.classifiers) + tuple(shared)
@@ -1246,15 +1285,24 @@ def coordinate_text(c) -> str:
     a term whose mark is a form no construction rule reads is written bare
     here, and the refusal that names it says what is wrong with it."""
     if not isinstance(c, terms.Coordinate):
-        return type(c).__name__
+        try:
+            return to_source(c)
+        except NotImplementedError:
+            return "a listing"
     mark = PERCH_OF_SIDE.get(type(c.at.side)) if isinstance(c.at, terms.At) else None
     return c.stem + WRITTEN_MARK.get(mark, "")
 
 
 def classifier_text(cl) -> str:
+    """A classifier written on a side as a message names it: a set by its
+    spelling, a role word or a second perch word by its kind."""
     if isinstance(cl, terms.Domain):
-        return f"set ({to_source(cl.space)})"
-    return type(cl).__name__
+        return f"the set {to_source(cl.space)}"
+    if isinstance(cl, terms.Role):
+        return "a role word"
+    if isinstance(cl, terms.Infoset):
+        return "a second perch word"
+    return "a classifier no construction rule reads"
 
 
 def span_of(address: str, spans):

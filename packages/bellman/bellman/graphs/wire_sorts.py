@@ -480,11 +480,8 @@ class WireTable:
                 raise NotConstructed(
                     f"the forward measures are not constructed: the distribution of "
                     f"{', '.join(i.field for i in op.inputs)} is written with the family "
-                    f"{equation.fun!r}, whose result set is not declared "
-                    f"(opaque:{Identity('external', field=equation.fun, mark='result')}); under "
-                    f"the rule not-constructed the forward measure is extended only by the "
-                    f"families {', '.join(FAMILY_ARGUMENTS)}; write the declaration with one of "
-                    f"those families, or read the backward builders graph, which does not use it",
+                    f"{equation.fun!r}, whose result set is not declared; the forward measure "
+                    f"is constructed only for the families {', '.join(FAMILY_ARGUMENTS)}",
                     stage=self.name,
                     address=(
                         declaration.address
@@ -492,6 +489,11 @@ class WireTable:
                         else op.identity
                     ),
                     rule="not-constructed",
+                    write=(
+                        f"Write the distribution of {', '.join(i.field for i in op.inputs)} with "
+                        f"one of the families {', '.join(FAMILY_ARGUMENTS)}, or read the "
+                        f"backward builders graph, which does not use it"
+                    ),
                 )
 
     def measures_written(self, box, perch):

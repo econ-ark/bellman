@@ -49,7 +49,7 @@ Rule
   (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  18  a = m_d - c
+  17  a = m_d - c
 
 Definitions referenced
   Xm    cons:set:Xm
@@ -58,7 +58,7 @@ Definitions referenced
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-A card has its title over a heavy line; then its sections, each opening with its heading at the left margin, its content two columns in and a blank line between two sections; then a light line, the sections `Source` and `Definitions referenced`, and a heavy line that closes it. No line passes column 78, and a section with nothing to print is not printed. An operation's card has, in this order: `Signature`, its input wires under `in` and its output wires under `out`, each with its type, and a short line between the two; `Where`, the local names its rules use, each stated once: the law of motion at the policy where the operation reads one, with its type and its rule at a point, the law of motion read at one label of a branching block, the outputs of a law named by their fields, and the set of admitted pairs of a block that declares a multiplier ([Constraints](../../10-constraints.md) §4.2); `Rule`, the rule the operation applies; `Conditions`, the memberships the rule needs that the construction has not established; on a methodized version, `Method`, the method bound within the piece with its handler and, at the right margin, the target it is bound at, and `Options`, the method's options with the values of the settings they name, both left out on the card of a block, of a line and of a piece read through `stage.declared`, whose `methods` answers them; `Source`, which names the file once and gives each line the operation realizes, as the author wrote it, after its line number, with a section for each file where the lines stand in the stage file and a block file; and `Definitions referenced`, the key of each declared name the card writes, followed by the file and the line where a block file defines the name. A line of the file stands once on a card, under `Source`, and what it denotes stands in the sections above; the identity of a wire is on the record and in no column of the card.
+A card has its title over a heavy line; then its sections, each opening with its heading at the left margin, its content two columns in and a blank line between two sections; then a light line, the sections `Source` and `Definitions referenced`, and a heavy line that closes it. No line passes column 78, and a section with nothing to print is not printed. An operation's card has, in this order: `Signature`, its input wires under `in` and its output wires under `out`, each with its type, and a short line between the two; `Where`, the local names its rules use, each stated once: the law of motion at the policy where the operation reads one, with its type and its rule at a point, the law of motion read at one label of a branching block, the outputs of a law named by their fields, and the set of admitted pairs of a block that declares a multiplier ([Constraints](../../10-constraints.md) §4.2); `Rule`, the rule the operation applies; `Conditions`, the memberships the rule needs that the construction has not established; on a methodized version, `Method`, the method bound within the piece with its handler and, at the right margin, the place it is bound at, and `Options`, the method's options with the values of the settings they name, both left out on the card of a block, of a line and of a piece read through `stage.declared`, whose `methods` answers them; `Source`, which names the file once and gives each line the operation realizes, as the author wrote it, after its line number, with a section for each file where the lines stand in the stage file and its methods file; and `Definitions referenced`, the key of each declared name the card writes, followed by the file and the line where the methods file defines the name. A line of the file stands once on a card, under `Source`, and what it denotes stands in the sections above; the identity of a wire is on the record and in no column of the card.
 
 Read along the wires of the decision builder: the continuation value 𝑉≻ is a function of savings `a`; the pullback composes it with the law of motion, so that 𝑉≻ ∘ 𝑔≻ is a function of `(m_d, c)`; the aggregation applies 𝐺; the policy indexes the pullback, the aggregation or the conditional distribution in which it occurs; and the evaluation returns 𝑉 under its field name as a function of `m_d` alone, with the derivative that the line `cntn_to_dcsn.marginal` states, `D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))`, recorded beside it.
 
@@ -95,7 +95,7 @@ Rule
   μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  18  a = m_d - c
+  17  a = m_d - c
 
 Definitions referenced
   Xm    cons:set:Xm
@@ -116,7 +116,7 @@ print([record.identity for record in aggregation.kernel().origins])
 
 ```text
 𝐺 of cntn_to_dcsn: 𝐺(V≻, m_d, c) = 𝑢(c) + V≻
-outputs (V); unused m_d; V reads V≻, c
+output V; unused m_d
 ['cons:G:cntn_to_dcsn']
 ```
 
@@ -152,9 +152,9 @@ print(aggregation.kernel().python)
 ```text
 1.5
 2.0
-# bellman kernel of cons, cntn_to_dcsn:Aggregation; cons.bl sha256 08c03d33a2b2c19b5655ba97c515c6d650999398fb0ba3d1c2111cd49e37cc8f; bellman 0.1.0
+# bellman kernel of cons, cntn_to_dcsn:Aggregation; cons.bl sha256 e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667; bellman 0.1.6
 # 𝐺 of cntn_to_dcsn: 𝐺(V≻, m_d, c) = 𝑢(c) + V≻
-# outputs (V); unused m_d; V reads V≻, c
+# output V; unused m_d
 # parameters: ρ ∈ [1, inf)
 # names: V_cntn is V≻; u is 𝑢
 import numpy as np
@@ -169,7 +169,7 @@ def G_cntn_to_dcsn(V_cntn, m_d, c, ρ):
 
 `g(2.0, 0.5)` evaluates the law of motion at `m_d = 2` and `c = 0.5` and returns the saving; `G(4.0, 2.0, 0.5, 2.0)` evaluates the aggregator at the continuation value 4, `m_d = 2` and `c = 0.5`, with `ρ = 2` passed last, and returns 𝑉, the one output that the line `outputs (V)` of the printed kernel names. The comment lines of the text name the stage, the operation, the stage file with the digest of its text, the package's version, the printed rule, the Python name given to each name of the file and the declared set of each parameter; they hold no date and no value, so the text of an unchanged model does not change. The function 𝑢 that the rule calls is written inside the function, so `numba.njit(G)` compiles it in one call, `inspect.getsource(G)` prints its definition and cloudpickle saves it. The standard `pickle` and Numba's cache refuse a function made in memory; for them, write the text to a file of your choosing and import the function from that file. A builder answers the kernels of all its operations as one record, `kernels()` ([A builder](04-builder.md) §5).
 
-`compile_kernel()` is refused with a `ConstructionError` under the rule `kernel-target` on an operation that applies no explicit function, an evaluation among them, whose `kernel()` states the identity it applies; an authored line refuses both verbs (§4). It is refused under the rule `kernel-form` on an operation whose rule reads a derivative term, as on one whose rule reads an operator term such as `D_{c}(𝑢)`, and the refusal names the term: the candidate line `InvEuler` of the policy builder reads `D_{a}V[>]`, so its `kernel()` prints the map with the term, `(D_{a}𝑉≻, a) ↦ 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻)`, and compiles to no function.
+`compile_kernel()` is refused with a `ConstructionError` under the rule `kernel-target` on an operation that applies no explicit function, an evaluation among them, whose `kernel()` states the identity it applies, and on a row that states a relation with no explicit side, the identification `c = c[>]`; an authored line refuses both verbs (§4). It is refused under the rule `kernel-form` on an operation whose kernel calls a function the stage file defines by a derivative or an inverse, `𝑑𝑢 := D_{c}(𝑢)` or `𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)`, and the refusal names the call. A row that reads a derivative term compiles, the term among the function's arguments: the candidate line `InvEuler` of the policy builder reads `D_{a}V[>]`, its `kernel()` prints the map with the term, `(D_{a}𝑉≻, a) ↦ 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻)`, and its `compile_kernel()` answers the function `G_policy_InvEuler(V_cntn, a, argument, ρ)`, whose third argument takes the value of the term, since `𝑑𝑢𝑖𝑛𝑣` is defined in closed form ([Expression forms](../../reference/forms.md) §3).
 
 ## 3 Conditions and methods
 
@@ -192,7 +192,7 @@ The one condition here is established: the declared sets decide that the law of 
 
 ## 4 An authored line
 
-A line of a block is read from its block by its id, `stage.initial.backward["cntn_to_dcsn", "value"]`, and answers `denote()`, `signature()`, `obligations()` and `methods`; [The initial diagrams](02-initial.md) §3 prints one. A line states a relation and applies no rule, so it refuses `kernel()` and `compile_kernel()`: the operation that realizes it is the piece that applies a rule. A line marked `!doc` has no box and answers `denote()` and `methods` alone.
+A line of a block is read from its block by its id, `stage.initial.backward["cntn_to_dcsn", "value"]`, and answers `denote()`, `signature()`, `obligations()` and `methods`; [The initial diagrams](02-initial.md) §3 prints one. A line states a relation and applies no rule, so it refuses `kernel()` and `compile_kernel()`: the operation that realizes it is the piece that applies a rule. A line marked `!doc` has no box and answers `denote()` and `methods` alone; the consumption stage marks none, and its maximization `optimality` is a line with a box, whose card prints the line as the file writes it.
 
 ```python
 optimality = stage.initial.backward["policy", "optimality"]
@@ -205,7 +205,7 @@ Line('cons', 'policy.optimality')
 STAGE cons / POLICY BLOCK policy / optimality
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Source  cons.bl
-  32  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 

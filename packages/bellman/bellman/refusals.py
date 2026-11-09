@@ -10,9 +10,8 @@ the rule and the position as fields rather than by matching the sentence:
   rule of `RULES`, with the position of the authored item responsible;
   `NotConstructed`, its subclass, a form the construction does not read, under
   the rule `not-constructed`;
-- `TargetError`, a methods-file target that names no place of a stage, or
-  two, under one rule of `TARGET_RULES`, the rules of the identity table by
-  which the string written after `on:` is read;
+- `TargetError`, a name that reaches no piece of a stage, or two, under one
+  rule of `TARGET_RULES`;
 - `FactoryError`, a registry, a recipe, a fill, a trellis file, a trellis
   dictionary, a record or a period that the Bellman factory refuses, under one
   rule of `FACTORY_RULES`.
@@ -21,6 +20,12 @@ the rule and the position as fields rather than by matching the sentence:
 discharge, the field `condition` of a `records.Condition`. The
 catalogue of the rules is `bellman.refusal_catalogue`, and the smallest
 example that breaks each rule stands in `bellman.refusal_examples`.
+
+A refusal of graph construction or of the factory may name a second place
+beside the item it is raised at, a `Location` with its role, and may carry
+the action, `write`, where the check establishes the edit; both are fields,
+printed on lines after the sentence, so that a reader links the second place
+and labels the action without reading the sentence (Model Interface 0.9 §4).
 
 `Diagnostic` is what an elaboration records without refusing: a problem of a
 connection of a trellis (`bellman.factory.connections`), or a value input a
@@ -44,32 +49,99 @@ __all__ = (
     "Diagnostic",
     "FACTORY_RULES",
     "FactoryError",
-    "GRID_KIND_AS_METHOD",
-    "GRID_UNDER_EGM",
-    "GRID_WITHOUT_KIND",
-    "METHOD_ATTACHMENT",
+    "Location",
     "METHOD_CONDITIONS",
     "NotConstructed",
-    "REPRESENTATION_ON_BUILDER",
-    "REPRESENTATION_ON_DERIVATIVE_LINE",
     "RULES",
-    "RULE_A",
-    "RULE_B_C",
-    "RULE_D",
-    "RULE_E",
-    "RULE_FORM",
-    "RULE_G",
-    "RULE_H",
-    "RULE_I",
-    "RULE_II",
-    "RULE_TWO",
     "TARGET_AMBIGUOUS",
     "TARGET_NOT_FOUND",
     "TARGET_RULES",
     "TARGET_VERSION",
     "TargetError",
     "construction_error",
+    "location",
+    "written_kind",
 )
+
+
+# --- the second place a refusal names ---
+
+
+class Location(NamedTuple):
+    """A second place a refusal names beside the item it is raised at: its
+    `role` in the refusal, `original declaration` for the earlier item of a
+    pair, `authored law` for the forward law a backward line reaches a state
+    through, `dependency` for an item of a cycle, `rejected setting` for the
+    key of a settings file, `settings source` for the settings file itself;
+    the `file`; the range `line`, `column`, `end_line` and `end_column`,
+    counted as `ConstructionError` counts them, each None where the place has
+    no position; and the `address` of the item, a term address or a key of a
+    YAML file. `str` prints the role, the position and the address."""
+
+    role: str
+    file: "str | None" = None
+    line: "int | None" = None
+    column: "int | None" = None
+    end_line: "int | None" = None
+    end_column: "int | None" = None
+    address: "str | None" = None
+
+    def __str__(self) -> str:
+        if self.line is not None:
+            where = f"{self.file if self.file else '<text>'}:{self.line}:{self.column}"
+            if self.end_line is not None and self.end_column is not None:
+                where += f"-{self.end_line}:{self.end_column}"
+            if self.address is not None:
+                where += f" (address {self.address!r})"
+        elif self.address is not None:
+            where = (f"{self.file}: " if self.file else "") + f"address {self.address!r}"
+        else:
+            where = self.file or "<text>"
+        return f"{self.role}: {where}"
+
+
+def location(role, *, address=None, span=None, file=None):
+    """The `Location` of a second item, positioned by `span`, a
+    `bellman.syntax.lower.SourceSpan`, or by `file` alone where the item has
+    no span, as `construction_error` positions the item responsible."""
+    return Location(
+        role,
+        file=file if span is None else span.file,
+        line=None if span is None else span.line,
+        column=None if span is None else span.column,
+        end_line=None if span is None else span.end_line,
+        end_column=None if span is None else span.end_column,
+        address=address,
+    )
+
+
+def written_kind(value):
+    """What a value a YAML file or a Python caller wrote is, in words, for a
+    refusal that expected another kind: `a list`, `the text 'x'`, `the number
+    3`, `the word true` or `the word false` for a Boolean, `a mapping`,
+    `nothing`, or `a value of another kind`."""
+    if value is None:
+        return "nothing"
+    if isinstance(value, bool):
+        return f"the word {str(value).lower()}"
+    if isinstance(value, (int, float)):
+        return f"the number {value!r}"
+    if isinstance(value, str):
+        return f"the text {value!r}"
+    if isinstance(value, (list, tuple)):
+        return "a list"
+    if isinstance(value, dict):
+        return "a mapping"
+    return "a value of another kind"
+
+
+def _lines_after(related, write):
+    """The lines a refusal prints after its sentence: one per related
+    location and one for the action, each indented."""
+    lines = [f"\n  {held}" for held in related]
+    if write:
+        lines.append(f"\n  write: {write}")
+    return "".join(lines)
 
 
 # --- the refusals of graph construction ---
@@ -85,7 +157,7 @@ RULES = (
     "syntax",
     # The roles `!mrgnvl` and `!sndmrgnvl` are retired from the language: a
     # backward header lists value fields and controls, and a derivative of a
-    # value is the term `D_{x}V` (AMD-MB-001 §4.1).
+    # value is the term `D_{x}V`.
     "marginal-role-retired",
     # The file names itself once: exactly one `@stage` line, with a name.
     "stage-name",
@@ -95,8 +167,8 @@ RULES = (
     # side once, and a derivative line states each derivative term, `D_{m}V`,
     # once. A documentary line (`!doc`) defines and states none.
     "defined-once",
-    # A name is a field, a function, a named space, a shock, or a parameter —
-    # one of them — and is not the name of a numerical operator.
+    # A name is one of a field, a function, a named space, a shock or a
+    # parameter, and is not the name of a numerical operator.
     "one-name-one-meaning",
     # A top-level scalar declaration is a parameter; only a shock is
     # both declared at the top level and listed on the side of a block.
@@ -104,8 +176,8 @@ RULES = (
     # Every listed field has one perch, fixed by its side's perch word, its
     # mark, or its role, and the three must agree.
     "field-perch",
-    # Every name a statement or a definition body mentions is declared where
-    # the statement stands, and every set a typing names, `n_m : Foo`, is a
+    # Every name a statement, method entry or definition body mentions is
+    # declared where it is used, and every set a typing names, `n_m : Foo`, is a
     # named set the stage defines or a set of the language.
     "name-in-scope",
     # A selection takes a coordinate of a declared family by a key the family
@@ -161,8 +233,8 @@ RULES = (
     # The one formal argument a derivative names is scalar, not product-valued.
     "derivative-scalar-coordinate",
     # A derivative of a value field, `D_{a}V[>]`, names a state coordinate of the
-    # perch at which the field is read, and not a discrete one (AMD-MB-001 §4.2);
-    # for the value of a branch, `D_{a_w}V_w[>]`, a state the branch writes.
+    # perch at which the field is read, and not a discrete one; for the value
+    # of a branch, `D_{a_w}V_w[>]`, a state the branch writes.
     "derivative-coordinate",
     # Every field is produced and consumed: a block writes it or the stage
     # receives it, and a block reads it or the stage delivers it.
@@ -177,15 +249,27 @@ RULES = (
     "grid-line-consistency",
     # No authored name collides with the spelling of an identity: a name
     # containing the colon that separates its segments, or a name equal to one
-    # of the words a reader tests for in the last segment — `result`,
-    # `declared`, `merged`.
+    # of the words a reader tests for in the last segment, `result`,
+    # `declared` or `merged`.
     "identity-collision",
     # The item is a form the construction rules read.
     "readable-form",
-    # A typing entry or a handler binding, `policy.method : !egm`, is written
-    # in a methods file, which the union attaches to its stage and the
-    # semantics reads; a stage elaborated alone carries none.
-    "typing-entry-unattached",
+    # A component of an operator's signature, its method, its grid or its
+    # handler, is typed by one entry: two entries at one place, an entry for
+    # the whole of an Evaluation beside one for an object it stores, or a
+    # stage-wide or block-wide operator head beside one of its occurrences,
+    # are refused naming both.
+    "component-typed-twice",
+    # The derivative operator `D` and its occurrences admit no typing: nothing
+    # is differentiated by a method, and a definition by `D` is an authored
+    # expression or a handler's.
+    "no-method-for-derivative",
+    # A method word stands at a place of a kind its row of the catalogue
+    # admits, a representation at an Evaluation, a quadrature at an
+    # expectation, a solution method on a builder, and its entry writes every
+    # keyword the row requires there, one count per shock for a quadrature's
+    # nodes.
+    "method-admission",
     # Over the files of a stage, a component is typed once, whether by an
     # absolute or a relative spelling of its path, a name is defined once, or
     # identically in each file, and a line id names one line of a block; the
@@ -205,6 +289,27 @@ RULES = (
     # name the stage file gives itself, and a metadata line of another key
     # agrees with the stage file's line of that key.
     "metadata-mismatch",
+    # Every factor of a grid names a coordinate of the function the place
+    # holds, a control of the builder for a feasible factor or a shock for a
+    # quadrature factor; a coordinate no factor names takes the default, the
+    # product over the coordinates of that function, as every coordinate does
+    # where the place writes no grid entry; a method that reads no grid has
+    # none written at its place.
+    "grid-coordinate",
+    # Every name a factor of a grid writes is a setting the methods file
+    # declares, a node set the stage defines or an expectation operator of
+    # the stage; a bound or a count written as a number is refused.
+    "grid-setting-declared",
+    # At configuration the bounds of a factor are in order and inside the
+    # coordinate's declared set, its count is at least two, and a node set
+    # is strictly increasing.
+    "grid-bounds",
+    # A setting's configured value lies in the set its declaration names.
+    "setting-outside-set",
+    # Every setting the methods file declares, and every setting a bound
+    # method's keyword arguments or grid name, has a value when settings are
+    # bound.
+    "setting-unvalued",
     # A multiplier is declared inside the block whose continuation grid it
     # extends, once, marked `[>]`, with one declared set and one bound after
     # ⟂ that names continuation states, multipliers of the block, parameters,
@@ -248,7 +353,8 @@ RULES = (
     # reads as arguments, so a symbolic version compiles too and answers no
     # values, `parameter_values` None.
     "kernel-form",
-    # Every configured method option has the type its public method row names.
+    # Every configured keyword argument of a method lies in the domain its
+    # row of the catalogue names for it.
     "method-option-value",
     # `kernel` and `compile` read a primitive operator box, and `compile` one
     # whose kernel is g or G.
@@ -289,18 +395,8 @@ RULES = (
     # order of the labels, `Categorical((p₁, …, pₙ))` or `Bernoulli(p)` over
     # two.
     "branch-law",
-    # The item is a form of the language the construction does not read
-    # (`NotConstructed`).
+    # The item is a form of the language the construction does not read.
     "not-constructed",
-    # A method block's header matches the builder the methods file opens with
-    # it: the block joins the builder's perches, writes the builder's outputs,
-    # and reads the builder's inputs or inputs its header declares with a set
-    # and a role (specification 0.6 §4.1).
-    "block-header-mismatch",
-    # A line of a method block calls a function the stage file or the block
-    # file defines, or a primitive function of the language (specification
-    # 0.6 §4.1).
-    "block-name-undefined",
 )
 
 
@@ -323,9 +419,14 @@ class ConstructionError(ValueError):
     top-level declaration (`cons.bl:6`), or the term address a term carries
     whether or not a span table was given; it is set whenever an authored
     item is responsible. `rule` is one of `RULES`, which the constructor
-    checks wherever the refusal is made. `message` is the explanation,
-    in the words of the model — field, perch, shock, block, statement —
-    and says what to write instead.
+    checks wherever the refusal is made. `message` is the explanation, in
+    the words of the model (field, perch, shock, block, statement), and
+    states the condition the item fails; the action stands apart from it in
+    `write`. `related` is the tuple of `Location`
+    records of the second items the sentence names, the earlier declaration
+    of a pair or the authored law a line reaches a state through, empty where
+    it names none; `write` is the action, the edit the check establishes, or
+    None where the check establishes none.
 
     `str(error)` leads with the position, as an editor and a compiler both
     print it, and the bookkeeping follows the sentence a modeler reads:
@@ -336,6 +437,9 @@ class ConstructionError(ValueError):
     and, without a position,
 
         address 'policy.cons_choice': block 'policy' … (rule name-in-scope)
+
+    The related locations and the action follow on lines of their own, so
+    that the first line is the same whether or not they are filled.
 
     It is a `ValueError`, so that a caller that catches `ValueError` catches
     every refusal.
@@ -353,6 +457,8 @@ class ConstructionError(ValueError):
         end_column=None,
         address=None,
         rule=None,
+        related=(),
+        write=None,
     ):
         if rule is not None and rule not in RULES:
             raise ValueError(
@@ -368,8 +474,15 @@ class ConstructionError(ValueError):
         self.end_column = end_column
         self.address = address
         self.rule = rule
+        self.related = tuple(related)
+        self.write = write
 
     def __str__(self) -> str:
+        return self._head() + _lines_after(self.related, self.write)
+
+    def _head(self) -> str:
+        """The position, the message and the rule, which the related
+        locations and the action follow on lines of their own."""
         tail = f"rule {self.rule}" if self.rule else "no rule named"
         if self.line is not None:
             where = f"{self.file if self.file else '<text>'}:{self.line}:{self.column}"
@@ -395,16 +508,26 @@ class NotConstructed(ConstructionError, NotImplementedError):
 
 
 def construction_error(
-    message, *, stage, address, span, rule, error_class=ConstructionError, file=None
+    message,
+    *,
+    stage,
+    address,
+    span,
+    rule,
+    error_class=ConstructionError,
+    file=None,
+    related=(),
+    write=None,
 ):
     """A `ConstructionError` (or, with `error_class=NotConstructed`, a
     `NotConstructed`) for the item at `address`, positioned by `span` — a
     `bellman.syntax.lower.SourceSpan` for a fresh parse, or None for a term
     decoded from a saved AST, which carries no positions. A refusal made
     after construction, when no span table remains, gives no span and
-    names the source the stage records as `file`. The rule is refused where it
-    is not one of `RULES`, by the constructor, which checks it at
-    every site."""
+    names the source the stage records as `file`. `related` and `write` are
+    the second places the sentence names and the action, as the class holds
+    them. The rule is refused where it is not one of `RULES`, by the
+    constructor, which checks it at every site."""
     return error_class(
         message,
         stage=stage,
@@ -415,105 +538,42 @@ def construction_error(
         column=None if span is None else span.column,
         end_line=None if span is None else span.end_line,
         end_column=None if span is None else span.end_column,
+        related=related,
+        write=write,
     )
 
 
-# --- the refusals of the identity table ---
+# --- the refusals of a name that reaches no piece, or two ---
 
-# The rules of the identity table by which a methods-file target is read
-# (`bellman.stage.method_targets`, whose docstring states each). Its item (f),
-# that the reading is blind to the method, refuses nothing: where a method
-# stands once its target is read is the placement rule of its row of the
-# method table, whose refusal is `METHOD_ATTACHMENT`.
-RULE_A = "(a) a builder box by its block id; `<block-id>_builder` for a transition block"
-RULE_B_C = (
-    "(b), (c) a node box or a line by `<block-id>.<statement-id>`, a line of a branch by "
-    "`<block-id>.<label>.<statement-id>`"
-)
-RULE_II = "(c.ii) a positional address `<block-id>.<n>` is not a target; the line needs an id"
-RULE_D = "(d) every occurrence of an operator by its stage-wide name"
-RULE_E = "(e) every occurrence of an operator in one line by `<block-id>.<statement-id>.<operator>`"
-RULE_G = (
-    "(g) `evaluate` alone: the one authored occurrence; two or more are named by their "
-    "addresses, and a stage that authors none is refused naming `<block-id>.evaluate.value`"
-)
-RULE_H = "(h) one target per entry; a comma-separated entry is split by L02"
-RULE_I = (
-    "(i) the Evaluation of a builder by `<block-id>.evaluate`, `<block-id>.evaluate.value` "
-    "or `<block-id>.evaluate.marginal`"
-)
-RULE_FORM = (
-    "a target has one, two, or three dot-separated parts, or four where the second is a "
-    "branch label"
-)
-RULE_TWO = "a target reaches one place; two is a construction defect"
-
-# The four failures a target can suffer beyond the identity table: a name the
-# version holds no place for, a name that reaches two places, a name resolved
-# against another version, and a method entry the attachment refuses.
-TARGET_NOT_FOUND = "target-not-found"
-TARGET_AMBIGUOUS = "target-ambiguous"
-TARGET_VERSION = "target-version"
-METHOD_ATTACHMENT = "method-attachment"
-
-# The two places a representation is not attached to, each refused naming the
-# address the author writes (AMD-MB-002 §4): a builder, whose Evaluation is
-# written `<block-id>.evaluate` or `<block-id>.evaluate.value`, and a
-# derivative line, whose stated derivative is represented at
-# `<block-id>.evaluate.marginal`.
-REPRESENTATION_ON_BUILDER = "representation-on-builder"
-REPRESENTATION_ON_DERIVATIVE_LINE = "representation-on-derivative-line"
-
-# The three forms of a grid the method table does not read, each refused
-# naming the form the author writes (AMD-MB-003 §3): a kind of grid,
-# `!Cartesian`, written as a method, where the basis is the method and the
-# grid its setting `grid: !Cartesian`; the fields of a grid, `orders` and
-# `bounds`, written beside a basis or beside `!egm` without the setting
-# `grid` that names the grid's kind; and a grid written on the Evaluation of
-# the policy builder where `!egm` stores the pairs that are the interpolant's
-# knots.
-GRID_KIND_AS_METHOD = "grid-kind-as-method"
-GRID_WITHOUT_KIND = "grid-without-kind"
-GRID_UNDER_EGM = "grid-under-egm"
-
-# The one vocabulary of `TargetError.rule`: the rules of the identity table
-# above, in the order the table writes them, and the nine failures beside
-# them. The constructor refuses a rule outside it, so that every site names
-# one of them.
+# The three failures a name can suffer when it is read against the pieces of
+# a version (`stage/boxes.py`, `piece_and_place`), the one vocabulary of
+# `TargetError.rule`: the constructor refuses a rule outside it, so that
+# every site names one of them. Each name is the field `rule` of a
+# `TargetError`, and the comment above it states the rule's claim, as the
+# comments of `RULES` do.
 TARGET_RULES = (
-    RULE_A,
-    RULE_B_C,
-    RULE_II,
-    RULE_D,
-    RULE_E,
-    RULE_G,
-    RULE_H,
-    RULE_I,
-    RULE_FORM,
-    RULE_TWO,
-    TARGET_NOT_FOUND,
-    TARGET_AMBIGUOUS,
-    TARGET_VERSION,
-    METHOD_ATTACHMENT,
-    REPRESENTATION_ON_BUILDER,
-    REPRESENTATION_ON_DERIVATIVE_LINE,
-    GRID_KIND_AS_METHOD,
-    GRID_WITHOUT_KIND,
-    GRID_UNDER_EGM,
+    # A name given to a query of the stage object, a box name or an identity,
+    # names a piece the version asked holds.
+    "target-not-found",
+    # A name given to a query reaches one piece of the version, not two.
+    "target-ambiguous",
+    # An object given to a query belongs to the version asked: a box or a
+    # record of one version is not read against another version, since
+    # versions share no object.
+    "target-version",
 )
+TARGET_NOT_FOUND, TARGET_AMBIGUOUS, TARGET_VERSION = TARGET_RULES
 
 
 class TargetError(LookupError):
-    """A target name that reaches no place in a stage, or two. `target` is
-    the name as given; `stage` the stage's name; `rule` the rule of the
-    identity table that failed, one of `TARGET_RULES`; `candidates` the
-    stage's target inventory, the strings `resolve_target` accepts; the
-    message names all four."""
+    """A name that reaches no piece of a stage, or two. `target` is the name
+    as given; `stage` the stage's name; `rule` one of `TARGET_RULES`;
+    `candidates` the names the stage holds; the message names all four."""
 
-    def __init__(self, target, stage, rule, candidates, message):
+    def __init__(self, target, stage, rule, candidates, message, *, write=None):
         if rule not in TARGET_RULES:
             raise ValueError(
-                f"{rule!r} is no rule of the identity table; the "
+                f"{rule!r} is no rule of `TARGET_RULES`, the names of the pieces; the "
                 f"rules are {', '.join(TARGET_RULES)}"
             )
         super().__init__(message)
@@ -521,6 +581,11 @@ class TargetError(LookupError):
         self.stage = stage
         self.rule = rule
         self.candidates = tuple(candidates)
+        self.message = message
+        self.write = write
+
+    def __str__(self):
+        return self.message + _lines_after((), self.write)
 
 
 # --- the refusals of the Bellman factory ---
@@ -530,55 +595,57 @@ class TargetError(LookupError):
 # joins of a period must satisfy. Each name is the field `rule` of a
 # `FactoryError`.
 FACTORY_RULES = (
-    # the recipe names its trellis file under `trellis:` and has a `stages`
+    # The recipe names its trellis file under `trellis:` and has a `stages`
     # mapping; each stage key stands once and its entry names its stage file
     # under `stage:`, each file by its path from the recipe's folder; each
     # kind block is a mapping with an `all` list; a range key is written
     # `lo-hi` with lo ≤ hi and no two ranges of one list overlap; `periods:`
-    # is a pair
+    # is a pair.
     "recipe-shape",
-    # every source name is relative to the registry without `..`, names a file
+    # Every source name is relative to the registry without `..`, names a file
     # the registry holds, of the kind of the list it stands in, and its
-    # `parent:` chain neither cycles nor exceeds ten files
+    # `parent:` chain neither cycles nor exceeds ten files.
     "recipe-source",
-    # every keyword of `load_recipe` names a slot the recipe declares
+    # Every fill names a slot the recipe declares by a `$` name in one of its
+    # source lists.
     "recipe-slot-unknown",
-    # every stage the recipe names occupies a period the trellis file holds,
-    # and every stage a period holds is named by the recipe
+    # Every stage the recipe names occupies a period the trellis file holds,
+    # and every stage a period holds is named by the recipe.
     "recipe-template-agreement",
-    # a slot is bound to a mapping
+    # A slot is bound to a mapping.
     "slot-value-not-a-mapping",
-    # every key of a fill names a parameter or a setting a receiving stage
-    # declares, or a name the `registry` block admits
+    # Every key of a fill names a parameter or a setting a receiving stage
+    # declares, or a name the `registry` block admits.
     "fill-names-nothing",
-    # a flat fill names parameters or settings, not both
+    # A flat fill names parameters or settings, not both.
     "fill-mixes-kinds",
-    # a trellis file, or a trellis dictionary, lists its `periods` and its
+    # A trellis file, or a trellis dictionary, lists its `periods` and its
     # `inter_connectors`; each period holds `stages` and `connectors`; each
-    # record of a file names its `stage`
+    # record of a file names its `stage`.
     "trellis-file-shape",
-    # a record holds `stage` as `{text, origin}` and its three mappings, and a
-    # supplied digest or origin agrees with the source
+    # A record holds `stage` as `{text, origin}` and its three mappings, and a
+    # supplied digest or origin agrees with the source.
     "record-shape",
-    # the pairs of a period, authored by its connectors or inferred from
+    # The pairs of a period, authored by its connectors or inferred from
     # equal field names, close no cycle, and no connector joins a stage to
-    # itself
+    # itself.
     "period-join-cycle",
-    # a connector is a mapping, flat or in the keyed form {from, to, fields}
+    # A connector is a mapping, flat or in the keyed form {from, to, fields}
     # within a period, and one entry maps a continuation field; a connector
     # whose endpoint names no field, or several, is a diagnostic of the
-    # trellis's selection of its connections and no refusal (AMD-COMP-001 §3)
+    # trellis's selection of its connections and no refusal.
     "connector-names-no-field",
-    # a parameter name two or more stages of one period declare names one
-    # parameter of the period (AMD-COMP-001 §2.3): the sets the stages
+    # A parameter name two or more stages of one period declare names one
+    # parameter of the period: the sets the stages
     # declare it with have one nonempty intersection the package reads, the
     # stages' sources supply it one value, and that value lies in every
-    # declared set
+    # declared set; a setting name two or more stages declare in their
+    # methods files names one setting of the period in the same way.
     "period-parameter-agreement",
-    # a path given to `load_stage`, or written under `stage:` in a recipe,
-    # names a readable stage file, a `.bl` file of UTF-8 text; a source file a
-    # binding verb reads, or a record of a trellis file names, is a readable
-    # YAML mapping that writes each key once
+    # A stage file, read by its path or named under `stage:` in a recipe, is a
+    # readable `.bl` file of UTF-8 text; a source file a binding verb reads, or
+    # a record of a trellis file names, is a readable YAML mapping that writes
+    # each key once.
     "readable-file",
 )
 
@@ -588,10 +655,27 @@ class FactoryError(ValueError):
     record or a period the Bellman factory refuses, under one rule of
     `FACTORY_RULES`, in the four parts of a refusal: `file` and `address` say
     where, `written` what stands there, `message` why, and `write` what to
-    write instead. `str(error)` is the file, the address, the message, the
-    advice and the rule; an empty part is left out."""
+    write instead. `line` and `column` are the position of the refused key
+    in a YAML file, counted from one, where the reader of the file knows it,
+    and None otherwise; `related` is the tuple of `Location` records of the
+    second places the sentence names, the first writing of a key written
+    twice among them. `str(error)` is the file with the position, the
+    address, the message, the advice and the rule, then one line per related
+    location; an empty part is left out."""
 
-    def __init__(self, message, *, rule, file=None, address=None, written="", write=""):
+    def __init__(
+        self,
+        message,
+        *,
+        rule,
+        file=None,
+        address=None,
+        written="",
+        write="",
+        line=None,
+        column=None,
+        related=(),
+    ):
         if rule not in FACTORY_RULES:
             raise ValueError(
                 f"{rule!r} is no rule of the Bellman factory; the rules are "
@@ -600,12 +684,16 @@ class FactoryError(ValueError):
         super().__init__(message)
         self.message, self.rule, self.file, self.address = message, rule, file, address
         self.written, self.write = written, write
+        self.line, self.column, self.related = line, column, tuple(related)
 
     def __str__(self) -> str:
         head = f"{self.file}: " if self.file else ""
+        if self.line is not None:
+            head = f"{self.file if self.file else '<text>'}:{self.line}:{self.column}: "
         place = f"address {self.address!r}: " if self.address is not None else ""
         advice = f"; write {self.write}" if self.write else ""
-        return f"{head}{place}{self.message}{advice} (rule {self.rule})"
+        first = f"{head}{place}{self.message}{advice} (rule {self.rule})"
+        return first + _lines_after(self.related, None)
 
 
 # --- the conditions a stage states ---
@@ -728,10 +816,20 @@ class Diagnostic(NamedTuple):
     A stage records one under `unread-input` (`stage_answers.diagnostics`):
     its `address` is a backward block whose header lists a value input no
     line of the block reads, its one candidate that input's identity, and
-    the block's builder leaves the input out (AAS, 17 October 2026)."""
+    the block's builder leaves the input out (AAS, 17 October 2026).
+
+    `depends_on` is the address of the diagnostic this one rests on, set on a
+    route diagnostic whose route is uncertified because an authored cycle or
+    a use claimed twice stands among its pairs, and None otherwise, so that a
+    reader suppresses the secondary finding by this fact and not by the text
+    of the sentence (Model Interface 0.9 §4). `write` is the action, the edit
+    the check establishes, held apart from the sentence as a refusal holds
+    it, and None where the check establishes none."""
 
     rule: str
     address: str
     message: str
     candidates: tuple = ()
     source_entries: tuple = ()
+    depends_on: "str | None" = None
+    write: "str | None" = None

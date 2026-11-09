@@ -147,8 +147,8 @@ def refused(selection, file=None, *, rules=REFUSING_RULES):
             file=file,
             address=f"periods[{h}]" if pairs else diagnostic.address,
             written=named or diagnostic.message,
-            write="remove or redirect an authored connector so that the stage dependencies "
-            "have no cycle; qualify an endpoint with its stage key where its bare name "
+            write="connectors with no cycle among the stages; remove or redirect an authored "
+            "connector, and qualify an endpoint with its stage key where its bare name "
             "is ambiguous",
         )
     return None
@@ -379,7 +379,7 @@ def unjoined_fields(trellis, selection=None):
 
 def derivative_missing(trellis, selection=None):
     """The derivative readings of an elaborated or specified trellis that no
-    route meets (AMD-MB-001 §5.3, D3, D5 and D6), read along the route
+    route meets, read along the route
     certification of its selection: one `Diagnostic` under
     `derivative-missing` for each derivative term a block of a source
     occurrence reads of its continuation value, `D_{a}V[>]`
@@ -447,10 +447,9 @@ def derivative_missing(trellis, selection=None):
                     f"{at_source}, whose block {read.builder!r} reads `{read.spelling}`, and its "
                     f"value `{named}` carries no derivative in {', '.join(coordinates)}; state it "
                     f"with a derivative line of the builder that writes the value of stage "
-                    f"{stage.name!r}, in its stage file or in a marginal block bound with "
-                    "`!marginals`, or write at that builder's Evaluation, "
-                    f"`on: {evaluation_value_address(stage, value)}`, a representation whose "
-                    "row of the method table evaluates it",
+                    f"{stage.name!r}, in its stage file or in an addition, or type at that "
+                    f"builder's Evaluation, `{evaluation_value_address(stage, value)}.method : "
+                    "…`, a representation whose row of the catalogue evaluates it",
                     candidates=(str(value) if value is not None else required, *coordinates),
                 )
             )

@@ -31,6 +31,7 @@ from dataclasses import KW_ONLY, dataclass
 from bellman.distributions.conditionals import (
     check_conditioning_covariance,
     conditioning_shocks,
+    expectation_words,
     select_conditional,
 )
 from bellman.distributions.edges import JointDistribution
@@ -364,10 +365,13 @@ def sub_builder_rows(block, env, acc, address, core):
             "value-input-role",
             address,
             f"the node {address} defines {name} from no value input, and {name} has "
-            f"no declared role; `!node` does not give a value role to a statement, "
-            f"so its kernel has no value or marginal value to act on "
-            f"(AMD-SG-008 §3, rule value-input-role); read a value input in the "
-            f"statement, or define an output of the block whose header declares its role",
+            f"no declared role; `!node` gives no value role to a line, so its kernel has "
+            f"no value or marginal value to act on; read a value input in the line, or "
+            f"define an output of the block whose header declares its role",
+            write=(
+                f"Read a value input on line {address}, or define an output of block "
+                f"{block.name!r} whose header declares its role"
+            ),
         )
     if is_wire_symbol(folded.term):
         last = folded.term.symbol.name
@@ -429,6 +433,7 @@ def refuse_second_definition(block, acc, identity, address, seen=()):
             f"{block.name!r} defines already; a policy line defines each field once "
             f"(rule declared-once); remove one definition or give the second field "
             f"its own name",
+            write=f"Remove one definition of {spelled}, or give the second field its own name",
         )
 
 
@@ -776,9 +781,13 @@ def _refuse_domains(block, env, identity, spelling):
         env.owner,
         f"the computation of {env.owner} on ({stems}) reads {spelled_with_mark(spelling)}, "
         f"a function of ({own}); two functions on different coordinates have no pointwise "
-        f"combination, and no law of motion of the stage relates these coordinates "
-        f"(AMD-SG-008 §7); read {spelled_with_mark(spelling)} where it is defined, or "
+        f"combination, and no law of motion of the stage relates these coordinates; "
+        f"read {spelled_with_mark(spelling)} where it is defined, or "
         f"through a solution relation",
+        write=(
+            f"Read {spelled_with_mark(spelling)} where it is defined, or through a solution "
+            f"relation"
+        ),
     )
 
 
@@ -820,16 +829,26 @@ def _join(block, term, children):
     integrated = {shock for shock, _ in history}
     for shock, where in read:
         if shock in integrated:
-            occurrences = ", ".join(dict.fromkeys(str(o) for s, o in history if s == shock))
+            expectations = ", ".join(
+                dict.fromkeys(
+                    f"the expectation over {shock} on line {getattr(o, 'address', o)}"
+                    for s, o in history
+                    if s == shock
+                )
+            )
             refuse_backward_block(
                 block,
                 "shock-reintroduced",
                 where,
-                f"the line reads the shock {shock} beside a term in which {occurrences} has "
+                f"the line reads the shock {shock} beside a term in which {expectations} has "
                 f"already integrated {shock}, and no other value input of that combination still "
-                f"depends on {shock}; a backward function does not depend again on a shock after "
-                f"its expectation (AMD-SG-008 §4, rule shock-reintroduced); move the read of "
-                f"{shock} inside that expectation, or integrate the combination after it",
+                f"depends on {shock}; a backward function does not read a shock again after "
+                f"its expectation; move the read of {shock} inside that expectation, or "
+                f"integrate the combination after it",
+                write=(
+                    f"Move the read of {shock} inside the expectation over {shock}, or "
+                    f"integrate the combination after it"
+                ),
             )
     paths = tuple(dict.fromkeys(path for child in children for path in child.paths))
     return _ReducedTerm(term, active=active, read=read, history=history, paths=paths)
@@ -855,9 +874,13 @@ def expectation_rows(block, env, acc, node, address, order):
             block,
             "not-constructed",
             address,
-            f"the expectation of {address} would be constructed twice under the one identity "
-            f"{occurrence}; mark the line `!node` so that its result is read by its wire, or "
-            f"write it once for each computation that reads it",
+            f"{expectation_words(occurrence, shocks)} would be constructed twice; mark the "
+            f"line `!node` so that its result is read by its wire, or write it once for each "
+            f"computation that reads it",
+            write=(
+                "Mark the line `!node`, so that its result is read by its wire, or write the "
+                "expectation once for each computation that reads it"
+            ),
         )
     given, selection = _selected_conditional(block, env, acc, shocks, inner, occurrence, address)
     integrand, printed = _integrand(block, env, acc, node, inner, address, n, suffix, shocks)
@@ -920,8 +943,8 @@ def _selected_conditional(block, env, acc, shocks, inner, occurrence, address):
             declarations=owners,
         )
 
-    def refuse(rule, _, message):
-        refuse_backward_block(block, rule, address, message)
+    def refuse(rule, _, message, write=None):
+        refuse_backward_block(block, rule, address, message, write=write)
 
     given = conditioning_shocks(edge, shocks, inner.shocks, {s for s, _ in inner.history})
     selection = select_conditional(edge, shocks, given, occurrence, refuse)
@@ -1123,10 +1146,14 @@ def _formal(block, env, acc, role, address):
             block,
             "value-input-role",
             address,
-            f"the statement {address} reads no value input, and the header of builder "
-            f"{block.name!r} lists none to attach as the formal input of its aggregation; a "
-            f"kernel of a backward builder acts on a value or a marginal value (AMD-SG-008 §3, "
-            f"rule value-input-role); list the value input the builder reads in its header",
+            f"the line {address} reads no value input, and the header of block "
+            f"{block.name!r} lists none; a line of a backward block acts on a value or a "
+            f"marginal value that its header lists; list a value input in the header and "
+            f"read it on the line",
+            write=(
+                f"List a value input in the header of block {block.name!r} and read it on "
+                f"line {address}"
+            ),
         )
     chosen = next((i for i in block.inputs if block.ctx.role(i) == role), block.inputs[0])
     return pullback_wire(block, env, acc, chosen)
@@ -1195,6 +1222,7 @@ def check_output_shocks(block, env, identity, address, folded):
             f"returns a function of ({base}), and every shock of the edge is integrated by an "
             f"expectation on each path to its output (AMD-SG-008 §4, rule shock-observed); write "
             f"E_{{{','.join(residual)}}}(…) around the term that depends on it",
+            write=f"Write E_{{{','.join(residual)}}}(…) around the term that depends on it",
         )
     shocks = edge.shocks if edge else ()
     for label, cover in folded.paths:
@@ -1210,6 +1238,7 @@ def check_output_shocks(block, env, identity, address, folded):
                 f"edge of {edge.block!r} ({', '.join(shocks)}) is integrated on each path to an "
                 f"output, and one path's integral does not cover another (AMD-SG-008 §4, D28; "
                 f"rule shock-observed); integrate E_{{{','.join(shocks)}}}(…) on that path",
+                write=f"Integrate E_{{{','.join(shocks)}}}(…) on that path",
             )
 
 
@@ -1230,10 +1259,11 @@ def check_value_roles(block, acc, address, term):
             block,
             "value-input-role",
             address,
-            f"the statement reads {named}; a kernel of a backward block acts on "
-            f"values or on marginal values and its output has one role "
-            f"(AMD-SG-005 §1a rule 4), so a statement mixing the two has no single "
-            f"kernel: write the value and the marginal value on separate statements",
+            f"the line reads {named}; a kernel of a backward block acts on "
+            f"values or on marginal values and its output has one role, so a line "
+            f"mixing the two has no single kernel: write the value and the marginal "
+            f"value on separate lines",
+            write="Write the value and the marginal value on separate lines",
         )
 
 
@@ -1244,6 +1274,9 @@ def value_role_of(acc, term):
     return next(iter(found)) if len(found) == 1 else None
 
 
-def refuse_backward_block(block, rule, address, message):
-    """The refusal of a backward block under `rule`, at `address`."""
-    raise ConstructionError(message, stage=block.ctx.stage_name, address=address, rule=rule)
+def refuse_backward_block(block, rule, address, message, *, write=None):
+    """The refusal of a backward block under `rule`, at `address`, with the
+    action `write` where the fold establishes the edit."""
+    raise ConstructionError(
+        message, stage=block.ctx.stage_name, address=address, rule=rule, write=write
+    )

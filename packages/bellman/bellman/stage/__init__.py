@@ -51,16 +51,20 @@ The binding:
 - `binding_verbs`: the three binding verbs, `calibrate`, `methodize` and
   `configure`, with the conditions calibration decides and the checks of the
   options at the settings.
-- `method_table`: the method table `method_types`, the attachment of
-  methods to the places of a stage, and the methods a target admits,
+- `method_table`: the catalogue of the methods, `method_types`.
+- `places`: the places of a stage, the typing entries resolved to them and
+  the components typed at each; the methods a place admits,
   `admitted_methods`.
-- `method_targets`: the places a numerical method attaches at.
+- `levels`: the two levels of a stage, declared and operative, and the
+  additions a methods source names.
+- `components`: the checks of the components typed at the places against
+  the rows of the catalogue, at binding and at configuration.
 - `calibration_requirements`: the check of parameter values against their
   declared sets.
-- `sources`: the readers of a calibration, settings or methods source, a
-  mapping or a file, and `read_yaml_mapping`, the one reader of a YAML file,
-  which reads every file the binding verbs and the factory are given, keeps
-  every tag and refuses a key written twice.
+- `sources`: the readers of a calibration or a settings source, a mapping
+  or a file, and `read_yaml_mapping`, the one reader of a YAML file, which
+  reads every file the binding verbs and the factory are given, keeps every
+  tag and refuses a key written twice.
 
 The verbs a user calls, and the function that answers each (the class body of
 `ElaboratedStage` in `elaborated` binds the stage's; the handles of `pieces`
@@ -70,7 +74,8 @@ call the rest):
 |---|---|---|
 | `view()`, `str(stage)` | the stage | `inventory.stage_sheet` |
 | `list()` | the stage | `stage_answers.stage_listing` |
-| `fields()`, `obligations()`, `diagnostics()`, `places()` | the stage | the functions of the same names in `stage_answers` |
+| `fields()`, `obligations()`, `diagnostics()` | the stage | the functions of the same names in `stage_answers` |
+| `places()` | the stage | `places.places` |
 | `denote()` | the stage | `denotations.denote` |
 | `encoding()` | the stage | `encoding.encoding` |
 | `calibrate(x)`, `methodize(x)`, `configure(x)` | the stage | `binding_verbs` |
@@ -84,9 +89,9 @@ call the rest):
 | `kernels()` | a bubble that is a builder or a sub-builder | `pieces.builder_kernels` |
 
 The stage's tables `par` and `settings` read `stage_answers.parameters_of`
-and `settings_of`, and print `parameter_rows` and `setting_rows`; a method is
-read from `methods` at every level by the target a methods file writes
-through `pieces.method_bound_at`; and a builder is read by the pair of perches
+and `settings_of`, and print `parameter_rows` and `setting_rows`; the
+components at a place are read from `methods` at every level by the place as
+written through `pieces.components_bound_at`; and a builder is read by the pair of perches
 it joins, `stage.builder["cntn", "dcsn"]`, through
 `builder_pairs.builder_pairs`, a perch path such as `stage.dcsn.builder.bwd`
 reading one key of that mapping.
@@ -118,10 +123,15 @@ _EXPORTS = {
     "dcsn": "bellman.syntax.vocabulary",
     "cntn": "bellman.syntax.vocabulary",
     "method_types": "bellman.stage.method_table",
-    # The tags of the method table that a target admits under the placement
-    # rules, which the Methods tab of Bellman Workbench offers there (model
-    # interface specification 0.4, unit L, Task 18).
-    "admitted_methods": "bellman.stage.method_table",
+    # The tags of the catalogue a place admits, which the Methods tab of
+    # Bellman Workbench offers there (model interface specification 0.4, unit
+    # L, Task 18).
+    "admitted_methods": "bellman.stage.places",
+    # The typing entries of a `.bl` text located and written as text, which
+    # the Methods tab of Bellman Workbench reads and writes back
+    # (specification 0.7 §6, the writer of the `.bl` declaration).
+    "typing_entries": "bellman.syntax.typing_entries",
+    "write_typing_entry": "bellman.syntax.typing_entries",
     "graph_refusal": "bellman.stage.grains",
     "header_line": "bellman.display.cards",
     "source_lines": "bellman.display.cards",

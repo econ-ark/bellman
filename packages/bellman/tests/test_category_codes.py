@@ -25,7 +25,7 @@ or, without one, the stage text's digest with the set's name.
 Not checked here: the documents that item 6 updates at merge; and the corpus
 stages' printed snapshot and recorded encodings, which items 2 and 5 require
 unchanged except for the grammar's digest, and which `test_snapshot.py` and
-`sym/test_corpus.py` compare.
+`test_snapshot.py` compare.
 """
 
 import json

@@ -71,8 +71,9 @@ def graph_of(stage, level, direction, grain="builder"):
         if isinstance(held, Refusal):
             raise NotConstructed(held.reason, **held.diagnostic)
         if grain == "builder" and not (level == "builders" and _opened(stage, direction)):
-            # the stored graph itself, the declared builders, while no method
-            # block opens a builder of this direction (specification 0.6 §7)
+            # the stored graph itself, the declared builders, while no
+            # solution method's rows open a builder of this direction
+            # (specification 0.6 §7)
             return held
         derived = (
             builders_graph_by_grain(wire_table(stage), direction, grains=(grain,))[grain]
@@ -111,20 +112,8 @@ def grain_token(grain):
 
 def wire_table(stage):
     """The wire table of the stage from its construction table, the operative
-    one (`construction_table`), with the sorts of the fields the headers of
-    the bound method blocks declare and, for a bound marginal block, the
-    marginal values it adds to its builder's outputs, made once per
-    stage."""
-
-    def compute():
-        table = WireTable(stage, construction_table(stage))
-        table.add_ports(sort for block in bound_blocks(stage) for sort in block.ports)
-        for block in bound_blocks(stage):
-            if block.marginal:
-                table.add_outputs(block.builder, block.ports)
-        return table
-
-    return kept_answer(stage, "wire_table", compute)
+    one (`construction_table`), made once per stage."""
+    return kept_answer(stage, "wire_table", lambda: WireTable(stage, construction_table(stage)))
 
 
 def construction_table(stage):
@@ -195,10 +184,8 @@ def operative_table(declared, blocks):
     """The construction table `declared` with the rows of each bound block
     in place of the rows of the builder it opens, at the place those rows
     stood, the definitions the rows read added and the obligations of the
-    rows after the declared ones (specification 0.6 §7). The rows of a
-    marginal block are the builder's own rows with the block's lines among
-    them and the Evaluation writing the marginal values beside the values,
-    as the fold reads the merged block (specification 0.6 §5)."""
+    rows after the declared ones (specification 0.6 §7; specification 0.7
+    D8)."""
     rows, closed = list(declared.primitive_rows), dict(declared.sub_builder_rows)
     definitions = {record.identity: record for record in declared.definitions}
     obligations = list(declared.obligations)
@@ -213,15 +200,9 @@ def operative_table(declared, blocks):
         else:
             closed.pop(block.builder, None)
         definitions.update((record.identity, record) for record in block.definitions)
-        # a condition recorded at a declared row a method block replaces
-        # holds of no operative row, and the declared table keeps it; a
-        # marginal block keeps the builder's rows and their conditions
-        # (specification 0.6 §5)
-        removed = (
-            set()
-            if block.marginal
-            else {row.identity for row in declared.primitive_rows if row.builder == block.builder}
-        )
+        # a condition recorded at a declared row the method's rows replace
+        # holds of no operative row, and the declared table keeps it
+        removed = {row.identity for row in declared.primitive_rows if row.builder == block.builder}
         obligations = [item for item in obligations if not (item[1] and item[1][0] in removed)]
         obligations.extend(item for item in block.obligations if item not in obligations)
     return dataclasses.replace(
@@ -234,8 +215,8 @@ def operative_table(declared, blocks):
 
 
 def _opened(stage, direction):
-    """Whether a bound method block opens a builder of `direction`, so that
-    the operative builders graph of that direction is built from the
+    """Whether a solution method's rows open a builder of `direction`, so
+    that the operative builders graph of that direction is built from the
     operative rows rather than read from the stored record."""
     blocks = bound_blocks(stage)
     if not blocks:

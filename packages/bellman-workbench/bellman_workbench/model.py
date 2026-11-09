@@ -22,9 +22,12 @@ builders graph contributes nothing to a count and raises nothing
 from __future__ import annotations
 
 import dataclasses
+import functools
 import hashlib
 import importlib.metadata
+import itertools
 import json
+import logging
 import os
 import posixpath
 import re
@@ -38,7 +41,13 @@ from urllib.parse import urlsplit
 
 from model_explorer.graph_builder import EdgeOverlaysData
 
-from bellman.refusals import ConstructionError, FactoryError, NotConstructed, TargetError
+from bellman.refusals import (
+    ConstructionError,
+    Diagnostic as PackageDiagnostic,
+    FactoryError,
+    NotConstructed,
+    TargetError,
+)
 from bellman.stage import (
     BOUNDARY_IDS,
     INITIAL_IDS,
@@ -125,12 +134,14 @@ __all__ = [
     "boxes_reading",
     "stage_sheets",
     "occurrences",
+    "sentence",
     "diagnostic_of",
-    "refusal_of",
-    "EXCEPTION_RULE",
+    "package_versions",
+    "RuleEntry",
+    "rule_entry",
+    "LOG",
     "EXCEPTION_LOGGED",
     "is_refusal",
-    "exception_diagnostic",
     "name_at",
     "NameReport",
     "name_report",
@@ -309,10 +320,10 @@ def _role(relative: Path, root: Path) -> str:
     period; a recipe is `<stem>.yml` or a name that begins `<stem>.` and
     ends `.yml` or `.yaml` (`spec.yml`, `spec.yaml`, `spec.<name>.yml`),
     where the stem is `RECIPE_STEM`; a `.yml` file under a folder
-    named `methods`, `calibration` or `settings`, named after the kind, as a
-    stage folder's `methods.yml`, or named `*_methods.yml`,
-    `*_calibration.yml` or `*_settings.yml`, is of that kind; any other
-    file is `other`."""
+    named `calibration` or `settings`, named after the kind, or named
+    `*_calibration.yml` or `*_settings.yml`, is of that kind; a methods
+    file is an addition alone (decision S7-W6); any other file is
+    `other`."""
     name = relative.name
     if relative.suffix == ".bl":
         return "methods" if is_addition_file(Path(root) / relative) else "stage"
@@ -325,7 +336,7 @@ def _role(relative: Path, root: Path) -> str:
     for prefix, role in (("trellis", "trellis"), ("period", "period")):
         if name.startswith(prefix):
             return role
-    for kind in ("methods", "calibration", "settings"):
+    for kind in ("calibration", "settings"):
         if (kind in relative.parent.parts or relative.stem == kind
                 or relative.stem.endswith("_" + kind)):
             return kind
@@ -650,7 +661,7 @@ def _write_export_files(folder: Folder, shown):
     refusal = read_only(folder)
     if refusal is not None:
         raise PermissionError(refusal)
-    package = {name: importlib.metadata.version(name) for name in ("bellman", "bellman-workbench")}
+    package = package_versions()
     head = _git(folder.root, "rev-parse", "--verify", "-q", "HEAD")
     commit = head.sentence.strip() if folder.git_root is not None and head.ok else None
     views = folder.root / EXPORT_FOLDER
@@ -1014,16 +1025,52 @@ def _replace_contents(path: Path, text: str) -> None:
         raise
 
 
-# --- the buffer elaborated ---
+# --- the diagnostic record ---
 
 
 class Diagnostic(NamedTuple):
-    """One refusal of a buffer, with its position counted from one, None
-    where the package records none: `file`, `line`, `column`, `end_line`,
-    `end_column`, `message` (the package's own sentence), `rule`, `address`
-    (the block or line responsible) and `advice`, the words a factory
-    refusal says to write (`FactoryError.write`); a construction refusal's
-    advice is part of its message, so `advice` is None for one."""
+    """One reported failure or check, the Workbench's one record of it,
+    which the editor's underline, the Problems list, Details, the refusing
+    node of a refused graph and the binding rows all read (Model Interface
+    0.9 §4). Every record is made by `diagnostic_of` from what the package
+    raised or recorded; nothing of it is a second description.
+
+    The position and the sentence: `file`; `line`, `column`, `end_line` and
+    `end_column`, the package's positions, counted from one in code points
+    with an exclusive end, None where the package records none; `message`,
+    the explanation, the package's own sentence; `rule`, the identifier the
+    responsible check emits, None for an internal failure; `address`, the
+    authored item, a block, a line or a key; and `write`, the action, the
+    edit the check establishes, None where it establishes none.
+
+    The kind and the operation: `kind` is `refusal` where the operation
+    stopped, `held` for a refusal the construction keeps for one builders
+    graph while it constructs the stage, `check` for a finding the operation
+    records and continues past, and `internal` for an exception of no class
+    of the package's refusals; `operation` names what produced the record,
+    `parse`, `elaborate`, `calibrate`, `methodize`, `configure`, `connect`,
+    `draw` or `read`, and `bind` for a binding of an occurrence that an
+    exception stopped before the record could name the verb.
+
+    The further facts of the record: `related`, the package's `Location`
+    records of the second places the sentence names, each with its role;
+    `direction`, `backward` or `forward` for a held refusal; `depends_on`,
+    the address of the finding this one rests on, None where it rests on
+    none; and `entry`, the identifier of the log entry that holds the
+    traceback of an internal failure.
+
+    The context, filled by the reader that knows it and absent from the
+    conversion: `stage`, the key or name of the stage; `source`, the recipe
+    or trellis file read; `view`, `stage` or `trellis`; `occurrences`, each
+    `(h, key)` the problem affects, and `(h, None)` for a period a finding
+    of the connections concerns; and `revision`, the SHA-256 digest of the
+    text of `file` the check read.
+
+    The category and the severity the Problems list shows are not stored
+    on the record: the list derives the category from the record's
+    operation and rule (`app._category`), and gives the severity where it
+    reads a check, `warning` for a connection to review and for an input
+    no line reads, `error` otherwise."""
 
     file: str | None
     line: int | None
@@ -1033,7 +1080,185 @@ class Diagnostic(NamedTuple):
     message: str
     rule: str | None
     address: str | None
-    advice: str | None
+    write: str | None
+    kind: str = "refusal"
+    operation: str = "elaborate"
+    related: tuple = ()
+    direction: str | None = None
+    depends_on: str | None = None
+    entry: str | None = None
+    stage: str | None = None
+    source: str | None = None
+    view: str | None = None
+    occurrences: tuple = ()
+    revision: str | None = None
+
+
+def sentence(diagnostic: Diagnostic) -> str:
+    """The sentence of a diagnostic as the Problems list prints it: the
+    message, then the action on a line of its own where the check
+    establishes one and the message does not already end with it, as a
+    syntax refusal's does."""
+    write = diagnostic.write
+    if not write or diagnostic.message.endswith(write):
+        return diagnostic.message
+    return f"{diagnostic.message}\n{write}"
+
+
+# The page's log, the server's standard error where nothing else configures
+# it: an exception of no class of the package's refusals is written there
+# with its traceback, under an identifier of its own, so that it can be
+# reported by that identifier; `diagnostic_of` names the identifier on the
+# record.
+LOG = logging.getLogger(__name__)
+# The identifiers of the entries, `exception 1`, `exception 2` and so on,
+# counted from one in this process.
+_ENTRIES = itertools.count(1)
+# The words of such an entry: the identifier, the operation that stopped
+# and the file or source read; the entry attributes the exception to
+# nothing, since a function of the Workbench may have raised it.
+EXCEPTION_LOGGED = "%s: an exception of no refusal class stopped %s of %s"
+
+
+def is_refusal(error: BaseException) -> bool:
+    """Whether `error` is of a class of the package's refusals,
+    `ConstructionError`, `FactoryError` or `TargetError`. The classes alone
+    decide: a `ValueError` of another class is an exception of no refusal
+    class, an internal failure (Model Interface 0.9 §4)."""
+    return isinstance(error, (ConstructionError, FactoryError, TargetError))
+
+
+def diagnostic_of(error, operation: str = "elaborate", file: str | None = None) -> Diagnostic:
+    """The one conversion into a `Diagnostic` of what the package raised or
+    recorded during `operation`: a `ConstructionError` with its position, its
+    related locations and its action, under the operation `parse` where its
+    rule is `syntax`, the rule of the parser, whichever operation read the
+    text; a `FactoryError` with the position of its key where the reader
+    knows it; a `TargetError` with its rule and no position; a diagnostic
+    the package recorded without raising, a connection finding or an unread
+    input, as a `check`; the sentence of a refusal the package kept as
+    text, as `bind_stage` does by default without `on_refusal`, as a
+    refusal with that sentence and no rule or position; and an exception of
+    any other class as an `internal` failure, written to the page's log
+    with its traceback under an identifier the record names (`LOG`,
+    `EXCEPTION_LOGGED`), the entry naming the identifier, the operation and
+    `file` and attributing the exception to nothing. `file`, the file or
+    source the operation read, is the record's file where the package
+    names none. A refusal's `write` of the empty string is None."""
+    if isinstance(error, ConstructionError):
+        return Diagnostic(
+            error.file or file,
+            error.line,
+            error.column,
+            error.end_line,
+            error.end_column,
+            error.message,
+            error.rule,
+            error.address,
+            error.write or None,
+            "refusal",
+            "parse" if error.rule == _SYNTAX_RULE else operation,
+            tuple(error.related),
+        )
+    if isinstance(error, FactoryError):
+        return Diagnostic(
+            error.file or file,
+            error.line,
+            error.column,
+            None,
+            None,
+            error.message,
+            error.rule,
+            error.address,
+            error.write or None,
+            "refusal",
+            operation,
+            tuple(error.related),
+        )
+    if isinstance(error, TargetError):
+        return Diagnostic(file, None, None, None, None, error.message, error.rule, None,
+                          error.write or None, "refusal", operation)
+    if isinstance(error, PackageDiagnostic):
+        return Diagnostic(file, None, None, None, None, error.message, error.rule, error.address,
+                          None, "check", operation, depends_on=error.depends_on)
+    if isinstance(error, str):
+        return Diagnostic(file, None, None, None, None, error, None, None, None, "refusal",
+                          operation)
+    entry = f"exception {next(_ENTRIES)}"
+    LOG.error(EXCEPTION_LOGGED, entry, operation, file, exc_info=error)
+    return Diagnostic(file, None, None, None, None, f"{type(error).__name__}: {error}", None, None,
+                      None, "internal", operation, entry=entry)
+
+
+def _token_end(text: str, diagnostic: Diagnostic) -> Diagnostic:
+    """The syntax refusal `diagnostic` of `text` with its end at the end of
+    the refused token. The package's end is that of the parser's token,
+    and where the parser's lexer reads the rest of a line as one token,
+    `- 1         :: [id=util]` after an operator, the end runs over the
+    spaces and the annotation `:: […]` that follow the refused text; the
+    record ends where the refused text ends, so that the editor's
+    underline, the source link and Details all read one range. Any other
+    diagnostic, and a syntax refusal whose range is not within one line, is
+    answered as it is."""
+    if diagnostic.rule != _SYNTAX_RULE or diagnostic.line is None:
+        return diagnostic
+    if diagnostic.end_line != diagnostic.line or diagnostic.end_column is None:
+        return diagnostic
+    lines = text.split("\n")
+    if not 1 <= diagnostic.line <= len(lines):
+        return diagnostic
+    covered = lines[diagnostic.line - 1][diagnostic.column - 1 : diagnostic.end_column - 1]
+    token = covered.split("::", 1)[0].rstrip()
+    if not token:
+        return diagnostic
+    return diagnostic._replace(end_column=diagnostic.column + len(token))
+
+
+@functools.lru_cache(maxsize=None)
+def package_versions() -> dict[str, str]:
+    """The installed versions of `bellman` and `bellman-workbench`, by
+    name, as the export records them and the copy of a problem names
+    them; read once per process."""
+    return {name: importlib.metadata.version(name) for name in ("bellman", "bellman-workbench")}
+
+
+class RuleEntry(NamedTuple):
+    """The entry of one rule that the Rule link of a line shows (Model
+    Interface 0.9 §6 item 4): `text`, the entry as the catalogue of the
+    imported Bellman prints it, and `address`, the rule's entry on the
+    published Refusals page of that version, whose fragment is the rule's
+    name."""
+
+    text: str
+    address: str
+
+
+@functools.lru_cache(maxsize=None)
+def rule_entry(rule: str) -> RuleEntry | None:
+    """The entry of the rule `rule` in the catalogue of the imported
+    Bellman (`bellman.refusal_catalogue.entry`), with the address of the
+    rule's entry on its published page (`REFERENCE_PAGE` of the same
+    module); None wherever no entry can be answered, so that the line shows
+    the identifier alone: where the imported Bellman has no `entry`, as a
+    release before Model Interface 0.9 has none, answers none for `rule`, a
+    name no vocabulary of its rules holds, or fails, the failure then
+    written to the page's log (`LOG`) with its traceback. The module is
+    imported on demand and each rule's entry read once per process, from
+    the installed package and with no connection."""
+    try:
+        catalogue = importlib.import_module("bellman.refusal_catalogue")
+        entry = getattr(catalogue, "entry", None)
+        found = None if entry is None else entry(rule)
+        if found is None:
+            return None
+        return RuleEntry(str(found), f"{catalogue.REFERENCE_PAGE}#{rule}")
+    except Exception:  # any failure of the catalogue of the imported Bellman
+        LOG.warning("the catalogue of the imported Bellman answered no entry of the rule %s",
+                    rule, exc_info=True)
+        return None
+
+
+# --- the buffer elaborated ---
 
 
 class Elaboration(NamedTuple):
@@ -1056,126 +1281,6 @@ class Elaboration(NamedTuple):
     counts: dict
 
 
-def diagnostic_of(error: Exception) -> Diagnostic:
-    """The `Diagnostic` of one refusal: the fields of a `ConstructionError`;
-    for a `FactoryError` or another ValueError the sentence with no
-    position, and for a `TargetError` the sentence with no position and the
-    rule of the identity table it names (unit L's final judgment, §6 item
-    8). `trellis.py` reads it for a refusal of a trellis's reading."""
-    if isinstance(error, ConstructionError):
-        return Diagnostic(
-            file=error.file,
-            line=error.line,
-            column=error.column,
-            end_line=error.end_line,
-            end_column=error.end_column,
-            message=error.message,
-            rule=error.rule,
-            address=error.address,
-            # a ConstructionError has no advice attribute: its message says
-            # what to write instead (`bellman/refusals.py`, the class)
-            advice=None,
-        )
-    if isinstance(error, FactoryError):
-        return Diagnostic(
-            file=error.file,
-            line=None,
-            column=None,
-            end_line=None,
-            end_column=None,
-            message=error.message,
-            rule=error.rule,
-            address=error.address,
-            advice=error.write or None,
-        )
-    rule = error.rule if isinstance(error, TargetError) else None
-    return Diagnostic(None, None, None, None, None, str(error), rule, None, None)
-
-
-def refusal_of(
-    error: Exception, subject: str, file: str | None = None, spans: dict | None = None
-) -> Diagnostic:
-    """The `Diagnostic` of a refusal of the reading of a recipe or a trellis
-    file, `subject` its path relative to the model folder, its message the
-    sentence the list under the error mark prints (AMD-MI-002 §6a; ruling
-    R51). For the package's refusal, a `FactoryError` or a
-    `ConstructionError`, the sentence is the package's whole sentence: its
-    message, then on a line of its own the words it says to write
-    (`advice`), as the list prints a text's refusal, then on a line each the
-    notes the factory adds, the stage occurrence it names among them; the
-    list links its file and line. Another refusal of the package's classes
-    (`is_refusal`) names no file, and its sentence is `<subject> does not
-    read: <its text>`, then its notes. An exception of no class of the
-    package's refusals, as a KeyError, is printed as the loop prints it
-    for the open text (`exception_diagnostic`), then its notes: as Python
-    prints the exception, in `file`, the path of the text whose reading
-    raised it, under the rule `package-exception`, at the line of the
-    address its message names in `spans`, that text's span table, so that
-    one exception that the loop and the trellis's reading both meet stands
-    as one line (unit L, Task 21; defect 18 of the UX simulation). The
-    trellis's refusal of its reading (`trellis.show_trellis`) and a stage's
-    note that its source does not read (`recipe.find_occurrence`) are this
-    one `Diagnostic`."""
-    notes = getattr(error, "__notes__", ())
-    if not is_refusal(error):
-        found = exception_diagnostic(error, file, spans)
-        return found._replace(message="\n".join([found.message, *notes]))
-    found = diagnostic_of(error)
-    if isinstance(error, (FactoryError, ConstructionError)):
-        lines = [found.message, *([found.advice] if found.advice else [])]
-    else:
-        lines = [f"{subject} does not read: {found.message}"]
-    return found._replace(message="\n".join([*lines, *notes]))
-
-
-# The rule under which the page lists an exception the package raised where
-# a refusal was due, as the KeyError of an unresolved semantic input (unit L,
-# Task 21; defect 18 of the UX simulation; the package's issue
-# `elaborator-raises-keyerror-for-an-unresolved-semantic-input.md`).
-EXCEPTION_RULE = "package-exception"
-# The words of the entry of the page's log that holds such an exception with
-# its traceback, so that it can be filed against the package, the path of the
-# file read in place of `%s` (`app.LOG`, `trellis.LOG`; unit L, Task 21).
-EXCEPTION_LOGGED = "the package raised an exception where a refusal was due: %s"
-# A word of an exception's message that may name a place of the text: a run
-# of characters other than spaces, quotation marks, parentheses, commas and
-# semicolons, `dcsn_to_cntn.contributions`.
-_MESSAGE_WORD = re.compile(r"[^\s'\"`(),;]+")
-
-
-def is_refusal(error: Exception) -> bool:
-    """Whether `error` is of a class of the package's refusals: a
-    ValueError, the class of `ConstructionError`, of `FactoryError` and of
-    the sentences the package raises as refusals, or a `TargetError`, the
-    refusal of a methods target the stage lacks. An exception of any other
-    class is one the package raised where a refusal was due (unit L, Task
-    21)."""
-    return isinstance(error, (ValueError, TargetError))
-
-
-def exception_diagnostic(
-    error: Exception, file: str | None, spans: dict | None = None
-) -> Diagnostic:
-    """The `Diagnostic` of an exception the package raised where a refusal
-    was due (unit L, Task 21; defect 18 of the UX simulation): its message
-    as Python prints the exception, `KeyError: "unresolved semantic input
-    … at dcsn_to_cntn.contributions"`; its file `file`; its rule
-    `package-exception`; and, where a word of the message, read from the
-    message's end, is an address of `spans`, the span table of the text the
-    package read, and no number, that address and the place of its span,
-    so that the list under the error mark links the line the message
-    names. A message that names no such address gives no line."""
-    message = f"{type(error).__name__}: {error}"
-    for word in reversed(_MESSAGE_WORD.findall(str(error))):
-        # a full stop or a colon at a word's end belongs to the sentence
-        word = word.rstrip(".:")
-        span = (spans or {}).get(word)
-        if span is not None and not word.isdigit():
-            place = (span.line, span.column, span.end_line, span.end_column)
-            return Diagnostic(file, *place, message, EXCEPTION_RULE, word, None)
-    return Diagnostic(file, None, None, None, None, message, EXCEPTION_RULE, None, None)
-
-
 def _term_counts(text: str, origin: str, diagnostic: Diagnostic) -> dict:
     """The counts of a refused text: `{"blocks": n}`, the top-level blocks
     of the term in the package's span table (`source_spans`), where the
@@ -1192,19 +1297,19 @@ def _term_counts(text: str, origin: str, diagnostic: Diagnostic) -> dict:
 
 def elaborate_buffer(text: str, origin: str, revision: int = 0) -> Elaboration:
     """The `Elaboration` of `text` with `origin` recorded as its source, by
-    `elaborate_text` of `bellman.stage`. A `ConstructionError`
-    becomes one `Diagnostic` with its position, a `FactoryError`, another
-    `ValueError` or a `TargetError` one without, every class of the
-    package's refusals (`is_refusal`; unit L's final judgment, §6 item 8);
-    nothing else is caught. A stage whose
-    construction refused one builders graph is answered as the stage, with
-    no diagnostic: `refused_directions` names the refusal."""
+    `elaborate_text` of `bellman.stage`. A refusal of the package's classes
+    (`is_refusal`) becomes one `Diagnostic` (`diagnostic_of`), a syntax
+    refusal's range ending where the refused text ends (`_token_end`);
+    nothing else is caught, so that an exception of another class reaches
+    the caller as the internal failure it is. A stage whose construction
+    refused one builders graph is answered as the stage, with no
+    diagnostic: `refused_directions` names the refusal."""
     started = time.perf_counter()
     try:
         stage = elaborate_text(text, origin)
-    except (ValueError, TargetError) as error:
+    except (ConstructionError, FactoryError, TargetError) as error:
         seconds = time.perf_counter() - started
-        diagnostic = diagnostic_of(error)
+        diagnostic = _token_end(text, diagnostic_of(error, "elaborate", origin))
         return Elaboration(
             stage=None,
             diagnostics=(diagnostic,),
@@ -1295,40 +1400,43 @@ def counts(stage, collection: dict | None = None) -> dict:
     }
 
 
-def refused_directions(stage) -> dict[str, dict]:
+def refused_directions(stage) -> dict[str, Diagnostic]:
     """The refusal of each builders graph the construction refused, by its
     direction, from the `Refusal` record the stage holds in the graph's
-    place (the package's `graph_refusal`): `message`, the refusal's
-    sentence; `rule`, `file`, `line`, `column`, `end_line`, `end_column`
-    and `address`, as the record's diagnostic holds them, None where it
-    holds none. Empty where both graphs were constructed."""
+    place (the package's `graph_refusal`): the `Diagnostic` of the
+    `NotConstructed` the package raises from that record where the graph is
+    read (`graph_of`), of the kind `held`, with its `direction`. Empty where
+    both graphs were constructed."""
     found = {}
     for direction in _GRAPH_OF_DIRECTION:
         refusal = graph_refusal(stage, "builders", direction)
         if refusal is None:
             continue
-        diagnostic = dict(refusal.diagnostic)
-        found[direction] = {
-            "message": refusal.reason,
-            **{
-                key: diagnostic.get(key)
-                for key in ("rule", "file", "line", "column", "end_line", "end_column", "address")
-            },
-        }
+        held = NotConstructed(refusal.reason, **refusal.diagnostic)
+        found[direction] = diagnostic_of(held)._replace(kind="held", direction=direction)
     return found
 
 
 def _bound_digests(stage) -> dict[str, str]:
     """The digest of each binding source the stage's provenance names and
     the stage is bound by: `stage.provenance["sources"][kind]["sha256"]`
-    for each kind of `_BINDING_VERBS` whose binding, `stage.bindings.<kind>`,
-    is not None. A source the provenance names for an unbound kind is the
-    digest of an empty mapping and is left out."""
+    for each kind of `_BINDING_VERBS` the stage is bound by, a calibration or
+    settings binding that is not None, and for the methods the additions the
+    provenance records (specification 0.7 §6; the methods of a version are
+    the components of its signatures and no binding record). A source the
+    provenance names for an unbound kind is the digest of an empty mapping
+    and is left out."""
     sources = stage.provenance.get("sources", {})
+
+    def bound(kind):
+        if kind == "methods":
+            return bool(stage.provenance.get("additions"))
+        return getattr(stage.bindings, kind) is not None
+
     return {
         kind: sources[kind]["sha256"]
         for kind, _ in _BINDING_VERBS
-        if getattr(stage.bindings, kind) is not None and kind in sources
+        if bound(kind) and kind in sources
     }
 
 
@@ -1354,13 +1462,78 @@ def collection(stage, operative: bool = True) -> dict:
     return dataclasses.asdict(to_model_explorer(stage, declared=not operative))
 
 
+_CONNECTOR_FIELD_ID = re.compile(r"(?:un)?joined:[^:]+:(arvl|dcsn|cntn):([^:]+)")
+
+
+def operator_boundary_ports(node: dict, side: str) -> list:
+    """The native ports on one side of a forward operator boundary."""
+    native = []
+    for port in node.get(side) or []:
+        occurrence, _, name = port["id"].rpartition("/")
+        field = _CONNECTOR_FIELD_ID.fullmatch(name)
+        if occurrence and occurrence == node.get("namespace") and field:
+            attrs = {item["key"]: item["value"] for item in port.get("attrs") or []}
+            if attrs.get("role") == "state" and field.groups() == (attrs.get("perch"), attrs.get("field")):
+                continue
+        native.append(port)
+    return native
+
+
+def forward_boundary_display(node: dict) -> tuple[str, str] | None:
+    """The title and explanation of a forward measure boundary in Workbench."""
+    boundary = node["id"].rsplit("/", 1)[-1]
+    if boundary not in BOUNDARY_IDS:
+        return None
+    ports = operator_boundary_ports(node, "inputsMetadata") + operator_boundary_ports(
+        node, "outputsMetadata"
+    )
+    measures = sum(
+        any(item["key"] == "role" and item["value"] == "measure" for item in port.get("attrs") or [])
+        for port in ports
+    )
+    if not measures:
+        return None
+    side = "Input" if boundary == BOUNDARY_IDS[0] else "Output"
+    measure = "measure" if measures == 1 else "measures"
+    title = f"{side} {measure}" if measures == len(ports) else f"Forward {side.lower()}s"
+    return (
+        title,
+        "Forward operators propagate finite measures over the state spaces. "
+        "When the transition takes an action, the policy supplies it.",
+    )
+
+
+def forward_display_collection(collection: dict | None) -> dict | None:
+    """The collection the canvas draws: in the forward graph, each node
+    that is a measure boundary (`forward_boundary_display`) carries the
+    title as its label and the explanation as its description, and every
+    other node and graph is as exported. None, and a collection that holds
+    no graphs, are answered as they are."""
+    if collection is None or "graphs" not in collection:
+        return collection
+    graphs = []
+    for graph in collection["graphs"]:
+        if graph["id"] != "forward":
+            graphs.append(graph)
+            continue
+        nodes = []
+        for node in graph["nodes"]:
+            display = forward_boundary_display(node)
+            nodes.append(
+                {**node, "label": display[0], "description": display[1]} if display else node
+            )
+        graphs.append({**graph, "nodes": nodes})
+    return {**collection, "graphs": graphs}
+
+
 def two_levels(stage) -> bool:
-    """Whether the declared builders of the stage, `stage.declared`, are
-    other objects than its operative builders, `stage.builder`: whether a
-    bound method block opens a builder (specification 0.6 §7), read from the
-    blocks its bindings hold, since the two handles of a bound stage compare
-    unequal where no block is bound (SE-37). Where they are one object, the
-    layers button does not act (decision SE-5)."""
+    """Whether the declared builders of the stage, `stage.declared`, differ
+    from its operative builders, `stage.builder`: whether a solution
+    method's lines open a builder, the rows the stage's bindings record
+    under `blocks` (specification 0.6 §7; specification 0.7 D8), since the
+    two handles of a stage into which an addition has been read compare
+    unequal where no line opens a builder (SE-37). Where they are one
+    object, the layers button does not act (decision SE-5)."""
     return bool(stage.bindings.blocks)
 
 
@@ -1448,7 +1621,8 @@ class Piece(NamedTuple):
     card holds (`builder_sections`), each `(heading, text)`; and `requires`,
     for a builder's layer at the declared level, the derivatives a bound
     method of the builder reads that no route supplies
-    (`requirements`), which the page adds to the piece."""
+    (`requirements`), which the page adds to the piece. `boundary_display`
+    holds the title and explanation for a forward boundary."""
 
     node_id: str
     direction: str
@@ -1464,6 +1638,7 @@ class Piece(NamedTuple):
     signature: str
     sections: tuple = ()
     requires: tuple = ()
+    boundary_display: tuple[str, str] | None = None
 
 
 # The sections of a builder's card that Details prints after its signature
@@ -1630,24 +1805,28 @@ def _initial_direction(stage, block: str) -> str | None:
 
 def _refusal_piece(stage, direction: str, node_id: str, collection: dict) -> Piece:
     """The `Piece` of the one node of a refused builders graph: its card
-    the refusal's sentence, its attributes the refusal's position and rule
-    (`refused_directions`) under their names and, under `refusal`, the
-    whole text with the position and the rule as the exporter writes it on
-    the node, its address the refusal's address."""
+    the refusal's sentence, its attributes the refusal's position and rule,
+    read from the one record (`refused_directions`) under their names and,
+    under `refusal`, the whole text with the position and the rule as the
+    exporter writes it on the node, its address the refusal's address."""
     refusal = refused_directions(stage).get(direction)
     if refusal is None:
         raise KeyError(f"the {direction} graph was constructed and holds no node {node_id!r}")
     attributes = dict(node_attributes(collection, direction, node_id))
     attributes.update(
-        {key: value for key, value in refusal.items() if key != "message" and value is not None}
+        {
+            key: getattr(refusal, key)
+            for key in ("rule", "file", "line", "column", "end_line", "end_column", "address")
+            if getattr(refusal, key) is not None
+        }
     )
     return _piece(
         node_id,
         direction,
         "refusal",
-        card=refusal["message"],
+        card=refusal.message,
         attributes=attributes,
-        address=refusal["address"] or "",
+        address=refusal.address or "",
     )
 
 
@@ -1749,6 +1928,11 @@ def piece(stage, direction: str, node_id: str, collection: dict | None = None) -
             "boundary",
             attributes=node_attributes(collection, direction, node_id),
             signature=str(graph.signature()),
+            boundary_display=(
+                forward_boundary_display(_node(collection, direction, node_id))
+                if direction == "forward"
+                else None
+            ),
         )
     handle = graph.primitives[node_id]
     identity = handle.box.identity
@@ -2667,19 +2851,32 @@ def _text_reading(stage, spans, text: str) -> _Reading:
     return _Reading(rows, tuple(labels), control)
 
 
-def named_rows(groups, sentences) -> dict:
+def named_rows(groups, places) -> dict:
     """The rows of the tables `groups` that a refusal names (unit R, R-D57):
-    each row whose identity one of `sentences`, the refusals' sentences,
-    quotes as the package quotes a field, `'cons:cntn:h'`, mapped to the
-    first such sentence."""
+    each row one of whose listings holds one of `places`, each `(line,
+    column, sentence)` for a position of the file that a refusal's record
+    names, its own or a related location's (Model Interface 0.9 §4), mapped
+    to the sentence of the first such place."""
     found = {}
     for group in groups:
         for row in group.rows:
-            quoted = f"'{row.identity}'"
-            sentence = next((s for s in sentences if quoted in s), None)
+            sentence = next(
+                (
+                    sentence
+                    for line, column, sentence in places
+                    if any(_holds(listing.at, line, column) for listing in row.listings)
+                ),
+                None,
+            )
             if sentence is not None:
                 found[row.identity] = sentence
     return found
+
+
+def _holds(span, line: int, column: int) -> bool:
+    """Whether the span `span` holds the position `line`, `column`, the
+    span's end being exclusive."""
+    return (span.line, span.column) <= (line, column) < (span.end_line, span.end_column)
 
 
 def add_roles(group: Group) -> tuple[str, ...]:

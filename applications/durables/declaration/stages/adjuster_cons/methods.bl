@@ -1,0 +1,74 @@
+@methods: adjuster_cons
+# The methods of the adjuster's consumption stage as an addition to
+# adjuster_cons.bl: the endogenous grid method of Box 2 of Dobrescu and Shanker
+# (2026) on the policy builder, realized by the routine make_adjuster_ops of the
+# replication code, on the product of the savings grid and the grid of new
+# housing, with the twenty-one further settings the routine reads; the two
+# candidate lines of the former block file adjuster_cons_egm.bl, the inverted asset Euler equation and
+# the endogenous grid of total wealth; the derivative line of the decision value
+# from the former block file marginals_adjuster_cons.bl; and the linear representation of the
+# decision value and of its stated derivative on the grid of total wealth, each
+# named at its own Evaluation, as the YAML names the two. The three lines of
+# adjuster_cons_egm.bl are written as the block file wrote them, the line
+# choice with the housing first-order condition included: with !egm in the slot
+# they stand in place of the joint maximization at the operative level, and
+# stage.declared keeps the maximization (proposal §4 rule 5, D8).
+# The block's own method and grid are written by the relative subjects, method
+# and grid; each grid is the grid entry of its place, one factor per coordinate
+# (D5, writer's sheet §7).
+
+n_a : ℕ                                   :: ["number of points of the savings grid"]
+a_min : ℝ₊                                :: ["lower bound of the savings grid"]
+a_max : ℝ₊                                :: ["upper bound of the savings grid"]
+n_h : ℕ                                   :: ["number of points of the grid of new housing"]
+h_min : ℝ₊₊                               :: ["lower bound of the grid of new housing"]
+h_max : ℝ₊₊                               :: ["upper bound of the grid of new housing"]
+grid_phi : ℝ₊₊                            :: ["exponent of the spacing of the savings grid, above one packing points near the lower end"]
+b : ℝ₊                                    :: ["lowest saving the method uses and the floor to which savings are clamped"]
+egm_n : ℕ                                 :: ["number of roots of the housing first-order condition kept per housing point"]
+root_eps : ℝ₊                             :: ["step of the coarse scan for the roots, zero using every grid point"]
+adj_upper_envelope : {FUES, DCEGM, RFC, CONSAV}    :: ["upper envelope method of the adjuster's endogenous grid method"]
+m_bar : ℝ₊₊                               :: ["jump threshold of the upper envelope scan"]
+fues_lb : ℕ                               :: ["number of points the upper envelope scan looks back"]
+fues_eps_d : ℝ₊₊                          :: ["tolerance of the scan on the difference of gradients"]
+fues_eps_sep : ℝ₊₊                        :: ["tolerance of the scan on the separation of points"]
+fues_eps_fwd_back : ℝ₊₊                   :: ["proximity of the forward and backward scans"]
+fues_parallel_guard : ℝ₊₊                 :: ["guard of the scan against parallel segments"]
+adj_include_intersections : {0, 1}        :: ["one adds the intersection points of the envelope"]
+adj_no_double_jumps : {0, 1}              :: ["one forbids two jumps in a row"]
+adj_single_intersection : {0, 1}          :: ["one keeps a single intersection at each jump"]
+adj_disable_jump_checks : {0, 1}          :: ["one disables the checks of the jumps"]
+correct_jumps : {0, 1}                    :: ["one corrects the jumps the scan detects"]
+n_sections : ℕ                            :: ["number of sections of the golden-section search over new housing"]
+n_w : ℕ                                   :: ["number of points of the grid of total wealth"]
+w_min : ℝ₊₊                               :: ["lower bound of the grid of total wealth"]
+w_max : ℝ₊₊                               :: ["upper bound of the grid of total wealth"]
+extrap_policy : {0, 1}                    :: ["zero clamps a tabulated function at the boundary, one extrapolates linearly"]
+clamp_max_factor : ℝ₊₊                    :: ["bound on a policy read above the grid, as a factor of the grid's upper end"]
+
+[id=policy, method : !egm(spacing=grid_phi, savings_floor=b,
+        roots_per_housing_point=egm_n, root_scan_step=root_eps,
+        upper_envelope=adj_upper_envelope, jump_threshold=m_bar,
+        lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep,
+        eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard,
+        include_intersections=adj_include_intersections,
+        no_double_jumps=adj_no_double_jumps,
+        single_intersection=adj_single_intersection,
+        disable_jump_checks=adj_disable_jump_checks,
+        correct_jumps=correct_jumps, search_sections=n_sections)
+    | handler : "fues-durables:make_adjuster_ops"
+    | grid : !Cartesian(a_nxt_adj=(a_min, a_max, n_a), h_nxt_adj=(h_min, h_max, n_h))] {    # no form in §4: handler: fues-durables:make_adjuster_ops; seventeen settings of the handler beyond the catalogue row; savings_spacing: grid_phi, the exponent of an uneven spacing, which no spacing word of the sheet's §7 carries; housing_orders with housing_bounds and savings_orders with savings_bounds, the handler's restatement of the two factors of the grid in the positional list form, written as nothing since the grid entry carries them
+    c[>] <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])                     :: [id=InvEuler]
+    m[>] = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj               :: [id=endoggrid]
+    (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) - 𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])   :: [id=choice]
+}
+
+[id=cntn_to_dcsn
+    | evaluate[V].method : !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)
+    | evaluate[V].handler : "dcsmm:interp_as_3"
+    | evaluate[V].grid : !Cartesian(m=(w_min, w_max, n_w))
+    | evaluate[D_{m}V].method : !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)
+    | evaluate[D_{m}V].handler : "dcsmm:interp_as_3"
+    | evaluate[D_{m}V].grid : !Cartesian(m=(w_min, w_max, n_w))] {    # no form in §4: handler: dcsmm:interp_as_3 on both entries; extrapolate and clamp_factor, settings beyond the catalogue row
+    D_{m}V = 𝑢_c(c)                                    :: [id=marginal_wealth]
+}

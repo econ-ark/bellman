@@ -9,6 +9,8 @@ the model folder, which `app.py` reads at import;
 `SOLARA_TELEMETRY_MIXPANEL_ENABLE=False`, which turns Solara's usage
 reporting off; `SOLARA_THEME_SHOW_BANNER=False`, which leaves the server's
 own banner, "This website runs on Solara", off the page;
+`SOLARA_THEME_LOADER=solara` selects the markup styled by `public/custom.css`,
+and `SOLARA_THEME_TITLE` names the page before the model opens;
 `SOLARA_ASSETS_PROXY_CACHE_DIR`, the package folder holding all of Solara's
 interface files (G-D12), overriding an inherited cache location so that
 Solara need not fetch and write a missing file;
@@ -66,7 +68,8 @@ def server_environment(
     """The environment of the server's process: `os.environ` with
     `BELLMAN_WORKBENCH_FOLDER` set to `folder`, Solara's usage reporting,
     its banner and its compression of responses turned off, and
-    `SOLARA_ASSETS_PROXY_CACHE_DIR` set to the complete package folder of
+    its startup loader and title selected for the Workbench. The
+    `SOLARA_ASSETS_PROXY_CACHE_DIR` is set to the complete package folder of
     Solara's interface files, overriding any inherited cache. Solara fetches
     and writes a missing file, so that folder must be complete (G-D12).
     Responses go uncompressed because the server answers the browser of the
@@ -82,6 +85,8 @@ def server_environment(
         "BELLMAN_WORKBENCH_FOLDER": str(folder),
         "SOLARA_TELEMETRY_MIXPANEL_ENABLE": "False",
         "SOLARA_THEME_SHOW_BANNER": "False",
+        "SOLARA_THEME_LOADER": "solara",
+        "SOLARA_THEME_TITLE": "Bellman Workbench",
         "SOLARA_ASSETS_PROXY_CACHE_DIR": str(SOLARA_CDN),
         "SOLARA_SERVER_HTTP_GZIP": "False",
     }

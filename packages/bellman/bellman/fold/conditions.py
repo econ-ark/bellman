@@ -387,12 +387,13 @@ def check_calibrated_distributions(stage, values):
     }
 
     def refuse_at(address):
-        def refuse(rule, _, message):
+        def refuse(rule, _, message, write=None):
             raise ConstructionError(
                 f"with the calibration values, {message}",
                 stage=stage.name,
                 address=address,
                 rule=rule,
+                write=write,
             )
 
         return refuse
@@ -431,8 +432,10 @@ def conditional_distribution_of(stage, row, plan=None):
             declarations=owners,
         )
 
-    def refuse(rule, address, message):
-        raise ConstructionError(message, stage=stage.name, address=address, rule=rule)
+    def refuse(rule, address, message, write=None):
+        raise ConstructionError(
+            message, stage=stage.name, address=address, rule=rule, write=write
+        )
 
     return select_conditional(edge, row.integrated, row.given, row.identity, refuse)
 

@@ -3,8 +3,8 @@
 the backend that §7 names "recipe and bindings", beside `model.py` and
 `trellis.py`, and like them free of Solara; with it, the values of the
 BellmanType panel (AMD-MI-002 §5 rules 3 to 6): the rows of its Parameters,
-Settings and Methods tabs, the place at which a file writes each value, and
-the writes of a typed value and of a method's tag.
+Settings and Methods tabs, the place at which a file writes each value or
+types a place, and the writes of a typed value and of a method word.
 
 A folder's trellis has a source: a recipe in the folder's `declaration/`,
 the folder that holds every file the language reads (the page Model
@@ -31,9 +31,15 @@ from typing import NamedTuple
 
 import yaml
 
-from bellman.native.records import bound_at
 from bellman.refusals import ConstructionError, FactoryError
-from bellman.stage import admitted_methods, bind_stage, method_types, to_source
+from bellman.stage import (
+    admitted_methods,
+    bind_stage,
+    method_types,
+    to_source,
+    typing_entries,
+    write_typing_entry,
+)
 from bellman.trellis import (
     append_to_mapping,
     entry_span,
@@ -48,6 +54,7 @@ from bellman_workbench import model
 
 __all__ = [
     "KINDS",
+    "KIND_OF_VERB",
     "Source",
     "model_sources",
     "trellis_file",
@@ -81,8 +88,7 @@ __all__ = [
     "UNVALUED",
     "NO_RECIPE",
     "Place",
-    "ParameterRow",
-    "SettingRow",
+    "ValueRow",
     "MethodRow",
     "Tab",
     "value_place",
@@ -99,6 +105,8 @@ KINDS = ("calibration", "settings", "methods")
 
 # the verb `bind_stage` reports for each kind, in the order it applies them
 _VERBS = (("calibration", "calibrate"), ("methods", "methodize"), ("settings", "configure"))
+# the kind of binding source each verb reads, by the verb
+KIND_OF_VERB = {verb: kind for kind, verb in _VERBS}
 
 # the endings of a YAML file
 _YAML = (".yml", ".yaml")
@@ -139,13 +147,24 @@ def _text(folder: model.Folder, relpath, texts=None) -> str:
 
 
 def _tagged_trellis(folder: model.Folder, relpath: str) -> bool:
-    """Whether the YAML file at `relpath` is a trellis file: its document,
-    read by the package's reader, carries the tag `!trellis`."""
+    """Whether the YAML file at `relpath` is a trellis file: its document
+    carries the tag `!trellis`, read from the text alone, on the first line
+    that is neither blank, a comment, a directive nor the document marker
+    `---` by itself, written `!trellis` or `--- !trellis`. The contents
+    are not parsed, so that a file the package's reader refuses is still a
+    source of the folder, and its refusal is listed (Model Interface 0.9
+    §4)."""
     try:
-        document = entry_value(_text(folder, relpath))
-    except (OSError, UnicodeDecodeError, ValueError):
+        lines = _text(folder, relpath).splitlines()
+    except (OSError, UnicodeDecodeError):
         return False
-    return isinstance(document, dict) and document.get("__yaml_tag__") == "trellis"
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped[0] in "#%" or stripped == "---":
+            continue
+        head = stripped[3:].lstrip() if stripped.startswith("---") else stripped
+        return head == "!trellis" or head.startswith(("!trellis ", "!trellis\t"))
+    return False
 
 
 def model_sources(folder: model.Folder, tree=None) -> list[Source]:
@@ -286,14 +305,15 @@ class Found(NamedTuple):
     the occurrence's record; `origin`, the origin the buffer is elaborated
     with, the one the record writes (`load_recipe` and `load_trellis` write
     the path they read), else the file's path relative to the folder;
-    `notes`, the sentence refusing the source, or the sentence that the
-    source holds no occurrence of the file; `positions`, every position of
-    the file in the source, in the order of `positions_of`, none where no
-    source binds it (AMD-MI-002 §3 rule 5: the breadcrumb counts the periods
-    that hold them); and `refusal`, the `model.Diagnostic` of the source's
-    refused reading, whose message is then the one note, so that the list
-    under the error mark links its file and line (ruling R51), None where
-    the source reads."""
+    `notes`, the sentence refusing the source (`model.sentence`), or the
+    Workbench's own sentence that the source holds no occurrence of the
+    file or that the folder is a model's `declaration/` opened by itself;
+    `positions`, every position of the file in the source, in the order of
+    `positions_of`, none where no source binds it (AMD-MI-002 §3 rule 5:
+    the breadcrumb counts the periods that hold them); and `refusal`, the
+    `model.Diagnostic` of the source's refused reading, under the
+    operation `read` in the source's file, which the list under the error
+    mark links (ruling R51), None where the source reads."""
 
     source: Source | None
     position: tuple[int, str] | None
@@ -356,10 +376,10 @@ def find_occurrence(
     declaration/spec.yml; the Workbench reads a recipe at
     declaration/spec.yml` (the page Model directory layout; unit L, Task 28,
     AAS, L-D23). A folder that holds both recipes gets no note. A source
-    that does not read is one note, the sentence of its refusal
-    (`model.refusal_of`), whose `Diagnostic` the `Found` keeps, and a source
-    that holds no occurrence of the file is one note too; the origin is
-    then the path. The source is read through the mapping of unsaved texts
+    that does not read is one note, the sentence of its refusal, whose
+    `Diagnostic` the `Found` keeps (`model.diagnostic_of`, the operation
+    `read`, in the source's file), and a source that holds no occurrence
+    of the file is one note too; the origin is then the path. The source is read through the mapping of unsaved texts
     `texts` (`read_source`; spec 0.4 §3.1)."""
     if source is None:
         notes = []
@@ -376,10 +396,8 @@ def find_occurrence(
     try:
         syntactic = read_source(folder, source, texts)
     except _REFUSALS as error:
-        # an exception of no class of the package's refusals is printed in
-        # the source's file (unit L, Task 21)
-        refusal = model.refusal_of(error, source.path, str((folder.root / source.path).resolve()))
-        return Found(source, None, None, stage_relpath, [refusal.message], refusal=refusal)
+        refusal = model.diagnostic_of(error, "read", str((folder.root / source.path).resolve()))
+        return Found(source, None, None, stage_relpath, [model.sentence(refusal)], refusal=refusal)
     held = positions_of(syntactic, folder.root / stage_relpath)
     if not held:
         note = f"{source.path} holds no occurrence of {stage_relpath}"
@@ -415,36 +433,56 @@ class Bound(NamedTuple):
     """A buffer's stage bound as its occurrence: `stage`, the version bound;
     `position`, `(h, key)`, and `occurrence`, `periods[h] / <key>`, the head
     the folder region prints, both None where no source binds the file;
-    `notes`, one for each verb failed, after those of the `Found`; and
-    `record`, the occurrence's record, None where none."""
+    `notes`, the sentences of the binding, which the BellmanType panel
+    marks the rows they name by: those of the `Found`, then the sentence of
+    each verb refused (`model.sentence`); `record`, the occurrence's
+    record, None where none;
+    and `failures`, the `model.Diagnostic` of each verb the package
+    refused, in the verbs' order, each under the verb as its operation, at
+    the occurrence."""
 
     stage: object
     position: tuple[int, str] | None
     occurrence: str | None
     notes: list[str]
     record: dict | None
+    failures: tuple[model.Diagnostic, ...] = ()
 
 
 def bind_occurrence(stage, found: Found) -> Bound:
-    """The stage bound as `found` binds it: the package's `bind_stage` on the
-    occurrence's record, which applies `calibrate`, `methodize` and
-    `configure` in that order, each skipped where its mapping binds nothing,
-    a failure leaving the object as the verbs before it made it; one note
-    per verb failed, in that order, the package's sentence and nothing
-    added (AMD-MI-002 §6a rule 2). A verb skipped, whose kind the source
-    lists as a slot or as a file that binds nothing, is no refusal and has
-    no note, the tab of that kind saying where no source is listed
+    """The bound stage of a buffer as the occurrence the selected recipe
+    binds, by the package's `bind_stage` on the occurrence's record, which
+    applies `calibrate`, `methodize` and `configure` in that order, each
+    skipped where its mapping binds nothing, a failure leaving the object
+    as the verbs before it made it; each verb refused is one `Diagnostic`
+    of `failures`, in that order, at the occurrence. The `on_refusal`
+    argument of `bind_stage` converts each exception with
+    `model.diagnostic_of`, preserving its rule, position and action.
+    A verb skipped, whose kind
+    the source lists as a slot or as a file that binds nothing, is no
+    refusal, the tab of that kind saying where no source is listed
     (`_no_source`): a slot is a parameter of the load (K-D29), and the list
     under the error mark holds refusals alone (unit L, Task 21; defect 17 of
     the UX simulation). Without a record the stage is answered as it is,
     with the notes of `found`."""
     if found.record is None:
         return Bound(stage, None, None, list(found.notes), None)
-    report = bind_stage(stage, found.record)
-    failed = [report.failed[verb] for _, verb in _VERBS if verb in report.failed]
-    notes = list(found.notes) + failed
+    report = bind_stage(
+        stage, found.record,
+        on_refusal=lambda error, verb: model.diagnostic_of(
+            error, verb, file=found.source.path if found.source else found.origin
+        ),
+    )
+    failures = tuple(
+        report.failed[verb]._replace(
+            stage=found.position[1], occurrences=(found.position,)
+        )
+        for _, verb in _VERBS
+        if verb in report.failed
+    )
+    notes = [*found.notes, *(model.sentence(failure) for failure in failures)]
     h, key = found.position
-    return Bound(report.stage, found.position, f"periods[{h}] / {key}", notes, found.record)
+    return Bound(report.stage, found.position, f"periods[{h}] / {key}", notes, found.record, failures)
 
 
 def record_files(record: dict | None) -> list[Path]:
@@ -546,29 +584,19 @@ class Row(NamedTuple):
 
 
 def _shown(value) -> str:
-    """The text of a value as the Recipe tab and the Methods tab of the
-    panel under the editor print it: a name as it reads, and any other
-    scalar as Python prints it; a tag, read as `entry_value` reads one,
-    `{"__yaml_tag__": "egm", "value": ""}`, as YAML writes it, `!egm` or
-    `!path grid.yml`, and a tagged mapping as its tag and `{…}`; a mapping
-    written in place as `{}` where it is empty and `{…}` where it is
-    not."""
-    if isinstance(value, dict) and "__yaml_tag__" in value:
-        tag = f"!{value['__yaml_tag__']}"
-        held = {key: item for key, item in value.items() if key != "__yaml_tag__"}
-        if set(held) == {"value"}:
-            return tag if held["value"] == "" else f"{tag} {_shown(held['value'])}"
-        return f"{tag} {_shown(held)}"
+    """The text of a value as the Recipe tab prints it: a name as it reads,
+    and any other scalar as Python prints it; a mapping written in place as
+    `{}` where it is empty and `{…}` where it is not."""
     if isinstance(value, dict):
         return "{…}" if value else "{}"
     return str(value)
 
 
 def _printed_value(text: str, address) -> str:
-    """The value at `address` of a YAML text as the Recipe tab and the
-    Methods tab print it (`_shown`), the printer with which `choose` checks
-    an entry of the recipe and `_rewrite` a method's tag. An address the
-    text does not hold is refused with a KeyError."""
+    """The value at `address` of a YAML text as the Recipe tab prints it
+    (`_shown`), the printer with which `choose` checks an entry of the
+    recipe. An address the text does not hold is refused with a
+    KeyError."""
     return _shown(entry_value(text, address))
 
 
@@ -807,14 +835,11 @@ def trellis_entry(folder: model.Folder, source: Source, texts=None) -> Entry | N
 
 class Choice(NamedTuple):
     """A file a cell may take: `path`, relative to the folder; `comment`,
-    its first comment line; for a methods file, the `stage` it names and the
-    `targets` it binds a method at, its entries `on`; and `unread`, the
-    sentence that the file cannot be read, None where it reads."""
+    its first comment line; and `unread`, the sentence that the file cannot
+    be read, None where it reads."""
 
     path: str
     comment: str
-    stage: str
-    targets: tuple
     unread: str | None
 
 
@@ -823,11 +848,12 @@ def _choice_paths(folder: model.Folder, kind: str) -> list[Path]:
     of a model folder places them (the page Model directory layout, §§1 and
     2.3): for `stage`, the stage files under `declaration/stages/`; for
     `trellis`, the YAML files of `declaration/` itself tagged `!trellis`
-    (`_tagged_trellis`); for a kind of `KINDS`, the YAML files under the
-    folder `<kind>/` of `declaration/` (`model.factory_path`) and, for the
-    methods, the methods file `methods.yml` of each stage's folder and each
-    addition beside a stage file, `methods.bl` or a replacing selection
-    `methods.<variant>.bl` (decision S7-W2), which is never a stage."""
+    (`_tagged_trellis`); for the calibration and the settings, the YAML
+    files under the folder `<kind>/` of `declaration/`
+    (`model.factory_path`); for the methods, the additions beside each
+    stage file, `methods.bl` and a replacing selection
+    `methods.<variant>.bl` (decision S7-W2), listed by their names, so that
+    one that cannot be read is listed with its sentence (`choices`)."""
     declaration = folder.root / model.FACTORY_FOLDER
     stages = declaration / "stages"
     if kind == "stage":
@@ -842,29 +868,22 @@ def _choice_paths(folder: model.Folder, kind: str) -> list[Path]:
             and path.suffix in _YAML
             and _tagged_trellis(folder, path.relative_to(folder.root).as_posix())
         ]
-    base = folder.root / model.factory_path(kind)
-    paths = [path for path in base.rglob("*") if path.suffix in _YAML] if base.is_dir() else []
     if kind == "methods":
-        paths += stages.glob("*/methods.yml")
-        paths += (
-            path
-            for pattern in ("*/methods.bl", "*/methods.*.bl")
-            for path in stages.glob(pattern)
-            if model.is_addition_file(path)
-        )
-    return paths
+        patterns = ("*/methods.bl", "*/methods.*.bl") if stages.is_dir() else ()
+        return [path for pattern in patterns for path in stages.glob(pattern)]
+    base = folder.root / model.factory_path(kind)
+    return [path for path in base.rglob("*") if path.suffix in _YAML] if base.is_dir() else []
 
 
 def choices(folder: model.Folder, kind: str) -> list[Choice]:
     """The files a cell of `kind` may take (specification §3.2; design pass
     9 §3), a kind of `KINDS`, `stage` or `trellis` (`_choice_paths`), in
     path order, names beginning with "." left out, each with its first
-    comment line and, for a methods file, the stage it names and its
-    targets, read by the package's reader of YAML text; an addition names
-    neither, since the Workbench reads nothing of it (decision S7-W1). The
-    listing is total (specification §2.2 rule 4): a file that is no UTF-8
-    text is listed with the sentence that it cannot be read, and a methods
-    file whose `methods` is no list names no target."""
+    comment line. The listing is total (specification §2.2 rule 4): a file
+    that is no UTF-8 text is listed with the sentence that it cannot be
+    read. A `.bl` file named as an addition whose first line is a stage's
+    is no addition and is left out, since the Workbench reads nothing of an
+    addition beyond its first line (decision S7-W1)."""
     declaration = folder.root / model.FACTORY_FOLDER
     found = []
     for path in sorted(_choice_paths(folder, kind)):
@@ -875,26 +894,14 @@ def choices(folder: model.Folder, kind: str) -> list[Choice]:
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as error:
-            found.append(Choice(relpath, "", "", (), f"the file cannot be read: {error}"))
+            found.append(Choice(relpath, "", f"the file cannot be read: {error}"))
+            continue
+        if kind == "methods" and not model.is_addition(text):
             continue
         comment = next(
             (line.lstrip("#").strip() for line in text.split("\n") if line.startswith("#")), ""
         )
-        stage, targets = "", ()
-        if kind == "methods" and path.suffix in _YAML:
-            try:
-                document = entry_value(text)
-            except ValueError:
-                document = None
-            if isinstance(document, dict):
-                stage = str(document.get("stage", ""))
-                methods = document.get("methods")
-                targets = tuple(
-                    str(item.get("on", ""))
-                    for item in (methods if isinstance(methods, list) else [])
-                    if isinstance(item, dict)
-                )
-        found.append(Choice(relpath, comment, stage, targets, None))
+        found.append(Choice(relpath, comment, None))
     return found
 
 
@@ -954,11 +961,11 @@ def _rewrite(
     """Replaces the value at `address` of the file `file`, relative to the
     folder, by `written`, a string, a number, a boolean or a tag, where the
     file still writes `shown` there as `printed` prints the value at
-    `address` of its text, the printer of the rows that showed it:
-    `_printed_value` for an entry of the recipe and a method's tag,
+    `address` of its text, the printer of the rows that showed it,
     `_written_value` for a value of the Parameters and the Settings tabs.
-    It is the step that the panel's writes (`write_value`, `write_method`)
-    share (specification §3.2; AMD-MI-002 §5 rule 6). The file is read with
+    It is the step of the panel's write of a value into a file that writes
+    it (`write_value`; specification §3.2; AMD-MI-002 §5 rule 6). The file
+    is read with
     its digest (`model.read_file`), the package's `replace_entry` changes the
     value's characters alone, keeping the other entries, the comments and
     the layout, and `model.save_file` writes the new text with the digest
@@ -1125,11 +1132,6 @@ UNVALUED = "unvalued"
 # and the refusal of a write asked there (AMD-MI-002 §5 rule 3; ruling R28)
 NO_RECIPE = "no recipe values them"
 
-# the words of the Methods tab of an occurrence whose methods source is an
-# addition of which the stage binds no method, until the package reads
-# additions (specification 0.7, unit U3)
-ADDITION_UNREAD = "addition, not read yet"
-
 # the addresses of the mapping that the package's reader of a calibration
 # or a settings source reads in its file, in the order in which
 # `load_calibration` and `load_settings` of `bellman.stage.sources` look
@@ -1142,46 +1144,36 @@ _MAPPINGS = {
 # a key that an address writes within quotes, as the factory writes one
 _QUOTED = re.compile(r"[.\[\]]")
 
-# the words a refusal of a value typed in the Settings tab gives a kind
-# (`_kind`), and `number`, the kind wanted where any number is taken, after
-# "reads as"; a kind not listed is written as its word, `text` or `null`
-_READ_AS = {
-    "number": "a number",
-    "integer": "an integer",
-    "real": "a real number",
-    "boolean": "a boolean",
-    "tag": "a tag",
-    "list": "a list",
-    "mapping": "a mapping",
-}
-
-# the kinds a value typed in the Settings tab may read as where they differ
-# from the kind wanted: `number`, the kind of a setting where the file writes
-# a number or no value, since the package types settings nowhere, takes an
-# integer or a real number (ruling R30; AMD-MI-002 §5 rule 4)
-_ACCEPTED = {"number": ("integer", "real")}
+# the components a typing entry of an addition types at a place, in the
+# order in which a row of the Methods tab links the entry that types its
+# place (specification 0.7 §4; D2, D5)
+_COMPONENTS = ("method", "handler", "grid")
 
 
 class Place(NamedTuple):
-    """Where a file writes a value of an occurrence or the method of a
-    target: `file`, relative to the folder; `address`, the entry's address
-    there, `calibration.R` or `methods[1].method`; and `line`, the line of
-    the value, counted from one, at which a row links the file."""
+    """Where a file writes a value of an occurrence or types a place of the
+    stage: `file`, relative to the folder; `address`, the entry's address
+    there, `calibration.R` in a YAML source or `policy.method` in an
+    addition; and `line`, the line of the entry, counted from one, at which
+    a row links the file."""
 
     file: str
     address: str
     line: int
 
 
-class ParameterRow(NamedTuple):
-    """One row of the Parameters tab (AMD-MI-002 §5 rule 3): `name`, as the
-    stage declares it; `domain`, the set it is declared in, as the stage's
-    text writes it (`to_source`), the empty text where none is declared;
-    `value`, its value at the shown occurrence as the file that writes it
-    writes it (`_written_value`), a value no file of the list writes as
-    YAML's writer writes it (`_yaml_text`), `unvalued` where no source
-    values it, None where the stage is shown without a recipe; and `place`,
-    where a file writes the value (`value_place`), None where none does."""
+class ValueRow(NamedTuple):
+    """One row of the Parameters tab or of the Settings tab (AMD-MI-002 §5
+    rules 3 and 4; decision S7-W4), the two tables read the same way:
+    `name`, a parameter as the stage declares it or a setting as an
+    addition declares it; `domain`, the set it is declared in, as the
+    declaring text writes it (`to_source`), the empty text where none is
+    declared; `value`, its value at the shown occurrence as the file that
+    writes it writes it (`_written_value`), a value no file of the list
+    writes as YAML's writer writes it (`_yaml_text`), `unvalued` where no
+    source values it, None where the stage is shown without a recipe; and
+    `place`, where a file writes the value (`value_place`), None where none
+    does."""
 
     name: str
     domain: str
@@ -1189,33 +1181,20 @@ class ParameterRow(NamedTuple):
     place: Place | None
 
 
-class SettingRow(NamedTuple):
-    """One row of the Settings tab (AMD-MI-002 §5 rule 4): `name`; `kind`,
-    the kind of its value (`_kind`), `integer`, `real`, `boolean` or `text`
-    among them; `value`, as the file that writes it writes it
-    (`_written_value`), a value no file of the list writes as YAML's writer
-    writes it (`_yaml_text`); and `place`, where a file writes it
-    (`value_place`), None where none does."""
-
-    name: str
-    kind: str
-    value: str
-    place: Place | None
-
-
 class MethodRow(NamedTuple):
-    """One row of the Methods tab (AMD-MI-002 §5 rule 5), one method the
-    stage binds (`stage.methods`): `target`, the target of the one YAML
-    entry of the occurrence's methods that binds it (`_written_target`),
-    else the place it is bound at, as the package prints it (`bound_at`);
-    `tag`, the method as that entry writes it, printed `!Linear`
-    (`_shown`), the empty text where the entry writes none, and the method
-    bound where no entry binds it; `bound`, the method bound, printed as
-    its tag or as `handler only`; `choices`, the tags the package admits at
-    the entry's target (`admitted_methods` of `bellman.stage`), none where
-    no entry binds it; and `place`, the entry's method, or the entry where
-    it names none, in the last methods file that names its target
-    (`_method_entry`), None where no file names it."""
+    """One row of the Methods tab (AMD-MI-002 §5 rule 5), one place of the
+    version at which a component is typed (`stage.methods`): `target`, the
+    place's address as the package prints it; `tag`, the method word the
+    typing entry writes there, `!Linear`, the empty text where the place
+    carries no method component; `bound`, what is bound at the place, the
+    method word, `handler only` where a handler and no word, else the grid
+    as written; `choices`, the method words the package admits at the place
+    (`admitted_methods` of `bellman.stage`), none where a choice could not
+    be written into an addition of the occurrence's list (`methods_tab`);
+    and `place`, the
+    entry that types the place in an addition of the occurrence's list, its
+    method entry where one is written and else its handler's or its grid's
+    (`_entry_place`), None where none is found."""
 
     target: str
     tag: str
@@ -1237,37 +1216,21 @@ class Tab(NamedTuple):
     sentence: str | None
 
 
-def _kind(value) -> str:
-    """The kind of a value read from a YAML file, which a row of the
-    Settings tab prints and a typed value must read as (AMD-MI-002 §5 rules
-    3 and 4): `boolean`; `integer`; `real`; `text`; `tag`; `list`;
-    `mapping`; `null` for an empty value; else the name of the value's
-    type."""
-    if isinstance(value, bool):
-        return "boolean"
-    if isinstance(value, int):
-        return "integer"
-    if isinstance(value, float):
-        return "real"
-    if isinstance(value, str):
-        return "text"
-    if isinstance(value, dict):
-        return "tag" if "__yaml_tag__" in value else "mapping"
-    if isinstance(value, list):
-        return "list"
-    return "null" if value is None else type(value).__name__
-
-
 def _yaml_text(value) -> str:
     """A value as YAML's writer writes it, in flow style and on one line
     where the value holds no line break, the form in which `replace_entry`
     writes a number or a boolean: `1.0e-05`, `400`, `true`, `null`; a string
     plain where it reads back as itself and within quotes where it does
     not, `'1.0'`; a list or a mapping with its entries in their order,
-    `[1, 2]`, `{a: 1}`; a tag as `_shown` prints it, `!egm`. The text reads
-    back, by `entry_value`, as the value, a tagged mapping apart."""
+    `[1, 2]`, `{a: 1}`; a tag, read as `entry_value` reads one,
+    `{"__yaml_tag__": "Cartesian", "value": ""}`, as YAML writes it,
+    `!Cartesian`, and a tagged value or mapping as its tag and that value.
+    The text reads back, by `entry_value`, as the value, a tagged mapping
+    apart."""
     if isinstance(value, dict) and "__yaml_tag__" in value:
-        return _shown(value)
+        held = {name: item for name, item in value.items() if name != "__yaml_tag__"}
+        rest = held.get("value", "") if set(held) <= {"value"} else held
+        return f"!{value['__yaml_tag__']}" + (f" {_yaml_text(rest)}" if rest != "" else "")
     written = yaml.safe_dump(
         value, default_flow_style=True, allow_unicode=True, sort_keys=False, width=float("inf")
     )
@@ -1413,37 +1376,39 @@ def value_place(folder: model.Folder, record: dict | None, kind: str, name: str)
     return None if found is None else found[0]
 
 
-def parameters_tab(folder: model.Folder, stage, record: dict | None, key: str | None) -> Tab:
-    """The Parameters tab of the BellmanType panel for a stage shown as the
-    occurrence `key` that `record` binds (AMD-MI-002 §5 rule 3): one row per
-    parameter the stage declares, in declaration order
-    (`stage.par.list()`), with the set it is declared in as the stage's
-    text writes it (`to_source`), its value at the occurrence as the file
-    that writes it writes it, the value of the record's `calibration` as
-    YAML's writer writes it where no file of the list writes it, or
-    `unvalued` where the sources the recipe lists value none, as a slot
-    `$fill` that no keyword binds in the Workbench values none, and the
-    place a file writes its value (`value_place`). The tab names the last
-    file of the occurrence's calibration list, to which a value no file
-    writes is added (`write_value`). Where the list names
-    no file the rows are kept and the tab, its file None, takes no value and
-    says `the recipe lists no calibration source for <key>` (§5 rule 6);
-    where the stage is shown without a recipe, `record` None, the rows have
-    no value and the tab says `no recipe values them`. The package's refusal
-    of the stage's queries is the tab's sentence, nothing added, with no
-    row, so that the tab is total."""
+def _set_text(domain) -> str:
+    """The set a declaration names as its text writes it (`to_source`), the
+    empty text where it names none."""
+    return "" if domain is None else to_source(domain)
+
+
+def _declared_tab(folder: model.Folder, record: dict | None, key: str | None, kind: str, declared_of) -> Tab:
+    """A tab of names a text declares, valued by the sources of one kind,
+    which the Parameters tab and the Settings tab are (AMD-MI-002 §5 rules
+    3 and 4; decision S7-W4): one `ValueRow` per pair that `declared_of`
+    answers, a name with the set it is declared in, in declaration order,
+    with its value at the occurrence as the file that writes it writes it,
+    the value of the record's mapping of `kind` as YAML's writer writes it
+    where no file of the list writes it, or `unvalued` where the sources the
+    recipe lists value none, as a slot `$fill` that no keyword binds in the
+    Workbench values none, and the place a file writes its value
+    (`value_place`). The tab names the last file of the occurrence's list of
+    `kind`, to which a value no file writes is added (`write_value`). Where
+    the list names no file the rows are kept and the tab, its file None,
+    takes no value and says `the recipe lists no <kind> source for <key>`
+    (§5 rule 6); where the stage is shown without a recipe, `record` None,
+    the rows have no value and the tab says `no recipe values them`. The
+    package's refusal of the stage's queries is the tab's sentence, nothing
+    added, with no row, so that the tab is total."""
     if record is None:
         file, sentence, sources = None, NO_RECIPE, []
     else:
-        last = _last_file(record, "calibration")
+        last = _last_file(record, kind)
         file = None if last is None else relative(folder, last)
-        sentence = _no_source("calibration", key) if last is None else None
-        sources = _sources(record, "calibration")
+        sentence = _no_source(kind, key) if last is None else None
+        sources = _sources(record, kind)
     try:
-        declared = [
-            (row["name"], "" if row["domain"] is None else to_source(row["domain"]))
-            for row in stage.par.list()
-        ]
+        declared = list(declared_of())
     except _REFUSALS + (NotImplementedError,) as error:
         return Tab((), file, _reason(error))
     rows = []
@@ -1453,143 +1418,144 @@ def parameters_tab(folder: model.Folder, stage, record: dict | None, key: str | 
             value = None
         elif found is not None:
             value = found[2]
-        elif name in record["calibration"]:
-            value = _yaml_text(record["calibration"][name])
+        elif name in record[kind]:
+            value = _yaml_text(record[kind][name])
         else:
             value = UNVALUED
-        rows.append(ParameterRow(name, domain, value, None if found is None else found[0]))
+        rows.append(ValueRow(name, domain, value, None if found is None else found[0]))
     return Tab(tuple(rows), file, sentence)
 
 
-def settings_tab(folder: model.Folder, record: dict | None, key: str | None) -> Tab:
-    """The Settings tab of the BellmanType panel for the occurrence `key`
-    that `record` binds (AMD-MI-002 §5 rule 4): one row per setting of the
-    record's `settings`, the merge of the settings sources the recipe lists
-    for the occurrence, in its order, with the kind of its value (`_kind`),
-    the value as the file that writes it writes it, or as YAML's writer
-    writes a value no file of the list writes, and the place a file writes
-    it (`value_place`). The tab
-    names the last file of the occurrence's settings list. Where the list
-    names no file the tab has no row and says `the recipe lists no settings
-    source for <key>` (§5 rule 6); where no record is given, `no recipe
-    values them`."""
-    if record is None:
-        return Tab((), None, NO_RECIPE)
-    last = _last_file(record, "settings")
-    if last is None:
-        return Tab((), None, _no_source("settings", key))
-    sources = _sources(record, "settings")
-    rows = []
-    for name, value in record["settings"].items():
-        found = _value_at(folder, sources, name)
-        if found is None:
-            row = SettingRow(str(name), _kind(value), _yaml_text(value), None)
-        else:
-            place, held, written = found
-            row = SettingRow(str(name), _kind(held), written, place)
-        rows.append(row)
-    return Tab(tuple(rows), relative(folder, last), None)
+def parameters_tab(folder: model.Folder, stage, record: dict | None, key: str | None) -> Tab:
+    """The Parameters tab of the BellmanType panel for a stage shown as the
+    occurrence `key` that `record` binds (AMD-MI-002 §5 rule 3): one row per
+    parameter the stage declares, in declaration order
+    (`stage.par.list()`), with the set it is declared in as the stage's
+    text writes it, valued by the calibration sources the recipe lists for
+    the occurrence (`_declared_tab`)."""
+    return _declared_tab(
+        folder,
+        record,
+        key,
+        "calibration",
+        lambda: [(row["name"], _set_text(row["domain"])) for row in stage.par.list()],
+    )
 
 
-def _method_entry(folder: model.Folder, record: dict, target: str):
-    """The entry of the last methods file of the record's list that names
-    `target` under `on`, a file before its parents (`_list_files`), in which
-    a choice of method is written (AMD-MI-002 §5 rule 5): its `Place`, at
-    the entry's `method` where it names one and else at the entry itself,
-    its index in the file's `methods`, and the entry as the file writes it;
-    None where no file names the target, a file that cannot be read naming
-    none. It reads the YAML form alone, which goes when the corpus moves to
-    additions (decision S7-W6)."""
+def settings_tab(folder: model.Folder, stage, record: dict | None, key: str | None) -> Tab:
+    """The Settings tab of the BellmanType panel for a stage shown as the
+    occurrence `key` that `record` binds (AMD-MI-002 §5 rule 4; decision
+    S7-W4): one row per setting of the version, `stage.settings`, the
+    settings its additions declare in declaration order and then the names
+    a configuration bound that no addition declares, with the set it is
+    declared in as the addition's text writes it, read as the Parameters
+    tab reads a parameter's set, valued by the settings sources the recipe
+    lists for the occurrence (`_declared_tab`). A value typed in a row is
+    judged by the package against that set when the loop binds the stage
+    again (`write_value`)."""
+    return _declared_tab(
+        folder,
+        record,
+        key,
+        "settings",
+        lambda: [(name, _set_text(held.domain)) for name, held in stage.settings.items()],
+    )
+
+
+def _addition_entries(folder: model.Folder, record: dict) -> list[tuple[str, dict]]:
+    """The typing entries of each addition the record's methods list names,
+    the last first (`_list_files`): pairs of the addition's path relative to
+    the folder and its entries by the address they type, `policy.method`
+    (`typing_entries` of `bellman.stage`). An addition that cannot be read,
+    or that the grammar does not read, is left out; its refusal stands under
+    the error mark (`bind_occurrence`)."""
+    found = []
     for path in _list_files(record, "methods"):
         try:
             text = Path(path).read_text(encoding="utf-8")
-            methods = entry_value(text, "methods")
-        except _UNREAD:
+            entries = typing_entries(text, path)
+        except _UNREAD + (ConstructionError,):
             continue
-        for index, entry in enumerate(methods if isinstance(methods, list) else []):
-            if not isinstance(entry, dict) or entry.get("on") != target:
-                continue
-            address = f"methods[{index}]" + (".method" if "method" in entry else "")
-            try:
-                line = entry_span(text, address).line
-            except (KeyError, ValueError):
-                break
-            return Place(relative(folder, path), address, line), index, entry
+        found.append((relative(folder, path), entries))
+    return found
+
+
+def _typed_in(additions: list, place: str, component: str):
+    """The first of `additions` (`_addition_entries`) that types the
+    `component` of the place `place`, with the entry, `(file, entry)`; None
+    where none does."""
+    for file, entries in additions:
+        entry = entries.get(f"{place}.{component}")
+        if entry is not None:
+            return file, entry
     return None
 
 
-def _written_target(stage, entries: list, place: str, method) -> str | None:
-    """The target of the YAML entry among `entries`, the record's methods,
-    that binds `method`, which the stage binds at `place`: the entry that
-    names `place` itself, else the one entry whose target the package
-    resolves to that method (`stage.methods[target]`), as `E_ε` resolves to
-    the expectation it names; None where no entry or several do, as the
-    value and the marginal of one Evaluation, at one of which a choice
-    would leave the two apart. The YAML entries go when the corpus moves to
-    additions (decision S7-W6)."""
-    targets = [entry["on"] for entry in entries]
-    if place in targets:
-        return place
-    reaching = []
-    for target in targets:
-        try:
-            if stage.methods[target] is method:
-                reaching.append(target)
-        except _REFUSALS:
-            # the target names no method, or several
-            continue
-    return reaching[0] if len(reaching) == 1 else None
+def _entry_place(additions: list, place: str) -> Place | None:
+    """The `Place` at which an addition of the occurrence's list types the
+    place `place`: its method entry where one is written, else its
+    handler's, else its grid's (`_COMPONENTS`), at the entry's line; None
+    where none is written, or where the parser records no place for the
+    entry (`TypingEntry.span`)."""
+    for component in _COMPONENTS:
+        typed = _typed_in(additions, place, component)
+        if typed is not None and typed[1].span is not None:
+            return Place(typed[0], f"{place}.{component}", typed[1].span.line)
+    return None
+
+
+def _bound_word(held) -> str:
+    """What a row of the Methods tab prints as bound at a place: the method
+    word (`Components.word`), `handler only` where the place carries a
+    handler and no word, else the grid as written, the one component left
+    (`Components.parts`)."""
+    if held.word:
+        return held.word
+    return "handler only" if held.handler else held.parts[0]
 
 
 def methods_tab(folder: model.Folder, stage, record: dict | None, key: str | None) -> Tab:
     """The Methods tab of the BellmanType panel for a stage shown as the
     occurrence `key` that `record` binds (AMD-MI-002 §5 rule 5): one row per
-    method the stage binds, read from the package's answer `stage.methods`
-    in its order, so that the tab shows nothing the elaboration does not
-    answer (decision S7-W1). Where the occurrence's last methods file is a
-    YAML file, a row whose method one YAML entry of the occurrence binds is
-    named by that entry's target, once for all the places the entry binds,
-    offers the tags the package admits there (`admitted_methods` of
-    `bellman.stage`) and links the entry, at which a choice is written
-    (`_written_target`, `_method_entry`, `write_method`); every other row
-    is named by the place the method is bound at and shows it as text.
-    Where that file is an addition, each row shows its method as text with
-    no choice, since no writer of the `.bl` declaration exists yet
-    (decision S7-W3), and where the stage binds no method the tab says
-    `addition, not read yet` (`ADDITION_UNREAD`). The tab names the last
-    file of the occurrence's methods list. Where the list names no file the
-    tab has no row and says `the recipe lists no methods source for <key>`
-    (§5 rule 6); where no record is given, `no recipe values them`. A
-    refusal of `methodize` stands under the error mark (`bind_occurrence`),
-    and the stage then binds no method."""
+    place of the version at which a component is typed, read from the
+    package's answer `stage.methods` in its order, so that the tab shows
+    nothing the elaboration does not answer (decision S7-W1): the place,
+    the method word typed there, what is bound there (`_bound_word`), the
+    words the package admits at the place (`admitted_methods` of
+    `bellman.stage`), among which a choice is written back into the
+    addition of the occurrence's list that types the place, or appended to
+    the last addition where none does (`write_method`; decision S7-W3), and
+    the line of the entry that types the place, at which the row links the
+    addition (`_entry_place`). A row offers a choice only where the choice
+    can be written: none where the place carries a method word that no
+    addition of the list types, the stage file writing it, and none where
+    the entry that types its method cannot be written back, its place in
+    the text unrecorded. The tab names the last addition of the
+    occurrence's methods list. Where the list names no file the tab has no
+    row and says `the recipe lists no methods source for <key>` (§5 rule
+    6); where no record is given, `no recipe values them`. A refusal of the
+    union or of the typing stands under the error mark (`bind_occurrence`),
+    and the stage then carries the components the stage file alone
+    types."""
     if record is None:
         return Tab((), None, NO_RECIPE)
     last = _last_file(record, "methods")
     if last is None:
         return Tab((), None, _no_source("methods", key))
-    addition = model.is_addition_file(Path(last))
-    entries = [] if addition else record["methods"]["methods"]
+    additions = _addition_entries(folder, record)
     rows = []
-    for name, method in stage.methods.items():
-        place = str(bound_at(name))
-        bound = f"!{method.tag}" if method.tag else "handler only"
-        target = _written_target(stage, entries, place, method)
-        if target is not None and any(row.target == target for row in rows):
-            # one entry that binds several places is one row
-            continue
-        held = None if target is None else _method_entry(folder, record, target)
-        if held is None:
-            rows.append(MethodRow(place, bound, bound, (), None))
-            continue
-        written, _, entry = held
+    for address, held in stage.methods.items():
+        place = str(address)
+        typed = _typed_in(additions, place, "method")
+        # a choice can be written where an addition types the method at a
+        # recorded place, or where no file types it and the entry is appended
+        writable = typed[1].span is not None if typed is not None else not held.word
         try:
-            choices = admitted_methods(stage, target)
+            choices = admitted_methods(stage, place) if writable else ()
         except _REFUSALS:
             choices = ()
-        tag = _shown(entry["method"]) if "method" in entry else ""
-        rows.append(MethodRow(target, tag, bound, choices, written))
-    sentence = ADDITION_UNREAD if addition and not rows else None
-    return Tab(tuple(rows), relative(folder, last), sentence)
+        rows.append(MethodRow(place, held.word, _bound_word(held), choices, _entry_place(additions, place)))
+    return Tab(tuple(rows), relative(folder, last), None)
 
 
 def places_refusal(stage) -> str | None:
@@ -1651,29 +1617,6 @@ def _anchored(typed: str) -> str | None:
     return None
 
 
-def _setting_refusal(typed: str, value, found) -> str | None:
-    """The refusal of the value `value`, read from the text `typed`, for a
-    row of the Settings tab whose value `found` (`_value_at`) shows, None
-    where the value is taken (AMD-MI-002 §5 rule 4; ruling R30). The value
-    must read as a value of the kind the file writes there (`_kind`), and
-    where a number is written there, or no value is, a null included, as an
-    integer or a real number, since the package types settings nowhere, the
-    type of the method option the setting supplies being checked by
-    `configure` when the loop binds the stage again. So `1e-5`, which reads
-    as text, is refused where a number stands; the number the file writes,
-    typed back as the row shows it, is taken as it stands."""
-    held = None if found is None else found[1]
-    reads = _kind(value)
-    # a number stands there, or no value does
-    wanted = "number" if _kind(held) in ("integer", "real", "null") else _kind(held)
-    # the number the file writes, typed back, is taken as it stands
-    typed_back = found is not None and reads in ("integer", "real") and reads == _kind(held)
-    if (typed_back and value == held) or reads in _ACCEPTED.get(wanted, (wanted,)):
-        return None
-    said = typed or "the empty text"
-    return f"{said} reads as {_READ_AS.get(reads, reads)}, not as {_READ_AS.get(wanted, wanted)}"
-
-
 def write_value(
     folder: model.Folder,
     record: dict | None,
@@ -1694,8 +1637,10 @@ def write_value(
     against the set the parameter's declaration names when the loop binds
     the stage again, its refusal standing under the error mark and on the
     row (unit L, Task 16; defects 4 and 5 of the UX simulation); the tab
-    composes no sentence about the value's form. A setting's value must read
-    as the kind `_setting_refusal` admits (ruling R30). Where a file of the
+    composes no sentence about the value's form. A setting's value is
+    written the same way, and the package judges it against the set its
+    declaration in the addition names when the loop binds the stage again
+    (`configure`; decision S7-W4). Where a file of the
     occurrence's list writes the value (`value_place`), the value is
     replaced there by the package's `replace_entry`, the file still writing
     `shown` as the row printed it (`_rewrite`, `_written_value`), so that a
@@ -1726,9 +1671,6 @@ def write_value(
         return Written(False, "", "", f"{typed} does not read as YAML")
     sources = _sources(record, kind)
     found = _value_at(folder, sources, name)
-    refused = _setting_refusal(typed, value, found) if kind == "settings" else None
-    if refused is not None:
-        return Written(False, "", "", refused)
     if found is not None:
         place = found[0]
         return _rewrite(folder, place.file, place.address, shown, value, _written_value)
@@ -1751,39 +1693,48 @@ def write_method(
     shown: str,
     tag: str,
 ) -> Written:
-    """Writes the method tag `tag`, `!pchip`, one of a row's choices, for
-    `target` in the Methods tab, whose row shows its method as `shown`
-    (AMD-MI-002 §5 rule 5): the tag alone, in the entry of the last methods
-    file of the occurrence's list that names `target` (`_method_entry`).
-    Where the entry names a method, its tag is replaced, a value written
-    after the tag kept, the file still writing `shown` there (`_rewrite`);
-    where it names none, `method: <tag>` is added to the entry (`_add`). A
-    stage shown without a recipe, a list that names no file, a text that
-    writes an anchor or an alias (`_anchored`, ruling R35), a tag that the
-    method table `method_types` does not hold, and a target that no file
-    names are refused in one sentence, as is every refusal of `_rewrite` and
-    `_add`, among them a method written as a tagged mapping, whose tag
-    `replace_entry` does not replace alone."""
+    """Writes the method word `tag`, `!pchip`, one of a row's choices, for
+    the place `target` in the Methods tab, whose row shows its word as
+    `shown` (AMD-MI-002 §5 rule 5; decision S7-W3): in the addition of the
+    occurrence's list that types the method of the place, the last first
+    (`_typed_in`), the entry's word replaced, its keyword arguments, its
+    spacing and every other character of the file kept; where no addition
+    types it, the entry `<target>.method : <tag>` appended at file level to
+    the last addition of the list (`write_typing_entry` of
+    `bellman.stage`). The writer parses the text it answers, so that a word
+    the grammar does not read is refused in the package's sentence and
+    nothing is written; whether the place admits the word and whether its
+    keywords are the word's is judged by the package when the loop binds
+    the stage again, the refusal standing under the error mark. A stage
+    shown without a recipe, a list that names no file, a word that no row
+    of the method table holds, an entry whose word is no longer `shown`, an
+    entry whose place in the text the parser does not record and a file
+    that cannot be read are refused in one sentence, as is a file that
+    cannot be written (`_save`)."""
     if record is None:
         return Written(False, "", "", NO_RECIPE)
-    if _last_file(record, "methods") is None:
+    last = _last_file(record, "methods")
+    if last is None:
         return Written(False, "", "", _no_source("methods", key))
-    refused = _anchored(tag)
-    if refused is not None:
-        return Written(False, "", "", refused)
     if tag not in method_types:
-        return Written(False, "", "", f"{tag} is no tag of the method table")
-    held = _method_entry(folder, record, target)
-    if held is None:
-        return Written(False, "", "", f"no methods file the recipe lists for {key} names {target}")
-    place, index, entry = held
-    # the tag as `entry_value` reads a tag written alone, `!pchip`
-    alone = {"__yaml_tag__": tag[1:], "value": ""}
-    if "method" not in entry:
-        return _add(folder, place.file, ("methods", index), "method", alone)
-    method = entry["method"]
-    if isinstance(method, dict) and "__yaml_tag__" in method:
-        written = {**method, "__yaml_tag__": tag[1:]}
+        return Written(False, "", "", f"{tag} is no word of the method table")
+    typed = _typed_in(_addition_entries(folder, record), target, "method")
+    if typed is None:
+        if shown:
+            return Written(False, "", "", f"no addition of {key} writes {shown} at {target}.method")
+        file, value = relative(folder, last), tag
     else:
-        written = alone
-    return _rewrite(folder, place.file, place.address, shown, written, _printed_value)
+        file, entry = typed
+        word, _, arguments = entry.value.partition("(")
+        if word != shown:
+            return Written(False, "", "", f"{file} no longer writes {shown} at {target}.method")
+        value = tag + (f"({arguments}" if arguments else "")
+    try:
+        current = model.read_file(folder, file)
+    except (OSError, UnicodeDecodeError) as error:
+        return Written(False, "", "", f"the file cannot be read: {error}")
+    try:
+        written = write_typing_entry(current.text, file, target, "method", value)
+    except (ConstructionError, ValueError) as error:
+        return Written(False, current.text, current.digest, _reason(error))
+    return _save(folder, file, current, written)

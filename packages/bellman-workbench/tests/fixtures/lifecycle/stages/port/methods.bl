@@ -1,0 +1,12 @@
+@methods: port
+# The methods of the portfolio stage of the lifecycle registry, as an addition
+# to port.bl: value function iteration on the decision value builder, the
+# decision value read by linear interpolation on the grid of its perch's
+# states, which no grid entry refines, and the two forward builders
+# deterministic. No setting is declared, so the recipe lists no settings
+# source for the stage.
+
+cntn_to_dcsn.method : !vfi
+cntn_to_dcsn.evaluate.method : !Linear
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !deterministic

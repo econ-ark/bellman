@@ -28,7 +28,7 @@ from bellman.refusals import ConstructionError
 from bellman.stage import inventory
 from conftest import ROOT, flat
 from snapshot.record import recording_path
-from sym.test_corpus import KNOWN_UNELABORATABLE
+from snapshot.corpus_cases import KNOWN_UNELABORATABLE
 
 HOUSING_RENTING = ROOT / "applications/housing-renting/declaration/stages"
 FIXTURES = Path(__file__).parent / "fixtures" / "spec_0_6"

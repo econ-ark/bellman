@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+import dataclasses
 from dataclasses import replace
 from types import MappingProxyType
 from typing import NamedTuple
@@ -31,7 +32,6 @@ from bellman.display import sheets
 from bellman.display.cards import (
     AuthoredCard,
     BlockDenoted,
-    BlockMethodClause,
     Composite,
     Declared,
     DefinitionCard,
@@ -63,7 +63,7 @@ from bellman.fold.wire_terms import term_nodes
 from bellman.native.identity import Identity, box_identity, piece_identity
 from bellman.native.labels import box_label, is_wiring, italic, value_aggregations_of
 from bellman.native.predicates import Compare
-from bellman.native.records import Definition, bound_at
+from bellman.native.records import Definition, typing_text
 from bellman.native.versions import kept_answer, stored
 from bellman.refusals import METHOD_CONDITIONS, NotConstructed, TargetError
 from bellman.stage.boxes import (
@@ -113,6 +113,7 @@ from bellman.stage.grains import (
     block_id_of,
     bound_blocks,
     chain_order,
+    declared_definitions,
     derived_graph_at_grain,
     graph_of,
     graph_refusal,
@@ -125,9 +126,8 @@ from bellman.stage.grains import (
 from bellman.stage.inventory import address_of, block_arrow, direction_entries
 from bellman.stage.kernel_records import aggregator_kernel, kernel_record, law_of_motion_kernel
 from bellman.stage.kernels import affine, conditioning, coordinates_of, integrated_shocks
-from bellman.stage.method_blocks import declared_version, is_declared_version
-from bellman.stage.method_table import method_types
-from bellman.stage.method_targets import block_box
+from bellman.stage.levels import declared_version, is_declared_version, source_texts
+from bellman.stage.places import block_box, components_of_box
 from bellman.stage.stage_answers import descriptions, field_role, fields, obligations, source_spans
 from bellman.stage.term_operations import reference_term, tuple_term
 from bellman.syntax import terms as T
@@ -272,45 +272,71 @@ def denotation_of_block(stage, box):
     """What a block or a sub-block of an initial diagram denotes, as the
     `AuthoredCard` record of AMD-SG-021 §2.2: its typed wires, its authored
     lines with their file positions, its header and the control it is read
-    at; kept for the version by the bubble. The card reads the stage as
-    declared (`method_blocks.declared_version`), so that no binding changes
-    it (decision SC-13): the methods a stage binds are answered by
+    at; kept for the version by the bubble. The statements are the lines the
+    box holds (`_statements_of_block`), each read as `denote_line` reads it
+    (`_line_version`): a line of the stage file on the stage as declared
+    (`levels.declared_version`), so that no binding changes it (decision
+    SC-13), and a line an addition appends on the version that holds it. The
+    wires, the header, the method clause and the conditions are read on the
+    declared version, which prints no method clause and no condition of a
+    method, the methods a stage binds being answered by
     `stage.initial.methods` and printed on the cards of the operative
-    builders."""
-    stage = declared_version(stage)
+    builders; a block the stage file does not write, one an addition adds
+    whole, is read on the version that holds it."""
+    declared = declared_version(stage)
+    reading = declared if _declares_block(declared, box) else stage
 
     def compute():
-        table = stage.definitions
-        signature = box_signature(stage, box)
+        signature = box_signature(reading, box)
         statements = []
         for address in _statements_of_block(stage, box):
-            doc = _WORDS["doc"] in (getattr(table[address], "tags", ()) or ())
+            record = stage.definitions[address]
+            on = _line_version(stage, declared, record)
+            doc = _WORDS["doc"] in (getattr(record, "tags", ()) or ())
             statements.append(
                 Statement(
                     address,
-                    _authored_text(stage, address),
-                    written_at(stage, address) or "",
+                    _authored_text(on, address),
+                    written_at(on, address) or "",
                     doc=doc,
                     no_wire=doc,
                 )
             )
         return with_definitions_and_source(
-            stage,
+            reading,
             AuthoredCard(
                 kind="block",
-                inputs=_card_wires(stage, signature.inputs),
-                outputs=_card_wires(stage, signature.outputs),
+                inputs=_card_wires(reading, signature.inputs),
+                outputs=_card_wires(reading, signature.outputs),
                 statements=tuple(statements),
                 tags=tuple(held.address for held in statements if held.doc),
-                header=_header_of_bubble(stage, box),
-                coordinate=_coordinate_answer(stage, _coordinate_sorts(stage, box)),
-                method=_method_clause(stage, methods_within(stage, box)),
-                conditions=tuple(box_obligations(stage, box)),
-                title=_title_of_bubble(stage, box),
+                header=_header_of_bubble(reading, box),
+                coordinate=_coordinate_answer(reading, _coordinate_sorts(reading, box)),
+                method=_method_clause(reading, methods_within(reading, box)),
+                conditions=tuple(box_obligations(reading, box)),
+                title=_title_of_bubble(reading, box),
             ),
         )
 
-    return _kept_for(stage, ("block card",), (box,), compute)
+    return _kept_for(reading, ("block card",), (box,), compute)
+
+
+def _declares_block(declared, box):
+    """Whether the stage file writes the block `box`, or the block it is
+    nested in, so that the declared version holds a block of that name: an
+    addition adds a nested block under a label its parent writes already
+    (`label-not-in-parent`) and adds a top-level block whole."""
+    return box.name.split(".", 1)[0] in {held.name for held in blocks_of(declared)}
+
+
+def _line_version(stage, declared, definition):
+    """The version an authored line is read on: the stage as declared,
+    `declared`, where its definitions hold the line, which the stage file
+    writes, and `stage` itself for a line an addition appends, which the
+    declared version does not hold."""
+    if stored(declared, "definitions").get(definition.identity) is not None:
+        return declared
+    return stage
 
 
 # the record kinds in the terminology's words, as the stamp of a sheet prints
@@ -319,12 +345,14 @@ _RECORD_STAMP = {
     "set": "SET",
     "distribution": "DISTRIBUTION",
     "parameter": "PARAMETER",
+    "setting": "SETTING",
     "function": "FUNCTION",
     "function_alias": "FUNCTION ALIAS",
     "correspondence": "CORRESPONDENCE",
     "g": "LAW OF MOTION",
     "G": "VALUE AGGREGATOR",
     "line": "BLOCK LINE",
+    "typing": "TYPING ENTRY",
 }
 
 
@@ -342,6 +370,8 @@ def denotation_of_definition(stage, definition, box=None):
         lambda: (
             denote_line(stage, definition, box)
             if definition.kind == "line"
+            else typing_card(stage, definition)
+            if definition.kind == "typing"
             else definition_card(stage, definition)
         ),
     )
@@ -406,16 +436,26 @@ def box_signature(stage, box):
     decision builder's signature is the signature of the operator at the
     policy, and a box held at a policy names the policy on its `applies` and
     `operator` lines and on no line of its signature; the policy is typed on
-    the output of the policy builder.
+    the output of the policy builder. After the field component stand the
+    components typed at the piece (specification 0.7, the ruling "On
+    structure"): a builder's or a block's own, `policy.method : !egm`, and a
+    primitive operator's, the Evaluation's with the object each is typed for.
 
     Each wire's identity stands on the record, not on the printed line. A
     primitive operator's lines are set as its card sets them under
     DENOTATION, so that `str(signature())` is that contiguous block of
     `str(denote())`. A bubble's and a line's are set as `signature_lines`
     of `display/printed_records.py` sets the same entries."""
+    if isinstance(box, Bubble):
+        components = tuple(
+            (place.address, held) for place, held in components_of_box(stage, box.name)
+        )
+    else:
+        components = tuple(methods_within(stage, box).items())
     return Signature(
         wire_records(stage, box.dom.inside, with_definitions=False),
         wire_records(stage, box.cod.inside, with_definitions=False),
+        components,
     )
 
 
@@ -648,12 +688,10 @@ def denote_line(stage, definition, box=None):
     address in the label column and its file position at the right margin, then
     `tags`, the control it is read at where it reads no wire, `describes` and
     `method`. A line of the stage file is read on the stage as declared
-    (`method_blocks.declared_version`), as the card of its block is, so that no
-    binding changes its card (decision SC-22); a line of a block file is read
-    on the stage that binds it."""
-    declared = declared_version(stage)
-    if stored(declared, "definitions").get(definition.identity) is not None:
-        stage = declared
+    (`levels.declared_version`), as the card of its block is, so that no
+    binding changes its card (decision SC-22); a line an addition appends is
+    read on the stage that holds it (`_line_version`)."""
+    stage = _line_version(stage, declared_version(stage), definition)
     return with_definitions_and_source(
         stage,
         AuthoredCard(
@@ -708,7 +746,7 @@ def definition_card(stage, definition):
             hypotheses=(),
             describes=descriptions(definition),
             conditions=_definition_conditions(stage, definition),
-            method=_method_clause(stage, methods_bound_within(stage, {definition.address})),
+            method=_method_clause(stage, methods_bound_within(stage, {definition.identity})),
             title=_title_block(
                 stage,
                 address_of(stage, f"DEFINITION {definition.identity}"),
@@ -717,6 +755,29 @@ def definition_card(stage, definition):
                 identity=definition.identity,
                 level="definition",
             ),
+        ),
+    )
+
+
+def typing_card(stage, definition):
+    """What a typing record denotes: the entry as the file writes it under
+    its own label, `policy.method : !egm`, and the place and the component
+    it types."""
+    return DefinitionCard(
+        kind=definition.kind,
+        statement=Statement(definition.identity.address, typing_text(definition), definition.address),
+        denoted=(),
+        hypotheses=(),
+        describes=(),
+        conditions=(),
+        method=(),
+        title=_title_block(
+            stage,
+            address_of(stage, f"DEFINITION {definition.identity}"),
+            subtitle=f"the {definition.identity.field} component of {definition.identity.address}",
+            stamp=sheets.stamp("KIND", _RECORD_STAMP["typing"]),
+            identity=definition.identity,
+            level="definition",
         ),
     )
 
@@ -1351,7 +1412,7 @@ def section_denoted(stage, row, label):
     spec = law_of_motion_kernel(stage, row.definition)
     states = tuple(i for i in spec.index if not ctx.labels(i))
     fields = dict(
-        branches_of(stage, block_box(stage, row.definition.address, row.definition.address))
+        branches_of(stage, block_box(stage, row.definition.address))
     )[label]
     point, points = bound_point(ctx, identity, states)
     arguments = tuple(points.get(i, T.Sym(T.Constant(label))) for i in spec.index)
@@ -1458,7 +1519,7 @@ def _card_coordinates(stage, box, row):
     block = getattr(row, "builder", None)
     if not block or block not in {b.name for b in blocks_of(stage)}:
         return ()
-    coordinates = block_coordinates(block_box(stage, block, block), header_wire_sorts(stage))
+    coordinates = block_coordinates(block_box(stage, block), header_wire_sorts(stage))
     reads = {identity for sort in box.dom.inside for identity in coordinates_of(sort)}
     reads |= {identity for sort in box.cod.inside for identity in coordinates_of(sort)}
     table = fields(stage)
@@ -1467,39 +1528,54 @@ def _card_coordinates(stage, box, row):
     )
 
 
+def _printed_arguments(value):
+    """A bound method's keyword arguments with each term among their values,
+    a quoted string or a word with arguments, printed as the stage file
+    writes it, at every depth of their mappings and tuples; a setting's name
+    and a number stay as they are."""
+    if dataclasses.is_dataclass(value):
+        return to_source(value)
+    if isinstance(value, Mapping):
+        return {key: _printed_arguments(item) for key, item in value.items()}
+    if isinstance(value, (tuple, list)):
+        return tuple(_printed_arguments(item) for item in value)
+    return value
+
+
 def _method_clause(stage, bound):
-    """The bindings within a piece as the `method` clause prints them (§3.1
-    item 11): per entry the tag with its `!` and the handler where both are
-    bound, the one that is bound where one is and `none` where an entry binds
-    neither, the address it is bound at, and the settings the entry names,
-    with their values on a specified version. A card of the declared level,
-    read on the version `declared_version` makes, prints none, though its
-    piece's `methods` answers them (decisions SC-13 and SC-24)."""
+    """The components within a piece as the `method` clause prints them
+    (§3.1 item 11): per place the method word with its arguments, the grid
+    and the handler, each where typed, the place's address, and the values
+    of the settings the keyword arguments name on a specified version. A
+    card of the declared level, read on the version `declared_version`
+    makes, prints none, though its piece's `methods` answers them (decisions
+    SC-13 and SC-24)."""
     if is_declared_version(stage):
         return ()
-    values = stage.bindings.settings
-    made = []
-    for key, method in bound.items():
-        address = bound_at(key)
-        options = (
-            method_types[f"!{method.tag}"].options
-            if method.tag and f"!{method.tag}" in method_types
-            else {}
-        )
-        clause = dict(
+    values = stage.bindings.settings or {}
+    return tuple(
+        MethodClause(
             address=address,
-            tag=method.tag,
-            handler=method.handler,
-            settings=method.settings,
-            option_types=options,
-            values=values or {},
+            method=held.method,
+            grid=held.grid,
+            handler=held.handler,
+            written=str(held),
+            options=tuple(
+                (keyword.key, _option_value(keyword.value, values))
+                for keyword in (held.method.arguments if held.method is not None else ())
+            ),
         )
-        made.append(
-            BlockMethodClause(**clause, block=method.block)
-            if method.block is not None
-            else MethodClause(**clause)
-        )
-    return tuple(made)
+        for address, held in bound.items()
+    )
+
+
+def _option_value(value, values):
+    """A keyword argument's value as the `Options` row of a card prints it:
+    the configured value of the setting a name names, where one is bound,
+    and the argument as written otherwise."""
+    if isinstance(value, T.Name) and value.name in values:
+        return repr(values[value.name])
+    return to_source(value)
 
 
 def _declarations(stage, block):
@@ -1692,8 +1768,10 @@ def _declared_denoted(stage, definition):
     with the family's convention on a line beneath (§3.5)."""
     kind, name = definition.kind, definition.identity.field
     identity = definition.identity
-    if kind == "parameter":
-        values = stage.bindings.calibration
+    if kind in ("parameter", "setting"):
+        # a parameter's value is bound by the calibration, a setting's by
+        # the configuration (specification 0.7, S1)
+        values = stage.bindings.calibration if kind == "parameter" else stage.bindings.settings
         declared = declared_set_term(
             StageNames(stage), definition.equations[0] if definition.equations else None, identity
         )
@@ -1845,11 +1923,12 @@ def with_definitions_and_source(stage, answer):
 
 
 def _with_block_files(stage, denoted):
-    """The objects `denoted`, each that a bound block's file defines given
-    as a `BlockDenoted`, with the block file's name and the line of its
-    definition, `cons_egm.bl:3`, read from the address of its record in the
+    """The objects `denoted`, each that an addition defines given as a
+    `BlockDenoted`, with the addition's file name and the line of its
+    definition, `methods.bl:3`, read from the address of its record in the
     definitions table; the objects the stage file defines as they are."""
-    files = {block.origin: block.origin.rpartition("/")[2] for block in bound_blocks(stage)}
+    _, _, additions = source_texts(stage)
+    files = {origin: origin.rpartition("/")[2] for _, origin in additions}
     if not files:
         return denoted
     table = stored(stage, "definitions")
@@ -2177,12 +2256,10 @@ def _span_of(stage, address):
 
 def _spanned_lines(stage, span):
     """The lines of the version's retained text a span covers, each with its
-    line ending: the stage file's text, or a bound method block's where the
-    span is a place in its file."""
-    text = next(
-        (block.text for block in bound_blocks(stage) if block.origin == span.file),
-        stage.provenance.get("text"),
-    )
+    line ending: the stage file's text, or an addition's where the span is a
+    place in its file."""
+    held, _, additions = source_texts(stage)
+    text = next((text for text, origin in additions if origin == span.file), held)
     lines = text.splitlines(keepends=True)
     return lines[span.line - 1 : span.end_line or span.line]
 
@@ -2210,7 +2287,7 @@ def _card_coordinate_names(stage, bubble):
     # a builder's box carries no retained header, so the coordinates are read
     # from the block of the same name; the builder is read at the same
     # coordinate as the block it is built from (AMD-SG-015 §4.3)
-    block = block_box(stage, bubble.name, bubble.name)
+    block = block_box(stage, bubble.name)
     table = fields(stage)
     named = tuple(
         table[identity]
@@ -2249,7 +2326,7 @@ def _arrowed(stage, part):
     block of the stage takes none."""
     name, block = part.name, box_identity(part).block
     try:
-        box = block_box(stage, block, block)
+        box = block_box(stage, block)
     except TargetError:
         return name
     arrow = block_arrow(stage, box)
@@ -2266,13 +2343,17 @@ def _grain_stamp(grain):
 
 
 def _statements_of_block(stage, box):
-    """The addresses of the authored lines of one block, in file order. A
-    sub-block is itself one authored line, marked `!node`, and its own
+    """The addresses of the authored lines of one block of an initial
+    diagram, in file order: the lines of the table the initial diagrams are
+    built from (`grains.declared_definitions`), the stage file's lines and
+    the lines an addition appends, a solution method's rows left out, since
+    they stand in the operative table and in no block of an initial diagram.
+    A sub-block is itself one authored line, marked `!node`, and its own
     statement is the line of its name: without it the card of a named
     intermediate quantity does not say what the quantity is."""
     return tuple(
         definition.address
-        for definition in stage.definitions.values()
+        for definition in declared_definitions(stage).values()
         if definition.kind == "line"
         and (definition.address.split(".", 1)[0] == box.name or definition.address == box.name)
     )
@@ -2309,7 +2390,7 @@ def _line_coordinates(stage, definition, box):
     block = definition.address.split(".", 1)[0]
     if block not in {b.name for b in blocks_of(stage)}:
         return ()
-    coordinates = block_coordinates(block_box(stage, block, block), header_wire_sorts(stage))
+    coordinates = block_coordinates(block_box(stage, block), header_wire_sorts(stage))
     named = {
         node.symbol.name
         for node in term_nodes(definition.equations)

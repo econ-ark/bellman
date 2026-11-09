@@ -1,0 +1,12 @@
+{
+  "path": "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
+  "sha256": "1c52da52a54b6f33350f5894625d9c2171c7ffaeb060fe3dece37d05b8f64bb8",
+  "text": "@stage: buffer_stock\n\nXm := ℝ₊₊\nXa := ℝ₊₊\n\nβ : (0,1)        :: [\"discount factor\"]\nρ : (1, inf)     :: [\"coefficient of relative risk aversion, greater than one\"]\nR : ℝ₊₊          :: [\"gross interest rate\"]\nΓ : ℝ₊₊          :: [\"deterministic permanent income growth factor\"]\nσ_ψ : ℝ₊         :: [\"standard deviation of the log permanent shock\"]\nσ_ξ : ℝ₊         :: [\"standard deviation of the log transitory shock, conditional on a positive draw\"]\nμ_ξ : ℝ          :: [\"log-mean of the positive transitory draw; E[ξ] = 1 requires μ_ξ = -log(1 - p_zero) - σ_ξ^2/2\"]\np_zero : (0,1)   :: [\"probability ℘ of a zero transitory draw\"]\n\nψ : ℝ₊₊\nψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)\nξ : ℝ₊\nξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))\n\n𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]\n𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]\n𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]\n\nΓ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}   :: [id=feasible_consumption]\n\n[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {\n    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]\n}\n\n[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {\n    a = m - c                       :: [id=savings]\n}\n\n[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = 𝑢(c) + β*V[>]               :: [id=value]\n}\n\n[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n}\n\n[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {\n    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]\n}\n",
+  "excerpts": {
+    "forward": {
+      "start_line": 26,
+      "end_line": 32,
+      "text": "[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {\n    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]\n}\n\n[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {\n    a = m - c                       :: [id=savings]\n}\n"
+    }
+  }
+}

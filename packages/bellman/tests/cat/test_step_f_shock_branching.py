@@ -236,6 +236,8 @@ def test_item_5_a_cagetti_period_joins_its_branch_fields_with_the_entrepreneurs_
         for key, text in ENTREPRENEUR_STANDINS.items():
             record = period["stages"][key]
             record["stage"] = {"text": text, "origin": f"standin:{key}"}
+            # a stand-in text replaces the stage and takes no addition of the stage it replaces
+            record["methods"] = []
             record["provenance"] = {**record["provenance"], "origin": f"standin:{key}",
                                     "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()}
     found = [period_joins(period) for period in elaborate_trellis(syntactic)["periods"]]

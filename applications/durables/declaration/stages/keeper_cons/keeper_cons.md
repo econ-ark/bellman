@@ -102,11 +102,16 @@ continuation value function written $W$ and the budget substituted, it is
 $Q(w, H, z, c) = u(c, H) + \beta W(w - c, H, z)$.
 
 The two derivatives of the decision value the tenure stage reads are stated by
-the marginal block of `declaration/methods/marginals_keeper_cons.bl`, which the
-methods file binds on the decision value builder with `!marginals`.
+the two lines the methods file `methods.bl`, the addition beside this file,
+appends to the decision value builder's block `cntn_to_dcsn`, whose header
+types one representation of the value and both derivatives on the grid of cash
+on hand and housing.
 
 ```bl
-[id=dcsn_marginal, (V[>], c) -> (V) : !dcsn] {
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)
+    | evaluate.handler : "dcsmm:interp_as"
+    | evaluate.grid : !Cartesian(w_d=(a_min, a_max, n_a), h_d=(h_min, h_max, n_h))] {
     D_{w_d}V = 𝑢_c(c)                                  :: [id=marginal_cash]
     D_{h_d}V = 𝑢_h(h_d) + β*D_{h_nxt_kp}V[>]           :: [id=marginal_housing]
 }
@@ -143,12 +148,24 @@ The line is the definition of the control: consumption maximises current
 utility plus the discounted continuation value over the feasible set, the
 interval the correspondence gives at this state.
 
-The method block `egm` of `declaration/methods/keeper_cons_egm.bl`, which the
-methods file binds on the policy builder with `!egm`, is the endogenous grid
-method's reading of the same choice, written on the continuation state.
+The block `policy` of the methods file, whose header types the policy builder's
+method `!egm` with the routine's keyword arguments, its handler and its grid of
+savings, is the endogenous grid method's reading of the same choice, written on
+the continuation state; the union appends its three lines to the stage's policy
+block, and with `!egm` in the method component they stand in place of the
+maximization at the operative level while `stage.declared` keeps it.
 
 ```bl
-[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, policy.method : !egm(spacing=grid_phi, savings_floor=b,
+        upper_envelope=keeper_upper_envelope, jump_threshold=m_bar,
+        lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep,
+        eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard,
+        include_intersections=keeper_include_intersections,
+        no_double_jumps=keeper_no_double_jumps,
+        single_intersection=keeper_single_intersection,
+        disable_jump_checks=keeper_disable_jump_checks)
+    | policy.handler : "fues-durables:make_keeper_ops"
+    | policy.grid : !Cartesian(a_nxt_kp=(a_min, a_max, n_a))] {
     c[>]   <= 𝑢_c_inv(β*D_{a_nxt_kp}V[>])              :: [id=InvEuler]
     w_d[>] = a_nxt_kp + c[>]                          :: [id=endoggrid]
     c      = c[>]                                     :: [id=cons_choice]
@@ -161,15 +178,16 @@ inequality, and an inequality defines its left side as the set of values
 satisfying it, so candidate consumption is a single value wherever saving is
 positive and a segment at zero saving, where marginal utility may exceed the
 discounted marginal value of saving. That segment is the borrowing constraint,
-and writing the line as an inequality keeps it in the method block's statement
-rather than in the method's code. The second line recovers the cash on hand at
-which each candidate is optimal, inverting the budget. The third identifies the
-control with the candidate; read through the budget, it is the Euler equation
+and writing the line as an inequality keeps it in the statement of the
+addition's block `policy` rather than in the method's code. The second line
+recovers the cash on hand at which each candidate is optimal, inverting the
+budget. The third identifies the control with the candidate; read through the
+budget, it is the Euler equation
 $u_c(c) = \beta\, \partial_a W(w - c, H, z)$ in the unknown consumption.
 
-The input of the method block is the continuation value alone, whose derivative
-its first line reads. The grid of savings on which a method tabulates the
-candidates is a setting of that method, not a field of this block.
+The lines read the continuation value alone, whose derivative the first line
+reads. The grid of savings on which the method tabulates the candidates is the
+grid entry of the block's header, not a field of the block.
 
 ## Elaboration
 
@@ -177,27 +195,27 @@ candidates is a setting of that method, not a field of this block.
 applications/durables/declaration/stages/keeper_cons/keeper_cons.bl: ElaboratedStage('keeper_cons', symbolic)
 ```
 
-With `declaration/stages/keeper_cons/methods.yml`, `declaration/settings/durables.yml` and
-`declaration/calibration/durables.yml` attached, the same stage reaches the specified
-version with no unresolved target:
+Read with its addition `declaration/stages/keeper_cons/methods.bl`, and with
+`declaration/settings/durables.yml` and `declaration/calibration/durables.yml`
+bound, the same stage reaches the specified version, and `stage.methods` prints
+the components its places carry:
 
 ```text
 ElaboratedStage('keeper_cons', specified)
-policy                    !egm   block ../../methods/keeper_cons_egm.bl
-cntn_to_dcsn:Evaluation   !marginals   block ../../methods/marginals_keeper_cons.bl
-cntn_to_dcsn:Evaluation   !Linear
+cntn_to_dcsn.evaluate   !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(w_d=(a_min, a_max, n_a), h_d=(h_min, h_max, n_h))   "dcsmm:interp_as"
+policy                  !egm(spacing=grid_phi, savings_floor=b, upper_envelope=keeper_upper_envelope, jump_threshold=m_bar, lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep, eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard, include_intersections=keeper_include_intersections, no_double_jumps=keeper_no_double_jumps, single_intersection=keeper_single_intersection, disable_jump_checks=keeper_disable_jump_checks)   !Cartesian(a_nxt_kp=(a_min, a_max, n_a))   "fues-durables:make_keeper_ops"
 ```
 
-The endogenous grid entry opens the policy builder with the method block, whose
-identification `policy.cons_choice` is the implicit statement the method
-solves, and the binding adds the condition the method requires,
+The method `!egm` on the policy builder makes the addition's three lines the
+builder's rows, whose identification `policy.cons_choice` is the implicit
+statement the method solves, and the binding adds the condition the method
+requires,
 `egm-eligibility`, which `stage.obligations()` lists: a concave and continuously
 differentiable continuation value with a finite positive right derivative at
-zero saving. The method block declares the constrained segment in its inverse
+zero saving. The addition declares the constrained segment in its inverse
 Euler line; the binding neither supplies it nor proves that a candidate is
-optimal. The marginal block's two derivative lines stand at the Evaluation of the
-decision value builder, beside the representations the methods file binds on
-their ids.
+optimal. The two derivative lines stand at the Evaluation of the decision value
+builder, beside the representation the addition types there.
 
 ## References
 

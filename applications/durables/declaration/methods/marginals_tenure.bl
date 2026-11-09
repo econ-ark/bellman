@@ -1,9 +1,0 @@
-@methods: tenure
-# The marginal block of the tenure stage's decision value builder, which states
-# the derivatives of the decision value in assets and in housing as those of the
-# branch value the choice d selects.
-
-[id=dcsn_marginal, (V_kp[>], V_adj[>], d) : !cntn -> (V) : !dcsn] {
-    D_{a_d}V = (R*D_{w_kp}V_kp[>], R*D_{w_adj}V_adj[>])[d]                          :: [id=marginal_assets]
-    D_{h_d}V = ((1 - δ)*D_{h_kp}V_kp[>], R_H*(1 - δ)*D_{w_adj}V_adj[>])[d]          :: [id=marginal_housing]
-}

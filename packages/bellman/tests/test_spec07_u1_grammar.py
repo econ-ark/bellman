@@ -212,18 +212,25 @@ n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 # --- the acceptance items ---
 
 
-@pytest.mark.parametrize("case", HEADERS, ids=lambda case: case[0])
-def test_item_1_every_header_spelling_of_the_sheet_lowers_to_its_constructor(case):
-    _, text, entries = case
-    term, _ = lowered("@methods: t\n" + text)
-    assert term.items[1].tag == T.Annotation(entries)
+def test_item_1_every_header_spelling_of_the_sheet_lowers_to_its_constructor():
+    for case in HEADERS:
+        _, text, entries = case
+        term, _ = lowered("@methods: t\n" + text)
+        assert term.items[1].tag == T.Annotation(entries)
 
 
-@pytest.mark.parametrize("case", LINES, ids=lambda case: case[0])
-def test_item_1_every_file_level_spelling_of_the_sheet_lowers_to_its_constructor(case):
-    _, text, item = case
-    term, _ = lowered("@methods: t\n" + text)
-    assert term.items[1] == item
+def test_item_1_every_file_level_spelling_of_the_sheet_lowers_to_its_constructor():
+    for case in LINES:
+        _, text, item = case
+        term, _ = lowered("@methods: t\n" + text)
+        assert term.items[1] == item
+        typing = item.declaration
+        if isinstance(typing, T.Handler):
+            printed = f'{to_source(typing.subject)} : "{typing.program}"'
+        else:
+            printed = f"{to_source(typing.subject)} : {to_source(typing.classifiers[0])}"
+        term, _ = lowered("@methods: t\n" + printed + "\n")
+        assert term.items[1].declaration == typing
 
 
 def test_item_1_the_buffer_stock_methods_file_lowers_with_the_positions_of_its_entries():
@@ -246,19 +253,22 @@ def test_item_1_the_buffer_stock_methods_file_lowers_with_the_positions_of_its_e
 
 
 def test_item_2_every_stage_file_of_the_corpus_lowers_to_a_term_without_the_new_constructors():
-    """No file under applications/ or under the test corpus carries a new
-    spelling: each lowers as before, to a term holding none of the
+    """No stage file under applications/ or under the test corpus carries a
+    new spelling: each lowers as before, to a term holding none of the
     constructors the typing entries add; its equality with the recorded
-    term is the corpus test's claim."""
+    term is the corpus test's claim. The additions beside the stage files,
+    whose first line is `@methods:`, carry the new constructors and are read
+    by the acceptance files of the later units."""
     # the tracked files alone: a checkout may hold an ignored scratch folder under applications/
     tracked = subprocess.run(
         ["git", "-C", str(ROOT), "ls-files", "--", "applications/**/*.bl", "packages/bellman/tests/corpus/**/*.bl"],
         capture_output=True, text=True, check=True,
     ).stdout.split()
-    files = sorted(ROOT / f for f in tracked)
-    assert len(files) > 100
-    for src in files:
-        term, _ = parse_with_spans(src.read_text(encoding="utf-8"), str(src))
+    texts = {ROOT / f: (ROOT / f).read_text(encoding="utf-8") for f in sorted(tracked)}
+    stage_files = [src for src, text in texts.items() if text.startswith("@stage:")]
+    assert len(stage_files) > 80
+    for src in stage_files:
+        term, _ = parse_with_spans(texts[src], str(src))
         assert not any(isinstance(node, NEW_CONSTRUCTORS) for node in nodes(term)), src
 
 
@@ -293,16 +303,6 @@ def test_item_4_the_grammar_builds_under_strict_mode():
 # --- normalization: a printed entry re-parses to its term ---
 
 
-@pytest.mark.parametrize("case", LINES, ids=lambda case: case[0])
-def test_a_printed_entry_reparses_to_the_same_term(case):
-    _, text, item = case
-    typing = item.declaration
-    if isinstance(typing, T.Handler):
-        printed = f'{to_source(typing.subject)} : "{typing.program}"'
-    else:
-        printed = f"{to_source(typing.subject)} : {to_source(typing.classifiers[0])}"
-    term, _ = lowered("@methods: t\n" + printed + "\n")
-    assert term.items[1].declaration == typing
 
 
 # --- the negative fixtures: the phase and the position of each refusal ---
@@ -322,12 +322,12 @@ PARSER_REFUSALS = [
 ]
 
 
-@pytest.mark.parametrize("case", PARSER_REFUSALS, ids=lambda case: case[0])
-def test_a_form_the_grammar_does_not_admit_is_refused_by_the_parser_at_its_token(case):
-    _, text, (line, column) = case
-    with pytest.raises(UnexpectedInput) as refused:
-        parse_with_spans("@methods: t\n" + text, "t.bl")
-    assert (refused.value.line, refused.value.column) == (line, column)
+def test_a_form_the_grammar_does_not_admit_is_refused_by_the_parser_at_its_token():
+    for case in PARSER_REFUSALS:
+        _, text, (line, column) = case
+        with pytest.raises(UnexpectedInput) as refused:
+            parse_with_spans("@methods: t\n" + text, "t.bl")
+        assert (refused.value.line, refused.value.column) == (line, column)
 
 
 # a form the grammar admits and the lowering reads no term from: the text,
@@ -361,13 +361,13 @@ LOWERING_REFUSALS = [
 ]
 
 
-@pytest.mark.parametrize("case", LOWERING_REFUSALS, ids=lambda case: case[0])
-def test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written(case):
-    _, text, (line, column), words = case
-    with pytest.raises(ConstructionError) as refused:
-        parse_with_spans("@methods: t\n" + text, "t.bl")
-    error = refused.value
-    assert (error.rule, error.file, error.line, error.column) == ("syntax", "t.bl", line, column)
-    assert all(word in error.message for word in words), (words, error.message)
-    for internal in ("Error trying to process rule", "VisitError", "_Path", "_Word", "Select("):
-        assert internal not in error.message
+def test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written():
+    for case in LOWERING_REFUSALS:
+        _, text, (line, column), words = case
+        with pytest.raises(ConstructionError) as refused:
+            parse_with_spans("@methods: t\n" + text, "t.bl")
+        error = refused.value
+        assert (error.rule, error.file, error.line, error.column) == ("syntax", "t.bl", line, column)
+        assert all(word in error.message for word in words), (words, error.message)
+        for internal in ("Error trying to process rule", "VisitError", "_Path", "_Word", "Select("):
+            assert internal not in error.message

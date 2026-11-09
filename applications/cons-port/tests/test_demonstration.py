@@ -1,8 +1,8 @@
 """The cons-port folder: its stage files elaborate with
 the package as it stands, and its two recipes, consumption first and portfolio
 first, load with the package's recipe reader and name the folder's own stage,
-calibration, settings and methods files. The binding of a methods line that
-names a block file is unit B's of specification 0.6 and is not tested here."""
+calibration, settings and methods files, the methods file of a stage the
+addition beside its stage file. What the additions bind is tested in code/tests/."""
 
 from pathlib import Path
 
@@ -64,11 +64,11 @@ Definitions referenced
 # path from the folder declaration/
 SOURCES = {
     "cons": {"calibration": ["calibration/portfolio.yml"], "settings": ["settings/cons_wide.yml"],
-             "methods": ["methods/cons.yml"]},
+             "methods": ["stages/cons/methods.bl"]},
     "disc": {"calibration": ["calibration/portfolio.yml"], "settings": [],
-             "methods": ["methods/disc.yml"]},
+             "methods": ["stages/disc/methods.bl"]},
     "port": {"calibration": ["calibration/portfolio.yml"], "settings": ["settings/port_wide.yml"],
-             "methods": ["methods/port.yml"]},
+             "methods": ["stages/port/methods.bl"]},
 }
 
 # the two recipes, each with the connectors its period writes and the

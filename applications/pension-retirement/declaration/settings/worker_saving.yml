@@ -1,0 +1,16 @@
+# The numerical settings of the worker's saving stage: the decision grid on
+# which time iteration solves the two first-order conditions, one factor per
+# state of the decision perch, financial resources m_f, pension assets m_p and
+# earnings w_d, as stages/worker_saving/methods.bl declares them. The values
+# are placeholders inside the declared sets, written so that the stage
+# configures; the paper states no grid, and AAS has not yet supplied one.
+settings:
+  n_m_f: 50
+  m_f_min: 0.1
+  m_f_max: 50.0
+  n_m_p: 50
+  m_p_min: 0.0
+  m_p_max: 50.0
+  n_w_d: 5
+  w_d_min: 0.1
+  w_d_max: 5.0

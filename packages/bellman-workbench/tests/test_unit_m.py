@@ -2015,7 +2015,7 @@ def test_task_10_the_recipe_is_a_tab_of_the_panel_under_the_editor_whose_changes
             "$fill",
         )
         assert values["stages.tenure.stage"] == "tenure.bl"
-        assert values["stages.tenure.methods.all[1]"] == "$tenure_method"
+        assert values["stages.tenure.methods.all[0]"] == "methods.bl"
         assert {key: found["periods"][key] for key, found in opened.items()} == {
             "tenure": ["", "All"],
             "keeper_cons": ["", "All"],

@@ -99,7 +99,6 @@ from workbench_support import (
     emptied_portfolio_with_entry_connectors,
     field_port,
     file_bytes,
-    five_mappings_port_cons,
     graph_named,
     join_event,
     join_labels,
@@ -261,11 +260,12 @@ def test_k_the_restriction_s_menu_lists_the_ranges_the_trellis_admits_and_its_ke
 
 
 def test_bind_trellis_reports_the_verbs_applied_skipped_and_refused(pension_folder, tmp_path):
-    """The pension trellis, whose slots no keyword binds and whose stages'
-    methods files the recipe names, binds the methods and names the two other
-    verbs skipped, which give no note, since a verb skipped is no refusal
-    (unit L, Task 21; K-D29; decision MB-V38); the lifecycle registry binds
-    all three; a terminal
+    """The pension trellis, whose calibration slots no keyword binds and
+    whose recipe names each stage's addition and the settings files of its
+    two saving stages, binds the methods and the settings and names the
+    calibration skipped, which gives no note, since a verb skipped is no
+    refusal (unit L, Task 21; K-D29; decision S7-W2); the lifecycle registry
+    binds all three; a terminal
     discount factor of 1.5, outside `(0, 1)`, refuses `calibrate_trellis`
     with the occurrence it names, its note the package's sentence and
     nothing added, the message on its first line and the occurrence on a
@@ -275,8 +275,8 @@ def test_bind_trellis_reports_the_verbs_applied_skipped_and_refused(pension_fold
     syntactic = load_recipe(pension_folder / "declaration", "spec.yml")
     pension = trellis.bind_trellis(elaborate_trellis(syntactic), syntactic)
     assert (pension.bound, pension.skipped, pension.failed) == (
-        ("methodize",),
-        ("calibrate", "configure"),
+        ("methodize", "configure"),
+        ("calibrate",),
         {},
     )
     assert trellis.binding_notes(pension) == []
@@ -411,7 +411,7 @@ def test_show_trellis_answers_the_refusal_of_a_trellis_file_that_names_its_stage
     assert outcome.shown is None
     refusal = outcome.refusal
     assert (refusal.rule, refusal.address) == ("trellis-file-shape", "periods[0].stages")
-    assert refusal.message == (
+    assert model.sentence(refusal) == (
         "periods[0].stages is no mapping of keys to records\n"
         "stages: {<key>: {stage: <file>.bl, calibration: ..., settings: ..., methods: ...}}"
     )
@@ -470,32 +470,38 @@ def test_address_place_answers_no_place_in_a_trellis_file_of_a_shape_the_factory
         assert trellis.address_place(folder, trellis_file, address) is None
 
 
-def test_bind_trellis_reports_a_methods_target_the_stage_lacks_as_a_failed_verb(
+def test_an_addition_that_types_a_builder_the_stage_lacks_refuses_the_reading(
     scratch_lifecycle,
 ):
-    """A methods file that names a builder the discount stage lacks is refused
-    by `methodize_trellis` with a `TargetError`, a LookupError, as
-    `bind_stage` refuses it: the binding names `methodize` failed, with the
-    target and the occurrence, and raises nothing."""
-    methods = scratch_lifecycle / "declaration/stages/disc/methods.yml"
+    """An addition that types a builder the discount stage lacks is refused
+    when the occurrence is constructed, since the additions are unioned with
+    the stage text at the construction and no verb binds them (specification
+    0.7, decision S7-F2): the reading of the trellis answers no trellis and
+    the package's refusal, which names the entry, the addition's file and
+    line and the occurrences the addition reaches."""
+    methods = scratch_lifecycle / "declaration/stages/disc/methods.bl"
     methods.write_text(
-        methods.read_text(encoding="utf-8").replace("on: dcsn_to_cntn", "on: no_such_builder"),
+        methods.read_text(encoding="utf-8").replace(
+            "dcsn_to_cntn.method", "no_such_builder.method"
+        ),
         encoding="utf-8",
     )
-    syntactic = load_recipe(scratch_lifecycle / "declaration", "spec.yml")
-    broken = trellis.bind_trellis(elaborate_trellis(syntactic), syntactic)
-    assert "methodize" in broken.failed and "methodize" not in broken.bound
-    assert "'no_such_builder' in stage 'disc' names no builder" in broken.failed["methodize"]
-    assert "Stage occurrence: periods[0].stages['disc']" in broken.failed["methodize"]
+    folder = model.open_folder(scratch_lifecycle)
+    outcome = trellis.show_trellis(folder, RECIPE)
+    assert outcome.shown is None
+    assert "`no_such_builder.method : !deterministic` names `no_such_builder`" in outcome.refusal.message
+    assert outcome.refusal.file == str(methods.resolve())
+    assert outcome.refusal.occurrences == ((0, "disc"), (1, "disc"), (2, "disc"))
 
 
 def test_a_reading_with_the_trellis_shown_before_answers_what_a_reading_without_it_answers(
     tmp_path,
 ):
     """The lifecycle registry read once, then read again with that reading
-    as `previous` and without it. After a settings file writes a key that is
-    a number, which the elaboration refuses, the two readings answer the
-    same refusal and no trellis. After a terminal discount factor of 1.5,
+    as `previous` and without it. After the discount stage's addition types
+    a builder the stage lacks, which the construction refuses, the two
+    readings answer the same refusal and no trellis. After a terminal
+    discount factor of 1.5,
     which `calibrate_trellis` refuses, and after the recipe's calibration
     sources are removed, which skips `calibrate`, they answer the same view
     and the same verbs bound, skipped and refused, so that no binding of the
@@ -503,11 +509,13 @@ def test_a_reading_with_the_trellis_shown_before_answers_what_a_reading_without_
     registry = lifecycle_registry(tmp_path / "lifecycle")
     folder = model.open_folder(registry)
     first = trellis.show_trellis(folder, RECIPE).shown
-    settings = registry / "declaration/settings/cons.yml"
-    written = settings.read_text(encoding="utf-8")
-    settings.write_text(written + "  extra: {1: 10}\n", encoding="utf-8")
+    methods = registry / "declaration/stages/disc/methods.bl"
+    written = methods.read_text(encoding="utf-8")
+    methods.write_text(
+        written.replace("dcsn_to_cntn.method", "no_such_builder.method"), encoding="utf-8"
+    )
     integer_key = [trellis.show_trellis(folder, RECIPE, previous=held) for held in (first, None)]
-    settings.write_text(written, encoding="utf-8")
+    methods.write_text(written, encoding="utf-8")
     (registry / "declaration/calibration/terminal.yml").write_text(
         TERMINAL_CALIBRATION.replace("0.9", "1.5"), encoding="utf-8"
     )
@@ -521,7 +529,7 @@ def test_a_reading_with_the_trellis_shown_before_answers_what_a_reading_without_
     skipped = [trellis.show_trellis(folder, RECIPE, previous=held).shown for held in (first, None)]
     assert integer_key[0].shown is None and integer_key[1].shown is None
     assert integer_key[0].refusal == integer_key[1].refusal
-    assert "Stage occurrence: periods[0].stages['cons']" in integer_key[1].refusal.message
+    assert integer_key[1].refusal.occurrences == ((0, "disc"), (1, "disc"), (2, "disc"))
     assert list(refused[1].binding.failed) == ["calibrate"]
     assert skipped[1].binding.skipped == ("calibrate",)
     for again, alone in (refused, skipped):
@@ -916,7 +924,7 @@ DISC_RECORD = (
     "      disc: {stage: ../../portfolio-choice/declaration/stages/disc/disc.bl, "
     "calibration: calibration/portfolio.yml,\n"
     "             settings: {}, "
-    "methods: ../../portfolio-choice/declaration/stages/disc/methods.yml}\n"
+    "methods: ../../portfolio-choice/declaration/stages/disc/methods.bl}\n"
 )
 
 
@@ -1031,7 +1039,8 @@ BEQUEST_ENTRY = (
 )
 BEQUEST_ROW = (
     "  bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: "
-    "[calibration/durables, $fill]}, methods: {all: [stages/bequest/methods]}, periods: [0, 0]}\n"
+    "[calibration/durables, $fill]}, methods: {all: [stages/bequest/methods.bl]}, "
+    "periods: [0, 0]}\n"
 )
 
 
@@ -1816,7 +1825,7 @@ def test_a_change_of_any_file_the_trellis_reads_binds_the_trellis_again(
     for name, written, replaced in (
         ("stages/disc/disc.bl", None, COMMENT),
         ("calibration/portfolio.yml", "β: 0.96", "β: 0.95"),
-        ("stages/port/methods.yml", "cons-port:transition", "cons-port:another_transition"),
+        ("stages/port/methods.bl", "cons-port:transition", "cons-port:another_transition"),
         ("settings/cons.yml", "n_a: 800", "n_a: 400"),
         (
             "spec.yml",
@@ -1877,7 +1886,8 @@ def records_of(binding: trellis.TrellisBinding) -> tuple:
     """The records of a binding as the standard pickle writes them: the
     trellis's entries but its stage occurrences, then each occurrence's
     bindings and provenance by its position; and the verbs bound, skipped
-    and failed. A drawn view leaves answers inside an occurrence's graphs,
+    and failed, with the identifier of each new log entry left out. A drawn
+    view leaves answers inside an occurrence's graphs,
     which the pickle writes, so the graphs are compared by equality."""
     shape = {
         **binding.trellis,
@@ -1890,14 +1900,15 @@ def records_of(binding: trellis.TrellisBinding) -> tuple:
         for h, period in enumerate(binding.trellis["periods"])
         for key, stage in period["stages"].items()
     }
-    return pickle.dumps(shape), occurrences, binding.bound, binding.skipped, binding.failed
+    failures = {verb: record._replace(entry=None) for verb, record in binding.failed.items()}
+    return pickle.dumps(shape), occurrences, binding.bound, binding.skipped, failures
 
 
 def test_l_20_a_change_of_one_stage_s_sources_binds_that_stage_alone(tmp_path):
     """Unit L, Task 20 (defect 14 of the UX simulation). On the pension
     model at its first build of the working years, whose calibration the
     package refuses at `periods[0] / shocks`: a comment appended to the
-    renter's methods file, a change of one stage's sources alone, binds the
+    renter's addition, a change of one stage's sources alone, binds the
     renter's occurrences alone, `alone` naming `renter_cons` and the status
     line's loop `for renter_cons`; every other occurrence is the object the
     trellis shown before holds, and the refusal of the calibration stands.
@@ -1911,10 +1922,11 @@ def test_l_20_a_change_of_one_stage_s_sources_binds_that_stage_alone(tmp_path):
     folder, source = model.open_folder(folder_path), recipe.Source("recipe", PENSIONS_RECIPE)
     first = trellis.show_trellis(folder, source).shown
     assert first.alone == () and first.binding.bound == ("methodize",)
-    refused_at = "Stage occurrence: periods[0].stages['shocks']"
-    assert first.binding.failed["calibrate"].endswith(refused_at)
+    refusal = first.binding.failed["calibrate"]
+    assert refusal.occurrences == ((0, "shocks"),)
+    assert "shocks" in model.sentence(refusal)
     declaration = folder_path / "declaration"
-    methods = declaration / "stages/renter_cons/methods.yml"
+    methods = declaration / "stages/renter_cons/methods.bl"
     methods.write_text(methods.read_text(encoding="utf-8") + COMMENT, encoding="utf-8")
     again = trellis.show_trellis(folder, source, previous=first).shown
     renter = [
@@ -1942,11 +1954,13 @@ def test_l_20_a_change_of_one_stage_s_sources_binds_that_stage_alone(tmp_path):
     calibration = declaration / "calibration/shocks.yml"
     calibration.write_text(calibration.read_text(encoding="utf-8") + COMMENT, encoding="utf-8")
     third = trellis.show_trellis(folder, source, previous=again).shown
-    assert third.alone == () and third.binding.failed == first.binding.failed
+    assert third.alone == ()
+    assert third.binding.failed["calibrate"]._replace(entry=None) == refusal._replace(entry=None)
     trellis_file = declaration / "trellis.pensions.yml"
     trellis_file.write_text(trellis_file.read_text(encoding="utf-8") + COMMENT, encoding="utf-8")
     fourth = trellis.show_trellis(folder, source, previous=third).shown
-    assert fourth.alone == () and fourth.binding.failed == first.binding.failed
+    assert fourth.alone == ()
+    assert fourth.binding.failed["calibrate"]._replace(entry=None) == refusal._replace(entry=None)
 
 
 def test_an_entry_that_is_no_binding_is_deleted_and_replaced_by_the_new_binding(
@@ -2405,13 +2419,6 @@ PERIODS_ENTRY = "- {template: period.yml, repeat: 6}"
 WITHIN = ((2, "port", "w"), (2, "cons", "m"))
 WITHIN_PORTFOLIO = ((2, "port", "m_next"), (2, "cons", "m"))
 BETWEEN = ((3, "disc", "a"), (2, "port", "k"))
-# the record of the portfolio stage in the trellis file of lesson 05, on its
-# two lines
-PORT_RECORD = (
-    "      port: {stage: ../../portfolio-choice/declaration/stages/port/port.bl, "
-    "calibration: calibration/portfolio.yml,\n"
-    "             settings: settings/port_wide.yml, methods: methods/port.yml}\n"
-)
 # the sentence "An old graph" of brief §5, at lesson 05's trellis file
 OLD_GRAPH = (
     "trellis.port-cons.yml: nothing was written. The graph was drawn from an earlier text. "
@@ -2959,7 +2966,10 @@ def test_no_control_stands_at_the_terminal_end_and_details_lists_what_a_typed_pe
             "{all: [$cons_calibration]}",
             '{all: [$cons_calibration], "0-2": [$cons_late], "3-5": [$cons_early]}',
         )
-        .replace("{all: [$port_methods]}}", "{all: [$port_methods]}, periods: [0, 5]}"),
+        .replace(
+            "settings: {all: [$port_settings]}, methods: {all: []}}",
+            "settings: {all: [$port_settings]}, methods: {all: []}, periods: [0, 5]}",
+        ),
         encoding="utf-8",
     )
     folder = model.open_folder(folder_path)
@@ -3108,10 +3118,10 @@ def test_l_the_stage_list_lists_the_library_after_the_templates_and_a_drop_copie
     `From a folder…` opens the form on the library. The sections' words and
     the item's are in sentence case (design pass 13 §3). `renter` dropped on
     periods[2] answers, writing nothing, the edits "add stage" makes for a
-    stage folder of the disk: `renter.bl` and its methods file as new files,
+    stage folder of the disk: `renter.bl` and its addition as new files,
     the recipe, the period file and answers.yml edited, answers.yml
     recording the origin, the path and the SHA-256 of `port.bl` and
-    `methods.yml`. `port`, whose key the recipe
+    `methods.bl`. `port`, whose key the recipe
     holds, opens the form from a folder on its folder in the library, the
     period's list named and the key left to type; an id that is the path of
     no stage of the library answers "An old graph". Nothing in the library
@@ -3166,14 +3176,14 @@ def test_l_the_stage_list_lists_the_library_after_the_templates_and_a_drop_copie
     )
     assert [path for path, _ in gesture.new_files] == [
         "declaration/stages/renter/renter.bl",
-        "declaration/stages/renter/methods.yml",
+        "declaration/stages/renter/methods.bl",
     ]
     assert list(gesture.edits) == [recipe_path, period, answers]
     assert entry_value(gesture.edits[answers], "stages.renter") == {
         "origin": str(library / "renter"),
         "sha256": {
             name: hashlib.sha256((library / "renter" / name).read_bytes()).hexdigest()
-            for name in ("port.bl", "methods.yml")
+            for name in ("port.bl", "methods.bl")
         },
     }
     assert str(library) not in gesture.edits[recipe_path] + gesture.edits[period]
@@ -3181,7 +3191,7 @@ def test_l_the_stage_list_lists_the_library_after_the_templates_and_a_drop_copie
     # the note says so (unit N, Task 5; design pass 10 §7)
     assert gesture.note == (
         "period.yml, stages: renter written, periods 0–5; "
-        "new: stages/renter/renter.bl, stages/renter/methods.yml; renter unconnected"
+        "new: stages/renter/renter.bl, stages/renter/methods.bl; renter unconnected"
     )
     held = dropped_event(shown, folder, str(library / "port"), "library", on_period)
     assert trellis.drop_edits(shown, held, {}) == {
@@ -4238,7 +4248,7 @@ def test_l_a_standing_mapping_joins_a_period_whose_stages_carry_its_fields(tmp_p
 PORT_REMOVED = {
     RECIPE_FILE: (
         "  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, "
-        "settings: {all: [settings/port]}, methods: {all: [stages/port/methods]}}\n",
+        "settings: {all: [settings/port]}, methods: {all: [stages/port/methods.bl]}}\n",
         "",
     ),
     "declaration/period.yml": (

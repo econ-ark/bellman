@@ -1,0 +1,15 @@
+# The numerical settings of the keeper's saving stage: the grid of the two
+# decision states, cash on hand m_d and housing h_d, on which time iteration
+# solves the Euler relation and the decision value is represented, as
+# stages/keeper_saving/methods.bl declares it. The values are placeholders
+# inside the declared sets, written so that the stage configures; the paper
+# states no grid, and AAS has not yet supplied one. n_m, m_min and m_max take
+# the values of settings/adjuster_saving.yml, since a setting two stages of a
+# period declare is one setting of the period.
+settings:
+  n_m: 50
+  m_min: 0.1
+  m_max: 50.0
+  n_h: 20
+  h_min: 0.1
+  h_max: 10.0

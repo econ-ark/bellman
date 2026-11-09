@@ -19,6 +19,7 @@ from bellman.stage.boxes import methods_within, piece_word
 from bellman.stage.denotations import denotation_of_definition, denotation_of_graph, denote
 from bellman.stage.grains import bound_blocks, graph_of
 from bellman.stage.inventory import version_word
+from bellman.stage.places import components_by_place
 from bellman.stage.stage_answers import descriptions
 from bellman.syntax.lower import to_json
 from bellman.typing.typed_expressions import obligation_entry
@@ -113,9 +114,8 @@ def encoding(stage):
         **graphs,
         bindings={
             "calibration": _plain(bound.calibration),
-            "methods": None
-            if bound.methods is None
-            else {_bound_key(at): _method(method) for at, method in bound.methods.items()},
+            "methods": {at: _components(held) for at, held in components_by_place(stage).items()}
+            or None,
             "settings": _plain(bound.settings),
         },
         provenance=_plain(dict(stage.provenance), without_text=True),
@@ -222,32 +222,22 @@ def _box(stage, box, valued):
         answer["pieces"] = [
             _box(stage, held, valued) for held in box.arg.boxes if not is_wiring(held)
         ]
-    if stage.bindings.methods is not None:
+    if components_by_place(stage):
         answer["methods"] = [
-            {"at": str(at), **_method(method, stage.bindings.settings)}
-            for at, method in methods_within(stage, box).items()
+            {"at": at, **_components(held)} for at, held in methods_within(stage, box).items()
         ]
     return answer
 
 
-def _method(method, values=None):
-    encoded = {
-        "tag": method.tag,
-        "handler": method.handler,
-        "settings": _setting(method.settings, values),
+def _components(held):
+    """The encoding of the components typed at one place: the method word
+    and the grid as terms, each null where not typed, and the handler's
+    program."""
+    return {
+        "method": None if held.method is None else to_json(held.method),
+        "grid": None if held.grid is None else to_json(held.grid),
+        "handler": held.handler,
     }
-    # the block file a binding names, written only where one is named, so
-    # that the encoding of every other binding is as before
-    if method.block is not None:
-        encoded["block"] = method.block
-    return encoded
-
-
-def _bound_key(key):
-    """The key of a bound method in the encoding: the box it is bound at,
-    and for a method of another kind at a box that holds one already the box
-    with the kind, `policy:Evaluation (representation)` (decision SD-15)."""
-    return f"{key[0]} ({key[1]})" if isinstance(key, tuple) else str(key)
 
 
 def _held_graph(stage, held, direction):
@@ -259,18 +249,6 @@ def _held_graph(stage, held, direction):
     if held == "_builders" and not isinstance(record, Refusal) and bound_blocks(stage):
         return graph_of(stage, "builders", direction)
     return record
-
-
-def _setting(value, values):
-    """A setting in strict JSON, its name kept beside its value where
-    configuration binds it."""
-    if isinstance(value, Mapping):
-        return _mapping({str(key): _setting(item, values) for key, item in value.items()})
-    if isinstance(value, (tuple, list)):
-        return [_setting(item, values) for item in value]
-    if isinstance(value, str) and values is not None and value in values:
-        return {"name": value, "value": _plain(values[value])}
-    return _plain(value)
 
 
 def _plain(value, without_text=False):

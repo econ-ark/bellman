@@ -23,12 +23,14 @@ prose of the page is kept and no table is edited by hand:
   `BOUND_OPERATORS` (`typing/line_unknowns.py`), the named functions of
   `PRIMITIVE_DEFINITIONS`, the arithmetic of the grammar
   (`syntax/grammars/stage.lark`) and the laws;
-- `reference/methods.md`: the method types of `METHOD_TYPES`
-  (`stage/method_table.py`), each with the places it may be bound at, its
-  options, among them the setting `grid` with the fields each kind of grid of
-  `GRID_KINDS` admits beside it, and the line that defines it;
-- `reference/refusals.md`: the rules of graph construction, `RULES`
-  (`refusals.py`), each with the claim its comment states;
+- `reference/methods.md`: the method words of `METHOD_TYPES`
+  (`stage/method_table.py`), each with the places it may be bound at, the
+  keyword arguments the package reads, the states its grid lies on where it
+  reads one, and the line that defines it;
+- `reference/refusals.md`: the rules of the three vocabularies of
+  `refusals.py`, `VOCABULARIES` of `refusal_catalogue.py`, one table per
+  vocabulary, each rule with the operation that refuses under it and the
+  claim its comment states, as the catalogue answers them;
 - `API/index.md`: every public name of `bellman.stage`, `bellman.period` and
   `bellman.trellis`, in one table per namespace, then the stage object. The
   functions of `bellman.stage` are printed on the corpus stage `cons`, those
@@ -84,13 +86,11 @@ import dataclasses
 import functools
 import importlib
 import inspect
-import io
 import os
 import posixpath
 import re
 import sys
 import tempfile
-import tokenize
 from pathlib import Path
 
 HOOKS = Path(__file__).resolve().parent
@@ -99,6 +99,13 @@ if str(HOOKS) not in sys.path:
 
 from markdown.extensions.toc import slugify  # noqa: E402  (the anchors MkDocs gives headings)
 from stage_object_page import ROOT, settle  # noqa: E402  (the printer beside this script)
+
+# the one listing of the stage files of the applications, `STAGE_FILES` of the
+# package tests' conftest.py
+TESTS = ROOT / "packages/bellman/tests"
+if str(TESTS) not in sys.path:
+    sys.path.append(str(TESTS))
+from conftest import STAGE_FILES  # noqa: E402
 
 import bellman.period  # noqa: E402
 import bellman.stage  # noqa: E402
@@ -116,6 +123,7 @@ from bellman.stage import (  # noqa: E402
     bind_stage,
     box_attributes,
     branches,
+    card_sections,
     elaborate_stage,
     elaborate_text,
     graph_refusal,
@@ -129,7 +137,9 @@ from bellman.stage import (  # noqa: E402
     source_lines,
     source_spans,
     to_model_explorer,
+    typing_entries,
     wire_counts,
+    write_typing_entry,
 )
 from bellman.trellis import (  # noqa: E402
     accrete,
@@ -141,6 +151,7 @@ from bellman.trellis import (  # noqa: E402
     configure_trellis,
     connection_report,
     connector_entry,
+    derivative_missing,
     diagram_trellis,
     elaborate_trellis,
     entry_span,
@@ -179,10 +190,12 @@ from bellman.display.cards import WORDS as CARD_WORDS  # noqa: E402
 from bellman.distributions import families  # noqa: E402
 from bellman.distributions.families import FAMILY_ARGUMENTS  # noqa: E402
 from bellman.fold.table import KINDS  # noqa: E402
-from bellman.refusals import METHOD_CONDITIONS, RULES, ConstructionError, FactoryError  # noqa: E402
+from bellman.refusal_catalogue import VOCABULARIES, claims, operation  # noqa: E402
+from bellman.refusals import METHOD_CONDITIONS, ConstructionError, FactoryError  # noqa: E402
 from bellman.stage import elaborated, pieces  # noqa: E402
 from bellman.stage.builder_pairs import DIRECTION_WORDS  # noqa: E402
-from bellman.stage.method_table import GRID_KINDS, METHOD_TYPES  # noqa: E402
+from bellman.display.cards import grid_sentence  # noqa: E402
+from bellman.stage.method_table import METHOD_TYPES  # noqa: E402
 from bellman.syntax import terms as T  # noqa: E402
 from bellman.syntax.lower import parse_with_spans  # noqa: E402
 from bellman.syntax.source import to_source  # noqa: E402
@@ -209,11 +222,17 @@ REFUSALS = "docs/Bellman-Sym/reference/refusals.md"
 API_INDEX = "docs/Bellman-Sym/API/index.md"
 
 # the corpus stage of the API index and its three binding files, the files
-# docs/Bellman-Sym/API/stage/09-binding-verbs.md §1 binds
+# docs/Bellman-Sym/API/stage/09-binding-verbs.md §1 binds: the methods file
+# is the addition beside the stage file, unioned with it by `methodize`
 CONS = "applications/portfolio-choice/declaration/stages/cons/cons.bl"
-CALIBRATION = "applications/cons-port/reference/legacy/syntax/calibration.yaml"
-METHODS_FILE = "applications/portfolio-choice/declaration/stages/cons/methods.yml"
-SETTINGS = "applications/cons-port/reference/legacy/syntax/settings.yaml"
+CALIBRATION = "applications/portfolio-choice/declaration/calibration/portfolio.yml"
+METHODS_FILE = "applications/portfolio-choice/declaration/stages/cons/methods.bl"
+SETTINGS = "applications/portfolio-choice/declaration/settings/cons.yml"
+# the portfolio stage of the site's running example, the second stage file of
+# the corpus; its maximization is marked `!doc`, a line that reads no wire,
+# which the consumption stage does not write, since its method lines stand
+# in its addition
+PORT = "applications/portfolio-choice/declaration/stages/port/port.bl"
 # the trellis file on which the API index prints the functions of a trellis and
 # of a period, and the registry and the recipe on which it prints the two
 # functions that read a recipe: on the recipe spec.yml the package
@@ -448,13 +467,19 @@ def denotes(page, *terms):
 
 
 def corpus_files():
-    """The stage files under `applications/`, the stage files of the site's
-    running example first, `cons.bl` and `port.bl`, the rest by path."""
-    first = [CONS, "applications/portfolio-choice/declaration/stages/port/port.bl"]
-    rest = sorted(
-        path.relative_to(ROOT).as_posix() for path in (ROOT / "applications").rglob("*.bl")
-    )
+    """The stage files under `applications/`, as `STAGE_FILES` lists them,
+    the stage files of the site's running example first, `cons.bl` and
+    `port.bl`, the rest by path."""
+    first = [CONS, PORT]
+    rest = [path.relative_to(ROOT).as_posix() for path in STAGE_FILES]
     return first + [path for path in rest if path not in first]
+
+
+@functools.cache
+def doc_line_stage():
+    """The symbolic stage of `port.bl`, on which the API index prints the
+    rows of a line that reads no wire, its maximization marked `!doc`."""
+    return elaborate_stage(load_stage(PORT))
 
 
 @functools.cache
@@ -470,20 +495,24 @@ def corpus():
     return tuple(stages)
 
 
-def written_lines(stage, address):
-    """The operative lines of `stage` at `address`, a line or every line of a
-    block, as the source printer writes them; a `!doc` line documents and is
-    left out."""
-    lines = []
-    for record in stage.definitions.values():
-        if record.kind != "line" or "!doc" in record.tags:
-            continue
-        if record.address == address or record.address.startswith(address + "."):
-            try:
-                lines.append(to_source(record.equations[0]))
-            except (TypeError, NotImplementedError):
-                continue
-    return lines
+def cited_lines(card):
+    """The lines an operation realizes, as its card quotes them under
+    `Source` and in the card's order (`bellman.stage.source_lines`):
+    each authored line its kernel cites, on one line and without its
+    annotation. A pullback's card quotes the law of motion it composes along,
+    an expectation's the line it stands in and the law of its shock, and an
+    Evaluation's the derivative lines its builder states."""
+    clause = getattr(card, "kernel", None)
+    held = {}
+    for statement in getattr(clause, "statements", ()):
+        path, _, number = statement.position.rpartition(":")
+        if number.isdigit():
+            held[(posixpath.basename(path), int(number))] = statement.text
+    return [
+        " ".join(held[line].partition("::")[0].split())
+        for line in source_lines(card)
+        if line in held
+    ]
 
 
 def signature_lines(signature):
@@ -540,8 +569,9 @@ def builder_path(stage, identity):
 @dataclasses.dataclass(frozen=True)
 class Example:
     """A row of one kind on a stage file of the corpus: the file, the box that
-    realizes it, the path of the builder that holds it, the lines that form
-    it, its signature and the lines of the rule its card prints."""
+    realizes it, the path of the builder that holds it, the lines its card
+    quotes under `Source`, its signature and the lines of the rule its card
+    prints."""
 
     path: str
     box: str
@@ -571,13 +601,14 @@ def corpus_examples():
                 kind = getattr(identity, "kind", None)
                 if kind is None or kind in found:
                     continue
+                card = handle.denote()
                 found[kind] = Example(
                     path=path,
                     box=str(name),
                     builder=builder_path(stage, identity),
-                    lines=tuple(written_lines(stage, identity.address)),
+                    lines=tuple(cited_lines(card)),
                     signature=tuple(signature_lines(handle.signature())),
-                    rule=tuple(rule_block(handle.denote())),
+                    rule=tuple(rule_block(card)),
                 )
     return found
 
@@ -617,8 +648,9 @@ def operations_table(page):
     """The table of the operations page: one row for each operation of
     `PRIMITIVE_DEFINITIONS` the contract names, in the table's order, with
     whether it is a kind of a card's row (`KINDS` of `fold/table.py`); the
-    lines that form a row of that kind on the corpus, with the row, its file
-    and the builder that holds it; what the row reads and writes and its
+    lines the card of the first row of that kind on the corpus quotes under
+    `Source`, with the row, its file and the builder that holds it; what the
+    row reads and writes and its
     rule, as its card prints them; and the operation's defining expression,
     under `definition`."""
     definitions = PRIMITIVE_DEFINITIONS["definitions"]
@@ -909,20 +941,11 @@ def realized(row):
     return ()
 
 
-def grid_fields(kind):
-    """The fields a kind of grid of `GRID_KINDS` admits beside the setting
-    `grid`, as the options cell of a method that takes a grid prints them:
-    beside `grid: !Cartesian`, each field with the kind of value it takes."""
-    fields = ", ".join(
-        f"{code(name)}: {prose(str(option))}" for name, option in GRID_KINDS[kind].items()
-    )
-    return f"beside {code(f'grid: !{kind}')}: {fields}"
-
-
 def methods_table(page, source_ref=SOURCE_REF):
-    """The table of the methods page: one row for each method type of
-    `METHOD_TYPES` and no other, with the places it may be bound at, its
-    options, whether it takes a block, the derivatives a representation
+    """The table of the methods page: one row for each method word of
+    `METHOD_TYPES` and no other, with the places it may be bound at, the
+    keyword arguments the package reads, the states its grid lies on where
+    it reads one, whether it brings lines, the derivatives a representation
     evaluates, the condition its construction requires with the sentence of
     `METHOD_CONDITIONS`, what it realizes and the line of
     `stage/method_table.py` that defines it, linked at `source_ref`."""
@@ -931,21 +954,18 @@ def methods_table(page, source_ref=SOURCE_REF):
     for tag, row in METHOD_TYPES.items():
         if tag not in lines:
             raise SystemExit(f"stage/method_table.py defines no `_method_type` call for !{tag}")
-        options = [
-            f"{code(name)}: {prose(str(option))}" for name, option in row["options"].items()
-        ] + [
-            grid_fields(kind)
-            for name, option in row["options"].items()
-            if option.kind.startswith("grid kind")
-            for kind in GRID_KINDS
+        keywords = [
+            f"{code(name)}: {prose(str(keyword))}" for name, keyword in row["keywords"].items()
         ]
         link = SOURCE.format(ref=source_ref, module="stage/method_table.py", line=lines[tag])
+        written = tag.replace("-", "_")
         rows.append(
             (
                 anchored(tag, code(f"!{tag}")),
-                code(f"method: !{tag}"),
+                code(f"<place>.method : !{written}"),
                 "<br>".join(place_text(place) for place in row["admits"]),
-                "<br>".join(options) or "none",
+                "<br>".join(keywords) or "none",
+                prose(grid_sentence(row.grid)),
                 "yes" if row.takes_block else "no",
                 prose(row.evaluates) if row.evaluates else "none",
                 f"{code(row.condition)}: {prose(METHOD_CONDITIONS[row.condition])}" if row.condition else "none",
@@ -957,61 +977,40 @@ def methods_table(page, source_ref=SOURCE_REF):
     # the link to the defining line is headed `defined in`, as the API index
     # heads a code location; `definition` heads a defining expression on the
     # operations and laws pages
-    head = ("method", "written", "bound at", "options", "takes a block", "derivatives it evaluates", "condition",
-            "denotes", "defined in", "read from")
+    head = ("method", "written", "bound at", "keywords", "grid", "brings lines",
+            "derivatives it evaluates", "condition", "denotes", "defined in", "read from")
     return table(head, rows)
 
 
-# --- the refusals: RULES ---
-
-
-def rule_claims():
-    """The claim each rule of `RULES` states, the comment lines written above
-    it in `refusals.py`, by its name."""
-    source = (PACKAGE / "refusals.py").read_text(encoding="utf-8")
-    tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
-    claims, comment, inside, depth = {}, [], False, 0
-    for index, token in enumerate(tokens):
-        if not inside:
-            if (
-                token.type == tokenize.NAME
-                and token.string == "RULES"
-                and tokens[index + 1].string == "="
-                and token.start[1] == 0
-            ):
-                inside = True
-            continue
-        if token.type == tokenize.OP and token.string in "([{":
-            depth += 1
-        elif token.type == tokenize.OP and token.string in ")]}":
-            depth -= 1
-            if depth == 0:
-                break
-        elif token.type == tokenize.COMMENT:
-            comment.append(token.string.lstrip("#").strip())
-        elif token.type == tokenize.STRING:
-            claims[ast.literal_eval(token.string)] = " ".join(comment)
-            comment = []
-    return claims
+# --- the refusals: the three vocabularies ---
 
 
 def refusals_table(page):
-    """The table of the refusals page: one row for each rule of `RULES`, with
-    the claim its comment states."""
-    claims = rule_claims()
-    rows = []
-    for rule in RULES:
-        rows.append(
+    """The three tables of the refusals page, each under its heading: one
+    row for each rule of each vocabulary of `VOCABULARIES`, in the order the
+    catalogue writes them, with the operation that refuses under the rule
+    (`operation`) and the claim its comment states (`claims`), the two the
+    rule's entry answers; the anchor of a row is the rule's name, the
+    fragment of its entry."""
+    conditions = claims()
+    head = ("rule", "written", "operation", "claim", "denotes", "read from")
+    sections = []
+    for number, (words, table_name, rules) in enumerate(VOCABULARIES, start=1):
+        rows = [
             (
                 anchored(rule, code(rule)),
-                code(f"(rule {rule})"),
-                prose(claims.get(rule) or NONE),
+                code(f"rule = {rule!r}") if table_name == "TARGET_RULES" else code(f"(rule {rule})"),
+                code(operation(rule)) if operation(rule) else NONE,
+                prose(conditions.get(rule) or NONE),
                 denotes(page),
-                read_from("refusals.py", "RULES", rule),
+                read_from("refusals.py", table_name, rule),
             )
-        )
-    head = ("rule", "written", "claim", "denotes", "read from")
-    return table(head, rows)
+            for rule in rules
+        ]
+        sections.append((f"### 2.{number} {words[0].upper()}{words[1:]}", table(head, rows)))
+    # a table ends with its own newline, so one more leaves one blank line
+    # between a table and the next heading
+    return "\n".join(f"{heading}\n\n{held}" for heading, held in sections)
 
 
 # --- the index of the API ---
@@ -1029,7 +1028,10 @@ BACKWARD_WORD, FORWARD_WORD = DIRECTION_WORDS["backward"], DIRECTION_WORDS["forw
 # two builders graphs, a builder, a piece inside it, a block of an initial
 # diagram with a line read from it by its name, a line that reads no wire,
 # and the three tables. The block shows its reading by a key alone, since
-# its other members are those of the builder, whose class it shares
+# its other members are those of the builder, whose class it shares. The
+# line that reads no wire is the `!doc` maximization of `port.bl`
+# (`doc_line_stage`), since the consumption stage writes none: its method
+# lines stand in its addition, and its maximization forms an operation
 LEVELS = (
     ("stage", lambda stage: stage, None),
     ("stage.definitions", lambda stage: stage.definitions, None),
@@ -1061,8 +1063,8 @@ LEVELS = (
         None,
     ),
     (
-        'stage.initial.backward["policy", "optimality"]',
-        lambda stage: stage.initial.backward["policy", "optimality"],
+        'stage.initial.backward["policy", "objective"]',
+        lambda stage: doc_line_stage().initial.backward["policy", "objective"],
         None,
     ),
     ("stage.par", lambda stage: stage.par, None),
@@ -1457,8 +1459,9 @@ def trellis_periods():
 
 
 def certified_route():
-    """The first certified route of the elaborated trellis of `TRELLIS`, a
-    consumption stage's into the bequest, on three coordinates."""
+    """The first certified route of the elaborated trellis of `TRELLIS`, the
+    portfolio stage's into the consumption stage of the terminal period, on
+    one coordinate, the wealth `w` that becomes the resources `m`."""
     return next(
         route for route in trellis_selection(elaborated_trellis()).routes if route.status == "certified"
     )
@@ -1574,6 +1577,12 @@ FUNCTION_EXAMPLES = {
         "unjoined_fields(elaborated)",
         lambda: unjoined_fields(elaborated_trellis()),
     ),
+    # the derivative readings no route of the trellis supplies; none on the
+    # cons-port trellis, whose additions state every derivative read
+    "trellis.derivative_missing": (
+        "derivative_missing(elaborated)",
+        lambda: derivative_missing(elaborated_trellis()),
+    ),
     "trellis.trellis_selection": (
         "trellis_selection(elaborated)",
         lambda: trellis_selection(elaborated_trellis()),
@@ -1583,24 +1592,24 @@ FUNCTION_EXAMPLES = {
         lambda: connection_report(elaborated_trellis()),
     ),
     "trellis.transport_point": (
-        "transport_point(route, (1.0, 2.0, 3.0))",
-        lambda: transport_point(certified_route(), (1.0, 2.0, 3.0)),
+        "transport_point(route, (1.0,))",
+        lambda: transport_point(certified_route(), (1.0,)),
     ),
     "trellis.transport_vector": (
-        "transport_vector(route, (0.1, 0.2, 0.3))",
-        lambda: transport_vector(certified_route(), (0.1, 0.2, 0.3)),
+        "transport_vector(route, (0.1,))",
+        lambda: transport_vector(certified_route(), (0.1,)),
     ),
     "trellis.transport_hessian": (
-        "transport_hessian(route, ((1, 0, 0), (0, 1, 0), (0, 0, 1)))",
-        lambda: transport_hessian(certified_route(), ((1, 0, 0), (0, 1, 0), (0, 0, 1))),
+        "transport_hessian(route, ((1,),))",
+        lambda: transport_hessian(certified_route(), ((1,),)),
     ),
     "trellis.transport_atoms": (
-        "transport_atoms(route, (((1.0, 2.0, 3.0), 0.5), ((1.0, 2.0, 3.0), 0.5)))",
-        lambda: transport_atoms(certified_route(), (((1.0, 2.0, 3.0), 0.5), ((1.0, 2.0, 3.0), 0.5))),
+        "transport_atoms(route, (((1.0,), 0.5), ((2.0,), 0.5)))",
+        lambda: transport_atoms(certified_route(), (((1.0,), 0.5), ((2.0,), 0.5))),
     ),
     "trellis.pull_back": (
-        "pull_back(route, lambda a, h, z: a + h + z)(1.0, 2.0, 3.0)",
-        lambda: pull_back(certified_route(), lambda a, h, z: a + h + z)(1.0, 2.0, 3.0),
+        "pull_back(route, lambda w: 2*w)(1.0)",
+        lambda: pull_back(certified_route(), lambda w: 2 * w)(1.0),
     ),
     "period.diagram_period": (
         "diagram_period(elaborated, 0)",
@@ -1672,9 +1681,9 @@ FUNCTION_EXAMPLES = {
     ),
     "stage.node_place": (
         'node_place(to_model_explorer(elaborate_stage(record)), "backward", '
-        '"policy.InvEuler:Aggregation")',
+        '"policy.optimality:Argmax")',
         lambda: node_place(
-            to_model_explorer(symbolic_cons()), "backward", "policy.InvEuler:Aggregation"
+            to_model_explorer(symbolic_cons()), "backward", "policy.optimality:Argmax"
         ),
     ),
     "stage.wire_counts": (
@@ -1692,6 +1701,23 @@ FUNCTION_EXAMPLES = {
     "stage.to_source": (
         'to_source(stage.fields()["cons:dcsn:c"].domain)',
         lambda: to_source(symbolic_cons().fields()["cons:dcsn:c"].domain),
+    ),
+    # the two functions that read and write a typing entry of an addition's
+    # text, each on the methods file of `cons`; `addition` is that file's text
+    "stage.typing_entries": (
+        f'typing_entries(addition, "{METHODS_FILE}")',
+        lambda: typing_entries((ROOT / METHODS_FILE).read_text(encoding="utf-8"), METHODS_FILE),
+    ),
+    "stage.write_typing_entry": (
+        f'write_typing_entry(addition, "{METHODS_FILE}", "policy", "method", "!vfi")',
+        lambda: write_typing_entry(
+            (ROOT / METHODS_FILE).read_text(encoding="utf-8"), METHODS_FILE, "policy", "method", "!vfi"
+        ),
+    ),
+    # the sections of a card, on the card of the decision builder of `cons`
+    "stage.card_sections": (
+        'card_sections(stage.builder["cntn", "dcsn"].denote())',
+        lambda: card_sections(symbolic_cons().builder["cntn", "dcsn"].denote()),
     ),
     "trellis.to_model_explorer": (
         "to_model_explorer(elaborated)",
@@ -1778,9 +1804,9 @@ FUNCTION_EXAMPLES = {
         ),
     ),
     "trellis.remove_from_mapping": (
-        f'remove_from_mapping(Path("{TRELLIS}").read_text(), "inter_connectors[0]", "m_next")',
+        f'remove_from_mapping(Path("{TRELLIS}").read_text(), "inter_connectors[0]", "disc.a")',
         lambda: remove_from_mapping(
-            Path(TRELLIS).read_text(encoding="utf-8"), "inter_connectors[0]", "m_next"
+            Path(TRELLIS).read_text(encoding="utf-8"), "inter_connectors[0]", "disc.a"
         ),
     ),
     "trellis.written_at": (
@@ -1797,12 +1823,12 @@ FUNCTION_EXAMPLES = {
         f'period_entries("{TRELLIS}")',
         lambda: period_entries(TRELLIS),
     ),
-    # a drag between the two unjoined ports of the trellis, the continuation
-    # field that leaves the terminal period and the arrival field of the
-    # earliest period, which stand five periods apart
+    # a drag between the two unjoined ports of the trellis, the savings that
+    # leave the discounting stage of the terminal period and the capital the
+    # portfolio stage of the earliest period arrives at, five periods apart
     "trellis.connector_entry": (
-        'connector_entry(elaborated, (0, "port", "m_next"), (5, "cons", "m"))',
-        lambda: connector_entry(elaborated_trellis(), (0, "port", "m_next"), (5, "cons", "m")),
+        'connector_entry(elaborated, (0, "disc", "a"), (5, "port", "k"))',
+        lambda: connector_entry(elaborated_trellis(), (0, "disc", "a"), (5, "port", "k")),
     ),
 }
 

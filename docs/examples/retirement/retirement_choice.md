@@ -6,7 +6,7 @@ topic: [applications]
 # Retirement choice
 
 > [!summary]
-> A worker chooses at the start of each period whether to work or to retire, and then how much to consume; retirement is permanent. The model of Iskhakov, Jørgensen, Rust and Schjerning (2017) is written as three stage files: the choice between working and retiring, the consumption of a worker and the consumption of a retiree. The derivatives of the values and the steps of the endogenous grid method stand in block files, which the stages' methods files bind. A period file joins the three stages, and a trellis file joins the periods. Every file on this page is quoted from the application folder `applications/retirement-choice/`, and every result is printed from the package.
+> A worker chooses at the start of each period whether to work or to retire, and then how much to consume; retirement is permanent. The model of Iskhakov, Jørgensen, Rust and Schjerning (2017) is written as three stage files: the choice between working and retiring, the consumption of a worker and the consumption of a retiree. The derivatives of the values, the steps of the endogenous grid method and the numerical methods stand in a methods file beside each stage file, an addition to the stage file that the package reads with it. A period file joins the three stages, and a trellis file joins the periods. Every file on this page is quoted from the application folder `applications/retirement-choice/`, and every result is printed from the package.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [Branching](../../Bellman-Sym/05-branching.md): the rules of the choice stage, whose file this page quotes again.
@@ -77,20 +77,31 @@ The choice stage is `applications/retirement-choice/declaration/stages/ret_choic
 }
 ```
 
-Its derivative line stands in the block file `applications/retirement-choice/declaration/methods/marginals_ret_choice.bl`, as the **marginal block** of the decision builder, a block of derivative lines that the stage's methods file binds with `!marginals` (§6):
+Its methods file, `applications/retirement-choice/declaration/stages/ret_choice/methods.bl`, is an **addition** to the stage file: a `.bl` file that opens with `@methods:` and that the package reads with the stage file, whose blocks name blocks of the stage by their ids and add their entries and their lines to them, and whose file-level entries type a place by its path (§6). It types the policy builder with the method `!max` and its handler, and appends the derivative line to the decision value block:
 
 ```bl
 @methods: ret_choice
-# The derivative of the value of the discrete choice in assets, stated by the
-# marginal block of the decision value builder: the derivative of the branch
-# value the choice d selects; the cost of work, a constant, contributes nothing.
+# The methods of the choice between work and retirement, written as an
+# addition to ret_choice.bl beside this file: the discrete maximum on the
+# policy builder with the handler of the FUES retirement example that
+# compares the two branch values, and the derivative of the choice value in
+# assets, the derivative of the branch value the choice d selects, as an
+# authored line of the decision value builder. The policy builder gains no
+# line, and a block of a methods file may not have an empty body, so its
+# method and its handler are file-level lines routed by their paths to the
+# block policy. The branching block dcsn_to_cntn, whose two nested blocks are
+# labeled work and retire, takes nothing: the union keeps it as the stage file
+# writes it.
 
-[id=dcsn_marginal, (V_w[>], V_r[>], d) : !cntn -> (V) : !dcsn] {
+policy.method : !max
+policy.handler : "fues-retirement:dcsn_mover"
+
+[id=cntn_to_dcsn] {
     D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]  :: [id=marginal]
 }
 ```
 
-The forward block `dcsn_to_cntn` holds one nested block for each label of the control `d`, and each writes its own branch's field: `a_w` on the work branch and `a_r` on the retire branch. A **branch** is one alternative of the choice, with its own continuation ([branch](../../wiki/branch.md)). The value statement `V = …` selects, by the tuple indexed by `d`, the worker's value less the cost of work or the retiree's value; the derivative line `D_{a_d}V = …` of the marginal block selects the derivative in assets of the chosen branch's value, in the same order; and the policy statement `d = argmax_{d}(…)` chooses a label whose entry of the same tuple is largest. [Branching](../../Bellman-Sym/05-branching.md) reads this file line by line. The package's queries `kind`, `branches` and `combination` answer, for this stage:
+The forward block `dcsn_to_cntn` holds one nested block for each label of the control `d`, and each writes its own branch's field: `a_w` on the work branch and `a_r` on the retire branch. A **branch** is one alternative of the choice, with its own continuation ([branch](../../wiki/branch.md)). The value statement `V = …` selects, by the tuple indexed by `d`, the worker's value less the cost of work or the retiree's value; the derivative line `D_{a_d}V = …` of the methods file selects the derivative in assets of the chosen branch's value, in the same order; and the policy statement `d = argmax_{d}(…)` chooses a label whose entry of the same tuple is largest. [Branching](../../Bellman-Sym/05-branching.md) reads this file line by line. The package's queries `kind`, `branches` and `combination` answer, for this stage:
 
 ```text
 kind(stage)          branching
@@ -140,43 +151,56 @@ y : ℝ₊₊          :: ["wage paid in a period of work"]
 }
 ```
 
-The derivative lines of its two values stand in the marginal blocks of `applications/retirement-choice/declaration/methods/marginals_worker_cons.bl`:
+Its methods file, `applications/retirement-choice/declaration/stages/worker_cons/methods.bl`, types the policy builder with the endogenous grid method, its grid of savings and its handler, writes the steps of the method in its block `policy`, types the operator `upper_env` of the last of them with the fast upper envelope scan, appends the derivative lines of the two values to the two value blocks, and represents the arrival value on the asset grid (§6):
 
 ```bl
 @methods: worker_cons
-# The derivatives of the worker's two values, each stated by the marginal
-# block of the value builder that writes the value. The decision value's line
-# is the envelope condition; the arrival value's line keeps the factor R of the
-# law w = R*a_w + y, which is not the identity.
+# The methods of the worker's consumption stage, written as an addition to
+# worker_cons.bl beside this file: the endogenous grid method on the policy
+# builder with its grid of savings and its handler, and the four lines of the
+# method, the inverted Euler relation, the endogenous grid of cash on hand,
+# the candidate value and the upper envelope that gives c from the
+# candidates; the fast upper envelope scan, FUES, on the operator upper_env
+# of the last of them, with its threshold m_bar; the envelope line of the
+# decision value and the derivative line of the arrival value; and one linear
+# representation of the arrival value and of its stated derivative on the
+# asset grid. The four settings the file reads are declared at the top with
+# their sets. Each grid is its own typing entry at its place, one factor
+# keyed by its coordinate: the savings b, the continuation state on which
+# !egm builds its grid and which the policy builder's signature does not
+# list, and the assets a_w at the arrival builder's Evaluation, both on the
+# bounds and the count of the settings file's asset grid.
+#
+# With the solution method !egm on the policy builder, the four lines stand
+# in place of the declared maximization at the operative level, and the
+# declared level keeps the stage file's line, so the line envelope, which
+# defines c, meets no second definition, and the entry on upper_env names the
+# operator of that line.
 
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
-    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
-}
+n_a : ℕ              :: ["number of points of the asset grid"]
+a_min : Xa           :: ["lower bound of the asset grid"]
+a_max : Xa           :: ["upper bound of the asset grid"]
+m_bar : ℝ₊₊          :: ["jump-detection threshold of the upper envelope scan"]
 
-[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
-    D_{a_w}V[<] = R*D_{w}V          :: [id=marginal]
-}
-```
-
-and the steps of the endogenous grid method in the **method block** of `applications/retirement-choice/declaration/methods/worker_cons_egm.bl`, a block whose lines compute the output of the builder it opens, here the policy builder (§6):
-
-```bl
-@methods: worker_cons
-# The endogenous grid method as the method block of the worker's policy
-# builder, whose stage file states the maximization alone. The candidate line
-# reads the derivative of the continuation value by the term D_{b}V[>]; the
-# worker's continuation value need not be concave, so the block selects among
-# the candidates by their values with an upper envelope.
-
-[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, method : !egm | grid : !Cartesian(b=(a_min, a_max, n_a)) | handler : "asva:make_egm_1d"
+    | upper_env.method : !FUES(m_bar=m_bar) | upper_env.handler : "dcsmm:EGM_UE"] {
     c[>] <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])                 :: [id=InvEuler]
     w[>] = b + c[>]                            :: [id=endoggrid]
     v[>] = 𝑢(c[>]) + β*V[>]                    :: [id=cand_value]
     c    = upper_env(w[>], c[>], v[>])          :: [id=envelope]
 }
+
+[id=cntn_to_dcsn] {
+    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl
+    | evaluate.method : !Linear | evaluate.grid : !Cartesian(a_w=(a_min, a_max, n_a)) | evaluate.handler : "dcsmm:interp_as_2"] {
+    D_{a_w}V[<] = R*D_{w}V          :: [id=marginal]
+}
 ```
 
-Cash on hand is `w = R*a_w + y`, and consumption lies in `Γ(w) = (0, w]`. The value statement adds the discounted continuation value to the utility of consumption, and the policy block states the maximization, which also declares the feasible set of consumption. The derivative line `D_{w}V = 𝑑𝑢(c)` of the first marginal block states the derivative of the value in cash on hand, `1/c`, and the second marginal block's line multiplies it by `R`, the factor of the law `w = R*a_w + y`, to state the derivative of the arrival value in assets. The method block writes the steps of the endogenous grid method as equations. The inverse Euler inequality `c[>] <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])`, which reads the derivative of the continuation value in savings, gives the candidate consumption at each level of savings. It carries no complementary-slackness clause `⟂ b >= 0`, which would pair the Euler equation with the borrowing limit, so it is read as the equation `c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])`: at every level of savings the candidate is the interior value, at which the Euler equation holds with equality ([Constraints](../../Bellman-Sym/10-constraints.md#43-the-clause-on-the-candidate-line) §4.3). The endogenous grid is `w[>] = b + c[>]`, the value of each candidate is `v[>]`, and the upper envelope `upper_env(w[>], c[>], v[>])` keeps, at each level of cash on hand, the candidate of largest value. The worker needs the upper envelope because her continuation value is not concave.
+Cash on hand is `w = R*a_w + y`, and consumption lies in `Γ(w) = (0, w]`. The value statement adds the discounted continuation value to the utility of consumption, and the policy block states the maximization, which also declares the feasible set of consumption. The derivative line `D_{w}V = 𝑑𝑢(c)` appended to `cntn_to_dcsn` states the derivative of the value in cash on hand, `1/c`, and the line appended to `dcsn_to_arvl` multiplies it by `R`, the factor of the law `w = R*a_w + y`, to state the derivative of the arrival value in assets. The block `policy` of the methods file writes the steps of the endogenous grid method as equations, which stand in place of the maximization at the operative level while the declared level keeps the maximization. The inverse Euler inequality `c[>] <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])`, which reads the derivative of the continuation value in savings, gives the candidate consumption at each level of savings. It carries no complementary-slackness clause `⟂ b >= 0`, which would pair the Euler equation with the borrowing limit, so it is read as the equation `c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])`: at every level of savings the candidate is the interior value, at which the Euler equation holds with equality ([Constraints](../../Bellman-Sym/10-constraints.md#43-the-clause-on-the-candidate-line) §4.3). The endogenous grid is `w[>] = b + c[>]`, the value of each candidate is `v[>]`, and the upper envelope `upper_env(w[>], c[>], v[>])` keeps, at each level of cash on hand, the candidate of largest value. The worker needs the upper envelope because her continuation value is not concave.
 
 ### 3.3 The retiree's consumption
 
@@ -216,40 +240,49 @@ R : ℝ₊₊          :: ["gross return on assets"]
 }
 ```
 
-Its derivative lines stand in the marginal blocks of `applications/retirement-choice/declaration/methods/marginals_retiree_cons.bl`:
+Its methods file, `applications/retirement-choice/declaration/stages/retiree_cons/methods.bl`, types the policy builder as the worker's does, writes the steps of the method in its block `policy`, appends the derivative lines of the two values, and represents the arrival value and its stated derivative on the asset grid, one entry for each stored object (§6):
 
 ```bl
 @methods: retiree_cons
-# The derivatives of the retiree's two values, each stated by the marginal
-# block of the value builder that writes the value. The decision value's line
-# is the envelope condition; the arrival value's line keeps the factor R of the
-# law w_ret = R*a_ret, which is not the identity.
+# The methods of the retiree's consumption stage, written as an addition to
+# retiree_cons.bl beside this file: the endogenous grid method on the policy
+# builder with its grid of savings and its handler, and the three lines of
+# the method, the inverted Euler relation with its note, the endogenous grid
+# of cash on hand and the identification of c with the candidate; the
+# envelope line of the decision value and the derivative line of the arrival
+# value; and the linear representation of the arrival value and of its stated
+# derivative on the asset grid, each named at its own Evaluation. The three
+# settings the file reads are declared at the top with their sets. Each grid
+# is its own typing entry at its place, one factor keyed by its coordinate:
+# the savings b_ret, the continuation state on which !egm builds its grid,
+# and the assets a_ret at each of the two Evaluations of the arrival builder.
+#
+# With the solution method !egm on the policy builder, the three lines stand
+# in place of the declared maximization at the operative level, and the
+# declared level keeps the stage file's line.
 
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
-    D_{w_ret}V = 𝑑𝑢(c)              :: [id=marginal]
-}
+n_a_ret : ℕ          :: ["number of points of the retiree's asset grid"]
+a_ret_min : Xa       :: ["lower bound of the retiree's asset grid"]
+a_ret_max : Xa       :: ["upper bound of the retiree's asset grid"]
 
-[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
-    D_{a_ret}V[<] = R*D_{w_ret}V    :: [id=marginal]
-}
-```
-
-and the steps of the endogenous grid method in the method block of `applications/retirement-choice/declaration/methods/retiree_cons_egm.bl`:
-
-```bl
-@methods: retiree_cons
-# The endogenous grid method as the method block of the retiree's policy
-# builder, whose stage file states the maximization alone. The candidate line
-# reads the derivative of the continuation value by the term D_{b_ret}V[>].
-
-[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn, "method = egm! will look for policy[>] and x[>] grid and invert it. Important here that the grids contain all constrained sections"] {
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(b_ret=(a_ret_min, a_ret_max, n_a_ret)) | policy.handler : "asva:make_egm_1d"] {
     c[>]     <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b_ret}V[>])                :: [id=InvEuler, "Implies a correspondence: where equality holds, c[>] takes on a single value, where inequality holds, it is multiple values"]
     w_ret[>] = b_ret + c[>]                          :: [id=endoggrid]
     c        = c[>]                                  :: [id=cons_choice]
 }
+
+[id=cntn_to_dcsn] {
+    D_{w_ret}V = 𝑑𝑢(c)              :: [id=marginal]
+}
+
+[id=dcsn_to_arvl
+    | evaluate[V[<]].method : !Linear | evaluate[V[<]].grid : !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret)) | evaluate[V[<]].handler : "dcsmm:interp_as_3"
+    | evaluate[D_{a_ret}V[<]].method : !Linear | evaluate[D_{a_ret}V[<]].grid : !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret)) | evaluate[D_{a_ret}V[<]].handler : "dcsmm:interp_as_3"] {
+    D_{a_ret}V[<] = R*D_{w_ret}V    :: [id=marginal]
+}
 ```
 
-Cash on hand is `w_ret = R*a_ret`, with no wage. The method block writes the inverse Euler inequality and the endogenous grid as the worker's does, and then the **identification** `c = c[>]`, which equates the policy at the cash on hand of each level of savings with the candidate there. The package forms from the policy block the **policy builder**, the operator whose output is the policy. Once the methods file binds the method block, the builder's operations are the lines of that block, and `stage.dcsn.builder.policy.denote()` prints its card, a statement of its operations, with the maximization of the stage file under `Declared`. The card gives the identification as the operation `cons_choice:Pullback`, the policy composed with the cash on hand at each level of savings, with the rule `𝑐(𝑤_ret≻(b_ret)) = 𝑐≻(b_ret)` on `𝑤_ret≻(Xa)`, the set of cash on hand that the candidates reach. The inverse Euler inequality carries no clause, so the policy is stated on that set and not below it, where the borrowing limit binds ([Constraints](../../Bellman-Sym/10-constraints.md#43-the-clause-on-the-candidate-line) §4.3). The retiree's continuation value is concave, so the block needs no upper envelope. At zero assets the feasible set `(0, w_ret]` is empty, as the description of `Γ` in the file records.
+Cash on hand is `w_ret = R*a_ret`, with no wage. The block `policy` of the methods file writes the inverse Euler inequality and the endogenous grid as the worker's does, and then the **identification** `c = c[>]`, which equates the policy at the cash on hand of each level of savings with the candidate there. The package forms from the policy block the **policy builder**, the operator whose output is the policy. With the solution method on the builder, the builder's operations are the lines of that block, and `stage.dcsn.builder.policy.denote()` prints its card, a statement of its operations, with the maximization of the stage file under `Declared`. The card gives the identification as the operation `cons_choice:Pullback`, the policy composed with the cash on hand at each level of savings, with the rule `𝑐(𝑤_ret≻(b_ret)) = 𝑐≻(b_ret)` on `𝑤_ret≻(Xa)`, the set of cash on hand that the candidates reach. The inverse Euler inequality carries no clause, so the policy is stated on that set and not below it, where the borrowing limit binds ([Constraints](../../Bellman-Sym/10-constraints.md#43-the-clause-on-the-candidate-line) §4.3). The retiree's continuation value is concave, so the block needs no upper envelope. At zero assets the feasible set `(0, w_ret]` is empty, as the description of `Γ` in the file records.
 
 ## 4 The period
 
@@ -416,20 +449,22 @@ The terminal period adds the bequest stage, `applications/retirement-choice/decl
 }
 ```
 
-Its derivative line stands in the marginal block of `applications/retirement-choice/declaration/methods/marginals_bequest.bl`, which the bequest's methods file binds (§6):
+Its methods file, `applications/retirement-choice/declaration/stages/bequest/methods.bl`, appends the derivative line to its decision value block and types no method (§6):
 
 ```bl
 @methods: bequest
-# The derivative of the terminal value in wealth, stated in closed form by the
-# marginal block of the decision value builder: the savings left after the
-# last date have no value, so the derivative is zero.
+# The methods of the terminal stage, written as an addition to bequest.bl
+# beside this file: the derivative of the terminal value in wealth, zero, as
+# an authored line of the decision value builder. The block names the stage's
+# block by its id and adds no coordinate, so it carries no signature. The
+# stage takes no method: its values are closed forms.
 
-[id=dcsn_marginal, () -> (V) : !dcsn] {
+[id=cntn_to_dcsn] {
     D_{x}V = 0                                         :: [id=marginal_wealth]
 }
 ```
 
-Its arrival field `a_bq` receives the savings of both consumption stages of the terminal period, through the connector `{b: a_bq, b_ret: a_bq}`. Its value is the continuation value `V[>]`, boundary data equal to zero, since the papers' agent consumes all her resources at the last date, and the derivative line `D_{x}V = 0` of its marginal block states that the derivative of its value in wealth is zero. The state-field connections are:
+Its arrival field `a_bq` receives the savings of both consumption stages of the terminal period, through the connector `{b: a_bq, b_ret: a_bq}`. Its value is the continuation value `V[>]`, boundary data equal to zero, since the papers' agent consumes all her resources at the last date, and the derivative line `D_{x}V = 0` of its methods file states that the derivative of its value in wealth is zero. The state-field connections are:
 
 ```text
 period_joins(periods[0])["joins"]
@@ -440,7 +475,7 @@ period_joins(periods[0])["joins"]
 ```
 
 The join check compares value fields alone. The terminal stage states the
-derivative of its value in wealth, zero, by its marginal block, and the law
+derivative of its value in wealth, zero, by the line its methods file appends, and the law
 of its arrival block, `x = a_bq`, is the identity, so the stated derivative
 passes through to the arrival value, which both consumption stages of the
 terminal period read by the terms `D_{b}V[>]` and `D_{b_ret}V[>]`. The
@@ -453,188 +488,50 @@ preserve the route that keeps a retiree retired.
 
 ## 6 Methods
 
-A methods file attaches a numerical method to a named place of a stage: a block, a line or an operator ([Methodization](../../Bellman-Sym/04-methodization.md)). The choice stage's methods file is `applications/retirement-choice/declaration/stages/ret_choice/methods.yml`:
+A methods file is an addition to a stage file: a `.bl` file that opens with `@methods:` and the stage's name, which the package reads with the stage file ([Methodization](../../Bellman-Sym/04-methodization.md)). A block of the methods file names a block of the stage by its id and adds to it. A typing entry in its bracket types a component of the builder's signature: `method : !egm` the method, `grid : !Cartesian(b=(a_min, a_max, n_a))` the grid, one factor for each coordinate it discretizes, keyed by the coordinate's name, with the lower bound, the upper bound and the count as declared settings, and `handler : "asva:make_egm_1d"` the handler, the routine outside the language that executes the method, written as a quoted string. An entry whose path names an operator of the block, `upper_env.method : !FUES(m_bar=m_bar)`, types that operator, and a keyword argument of a method word names a setting by its name. The block's lines are appended to the stage block's lines; where the block's method is a solution method, as `!egm` is, its lines stand in place of the stage block's maximization at the operative level, and the declared level keeps the maximization. A file-level entry with a full path, `policy.method : !max`, types the place the path names, and an Evaluation that stores a value and its stated derivative takes one entry for both, `evaluate.method`, or one for each stored object, `evaluate[V[<]].method` and `evaluate[D_{a_ret}V[<]].method`, as the worker's and the retiree's files write them. Every setting a grid or a method reads is declared at the top of the file with its set, `n_a : ℕ`, and valued by the settings file of §7. The four methods files are quoted in §3 and §5.
 
-```yaml
-stage: ret_choice
-
-methods:
-  # The discrete choice is the larger of the two branch values. The handler is
-  # the routine of the FUES retirement example that compares them.
-  - on: policy
-    method: !max
-    handler: fues-retirement:dcsn_mover
-
-  # The derivative of the choice value in assets, the derivative of the branch
-  # value the choice selects, is stated by the marginal block of
-  # marginals_ret_choice.bl on the decision value builder.
-  - on: cntn_to_dcsn
-    method: !marginals
-    block: ../../methods/marginals_ret_choice.bl
-```
-
-The worker's is `applications/retirement-choice/declaration/stages/worker_cons/methods.yml`:
-
-```yaml
-stage: worker_cons
-
-methods:
-  # The endogenous grid method opens the policy builder with the method block
-  # of worker_cons_egm.bl, which writes the grid line w[>] = b + c[>]; the
-  # stage file states the maximization alone. The candidates the block
-  # computes at each level of savings are selected by the upper envelope
-  # below, since the worker's continuation value need not be concave. The
-  # setting grid names the exogenous grid of savings b by its kind,
-  # !Cartesian, with its order and bounds beside it, the asset grid of the
-  # settings file.
-  - on: policy
-    method: !egm
-    block: ../../methods/worker_cons_egm.bl
-    handler: asva:make_egm_1d
-    settings:
-      grid: !Cartesian
-      orders:
-        b: n_a
-      bounds:
-        b: [a_min, a_max]
-
-  # The derivatives of the decision value and the arrival value are stated by
-  # the two marginal blocks of marginals_worker_cons.bl, one for each value
-  # builder.
-  - on: cntn_to_dcsn
-    method: !marginals
-    block: ../../methods/marginals_worker_cons.bl
-
-  - on: dcsn_to_arvl
-    method: !marginals
-    block: ../../methods/marginals_worker_cons.bl
-
-  # The upper envelope over the candidates that satisfy the first-order
-  # condition; m_bar is the jump-detection threshold of the scan.
-  - on: upper_env
-    method: !FUES
-    handler: dcsmm:EGM_UE
-    settings:
-      m_bar: m_bar
-
-  # The arrival value and its stated derivative in assets are tabulated on the
-  # asset grid at the arrival builder's Evaluation, dcsn_to_arvl.evaluate.value
-  # and dcsn_to_arvl.evaluate.marginal, and read by linear interpolation, the
-  # basis !Linear; the setting grid names the asset grid by its kind,
-  # !Cartesian, with its order and bounds beside it.
-  - on: dcsn_to_arvl.evaluate.value
-    method: !Linear
-    handler: dcsmm:interp_as_2
-    settings:
-      grid: !Cartesian
-      orders:
-        a_w: n_a
-      bounds:
-        a_w: [a_min, a_max]
-
-  - on: dcsn_to_arvl.evaluate.marginal
-    method: !Linear
-    handler: dcsmm:interp_as_2
-    settings:
-      grid: !Cartesian
-      orders:
-        a_w: n_a
-      bounds:
-        a_w: [a_min, a_max]
-```
-
-The retiree's is `applications/retirement-choice/declaration/stages/retiree_cons/methods.yml`:
-
-```yaml
-stage: retiree_cons
-
-methods:
-  # The endogenous grid method opens the policy builder with the method block
-  # of retiree_cons_egm.bl, whose implicit statement c = c[>] gives the
-  # policy; the stage file states the maximization alone. The retiree's
-  # continuation value is concave, so no envelope operation is needed. The
-  # setting grid names the exogenous grid of savings b_ret by its kind,
-  # !Cartesian, with its order and bounds beside it, the asset grid of the
-  # settings file.
-  - on: policy
-    method: !egm
-    block: ../../methods/retiree_cons_egm.bl
-    handler: asva:make_egm_1d
-    settings:
-      grid: !Cartesian
-      orders:
-        b_ret: n_a_ret
-      bounds:
-        b_ret: [a_ret_min, a_ret_max]
-
-  # The derivatives of the decision value and the arrival value are stated by
-  # the two marginal blocks of marginals_retiree_cons.bl, one for each value
-  # builder.
-  - on: cntn_to_dcsn
-    method: !marginals
-    block: ../../methods/marginals_retiree_cons.bl
-
-  - on: dcsn_to_arvl
-    method: !marginals
-    block: ../../methods/marginals_retiree_cons.bl
-
-  # The arrival value and its stated derivative in assets are tabulated on the
-  # asset grid at the arrival builder's Evaluation, dcsn_to_arvl.evaluate.value
-  # and dcsn_to_arvl.evaluate.marginal, and read by linear interpolation, the
-  # basis !Linear; the setting grid names the asset grid by its kind,
-  # !Cartesian, with its order and bounds beside it.
-  - on: dcsn_to_arvl.evaluate.value
-    method: !Linear
-    handler: dcsmm:interp_as_3
-    settings:
-      grid: !Cartesian
-      orders:
-        a_ret: n_a_ret
-      bounds:
-        a_ret: [a_ret_min, a_ret_max]
-
-  - on: dcsn_to_arvl.evaluate.marginal
-    method: !Linear
-    handler: dcsmm:interp_as_3
-    settings:
-      grid: !Cartesian
-      orders:
-        a_ret: n_a_ret
-      bounds:
-        a_ret: [a_ret_min, a_ret_max]
-```
-
-The bequest's is `applications/retirement-choice/declaration/stages/bequest/methods.yml`:
-
-```yaml
-stage: bequest
-
-methods:
-  # The derivative of the terminal value in wealth, zero, is stated by the
-  # marginal block of marginals_bequest.bl on the decision value builder.
-  - on: cntn_to_dcsn
-    method: !marginals
-    block: ../../methods/marginals_bequest.bl
-```
-
-Binding each file to its stage with `methodize` gives:
+The recipe names each stage's methods file in the stage's methods list, and `elaborate_trellis` reads it with the stage file at every occurrence of the stage, so that the trellis holds the methods without a binding step: `methodize_trellis` changes nothing. After `calibrate_trellis` and `configure_trellis` the occurrences print as
 
 ```text
-ret_choice    binds
-worker_cons   binds
-retiree_cons  binds
-bequest       binds
+ret_choice      ElaboratedStage('ret_choice', specified)
+worker_cons     ElaboratedStage('worker_cons', specified)
+retiree_cons    ElaboratedStage('retiree_cons', specified)
+bequest         ElaboratedStage('bequest', calibration, settings)
 ```
 
-The four files bind. The worker's endogenous grid entry opens the policy builder with the method block of `worker_cons_egm.bl`, whose four lines become the builder's operations, and the upper envelope over the candidates is the method `!FUES` on the block's line `envelope`, as the comment in the file records. The retiree's entry opens its policy builder with the method block of `retiree_cons_egm.bl`, which holds the identification `c = c[>]`. Each endogenous grid entry names its exogenous grid of savings, `b` for the worker and `b_ret` for the retiree, by the setting `grid`, whose value is the grid's kind, the tag `!Cartesian`, with the grid's order and bounds beside it. Each `!marginals` entry records the lines of a marginal block at the Evaluation of the value builder it names, as stated derivatives of the value, and adds no operation; the entries on `dcsn_to_arvl.evaluate.value` and `dcsn_to_arvl.evaluate.marginal` represent the arrival value and its stated derivative by the basis `!Linear` on the asset grid that their setting `grid` names in the same way, one method at the arrival builder's Evaluation. The worker's stage prints its methods, `str(stage.methods)`, as
+The bequest's methods file types no method, so its occurrence carries no method component and its word is not `specified`. The worker's stage prints its methods, `str(stage.methods)`, as
 
 ```text
-policy.envelope           !FUES
-policy                    !egm   block ../../methods/worker_cons_egm.bl
-cntn_to_dcsn:Evaluation   !marginals   block ../../methods/marginals_worker_cons.bl
-dcsn_to_arvl:Evaluation   !marginals   block ../../methods/marginals_worker_cons.bl
-dcsn_to_arvl:Evaluation   !Linear
+dcsn_to_arvl.evaluate   !Linear   !Cartesian(a_w=(a_min, a_max, n_a))   "dcsmm:interp_as_2"
+policy                  !egm   !Cartesian(b=(a_min, a_max, n_a))   "asva:make_egm_1d"
+policy.upper_env        !FUES(m_bar=m_bar)   "dcsmm:EGM_UE"
 ```
+
+one row for each place that carries a component: the Evaluation of the arrival value builder, which represents the arrival value and its stated derivative alike by linear interpolation on the asset grid; the policy builder, solved by the endogenous grid method on the grid of savings `b`; and the operator `upper_env` of its line `envelope`, the fast upper envelope scan with its threshold `m_bar`. The retiree's file names the two stored objects of its arrival Evaluation separately, which say the same here, and its methods print as
+
+```text
+dcsn_to_arvl.evaluate[V[<]]            !Linear   !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret))   "dcsmm:interp_as_3"
+dcsn_to_arvl.evaluate[D_{a_ret}V[<]]   !Linear   !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret))   "dcsmm:interp_as_3"
+policy                                 !egm   !Cartesian(b_ret=(a_ret_min, a_ret_max, n_a_ret))   "asva:make_egm_1d"
+```
+
+The settings a stage reads print beside the places that read them, `str(stage.settings)` of the worker's stage:
+
+```text
+name       set  value  read at                by       grid
+n_a        ℕ    3000   dcsn_to_arvl.evaluate  !Linear  !Cartesian
+n_a        ℕ    3000   policy                 !egm     !Cartesian
+a_min      Xa   1e-10  dcsn_to_arvl.evaluate  !Linear  !Cartesian
+a_min      Xa   1e-10  policy                 !egm     !Cartesian
+a_max      Xa   500    dcsn_to_arvl.evaluate  !Linear  !Cartesian
+a_max      Xa   500    policy                 !egm     !Cartesian
+m_bar      ℝ₊₊  1.01   policy.upper_env       !FUES
+n_a_ret         3000
+a_ret_min       1e-10
+a_ret_max       500
+```
+
+The three settings of the retiree's grid stand in the same settings file and are read at no place of the worker's stage, so they print with no place.
 
 ## 7 Calibration and settings
 
@@ -674,18 +571,19 @@ The recipe, `applications/retirement-choice/declaration/spec.yml`, names the tre
 ```yaml
 # The recipe of the retirement model: the trellis file and each stage's file,
 # by their paths from this folder, and for each stage and each kind the
-# ordered sources; `$fill` and the three methods slots are bound by keyword of
-# `load_recipe`. Each stage has its own methods slot, `$ret_choice_method`,
-# `$worker_method` and `$retiree_method`, so that a method choice reaches one
-# stage. The bequest declares no parameter or setting; its one methods file
-# binds the marginal block of its derivative, and it is active in the
-# terminal period alone, `periods: [0, 0]`.
+# ordered sources; `$fill` is bound by keyword of `load_recipe`. The methods
+# of a stage are the addition its methods list names, the `.bl` file
+# `methods.bl` in the stage's own folder, read with the stage file at every
+# occurrence; a change of method is another addition named in the list. The
+# bequest declares no parameter or setting; its methods file states the
+# derivative of its value, and it is active in the terminal period alone,
+# `periods: [0, 0]`.
 trellis: trellis.yml
 stages:
-  ret_choice:   {stage: stages/ret_choice/ret_choice.bl,     calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/ret_choice/methods, $ret_choice_method]}}
-  worker_cons:  {stage: stages/worker_cons/worker_cons.bl,   calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/worker_cons/methods, $worker_method]}}
-  retiree_cons: {stage: stages/retiree_cons/retiree_cons.bl, calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/retiree_cons/methods, $retiree_method]}}
-  bequest:      {stage: stages/bequest/bequest.bl,           methods: {all: [stages/bequest/methods]}, periods: [0, 0]}
+  ret_choice:   {stage: stages/ret_choice/ret_choice.bl,     calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/ret_choice/methods.bl]}}
+  worker_cons:  {stage: stages/worker_cons/worker_cons.bl,   calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/worker_cons/methods.bl]}}
+  retiree_cons: {stage: stages/retiree_cons/retiree_cons.bl, calibration: {all: [calibration/retirement, $fill]}, settings: {all: [settings/retirement, $fill]}, methods: {all: [stages/retiree_cons/methods.bl]}}
+  bequest:      {stage: stages/bequest/bequest.bl,           methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
 ```
 
 ## 8 References

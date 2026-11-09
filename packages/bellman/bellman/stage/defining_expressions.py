@@ -107,7 +107,7 @@ from bellman.stage.kernel_records import (
     law_of_motion_kernel,
     stems_of,
 )
-from bellman.stage.method_targets import block_box
+from bellman.stage.places import block_box
 from bellman.stage.term_operations import (
     SIGN,
     apply_at,
@@ -722,9 +722,7 @@ def _law_outputs(ctx, row, label=None):
     label = label or row.section
     if label is not None:
         written = dict(
-            branches_of(
-                ctx.stage_object, block_box(ctx.stage_object, forward.builder, forward.builder)
-            )
+            branches_of(ctx.stage_object, block_box(ctx.stage_object, forward.builder))
         )[label]
         outputs = tuple(o for o in outputs if o in written)
     return forward, coordinate_bindings(ctx, outputs, row.identity, LAW_OUTPUTS)

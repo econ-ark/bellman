@@ -10,10 +10,10 @@ topic: [applications]
 > This page explains `worker_cons.bl`, the worker's consumption stage of
 > the retirement model, for readers new to Bellman-SYM, the language used
 > for `.bl` stage files. The code blocks quote the working copy,
-> `declaration/stages/worker_cons/worker_cons.bl`, and the two block files
-> that hold its derivative lines and its endogenous grid method,
-> `declaration/methods/marginals_worker_cons.bl` and
-> `declaration/methods/worker_cons_egm.bl`; when those files change, these
+> `declaration/stages/worker_cons/worker_cons.bl`, and the methods file
+> beside it, `declaration/stages/worker_cons/methods.bl`, which holds its
+> derivative lines, its endogenous grid method and the representation of its
+> arrival value; when those files change, these
 > excerpts and their explanations must change with them. `economics.md` states the whole model;
 > `ret_choice.md` explains the discrete-choice stage and `retiree_cons.md`
 > the retiree's consumption stage.
@@ -150,22 +150,23 @@ expectation appears because the stage has no shock.
 ```
 
 The derivatives of the two values are not written in the stage file. They
-stand in the two marginal blocks of
-`declaration/methods/marginals_worker_cons.bl`, which the methods file
-binds on the two value blocks with `!marginals`:
+stand in the methods file `declaration/stages/worker_cons/methods.bl`, an
+addition to the stage file: a `.bl` file that opens with `@methods:`, read
+with the stage file, whose blocks name blocks of the stage by their ids and
+add their entries and their lines to them. Its blocks `cntn_to_dcsn` and
+`dcsn_to_arvl` each append one derivative line, and the second also
+carries, in its bracket, one representation of the arrival value and of its
+stated derivative on the asset grid: the method `!Linear`, the grid
+`!Cartesian(a_w=(a_min, a_max, n_a))` and the handler, the routine outside
+the language that executes the method:
 
 ```bl
-@methods: worker_cons
-# The derivatives of the worker's two values, each stated by the marginal
-# block of the value builder that writes the value. The decision value's line
-# is the envelope condition; the arrival value's line keeps the factor R of the
-# law w = R*a_w + y, which is not the identity.
-
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+[id=cntn_to_dcsn] {
     D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
 }
 
-[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+[id=dcsn_to_arvl
+    | evaluate.method : !Linear | evaluate.grid : !Cartesian(a_w=(a_min, a_max, n_a)) | evaluate.handler : "dcsmm:interp_as_2"] {
     D_{a_w}V[<] = R*D_{w}V          :: [id=marginal]
 }
 ```
@@ -196,19 +197,20 @@ The policy block states how consumption is chosen:
 }
 ```
 
-and the method block `egm` of `declaration/methods/worker_cons_egm.bl`,
-which the methods file binds on the policy builder, states how the
-endogenous grid method computes it:
+and the block `policy` of the methods file, whose bracket types the builder
+with `!egm`, its grid on the savings `b` and its handler, and the operator
+`upper_env` of its last line with the fast upper envelope scan and its
+threshold `m_bar`, states how the endogenous grid method computes it; the
+four settings the file reads are declared above it with their sets:
 
 ```bl
-@methods: worker_cons
-# The endogenous grid method as the method block of the worker's policy
-# builder, whose stage file states the maximization alone. The candidate line
-# reads the derivative of the continuation value by the term D_{b}V[>]; the
-# worker's continuation value need not be concave, so the block selects among
-# the candidates by their values with an upper envelope.
+n_a : ℕ              :: ["number of points of the asset grid"]
+a_min : Xa           :: ["lower bound of the asset grid"]
+a_max : Xa           :: ["upper bound of the asset grid"]
+m_bar : ℝ₊₊          :: ["jump-detection threshold of the upper envelope scan"]
 
-[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, method : !egm | grid : !Cartesian(b=(a_min, a_max, n_a)) | handler : "asva:make_egm_1d"
+    | upper_env.method : !FUES(m_bar=m_bar) | upper_env.handler : "dcsmm:EGM_UE"] {
     c[>] <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b}V[>])                 :: [id=InvEuler]
     w[>] = b + c[>]                            :: [id=endoggrid]
     v[>] = 𝑢(c[>]) + β*V[>]                    :: [id=cand_value]
@@ -216,22 +218,24 @@ endogenous grid method computes it:
 }
 ```
 
-The input of both blocks is the continuation value alone, and no
+The input of the policy block is the continuation value alone, and no
 continuation state: the decision state is the argument of the policy the
 block produces, and the savings at which the candidates are computed are
-the bound argument of those functions. The method block reads the
-derivative of the continuation value by the term `D_{b}V[>]` and lists
-nothing for it in its header; it reads `V[>]` itself because the envelope
-compares candidate values, not only candidate consumptions.
+the bound argument of those functions. The block of the methods file
+carries no signature, since it adds no coordinate; its lines read the
+derivative of the continuation value by the term `D_{b}V[>]`, and `V[>]`
+itself because the envelope compares candidate values, not only candidate
+consumptions.
 
 The policy block's one statement is the definition of the control:
 consumption maximizes current utility plus discounted continuation value
-over the feasible set `Γ(w) = (0, w]`. The four statements of the method
-block are one realization of it; the stage records the condition under
-which they reach it as the obligation `egm-eligibility`, which nothing
-checks.
+over the feasible set `Γ(w) = (0, w]`. The four statements of the methods
+file's block are one realization of it, which stand in place of the
+maximization at the operative level while the declared level keeps it; the
+stage records the condition under which they reach it as the obligation
+`egm-eligibility`, which nothing checks.
 
-The first statement of the method block inverts the first-order
+The first statement of that block inverts the first-order
 condition. It is written as an inequality, which defines candidate
 consumption as a correspondence:
 marginal utility is at least the discounted marginal value of saving,
@@ -253,20 +257,20 @@ found by comparing values.
 The last statement selects among the candidates by value and defines the
 control: at each cash on hand, `upper_env` takes the candidate with the
 largest value and returns its consumption. Writing the envelope in the
-method block makes the method correct as written; which routine computes
-it is settled separately, in the methods file.
+block makes the method correct as written; which routine computes it is
+the handler the same file binds on the operator `upper_env`.
 
 ## Numerical method
 
-`declaration/stages/worker_cons/methods.yml` attaches the endogenous grid method to
-the policy block with the method block of `worker_cons_egm.bl`, whose four
-lines then form the policy builder's operations; the two marginal blocks
-of `marginals_worker_cons.bl` to the two value blocks with `!marginals`;
-the fast upper envelope scan to the envelope operation of the method
-block, with the jump-detection threshold `m_bar` among its settings; and
-a tabulation on the asset grid to the arrival value and to the stated
-derivative of the arrival value. The file binds, and the methods of the
-retirement trellis bind with it (`economics.md`, "Elaboration").
+The methods file `declaration/stages/worker_cons/methods.bl` types the
+policy builder with the endogenous grid method, whose four lines form the
+policy builder's operations, with its grid of savings and its handler;
+types the envelope operation of its last line with the fast upper envelope
+scan, with the jump-detection threshold `m_bar` as its keyword argument;
+appends the two derivative lines to the two value blocks; and represents the
+arrival value and its stated derivative on the asset grid by linear
+interpolation. The file is read with the stage file at every occurrence of
+the retirement trellis (`economics.md`, "Elaboration").
 
 ## Elaboration
 
@@ -278,8 +282,8 @@ applications/retirement-choice/declaration/stages/worker_cons/worker_cons.bl: El
 
 At the primitive grain the policy builder opens into four boxes: a
 pullback of the continuation value, the aggregation and the argmax of the
-maximization, and the evaluation. Once the methods file binds the method
-block, its four boxes are those of the method: an aggregation for
+maximization, and the evaluation. With the methods file read, its four
+boxes are those of the method: an aggregation for
 candidate consumption, one aggregation for its cash-on-hand coordinate
 and its value together, the pullback the envelope statement denotes,
 which reads the three candidate functions and returns consumption, and

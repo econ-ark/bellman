@@ -66,10 +66,14 @@ from workbench_support import (
     show_status,
     layout_differences,
     layout_records,
+    layouts_recorded,
     open_cons,
     open_path_shown,
     open_trellis,
     opened_namespaces,
+    panel_heads,
+    record_layouts,
+    view_laid_out,
     DOCUMENT_JS,
     NODE_POSITIONS_JS,
     OVERLAY_LINES_JS,
@@ -374,20 +378,26 @@ def test_item_1_the_layout_lays_out_every_box_and_wire_of_the_graph_json(
 def test_item_2_a_box_shows_its_symbol_and_mark_and_the_links_hold(
     page, server, model_folder, original
 ):
-    """Item 2: on cons.bl with its methods, bound as the folder's recipe
-    binds it, every box of the backward graph prints its label as
-    `node_label` writes it, whole inside the box, the symbol in ice and the
-    mark from ` · !` in ice-3, `𝑐(m_d) · !egm` among them, and no box prints
-    its kind; the kind `Evaluation` stands in the head of policy:Evaluation
-    in the panel and its rows are those of the box's Details (unit K, Task
-    5; `app.box_rows`), no kernel among them; the three backward boxes and
-    the two forward boxes of
-    AMD-MI-001's item 3 alone are lined in the accent, and the box selected
-    carries the ring 5 px outside it; the boxes of the policy layer stand in
-    one column where ELK's options give it (the plan's Task 3). Selection
-    links the panel, editor and Fields rows; Escape clears the selection
-    without changing the editor (spec 0.4 §2.5). The legend gives each
-    mark its words and colors each swatch by its custom property (§2.1)."""
+    """Item 2: on cons.bl with its addition, bound as the folder's recipe
+    binds it and with the operative builders shown, every box of the
+    backward graph prints its label as `node_label` writes it, whole
+    inside the box, the symbol in ice and the mark from ` · !` in ice-3,
+    `𝑉(m_d) · !Linear` among them at the Evaluation the addition types,
+    while the Evaluation of policy prints `𝑐(m_d)` and no mark, since
+    `!egm` is typed on the block `policy` and opens its builder
+    (specification 0.7 §4, D8; S7-U7), and no box prints its kind; the
+    kind `Evaluation` stands in the head of policy:Evaluation in the panel
+    and its rows are those of the box's Details (unit K, Task 5;
+    `app.box_rows`), the row `method` `!Linear` among those of
+    cntn_to_dcsn:Evaluation and no such row among those of
+    policy:Evaluation, no kernel among them; the three backward boxes and
+    the two forward boxes of AMD-MI-001's item 3 alone are lined in the
+    accent, and the box selected carries the ring 5 px outside it; the
+    boxes of the policy layer stand in one column where ELK's options give
+    it (the plan's Task 3). Selection links the panel, editor and Fields
+    rows; Escape clears the selection without changing the editor (spec
+    0.4 §2.5). The legend gives each mark its words and colors each swatch
+    by its custom property (§2.1)."""
     stage = bound_as_the_recipe_binds(model_folder, original, CONS)
     collection = model.collection(stage)
     open_cons(page, server)
@@ -395,6 +405,18 @@ def test_item_2_a_box_shows_its_symbol_and_mark_and_the_links_hold(
     accent = property_color(page, "--bl-graph-output")
     ring = property_color(page, "--bl-graph-ring")
 
+    # the page opens on the declared builders, which carry no mark; the
+    # layers button shows the operative builders, those of `collection`
+    expected = {node["id"] for node in graph_named(collection, "backward")["nodes"]}
+    record_layouts(page)
+    since = layouts_recorded(page)
+    page.click(".bl-layers-button")
+    wait_until(
+        lambda: view_laid_out(page, "cons", since)
+        and set(page.evaluate(BOX_DRAWN_JS)) >= expected,
+        30.0,
+        "the operative builders drawn",
+    )
     drawn = page.evaluate(BOX_DRAWN_JS)
     for node in graph_named(collection, "backward")["nodes"]:
         box = drawn[node["id"]]
@@ -406,7 +428,8 @@ def test_item_2_a_box_shows_its_symbol_and_mark_and_the_links_hold(
             assert box["markColor"] == ice_3, node["id"]
         kind = attribute_of(node, "kind")
         assert not kind or kind not in box["text"], node["id"]
-    assert drawn["policy:Evaluation"]["text"] == "𝑐(m_d) · !egm"
+    assert drawn["cntn_to_dcsn:Evaluation"]["text"] == "𝑉(m_d) · !Linear"
+    assert drawn["policy:Evaluation"]["text"] == "𝑐(m_d)"
     lined = {node_id for node_id, box in drawn.items() if box["border"] == accent}
     assert lined == {"cntn_to_dcsn:Evaluation", "dcsn_to_arvl:Evaluation", "policy:Evaluation"}
 
@@ -441,18 +464,30 @@ def test_item_2_a_box_shows_its_symbol_and_mark_and_the_links_hold(
     lined = {node_id for node_id, box in drawn.items() if box["border"] == accent}
     assert lined == {"arvl_to_dcsn:Pushforward", "dcsn_to_cntn:Pushforward"}
 
-    # The panel's rows and source lines describe the selected box.
+    # The panel's rows and source lines describe the selected box: the row
+    # `method` `!Linear` stands among those of cntn_to_dcsn:Evaluation, the
+    # place the addition types it, and no such row among those of the
+    # Evaluation of policy, since `!egm` is typed on the block `policy`.
     choose_view(page, "operator", "backward")
     wait_until(lambda: "𝑉≻ ∘ 𝑔≻" in svg_texts(page), 15.0, "the backward graph")
-    select_node(page, "policy:Evaluation", "backward")
-    piece = model.piece(stage, "backward", "policy:Evaluation", collection)
-    rows = dict(app.box_rows(piece.attributes))
-    assert rows["method"] == "!egm"
 
     def shown_rows() -> dict:
         return dict(page.evaluate(ATTRIBUTE_ROWS_JS))
 
-    wait_until(lambda: rows.items() <= shown_rows().items(), 10.0, "the box's rows")
+    select_node(page, "cntn_to_dcsn:Evaluation", "backward")
+    piece = model.piece(stage, "backward", "cntn_to_dcsn:Evaluation", collection)
+    rows = dict(app.box_rows(piece.attributes))
+    assert rows["method"] == "!Linear"
+    wait_until(lambda: rows.items() <= shown_rows().items(), 10.0, "the Evaluation's rows")
+    select_node(page, "policy:Evaluation", "backward")
+    piece = model.piece(stage, "backward", "policy:Evaluation", collection)
+    rows = dict(app.box_rows(piece.attributes))
+    assert "method" not in rows
+    wait_until(
+        lambda: "policy:Evaluation" in panel_heads(page) and "method" not in shown_rows(),
+        10.0,
+        "policy:Evaluation in the panel with no row method",
+    )
     assert not any(key.startswith("kernel") for key in shown_rows())
 
     def source_lines() -> list[int]:

@@ -1,9 +1,0 @@
-@stage: cons
-𝑑𝑢     := D_{c}(𝑢)
-𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)
-
-[id=egm_interior, (V[>]) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-    c[>]   = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])            :: [id=candidate]
-    m_d[>] = a + c[>]                    :: [id=cash]
-    c      = c[>]                        :: [id=on_grid]
-}

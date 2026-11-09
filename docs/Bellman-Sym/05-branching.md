@@ -57,22 +57,22 @@ This complete stage file is the retirement choice of the retirement application,
 }
 ```
 
-The derivative of the choice value in assets is not written in the stage file. It stands in the stage's block file, `applications/retirement-choice/declaration/methods/marginals_ret_choice.bl`, as a **marginal block**, a block of derivative lines that the stage's methods file binds on the decision builder with `!marginals` ([Methodization](04-methodization.md) §4.1):
+The derivative of the choice value in assets is not written in the stage file. It stands in the stage's methods file, `applications/retirement-choice/declaration/stages/ret_choice/methods.bl`, an **addition** to the stage file: a `.bl` file that opens with `@methods:` and that the package reads with the stage file ([Methodization](04-methodization.md)). Its block `cntn_to_dcsn` names the decision value block of the stage by its id and appends the derivative line to it, and its two file-level entries type the policy builder with the method `!max` and its handler; the whole file, with its comment, is quoted in [the retirement example](../examples/retirement/retirement_choice.md#31-the-choice-between-work-and-retirement) §3.1:
 
 ```bl
 @methods: ret_choice
-# The derivative of the value of the discrete choice in assets, stated by the
-# marginal block of the decision value builder: the derivative of the branch
-# value the choice d selects; the cost of work, a constant, contributes nothing.
 
-[id=dcsn_marginal, (V_w[>], V_r[>], d) : !cntn -> (V) : !dcsn] {
+policy.method : !max
+policy.handler : "fues-retirement:dcsn_mover"
+
+[id=cntn_to_dcsn] {
     D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]  :: [id=marginal]
 }
 ```
 
 The control `d` takes labels from `{work, retire}`. The two nested blocks, labeled `work` and `retire`, define `a_w` and `a_r`. No `kind: branching` YAML header is needed: the typed discrete control and the branch blocks declare the alternatives.
 
-In the value equation, `(V_w[>] - δ, V_r[>])[d]` selects the value for a supplied choice. The first component corresponds to `work`, and the second to `retire`. The derivative line of the marginal block, `D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]`, states the derivative of the value in assets as the derivative of the selected branch's value, in the same order; the cost of working does not depend on assets, so it has no counterpart there. The policy equation's `argmax` over `(V_w[>] - δ, V_r[>])` is read as that same tuple indexed by `d`: the policy chooses a label whose entry is largest. The two tuples agree entry by entry and in order. A policy that writes them in another order would select a label using the wrong payoff, and the stage is refused under the rule `branch-tuple-mismatch` ([Refusals](reference/refusals.md#3-the-catalogue)).
+In the value equation, `(V_w[>] - δ, V_r[>])[d]` selects the value for a supplied choice. The first component corresponds to `work`, and the second to `retire`. The derivative line of the methods file, `D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]`, states the derivative of the value in assets as the derivative of the selected branch's value, in the same order; the cost of working does not depend on assets, so it has no counterpart there. The policy equation's `argmax` over `(V_w[>] - δ, V_r[>])` is read as that same tuple indexed by `d`: the policy chooses a label whose entry is largest. The two tuples agree entry by entry and in order. A policy that writes them in another order would select a label using the wrong payoff, and the stage is refused under the rule `branch-tuple-mismatch` ([Refusals](reference/refusals.md#3-the-catalogue)).
 
 The parameter `δ` is charged on the working alternative once. Discounting, earnings, and subsequent consumption are not additional computations in this choice stage; they belong in whichever stages supply its continuation values.
 
@@ -142,6 +142,6 @@ Whether retirement is absorbing is determined by the subsequent stages and inter
 
 ## 6 Numerical methods
 
-A method can attach to the authored policy builder, a supported named `!node`, or a supported operator occurrence. For §1, `on: argmax` applies to every `argmax` in the stage; `on: policy.choice.argmax` overrides that choice for the named statement. This attachment does not make the statement another authored node. [Methodization](04-methodization.md#2-computations-and-addresses) gives the address rules.
+A method is typed at a place of a branching stage as at any other: a builder, a line with an id, or an operator occurrence, each named by its path ([Methodization](04-methodization.md) §2). The methods file of §1 types the policy builder, `policy.method : !max`, with its handler. A method for the maximization alone is typed at its operator instead: `argmax.method`, written at file level, types every `argmax` of the stage, and `policy.choice.argmax.method` the one in the line `choice`. The two are not written together, since both paths reach the same operator and a component is typed once at a place (`component-typed-twice`). A line inside a branch is named under its branch's label, as the line `cash_on_hand` of the branch `keep` in the tenure stage of the durables application is named `dcsn_to_cntn.keep.cash_on_hand`; the branch lines of §1 carry no id and are named by no path. Typing a method at a line does not make the line a `!node`.
 
-Neither the discrete control nor its labels create an `upper_env` equation. If a continuous-choice algorithm generates several candidates per branch, its candidate-selection and interpolation requirements must be stated in that algorithm's mathematical and numerical contracts; see [Methodization](04-methodization.md#6-candidate-consumption-and-interpolation).
+Neither the discrete control nor its labels create an `upper_env` equation. If a continuous-choice algorithm generates several candidates per branch, its candidate-selection and interpolation requirements must be stated in that algorithm's mathematical and numerical contracts; see [Methodization](04-methodization.md#8-writing-a-methods-file-for-your-model).

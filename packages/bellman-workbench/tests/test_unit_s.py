@@ -18,14 +18,19 @@ from workbench_support import (
     RECIPE_FILE,
     TWO_FRAMES_JS,
     VIEW_STATE_JS,
+    _zoom_over,
     bound_as_the_recipe_binds,
     choose_view,
+    click_join,
     flow_handle,
     graph_named,
+    lay_out_left_to_right,
+    lay_out_top_to_bottom,
     layout_button,
     new_tab,
     open_file,
     open_trellis,
+    panel_heads,
     property_color,
     record_layouts,
     restriction_shown,
@@ -75,7 +80,7 @@ LINES_JS = r"""
     return {
       id: edge.dataset.id,
       source: s ? s.closest('.react-flow__node').dataset.id : null, out: sp.split('::out::')[1],
-      target: t ? t.closest('.react-flow__node').dataset.id : null, into: tp.split('::in::')[1],
+      target: t ? t.closest('.react-flow__node').dataset.id : null, into: tp?.split('::in::')[1],
       count: count ? count.textContent : null, countShown: count ? getComputedStyle(count).display !== 'none' : false,
       countFill: count ? getComputedStyle(count).fill : null, slash, title: title ? title.textContent : null,
       lit: !!path && path.classList.contains('bf-lit'), arrow: !!edge.querySelector('.bf-arrow'),
@@ -198,6 +203,66 @@ def test_the_forward_graph_of_tenure_keeps_two_measure_lines_into_outputs(browse
         assert [(p["side"], p["port"]) for p in tab.evaluate(PORTS_JS, "GraphOutputs")] == [
             ("reading", "tenure:measure:cntn:keep"), ("reading", "tenure:measure:cntn:adjust")
         ]
+        inputs = tab.locator('.bl-view-host .react-flow__node[data-id="GraphInputs"]')
+        outputs = tab.locator('.bl-view-host .react-flow__node[data-id="GraphOutputs"]')
+        assert inputs.locator(".bf-name").inner_text() == "Input measure"
+        assert outputs.locator(".bf-name").inner_text() == "Output measures"
+        assert inputs.locator(".bf-out").all_text_contents() == ["μ≺"]
+        assert outputs.locator(".bf-in").all_text_contents() == ["μ_keep≻", "μ_adjust≻"]
+        select_node(tab, "GraphOutputs", "forward")
+        wait_until(lambda: "Output measures" in panel_heads(tab), 20, "the output measure details")
+        assert tab.locator(".bl-details-context").inner_text() == "Output measures"
+        assert "finite measure on" in tab.locator(".bl-signature").inner_text()
+    finally:
+        context.close()
+
+
+def test_expanded_forward_occurrence_shows_operators_and_measure_wires(
+    browser, server_on, durables_folder
+):
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(durables_folder), RECIPE_FILE)
+        record_layouts(tab)
+        choose_view(tab, "operator", "forward")
+        wait_until(lambda: view_still(tab), 40, "the forward operator graph")
+        occurrence = "periods[0]/adjuster_cons"
+        graph_node = '.bl-view-host .react-flow__node[data-id="{}"]'
+        chevron = tab.locator(graph_node.format(occurrence + "___group___") + " .bf-chevron")
+        chevron.focus()
+        tab.keyboard.press("Tab")
+        tab.locator(f'.react-flow__node[data-id^="{occurrence}/"] > .bf-builder:focus').wait_for()
+        tab.keyboard.press("Tab")
+        tab.locator(f'.react-flow__node[data-id^="{occurrence}/"] .bf-builder-toggle:focus').wait_for()
+        tab.keyboard.press("Shift+Tab")
+        tab.keyboard.press("Shift+Tab")
+        tab.locator(graph_node.format(occurrence + "___group___") + " .bf-chevron:focus").wait_for()
+        chevron.click()
+        pushforward = f"{occurrence}/dcsn_to_cntn:Pushforward"
+        operator = tab.locator(graph_node.format(pushforward) + " .bf-box")
+        operator.wait_for(state="attached")
+        wait_until(lambda: view_still(tab), 40, "the expanded adjuster")
+        for name in ("GraphInputs", "GraphOutputs"):
+            assert tab.locator(graph_node.format(f"{occurrence}/{name}")).count() == 0
+
+        lines = tab.evaluate(LINES_JS)
+        assert any(
+            line["target"] == pushforward and line["into"] == f"{occurrence}/adjuster_cons:measure:dcsn"
+            for line in lines
+        )
+        assert any(
+            line["source"] == pushforward and line["out"] == f"{occurrence}/adjuster_cons:measure:cntn"
+            for line in lines
+        )
+
+        operator.focus()
+        tab.keyboard.press("Tab")
+        focused_node = "() => document.activeElement.closest('.react-flow__node')?.dataset.id"
+        wait_until(
+            lambda: (node_id := tab.evaluate(focused_node)) and node_id != pushforward,
+            5.0,
+            "focus beyond the expanded adjuster's pushforward",
+        )
     finally:
         context.close()
 
@@ -517,5 +582,236 @@ def test_the_trellis_offers_the_initial_view_whose_joins_run_between_fields(
         choose_view(tab, "operator", None)
         wait_until(lambda: tab.evaluate(TRELLIS_INITIAL_JS)["graph"] == "backward", 30.0, "the builders graph")
         print(f"unit S: the trellis's initial diagram drew {drawn['fields']} fields in {drawn['perches']} perch layers and {drawn['wires']} wires")
+    finally:
+        context.close()
+
+
+INITIAL_ROUTES_JS = r"""
+(horizontal) => {
+  const host = document.querySelector('.bl-view-host');
+  const routes = Array.from(host.querySelectorAll('.bf-initial-route'));
+  const name = (edge) => [
+    edge.dataset.routeSource, edge.dataset.routeDestination, edge.dataset.routeBranch || '',
+    Number(edge.dataset.routeCount)
+  ];
+  const axis = horizontal ? 'x' : 'y';
+  const [near, far] = horizontal ? ['left', 'right'] : ['top', 'bottom'];
+  const frames = [0, 1].map((h) => host.querySelector(
+    `.react-flow__node[data-id="periods[${h}]___group___"]`
+  ).getBoundingClientRect()).sort((a, b) => a[near] - b[near]);
+  const gap = (frames[0][far] + frames[1][near]) / 2;
+  const paths = Array.from(host.querySelectorAll('.react-flow__edge-path'), (path) => ({
+    edge: path.closest('.react-flow__edge'),
+    runs: path.getAttribute('d').split('M').filter(Boolean).map((run) =>
+      run.split('L').map((point) => {
+        const [x, y] = point.split(',').map(Number);
+        return new DOMPoint(x, y).matrixTransform(path.getScreenCTM());
+      })
+    )
+  }));
+  // Each M starts a separate path, so a writer's last point and a reader's
+  // first point are never counted as a line across the gap.
+  const segments = (runs) => runs.flatMap((run) => run.slice(1).map((point, i) => [run[i], point]));
+  const across = paths.flatMap(({edge, runs}) => {
+    const count = segments(runs).filter(([from, to]) =>
+      Math.min(from[axis], to[axis]) < gap && gap < Math.max(from[axis], to[axis])).length;
+    return count ? [[edge.classList.contains('bf-initial-route') ? name(edge) : edge.dataset.id, count]] : [];
+  });
+  const bequest = 'periods[0]/bequest';
+  const title = (edge) => edge.querySelector('title')?.textContent || '';
+  const terminal = paths.filter(({edge}) => edge.dataset.routeDestination === bequest ||
+    (edge.classList.contains('bf-initial-route-leg') && edge.dataset.id.includes(`>>${bequest}`)) ||
+    (edge.classList.contains('bf-initial-shared-run') && title(edge).includes(bequest)));
+  const shared = terminal.filter(({edge}) => edge.classList.contains('bf-initial-shared-run') &&
+    ['periods[0]/keeper_cons', 'periods[0]/adjuster_cons'].every((writer) => title(edge).includes(writer)));
+  const overlap = ([a, b], [c, d]) => ['x', 'y'].some((along) => {
+    const across = along === 'x' ? 'y' : 'x';
+    return [b, c, d].every((point) => Math.abs(point[across] - a[across]) < 0.01) &&
+      Math.min(Math.max(a[along], b[along]), Math.max(c[along], d[along])) -
+      Math.max(Math.min(a[along], b[along]), Math.min(c[along], d[along])) > 0.01;
+  });
+  const duplicatePaint = terminal.flatMap(({edge, runs}, i) => terminal.slice(i + 1).flatMap((other) =>
+    segments(runs).some((segment) => segments(other.runs).some((part) => overlap(segment, part)))
+      ? [[edge.dataset.id, other.edge.dataset.id]] : []));
+  const arrows = Array.from(host.querySelectorAll('.react-flow__edge .bf-arrow'),
+    (arrow) => new DOMPoint(0, 0).matrixTransform(arrow.getScreenCTM()));
+  const atPort = (point, port) => {
+    const box = port.getBoundingClientRect();
+    return Math.hypot(point.x - (box.left + box.right) / 2, point.y - (box.top + box.bottom) / 2) < 1;
+  };
+  const arrivals = [
+    ...['a', 'h', 'z'].map((field) => `periods[0]/tenure/tenure:arvl:${field}`),
+    ...['a_bq', 'h_bq', 'z_bq'].map((field) => `periods[0]/bequest/bequest:arvl:${field}`)
+  ].map((id) => {
+    const input = host.querySelector(`.react-flow__node[data-id="${id}"] .react-flow__handle.target`);
+    return input ? arrows.filter((point) => atPort(point, input)).length : null;
+  });
+  return {
+    routes: routes.map(name), across, arrivals, duplicatePaint, room: frames[1][near] - frames[0][far],
+    shared: shared.map(({edge}) => ({
+      title: title(edge), hover: getComputedStyle(edge.querySelector('title').parentElement).pointerEvents,
+      editable: edge.matches('.selectable, [tabindex="0"]') || !!edge.querySelector('.react-flow__edgeupdater')
+    }))
+  };
+}
+"""
+
+
+def test_tab_moves_past_a_closed_initial_occurrence(browser, server_on, durables_folder):
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(durables_folder), RECIPE_FILE)
+        record_layouts(tab)
+        choose_view(tab, "initial", "forward")
+        wait_until(lambda: view_still(tab), 40, "the forward initial diagram")
+        occurrence = '.bl-view-host .react-flow__node[data-id="periods[0]/adjuster_cons___group___"]'
+        tab.locator(occurrence + " > .bf-layer > .bf-toggle").click()
+        card = occurrence + " > .bf-card"
+        tab.locator(card + " > .bf-toggle").focus()
+        tab.keyboard.press("Tab")
+        next_box = tab.locator(".bl-view-host .react-flow__node > :is(.bf-box, .bf-layer, .bf-marker):focus")
+        next_box.wait_for(timeout=5_000)
+        assert next_box.evaluate("element => element.closest('.react-flow__node').dataset.id") != "periods[0]/adjuster_cons___group___"
+        tab.keyboard.press("Shift+Tab")
+        tab.locator(card + " > .bf-toggle:focus").wait_for(timeout=5_000)
+        tab.keyboard.press("Shift+Tab")
+        tab.locator(card + ":focus").wait_for(timeout=5_000)
+    finally:
+        context.close()
+
+
+def test_initial_join_arrows_point_to_the_reading_fields(browser, server_on, durables_folder):
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(durables_folder), RECIPE_FILE)
+        record_layouts(tab)
+        choose_view(tab, "initial", "forward")
+        wait_until(lambda: view_still(tab), 40, "the forward initial diagram")
+        across = [
+            [f"periods[1]/{writer}", "periods[0]/tenure", "", 3]
+            for writer in ("adjuster_cons", "keeper_cons")
+        ]
+        expected = [
+            *across,
+            ["periods[0]/adjuster_cons", "periods[0]/bequest", "", 3],
+            ["periods[0]/keeper_cons", "periods[0]/bequest", "", 3],
+            ["periods[0]/tenure", "periods[0]/adjuster_cons", "adjust", 2],
+            ["periods[0]/tenure", "periods[0]/keeper_cons", "keep", 3],
+        ]
+        for horizontal, turn in ((True, lay_out_left_to_right), (False, lay_out_top_to_bottom)):
+            turn(tab)
+            wait_until(lambda: view_still(tab), 40, "the forward initial diagram")
+            drawn = tab.evaluate(INITIAL_ROUTES_JS, horizontal)
+            keys = [tuple(route[:3]) for route in drawn["routes"]]
+            assert len(set(keys)) == len(keys), drawn["routes"]
+            assert all(route in drawn["routes"] for route in expected), drawn["routes"]
+            assert drawn["room"] > 0
+            assert all(isinstance(route, list) for route, _ in drawn["across"]), drawn["across"]
+            assert sorted(drawn["across"]) == [[route, 1] for route in across], drawn["across"]
+            assert drawn["arrivals"] == [1, 1, 1, 1, 1, 1], drawn["arrivals"]
+            assert drawn["duplicatePaint"] == []
+            assert len(drawn["shared"]) == 3, drawn["shared"]
+            for shared in drawn["shared"]:
+                assert shared["hover"] == "stroke" and not shared["editable"], shared
+            bequest = '.bl-view-host .react-flow__node[data-id="periods[0]/bequest___group___"]'
+            tab.locator(bequest + " > .bf-layer > .bf-toggle").click()
+            wait_until(lambda: view_still(tab), 40, "the closed Bequest card")
+            closed = tab.evaluate(INITIAL_ROUTES_JS, horizontal)
+            assert all(route in closed["routes"] for route in expected), closed["routes"]
+            assert closed["duplicatePaint"] == []
+            assert len(closed["shared"]) == 1, closed["shared"]
+            shared = closed["shared"][0]
+            assert shared["hover"] == "stroke" and not shared["editable"], shared
+            assert "a_nxt_kp → a_bq" in shared["title"], shared
+            assert "a_nxt_adj → a_bq" in shared["title"], shared
+            tab.locator(bequest + " > .bf-card > .bf-toggle").click()
+            wait_until(lambda: view_still(tab), 40, "the reopened Bequest occurrence")
+    finally:
+        context.close()
+
+
+
+BEQUEST_SHARED_POINT_JS = """
+() => {
+  const host = document.querySelector('.bl-view-host');
+  const inputs = host.querySelectorAll(
+    '.react-flow__node[data-id="periods[0]/bequest___group___"] .react-flow__handle.target');
+  for (const path of host.querySelectorAll('.bf-shared-run path.bf-shared-hit')) {
+    const matrix = path.getScreenCTM(), length = path.getTotalLength();
+    const at = (distance) => path.getPointAtLength(distance).matrixTransform(matrix);
+    const ends = [at(0), at(length)];
+    const reachesBequest = Array.from(inputs).some((input) => {
+      const box = input.getBoundingClientRect();
+      return ends.some(({x, y}) =>
+        Math.hypot(x - (box.left + box.right) / 2, y - (box.top + box.bottom) / 2) < 1);
+    });
+    if (reachesBequest) {
+      const {x, y} = at(length / 2);
+      return {x, y};
+    }
+  }
+  return null;
+}
+"""
+
+
+def test_shared_bequest_run_requires_an_explicit_native_connector_choice(browser, server_on, durables_folder):
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(durables_folder), RECIPE_FILE)
+        record_layouts(tab)
+        choose_view(tab, "operator", "forward")
+        wait_until(lambda: view_still(tab), 40, "the forward operator diagram")
+        tab.evaluate("""() => {
+          const host = document.querySelector('.bl-view-host');
+          window.bequestJoins = { selected: [], edits: [] };
+          host.addEventListener('join-chosen', (event) => window.bequestJoins.selected.push(event.detail.join));
+          for (const name of ['moved', 'removed']) {
+            host.addEventListener(name, (event) => window.bequestJoins.edits.push(event.detail));
+          }
+        }""")
+        choice = tab.get_by_role("dialog", name="Shared connection")
+        bequest = "periods[0]/bequest"
+        keeper = "periods[0]/keeper_cons"
+        adjuster = "periods[0]/adjuster_cons"
+        keep_button = choice.get_by_role("button", name=f"{keeper} → {bequest}")
+        adjust_button = choice.get_by_role("button", name=f"{adjuster} → {bequest}")
+        selected = ".bf-join-wire.selected"
+        for turn in (lay_out_left_to_right, lay_out_top_to_bottom):
+            turn(tab)
+            click_join(tab, "periods[1]", "periods[0]/tenure")
+            tab.locator(selected + ".bf-join-pair").wait_for(state="attached")
+            point = _zoom_over(tab, lambda: tab.evaluate(BEQUEST_SHARED_POINT_JS))
+            tab.mouse.click(point["x"], point["y"])
+            choice.wait_for()
+            assert keep_button.count() == adjust_button.count() == 1
+            assert tab.evaluate("() => window.bequestJoins.selected.at(-1)") is None
+            tab.locator(selected).wait_for(state="detached")
+            keep_button.press("Delete")
+            assert choice.is_visible()
+            keep_button.press("Escape")
+            choice.wait_for(state="hidden")
+            tab.locator(".bf-shared-run:focus").wait_for(state="attached")
+            tab.keyboard.press("Delete")
+            assert tab.evaluate("() => window.bequestJoins.edits") == []
+
+            tab.keyboard.press("Enter")
+            choice.wait_for()
+            adjust_button.press("Enter")
+            choice.wait_for(state="hidden")
+            tab.locator(f'{selected}[data-from="{adjuster}"][data-to="{bequest}"]').wait_for(state="attached")
+            record = tab.evaluate("() => window.bequestJoins.selected.at(-1)")
+            assert (record["from"], record["to"]) == (adjuster, bequest)
+            assert record["sourceHandle"] and record["targetHandle"]
+            assert "a_nxt_adj → a_bq" in record["join"] and "a_nxt_kp" not in record["join"]
+            assert tab.evaluate("() => window.bequestJoins.edits") == []
+            point = tab.evaluate(BEQUEST_SHARED_POINT_JS)
+            assert point is not None
+            tab.mouse.move(point["x"], point["y"])
+            tab.mouse.click(point["x"], point["y"])
+            choice.wait_for()
+            assert tab.evaluate("() => window.bequestJoins.selected.at(-1)") is None
+            keep_button.press("Escape")
+            choice.wait_for(state="hidden")
     finally:
         context.close()

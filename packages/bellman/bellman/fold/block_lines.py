@@ -25,13 +25,12 @@ from bellman.native.hypergraphs import BellmanHypergraph, Block
 from bellman.native.identity import Identity
 from bellman.native.records import BlockData, BlockHeader, NodeData, Refusal, Sort, setting_names
 from bellman.native.versions import StageVersion, WorkingStage, stored
-from bellman.refusals import ConstructionError, NotConstructed
+from bellman.refusals import ConstructionError, NotConstructed, location
 from bellman.syntax.vocabulary import (
     CONTROL,
     PERCHES,
     SHCK,
     SHOCK,
-    STATE,
     VALUE,
     VALUE_ROLES,
 )
@@ -78,7 +77,7 @@ def blocks_in_file_order(stage):
         or len(actual) != len(boxes)
     ):
         raise NotConstructed(
-            "missing or malformed authored block_order (I18)",
+            "the saved block order is missing, or names other blocks than the stage holds",
             stage=stage.name,
             address="stage",
             rule="not-constructed",
@@ -380,8 +379,16 @@ def shock_edges(stage, ports):
         name for d in definitions if d.kind == "distribution" for name in d.equations[0].subjects
     }
 
-    def refuse(rule, address, message):
-        raise ConstructionError(message, stage=stage.name, address=address, rule=rule)
+    def refuse(rule, address, message, related=(), write=None):
+        # `related` pairs each second item's role with its address
+        raise ConstructionError(
+            message,
+            stage=stage.name,
+            address=address,
+            rule=rule,
+            related=tuple(location(role, address=at) for role, at in related),
+            write=write,
+        )
 
     def is_shock(name):
         sort = ports.get(_shock_identity(stage, name))
@@ -454,7 +461,8 @@ def symbols(stage):
     listed on the continuation output sides (`cntn_states`), the controls,
     the shocks, the values and the marginal values, each name once in
     first-listing order; the parameters and the functions in file order; the
-    setting names the attached methods reference."""
+    settings the stage declares and the setting names the components of the
+    signatures reference."""
     require_stage(stage)
     table, _ = fields_of(stage)
     ports = header_wire_sorts(stage)
@@ -493,9 +501,14 @@ def symbols(stage):
         for d in definitions
         if d.kind in ("function", "function_alias", "correspondence")
     )
-    settings = []
-    for method in (stage.bindings.methods or {}).values():
-        settings.extend(setting_names(method.settings))
+    # the settings the stage declares, then the names the components of the
+    # signatures reference, read from the typing records of the table: the
+    # names among a method word's keyword arguments and a grid's factors
+    # (specification 0.7 D1, D5)
+    settings = list(setting_sets(stage))
+    for d in definitions:
+        if d.kind == "typing":
+            settings.extend(setting_names(d.equations[0]))
     return MappingProxyType(
         {
             "spaces": tuple(d.identity.field for d in definitions if d.kind == "set"),
@@ -541,6 +554,22 @@ def parameter_sets(stage):
         d.identity.field: (d.equations[0] if d.equations else None)
         for d in stage.definitions.values()
         if d.kind == "parameter"
+    }
+
+
+def setting_sets(stage):
+    """The declared set of every setting of the stage as a retained term, by
+    name, in file order: a setting is a top-level declaration of a methods
+    file, an addition to the stage file, which `configure` values
+    (specification 0.7, S1). From the `setting` records of a `StageVersion`'s
+    definitions table, or from the `WorkingStage`'s own table while the stage
+    is constructed."""
+    if not isinstance(stage, StageVersion):
+        return dict(stage.setting_sets)
+    return {
+        d.identity.field: (d.equations[0] if d.equations else None)
+        for d in stage.definitions.values()
+        if d.kind == "setting"
     }
 
 

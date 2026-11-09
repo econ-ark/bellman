@@ -14,9 +14,8 @@ at the decision perch (a[~] on a `: !cntn` side is read as that side's
 field).
 """
 
-import pathlib
-
 import pytest
+from conftest import STAGE_FILES
 
 from bellman.syntax import terms as T
 from bellman.syntax.lower import parse_with_spans
@@ -52,8 +51,6 @@ V : ℝ
 LAW_BARE = "@stage: t\n\ny : ℝ\ny ~ N(0, 1)\n(y, z) ~ N(0, 1)\n"
 LAW_MARKED = "@stage: t\n\ny[~] : ℝ\ny[~] ~ N(0, 1)\n(y[~], z) ~ N(0, 1)\n"
 
-APPLICATIONS = pathlib.Path(__file__).resolve().parents[4].joinpath("applications")
-CORPUS = sorted(APPLICATIONS.glob("*/declaration/stages/*/*.bl"))
 
 
 def test_marked_and_bare_decision_fields_lower_to_one_term():
@@ -99,7 +96,7 @@ def test_no_term_carries_an_explicit_decision_perch():
 
 
 def test_no_corpus_term_carries_an_explicit_decision_perch():
-    for src in CORPUS:
+    for src in STAGE_FILES:
         try:
             term, _ = parse_with_spans(src.read_text(encoding="utf-8"), str(src))
         except Exception:
@@ -134,7 +131,7 @@ def test_decision_mark_after_a_selector_is_rejected_like_the_other_marks():
                              f"    w = v[keep][{mark}]\n}}\n")
         assert (caught.value.line, caught.value.column) == (4, 17)
         assert f"perch mark `{mark}` follows the first selector" in str(caught.value)
-        assert caught.value.advice == f"write one perch mark first, as `v[{mark}][keep]`"
+        assert caught.value.write == f"write one perch mark first, as `v[{mark}][keep]`"
         assert "Error trying to process rule" not in str(caught.value)
 
 

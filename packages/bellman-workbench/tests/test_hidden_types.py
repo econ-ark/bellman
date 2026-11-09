@@ -18,12 +18,11 @@ import json
 from pathlib import Path
 
 import pytest
-from workbench_support import node_output
+from workbench_support import node_output, stage_files
 
 ROOT = Path(__file__).resolve().parents[3]
 FINDER = ROOT / "packages/bellman-workbench/js/codemirror/src/hidden_types.js"
 EXTENSION = ROOT / "editor/dynspec-vscode/extension.js"
-APPLICATIONS = ROOT / "applications"
 # the stage file of the consumption stage, relative to the repository
 CONS_PATH = "applications/portfolio-choice/declaration/stages/cons/cons.bl"
 
@@ -106,7 +105,7 @@ def ranges(node) -> dict:
     edge lines, keyed `edge lines`."""
     texts = {
         str(path.relative_to(ROOT)): path.read_text(encoding="utf-8")
-        for path in sorted(APPLICATIONS.glob("*/declaration/stages/*/*.bl"))
+        for path in stage_files()
     }
     texts["edge lines"] = "\n".join(EDGE_LINES)
     script = NODE_SCRIPT % {"finder": json.dumps(FINDER.as_uri())}

@@ -45,9 +45,7 @@ from workbench_support import (
     MATSYA_FOLD,
     MATSYA_TOGGLE,
     PAIR_JOIN_DETAILS,
-    PORT_CONS,
     PORT_CONS_RECORDS,
-    PORT_CONS_RECIPE,
     PORT_ID,
     PULLBACK_DETAILS,
     READING_SCALE,
@@ -90,7 +88,6 @@ from workbench_support import (
     dropped_event,
     emptied_portfolio,
     error_lines,
-    expected_layout,
     field_port,
     file_bytes,
     file_tabs,
@@ -1003,15 +1000,15 @@ def test_task_8_a_trellis_opens_on_its_terminal_period_with_matsya_folded(
         context.close()
 
 
-# the stage file `new stage` writes for the key buyer, the methods file `new
-# file` writes for it, the address of its methods slot in the recipe, and
-# the button `New file` beside that slot in the Recipe tab (K-D7; unit M,
-# Task 10)
+# the stage file `new stage` writes for the key buyer, the settings file
+# `new file` writes for it, the address of its settings slot in the recipe,
+# and the button `New file` beside that slot in the Recipe tab (K-D7; unit
+# M, Task 10); a methods list names additions and no slot (decision S7-F3)
 BUYER_FILE = "declaration/stages/buyer/buyer.bl"
-BUYER_METHODS = "declaration/stages/buyer/methods.yml"
-BUYER_METHODS_SLOT = "stages.buyer.methods.all[0]"
+BUYER_SETTINGS = "declaration/settings/buyer.yml"
+BUYER_SETTINGS_SLOT = "stages.buyer.settings.all[0]"
 BUYER_NEW_FILE = (
-    f'.bl-recipe-row[data-stage="buyer"] .bl-new-file[data-address="{BUYER_METHODS_SLOT}"]'
+    f'.bl-recipe-row[data-stage="buyer"] .bl-new-file[data-address="{BUYER_SETTINGS_SLOT}"]'
 )
 # the four block headers of the empty stage file, as the page Stages writes
 # each block's header, with no field on either side
@@ -1036,9 +1033,9 @@ def test_task_9_new_stage_and_new_file_write_the_author_s_own_files(
     panel under the editor on its Recipe tab (unit M, Task 10; design pass 9
     §2; the rail's `Recipe` having left with the rail, unit N, Task 1),
     which holds the row buyer, and, the row opened by a click (design pass
-    11 §2), `New file` beside its methods slot writes
-    declaration/stages/buyer/methods.yml and opens it in the editor, its
-    name written in the slot's place in the recipe's text, one edit of its
+    11 §2), `New file` beside its settings slot writes
+    declaration/settings/buyer.yml and opens it in the editor, its name
+    written in the slot's place in the recipe's text, one edit of its
     buffer (design pass 9 §4). The trellis's reading stands refused, since
     no period holds buyer, so the tab keeps the rows of the last reading
     that answered (AAS, M-D7; unit M, Task 5) and the recipe's text is
@@ -1066,14 +1063,14 @@ def test_task_9_new_stage_and_new_file_write_the_author_s_own_files(
         tab.wait_for_selector(BUYER_NEW_FILE, timeout=60_000)
         print(f"task 9: the refusals once the recipe names buyer: {error_lines(tab)}")
         tab.click(BUYER_NEW_FILE)
-        wait_until(lambda: open_path_shown(tab) == BUYER_METHODS, 30.0, "the methods file open")
-        methods = (scratch_folder / BUYER_METHODS).read_text(encoding="utf-8")
-        assert methods == "stage: buyer\nmethods: []\n"
+        wait_until(lambda: open_path_shown(tab) == BUYER_SETTINGS, 30.0, "the settings file open")
+        settings = (scratch_folder / BUYER_SETTINGS).read_text(encoding="utf-8")
+        assert settings == "settings: {}\n"
         tab.click(f'.bl-tab[data-path="{RECIPE_FILE}"]')
         wait_until(lambda: open_path_shown(tab) == RECIPE_FILE, 30.0, "the recipe open again")
         wait_until(
-            lambda: entry_value(tab.evaluate(DOCUMENT_JS), BUYER_METHODS_SLOT)
-            == "stages/buyer/methods",
+            lambda: entry_value(tab.evaluate(DOCUMENT_JS), BUYER_SETTINGS_SLOT)
+            == "settings/buyer",
             30.0,
             "the slot's file written in the recipe's text",
         )
@@ -1081,10 +1078,10 @@ def test_task_9_new_stage_and_new_file_write_the_author_s_own_files(
         context.close()
 
 
-# the methods file that the portfolio model's recipe names for `cons`, and
-# its line 5, the method of the entry `on: policy`
-CONS_METHODS = "declaration/stages/cons/methods.yml"
-POLICY_METHOD = "    method: !egm"
+# the addition the portfolio model's recipe names for `cons`, and its
+# entry that types the method word at the decision builder's Evaluation
+CONS_METHODS = "declaration/stages/cons/methods.bl"
+EVALUATE_METHOD = "cntn_to_dcsn.evaluate.method : !Linear"
 # the select of the row of a target in the Methods tab
 METHOD_SELECT = '.bl-values-row[data-name="{}"] select.bl-values-method'
 
@@ -1095,24 +1092,26 @@ def test_task_10_the_methods_tab_offers_at_policy_the_tags_the_package_admits_th
     """Task 10 (the usability walkthrough §4 item 10 and §5; AMD-MI-002 §5
     rule 5), with the offer of unit L's Task 18 (K-I150). On a copy of the
     portfolio model with `cons.bl` open, the BellmanType panel's Methods tab
-    names the methods file that the recipe names for `cons`. The select of
-    the row `policy` offers the tags the package admits at that target,
+    names the addition that the recipe names for `cons`. The select of the
+    row `policy` offers the words the package admits at that place,
     `admitted_methods` of `bellman.stage`, in the method table's order, and
-    no other: `!egm`, since the policy block writes the grid line, and not
-    `!vfi`, which stands on the backward decision builder alone; the row
-    `cntn_to_dcsn:Evaluation`, the one representation that the entries of
-    the value and of its marginal bind at the decision builder's
-    Evaluation, shows `!Linear` as text, with no select, since the tab reads
+    no other, `!egm` among them; the row `cntn_to_dcsn.evaluate`, the one
+    representation the addition types at the decision builder's Evaluation,
+    shows `!Linear` and offers the words admitted there, since the tab reads
     the methods the stage binds (decision S7-W1 of specification 0.7).
-    `!time-iteration` chosen at `policy` replaces `!egm` at
-    line 5 of the methods file on disk, no other line changing, and the row
-    then shows the tag chosen."""
+    `!pchip` chosen at the Evaluation replaces `!Linear` in its entry of the
+    addition on disk, no other line changing, and the row then shows the
+    word chosen. The test chooses at the Evaluation, where the package
+    accepts the word: `!time_iteration` chosen at `policy` keeps the savings
+    grid the block types for `!egm`, whose factor `a` names no coordinate of
+    the policy's function, and the next binding refuses it under
+    `grid-coordinate`."""
     methods = scratch_folder / CONS_METHODS
     lines = methods.read_text(encoding="utf-8").split("\n")
-    assert lines[4] == POLICY_METHOD
+    (entry,) = [index for index, line in enumerate(lines) if line == EVALUATE_METHOD]
     cons = elaborate_text((scratch_folder / CONS).read_text(encoding="utf-8"), CONS)
     admitted = admitted_methods(cons, "policy")
-    assert "!egm" in admitted and "!vfi" not in admitted
+    assert "!egm" in admitted
     context, tab = new_tab(browser)
     try:
         open_file(tab, server_on(scratch_folder), CONS)
@@ -1122,20 +1121,22 @@ def test_task_10_the_methods_tab_offers_at_policy_the_tags_the_package_admits_th
         policy = tab.locator(METHOD_SELECT.format("policy"))
         policy.wait_for(timeout=30_000)
         assert policy.locator("option").all_text_contents() == list(admitted)
-        value = tab.locator('.bl-values-row[data-name="cntn_to_dcsn:Evaluation"]')
-        assert value.locator(".bl-values-tag").text_content() == "!Linear"
-        assert value.locator("select").count() == 0
-        policy.select_option("!time-iteration")
-        lines[4] = "    method: !time-iteration"
+        value = tab.locator(METHOD_SELECT.format("cntn_to_dcsn.evaluate"))
+        assert value.input_value() == "!Linear"
+        assert value.locator("option").all_text_contents() == list(
+            admitted_methods(cons, "cntn_to_dcsn.evaluate")
+        )
+        value.select_option("!pchip")
+        lines[entry] = EVALUATE_METHOD.replace("!Linear", "!pchip")
         wait_until(
             lambda: methods.read_text(encoding="utf-8") == "\n".join(lines),
             30.0,
-            "!time-iteration written at line 5 of the methods file",
+            "!pchip written in the Evaluation's entry",
         )
         wait_until(
-            lambda: policy.input_value() == "!time-iteration",
+            lambda: value.input_value() == "!pchip",
             30.0,
-            "the row policy showing the tag chosen",
+            "the row of the Evaluation showing the word chosen",
         )
     finally:
         context.close()
@@ -1625,7 +1626,7 @@ def test_task_12_a_stage_marked_terminal_period_stands_in_the_terminal_period_al
     its `stages` the four keys and its connectors one empty mapping, then
     period.yml, which lists the three other keys, repeated five times; each
     copied stage file's `@stage:` line reads its key, and each copied
-    methods file's `stage:`; the trellis the page reads holds six periods
+    addition's `@methods:` line; the trellis the page reads holds six periods
     and nineteen stage occurrences, four in the terminal period and three
     in each of the five before it."""
     work, _ = repository
@@ -1669,15 +1670,12 @@ def test_task_12_a_stage_marked_terminal_period_stands_in_the_terminal_period_al
     for key in BEQUEST_TERMINAL:
         stage = (declaration / f"stages/{key}/{key}.bl").read_text(encoding="utf-8")
         assert stage.splitlines()[0] == f"@stage: {key}"
-        methods = declaration / f"stages/{key}/methods.yml"
-        if key == "bequest":
-            assert not methods.exists()
-        else:
-            assert entry_value(methods.read_text(encoding="utf-8"), "stage") == key
+        methods = (declaration / f"stages/{key}/methods.bl").read_text(encoding="utf-8")
+        assert methods.splitlines()[0] == f"@methods: {key}"
 
 
-# the head of the checklist on the portfolio model with the cons methods
-# emptied to a slot and the period's connector emptied (K-D16; design pass 2
+# the head of the checklist on the portfolio model with a settings slot on
+# the discount stage and the period's connector emptied (K-D16; design pass 2
 # §6), its words, which its twistie, a Codicon, adds nothing to (design
 # pass 8 §6; unit M, Task 6), and its items, each its class, its text, its
 # file and its line (K-D10): the arrival field m of cons, which no join
@@ -1729,24 +1727,25 @@ def test_task_13_the_checklist_lists_what_the_model_lacks_and_details_of_a_refus
     browser, server_on, scratch_folder
 ):
     """Task 13 (the usability walkthrough §4 items 9, 11, 15 and 16 and §5;
-    K-D10, K-D16; design pass 2 §6), with Task 26 (K-D28, K-D29). On a copy
-    of the portfolio model with the cons methods emptied to a slot and the
-    period's connector removed, the checklist under the tree stands folded
-    under its head, `1 field unjoined`, in the tree's face and size and
-    without orange, as its item, which is no refusal (spec 0.4 §5.7);
-    unfolded by a click on the head, it holds one item with its file and
+    K-D10, K-D16; design pass 2 §6), with Task 26 (K-D28, K-D29). On a copy of
+    the portfolio model whose discount stage takes its settings through a slot,
+    which refuses nothing since its addition declares no setting (decision
+    S7-W15), and whose period's connector is removed, the checklist under the
+    tree stands folded under its head, `1 field unjoined`, in the tree's face
+    and size and without orange, as its item, which is no refusal (spec 0.4
+    §5.7); unfolded by a click on the head, it holds one item with its file and
     line, the arrival field m of cons, which no join reaches, at the period
     file's connectors, line 14; the slot is no item. With cons.bl then open,
-    the cursor on ρ at
-    line 6, Details prints the line of the calibration file that values ρ;
-    after an edit the construction refuses, Details holds the refusal's row
-    for cons.bl, its legend names cons, and it prints no line of another
-    file."""
+    the cursor on ρ at line 6, Details prints the line of the calibration file
+    that values ρ; after an edit the construction refuses, Details holds the
+    refusal's row for cons.bl, its legend names cons, and it prints no line of
+    another file."""
     recipe_file = scratch_folder / RECIPE_FILE
     text = recipe_file.read_text(encoding="utf-8")
-    assert text.count("methods: {all: [stages/cons/methods]}") == 1
+    disc_methods = "methods: {all: [stages/disc/methods.bl]}}"
+    assert text.count(disc_methods) == 1
     recipe_file.write_text(
-        text.replace("methods: {all: [stages/cons/methods]}", "methods: {all: [$cons_methods]}"),
+        text.replace(disc_methods, "settings: {all: [$disc_settings]}, " + disc_methods),
         encoding="utf-8",
     )
     period_file = scratch_folder / "declaration/period.yml"
@@ -1988,7 +1987,7 @@ PORT_BEFORE_CONS = [
 PORT_RECORD = (
     "      port: {stage: ../../portfolio-choice/declaration/stages/port/port.bl, "
     "calibration: calibration/portfolio.yml,\n"
-    "             settings: settings/port_wide.yml, methods: methods/port.yml}\n"
+    "             settings: settings/port_wide.yml, methods: stages/port/methods.bl}\n"
 )
 # and, since unit L's Task 14, the connector and the inter-period entry of
 # its two joins, whose fields no other stage of the period declares
@@ -2849,7 +2848,7 @@ RECIPE_HEAD_HOVERS = [
 ]
 # the hover of a column the recipe writes nothing for (design pass 9 §3)
 NOTHING_WRITTEN = "The recipe writes none"
-DURABLES_SLOTS_WRITTEN = {"$fill", "$tenure_method", "$keeper_method", "$adjuster_method"}
+DURABLES_SLOTS_WRITTEN = {"$fill"}
 # the documentation's paragraph on the recipe in the panel under the editor,
 # by the words it opens with (unit M, Task 10)
 RECIPE_PARAGRAPH = "**The recipe in the panel under the editor.** "
@@ -2874,7 +2873,7 @@ def test_task_20_the_recipe_s_words_slots_and_select_say_what_they_are(
     each column head carries its hover; with each row opened in turn, the
     others at rest, each entry's select carries the
     hover `Replace <the entry as written>`, every slot of the recipe,
-    `$fill` and the three methods slots, among them; each column written
+    `$fill`, among them; each column written
     `—` `The recipe writes none`; each row's trash `Remove stage` names the
     stage it takes out of this recipe, and each icon button `New file` the
     file it writes; no row holds a word on a button; and each periods field
@@ -3874,14 +3873,14 @@ def test_task_25_a_stage_folder_of_the_disk_is_copied_into_a_period_with_its_ori
     its entry `port/` clicked in the chooser writes the stage folder's path,
     and the form prints `port`'s row as `folder_template` reads it, its key,
     its model's folder and its parameters, its hover the model's title, the
-    parameters and `methods.yml` brought, and the key `port` proposed. `add
-    the stage` copies `port.bl` and its methods file under
+    parameters and `methods.bl` brought, and the key `port` proposed. `add
+    the stage` copies `port.bl` and its addition under
     `declaration/stages/port/` with the texts `add_stage` answers for that
     record, prints its note, and `port` is
     drawn in periods[1] and periods[2]; once the three files the tree marks
     unsaved are saved, the period file lists `port`, the recipe names the
     copy and never the origin, and answers.yml records the path as given
-    and the SHA-256 of `port.bl` and `methods.yml`. Nothing is written in
+    and the SHA-256 of `port.bl` and `methods.bl`. Nothing is written in
     the corpus's stage folder or beside the model folder."""
     copy = scratch_durables
     (copy / creation.ANSWERS).write_text(DURABLES_ANSWERS, encoding="utf-8")
@@ -3901,7 +3900,7 @@ def test_task_25_a_stage_folder_of_the_disk_is_copied_into_a_period_with_its_ori
     added = creation.add_stage(copy, "port", record, "period.yml")
     assert [path for path, _ in added.new_files] == [
         "declaration/stages/port/port.bl",
-        "declaration/stages/port/methods.yml",
+        "declaration/stages/port/methods.bl",
     ]
     corpus_before = file_bytes(PORT_STAGE_FOLDER)
     beside_before = sorted(path.name for path in copy.parent.iterdir())
@@ -3962,7 +3961,7 @@ def test_task_25_a_stage_folder_of_the_disk_is_copied_into_a_period_with_its_ori
             "name": "port",
             "model": "portfolio-choice",
             "calibration": ", ".join(record.calibration),
-            "hover": f"{record.model} · {', '.join(record.calibration)} · brings methods.yml",
+            "hover": f"{record.model} · {', '.join(record.calibration)} · brings methods.bl",
         }
         assert form["key"] == "port"
 
@@ -4000,12 +3999,13 @@ def test_task_25_a_stage_folder_of_the_disk_is_copied_into_a_period_with_its_ori
             "origin": given,
             "sha256": {
                 name: hashlib.sha256((PORT_STAGE_FOLDER / name).read_bytes()).hexdigest()
-                for name in ("port.bl", "methods.yml")
+                for name in ("port.bl", "methods.bl")
             },
         }
         assert "port" in entry_value((copy / PERIOD_FILE).read_text(encoding="utf-8"), "stages")
         spec = (copy / RECIPE_FILE).read_text(encoding="utf-8")
-        assert f"  port: {creation.recipe_row('port')}" in spec and given not in spec
+        row = creation.recipe_row("port", ("stages/port/methods.bl",))
+        assert f"  port: {row}" in spec and given not in spec
         assert file_bytes(PORT_STAGE_FOLDER) == corpus_before
         assert sorted(path.name for path in copy.parent.iterdir()) == beside_before
     finally:
@@ -4046,16 +4046,15 @@ def test_task_26_a_slot_is_a_parameter_of_the_load_and_no_lack(
     browser, server_on, durables_folder
 ):
     """Task 26 (K-D28, K-D29; design pass 2 §11; the factory page, §3.3).
-    The durables model's recipe, whose source lists write ten slots, opened
+    The durables model's recipe, whose source lists write seven slots, opened
     in the trellis view: no file row of the tree holds a count beside its
     name and its mark; the checklist's head reads `1 binding refused` and
     its one item is the refused calibration of tenure, no slot line among
     them; the status line holds no part `to fill`; and every `$` entry of
     the recipe's Recipe tab (unit M, Task 10; design pass 9 §3) is a slot
     of a row at rest and, each row opened in turn (design pass 11 §2), a
-    select that carries no refusal's mark, the four keywords `load_recipe`
-    takes, `fill, tenure_method, keeper_method, adjuster_method`, among
-    them."""
+    select that carries no refusal's mark, the one keyword `load_recipe`
+    takes, `fill`, among them."""
     context, tab = new_tab(browser)
     try:
         open_trellis(tab, server_on(durables_folder), RECIPE_FILE)
@@ -4078,12 +4077,12 @@ def test_task_26_a_slot_is_a_parameter_of_the_load_and_no_lack(
         assert found["items"] == []
         assert len(error_lines(tab)) == 1 and "stage 'tenure'" in error_lines(tab)[0][0]
         assert "to fill" not in found["status"]
-        assert len(found["restSlots"]) == 10
+        assert len(found["restSlots"]) == 7
         assert set(found["restSlots"]) == DURABLES_SLOTS_WRITTEN
         opened = with_each_recipe_row_open(tab, lambda tab: tab.evaluate(SLOTS_SHOWN_JS))
         slots = [slot for shown in opened.values() for slot in shown["slots"]]
         print(f"task 26: the slots' selects, each row opened in turn: {slots}")
-        assert len(slots) == 10
+        assert len(slots) == 7
         assert {text for text, _ in slots} == DURABLES_SLOTS_WRITTEN
         assert not any(marked for _, marked in slots), slots
     finally:
@@ -4131,26 +4130,24 @@ RECIPE_TAB_JS = """
 # 10; design pass 9 §3), by each entry's address: the trellis file, then for
 # each stage its stage file and each entry of its lists, the kind's folder
 # and the stage's own folder dropped
-DURABLES_METHODS = ("tenure_method", "keeper_method", "adjuster_method")
 DURABLES_VALUES = {
     "trellis": "trellis.yml",
     **{
         address: value
-        for key, method in zip(DURABLES_KEYS, (*DURABLES_METHODS, None))
+        for key in DURABLES_KEYS
         for address, value in (
             (f"stages.{key}.stage", f"{key}.bl"),
             (f"stages.{key}.calibration.all[0]", "durables"),
             (f"stages.{key}.calibration.all[1]", "$fill"),
             *(
                 ()
-                if method is None
+                if key == "bequest"
                 else (
                     (f"stages.{key}.settings.all[0]", "durables"),
                     (f"stages.{key}.settings.all[1]", "$fill"),
-                    (f"stages.{key}.methods.all[0]", "methods"),
-                    (f"stages.{key}.methods.all[1]", f"${method}"),
                 )
             ),
+            (f"stages.{key}.methods.all[0]", "methods.bl"),
         )
     },
 }

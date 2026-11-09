@@ -33,8 +33,15 @@ def binding_provenance(stage, operation, source, loaded):
     sources = dict(stage.provenance.get("sources", {}))
     name = names[operation]
     # A source recorded before elaboration, where the verb is given a mapping
-    # and no path, keeps its path or origin in the new description.
-    if supplied is None and getattr(stage.bindings, name) is None and name in sources:
+    # and no path, keeps its path or origin in the new description. The
+    # methods of a version are no binding: the additions its provenance
+    # records say whether methodize has read a selection into it.
+    unbound = (
+        "additions" not in stage.provenance
+        if name == "methods"
+        else getattr(stage.bindings, name) is None
+    )
+    if supplied is None and unbound and name in sources:
         previous = sources[name]
         location = {key: previous[key] for key in ("path", "origin") if key in previous}
         description = source_description(loaded, location)

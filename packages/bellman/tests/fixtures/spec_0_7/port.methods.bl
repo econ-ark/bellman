@@ -1,0 +1,19 @@
+@methods: port
+# The methods of the portfolio stage as an addition to port.bl: value
+# function iteration on the decision builder with its capital grid and its
+# handler, the quadrature of each expectation with one node count per shock,
+# and the linear representation of what the decision builder's Evaluation
+# stores on the same grid. The settings the grid reads are declared at the
+# end of this file with their sets and valued by the settings file.
+cntn_to_dcsn.method : !vfi
+cntn_to_dcsn.handler : "cons-port:share_search"
+cntn_to_dcsn.grid : !Cartesian(k_d=(k_min, k_max, n_k))
+cntn_to_dcsn.E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+policy.foc.E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(k_d=(k_min, k_max, n_k))
+k_min : ℝ₊           :: ["lower bound of the capital grid"]
+k_max : ℝ₊           :: ["upper bound of the capital grid"]
+n_k : ℕ              :: ["number of points of the capital grid"]
+n_Ψ_nodes : ℕ
+n_θ_nodes : ℕ

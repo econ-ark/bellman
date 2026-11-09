@@ -50,7 +50,7 @@ from markdown.extensions.toc import slugify
 
 from bellman.distributions.families import FAMILY_ARGUMENTS
 from bellman.fold.table import KINDS
-from bellman.refusals import RULES
+from bellman.refusals import FACTORY_RULES, RULES, TARGET_RULES
 from bellman.stage.method_table import METHOD_TYPES
 from bellman.typing.primitive_definitions import PRIMITIVE_DEFINITIONS
 
@@ -219,13 +219,16 @@ RENAMED_ROWS = {"evaluate": "PolicyInsertion", "Function evaluation": "Evaluatio
 # the anchors of the forms rows that DR8 leaves without a link, since E.3
 # defines no object for them; every other forms row links one
 FORMS_WITHOUT_DENOTES = ("exp", "log", "min", "inv", "arithmetic", "laws")
-# the four tables of the package whose entries stand in the reference rows,
-# each as the `read from` cell spells it
+# the six tables of the package whose entries stand in the reference rows,
+# each as the `read from` cell spells it, the three vocabularies of the
+# refusals among them
 PACKAGE_TABLES = {
     'PRIMITIVE_DEFINITIONS["definitions"]': tuple(PRIMITIVE_DEFINITIONS["definitions"]),
     "FAMILY_ARGUMENTS": tuple(FAMILY_ARGUMENTS),
     "METHOD_TYPES": tuple(METHOD_TYPES),
     "RULES": tuple(RULES),
+    "TARGET_RULES": tuple(TARGET_RULES),
+    "FACTORY_RULES": tuple(FACTORY_RULES),
 }
 
 # --- the direction of the links (architecture §1 and §5 item 4) ---
@@ -624,8 +627,9 @@ def test_item_3_the_catalogues_relate_the_package_to_appendix_e3():
     every row of the forms whose anchor `FORMS_WITHOUT_DENOTES` does not
     name, E.3 defining the object of each such row (DR8);
     every entry of `PRIMITIVE_DEFINITIONS`, `FAMILY_ARGUMENTS`,
-    `METHOD_TYPES` and `RULES` stands in exactly one reference row, and no
-    row names an entry the table lacks; every `realized by` link of E.3
+    `METHOD_TYPES` and the three vocabularies of the refusals, `RULES`,
+    `TARGET_RULES` and `FACTORY_RULES`, stands in exactly one reference row,
+    and no row names an entry the table lacks; every `realized by` link of E.3
     reaches a row of the operations page's table, the link in a row of E.3's
     tables whose first cell names a kind reaches that kind's row, and no
     kind's row is reached by more than one link, the architecture's §1

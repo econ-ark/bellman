@@ -33,7 +33,7 @@ from bellman.native.identity import (
     IdentityCollision,
     refuse_colliding_name,
 )
-from bellman.refusals import ConstructionError, NotConstructed, construction_error
+from bellman.refusals import ConstructionError, NotConstructed, construction_error, location
 from bellman.syntax import terms
 from bellman.syntax.source import to_source
 from bellman.syntax.walk import nodes
@@ -55,6 +55,7 @@ from bellman.syntax.vocabulary import (
     VALUE_ROLES,
 )
 from bellman.typing import sets
+from bellman.typing.ranges import substituted
 from bellman.typing.line_unknowns import (
     BOUND_OPERATORS,
     derivative_left_side,
@@ -62,6 +63,7 @@ from bellman.typing.line_unknowns import (
     OPERATOR_MEANINGS,
     OPERATOR_VOCABULARY,
     OUTPUT,
+    MarkedName,
     annotation_entries,
     bound_expressions,
     check_selections_and_calls,
@@ -76,7 +78,6 @@ from bellman.typing.line_unknowns import (
     free_names_with_shocks,
     group_coordinates,
     is_number_alone,
-    item_kind,
     listed_identity,
     named_sets,
     names_fields,
@@ -92,6 +93,24 @@ from bellman.typing.line_unknowns import (
     statement_id,
     subscript_binder,
     unreadable_form_refusal,
+)
+from bellman.syntax.union import is_typing_entry
+
+# the words naming the form of a statement, for the refusal of a statement
+# written where no construction rule reads its form
+_STATEMENT_FORMS = {
+    terms.Equation: "an equation",
+    terms.Inequality: "an inequality",
+    terms.Slack: "a line with a clause",
+    terms.FuncDef: "a function definition",
+    terms.CorrDef: "a correspondence definition",
+    terms.Law: "a distribution declaration",
+    terms.Assignment: "an assignment",
+}
+
+# the role words a header writes, for the refusal of a role no rule reads
+_ROLE_WORDS = " and ".join(
+    ", ".join(f"`!{word}`" for word in ROLE_WORD.values()).rsplit(", ", 1)
 )
 
 # --- the working records of the declaration pass ---
@@ -172,12 +191,13 @@ class _SidePerches(NamedTuple):
 class _Deferred(NamedTuple):
     """The refusal of an item the construction does not read, held until the
     declaration pass ends: the item's place in the file, its address, the
-    rule and the message."""
+    rule, the message and the action."""
 
     order: int
     address: str
     rule: str
     message: str
+    write: str | None = None
 
 
 class _DistributionStatement(NamedTuple):
@@ -255,6 +275,12 @@ _STANDARD_FORMS = (
 # the nine checks in `make_stage`'s order, the lookups, the annotation
 
 
+def _candidates(names):
+    """The names at the candidate points as an edit offers them, "`c[>]` or
+    `m[>]`"."""
+    return " or ".join(f"`{name}[>]`" for name in names)
+
+
 class Declarations:
     """The declaration pass over one file term: every top-level item and every
     block signature, in textual order, with the body lines of each block
@@ -268,6 +294,16 @@ class Declarations:
         self.stage = stage
         self.items = items
         self.spans = spans
+        # the file of the `@stage` line, against which the file of each
+        # top-level declaration tells a parameter from a setting
+        self.stage_file = next(
+            (
+                spans[address].file
+                for address, item in items
+                if isinstance(item, terms.Metadata) and item.key == "stage" and address in spans
+            ),
+            None,
+        ) if spans else None
         self.address_of = {id(item): address for address, item in items}
         self.order = {address: n for n, (address, _) in enumerate(items)}
         self.metadata = {}  # key -> (value, address)
@@ -310,9 +346,9 @@ class Declarations:
                     "readable-form",
                     address,
                     (
-                        f"no construction rule reads a {type(item).__name__} item; "
-                        f"a stage file holds metadata lines, declarations, "
-                        f"definitions, distribution declarations, and blocks"
+                        "no construction rule reads the item written here; a stage file "
+                        "holds metadata lines, declarations, definitions, distribution "
+                        "declarations, and blocks"
                     ),
                 )
         self.check_multipliers_unlisted()
@@ -338,24 +374,42 @@ class Declarations:
                     f"the header of block {listing.block_id!r} lists {listing.text}, and "
                     f"{listing.stem!r} is declared as a multiplier in {body}, at "
                     f"{self.where(multiplier.address)}; a multiplier is a coordinate of its "
-                    f"declaring block alone and is listed by no header (AMD-SG-035 D3). Remove "
+                    f"declaring block alone and is listed by no header. Remove "
                     f"{listing.text} from the header, or give the multiplier a name no field of "
                     f"the stage has"
+                ),
+                write=(
+                    f"Remove {listing.text} from the header of block {listing.block_id!r}, or "
+                    f"give the multiplier a name no field of the stage has"
                 ),
             )
 
     def error(
-        self, rule: str, address, message: str, error_class=ConstructionError
+        self,
+        rule: str,
+        address,
+        message: str,
+        error_class=ConstructionError,
+        *,
+        related=(),
+        write=None,
+        span=None,
     ) -> ConstructionError:
         """The refusal of the item at `address`, carrying its position, its
-        term address, and the rule it does not satisfy (`bellman.refusals`)."""
+        term address, and the rule it does not satisfy (`bellman.refusals`),
+        with the `related` locations its sentence names and the action
+        `write` where the check establishes the edit. `span` positions the
+        refusal at a part of the item, a name its line writes, in place of
+        the item's own span."""
         return construction_error(
             message,
             stage=self.stage,
             address=address,
-            span=span_of(address, self.spans),
+            span=span or span_of(address, self.spans),
             rule=rule,
             error_class=error_class,
+            related=related,
+            write=write,
         )
 
     def where(self, address: str) -> str:
@@ -363,6 +417,13 @@ class Declarations:
         position of the item a refusal is raised at is a field of the refusal
         itself and is not written into its sentence."""
         return position_text(address, self.spans)
+
+    def location(self, address: str, role: str = "original declaration"):
+        """The `Location` of a second item a refusal names, by its term
+        address, positioned by the span table where one is given; `role` is
+        the item's part in the refusal (`bellman.refusals.Location`)."""
+        span = None if self.spans is None else self.spans.get(address)
+        return location(role, address=address, span=span)
 
     def read_metadata(self, item, address) -> None:
         if item.key == "stage":
@@ -377,25 +438,40 @@ class Declarations:
                     f"first is at {self.where(first)}. A key is written once: "
                     f"delete this line or give it another key"
                 ),
+                write=f"Delete this line, or give it a key other than '@{item.key}'",
             )
         self.metadata[item.key] = (item.value, address)
 
     def read_declaration(self, declaration, address) -> None:
-        if isinstance(declaration, terms.Handler) or isinstance(declaration.subject, terms.Path):
-            # a typing entry or a handler binding the union left at file
-            # level, the component of a definition or of a stage-wide
-            # operator, which the semantics reads (specification 0.7, unit U3)
+        if is_typing_entry(declaration):
+            # a typing entry or a handler binding, `policy.method : !egm`,
+            # types a component of an operator and declares no name; the
+            # fold records it and `stage/places.py` reads it (specification
+            # 0.7 §4)
             return
         if declaration.value is not None:
             names = ", ".join(coordinate_text(c) for c in declaration.subject.coordinates)
+            domains = [c for c in declaration.classifiers if isinstance(c, terms.Domain)]
+            declared = to_source(domains[0].space) if len(domains) == 1 else "<set>"
+            value = to_source(declaration.value)
+            one = len(declaration.subject.coordinates) == 1
             raise self.error(
                 "readable-form",
                 address,
                 (
-                    f"the declaration of {names} carries a value; a stage file "
-                    f"declares what a name is, not what it equals: calibration "
-                    f"supplies the value, and the stage reads it through "
-                    f"`.calibration`"
+                    f"the declaration of {names} carries the value {value}; a stage file "
+                    f"declares the set a name lies in, `{names} : {declared}`, and the "
+                    + (
+                        f"calibration file supplies its value, `{names}: {value}`"
+                        if one
+                        else "calibration file supplies the value of each name"
+                    )
+                ),
+                write=(
+                    f"Write `{names} : {declared}` here, and `{names}: {value}` in the "
+                    f"calibration file"
+                    if one
+                    else None
                 ),
             )
         subject = declaration.subject
@@ -471,6 +547,9 @@ class Declarations:
                             f"sets; no construction rule reads their conjunction. "
                             f"Write the one set the field takes its values in"
                         ),
+                        write=(
+                            f"Write the one set {coordinate_text(coordinate)} takes its values in"
+                        ),
                     )
                 domain, domain_term = to_source(cl.space), cl.space
             elif isinstance(cl, terms.Role):
@@ -480,10 +559,8 @@ class Declarations:
                         "readable-form",
                         address,
                         (
-                            f"{coordinate_text(coordinate)} in {place} carries the "
-                            f"role {type(cl.kind).__name__}, which no construction "
-                            f"rule reads; the roles are `!state`, `!ctrl`, `!vlu`, "
-                            f"`!mrgnvl`, `!sndmrgnvl`, and `!shck`"
+                            f"{coordinate_text(coordinate)} in {place} carries a role no "
+                            f"construction rule reads; the roles are {_ROLE_WORDS}"
                         ),
                     )
                 if role is not None and role != word:
@@ -505,10 +582,9 @@ class Declarations:
                     "readable-form",
                     address,
                     (
-                        f"no construction rule reads the classifier "
-                        f"{type(cl).__name__} on {coordinate_text(coordinate)}; a "
-                        f"listed field carries a set, a role word, and a perch "
-                        f"word"
+                        f"no construction rule reads a classifier written on "
+                        f"{coordinate_text(coordinate)}; a listed field carries a set, a role "
+                        f"word, and a perch word"
                     ),
                 )
         return _Classified(role=role, domain=domain, domain_term=domain_term, perch=perch)
@@ -524,8 +600,8 @@ class Declarations:
                 "field-perch",
                 address,
                 (
-                    f"{what} names the perch {type(side).__name__}, which is no "
-                    f"perch of a stage; the perches are arrival (`!arvl`, `[<]`), "
+                    f"{what} names no perch of a stage; the perches are arrival "
+                    f"(`!arvl`, `[<]`), "
                     f"decision (`!dcsn`, `[~]`), and continuation (`!cntn`, "
                     f"`[>]`)"
                 ),
@@ -549,10 +625,9 @@ class Declarations:
                     "readable-form",
                     address,
                     (
-                        f"this assignment has a {type(core.target).__name__} as "
-                        f"its target; no construction rule reads one. An "
-                        f"assignment names a space or a function on its left "
-                        f"(`Xa := ℝ₊`, `𝑑𝑢 := D_{{c}}(𝑢)`)"
+                        "the left side of this assignment is no name, and no construction "
+                        "rule reads another left side. An assignment names a space or a "
+                        "function on its left (`Xa := ℝ₊`, `𝑑𝑢 := D_{c}(𝑢)`)"
                     ),
                 )
             if isinstance(core.value, terms.Space):
@@ -570,8 +645,9 @@ class Declarations:
                 "readable-form",
                 address,
                 (
-                    f"no construction rule reads a {item_kind(item)} at the top level; "
-                    f"a top-level statement defines a space, a function, or a "
+                    f"no construction rule reads "
+                    f"{_STATEMENT_FORMS.get(type(core), 'a statement of another form')} at the "
+                    f"top level; a top-level statement defines a space, a function, or a "
                     f"correspondence, or declares the distribution of a shock"
                 ),
             )
@@ -648,14 +724,14 @@ class Declarations:
         distribution."""
         subjects = law.subjects
         if not subjects or not all(isinstance(s, str) for s in subjects):
-            named = ", ".join(type(s).__name__ for s in subjects) or "no subject"
+            named = "a subject that is no list of shock names" if subjects else "no subject"
             raise self.error(
                 "readable-form",
                 address,
                 (
-                    f"this distribution declaration has {named} as its subject; no "
-                    f"construction rule reads one. A distribution declaration names "
-                    f"its shocks and their distribution, `y ~ LogNormal(μ_y, σ_y)`"
+                    f"this distribution declaration has {named}, and no construction rule "
+                    f"reads it. A distribution declaration names its shocks and their "
+                    f"distribution, `y ~ LogNormal(μ_y, σ_y)`"
                 ),
             )
         key = tuple(subjects)
@@ -713,6 +789,7 @@ class Declarations:
                         f"this line stands in block {block_id!r} beside its nested blocks; a "
                         f"branching block holds its branches alone, so move the line into a branch"
                     ),
+                    write=f"Move the line into a branch of block {block_id!r}",
                 )
             elif isinstance(item, terms.Statement):
                 self.read_body_statement(block_id, n, item, item_address)
@@ -724,19 +801,48 @@ class Declarations:
                     "readable-form",
                     item_address,
                     (
-                        f"no construction rule reads a {type(item).__name__} inside "
-                        f"block {block_id!r}; the body of a block holds its "
-                        f"statements"
+                        f"no construction rule reads the item written here inside block "
+                        f"{block_id!r}; the body of a block holds its lines"
                     ),
                 )
         if len(nested) == 1:
+            (present,) = self.branch_labels.get(block_id, [None])
+            coordinate = next(
+                (
+                    listing
+                    for listing in self.side_entries(block_id, INPUT)
+                    if isinstance(listing.domain_term, terms.FiniteSet)
+                ),
+                None,
+            )
+            members = () if coordinate is None else coordinate.domain_term.members
+            missing = [str(member) for member in members if str(member) != present]
+            labels = (
+                f" of its label coordinate {coordinate.stem!r}, "
+                f"{to_source(coordinate.domain_term)}"
+                if coordinate is not None
+                else " of its label coordinate"
+            )
+            held = "one nested block" if present is None else f"one nested block, `{present}`"
+            wanted = (
+                f"the nested block of `{missing[0]}`"
+                if len(missing) == 1
+                else "the nested blocks of " + ", ".join(f"`{label}`" for label in missing)
+                if missing
+                else "the nested block of each missing label"
+            )
             raise self.error(
                 "branch-form",
                 address,
                 (
-                    f"block {block_id!r} holds one nested block; a branching "
-                    f"block holds at least two, one for each label of its label "
-                    f"coordinate; write a nested block for each missing label"
+                    f"block {block_id!r} holds {held}; a branching block holds one nested block "
+                    f"for each label{labels}; write {wanted}"
+                ),
+                write=(
+                    f"Write the nested block `[label={missing[0]}, …] {{ … }}` after the branch "
+                    f"`{present}`"
+                    if len(missing) == 1 and present is not None
+                    else f"Write {wanted}"
                 ),
             )
 
@@ -767,7 +873,7 @@ class Declarations:
                 (
                     "this block header has no `id=` entry; every block is named by "
                     "its id, `[id=policy, …]`, and a methods file names the block "
-                    "by it (D06)"
+                    "by it"
                 ),
             )
         if signature is None:
@@ -777,8 +883,7 @@ class Declarations:
                 (
                     f"the header of block {block_id!r} has no signature "
                     f"`(...) : !perch -> (...) : !perch`; a block declares the "
-                    f"fields it reads and the fields it writes in its header (spec "
-                    f"0.3c §3.2)"
+                    f"fields it reads and the fields it writes in its header"
                 ),
             )
         return block_id, signature
@@ -798,6 +903,7 @@ class Declarations:
                     f"block by its id and a method must reach one block, so give "
                     f"each block its own id"
                 ),
+                write=f"Give this block an id other than {block_id!r}",
             )
 
     def check_branch_form(self, block_id, nested, address) -> None:
@@ -821,6 +927,7 @@ class Declarations:
                     f"block {block_id!r} lists fields on its own output side beside its nested "
                     f"blocks; a branching block's own output side is empty, `-> ()`"
                 ),
+                write=f"Write the output side of block {block_id!r} empty, `-> ()`",
             )
 
     def read_side(self, subject, side_types, block_id, side, address) -> str | None:
@@ -837,7 +944,7 @@ class Declarations:
                     "readable-form",
                     address,
                     (
-                        f"the {side} side of block {block_id!r} is typed by a "
+                        f"the {side} side of block {block_id!r} is typed by "
                         f"{classifier_text(t)}; a side carries one perch word and "
                         f"nothing else (a set on a side is a joint constraint, "
                         f"which no construction rule reads)"
@@ -887,8 +994,8 @@ class Declarations:
             "readable-form",
             address,
             (
-                f"no construction rule reads the index {type(at).__name__} on "
-                f"{text}; a field is marked `[<]`, `[~]`, or `[>]`"
+                f"no construction rule reads the index written on {text}; a field is "
+                f"marked `[<]`, `[~]`, or `[>]`"
             ),
         )
 
@@ -943,6 +1050,10 @@ class Declarations:
                     f"block's inputs, so its input side is empty, "
                     f"`[label={label}, () -> (…) : !cntn]`"
                 ),
+                write=(
+                    f"Write the input side of the branch {label!r} empty, "
+                    f"`[label={label}, () -> (…) : !cntn]`"
+                ),
             )
         earlier = {
             listing.stem: listing.address for listing in self.side_entries(block_id, OUTPUT)
@@ -957,6 +1068,10 @@ class Declarations:
                     f"name its part of the continuation space, "
                     f"`[label={label}, () -> (w : ℝ₊) : !cntn]`"
                 ),
+                write=(
+                    f"List the fields the branch {label!r} writes at the continuation perch, "
+                    f"such as `[label={label}, () -> (w : ℝ₊) : !cntn]`"
+                ),
             )
         for listing in self.side_entries(block_id, OUTPUT):
             if listing.address == address and listing.stem in earlier:
@@ -969,6 +1084,10 @@ class Declarations:
                         f"{first!r} and {label!r}; each branch writes fields of "
                         f"its own, so rename one, `{listing.stem}_{label}`"
                     ),
+                    write=(
+                        f"Rename the field of one branch, such as `{listing.stem}_{label}` in "
+                        f"the branch {label!r}"
+                    ),
                 )
         self.branch_labels.setdefault(block_id, []).append(label)
         self.branch_fields[(block_id, label)] = tuple(
@@ -979,13 +1098,13 @@ class Declarations:
         for item in block.body:
             item_address = self.address_of[id(item)]
             if not isinstance(item, terms.Statement):
+                held = "an item that is no line"
+                if isinstance(item, terms.Block):
+                    held = "a nested block"
                 raise self.error(
                     "branch-form",
                     item_address,
-                    (
-                        f"the branch {label!r} holds a "
-                        f"{type(item).__name__}; a branch holds lines alone"
-                    ),
+                    f"the branch {label!r} holds {held}; a branch holds lines alone",
                 )
             ordinal += 1
             self.read_body_statement(block_id, ordinal, item, item_address)
@@ -1003,9 +1122,9 @@ class Declarations:
                     "readable-form",
                     address,
                     (
-                        f"this slack clause follows a {type(core.core).__name__}; "
-                        f"the clause `⟂ a >= 0` is written after an equality or an inequality "
-                        f"(grammar rule `statement`)"
+                        f"this clause follows "
+                        f"{_STATEMENT_FORMS.get(type(core.core), 'a statement of another form')}; "
+                        f"the clause `⟂ a >= 0` is written after an equality or an inequality"
                     ),
                 )
             core = core.core
@@ -1015,12 +1134,7 @@ class Declarations:
             # by the record keeps the relation.
             self.bodies[block_id].append((ordinal, address, item))
         else:
-            described = {
-                terms.FuncDef: "a function definition",
-                terms.CorrDef: "a correspondence definition",
-                terms.Law: "a distribution declaration",
-                terms.Assignment: "an assignment",
-            }.get(type(core), f"a {type(core).__name__} statement")
+            described = _STATEMENT_FORMS.get(type(core), "a statement of another form")
             self.defer(
                 address,
                 "not-constructed",
@@ -1029,13 +1143,17 @@ class Declarations:
                     f"not read: {_STANDARD_FORMS}. Write {described} at the top level of the "
                     f"file"
                 ),
+                write=f"Write {described} at the top level of the file",
             )
 
-    def defer(self, address, rule, message) -> None:
-        """Collects the refusal of an item this module does not construct;
-        the textually first is raised after the declaration pass."""
+    def defer(self, address, rule, message, write=None) -> None:
+        """Collects the refusal of an item this module does not construct,
+        with the action `write` where its sentence gives an edit; the
+        textually first is raised after the declaration pass."""
         self.deferred.append(
-            _Deferred(order=self.order[address], address=address, rule=rule, message=message)
+            _Deferred(
+                order=self.order[address], address=address, rule=rule, message=message, write=write
+            )
         )
 
     def read_multiplier(self, block_id, item, address) -> None:
@@ -1051,7 +1169,7 @@ class Declarations:
                 "readable-form",
                 address,
                 (
-                    f"no construction rule reads a {type(typer).__name__} inside block "
+                    f"no construction rule reads the declaration written here inside block "
                     f"{block_id!r}; a declaration in a block body declares the multiplier of "
                     f"a bound with its clause, `μ[>] : ℝ₊ ⟂ a >= 0`"
                 ),
@@ -1072,6 +1190,7 @@ class Declarations:
                     f"declares one, `μ[>] : ℝ₊ ⟂ a >= 0`. Write one declaration for each "
                     f"multiplier"
                 ),
+                write="Write one declaration for each multiplier",
             )
         stem, at = coordinates[0].stem, coordinates[0].at
         if not (
@@ -1085,8 +1204,9 @@ class Declarations:
                 (
                     f"the declaration in block {block_id!r} writes {written}, which is not "
                     f"marked `[>]`; a multiplier is a coordinate of the continuation perch of "
-                    f"the functions its block defines (AMD-SG-035 D3). Write `{stem}[>]`"
+                    f"the functions its block defines. Write `{stem}[>]`"
                 ),
+                write=f"Write `{stem}[>]` in place of {written}",
             )
         domains = [c for c in declaration.classifiers if isinstance(c, terms.Domain)]
         if len(domains) != 1 or len(declaration.classifiers) != 1 or coordinates[0].classifiers:
@@ -1098,6 +1218,10 @@ class Declarations:
                     f"set alone; a multiplier is typed by one declared set and carries no role "
                     f"or perch word, `{stem}[>] : ℝ₊ ⟂ a >= 0`"
                 ),
+                write=(
+                    f"Type {stem}[>] by one declared set, with no role and no perch word, such "
+                    f"as `{stem}[>] : ℝ₊ ⟂ a >= 0`"
+                ),
             )
         if isinstance(bound, terms.Between):
             raise self.error(
@@ -1105,9 +1229,10 @@ class Declarations:
                 address,
                 (
                     f"the clause of {stem}[>] carries two bounds, `{to_source(bound)}`; a "
-                    f"declared multiplier belongs to one bound (AMD-SG-035 §4). Write one "
+                    f"declared multiplier belongs to one bound. Write one "
                     f"declaration for each bound, each with its own multiplier"
                 ),
+                write="Write one declaration for each bound, each with its own multiplier",
             )
         if is_number_alone(bound.left):
             raise self.error(
@@ -1117,9 +1242,10 @@ class Declarations:
                     f"the clause of {stem}[>] writes `⟂ {to_source(bound)}`, a number or `inf` "
                     f"alone before its relation sign; a one-bound clause is written with the "
                     f"bounded quantity first, on a declaration as on a line, since the slack and "
-                    f"the sign of a clause are read from the relation as written (AMD-SG-035 §2, "
-                    f"E33, E37). Write `⟂ {to_source(converse_bound(bound))}`"
+                    f"the sign of a clause are read from the relation as written. Write "
+                    f"`⟂ {to_source(converse_bound(bound))}`"
                 ),
+                write=f"Write `⟂ {to_source(converse_bound(bound))}`",
             )
         if stem in self.multipliers:
             raise self.error(
@@ -1130,6 +1256,10 @@ class Declarations:
                     f"declaration is at {self.where(self.multipliers[stem].address)}. A "
                     f"multiplier is declared once: delete this line, or give the second bound "
                     f"a multiplier of its own name"
+                ),
+                write=(
+                    f"Delete this declaration of {stem!r}, or give the second bound a "
+                    f"multiplier of its own name"
                 ),
             )
         self.multipliers[stem] = _Multiplier(
@@ -1257,6 +1387,7 @@ class Declarations:
                             f"{kind} at {self.where(defined_at)}; a name has one "
                             f"meaning in a stage"
                         ),
+                        related=(self.location(defined_at),),
                     )
         for name in self.shocks:
             self.check_one_meaning(
@@ -1328,6 +1459,8 @@ class Declarations:
                             f"typing names a set. Write one of the sets in scope here: "
                             f"{self.sets_in_scope_text()}"
                         ),
+                        related=(self.location(definition.address),),
+                        write=f"Write one of the sets in scope here: {self.sets_in_scope_text()}",
                     )
                 raise self.error(
                     "name-in-scope",
@@ -1338,6 +1471,7 @@ class Declarations:
                         f"`{name} := …`, or write one of the sets in scope here: "
                         f"{self.sets_in_scope_text()}"
                     ),
+                    write=f"Write one of the sets in scope here: {self.sets_in_scope_text()}",
                 )
 
     def defines_a_function(self, definition) -> bool:
@@ -1383,8 +1517,11 @@ class Declarations:
                     address,
                     (
                         f"{name!r} is {meaning}, and a {kind}, defined at "
-                        f"{self.where(defined_at)}; a name has one meaning in a stage"
+                        f"{self.where(defined_at)}; a name has one meaning in a stage, so give "
+                        f"one of the two another name"
                     ),
+                    related=(self.location(defined_at),),
+                    write=f"Give {name!r} here or the {kind} {name!r} another name",
                 )
 
     def definition_address(self, name, kind) -> str | None:
@@ -1407,6 +1544,7 @@ class Declarations:
                     f"methods file names that operator by it, so no {kind} may "
                     f"take it. Rename the {kind}"
                 ),
+                write=f"Rename the {kind} {name!r}",
             )
 
     def shock_address(self, name: str) -> str:
@@ -1449,6 +1587,11 @@ class Declarations:
                         f"side's perch word after the parenthesis (`: !arvl`, "
                         f"`: !dcsn`, or `: !cntn`) or mark the field"
                     ),
+                    write=(
+                        f"Write the perch word of the {listing.side} side of block "
+                        f"{listing.block_id!r} after the parenthesis, `: !arvl`, `: !dcsn` or "
+                        f"`: !cntn`, or mark {listing.stem} with its perch"
+                    ),
                 )
             wire_type = Identity("field", stage=self.stage, perch=perch, field=listing.stem)
             listing.wire_type = wire_type
@@ -1463,8 +1606,12 @@ class Declarations:
                     (
                         f"the field {listing.text} is listed twice on the "
                         f"{listing.side} side of block {listing.block_id!r}: two "
-                        f"coordinates of one side are the one field "
-                        f"{wire_type!r}. List it once"
+                        f"coordinates of one side name the one field {listing.stem} of the "
+                        f"{perch} perch. List it once"
+                    ),
+                    write=(
+                        f"List {listing.text} once on the {listing.side} side of block "
+                        f"{listing.block_id!r}"
                     ),
                 )
             product.append(wire_type)
@@ -1514,11 +1661,14 @@ class Declarations:
         of specification 0.7). Read after the perches of the sides are placed.
         Two blocks between the same perches that write different fields are
         the question of `forward-composite`."""
-        writers = {}  # (input perch, output perch, field) -> the block that writes it
+        # (input perch, output perch, field) -> the block that writes it, with its address
+        writers = {}
         for block_id, address in self.blocks:
             perch_in, perch_out = self.side_perches[block_id]
             for listing in self.side_entries(block_id, OUTPUT):
-                first = writers.setdefault((perch_in, perch_out, listing.stem), block_id)
+                first, first_address = writers.setdefault(
+                    (perch_in, perch_out, listing.stem), (block_id, address)
+                )
                 if first == block_id:
                     continue
                 raise self.error(
@@ -1530,6 +1680,11 @@ class Declarations:
                         f"writes a field between two perches (rule one-builder-per-output). Write "
                         f"the lines of the two blocks in one block, or make block {block_id!r} "
                         f"write another field"
+                    ),
+                    related=(self.location(first_address),),
+                    write=(
+                        f"Write the lines of the two blocks in one block, or make block "
+                        f"{block_id!r} write another field"
                     ),
                 )
 
@@ -1568,6 +1723,7 @@ class Declarations:
                     f"a state; {listing.text} is a state of the {actual or 'unplaced'} perch. "
                     f"Remove the state output, `{header}`"
                 ),
+                write=f"Remove {listing.text} from the header: `{header}`",
             )
         if actual is not None and actual == perch_out:
             reason = (
@@ -1602,6 +1758,7 @@ class Declarations:
                 f"`{header}`; a line of the block may still mention a state of the "
                 f"{perch_out or 'output'} perch, which is a coordinate of what it defines"
             ),
+            write=f"Remove {listing.text} from the header: `{header}`",
         )
 
     def block_is_backward(self, block_id: str) -> bool:
@@ -1731,6 +1888,7 @@ class Declarations:
                     f"and {first_role!r} at {self.where(first_address)}; a field "
                     f"has one role in a stage"
                 ),
+                related=(self.location(first_address),),
             )
         roles.setdefault(stem, (role, address))
 
@@ -1768,14 +1926,32 @@ class Declarations:
             return self.control_perch(listing, explicit, roles)
         if explicit is not None:
             if listing.side_perch is not None and listing.side_perch != explicit:
+                # the side's perch word moves every field of the side, and
+                # holds where the block writes value fields, a backward block
+                # whose sides stand at the perches of its value fields
+                writes_values = any(
+                    roles.get(output.stem) in VALUE_ROLES
+                    for output in self.side_entries(listing.block_id, OUTPUT)
+                )
+                unmarked = (
+                    f"list the field without its mark, `{listing.stem}`, and write "
+                    f"`{listing.stem}` in place of `{listing.text}` on the lines of the block"
+                )
+                side_word = f"write `: !{explicit}` on the {listing.side} side"
                 raise self.error(
                     "field-perch",
                     listing.address,
                     (
                         f"the mark on {listing.text} places the field at the "
-                        f"{explicit} perch, but the {listing.side} side of block "
+                        f"{explicit} perch, and the {listing.side} side of block "
                         f"{listing.block_id!r} is marked `: !{listing.side_perch}`; "
-                        f"a mark agrees with its side's perch word (D06)"
+                        f"a mark agrees with the perch word of its side: {unmarked}"
+                        + (f", or {side_word}" if writes_values else "")
+                    ),
+                    write=(
+                        f"List {listing.stem} without its mark and write `{listing.stem}` in "
+                        f"place of `{listing.text}` on the lines of block {listing.block_id!r}"
+                        + (f", or {side_word}" if writes_values else "")
                     ),
                 )
             return explicit
@@ -1796,6 +1972,7 @@ class Declarations:
                     f"a shock is drawn on the edge between two perches and "
                     f"belongs to no perch, so list it bare"
                 ),
+                write=f"List {listing.stem} bare, with no perch mark and no perch word",
             )
         return SHCK
 
@@ -1846,6 +2023,7 @@ class Declarations:
                     f"blocks and not a member of their information sets. List it "
                     f"bare"
                 ),
+                write=f"List {listing.stem} bare, with no perch mark and no perch word",
             )
         return DECISION
 
@@ -1888,8 +2066,15 @@ class Declarations:
         declarations on two edges. The assignment, shock name → forward
         builder, is kept for `shock_edge`."""
 
-        def refuse(rule, address, message):
-            raise self.error(rule, address, message)
+        def refuse(rule, address, message, related=(), write=None):
+            # `related` pairs each second item's role with its term address
+            raise self.error(
+                rule,
+                address,
+                message,
+                related=tuple(self.location(at, role) for role, at in related),
+                write=write,
+            )
 
         def names(term):
             found = []
@@ -1996,6 +2181,11 @@ class Declarations:
                         f"the function definitions form a cycle: {chain}. No "
                         f"dependency order exists, so no definition can be "
                         f"expanded; break the cycle"
+                    ),
+                    related=tuple(
+                        self.location(self.functions[n].address, "dependency")
+                        for n in dict.fromkeys(cycle)
+                        if n != name
                     ),
                 )
             active.append(name)
@@ -2120,8 +2310,8 @@ class Declarations:
                     "readable-form",
                     address,
                     (
-                        f"no construction rule reads the {type(e).__name__} in the "
-                        f"definition of {definition.name!r} ({where})"
+                        f"no construction rule reads a term written in the definition of "
+                        f"{definition.name!r} ({where})"
                     ),
                 )
 
@@ -2216,6 +2406,7 @@ class Declarations:
                         f"or write an argument of the definition. The names "
                         f"in scope here are {self.names_in_scope_text(params)}"
                     ),
+                    write=f"Write one of the names in scope here: {self.names_in_scope_text(params)}",
                 )
         elif (
             isinstance(symbol.symbol, terms.Variable)
@@ -2233,6 +2424,7 @@ class Declarations:
                     f"The names in scope here are "
                     f"{self.names_in_scope_text(params)}"
                 ),
+                write=f"Write one of the names in scope here: {self.names_in_scope_text(params)}",
             )
 
     def names_in_scope_text(self, params=()) -> str:
@@ -2310,10 +2502,12 @@ class Declarations:
                     address,
                     "not-constructed",
                     (
-                        f"block {block_id!r} {met}; this version of the package constructs a "
-                        f"branching block whose branches state equations alone and whose label "
-                        f"coordinate is its one control, or a shock over a finite set in a stage "
-                        f"that chooses nothing (docs/Bellman-Sym/05-branching.md)"
+                        f"block {block_id!r} {met}; the construction reads a branching block "
+                        f"whose branches state equations alone and whose label coordinate is "
+                        f"its one control, or a shock over a finite set in a stage that chooses "
+                        f"nothing, and reads no other form of a branching block; the "
+                        f"declarations and the other blocks of the stage are read, and no "
+                        f"builder of the stage is drawn while this block keeps this form"
                     ),
                 )
                 continue
@@ -2623,7 +2817,13 @@ class Declarations:
         module does not construct, raised after the whole declaration pass."""
         if self.deferred:
             first = min(self.deferred, key=lambda deferred: deferred.order)
-            raise self.error(first.rule, first.address, first.message, error_class=NotConstructed)
+            raise self.error(
+                first.rule,
+                first.address,
+                first.message,
+                error_class=NotConstructed,
+                write=first.write,
+            )
 
     # -- 9. the statements of every block --
 
@@ -2732,10 +2932,10 @@ class Declarations:
                 )
             reads = [equation.rhs] + self.clause_reads(core, equation, address)
             for term in reads:
-                self.check_names_in_scope(block_id, term, defined, listings, address)
+                self.check_names_in_scope(block_id, term, defined, listings, address, core)
             read_terms = list(reads)
             if not names_fields(equation.lhs):
-                self.check_names_in_scope(block_id, equation.lhs, defined, listings, address)
+                self.check_names_in_scope(block_id, equation.lhs, defined, listings, address, core)
                 read_terms.append(equation.lhs)
             reads_of.append(
                 (
@@ -2746,7 +2946,9 @@ class Declarations:
             if names_fields(equation.lhs) and DOC not in marks:
                 for lhs in left_fields:
                     if self.policy_candidate_spelling(block_id, lhs):
-                        self.check_candidate_coordinate(block_id, lhs, address, envelope_reads)
+                        self.check_candidate_coordinate(
+                            block_id, lhs, address, envelope_reads, reads_of[-1][1]
+                        )
                         candidates.append((lhs, address, ordinal))
             if self.block_is_backward(block_id):
                 output_perch = self.backward_perches(block_id)[1]
@@ -2815,6 +3017,7 @@ class Declarations:
                     f"by `<block>.<id>` and a method must reach one line, "
                     f"so give each line its own id"
                 ),
+                write=f"Give this line an id other than {written_id!r}",
             )
         ids[address] = ordinal
 
@@ -2833,6 +3036,12 @@ class Declarations:
                         f"{spelling_text(lhs)} at {self.where(first)}, and "
                         "this operative equation defines it again; an operative "
                         "left side is defined once within a block"
+                    ),
+                    related=(self.location(first),),
+                    write=(
+                        f"Remove one of the two definitions of {spelling_text(lhs)}, give one "
+                        f"of the two results another name, or mark the line that only "
+                        f"documents the model `!doc`"
                     ),
                 )
             definitions[lhs] = address
@@ -2853,6 +3062,12 @@ class Declarations:
                     f"block {block_id!r} already states D_{{{key[0]}}}{spelling_text(spelling)} "
                     f"at {self.where(first)}, and this derivative line states it again; a "
                     "derivative term is stated once within a block"
+                ),
+                related=(self.location(first),),
+                write=(
+                    f"Remove one of the two lines that state "
+                    f"D_{{{key[0]}}}{spelling_text(spelling)}, or mark the line that only "
+                    f"documents the model `!doc`"
                 ),
             )
         stated[key] = address
@@ -2889,16 +3104,29 @@ class Declarations:
         ]
         return tuple(dict.fromkeys(controls)), tuple(dict.fromkeys(states))
 
-    def check_candidate_coordinate(self, block_id, spelling, address, envelope_reads) -> None:
+    def check_candidate_coordinate(
+        self, block_id, spelling, address, envelope_reads, reads
+    ) -> None:
         """A candidate line of a policy block, `x[>] = …`, names a control at
         the candidate points, `c[>]`, a state of the decision perch, the grid
         line `m[>] = a + c[>]`, or the value candidate an upper envelope of
         the block compares; any other name is refused under
         `candidate-coordinate` with the coordinates in scope (F39 of the case
-        studies of specification 0.7)."""
+        studies of specification 0.7). `reads` holds the names the line
+        reads: the edit offers the candidate of each state of the decision
+        perch for the grid line and, for a candidate line of a control, the
+        candidate of a control the line does not read, since a line that read
+        `c[>]` and wrote it would define it by itself."""
         controls, states = self.candidate_names()
         if spelling.stem in controls or spelling.stem in states or spelling in envelope_reads:
             return
+        unread = [name for name in controls if MarkedName(name, spelling.mark) not in reads]
+        options = []
+        if states:
+            options.append(f"{_candidates(states)} for the grid line")
+        if unread:
+            of = "the control" if len(unread) == 1 else "one of the controls"
+            options.append(f"{_candidates(unread)} for a candidate line of {of}")
         raise self.error(
             "candidate-coordinate",
             address,
@@ -2911,6 +3139,11 @@ class Declarations:
                 f"reads (rule candidate-coordinate). The controls are "
                 f"{', '.join(controls) or 'none'} and the states of the {DECISION} perch are "
                 f"{', '.join(states) or 'none'}"
+            ),
+            write=(
+                f"Write, in place of `{spelling_text(spelling)}`, {' or '.join(options)}"
+                if options
+                else None
             ),
         )
 
@@ -2938,6 +3171,10 @@ class Declarations:
                     f"policy is stored (rule candidate-read). Read the candidate on a later "
                     f"line, or remove the line"
                 ),
+                write=(
+                    f"Read {spelling_text(spelling)} on a later line, as `{spelling.stem} = "
+                    f"{spelling_text(spelling)}` reads it, or remove the line"
+                ),
             )
 
     def clause_reads(self, core, equation, address) -> list:
@@ -2958,8 +3195,9 @@ class Declarations:
                     f"the clause of this line writes the chain `{to_source(chain)}`; a clause "
                     f"with two bounds is read as the ascending weak chain, lower bound, "
                     f"quantity, upper bound, and no rule reads a descending, strict or mixed "
-                    f"one (AMD-SG-035 §4). Write `lb <= x <= ub`"
+                    f"one. Write `lb <= x <= ub`"
                 ),
+                write="Write the clause as the ascending weak chain, `lb <= x <= ub`",
             )
         if isinstance(chain, terms.Between) and isinstance(equation, terms.Inequality):
             raise self.error(
@@ -2967,9 +3205,10 @@ class Declarations:
                 address,
                 (
                     f"the clause `⟂ {to_source(chain)}` follows an inequality; a clause with "
-                    f"two bounds has a sign rule on an equation alone (AMD-SG-035 §2, D13). "
+                    f"two bounds has a sign rule on an equation alone. "
                     f"Write the line as an equation, or give its clause one bound"
                 ),
+                write="Write the line as an equation, or give its clause one bound",
             )
         if isinstance(chain, terms.Rel) and is_number_alone(chain.left):
             raise self.error(
@@ -2979,13 +3218,14 @@ class Declarations:
                     f"the clause `⟂ {to_source(chain)}` writes a number or `inf` alone before its "
                     f"relation sign; the sign of the line's residual is read from a one-bound "
                     f"clause written with the bounded quantity first, so this spelling would "
-                    f"state the reversed sign (AMD-SG-035 §2, E33). Write "
+                    f"state the reversed sign. Write "
                     f"`⟂ {to_source(converse_bound(chain))}`"
                 ),
+                write=f"Write `⟂ {to_source(converse_bound(chain))}`",
             )
         return list(bound_expressions(chain))
 
-    def check_names_in_scope(self, block_id, rhs, defined, listings, address) -> None:
+    def check_names_in_scope(self, block_id, rhs, defined, listings, address, line) -> None:
         """Every name a line reads is in scope where the line stands, having a
         declaration or a binder there: a parameter, a named space or a function
         the stage defines, whose own formal coordinates are no reads of the
@@ -3015,8 +3255,9 @@ class Declarations:
         separately. A call to a name the stage does not declare is admitted:
         the language declares no built-in functions, so `log(x)` names a
         function the realization supplies. A bare name that nothing in the
-        file declares — a misspelled field, a parameter the file forgot to
-        declare — is refused under `name-in-scope`."""
+        file declares, such as a misspelled field or a parameter the file
+        forgot to declare, is refused under `name-in-scope`, positioned at the
+        first place `line`, the line's term, writes the name."""
         for spelling in free_names(rhs, address, self):
             stem, _ = spelling
             if (
@@ -3043,20 +3284,20 @@ class Declarations:
                     if self.block_is_backward(block_id)
                     else "every field its lines read"
                 )
+                header = self.corrected_header(block_id, spelling)
                 raise self.error(
                     "signature-complete",
                     address,
                     (
                         f"the line reads {spelling_text(spelling)}, which the header of block "
                         f"{block_id!r} does not list and no earlier line of the block defines; a "
-                        f"{kind} block's header lists {lists} (AMD-SG-007 §5, rule "
-                        f"signature-complete). List it in the header, "
-                        f"`{self.corrected_header(block_id, spelling)}`, or define it on an "
-                        f"earlier line of the block. The correction writes a perch word on each "
-                        f"field of a side where the side's one word no longer holds for every "
-                        f"field; the perch of a control is unchanged by either spelling, being "
-                        f"the decision perch wherever a header lists it (AMD-SG-017 §2)"
+                        f"{kind} block's header lists {lists}. List it in the header, "
+                        f"`{header}`, or define it on an earlier line of the block. The corrected "
+                        f"header writes a perch word on each field of a side where the side's "
+                        f"one word no longer holds for every field; a control is at the decision "
+                        f"perch under either spelling"
                     ),
+                    write=f"List {spelling_text(spelling)} in the header, `{header}`",
                 )
             raise self.error(
                 "name-in-scope",
@@ -3069,7 +3310,32 @@ class Declarations:
                     f"write one of the names in scope here: "
                     f"{self.block_names_in_scope_text(listings, defined)}"
                 ),
+                write=self.meant_input(spelling, listings, defined, line),
+                span=self.name_span(address, spelling),
             )
+
+    def name_span(self, address, spelling):
+        """The span of the name `spelling` where the line at `address` first
+        writes it, or None where no span table is given or the line's span
+        holds no such name."""
+        span = None if self.spans is None else self.spans.get(address)
+        return None if span is None else span.of_name(spelling_text(spelling))
+
+    def meant_input(self, spelling, listings, defined, line) -> str:
+        """The action of a refusal of a name the stage does not declare, read
+        on the line `line` of a block whose header lists `listings`: where the
+        header lists one input, the line rewritten with that input in the
+        name's place, an edit conditional on the author having meant it;
+        otherwise the names in scope there."""
+        inputs = [listing for listing in listings if listing.side == INPUT]
+        if len(inputs) != 1:
+            return (
+                f"Write one of the names in scope here: "
+                f"{self.block_names_in_scope_text(listings, defined)}"
+            )
+        (meant,) = inputs
+        rewritten = substituted(line, {_name_term(*spelling): _name_term(meant.stem, meant.mark)})
+        return f"If you meant the input {meant.text}, write `{to_source(rewritten)}`"
 
     def refuse_two_perch_state(self, block_id, spelling, address) -> None:
         """A bare name a backward line mentions that the stage places at two
@@ -3109,6 +3375,7 @@ class Declarations:
                 f"state of no one perch where the line stands; a backward block's header "
                 f"lists no state, so the mark decides. Write {choices}"
             ),
+            write=f"Write {choices}",
         )
 
     def block_names_in_scope_text(self, listings, defined) -> str:
@@ -3136,15 +3403,42 @@ class Declarations:
         return ", ".join(names) or "none"
 
     def parameters(self) -> dict:
-        """The top-level scalar declarations that are not fields and not
-        shocks (no function or space name is among them: those names are
-        refused before this point)."""
+        """The top-level scalar declarations of the stage file that are not
+        fields and not shocks (no function or space name is among them: those
+        names are refused before this point). A scalar a methods file
+        declares is a setting (`settings`)."""
         field_names = set(self.field_names())
         return {
             name: declaration.domain
             for name, declaration in self.scalars.items()
-            if name not in field_names and name not in self.shocks
+            if name not in field_names
+            and name not in self.shocks
+            and self.in_stage_file(declaration.address)
         }
+
+    def settings(self) -> dict:
+        """The top-level scalar declarations of a methods file, an addition
+        to the stage file, that are not fields and not shocks: the settings
+        of the stage, which `configure` values and no line of the model reads
+        (specification 0.7, S1). An item's file is the file of its span, so
+        a term decoded without positions declares no setting."""
+        field_names = set(self.field_names())
+        return {
+            name: declaration.domain
+            for name, declaration in self.scalars.items()
+            if name not in field_names
+            and name not in self.shocks
+            and not self.in_stage_file(declaration.address)
+        }
+
+    def in_stage_file(self, address) -> bool:
+        """Whether the item at `address` stands in the stage file itself, the
+        file of the `@stage` line, and not in a methods file unioned with it:
+        read from the span table; every item where no table was given."""
+        if self.spans is None or self.stage_file is None:
+            return True
+        span = self.spans.get(address)
+        return span is None or span.file == self.stage_file
 
     def corrected_header(self, block_id, spelling) -> str:
         """The signature of a block with a field one of its lines reads
@@ -3288,6 +3582,9 @@ class Declarations:
             perch = perch_of_spelling(spelling, block_id, self, elsewhere=True)
             if perch is None or perch == SHCK or not _precedes(left, perch):
                 continue
+            # the authored law as a related location, and the replacement
+            # as the action, where the chain of forward blocks supplies them
+            law_location, replacement = (), None
             chain = forward_blocks_between(left, perch, self)
             if chain is None:
                 reached = "a later perch with no complete forward law of motion from " + left
@@ -3324,6 +3621,8 @@ class Declarations:
                         + " then ".join(repr(block) for block in chain)
                     )
                 law = self.authored_law(chain[-1], spelling.stem)
+                if law is not None:
+                    law_location = (self.location(law[0], "authored law"),)
                 if law is None:
                     supplied = (
                         f"No line of the forward block {chain[-1]!r} defines {spelling.stem}, "
@@ -3332,18 +3631,26 @@ class Declarations:
                         f"expression in this line"
                     )
                 elif len(chain) == 1:
-                    where, equation, expression = law
-                    replacement = (
-                        f"Write `{to_source(expression)}` in its place"
-                        if self.replacement_at_perch(expression, block_id, left, address)
-                        else f"Express it using names in scope at the {left} perch"
-                    )
+                    law_address, equation, expression = law
+                    where = self.where(law_address)
+                    if self.replacement_at_perch(expression, block_id, left, address):
+                        written = to_source(expression)
+                        replacement = f"Write `{written}` in place of `{spelling_text(spelling)}`"
+                        offered = (
+                            f"Write `{written}` in its place, as the law of motion holds with no "
+                            f"shock drawn on the edge of block {chain[0]!r}; across an edge that "
+                            f"draws a shock, the state is read under the expectation over that "
+                            f"shock"
+                        )
+                    else:
+                        offered = f"Express it using names in scope at the {left} perch"
                     supplied = (
                         f"The forward block {chain[0]!r} defines it at {where}, `{equation}`. "
-                        f"{replacement}"
+                        f"{offered}"
                     )
                 else:
-                    where, equation, _ = law
+                    law_address, equation, _ = law
+                    where = self.where(law_address)
                     supplied = (
                         f"The forward block {chain[-1]!r} defines it at {where}, `{equation}`, whose "
                         f"right side is read in turn through the earlier blocks of the chain. Write "
@@ -3360,6 +3667,8 @@ class Declarations:
                     f"free in a rule that holds on the {left} state (rule input-perch-state). "
                     f"{supplied}"
                 ),
+                related=law_location,
+                write=replacement,
             )
 
     def policy_candidate_spelling(self, block_id, spelling) -> bool:
@@ -3398,8 +3707,8 @@ class Declarations:
 
     def authored_law(self, block_id: str, stem: str):
         """The authored equation of a forward block that defines the state
-        `stem`, as the position of its line, its text `stem = rhs`, and the
-        right-side expression, or None
+        `stem`, as the term address of its line, its text `stem = rhs`, and
+        the right-side expression, or None
         where no operative line of the block defines it. The text is the
         line as written, read from the parsed term, and no definition of its
         own: the law of motion stays the forward block's."""
@@ -3412,7 +3721,7 @@ class Declarations:
             if DOC in marks:
                 continue
             if field_spelling(equation.lhs, address, self).stem == stem:
-                return self.where(address), f"{stem} = {to_source(equation.rhs)}", equation.rhs
+                return address, f"{stem} = {to_source(equation.rhs)}", equation.rhs
         return None
 
     def transition_perches(self, block_id, lhs, lhs_type) -> frozenset:
@@ -3446,6 +3755,10 @@ class Declarations:
                     f"it, as `(k_d, ς, Ψ, θ) : !dcsn` does in port.bl, or take an "
                     f"expectation over it"
                 ),
+                write=(
+                    f"List {shock!r} on the input side of the block that draws it, or write "
+                    f"the expectation over it, `E_{{{shock}}}(…)`"
+                ),
             )
         before, after = drawn
         if not _precedes(left, after):
@@ -3459,6 +3772,7 @@ class Declarations:
                 f"the {after} perch: at the {left} perch its value is not yet "
                 f"known. Write the expectation over it, `E_{{{shock}}}(…)`"
             ),
+            write=f"Write the expectation over it, `E_{{{shock}}}(…)`",
         )
 
     def shock_edge(self, shock: str):
@@ -3506,6 +3820,10 @@ class Declarations:
                     f"{left} state. Write the {left}-perch field the law of motion "
                     f"defines, or state the equation at the {perch} perch"
                 ),
+                write=(
+                    f"Write the {left}-perch field the law of motion defines, or state the "
+                    f"equation at the {perch} perch"
+                ),
             )
         chain = forward_blocks_between(left, perch, self)
         if chain is None:
@@ -3530,6 +3848,7 @@ class Declarations:
                     f"{spelling_text(spelling)} is not known at the {left} perch. "
                     f"Write the expectation over it, `E_{{{first}}}(…)`"
                 ),
+                write=f"Write the expectation over it, `E_{{{first}}}(…)`",
             )
 
     def input_shocks(self, block_id: str) -> list:
@@ -3626,9 +3945,13 @@ class Declarations:
                         f"the bound of the multiplier {multiplier.stem!r} names {stem!r}, "
                         f"written {spelling_text(spelling)}, {what}; the bound of a "
                         f"declared multiplier names continuation states, multipliers of "
-                        f"block {block_id!r}, parameters, numbers or `inf` "
-                        f"(AMD-SG-035 D11). Write the bound on a continuation state, or state "
+                        f"block {block_id!r}, parameters, numbers or `inf`. "
+                        f"Write the bound on a continuation state, or state "
                         f"the condition on a line of the block with its own clause"
+                    ),
+                    write=(
+                        f"Write the bound of {multiplier.stem!r} on a continuation state, or "
+                        f"state the condition on a line of block {block_id!r} with its own clause"
                     ),
                 )
 
@@ -3754,7 +4077,7 @@ class Declarations:
             "exogenous": self.exogenous(),
             "values": with_role(VALUE),
             "parameters": tuple(self.parameters()),
-            "settings": (),
+            "settings": tuple(self.settings()),
             "functions": tuple(self.functions),
         }
         assert tuple(symbols) == SYMBOL_GROUPS
@@ -3812,3 +4135,12 @@ def _precedes(first, second) -> bool:
     """Whether the perch `first` comes before the perch `second` in the order
     of a stage: arrival, decision, continuation."""
     return PERCHES.index(first) < PERCHES.index(second)
+
+
+def _name_term(stem, mark):
+    """The term of a name as a line writes it: the stem under the mark of its
+    perch, `a[<]` or `a[>]`, or bare, as a field of the decision perch is."""
+    side = {ARRIVAL: terms.Arrival, CONTINUATION: terms.Continuation}.get(mark)
+    if side is None:
+        return terms.Sym(terms.Constant(stem))
+    return terms.Sym(terms.Variable(stem, terms.At(side()), 0))

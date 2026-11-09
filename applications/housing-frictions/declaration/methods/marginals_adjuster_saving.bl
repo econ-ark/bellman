@@ -1,7 +1,0 @@
-@methods: adjuster_saving
-# The marginal block of the adjuster's decision value builder, which states the
-# derivative of the decision value in total resources, the envelope condition.
-
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
-    D_{m}V = 𝑢_c(c)                                     :: [id=marginal_resources]
-}

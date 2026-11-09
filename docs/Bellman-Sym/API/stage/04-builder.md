@@ -82,15 +82,14 @@ Operations
      in: 𝑉                              out: 𝑉
      ─────────────────────────────────────────────────────
      rule: 𝑉 : Xm → [−∞, ∞)
-     derivative: D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))
-                 cntn_to_dcsn.marginal, marginal-reading
+           D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))
 
 Conditions
   Aggregation  𝑉(m_d) ∈ [−∞, ∞)
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  22  V        = 𝑢(c) + V[>]  :: [id=value]
-  23  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
 
 Definitions referenced
   Xm    cons:set:Xm
@@ -104,43 +103,56 @@ Definitions referenced
 
 The card's title names the stage, the builder's direction and the builder by the pair of perches it joins, `cntn → dcsn`, with the id of its block in brackets, while the policy builder's card is titled by its key, `POLICY BUILDER policy` ([The builders graphs](03-build.md) §1). The card's `Operations` section lists the operations within the builder, one entry each, with a blank line between two entries. An entry opens with its number and its name; the next line gives its inputs after `in:` and its outputs after `out:`, `out:` standing at column 40, or on the next line where the inputs or the outputs leave it no room there; a short line follows, and every short line of a card ends at the same column; then the rule the operation applies stands after `rule:`, with the set on which it holds, `on …`, at the right margin or under the rule; on an evaluation, a derivative the file states for the value stands after `derivative:`, with the line that states it and its condition `marginal-reading`. The lines state the wiring: the name after `out:` in one entry is the name after `in:` in the entry that reads it, and an output the file does not name is written, in the entry that reads it, as the number of the entry that produced it, `(1)`, as a paper cites an equation by its number. Where the operations form a chain, each one's outputs being the next one's inputs, the same wires in the same order, the entries stand in the order they are applied; otherwise each stands after every entry that writes a wire it reads. On a builders graph's card each builder is an entry with no number, and its operations stand beneath it, numbered and set further in ([The builders graphs](03-build.md) §3).
 
-`diagram()` answers the drawing of the builder's interior, a `Drawing`; `obligations()` the conditions of its operations and of the lines it realizes; `methods` the methods bound at it or inside it, empty before [methodization](07-methods.md); and `box` the DisCoPy box itself, an object of the diagram library the package keeps its graphs in ([The initial diagrams](02-initial.md) §2). In the drawing an aggregation is labeled `Value aggregation 𝐺` where it produces value functions at a perch, as in the two backward builders, and `Apply 𝐺` otherwise, as in the policy builder; where one builder holds several aggregations, the label names the statement each aggregates, `Apply 𝐺 of the statement InvEuler`, so that the two aggregations of the policy builder are told apart. The names of the operations carry the same distinction (§2). A pullback is labeled by the function it pulls back and the map it pulls back along: `Pullback of 𝑉≻ along 𝑔 at 𝑐` in the decision builder, and `Pullback of 𝑐 along 𝑚_d≻` for the identification of the policy builder, which pulls the policy back along the map from each saving to its cash on hand and not along the law of motion (§2). A stage's two builders graphs, of which each builder is a box, are also read interactively in Google's Model Explorer, where each builder opens to its operations and a selected operation shows the rows of its card; the drawing remains the figure of this page ([The view in Model Explorer](10-model-explorer.md)).
+`diagram()` answers the drawing of the builder's interior, a `Drawing`; `obligations()` the conditions of its operations and of the lines it realizes; `methods` the methods bound at it or inside it, empty before [methodization](07-methods.md); and `box` the DisCoPy box itself, an object of the diagram library the package keeps its graphs in ([The initial diagrams](02-initial.md) §2). In the drawing an aggregation is labeled `Value aggregation 𝐺` where it produces value functions at a perch, as in the two backward builders, and `Apply 𝐺` otherwise, as in the policy builder; where one builder holds several aggregations, as the policy builder does once the methods file has brought the lines of the endogenous grid method, the label names the statement each aggregates, `Apply 𝐺 of the statement InvEuler`, so that the two aggregations are told apart. The names of the operations carry the same distinction (§2). A pullback is labeled by the function it pulls back and the map it pulls back along: `Pullback of 𝑉≻ along 𝑔 at 𝑐` in the decision builder, and `Pullback of 𝑐 along 𝑚_d≻` for the identification of the methodized policy builder, which pulls the policy back along the map from each saving to its cash on hand and not along the law of motion (§2). A stage's two builders graphs, of which each builder is a box, are also read interactively in Google's Model Explorer, where each builder opens to its operations and a selected operation shows the rows of its card; the drawing remains the figure of this page ([The view in Model Explorer](10-model-explorer.md)).
 
 ## 2 The policy builder
 
-`stage.dcsn.builder.policy` is the policy builder, the builder whose outputs are the controls. Its `signature()` carries the policy's type, the set of feasible policies where the file declares a feasibility correspondence, `Γ` here, beside the value functions it reads. The clause `c(m_d) ∈ Γ(m_d)` is the feasibility condition: the consumption the policy chooses lies in the feasible set that the correspondence `Γ(x) := (0, x]` of the file gives.
+`stage.dcsn.builder.policy` is the policy builder, the builder whose outputs are the controls. Its `signature()` carries the policy's type, the set of feasible policies where the file declares a feasibility correspondence, `Γ` here, beside the value functions it reads. The clause `c(m_d) ∈ Γ(m_d)` is the feasibility condition: the consumption the policy chooses lies in the feasible set that the correspondence `Γ(x) := (0, x]` of the file gives. On the symbolic stage the builder holds the maximization of the stage file's line `optimality` as three operations, the pullback of the continuation value along the law of motion, the aggregation of the objective and the maximization itself, and then its Evaluation:
 
 ```python
 print(repr(stage.dcsn.builder.policy))
 print(stage.dcsn.builder.policy.signature())
+print(stage.dcsn.builder.policy.list())
 ```
 
 ```text
 Builder('cons', 'policy')
 in         𝑉≻ : Xa → [−∞, ∞)
 out        𝑐(m_d) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m_d) ∈ Γ(m_d)})
+1  Pullback                primitive
+2  optimality:Aggregation  primitive
+3  optimality:Argmax       primitive  → 𝑐
+4  Evaluation              primitive  → 𝑐
 ```
 
-Its operations, by the names that reach them: an operation that belongs to one line of the policy block takes that line's id, and the two aggregations are told apart by their lines.
+The methods file beside the stage file, `methods.bl`, types the endogenous grid method on this builder, with its grid of savings and its handler, and brings the three lines by which the method computes the policy ([Methodization](../../04-methodization.md) §1). After methodization the operative policy builder holds those lines as its operations, each named by the id of its line, while the maximization stays its declared line, which `stage.declared.policy` holds and the card prints under `Declared` ([Methods and places](07-methods.md) §3); the signature gains the method, the grid and the handler. The listing reads a second elaboration of the file with its methods file, so that `stage` stays symbolic for the rest of the page:
 
 ```python
-for name in stage.dcsn.builder.policy.list():
+methodized = elaborate_stage(load_stage("applications/portfolio-choice/declaration/stages/cons/cons.bl",
+                                        ["applications/portfolio-choice/declaration/stages/cons/methods.bl"]))
+policy = methodized.dcsn.builder.policy
+print(policy.signature())
+for name in policy.list():
     print(name)
 ```
 
 ```text
+in         𝑉≻ : Xa → [−∞, ∞)
+out        𝑐(m_d) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m_d) ∈ Γ(m_d)})
+method     !egm
+grid       !Cartesian(a=(a_min, a_max, n_a))
+handler    "cons-port:egm"
 InvEuler:Aggregation
-endoggrid:Aggregation
-cons_choice:Pullback
+grid:Aggregation
+identification:Pullback
 Evaluation
 ```
 
-The four operations state the policy as the lines of the block write it, and [Operations](../../reference/operations.md) §4 states how each such line is read. `InvEuler:Aggregation` is formed by the **candidate line** `c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0`, which states the candidate consumption at each saving from the derivative term `D_{a}V[>]`, the derivative of the continuation value in savings. Its clause `⟂ a >= 0`, the complementary-slackness condition of the borrowing constraint, admits the interior value `𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a))` alone at a positive saving and every positive value up to it at zero saving, so the operation's output is typed as a correspondence, a map to sets, `Xa ⇉ ℝ₊₊` ([Constraints](../../10-constraints.md) §4.3). `endoggrid:Aggregation` is formed by the **grid line** `m_d[>] = a + c[>]`, the cash on hand at each saving and each value admitted there. `cons_choice:Pullback` is formed by the **identification** `c = c[>]`: it reads the policy at that cash on hand and equates it with the candidate, a relation that must hold at every saving and every value admitted there, and its `signature()` answers the set of the feasible policies that satisfy it, which may be empty or hold several. `Evaluation` places that set in its declared carrier and selects no member; the method bound there, `!egm` in the application's methods file, stores its numerical representation of the function and asserts nothing about the set ([Methods and places](07-methods.md) §2; [Methodization](../../04-methodization.md) §3).
+The four operations state the policy as the lines of the methods file's block `policy` write it, and [Operations](../../reference/operations.md) §4 states how each such line is read. `InvEuler:Aggregation` is formed by the **candidate line** `c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0`, which states the candidate consumption at each saving from the derivative term `D_{a}V[>]`, the derivative of the continuation value in savings. Its clause `⟂ a >= 0`, the complementary-slackness condition of the borrowing constraint, admits the interior value `𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a))` alone at a positive saving and every positive value up to it at zero saving, so the operation's output is typed as a correspondence, a map to sets, `Xa ⇉ ℝ₊₊` ([Constraints](../../10-constraints.md) §4.3). `grid:Aggregation` is formed by the **grid line** `m_d[>] = a + c[>]`, the cash on hand at each saving and each value admitted there. `identification:Pullback` is formed by the **identification** `c = c[>]`: it reads the policy at that cash on hand and equates it with the candidate, a relation that must hold at every saving and every value admitted there, and its `signature()` answers the set of the feasible policies that satisfy it, which may be empty or hold several. `Evaluation` places that set in its declared carrier and selects no member; the handler of the method, `cons-port:egm`, stores its numerical representation of the function and asserts nothing about the set ([Methods and places](07-methods.md) §2; [Methodization](../../04-methodization.md) §5).
 
 ```python
-policy = stage.dcsn.builder.policy
 print(policy["InvEuler:Aggregation"].signature())
-print(policy["cons_choice:Pullback"].signature())
+print(policy["identification:Pullback"].signature())
 ```
 
 ```text
@@ -153,7 +165,7 @@ out        {f ∈ {c ∈ (Xm → ℝ₊₊
            𝒫({c ∈ (Xm → ℝ₊₊) | c(m_d) ∈ Γ(m_d)})
 ```
 
-The line `optimality`, marked `!doc`, forms no operation. An `argmax` line that is not marked `!doc` forms an operation of the kind `Argmax`, whose output is the set of maximizing policies, as `choice:Argmax` does in the policy builder of `applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl`.
+A line marked `!doc` forms no operation, as the maximization `objective` of the portfolio stage `applications/portfolio-choice/declaration/stages/port/port.bl` is marked. An `argmax` line that is not marked `!doc` forms an operation of the kind `Argmax`, whose output is the set of maximizing policies, as `optimality:Argmax` does above and `choice:Argmax` does in the policy builder of `applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl`.
 
 ## 3 A forward builder at a policy
 
@@ -250,7 +262,7 @@ Operations
      rule: 𝐶𝐸 : ℝ₊₊ × ℝ → ℝ₊₊
 ──────────────────────────────────────────────────────────────────────────────
 Source  sa_savings.bl
-  27  CE = E_{Ψ}(V[>]^(1-γ))^(1/(1-γ))  :: [id=risk_ce, !node]
+  23  CE = E_{Ψ}(V[>]^(1-γ))^(1/(1-γ))  :: [id=risk_ce, !node]
 
 Definitions referenced
   γ     sa_savings:parameter:γ
@@ -283,7 +295,7 @@ Rule
 ──────────────────────────────────────────────────────────────────────────────
 Source  sa_savings.bl
   14  Ψ ~ LogNormal(ν, σ_Ψ)
-  27  CE = E_{Ψ}(V[>]^(1-γ))^(1/(1-γ))  :: [id=risk_ce, !node]
+  23  CE = E_{Ψ}(V[>]^(1-γ))^(1/(1-γ))  :: [id=risk_ce, !node]
 
 Definitions referenced
   γ     sa_savings:parameter:γ
@@ -295,4 +307,4 @@ Definitions referenced
 
 ## 5 The kernels of a builder
 
-`kernels()` answers one record of the builder's kernels, from which a numerical operator is built with no stage in hand: each operation in the order it is applied, with its printed kernel and the wires it reads and writes, and, where its kernel is an explicit function, its function with the names of its arguments and outputs, or, for a row that states a relation its output satisfies, such as the identification of a policy block, or a row that reads a derivative term, such as the candidate line `InvEuler`, whose `compile_kernel()` is refused under `kernel-form` ([A piece](05-piece.md) §2), its printed relation; then the parameters with their values and the declared sets its operations are read on. The record refers to no stage, so cloudpickle saves it and another process reads it. The endogenous-grid step of the portfolio–consumption application is built from two such records of a specified version by one call of `asva`, the numerical toolkit installed beside the package, `asva.egm(specified.dcsn.builder.policy.kernels(), specified.dcsn.builder.bwd.kernels(), savings, evaluation)`, the caller reading the savings grid and the evaluation grid from the settings. [A piece](05-piece.md) §2 gives one operation's kernel as a function, and the lesson `tutorials/topics/kernels.ipynb` of the repository composes one step of the decision builder from its two kernels, compiles them with Numba and passes the values of a second calibration without compiling again; [Solutions at the perches](../../11-solutions-at-the-perches.md) describes the dictionaries in which a solver keeps what the kernels compute.
+`kernels()` answers one record of the builder's kernels, from which a numerical operator is built with no stage in hand: each operation in the order it is applied, with its printed kernel and the wires it reads and writes, and, where its kernel is an explicit function, its function with the names of its arguments and outputs, a derivative term the row reads standing among the arguments, `G_policy_InvEuler(V≻, a, D_{a}(V≻); ρ) → c≻` for the candidate line `InvEuler`, or, for a row that states a relation its output satisfies with no explicit side, such as the identification of a policy block, whose `compile_kernel()` is refused under `kernel-target` ([A piece](05-piece.md) §2), its printed relation; then the parameters with their values and the declared sets its operations are read on. The record refers to no stage, so cloudpickle saves it and another process reads it. The endogenous-grid step of the portfolio–consumption application is built from two such records of a specified version by one call of `asva`, the numerical toolkit installed beside the package, `asva.egm(specified.dcsn.builder.policy.kernels(), specified.dcsn.builder.bwd.kernels(), savings, evaluation)`, the caller reading the savings grid and the evaluation grid from the settings. [A piece](05-piece.md) §2 gives one operation's kernel as a function, and the lesson `tutorials/topics/kernels.ipynb` of the repository composes one step of the decision builder from its two kernels, compiles them with Numba and passes the values of a second calibration without compiling again; [Solutions at the perches](../../11-solutions-at-the-perches.md) describes the dictionaries in which a solver keeps what the kernels compute.

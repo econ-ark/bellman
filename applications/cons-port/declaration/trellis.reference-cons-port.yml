@@ -1,16 +1,18 @@
 !trellis
 name: reference_cons_port
 # The fixed reference's end-of-period returns (its configuration end_returns): consumption, then discounting,
-# then the portfolio stage as the reference solved it; the resources the draws give leave each period.
+# then the portfolio stage as the reference solved it (stages/port/methods.reference.bl); the resources the
+# draws give leave each period. The consumption stage takes stages/cons/methods.reference.bl, the
+# endogenous-grid method on the evenly spaced grids of settings/cons.yml.
 # Six equal periods; the one inter-period mapping stands for every adjacent pair.
 periods:
   - stages:
       cons: {stage: stages/cons/cons.bl, calibration: calibration/portfolio.yml,
-             settings: settings/cons.yml, methods: methods/cons.yml}
+             settings: settings/cons.yml, methods: stages/cons/methods.reference.bl}
       disc: {stage: stages/disc/disc.bl, calibration: calibration/portfolio.yml,
-             settings: {}, methods: methods/disc.yml}
+             settings: {}, methods: stages/disc/methods.bl}
       port: {stage: stages/port/port.bl, calibration: calibration/portfolio.yml,
-             settings: settings/port.yml, methods: methods/port_reference.yml}
+             settings: settings/port.yml, methods: stages/port/methods.reference.bl}
     connectors:
       - {disc.a: k}
     repeat: 6

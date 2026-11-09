@@ -178,7 +178,7 @@ The wage $w$, the payroll tax $\tau$ and the pension $p$ have no values in the f
 
 ## 8 Methods
 
-Each stage has a methods file. The choice stages attach `!max` to the policy block. The worker, the retiree and the entrepreneurs attach `!vfi`, value function iteration, with the grids of Appendix B, and `!histogram` to the forward transition that builds the transition matrix over the grid. The entrepreneurs' files add a recognition entry for the enforcement statement with the settings of the iteration on $\hat k(x)$, for which no method tag exists. The demographic stages attach `!exact-markov` to the expectation over the new abilities and `!sum` to the expectation over the demographic event.
+Each stage has a methods file, the addition `methods.bl` beside its stage file, whose every selection is a typing line at file level, since no method adds a line. The choice stages type `!max` on the policy builder. The worker, the retiree and the entrepreneurs type `!vfi`, value function iteration, on the decision value builder with the grids of Appendix B as grid entries, and `!histogram` on the forward transition that builds the transition matrix over the grid. The entrepreneurs' files declare the two settings of the iteration on $\hat k(x)$, `k_max` and `tol_k`, and write no entry for that iteration, since the language has no method word for it. The demographic stages type `!exact_markov` at the expectation over the new abilities and `!sum` at the expectation over the demographic event.
 
 ## 9 Elaboration
 

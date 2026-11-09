@@ -57,32 +57,22 @@ Every other field is a part of a longer expression. For an unmarked line such as
 
 ## 4 Where a method stands
 
-A methods file attaches numerical methods to places of the stage.
+A methods file, the `.bl` file beside the stage file that the package reads with it, types numerical methods at places of the stage ([Methodization](../Bellman-Sym/04-methodization.md)). The smooth-ambiguity savings stage's file, `applications/smooth-ambiguity-savings/declaration/stages/sa_savings/methods.bl`, writes among its entries, in the bracket of its block `cntn_to_dcsn`:
 
-```yaml
-stage: sa_savings
-methods:
-  - on: E_Ψ
-    method: !gauss-hermite
-    settings:
-      n_nodes: [n_Ψ_nodes]
-  - on: cntn_to_dcsn.risk_ce
-    method: !Linear
-    settings:
-      grid: !Cartesian
-      orders: {m_d: n_m}
-      bounds: {m_d: [m_min, m_max]}
+```bl
+    | risk_ce.E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
 ```
 
-A method that computes an operation stands on the operator. Gauss–Hermite quadrature is a rule for one integral against a normal or lognormal distribution, and `E_Ψ` names the expectation. A method that stores a function stands where a function has a name: `!Linear` holds $CE$ by its values on a grid and reads it between them by linear interpolation, and `cntn_to_dcsn.risk_ce` names the line that returns $CE$. The setting `grid` names the grid by its kind, `!Cartesian`, a product of one grid for each coordinate, and the grid's order and bounds stand beside it. A method of one kind is refused at a place of the other. Quadrature says how the expectation inside the line is computed and says nothing about how $CE$ is held, so the package refuses it on the line:
-
-```text
-!gauss-hermite does not admit target kind node; method-attachment admits operator E
+```bl
+    | risk_ce.evaluate.method : !Linear
+    | risk_ce.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m), ν=E_ν)
 ```
 
-An option a method requires is written beside it, and `configure` refuses a value outside its type.
+A method that computes an operation stands on the operator. Gauss–Hermite quadrature is a rule for one integral against a normal or lognormal distribution, and `risk_ce.E_Ψ` names the expectation in the line `risk_ce`. A method that stores a function stands where a function has a name: `!Linear` holds $CE$ by its values on a grid and reads it between them by linear interpolation, and `risk_ce.evaluate` names the Evaluation of the line that returns $CE$. The grid is the place's own entry, `!Cartesian`, a product of one set of points per coordinate: the resources `m_d` from a lower bound to an upper bound with a count, the three names declared settings, and the ambiguity coordinate `ν` on the quadrature nodes of the expectation `E_ν`. A method of one kind is refused at a place of the other. Quadrature says how the expectation inside the line is computed and says nothing about how $CE$ is held, so the package refuses it on the line itself. An entry `risk_ce.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)` in that bracket is refused under the rule `method-admission`, and the refusal names the line of the methods file and says: “the entry `cntn_to_dcsn.risk_ce.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)` types `cntn_to_dcsn.risk_ce`, a place of the kind node, with `!gauss_hermite`, whose row of the catalogue admits operator E; write the word at a place of a kind it admits, or a word that admits this place”.
 
-The places a stage admits are its own answer, `stage.places()`, with the kind of each. A method that stores a function admits the evaluated fields, a declared function and the stored form of a builder's output, at the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that closes the builder, which the methods file names by what it stores: `policy.evaluate` for the policy function, and `cntn_to_dcsn.evaluate.value` and `cntn_to_dcsn.evaluate.marginal` for a value function and the derivative of it that a derivative line states. A method that computes an operation admits the operator. A function that the file does not name, such as $V_\succ \circ g_\succ$, is no place at all: an author who wants it stored writes it on a line of its own and marks the line `!node`.
+A keyword argument a method requires is written beside its word, its value the name of a declared setting, and `configure` refuses a value outside the setting's declared set.
+
+The places a stage admits are its own answer, `stage.places()`, with the kind of each. A method that stores a function admits the evaluated fields, a declared function and the stored form of a builder's output, at the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that closes the builder, which the methods file names by the builder's id: `policy.evaluate` for the policy function, and `cntn_to_dcsn.evaluate` for a value function and the derivative of it that a derivative line states together, or `cntn_to_dcsn.evaluate[V]` and `cntn_to_dcsn.evaluate[D_{m_d}V]` for each apart. A method that computes an operation admits the operator. A function that the file does not name, such as $V_\succ \circ g_\succ$, is no place at all: an author who wants it stored writes it on a line of its own and marks the line `!node`.
 
 ## References
 

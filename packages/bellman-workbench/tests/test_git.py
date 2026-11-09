@@ -204,7 +204,7 @@ def test_init_repository_names_the_destination_and_refuses_a_password(tmp_path, 
     assert model.git_push(folder).ok
     refused = tmp_path / "refused"
     refused.mkdir()
-    result = model.init_repository(refused, "https://me:token@example.org/model.git")
+    result = model.init_repository(refused, "https://user:password@example.org/model.git")
     assert not result.ok and "password" in result.sentence
     assert not (refused / ".git").exists()
     result = model.init_repository(refused, "https://ghp_abc@github.com/me/model.git")
@@ -416,7 +416,7 @@ def test_item_4_each_export_is_ignored_and_has_its_record(repository):
         created.folder / name
         for name in (
             "declaration/calibration/portfolio.yml",
-            "declaration/stages/cons/methods.yml",
+            "declaration/stages/cons/methods.bl",
             "declaration/settings/cons_wide.yml",
         )
     )

@@ -161,7 +161,7 @@ grains.
 
 A builder is not its block, which is text; not a stage, which composes
 the builders of its edges; and not a numerical routine. A method attaches to
-a target, and a target may be a declared function, an evaluated field, a builder or an operator
+a place, and a place may be a declared function, an evaluated field, a builder or an operator
 occurrence, but attaching one neither supplies a routine nor runs it
 ([[methodization]]). The [[bellman_operator|Bellman operator]] of a stage is
 the composite $\mathbb T$, not any one of its builders.

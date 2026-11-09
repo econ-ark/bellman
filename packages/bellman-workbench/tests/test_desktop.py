@@ -152,8 +152,11 @@ def test_item_4_initial_and_running_page_links_keep_unsaved_text(
         page.goto(url + "?" + urlencode({"file": PORT, "line": 30}))
         wait_until(lambda: status_settled_on(page, PORT), 60, "the requested stage")
         wait_until(lambda: editor_selection(page)["line"] == "30", 20, "the requested line")
+        # the block's text is read whether the fold `cursor` is open or not:
+        # the fold's `open` follows the selection, and the box the line opens
+        # is selected as soon as the block is named
         wait_until(
-            lambda: "dcsn_to_arvl" in page.locator(".bl-cursor-block").inner_text(),
+            lambda: "dcsn_to_arvl" in (page.locator(".bl-cursor-block").text_content() or ""),
             20,
             "the selected block",
         )
@@ -261,8 +264,11 @@ def test_item_5_running_request_replaces_a_queued_request_during_elaboration(
         )
         wait_until(lambda: status_settled_on(page, PORT), 60, "the latest requested stage")
         wait_until(lambda: editor_selection(page)["line"] == "30", 20, "the latest requested line")
+        # the block's text is read whether the fold `cursor` is open or not:
+        # the fold's `open` follows the selection, and the box the line opens
+        # is selected as soon as the block is named
         wait_until(
-            lambda: "dcsn_to_arvl" in page.locator(".bl-cursor-block").inner_text(),
+            lambda: "dcsn_to_arvl" in (page.locator(".bl-cursor-block").text_content() or ""),
             20,
             "the selected block",
         )

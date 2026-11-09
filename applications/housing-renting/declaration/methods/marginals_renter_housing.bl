@@ -1,8 +1,0 @@
-@methods: renter_housing
-# The derivative of the renter's housing value in wealth, stated as the
-# marginal block of the decision value builder (AMD-MB-001 §4.3): wealth
-# enters cash one for one.
-
-[id=dcsn_marginal, (V[>]) : !cntn -> (V) : !dcsn] {
-    D_{w_d}V = D_{w_rent}V[>]    :: [id=marginal, "the derivative with respect to the wealth w_d brought into the stage, which enters cash one for one"]
-}

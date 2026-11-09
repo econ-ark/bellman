@@ -1,7 +1,13 @@
 # The recipe of the within-life model of Benhabib, Bisin and Luo (2019): the
 # trellis file and each stage's file, by their paths from this folder, and for
-# each stage and each kind the ordered sources; `$fill` and the methods slot
-# `$bellman_method` are bound by keyword of `load_recipe`.
+# each stage and each kind the ordered sources; `$fill` is bound by keyword of
+# `load_recipe`. The methods of a stage are the additions its methods list
+# names, each a `.bl` file read with the stage file at every occurrence:
+# `stages/benhabib_bellman/methods.bl` for the within-life stage and
+# `stages/bequest/methods.bl` for the bequest. A second addition of the
+# within-life stage, `stages/benhabib_bellman/methods.bellman_method.bl`, which
+# types the policy builder's Evaluation and its node InvEuler, is named by no
+# list; an author who names it after the first in the list binds both.
 #
 # periods[0] is the terminal period and holds the bequest alone,
 # `periods: [0, 0]`; periods[1] to periods[36] hold the within-life stage, ages
@@ -10,8 +16,8 @@
 # `wage_fn`: "1-6" holds ages 60 to 55, the sixth bracket, and "31-36" ages 30
 # to 25, the first (economics.md, "The age brackets"). A range source is applied
 # after `$fill` and overrides it, so a `wage_fn` in a fill is replaced by the
-# bracket's file. The bequest's one methods file binds the marginal block of
-# its derivative, which the endogenous grid step of the last age reads.
+# bracket's file. The bequest's methods file states the derivative of its
+# value, which the endogenous grid step of the last age reads.
 trellis: trellis.yml
 stages:
   benhabib_bellman:
@@ -25,8 +31,8 @@ stages:
       "25-30": [calibration/wage/bracket_2]
       "31-36": [calibration/wage/bracket_1]
     settings: {all: [settings/default, $fill]}
-    methods:  {all: [stages/benhabib_bellman/methods, $bellman_method]}
+    methods:  {all: [stages/benhabib_bellman/methods.bl]}
     periods: [1, 36]
-  bequest: {stage: stages/bequest/bequest.bl, calibration: {all: [calibration/main, $fill]}, methods: {all: [stages/bequest/methods]}, periods: [0, 0]}
+  bequest: {stage: stages/bequest/bequest.bl, calibration: {all: [calibration/main, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
 registry:
   calibration: [calibration/horizon]

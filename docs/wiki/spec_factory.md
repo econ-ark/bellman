@@ -28,17 +28,17 @@ Each recipe stage names its stage file and supplies `all` **source lists** for c
 
 ## Source composition
 
-Mappings merge recursively. Method lists match their single `on` targets, merge matched entries and append new targets. Later scalars and ordinary lists replace earlier values. This preserves omitted bindings without asserting a general categorical or algebraic theorem about arbitrary merge inputs.
+Mappings merge recursively, and later scalars and ordinary lists replace earlier values. A methods list is not merged: the `.bl` additions it names are unioned with the stage file in the order written, so that the whole list is the stage occurrence's selection. This preserves omitted bindings without asserting a general categorical or algebraic theorem about arbitrary merge inputs.
 
-Source names are relative to the registry directory. A parent source is read before its child's entries; parent cycles are rejected and recursion is limited. These rules resolve data, leaving method-target and [[parameters|parameter]] and setting completeness checks to the stage operations. The current reference specifies path resolution and accepted wrappers in detail.
+Source names are relative to the registry directory. A parent source is read before its child's entries; parent cycles are rejected and recursion is limited. These rules resolve data, leaving the checks of method places and of [[parameters|parameter]] and setting completeness to the stage operations. The current reference specifies path resolution and accepted wrappers in detail.
 
 ## Recipe slots
 
 A **slot** is a named place in a recipe source list, such as `$fill`, whose value is supplied with the keyword `fill=` of `load_recipe`; the value is the **fill**, a mapping. A slot affects only the source lists in which it is named, so one fill can be reused at several addresses.
 
-`load_recipe` is one step of the **Bellman factory**, the part of the package from the files to the specified trellis; a **method choice** is a methods mapping supplied to a methods slot, and a **sweep** is a family of fills, one expression over them, such as `[assemble_trellis(directory, recipe, fill=f) for f in fills]`, with `assemble_trellis` of `bellman.trellis`.
+`load_recipe` is one step of the **Bellman factory**, the part of the package from the files to the specified trellis; a **sweep** is a family of fills, one expression over them, such as `[assemble_trellis(directory, recipe, fill=f) for f in fills]`, with `assemble_trellis` of `bellman.trellis`.
 
-A flat mapping supplies entries directly. A mapping whose top-level keys are all among `calibration`, `settings` and `methods` is interpreted by specification kind; a mixture with other keys is treated as flat. A methods slot supplies a mapping containing its methods list. The shape must match the recipe's intended use.
+A flat mapping supplies entries directly. A mapping whose top-level keys are all among `calibration` and `settings` is interpreted by specification kind; a mixture with other keys is treated as flat. A methods list takes no slot: a change of methods is a replacing selection, another addition named in the list. The shape must match the recipe's intended use.
 
 An unfilled slot contributes an empty mapping. A keyword naming no slot is refused with `FactoryError` under the rule `recipe-slot-unknown`. Extra keys inside a declared slot do not become model declarations. Slots are not the only source of user data: files and direct stage bindings are separate supported routes. A recipe slot is also distinct from an [[asdl|ASDL field]], an economic [[field]] or an operation's argument.
 

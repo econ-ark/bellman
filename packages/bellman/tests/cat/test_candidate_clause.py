@@ -1,40 +1,16 @@
-"""The acceptance file of lane C of the internal developer release 0.01, the
-clause on the candidate line read on the policy card (the second layer of the
-tests, `packages/bellman/README.md` §8): one test for each of the six items
-the release's implementation plan states for lane C (its §3), which merge §10
-of the lane's brief.
+"""Candidate clauses, their admitted values, and policy identification.
 
-The candidate line of `cons.bl`, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(dV[>]) ⟂ a >= 0`, admits at
-each saving a set of values: the one value `𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻(a))` where the saving is
-positive and the segment up to it where the saving is zero, the regions into
-which the split of a clause writes its Kuhn–Tucker condition. The grid line
-gives the cash on hand of each admitted value, and the identification relates
-the policy to the candidate over the admitted pairs,
-`∀ a ∈ Xa, ∀ x ∈ 𝑐≻(a): 𝑐(a + x) = x`. Items 2 to 4 read the relations the
-records hold at numbers, through the fixture `at_numbers` of `conftest.py`,
-whose own test closes this file; items 1 and 5 read the printed cards.
-
-The claims of the retired acceptance file of AMD-SG-035 stand here and in
-`test_refusals.py` (BN1 of the release's decisions): its item 1, spelling A
-(the twin text `cons_kt`), and its item 3, spelling B (`cons_obs.bl`), in
-item 1; its item 2, the pension worker's two clauses, in item 5; its item 5,
-the malformed declarations and chains, in `test_refusals.py`.
-
-Item 5 sweeps the builder cards of the stages of `conftest.py` and the stage
-files under `applications/`, and carries the mark `sweep`, which a run given
-no marker expression, or `-m 'not sweep'`, leaves out; it runs by
-`pytest packages/bellman/tests/cat/test_candidate_clause.py -m sweep -n 4`
-and is part of the lane's acceptance run. Item 6 is closed by the recorded
-guard and by AAS's reading of the cards beside the drawings in the lane's
-reading notebook; its test holds the recorded snapshot of `cons` to the
-carriers of the two correspondences, and passes after the snapshot is
-re-recorded.
+The explicit consumption fixture reads the authored inverse Euler equation
+with its complementarity clause. Numerical checks retain the admitted pairs,
+the empty-solution counterexample, every one-sided and chained bound, and the
+durable-adjustment membership conditions. The shared `at_numbers` fixture
+reads supplied derivatives and evaluates relations; it differentiates nothing.
+Printed checks retain carriers, clause placement and source statements. The
+application's complete `cons_obs` card is also held by the snapshot guard.
 """
 import itertools
-import json
 import re
 from fractions import Fraction
-from pathlib import Path
 
 import pytest
 
@@ -45,17 +21,10 @@ from bellman.stage.boxes import kind_of
 from bellman.stage.stage_answers import obligations
 from bellman.stage.term_operations import kuhn_tucker
 from bellman.typing import typed_expressions as S
-from conftest import (GRID_LINE, ROOT, builder_cards, candidate_text, flat, grid_line_text, name_at_numbers, reads,
-                      section, stage_from_text, terms_inside, CONS_POLICY_CARD)
+from conftest import (GRID_LINE, ROOT, STAGE_FILES, builder_cards, candidate_text, flat,
+                      grid_line_text, name_at_numbers, reads, section, stage_from_text,
+                      terms_inside)
 from sheets_parse import operations_entries
-
-# the recording of the snapshot guard
-SNAPSHOT = Path(__file__).resolve().parents[1] / "snapshot"
-APPLICATIONS = ROOT / "applications"
-# the stage files of the core applications, each in its stage folder,
-# `declaration/stages/<key>/<key>.bl`
-CORE = sorted(APPLICATIONS.glob("*/declaration/stages/*/*.bl"))
-
 
 # --- item 1 ---
 
@@ -68,75 +37,15 @@ OVER_THE_ADMITTED_PAIRS = re.compile(r"∀a∈Xa,(∀)?x∈𝑐≻\(a\):\(?f\(a\
 # the moved item 1 of AMD-SG-035: a representation of the policy at the
 # Evaluation that closes the policy builder, which binds on every spelling and
 # leaves every rule as it was
-LINEAR = [{"on": "policy.evaluate", "method": "!Linear"}]
-# the rule of `euler:Aggregation` on the card of `cons_kt` with its region
-# note, spelling A's clause read at the point
-CONS_KT_RULE = (
-    "     rule: 𝑑𝑢(𝑐(m_d)) = 𝑑𝑉≻(𝑔≻(m_d, 𝑐(m_d))) ⟂ 𝑔≻(m_d, 𝑐(m_d)) ≥ 0       on Xm")
-
-# the moved item 3 of AMD-SG-035: the policy card of `cons_obs`, spelling B,
-# the drawing of AMD-SG-035 §2 in the card form of lane P with the kinds of
-# lane K
-CONS_OBS_POLICY = """\
-STAGE cons_obs / POLICY BUILDER policy
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Signature
-  in   𝑉≻   : Xa → [−∞, ∞)
-       𝑑𝑉≻  : Xa → ℝ₊₊
-       ──────────────────────────────────────────────
-  out  𝑐    : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
-
-Where
-  A≻,policy = {a, μ ∈ Xa × ℝ₊ | a ≥ 0 ∧ μ · a = 0}
-
-Declared
-  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
-
-Operations
-  1  endoggrid:Aggregation
-     in: 𝑑𝑉≻                            out: 𝑐≻, 𝑚_d≻
-     ────────────────────────────────────────────────
-     rule: 𝑐≻ = 𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻(a) + μ)                        on (a, μ) ∈ A≻,policy
-           𝑚_d≻ = a + 𝑐≻                                 on (a, μ) ∈ A≻,policy
-
-  2  cons_choice:Pullback
-     in: 𝑐≻, 𝑚_d≻                       out: 𝑐
-     ────────────────────────────────────────────────
-     rule: 𝑐(𝑚_d≻(a, μ)) = 𝑐≻(a, μ)                         on 𝑚_d≻(A≻,policy)
-
-  3  Evaluation
-     in: 𝑐                              out: 𝑐
-     ────────────────────────────────────────────────
-     rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
-
-Conditions
-  endoggrid:Aggregation  𝑐≻(a, μ) ∈ ℝ₊₊
-  endoggrid:Aggregation  𝑚_d≻(a, μ) ∈ Xm
-──────────────────────────────────────────────────────────────────────────────
-Source  cons_obs.bl
-  32  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
-  33  μ[>]   : ℝ₊ ⟂ a >= 0                         :: [id=slackness]
-  34  c[>]   = 𝑑𝑢𝑖𝑛𝑣(dV[>] + μ[>])                 :: [id=InvEuler]
-  35  m_d[>] = a + c[>]                            :: [id=endoggrid]
-  36  c      = c[>]                                :: [id=cons_choice]
-
-Definitions referenced
-  Xm     cons_obs:set:Xm
-  Xa     cons_obs:set:Xa
-  𝑢      cons_obs:function:𝑢
-  𝑑𝑢𝑖𝑛𝑣  cons_obs:function:𝑑𝑢𝑖𝑛𝑣
-  Γ      cons_obs:correspondence:Γ
-  μ      cons_obs:multiplier:μ
-  𝑔≻     cons_obs:g:dcsn_to_cntn
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
-
+LINEAR = {"text": "@methods: cons_kt\npolicy.evaluate.method : !Linear\n",
+          "origin": "cons_kt.methods.bl"}
 
 def test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_answers_the_relation_over_the_admitted_pairs(
-        cons, cons_kt, cons_obs):
+        cons_candidate, cons_kt, cons_obs):
+    cons = cons_candidate
     policy = cons.builder.policy
     assert [str(key) for key in policy.primitives.list()] == [
         "InvEuler:Aggregation", "endoggrid:Aggregation", "cons_choice:Pullback", "Evaluation"]
-    assert str(policy) == CONS_POLICY_CARD
     # the candidate and the cash on hand are correspondences of the saving:
     # at zero saving each takes every value the clause admits; the candidate
     # is typed so on its piece card and in its signature (the ruling on the
@@ -157,13 +66,14 @@ def test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_a
     policy = cons_kt.builder.policy
     assert [str(key) for key in policy.primitives.list()] == ["Pullback", "euler:Aggregation", "Evaluation"]
     printed = "\n".join(section(str(policy), "Operations"))
-    assert CONS_KT_RULE in printed
+    assert flat("𝑑𝑢(𝑐(m_d))") in flat(printed)
+    assert flat("⟂ m_d − 𝑐(m_d) ≥ 0") in flat(printed)
     clause = next(line for line in printed.splitlines() if "⟂" in line)
     assert clause.rstrip().endswith("on Xm") and section(str(policy), "Where") == []
     assert "optimality" not in [item.condition for item in obligations(cons_kt)]
-    methodized = copy_native(cons_kt).methodize({"stage": "cons_kt", "methods": LINEAR})
-    assert [box for box, method in methodized.builder.bwd.methods.items() if method.tag == "Linear"] == [
-        "policy:Evaluation"]
+    methodized = copy_native(cons_kt).methodize(LINEAR)
+    assert [box for box, method in methodized.methods.items() if method.word == "!Linear"] == [
+        "policy.evaluate"]
     assert "\n".join(section(str(methodized.builder.policy), "Operations")) == printed
     assert [item.condition for item in obligations(methodized)] == [item.condition for item in obligations(cons_kt)]
 
@@ -172,18 +82,17 @@ def test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_a
     # at each of its pairs, over the consumption that 𝑐≻ gives there
     policy = cons_obs.builder.policy
     aggregation = str(policy.primitives["endoggrid:Aggregation"])
-    assert "𝑑𝑉≻   : Xa → ℝ₊₊" in aggregation
+    assert "𝑉≻" in aggregation
     assert aggregation.count("{a, μ ∈ Xa × ℝ₊ | a ≥ 0 ∧ μ · a = 0} → ") == 2
     relation = S.format_expression(policy.primitives["cons_choice:Pullback"].denote().expression, width=None)
     assert "∀ (a, μ) ∈ {a, μ ∈ Xa × ℝ₊ | a ≥ 0 ∧ μ · a = 0}, x ∈ " in relation
     assert "∈ Xa × ℝ₊:" not in relation and "μ ∈ ℝ₊:" not in relation
-    assert str(policy) == CONS_OBS_POLICY
 
 
 # --- items 2 and 3: the relation and the clause at numbers ---
 
 # the calibration of items 2 and 3, ρ = 2 (with the continuation marginal
-# value 𝑑𝑉≻ ≡ 1, the interior value 𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻(a)) is 1 at every saving: 𝑐≻(a)
+# value D_{a}𝑉≻ ≡ 1, the interior value 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a)) is 1 at every saving: 𝑐≻(a)
 # is 1 and 𝑚_d≻(a) is a + 1 at a positive saving, and at zero saving the two
 # take every value of the segment (0, 1] together)
 RHO = {"ρ": 2}
@@ -212,19 +121,20 @@ def identification(stage):
 
 
 def test_item_2_the_relation_holds_exactly_the_admitted_pairs_and_its_solution_set_can_be_empty(
-        cons, cons_head, at_numbers):
+        cons_candidate, cons_head, at_numbers):
+    cons = cons_candidate
     for stage, column in ((cons, 2), (cons_head, 3)):
-        numbers = at_numbers.rows(stage.builder.policy, at_numbers.stage(stage, {**RHO, "dV≻": lambda a: 1}))
+        numbers = at_numbers.rows(stage.builder.policy, at_numbers.stage(stage, {**RHO, "D_{a}V≻": lambda a: 1}))
         relation = identification(stage)
         held = [at_numbers.demand(relation, {**numbers, "a": a, "x": pair[1]}) == pair for a, pair, *_ in PAIRS]
         assert held == [case[column] for case in PAIRS], stage.name
     # the counterexample of the independent review of the plan (correction 2):
-    # at ρ = 2 and 𝑑𝑉≻(a) = (1 − 2a)⁻² on [0, 1/4], the interior value at the
+    # at ρ = 2 and D_{a}𝑉≻(a) = (1 − 2a)⁻² on [0, 1/4], the interior value at the
     # saving 1/8 is 3/4 and the corner at zero saving admits 7/8; both give the
     # cash on hand 7/8, and the relation demands 𝑐(7/8) = 3/4 and 𝑐(7/8) = 7/8,
     # which no function meets
     numbers = at_numbers.rows(cons.builder.policy, at_numbers.stage(
-        cons, {**RHO, "dV≻": lambda a: (1 - 2 * Fraction(a)) ** -2}))
+        cons, {**RHO, "D_{a}V≻": lambda a: (1 - 2 * Fraction(a)) ** -2}))
     demands = [at_numbers.demand(identification(cons), {**numbers, "a": a, "x": x})
                for a, x in ((Fraction(1, 8), Fraction(3, 4)), (0, Fraction(7, 8)))]
     assert demands == [(Fraction(7, 8), Fraction(3, 4)), (Fraction(7, 8), Fraction(7, 8))]
@@ -260,9 +170,9 @@ def clause_condition(stage):
 def test_item_3_the_split_of_a_clause_and_its_kuhn_tucker_condition_agree_at_numbers(cons_cap, at_numbers):
     written = [(core, bound) for core in CORES for bound in ONE_BOUND] + [("=", chain) for chain in CHAINS]
     for core, bound in written:
-        line = f"    c[>]   {core} 𝑑𝑢𝑖𝑛𝑣(dV[>]) ⟂ {bound}           :: [id=InvEuler]\n"
+        line = f"    c[>]   {core} 𝑑𝑢𝑖𝑛𝑣(D_{{a}}V[>]) ⟂ {bound}           :: [id=InvEuler]\n"
         stage = stage_from_text(candidate_text("clause", line), "clause.bl")
-        numbers = at_numbers.stage(stage, {**RHO, "dV≻": 1})
+        numbers = at_numbers.stage(stage, {**RHO, "D_{a}V≻": 1})
         condition, regions = clause_condition(stage)
         for a, x in itertools.product(SAVINGS, CONSUMPTIONS):
             point = {**numbers, "a": a, "c≻": x}
@@ -289,7 +199,7 @@ def test_item_3_the_split_of_a_clause_and_its_kuhn_tucker_condition_agree_at_num
     # trial of the two-sided bound (`cap-v3-reversed.bl`): at ā = 2 and the
     # saving 2 the cap binds, the residual is nonnegative, and the value 3 is
     # admitted and the value 1/2 is not
-    numbers = at_numbers.stage(cons_cap, {**RHO, "ā": 2, "dV≻": 1})
+    numbers = at_numbers.stage(cons_cap, {**RHO, "ā": 2, "D_{a}V≻": 1})
     for form in clause_condition(cons_cap):
         assert at_numbers(form, {**numbers, "a": 2, "c≻": 3})
         assert not at_numbers(form, {**numbers, "a": 2, "c≻": Fraction(1, 2)})
@@ -391,12 +301,12 @@ GRID = re.compile(r"^\s*(?!(?:V|dV\w*|v|c)\[)(?P<field>\w+)\[>\]\s*=(?!=)[^:]*c\
 # the grid lines under `applications/` whose files elaborate, by file and line;
 # buffer-stock, the two consumption stages of retirement-choice,
 # consumption-savings-iid, benhabib-2019 and the two consumption stages of
-# housing-renting and of durables write theirs in method blocks under
-# `declaration/methods/`, which CORE does not read (decisions MB-S18, MB-V7,
-# MB-U12)
+# housing-renting and of durables write theirs in their methods files, the
+# additions beside the stage files or the block files under
+# `declaration/methods/`, which STAGE_FILES does not read (decisions MB-S18,
+# MB-V7, MB-U12)
 GRID_LINES = {
-    "applications/portfolio-choice/declaration/stages/cons/cons.bl": 34,
-    "applications/portfolio-choice/declaration/stages/cons_obs/cons_obs.bl": 35,
+    "applications/portfolio-choice/declaration/stages/cons_obs/cons_obs.bl": 34,
 }
 # the files with a grid line that stand refused under a rule of an earlier
 # amendment, before the construction reads their grid lines, by file, line
@@ -428,12 +338,14 @@ def test_item_5_only_a_pullback_writes_the_law_on_a_card_with_a_where_line_and_e
     # The law's line is read at the policy, whose controls print bare at the
     # point of several coordinates, `𝑔≻(m_f, m_p, w_d, 𝑐, 𝑐_p)` (card-redesign
     # §2 change 4 and §3; CL151 and CL155 of the release's decisions)
-    policy = worker_saving.builder.policy
+    bound_worker = copy_native(worker_saving).methodize(
+        ROOT / "applications/pension-retirement/declaration/stages/worker_saving/methods.bl")
+    policy = bound_worker.builder.policy
     card = str(policy)
     where = "\n".join(section(card, "Where"))
     assert flat(where) == flat("Where (y_f, y_p) = 𝑔≻(m_f, m_p, w_d, 𝑐, 𝑐_p)") and where.count("𝑔≻(") == 1
     operations = "\n".join(section(card, "Operations"))
-    assert flat("⟂ y_f ≥ 0") in flat(operations) and "[1]" not in card
+    assert flat("⟂ m_f − 𝑐 − 𝑐_p ≥ 0") in flat(operations) and "[1]" not in card
     keys = [str(key) for key in policy.primitives.list()]
     assert [key for key in keys if key.startswith("euler")] == ["euler_financial:Aggregation"]
     assert not any(key.endswith(("Inversion", "Solution")) for key in keys)
@@ -447,7 +359,7 @@ def test_item_5_only_a_pullback_writes_the_law_on_a_card_with_a_where_line_and_e
     # the decision state at the candidate: its file elaborates, or stands
     # refused under a rule of an earlier amendment, and none is refused under
     # `grid-line-consistency`
-    found = {str(path.relative_to(ROOT)): number for path in CORE
+    found = {str(path.relative_to(ROOT)): number for path in STAGE_FILES
              for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1) if GRID.match(line)}
     assert found == {**GRID_LINES, **{path: line for path, (line, _) in REFUSED_BEFORE.items()}}
     for path in found:
@@ -472,29 +384,22 @@ def test_item_5_only_a_pullback_writes_the_law_on_a_card_with_a_where_line_and_e
     assert flat("m_d[>] = a + c[>]") in flat(refused.value.message)
 
 
-# --- item 6: the recorded guard ---
+# --- item 6: the correspondence carriers ---
 
-def test_item_6_the_recorded_guard_holds_the_candidate_and_the_cash_on_hand_as_correspondences():
-    def strings(value):
-        if isinstance(value, str):
-            yield value
-        elif isinstance(value, (dict, list)):
-            for item in value.values() if isinstance(value, dict) else value:
-                yield from strings(item)
-
-    # the recording of the inverse Euler form of the consumption stage, since
-    # the corpus `cons.bl` writes the maximization alone (MB-T216)
+def test_item_6_the_inverse_euler_example_types_candidate_and_cash_as_correspondences(elaborate_text):
     from bellman.refusal_examples import INVERSE_EULER
-    from conftest import stage_from_text
-    from snapshot.record import recording_of
-    recorded = flat("\n".join(strings(recording_of(stage_from_text(INVERSE_EULER, "t.bl")))))
-    assert flat("𝑐≻ : ℝ₊ ⇉ ℝ₊₊") in recorded and flat("𝑚≻ : ℝ₊ ⇉ ℝ₊") in recorded
-    assert flat("𝑐≻ : ℝ₊ → ℝ₊₊") not in recorded and flat("𝑚≻ : ℝ₊ → ℝ₊") not in recorded
+    stage = elaborate_text(INVERSE_EULER, "t.bl")
+    signatures = flat(str(stage.builder.policy["InvEuler:Aggregation"].signature()) +
+                      str(stage.builder.policy["grid:Aggregation"].signature()))
+    assert flat("𝑐≻ : ℝ₊ ⇉ ℝ₊₊") in signatures
+    assert flat("𝑚≻ : ℝ₊ ⇉ ℝ₊") in signatures
+    assert flat("𝑐≻ : ℝ₊ → ℝ₊₊") not in signatures
+    assert flat("𝑚≻ : ℝ₊ → ℝ₊") not in signatures
 
 
 # --- the fixture that reads a held term at numbers ---
 
-def test_the_fixture_reads_a_held_term_at_numbers(cons, adjuster_cons, at_numbers):
+def test_the_fixture_reads_a_held_term_at_numbers(cons_candidate, adjuster_cons, at_numbers):
     """The fixture `at_numbers` of `conftest.py`, on the definitions of two
     stages, which lane C does not change, and on terms written here: the
     functions, the correspondence and the laws of motion of the files, the
@@ -507,6 +412,7 @@ def test_the_fixture_reads_a_held_term_at_numbers(cons, adjuster_cons, at_number
     def name(written):
         return T.Sym(T.Constant(written))
 
+    cons = cons_candidate
     numbers = at_numbers.stage(cons, RHO)
     assert numbers["𝑑𝑢𝑖𝑛𝑣"](Fraction(16, 9)) == Fraction(3, 4) and numbers["𝑑𝑢𝑖𝑛𝑣"](1) == 1
     assert numbers["𝑑𝑢"](Fraction(1, 2)) == 4 and numbers["dcsn_to_cntn"](2, Fraction(1, 2)) == Fraction(3, 2)

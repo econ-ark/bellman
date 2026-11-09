@@ -78,7 +78,7 @@ STAGE cons / BACKWARD INITIAL DIAGRAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Signature
   in   V≻  : {V≻}
-       ─────────────────────────────────────────────
+       ────────────────────────────────────────
   out  V≺  : {V≺}
        c   : {c}
 
@@ -95,20 +95,10 @@ Operations
 Source  cons.bl
   backward  ≺ V≺  ←  ∼ V  ←  ≻ V≻
   policy    ∼ c  ←  ≻ V≻
-  22        V        = 𝑢(c) + V[>]
-              :: [id=value]
-  23        D_{m_d}V = 𝑑𝑢(c)
-              :: [id=marginal]
-  27        V[<] = V
-              :: [id=value]
-  31        c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])
-              :: [id=optimality, !doc]
-  32        c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0
-              :: [id=InvEuler]
-  33        m_d[>] = a + c[>]
-              :: [id=endoggrid]
-  34        c      = c[>]
-              :: [id=cons_choice]
+  21        V        = 𝑢(c) + V[>]                       :: [id=value]
+  22        D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
+  26        V[<] = V                                     :: [id=value]
+  30        c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -121,20 +111,21 @@ STAGE cons / FORWARD INITIAL DIAGRAM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Signature
   in   m≺  : {m≺}
+       l≺  : {m≺, l≺}
        ─────────────────────────────────────────
   out  a≻  : {a≻}
 
 Operations
   arvl_to_dcsn
-  in: m≺                                out: m_d
+  in: m≺, l≺                            out: m_d
 
   dcsn_to_cntn
   in: m_d                               out: a≻
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  forward  ≺ m≺  →  ∼ m_d  →  ≻ a≻
-  14       m_d = m
-  18       a = m_d - c
+  forward  ≺ m≺, l≺  →  ∼ m_d  →  ≻ a≻
+  13       m_d = m
+  17       a = m_d - c
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -155,7 +146,7 @@ print(block.signature())
 ```text
 Block('cons', 'cntn_to_dcsn')
 value     line  → V
-marginal  line  → D_{m_d}V
+marginal  line
 in         V≻ : {V≻}
 out        V : {V}
 ```
@@ -176,14 +167,21 @@ Signature
 
 Conditions
   𝑉(m_d) ∈ [−∞, ∞)
+  marginal-reading: the right side of each derivative line equals the
+    derivative, in the named coordinate, of the value the builder writes,
+    under the envelope conditions: concavity of the continuation value,
+    interiority of the maximizer or the multiplier's term at a binding
+    constraint, differentiability of the reward in the control, a measurable
+    selection of the policy, and differentiability of the value at the point
+    read; listed and not checked   [required]
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  22  V        = 𝑢(c) + V[>]  :: [id=value]
-  23  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-A line of a block is read by a second key, its id, and answers `denote()`, the statement the file writes with its position, `signature()`, `obligations()` and `methods`. A line marked `!doc` states what the control is and is no equation a method solves, so it has no box in the diagram and forms no operation of the builder: the builder's card prints it under `Declared`, with the constructed output substituted, and the line as the file writes it under `Source` ([The builders graphs](03-build.md) §3). It is still read by its key.
+A line of a block is read by a second key, its id, and answers `denote()`, the statement the file writes with its position, `signature()`, `obligations()` and `methods`. A line marked `!doc` states what the control is and is no equation a method solves, so it has no box in the diagram and forms no operation of the builder: the builder's card prints it under `Declared`, with the constructed output substituted, and the line as the file writes it under `Source` ([The builders graphs](03-build.md) §3). It is still read by its key. The consumption stage marks no line so; its maximization `optimality` forms an operation, and the portfolio stage `port.bl` of the same application marks its maximization `objective`.
 
 ```python
 line = stage.initial.backward["cntn_to_dcsn", "value"]
@@ -200,7 +198,7 @@ Conditions
   𝑉(m_d) ∈ [−∞, ∞)
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  22  V        = 𝑢(c) + V[>]  :: [id=value]
+  21  V        = 𝑢(c) + V[>]  :: [id=value]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Line('cons', 'policy.optimality')
 ```

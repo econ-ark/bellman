@@ -1,9 +1,18 @@
-# The consumption-savings stage's numerical settings: the exogenous grid of
-# savings a of the endogenous grid method, which its entry in
-# methods/cons_savings_iid.yml names. No code of this application reads a grid,
-# so the values are those of the savings grid of the consumption stage of
-# applications/cons-port/declaration/settings/cons.yml.
+# The consumption-savings stage's numerical settings, the values of the
+# settings its methods file methods.bl declares, beside the stage file under
+# declaration/stages/cons_savings_iid/: the exogenous grid of savings a of
+# the endogenous grid method, the grid of the arrival assets b on which the
+# arrival value and its derivative are represented, and the quadrature nodes
+# of the income. No code of this application reads a grid, so the savings
+# grid takes the values of the savings grid of the consumption stage of
+# applications/cons-port/declaration/settings/cons.yml, the grid of the
+# arrival assets takes the same values, and the seven nodes are those of the
+# buffer-stock application.
 settings:
   n_a: 800
   a_min: 1.0e-6
   a_max: 100.0
+  n_b: 800
+  b_min: 1.0e-6
+  b_max: 100.0
+  n_y_nodes: 7

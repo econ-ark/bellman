@@ -1,10 +1,14 @@
-"""The parameters the stages of one period share (AMD-COMP-001 §2.3).
+"""The parameters, and the settings, the stages of one period share
+(AMD-COMP-001 §2.3; specification 0.7, S1).
 
 A parameter name that two or more stage occurrences of a period declare
 names one parameter of the period, whatever stage declares it: `a_min` in
 two stages of one period is one parameter, and the same spelling in another
 period is another. The declarations of such a parameter are reconciled and
-its value is supplied once for the period.
+its value is supplied once for the period. A setting name that two or more
+occurrences declare in their methods files names one setting of the period
+in the same way, its declared sets reconciled and its value supplied once
+for the period (`period_settings`).
 
 `shared_parameters` reads the stage occurrences of one period and answers,
 for each parameter name two or more of them declare, the keys that declare
@@ -32,7 +36,10 @@ kind, so that a reader that binds the other kinds after a refused
 calibration tells the refusal from one of the elaboration. A position
 whose record is a stage object has no mapping to bind and keeps its
 calibration; a stage that declares a shared parameter its own sources do
-not supply takes the period's value.
+not supply takes the period's value. `period_settings` answers the settings
+mapping to bind at each position in the same way, from the records'
+settings mappings and the settings a stage object holds, for the settings
+the stages of the period share.
 """
 
 from __future__ import annotations
@@ -42,28 +49,33 @@ from collections.abc import Mapping
 from typing import NamedTuple
 
 from bellman.factory.loading import plain_python
-from bellman.fold.block_lines import parameter_sets
+from bellman.fold.block_lines import parameter_sets, setting_sets
 from bellman.native.identity import Identity
 from bellman.refusals import FactoryError
 from bellman.stage.elaborated import ElaboratedStage
-from bellman.stage.sources import load_calibration
+from bellman.stage.sources import load_calibration, load_settings
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
 from bellman.typing import sets
 
-__all__ = ["SharedParameter", "period_calibrations", "shared_parameters"]
+__all__ = ["SharedParameter", "period_calibrations", "period_settings", "shared_parameters"]
 
 RULE = "period-parameter-agreement"
 
 
 class SharedParameter(NamedTuple):
-    """One parameter two or more stages of a period declare: its `name`, the
-    `keys` of the stages that declare it, in the period's order, and the
-    `domain`, the one retained set term the declarations agree on."""
+    """One parameter, or one setting, two or more stages of a period declare:
+    its `name`, the `keys` of the stages that declare it, in the period's
+    order, the `domain`, the one retained set term the declarations agree
+    on, and its `kind`, `parameter` or `setting`, the same in every
+    declaring stage. A setting two stages of one period declare is one
+    setting of the period, as a parameter is one parameter (specification
+    0.7, S1)."""
 
     name: str
     keys: tuple
     domain: object
+    kind: str = "parameter"
 
 
 class _Declaration(NamedTuple):
@@ -89,16 +101,36 @@ def shared_parameters(stages, address="periods[?]", file=None):
     `address`, where two declarations meet in no nonempty set the package
     reads; a refusal names `file`, the trellis file, where one is given."""
     declared = {}
+    kinds = {}
     for key, stage in stages.items():
         definitions = _set_definitions(stage)
-        for name, setterm in parameter_sets(stage).items():
-            resolved = T.Named("ℝ") if setterm is None else sets.defined(setterm, definitions)
-            written = "ℝ" if setterm is None else to_source(setterm)
-            declared.setdefault(name, []).append(_Declaration(key, stage, resolved, written))
+        for kind, declarations in (
+            ("parameter", parameter_sets(stage)),
+            ("setting", setting_sets(stage)),
+        ):
+            for name, setterm in declarations.items():
+                resolved = T.Named("ℝ") if setterm is None else sets.defined(setterm, definitions)
+                written = "ℝ" if setterm is None else to_source(setterm)
+                declared.setdefault(name, []).append(_Declaration(key, stage, resolved, written))
+                kinds.setdefault(name, set()).add(kind)
     shared = {}
     for name, sites in declared.items():
         if len(sites) < 2:
             continue
+        if len(kinds[name]) > 1:
+            # a name one stage declares as a parameter of the model and
+            # another as a setting of a methods file names two things
+            raise FactoryError(
+                f"the stages {_stages(sites)} of the period declare {name!r} as a parameter "
+                "in one and as a setting in another; a name two stages of one period declare "
+                "names one parameter or one setting of the period",
+                rule=RULE,
+                file=file,
+                address=address,
+                written="; ".join(f"{name} : {site.written} in {site.key}" for site in sites),
+                write=f"{name!r} declared as a parameter in every stage of the period, or as "
+                "a setting in every methods file, or distinct names",
+            )
         terms = [site.resolved for site in sites]
         if all(term == terms[0] for term in terms):
             domain = terms[0]
@@ -117,7 +149,7 @@ def shared_parameters(stages, address="periods[?]", file=None):
                     f"the stages {_stages(differing)} of the period declare the parameter "
                     f"{name!r} with the sets {_sets(differing)}, {reason}; a parameter name "
                     "names one parameter of the period, shared by the stages that declare "
-                    "it, so their declared sets agree (AMD-COMP-001 §2.3)",
+                    "it, so their declared sets agree",
                     rule=RULE,
                     file=file,
                     address=address,
@@ -126,7 +158,9 @@ def shared_parameters(stages, address="periods[?]", file=None):
                     "package reads whose intersection is not empty, or distinct names for "
                     "distinct parameters",
                 )
-        shared[name] = SharedParameter(name, tuple(site.key for site in sites), domain)
+        shared[name] = SharedParameter(
+            name, tuple(site.key for site in sites), domain, next(iter(kinds[name]))
+        )
     return shared
 
 
@@ -154,14 +188,23 @@ def _sets(sites):
 
 
 def _declaration_address(stage, name):
-    """The address of a stage's declaration of the parameter `name`, as its
-    definitions table records it, else the stage's origin."""
-    definition = stage.definitions.get(Identity("parameter", stage=stage.name, field=name))
+    """The address of a stage's declaration of the parameter or the setting
+    `name`, as its definitions table records it, else the stage's origin."""
+    definition = stage.definitions.get(
+        Identity("parameter", stage=stage.name, field=name)
+    ) or stage.definitions.get(Identity("setting", stage=stage.name, field=name))
     address = getattr(definition, "address", None)
     return address or stage.provenance.get("origin") or stage.name
 
 
 # --- the values of one period reconciled ---
+
+# for each binding kind whose values a period supplies: the kind of the
+# shared names it values and the reader of a record's source
+_SUPPLIED = {
+    "calibration": ("parameter", load_calibration),
+    "settings": ("setting", load_settings),
+}
 
 
 def period_calibrations(found, by_period, file=None):
@@ -181,28 +224,56 @@ def period_calibrations(found, by_period, file=None):
     `shared_parameters` refuses the declarations; a refusal of a value
     carries the notes `Stage occurrence: <address>` and `Binding kind:
     calibration`."""
+    return _period_values(found, by_period, file, "calibration")
+
+
+def period_settings(found, by_period, file=None):
+    """The settings mapping to bind at each position of `found`, as
+    `period_calibrations` answers the calibration mapping, for the settings
+    two or more stages of a period declare in their methods files
+    (specification 0.7, S1): the record's own mapping where the period
+    supplies nothing beyond it, the same object; a flat mapping of the
+    record's values with the period's value for each shared setting the
+    record does not supply or supplies otherwise; and None for a position
+    whose record is a stage object. The suppliers of a shared setting are
+    the records of its declaring stages and the settings a stage object
+    among them holds; two suppliers whose values differ are refused under
+    `period-parameter-agreement`, the refusal carrying the notes `Stage
+    occurrence: <address>` and `Binding kind: settings`."""
+    return _period_values(found, by_period, file, "settings")
+
+
+def _period_values(found, by_period, file, kind):
+    """The mapping of the binding `kind`, `calibration` or `settings`, to
+    bind at each position of `found`, as `period_calibrations` and
+    `period_settings` answer it."""
+    word, load = _SUPPLIED[kind]
     effective = {}
     by_h = {}
     for h, key, address, record in found:
         by_h.setdefault(h, []).append((key, address, record))
     for h, places in by_h.items():
         where = f"periods[{h}]"
-        shared = shared_parameters(by_period[h], where, file)
+        shared = {
+            name: parameter
+            for name, parameter in shared_parameters(by_period[h], where, file).items()
+            if parameter.kind == word
+        }
         supplied = {}
         for key, address, record in places:
             if isinstance(record, ElaboratedStage):
-                held = record.bindings.calibration
+                held = getattr(record.bindings, kind)
                 supplied[key] = (dict(held) if held is not None else {}, address)
                 effective[h, key] = None
             else:
-                mapping = record["calibration"]
+                mapping = record[kind]
                 try:
-                    values = plain_python(load_calibration(mapping)) if mapping else {}
+                    values = plain_python(load(mapping)) if mapping else {}
                 except Exception as error:
                     # a source the reader refuses is a refused binding, as
                     # the stage verb's refusal of it is noted
                     error.add_note(f"Stage occurrence: {address}")
-                    error.add_note("Binding kind: calibration")
+                    error.add_note(f"Binding kind: {kind}")
                     raise
                 supplied[key] = (values, address)
                 effective[h, key] = mapping
@@ -219,33 +290,35 @@ def period_calibrations(found, by_period, file=None):
             for key, other in suppliers[1:]:
                 if not _equal(other, value):
                     _refuse_value(
-                        f"the stages {first} and {key} of the period supply the parameter "
-                        f"{name!r} with the values {value!r} and {other!r}; a parameter name "
-                        "names one parameter of the period, shared by the stages that declare "
-                        "it, so their sources supply it one value (AMD-COMP-001 §2.3)",
+                        f"the stages {first} and {key} of the period supply the {word} "
+                        f"{name!r} with the values {value!r} and {other!r}; a {word} name "
+                        f"names one {word} of the period, shared by the stages that declare "
+                        f"it, so their sources supply it one value",
                         where,
                         file,
-                        written=f"{name}: {value!r} ({_sources(first, places)}); "
-                        f"{other!r} ({_sources(key, places)})",
+                        written=f"{name}: {value!r} ({_sources(first, places, kind)}); "
+                        f"{other!r} ({_sources(key, places, kind)})",
                         write=f"one value of {name!r} in the sources of "
-                        f"{', '.join(parameter.keys)}, or distinct names for distinct parameters",
+                        f"{', '.join(parameter.keys)}, or distinct names for distinct {word}s",
                         position=supplied[key][1],
+                        kind=kind,
                     )
             for key in parameter.keys:
-                declared = _declared_set(by_period[h][key], name)
+                declared = _declared_set(by_period[h][key], name, word)
                 if _outside(value, declared):
                     _refuse_value(
-                        f"the value {value!r} of the parameter {name!r}, supplied by {first}, "
+                        f"the value {value!r} of the {word} {name!r}, supplied by {first}, "
                         f"lies outside the set {to_source(declared)} that {key} declares it "
-                        "with; a parameter name names one parameter of the period, so its "
-                        "value lies in the set every declaring stage writes (AMD-COMP-001 §2.3)",
+                        f"with; a {word} name names one {word} of the period, so its "
+                        f"value lies in the set every declaring stage writes",
                         where,
                         file,
-                        written=f"{name}: {value!r} ({_sources(first, places)}); "
+                        written=f"{name}: {value!r} ({_sources(first, places, kind)}); "
                         f"{name} : {to_source(declared)} in {key}",
                         write=f"a value of {name!r} in {to_source(declared)}, or a declared set "
                         f"of {name!r} in every stage that holds the value",
                         position=supplied[first][1],
+                        kind=kind,
                     )
             period[name] = value
         for key, address, record in places:
@@ -262,21 +335,23 @@ def period_calibrations(found, by_period, file=None):
     return effective
 
 
-def _refuse_value(message, address, file, *, written, write, position):
+def _refuse_value(message, address, file, *, written, write, position, kind):
     """Raise the refusal of a supplied value, with the notes of a refused
-    binding at `position`."""
+    binding of `kind` at `position`."""
     error = FactoryError(
         message, rule=RULE, file=file, address=address, written=written, write=write
     )
     error.add_note(f"Stage occurrence: {position}")
-    error.add_note("Binding kind: calibration")
+    error.add_note(f"Binding kind: {kind}")
     raise error
 
 
-def _declared_set(stage, name):
-    """The set `stage` declares the parameter `name` with, read through the
-    sets the stage defines by name; the reals where it names none."""
-    setterm = parameter_sets(stage).get(name)
+def _declared_set(stage, name, word):
+    """The set `stage` declares the parameter or the setting `name` with,
+    `word` saying which, read through the sets the stage defines by name;
+    the reals where it names none."""
+    declarations = parameter_sets(stage) if word == "parameter" else setting_sets(stage)
+    setterm = declarations.get(name)
     return T.Named("ℝ") if setterm is None else sets.defined(setterm, _set_definitions(stage))
 
 
@@ -302,17 +377,18 @@ def _equal(left, right):
         return False
 
 
-def _sources(key, places):
-    """The sources of the calibration at the position `key` of `places`, in
-    words: the names of the record's calibration list, a slot as `$<slot>`,
-    the file a held binding names, or the record itself."""
+def _sources(key, places, kind):
+    """The sources of the binding of `kind` at the position `key` of
+    `places`, in words: the names of the record's source list of that kind,
+    a slot as `$<slot>`, the file a held binding names, or the record
+    itself."""
     record = next(record for other, _, record in places if other == key)
     if isinstance(record, ElaboratedStage):
-        source = record.provenance.get("sources", {}).get("calibration", {})
+        source = record.provenance.get("sources", {}).get(kind, {})
         return "its binding from " + str(source.get("path") or source.get("origin") or "memory")
     entries = []
     if isinstance(record.get("provenance"), Mapping):
-        entries = record["provenance"].get("source_lists", {}).get("calibration", [])
+        entries = record["provenance"].get("source_lists", {}).get(kind, [])
     names = [
         entry.get("source") or (f"${entry['slot']}" if entry.get("slot") else None)
         for entry in entries

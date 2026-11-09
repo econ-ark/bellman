@@ -4330,7 +4330,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:h_d, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:h_d, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "dcsn",
       "name": "Cap(tenure:dcsn:h_d, tenure:dcsn:h_d)",
@@ -4340,7 +4340,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:a_d"
       ],
@@ -4352,7 +4352,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d"
       ],
@@ -4364,7 +4364,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d"
       ],
@@ -4376,7 +4376,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -4389,7 +4389,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:dcsn:z_d"
@@ -4402,7 +4402,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:a_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:a_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:a_d",
        "tenure:dcsn:z_d"
@@ -4415,7 +4415,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:dcsn:a_d"
@@ -4428,7 +4428,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:dcsn:z_d"
@@ -4449,7 +4449,7 @@
       ],
       "interior": [
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [],
         "kind": "dcsn",
         "name": "Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)",
@@ -4459,7 +4459,7 @@
         ]
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d"
         ],
@@ -4471,7 +4471,7 @@
         ]
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d",
          "tenure:dcsn:z_d"
@@ -4484,7 +4484,7 @@
         ]
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d",
          "tenure:dcsn:a_d"
@@ -4534,7 +4534,7 @@
         "references": []
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d",
          "tenure:cntn:z_kp"
@@ -4547,7 +4547,7 @@
         ]
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d",
          "tenure:cntn:w_kp"
@@ -4560,7 +4560,7 @@
         ]
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d",
          "tenure:dcsn:z_d"
@@ -4573,7 +4573,7 @@
         ]
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d",
          "tenure:dcsn:z_d"
@@ -4583,7 +4583,7 @@
         "outputs": []
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:cntn:z_kp",
          "tenure:cntn:w_kp"
@@ -4596,7 +4596,7 @@
         ]
        },
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:cntn:z_kp",
          "tenure:cntn:h_kp"
@@ -4676,7 +4676,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:w_kp"
@@ -4689,7 +4689,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:h_kp"
@@ -4702,7 +4702,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:z_kp"
@@ -4715,7 +4715,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:dcsn:a_d"
@@ -4728,7 +4728,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:dcsn:z_d"
@@ -4749,7 +4749,7 @@
       ],
       "interior": [
        {
-        "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+        "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
         "inputs": [
          "tenure:dcsn:z_d"
         ],
@@ -4843,7 +4843,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:w_kp"
@@ -4856,7 +4856,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:h_kp"
@@ -4869,7 +4869,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:z_kp"
@@ -4882,7 +4882,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:w_adj)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:w_adj)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:w_adj"
@@ -4895,7 +4895,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:z_adj)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:cntn:z_adj)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:cntn:z_adj"
@@ -4908,7 +4908,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:h_d, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:dcsn:h_d"
@@ -4921,7 +4921,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:h_d, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:h_d, tenure:dcsn:h_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:h_d",
        "tenure:dcsn:h_d"
@@ -5216,7 +5216,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "dcsn",
       "name": "Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)",
@@ -5226,7 +5226,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d"
       ],
@@ -5238,7 +5238,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -5251,7 +5251,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:a_d"
@@ -5301,7 +5301,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:cntn:z_kp"
@@ -5314,7 +5314,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:cntn:w_kp"
@@ -5327,7 +5327,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -5340,7 +5340,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -5350,7 +5350,7 @@
       "outputs": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:cntn:z_kp",
        "tenure:cntn:w_kp"
@@ -5363,7 +5363,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:cntn:z_kp",
        "tenure:cntn:h_kp"
@@ -5451,7 +5451,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d"
       ],
@@ -5777,7 +5777,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "dcsn",
       "name": "Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)",
@@ -5787,7 +5787,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d"
       ],
@@ -5799,7 +5799,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -5812,7 +5812,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:a_d"
@@ -5862,7 +5862,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:cntn:z_kp"
@@ -5875,7 +5875,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:cntn:w_kp"
@@ -5888,7 +5888,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -5901,7 +5901,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -5911,7 +5911,7 @@
       "outputs": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:cntn:z_kp",
        "tenure:cntn:w_kp"
@@ -5924,7 +5924,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:cntn:z_kp",
        "tenure:cntn:h_kp"
@@ -6012,7 +6012,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d"
       ],
@@ -6643,7 +6643,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "dcsn",
       "name": "Cap(tenure:dcsn:z_d, tenure:dcsn:z_d)",
@@ -6653,7 +6653,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d"
       ],
@@ -6665,7 +6665,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -6678,7 +6678,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:a_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:a_d"
@@ -6728,7 +6728,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:z_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:cntn:z_kp"
@@ -6741,7 +6741,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:cntn:w_kp"
@@ -6754,7 +6754,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -6767,7 +6767,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Cup(tenure:dcsn:z_d, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d",
        "tenure:dcsn:z_d"
@@ -6777,7 +6777,7 @@
       "outputs": []
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:w_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:cntn:z_kp",
        "tenure:cntn:w_kp"
@@ -6790,7 +6790,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Swap(tenure:cntn:z_kp, tenure:cntn:h_kp)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:cntn:z_kp",
        "tenure:cntn:h_kp"
@@ -6878,7 +6878,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'tenure': the box 'Spider(1, 2, tenure:dcsn:z_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "tenure:dcsn:z_d"
       ],

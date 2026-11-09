@@ -7,9 +7,9 @@
 # applications/housing-frictions/ states a terminal value, and neither does
 # §6.2 of Dobrescu and Shanker (2024), which says only "Let T be finite". The
 # value written here is the terminal boundary data V[>], zero, supplied at
-# realization; its two derivatives are therefore zero, as the marginal block
-# of declaration/methods/marginals_terminal.bl states, the agent valuing
-# nothing left after the last date T.
+# realization; its two derivatives are therefore zero, the two lines of
+# methods.bl beside this file, the addition to it, the agent valuing nothing
+# left after the last date T.
 
 [id=arvl_to_dcsn, (y_f_T : ℝ₊, y_h_T : ℝ₊₊) : !arvl -> (y_f_d : ℝ₊, y_h_d : ℝ₊₊) : !dcsn] {
     y_f_d = y_f_T                                       :: [id=financial_assets]

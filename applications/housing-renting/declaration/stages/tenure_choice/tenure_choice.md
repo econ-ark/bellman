@@ -114,10 +114,10 @@ The renter's wealth is assets after the return and the tax plus the proceeds
 of the house. Income is not added here: it is added in the renter's rental
 stage, which is where the solver adds it.
 
-The first backward block evaluates the choice at a given tenure, and the
-marginal block of `declaration/methods/marginals_tenure_choice.bl`, which the
-methods file binds on that builder with `!marginals`, states the derivative
-with respect to the assets held on arrival:
+The first backward block evaluates the choice at a given tenure, and the line
+the methods file `methods.bl`, the addition beside this file, appends to that
+builder's block states the derivative with respect to the assets held on
+arrival:
 
 ```bl
     V = (V_o[>], V_r[>])[d]                                         :: [id=choice_value]
@@ -148,8 +148,8 @@ The second backward block integrates the income draw:
 
 It writes no derivative line: the decision states are the arrival states
 unchanged, so the derivative of the arrival value in assets is the
-expectation of the decision value's derivative, which the decision value
-carries by its marginal block.
+expectation of the decision value's derivative, which the line
+`choice_marginal` of the methods file's block `cntn_to_dcsn` states.
 
 Because the law names `y_pre`, the result is a function of last period's
 income as well as of assets and housing, which is the state the inter-period
@@ -187,9 +187,9 @@ included.
 
 ## Numerical methods
 
-`declaration/stages/tenure_choice/methods.yml` records what the solver does: the comparison of
-the two values at the policy block; the expectation as a sum over the row of
-the transition matrix, which the solver computes as a matrix product; and the
-decision value and its derivative held on the asset grid by linear
-interpolation, which is how the renter's value is read at the liquidated
+`declaration/stages/tenure_choice/methods.bl` types what the solver does: the discrete choice
+between the two values on the policy builder; the expectation over the income chain by
+`!markov` at its one occurrence, a sum over the row of the transition matrix, which the solver
+computes as a matrix product; and the decision value and its derivative held on the asset
+grid by linear interpolation, which is how the renter's value is read at the liquidated
 wealth.

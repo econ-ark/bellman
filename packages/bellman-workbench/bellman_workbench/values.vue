@@ -77,14 +77,15 @@
 //   tab       the tab shown: Parameters, Settings or Methods
 //   rows      one row each, {name, detail, value, choices, note, file,
 //             line}: `name` the parameter, the setting or the place of a
-//             bound method; `detail` the set the parameter is declared in,
-//             the kind of the setting's value, or the method the stage
-//             binds there; `value` the value as the file writes it, or as
-//             it was typed while its write waits, or the method's tag;
-//             `choices` the tags the package admits at the place, none for
-//             a parameter or a setting; `note` the package's refusal of a
-//             parameter's value; `file` and `line` where the value or the
-//             method is written, null where no file writes it
+//             bound method; `detail` the set the parameter or the setting
+//             is declared in, or the method the stage binds there;
+//             `value` the value as the file writes it, or as
+//             it was typed while its write waits, or the method word;
+//             `choices` the method words the package admits at the place,
+//             none for a parameter or a setting and none where a choice
+//             could not be written into an addition; `note` the package's
+//             refusal of a parameter's value; `file` and `line` where the
+//             value or the method is written, null where no file writes it
 //   file      the file the tab writes, null where the recipe lists none,
 //             the tab then taking no value
 //   sentence  the tab's one sentence, null where none applies
@@ -110,7 +111,7 @@ module.exports = {
     // the Fields tab's (design pass 6 §3.1; AAS, L-D24)
     columns() {
       if (this.tab === "Methods") return ["Target", "Method", "Bound"];
-      if (this.tab === "Settings") return ["Setting", "Kind", "Value"];
+      if (this.tab === "Settings") return ["Setting", "Set", "Value"];
       return ["Parameter", "Set", "Value"];
     },
   },

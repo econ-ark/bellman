@@ -548,6 +548,10 @@ vscode-textfield, vscode-textarea, vscode-single-select {
    no style of its own is set in Label, and the browser draws no weight and
    no slant that a face does not hold, so that a function's mathematical
    italic is the face's own (design pass 13 §3; C7, C13). */
+/* Keep Solara's loading indicator until the Workbench is present. */
+body:has(.bl-window) #loader-container {
+  display: none;
+}
 .bl-root, .bl-root .v-application__wrap, .bl-root .v-main {
   min-height: 0;
 }
@@ -570,7 +574,7 @@ vscode-textfield, vscode-textarea, vscode-single-select {
 }
 /* Unit R: the fourth column, Matsya's, while it is a child of the window
    and is not folded (unit K's decision K-D19). */
-.bl-window:has(> .bl-matsya):not([data-folded-matsya]) {
+.bl-window:has(> .bl-matsya):not([data-folded-matsya], [data-compact-pane]) {
   grid-template-columns:
     var(--bl-folder-width, 170px)
     var(--bl-file-width, minmax(0, 568fr))
@@ -1012,6 +1016,11 @@ button.bl-crumb:focus-visible {
   outline: 1px solid var(--bl-accent);
   outline-offset: -1px;
 }
+.bl-error-status {
+  max-width: 11rem;
+  line-height: 1.1;
+  text-align: left;
+}
 .bl-error-icon {
   width: 16px;
   height: 16px;
@@ -1112,6 +1121,22 @@ button.bl-crumb:focus-visible {
 .bl-error-action {
   margin: 2px 0 0 calc(-1 * var(--bl-s2));
 }
+/* The catalogue's entry of a line's rule (Model Interface 0.9 §6 item 4):
+   its summary `entry` stands under the line's facts, and the entry, read
+   from the installed package, opens under the summary in the code face. */
+.bl-rule-entry > summary {
+  cursor: pointer;
+  color: var(--bl-ink-2);
+}
+.bl-rule-entry > summary:focus-visible {
+  outline: 1px solid var(--bl-accent);
+}
+.bl-rule-entry > pre {
+  margin: var(--bl-s1) 0 0;
+  font: var(--bl-t-code-small);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 /* The mark a thing refused keeps while its refusal stands, its sentence in
    the list under the error mark (AMD-MI-002 §6a rule 1): a cell's input or
@@ -1198,7 +1223,10 @@ button.bl-crumb:focus-visible {
    `last constructed <digest>`, the words in Small and the digest in Code
    small, in ink-3, cut with an ellipsis where the column is narrow (spec
    0.4 §5.7; Design brief 7 §14); and Problems at its upper right corner.
-   Where the bar's items do not fit one row, as in a stage's view while
+   Where the bar's items do not fit one row, the summary of the
+   categories in Problems is not drawn first, its text kept (graph_bar.vue
+   writes data-narrow on the bar), and where they do not fit without it
+   either, as in a stage's view while
    Matsya's column is open, the region's name is not drawn and stays the
    region's heading for assistive technology, so that the bar keeps one
    row of 36 px and the canvas begins at 72 (graph_bar.vue writes
@@ -1256,6 +1284,17 @@ button.bl-crumb:focus-visible {
   display: flex;
   align-items: center;
   height: var(--bl-bar-h);
+}
+/* Problems' summary of the categories not drawn while the bar's items do
+   not fit one row with it: out of the bar's flow and clipped to
+   nothing, its text kept. */
+.bl-graph-bar[data-narrow] .bl-error-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .bl-graph-choice {
   display: contents;
@@ -1642,6 +1681,10 @@ a.bl-term:hover {
 }
 .bl-tree .bl-row {
   padding-left: calc(var(--bl-s3) + var(--bl-tree-depth, 0) * var(--bl-s2));
+}
+.bl-tree [role="treeitem"]:focus-visible {
+  outline: 1px solid var(--bl-accent);
+  outline-offset: -1px;
 }
 .bl-tree-file {
   position: relative;
@@ -2132,6 +2175,10 @@ a.bl-term:hover {
   padding: var(--bl-s3);
   font: var(--bl-t-label);
   color: var(--bl-ink-3);
+}
+.bl-editor-frame .bl-start-model {
+  align-self: flex-start;
+  margin-inline: var(--bl-s3);
 }
 /* The editor's line numbers in opaque ice-3 under the high-contrast
    setting (spec 0.4 §5.8; unit R). */
@@ -2944,6 +2991,9 @@ span.bl-class-field {
 .bl-view-host .react-flow__edge.bf-cable-edge:hover .react-flow__edge-path.bf-cable-outer { stroke: var(--bl-ice-3); }
 .bl-view-host .react-flow__edge.bf-cable-edge.selected .react-flow__edge-path.bf-cable-outer { stroke: var(--bl-accent); stroke-width: max(2px, calc(1.5px / var(--bf-scale, 1))); }
 .bl-view-host .react-flow__edge-path.bf-cable-outer.bf-lit { stroke: var(--bl-graph-ring); }
+.bl-view-host .bf-shared-run { cursor: pointer; }
+.bl-view-host .bf-shared-run:hover .react-flow__edge-path,
+.bl-view-host .bf-shared-run:focus-visible .react-flow__edge-path { stroke: var(--bl-graph-ring); }
 /* The count of a cable's wires at its plug, where it carries more than one
    (design pass 13 §1, rule 5; AAS, 16 October 2026: "some indication ...
    which indicates multiple states"): the schematic's mark of a line that
@@ -4323,6 +4373,22 @@ details[open] > .bl-fold-summary > .bl-closed-twistie {
   font: var(--bl-t-small);
   color: var(--bl-ink-3);
 }
+.bl-form[data-form="new variant"] .bl-form-note {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.bl-empty-trellis {
+  padding: var(--bl-s2) var(--bl-s3);
+}
+.bl-empty-trellis .bl-text-button {
+  border: 1px solid var(--bl-control-border);
+  border-radius: 0;
+}
+.bl-stage-placement {
+  margin: 0;
+  font: var(--bl-t-small);
+  color: var(--bl-ink-2);
+}
 /* The keyboard's focus on every control of a form: a 1 px accent outline
    and no glow (§5.5). */
 .bl-form :focus-visible {
@@ -4850,6 +4916,24 @@ details[open] > .bl-fold-summary > .bl-closed-twistie {
   max-height: 60%;
   overflow-y: auto;
   font: var(--bl-t-label);
+}
+.bl-view-host .bf-shared-list { width: min(360px, 100%); }
+.bl-view-host .bf-shared-list .bf-stage-item {
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  height: auto;
+  min-height: 28px;
+  padding-bottom: 4px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  white-space: normal;
+  cursor: pointer;
+}
+.bl-view-host .bf-shared-list .bf-stage-item > span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 /* The same list beside the Recipe tab's button `Stage` (unit N, Task 5;
    design pass 10 §7), within the panel under the editor, which holds it
@@ -5587,4 +5671,118 @@ details[open] > .bl-fold-summary > .bl-closed-twistie {
   white-space: pre;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* One work area fills the narrow window. Hidden areas keep their layout
+   so the editor and graph retain their positions and selection. */
+.bl-compact-switch {
+  display: none;
+}
+.bl-window[data-compact-pane] {
+  --bl-compact-panel-height: min(30dvh, 16rem);
+  column-gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100dvh;
+}
+.bl-window[data-compact-pane] > .bl-main-bar::after,
+.bl-window[data-compact-pane] > .bl-status::after,
+.bl-window[data-compact-pane] > .bl-matsya::before {
+  display: none;
+}
+.bl-window[data-compact-pane] > .bl-main-bar,
+.bl-window[data-compact-pane] > .bl-status {
+  grid-column: 1;
+}
+.bl-window[data-compact-pane] > .bl-status {
+  grid-row: 4;
+}
+.bl-window[data-compact-pane] > :is(.bl-folder, .bl-file, .bl-view, .bl-matsya) {
+  grid-area: 3 / 1;
+  opacity: 0;
+  visibility: hidden;
+}
+.bl-window[data-compact-pane="folder"] > .bl-folder,
+.bl-window[data-compact-pane="file"] > .bl-file,
+.bl-window[data-compact-pane="view"] > .bl-view,
+.bl-window[data-compact-pane="matsya"] > .bl-matsya {
+  opacity: 1;
+  visibility: visible;
+}
+.bl-window[data-compact-pane] > :is(.bl-folder, .bl-file, .bl-view, .bl-matsya)[inert] {
+  pointer-events: none;
+}
+.bl-window[data-compact-pane] .bl-main-bar .bl-fold[data-fold="folder"],
+.bl-window[data-compact-pane] .bl-main-bar .bl-fold[data-fold="matsya"],
+.bl-window[data-compact-pane]:not([data-compact-pane="file"]) .bl-main-bar .bl-fold[data-fold="inspector"],
+.bl-window[data-compact-pane]:not([data-compact-pane="view"]) .bl-main-bar .bl-fold[data-fold="details"],
+.bl-window[data-compact-pane] .bl-handle:is([data-handle="folder"], [data-handle="file"], [data-handle="matsya"]) {
+  display: none;
+}
+.bl-window[data-compact-pane] .bl-main-bar {
+  gap: var(--bl-s2);
+}
+.bl-window[data-compact-pane] > .bl-compact-switch {
+  grid-area: 2 / 1;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  padding-inline: var(--bl-s2);
+  border-bottom: 1px solid var(--bl-hairline);
+  background: var(--bl-ground);
+}
+.bl-compact-switch > button {
+  min-height: var(--bl-title-h);
+  padding: 0 var(--bl-s2);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--bl-ink-2);
+  font: var(--bl-t-label);
+  cursor: pointer;
+}
+.bl-compact-switch > button[aria-pressed="true"] {
+  border-bottom-color: var(--bl-accent);
+  color: var(--bl-ink-1);
+}
+.bl-compact-switch > button:hover {
+  background: var(--bl-hover);
+  color: var(--bl-ink-1);
+}
+.bl-compact-switch > button:focus-visible {
+  outline: 1px solid var(--bl-accent);
+  outline-offset: -2px;
+}
+.bl-compact-switch > [data-show-problems] {
+  margin-inline-start: auto;
+}
+.bl-compact-switch > [data-problem-count]:not([data-problem-count=""])::after {
+  content: attr(data-problem-count);
+  margin-inline-start: var(--bl-s1);
+  color: var(--bl-alarm);
+}
+.bl-window[data-compact-pane] .bl-classification:not(.bl-wide) {
+  flex-basis: var(--bl-classification-height, var(--bl-compact-panel-height));
+}
+.bl-window[data-compact-pane] .bl-panel:not(.bl-wide) {
+  flex-basis: var(--bl-panel-height, var(--bl-compact-panel-height));
+}
+@media (max-width: 560px) {
+  .bl-window[data-compact-pane] .bl-editor .bl-minimap {
+    display: none;
+  }
+  .bl-window[data-compact-pane] .bl-editor .cm-scroller {
+    margin-right: 0;
+  }
+}
+.bl-window[data-compact-pane] .bl-status-summary {
+  gap: var(--bl-s2);
+}
+.bl-window[data-compact-pane] .bl-status-loop {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.bl-window[data-compact-pane] .bl-status-loop > :is(.bl-status-indent, .bl-status-language) {
+  display: none;
 }

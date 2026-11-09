@@ -184,20 +184,17 @@ DEMO_FILES = (
     "README.md",
     "answers.yml",
     "declaration/calibration/portfolio.yml",
-    # the block files the consumption and portfolio stages' methods files
-    # name, which creation copies with them (SE-29; the portfolio stage's
-    # since the two cons-port folders became one, 28 October 2026)
-    "declaration/methods/cons_egm.bl",
-    "declaration/methods/port_foc.bl",
     "declaration/period.yml",
     "declaration/settings/cons_wide.yml",
     "declaration/settings/port_wide.yml",
     "declaration/spec.yml",
     "declaration/stages/cons/cons.bl",
-    "declaration/stages/cons/methods.yml",
+    # each stage's addition, which its template brings beside its stage
+    # file (decision S7-W2)
+    "declaration/stages/cons/methods.bl",
     "declaration/stages/disc/disc.bl",
-    "declaration/stages/disc/methods.yml",
-    "declaration/stages/port/methods.yml",
+    "declaration/stages/disc/methods.bl",
+    "declaration/stages/port/methods.bl",
     "declaration/stages/port/port.bl",
     "declaration/trellis.yml",
 )
@@ -213,17 +210,15 @@ VARIANT_FILES = (
 
 # the source each slot of the demonstration is filled with at 4:30 (spec
 # 0.2 §11), by its path from the recipe's folder `declaration/`; the
-# discounting stage's settings take no source, the empty list
+# discounting stage's settings take no source, the empty list; the methods
+# are no slot, the recipe naming each stage's addition (decision S7-F3)
 DEMO_FILLS = {
     "port_calibration": "calibration/portfolio",
     "port_settings": "settings/port_wide",
-    "port_methods": "stages/port/methods",
     "cons_calibration": "calibration/portfolio",
     "cons_settings": "settings/cons_wide",
-    "cons_methods": "stages/cons/methods",
     "disc_calibration": "calibration/portfolio",
     "disc_settings": None,
-    "disc_methods": "stages/disc/methods",
 }
 
 # the files of the page's tests, which the skip rule applies to: every test
@@ -294,7 +289,7 @@ STATUS = re.compile(
     r"^(?P<path>\S+) \((?P<file>file|buffer, unsaved)\)"
     r"(?: · (?P<refusals>\d+) refused)?"
     r" · (?P<state>not parsed|parsed, refused|constructed(?:, (?:forward|backward) refused)?)"
-    r"(?: · (?P<version>symbolic|bound))?"
+    r"(?: · (?P<version>symbolic|bound|partially bound|bindings refused))?"
     r"(?: · (?P<blocks>\d+) blocks(?: \((?P<backward>\d+) backward, (?P<forward>\d+) forward\),"
     r" (?P<builders>\d+) builders, (?P<wires>\d+) wires)?)?"
     r" · loop (?P<seconds>\d+\.\d\d) s · text (?P<digest>[0-9a-f]{7})"
@@ -634,16 +629,18 @@ ADJUSTER_CONS_DETAILS = (
         # the stage begins at its decision perch and prints no inputs row (decision MB-U31)
         ("outputs", ["a_nxt_adj ℝ₊ · h_nxt_adj ℝ₊₊ · z_nxt_adj ℝ₊₊"]),
         ("policies", ["c ℝ₊₊ · h_choice ℝ₊₊"]),
+        # each place of the version at which a component is typed, in the
+        # package's order, with its method word (specification 0.7)
         ("methods", [
-            "!egm policy · !marginals cntn_to_dcsn:Evaluation · "
-            "!Linear ('cntn_to_dcsn:Evaluation', 'representation')"
+            "!Linear cntn_to_dcsn.evaluate[V] · !Linear cntn_to_dcsn.evaluate[D_{m}V] · "
+            "!egm policy"
         ]),
         (
             "sources",
             [
                 "declaration/calibration/durables.yml",
                 "declaration/settings/durables.yml",
-                "declaration/stages/adjuster_cons/methods.yml",
+                "declaration/stages/adjuster_cons/methods.bl",
             ],
         ),
     ],
@@ -895,8 +892,9 @@ PULLBACK_DETAILS = (
 
 # the keywords the durables model's recipe's slots take, in the order the
 # recipe first writes each, as the line `slots` under the recipe's blocks
-# prints them (unit K, K-D29; design pass 2 §11)
-DURABLES_SLOT_KEYWORDS = ["fill", "tenure_method", "keeper_method", "adjuster_method"]
+# prints them (unit K, K-D29; design pass 2 §11): `$fill` alone, since a
+# methods list names additions and no slot (decision S7-F3)
+DURABLES_SLOT_KEYWORDS = ["fill"]
 
 # the verbs applied of the trellis's status line for the durables model's
 # recipe, with their separator, which stand in its line after `trellis`
@@ -905,7 +903,7 @@ DURABLES_STATUS_BOUND = " · methodized, configured"
 # the rest of the same status line, periods 0–2, its parts after the loop's
 # seconds (design pass §1 item 10; unit K, Task 6): the periods and the
 # occurrences, and the unjoined fields of the forward graph
-DURABLES_STATUS_REST = " · 51 periods, 154 occurrences · 0 unjoined fields"
+DURABLES_STATUS_REST = " · 51 periods, 154 occurrences · 0 unjoined internal entry fields"
 
 # The trellis's status line and the checklist, read at one moment: the
 # visible line's text; the text of the trellis's parts in the details'
@@ -1204,6 +1202,23 @@ ERROR_LINES_JS = """
 })
 """
 
+# the lines of one group of the list under the error mark, the group named
+# by its heading, `Errors`, `Connections to check` or `Headers to check`,
+# each line the triple ERROR_LINES_JS gives
+ERROR_GROUP_LINES_JS = """
+(label) => Array.from(document.querySelectorAll('.bl-error-list .bl-problem-group'))
+  .filter((group) => group.querySelector('.bl-problem-heading').textContent === label)
+  .flatMap((group) => Array.from(group.querySelectorAll('.bl-error-line')).map((line) => {
+    const link = line.querySelector('.bl-error-place');
+    const file = line.querySelector('.bl-error-file');
+    return [
+      line.querySelector('.bl-error-sentence').textContent,
+      link ? link.dataset.path : (file ? file.textContent : null),
+      link ? Number(link.dataset.line) : null,
+    ];
+  }))
+"""
+
 # the color of the error mark as the browser computes it
 ERROR_MARK_COLOR_JS = "() => getComputedStyle(document.querySelector('.bl-error-mark')).color"
 
@@ -1258,8 +1273,9 @@ def filled(text: str) -> str:
 def written_from_the_forms(folder: Path, stages=DEMO_STAGES, repeat: int = 6) -> Path:
     """`folder` holding, by the forms of `creation` alone, what "new
     trellis" writes but the companion files: the stage files of `stages`
-    copied from their templates, the recipe, the period file, the trellis
-    file and answers.yml, each where `create_trellis` writes it
+    copied from their templates, the recipe, whose methods lists are empty
+    since no addition is copied, the period file, the trellis file and
+    answers.yml, each where `create_trellis` writes it
     (`creation.factory_path`, `creation.stage_file`). Answers the
     folder."""
     from bellman_workbench import creation
@@ -1270,7 +1286,9 @@ def written_from_the_forms(folder: Path, stages=DEMO_STAGES, repeat: int = 6) ->
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(creation.template_of(template_id).stage, target)
     texts = {
-        creation.factory_path(creation.RECIPE): creation.recipe_text(folder.name, keys),
+        creation.factory_path(creation.RECIPE): creation.recipe_text(
+            folder.name, [(key, ()) for key in keys]
+        ),
         creation.factory_path(creation.PERIOD): creation.period_text("demo_period", keys),
         creation.factory_path(creation.TRELLIS): creation.trellis_text("demo", repeat),
         creation.ANSWERS: creation.answers_text(folder.name, None, "demo_period", repeat, stages),
@@ -1278,6 +1296,23 @@ def written_from_the_forms(folder: Path, stages=DEMO_STAGES, repeat: int = 6) ->
     for name, text in texts.items():
         (folder / name).write_text(text, encoding="utf-8")
     return folder
+
+
+def stage_files() -> list[Path]:
+    """The stage files of the applications, `STAGE_FILES` of
+    `packages/bellman/tests/conftest.py`, the one listing of them: every
+    tracked `.bl` file under `applications/` whose first line is `@stage:`,
+    an addition beside a stage file being none. The module is loaded from
+    its file under the name `bellman_tests_conftest`, since the name
+    `conftest` stands for this folder's own (see `conftest.py`)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "bellman_tests_conftest", ROOT / "packages/bellman/tests/conftest.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.STAGE_FILES
 
 
 def layout_faults_of(folder: Path) -> list[str]:
@@ -1475,7 +1510,7 @@ def pensions_with_bequest_dur(target: Path) -> Path:
     row = (
         "  bequest_dur: {stage: stages/bequest_dur/bequest_dur.bl, calibration: {all: "
         "[$bequest_dur_calibration]}, settings: {all: [$bequest_dur_settings]}, methods: {all: "
-        "[$bequest_dur_methods]}}\n"
+        "[]}}\n"
     )
     text = recipe_file.read_text(encoding="utf-8")
     assert text.count("registry:") == 1
@@ -1497,8 +1532,10 @@ def pensions_two_templates(target: Path) -> Path:
     two period templates: the working years, periods[4] and periods[5],
     read `period.working.yml`, a copy of `period.pensions.yml` named
     `pension_working_period`, and the other periods `period.pensions.yml`
-    (unit G2). Answers the copy."""
-    folder = pensions_copy(target, PENSIONS_WORKING_YEARS)
+    (unit G2), and without the stages' additions (`without_additions`),
+    since the service does not accept the job for a folder that holds one
+    (decision S7-W5). Answers the copy."""
+    folder = without_additions(pensions_copy(target, PENSIONS_WORKING_YEARS))
     declaration = folder / "declaration"
     period = (declaration / "period.pensions.yml").read_text(encoding="utf-8")
     assert period.count("name: pension_period") == 1
@@ -1602,22 +1639,24 @@ def corpus_startup(site: Path, corpus: Path) -> Path:
 
 # The lifecycle registry of unit B's tests, the folder the form of "New
 # trellis" writes (specification §4), in the one layout of a model folder:
-# the portfolio model's three stage files bound by cons-port's files, the
-# consumption stage's method a slot, the discount stage bound by its
-# own methods file in its stage folder, the discount factor of the terminal
-# period its own, the connector from the portfolio stage to consumption left
-# empty, and the form's answers marking the slot and the connector required
-# (decision B-D2). The recipe, the period file and the trellis file stand in
+# the portfolio model's three stage files, each with its addition beside
+# it, `stages/<key>/methods.bl`, the consumption stage with a replacing
+# selection `methods.vfi.bl` as well (decision S7-W2), the discount stage's
+# settings a slot, the portfolio stage with no settings list, since its
+# addition declares none, the discount factor of the terminal period its own, the
+# connector from the portfolio stage to consumption left empty, and the
+# form's answers marking the slot and the connector required (decision
+# B-D2). The recipe, the period file and the trellis file stand in
 # `declaration/`, and the recipe writes each path from that folder.
 LIFECYCLE_RECIPE = """\
 # The recipe of the lifecycle registry: for each stage and each kind, the
-# ordered sources. The consumption stage's method is a slot.
+# ordered sources. The discount stage's settings are a slot.
 trellis: trellis.yml
 stages:
-  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/port]}, methods: {all: [methods/port]}}
-  cons: {stage: stages/cons/cons.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/cons]}, methods: {all: [$cons_method]}}
+  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, methods: {all: [stages/port/methods.bl]}}
+  cons: {stage: stages/cons/cons.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/cons]}, methods: {all: [stages/cons/methods.bl]}}
   # the discount factor of the terminal period is its own
-  disc: {stage: stages/disc/disc.bl, calibration: {all: [calibration/portfolio], 0-0: [calibration/terminal]}, methods: {all: [stages/disc/methods]}}
+  disc: {stage: stages/disc/disc.bl, calibration: {all: [calibration/portfolio], 0-0: [calibration/terminal]}, settings: {all: [$disc_settings]}, methods: {all: [stages/disc/methods.bl]}}
 """  # noqa: E501  (the recipe writes each stage's row on one line)
 LIFECYCLE_PERIOD = """\
 !period
@@ -1646,7 +1685,7 @@ inter_connectors:
 LIFECYCLE_ANSWERS = """\
 # The entries the form of a new model holds required (decision B-D2).
 required:
-  slots: [cons_method]
+  slots: [disc_settings]
   connectors:
     - {file: declaration/period.yml, address: "connectors[0]"}
 """
@@ -1655,25 +1694,32 @@ TERMINAL_CALIBRATION = (
 )
 
 
+# the additions of the lifecycle registry, the Workbench's own copies of the
+# case studies' additions of the portfolio model's stages and of cons-port's
+# consumption stage (specification 0.7; decision S7-W2), each beside the
+# stage file it is unioned with
+LIFECYCLE_ADDITIONS = Path(__file__).resolve().parent / "fixtures" / "lifecycle"
+
+
 def lifecycle_registry(target: Path) -> Path:
     """The lifecycle registry at `target`, in the one layout of a model
     folder (the page Model directory layout), a fresh git repository with
     one commit. Its `declaration/` holds the stage folders `stages/port/`,
     `stages/cons/` and `stages/disc/`, each with the stage file of the
-    portfolio model, `stages/disc/` also with that model's methods file of
-    the discount stage, `methods.yml`; `calibration/portfolio.yml` and the
-    terminal period's `calibration/terminal.yml`; `settings/cons.yml` and
-    `settings/port.yml`, cons-port's wide grids; `methods/cons.yml`,
-    `methods/cons_vfi.yml` and `methods/port.yml` of cons-port; and
+    portfolio model and the addition `methods.bl` of LIFECYCLE_ADDITIONS,
+    `stages/cons/` also with the replacing selection `methods.vfi.bl`;
+    `calibration/portfolio.yml` and the terminal period's
+    `calibration/terminal.yml`; `settings/cons.yml`, cons-port's wide
+    grids with the candidate count `n_c` the replacing selection declares;
+    and
     `spec.yml`, `period.yml` and `trellis.yml` as the constants above write
     them. Its top holds `answers.yml`, which names the period file of its
     required connector by its path from the folder, `declaration/period.yml`,
     the rule `creation.answers_text` states. The consumption stage's
-    methods files are cons-port's, with the block file `cons_egm.bl` they
-    name beside them under `methods/`; the portfolio stage's methods file is
-    the portfolio model's own, since cons-port's binds the block file of its
-    portfolio stage written the method way, which the explicit stage of this
-    registry cannot read (28 October 2026)."""
+    additions are the portfolio model's, the endogenous grid method with its
+    lines and the value function iteration; the discount stage's is the
+    portfolio model's own, and the portfolio stage's declares no setting,
+    so that the recipe lists no settings source for it."""
     declaration = target / "declaration"
     for key in ("port", "cons", "disc"):
         (declaration / "stages" / key).mkdir(parents=True)
@@ -1681,23 +1727,17 @@ def lifecycle_registry(target: Path) -> Path:
             PORTFOLIO_CHOICE / f"declaration/stages/{key}/{key}.bl",
             declaration / "stages" / key / f"{key}.bl",
         )
-    shutil.copy(
-        PORTFOLIO_CHOICE / "declaration/stages/disc/methods.yml",
-        declaration / "stages/disc/methods.yml",
-    )
-    for folder in ("calibration", "settings", "methods"):
+        for addition in sorted((LIFECYCLE_ADDITIONS / "stages" / key).glob("methods*.bl")):
+            shutil.copy(addition, declaration / "stages" / key / addition.name)
+    for folder in ("calibration", "settings"):
         (declaration / folder).mkdir()
     corpus = CONS_PORT / "declaration"
     shutil.copy(corpus / "calibration/portfolio.yml", declaration / "calibration/portfolio.yml")
     (declaration / "calibration/terminal.yml").write_text(TERMINAL_CALIBRATION, encoding="utf-8")
     shutil.copy(corpus / "settings/cons_wide.yml", declaration / "settings/cons.yml")
-    shutil.copy(corpus / "settings/port_wide.yml", declaration / "settings/port.yml")
-    for name in ("cons", "cons_vfi"):
-        shutil.copy(corpus / f"methods/{name}.yml", declaration / f"methods/{name}.yml")
-    shutil.copy(corpus / "methods/cons_egm.bl", declaration / "methods/cons_egm.bl")
-    shutil.copy(
-        PORTFOLIO_CHOICE / "declaration/stages/port/methods.yml", declaration / "methods/port.yml"
-    )
+    with (declaration / "settings/cons.yml").open("a", encoding="utf-8") as settings:
+        # the candidate count the replacing selection methods.vfi.bl declares
+        settings.write("  n_c: 200\n")
     for name, text in (
         ("spec.yml", LIFECYCLE_RECIPE),
         ("period.yml", LIFECYCLE_PERIOD),
@@ -1754,9 +1794,10 @@ def demonstration_folder(tmp_path_factory) -> Path:
 @pytest.fixture(scope="session")
 def buffer_stock_folder(tmp_path_factory) -> Path:
     """A copy of `applications/buffer-stock/`, whose one stage file states
-    the maximization alone and which no source binds: its methods file, in
-    `declaration/methods/`, is named by no recipe or trellis file. A fresh
-    git repository with one commit, made once per session."""
+    the maximization alone and which no source binds: the addition beside
+    it, `declaration/stages/buffer_stock/methods.bl`, is named by no recipe
+    or trellis file, since the folder holds none. A fresh git repository
+    with one commit, made once per session."""
     return repository_copy(BUFFER_STOCK, tmp_path_factory.mktemp("buffer") / "buffer-stock")
 
 
@@ -1765,6 +1806,39 @@ def scratch_durables(tmp_path) -> Path:
     """A fresh copy of `applications/durables/` named `durables`, a fresh git
     repository with one commit, for one test that writes its files."""
     return repository_copy(DURABLES, tmp_path / "durables")
+
+
+# the methods list of a recipe's row,
+# `methods: {all: [stages/<key>/methods.bl]}`, which `without_additions`
+# empties
+_METHODS_LIST = re.compile(r"methods: \{all: \[[^\]]*\]\}")
+
+
+def without_additions(folder: Path) -> Path:
+    """`folder`, a model folder, with its additions taken out: every
+    `methods*.bl` under `declaration/stages/` deleted and the methods list
+    of every row of every recipe `declaration/spec*.yml` emptied, so that
+    the Matsya job `Build declaration`, which the service does not accept
+    for a folder that holds an addition (decision S7-W5), reads the folder.
+    Answers `folder`."""
+    declaration = folder / "declaration"
+    for addition in sorted(declaration.glob("stages/*/methods*.bl")):
+        addition.unlink()
+    for recipe_file in sorted(declaration.glob("spec*.yml")):
+        text = recipe_file.read_text(encoding="utf-8")
+        recipe_file.write_text(_METHODS_LIST.sub("methods: {all: []}", text), encoding="utf-8")
+    return folder
+
+
+@pytest.fixture
+def matsya_durables(tmp_path) -> Path:
+    """A copy of `applications/durables/` without its additions
+    (`without_additions`), a fresh git repository with one commit, made for
+    each test of the Matsya job that takes it, since the service does not
+    accept the job for a folder that holds an addition (decision S7-W5)."""
+    target = tmp_path / "durables"
+    shutil.copytree(DURABLES, target, ignore=shutil.ignore_patterns("__pycache__"))
+    return init_repository(without_additions(target))
 
 
 @pytest.fixture
@@ -1934,6 +2008,7 @@ def matsya_stub(monkeypatch, tmp_path) -> str:
     service, a JSON file of the test's own, absent until a command writes
     it (unit G2)."""
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA", MATSYA_STUB)
+    monkeypatch.setenv("BELLMAN_MATSYA_SERVER", "http://127.0.0.1:8710")
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STATE_DIR", str(tmp_path / "matsya-sessions"))
     service = tmp_path / "matsya-service.json"
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_STATE", str(service))
@@ -2526,7 +2601,8 @@ def drawn_text(widget) -> str:
     element with no children, such as `<wbr>`, a break opportunity, draws
     none."""
     return "".join(
-        child if isinstance(child, str) else drawn_text(child) for child in widget.children
+        child if isinstance(child, str) else drawn_text(child)
+        for child in getattr(widget, "children", ())
     )
 
 
@@ -3404,6 +3480,14 @@ def error_lines(page) -> list[tuple[str, str | None, int | None]]:
     return [tuple(line) for line in page.evaluate(ERROR_LINES_JS)]
 
 
+def error_group_lines(page, label: str) -> list[tuple[str, str | None, int | None]]:
+    """The lines of the group `label` of the list under the error mark,
+    `Errors`, `Connections to check` or `Headers to check`, as `error_lines`
+    reads a line (ERROR_GROUP_LINES_JS); empty where the group does not
+    stand."""
+    return [tuple(line) for line in page.evaluate(ERROR_GROUP_LINES_JS, label)]
+
+
 def toggle_errors(page) -> None:
     """Clicks the error mark, which opens the list under it where the list
     is closed and closes it where it is open, and waits until the list is
@@ -3788,17 +3872,17 @@ SLOT_KEYWORDS_JS = """
 
 
 def slot_keywords(page) -> list[str]:
-    """The keywords the recipe's slots take, `["fill", "tenure_method"]`
-    (unit K, K-D29), read from the entries of the Recipe tab, which stands
-    while the recipe is the open file (unit M, Task 10; design pass 9 §§3
-    and 5: the line `slots` left with the recipe region), each slot's
-    keyword once in the order in which the table first writes it, by its
-    rows, the kinds and each stage's lists, a row at rest by its texts and
-    the open row by its selects (design pass 11 §2); the empty list where
-    the tab is not drawn or the recipe writes no slot. The keywords are
-    read at one moment, so that a table drawn again with fewer slots while
-    it is read gives no keyword the page no longer holds (unit K's fix
-    wave, §6 item 5 of the final judgment)."""
+    """The keywords the recipe's slots take, `["fill"]` for the durables
+    model's recipe (unit K, K-D29), read from the entries of the Recipe tab,
+    which stands while the recipe is the open file (unit M, Task 10; design
+    pass 9 §§3 and 5: the line `slots` left with the recipe region), each
+    slot's keyword once in the order in which the table first writes it, by its
+    rows, the kinds and each stage's lists, a row at rest by its texts and the
+    open row by its selects (design pass 11 §2); the empty list where the tab
+    is not drawn or the recipe writes no slot. The keywords are read at one
+    moment, so that a table drawn again with fewer slots while it is read gives
+    no keyword the page no longer holds (unit K's fix wave, §6 item 5 of the
+    final judgment)."""
     return page.evaluate(SLOT_KEYWORDS_JS)
 
 

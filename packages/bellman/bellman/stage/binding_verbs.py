@@ -2,62 +2,71 @@
 order a stage is bound: `calibrate`, `methodize` and `configure`. A reader
 calls each as the stage's method, `stage.calibrate(x)`, `stage.methodize(x)`
 and `stage.configure(x)`, since the class body of `ElaboratedStage` binds
-them. Each verb adds its bindings, and `methodize` the rows of the method
-blocks it binds, to the stage it is called on and returns that stage: nothing
-is copied, and a later binding of a target replaces the earlier one
+them. Each verb binds the stage it is called on and returns that stage:
+nothing is copied, and a later binding replaces the earlier one
 (specification 0.6 §4.1 and decision 1).
 
 Each verb is its inner form: `calibrated_version`, `methodized_version` and
 `configured_version` bind the stage they are given in place through
-`versions.bind_in_place` and refuse as the verb refuses, a refused binding
-leaving the stage as it was. `elaborate_stage` binds the sources a record
-supplies by the inner forms on the stage it constructs and copies that
-stage once, at the end; the trellis's route binds each stage occurrence by
-them on a version of its own.
+`versions.bind_in_place` or `versions.rebuild_in_place` and refuse as the
+verb refuses, a refused binding leaving the stage as it was.
+`elaborate_stage` binds the sources a record supplies by the inner forms on
+the stage it constructs and copies that stage once, at the end; the
+trellis's route binds each stage occurrence by them on a version of its own.
 
 `calibrate` decides the conditions of the stage that its parameters alone
-settle at the values (`calibrated_obligations`); `methodize` attaches the
-methods a methods file names (`method_table.attached_bindings`); `configure`
-checks each option of an attached method at the settings bound.
+settle at the values (`calibrated_obligations`); `methodize` reads an
+addition, a `.bl` file of typing entries and lines, into the stage through
+the union of the files (`bellman.syntax.union`), so that the components of
+its signatures are those the stage file and the addition type
+(specification 0.7 §6); `configure` values the settings the methods file
+declares and checks each place's keyword arguments and grid at the values
+(`components.check_bound_values`).
 """
 
 from __future__ import annotations
 
-import math
-from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
-from typing import NamedTuple, Union
+from typing import Union
 
 from bellman.distributions.families import law_support
-from bellman.fold.block_lines import fields_of, header_wire_sorts, parameter_sets, require_stage
+from bellman.fold.block_lines import parameter_sets, setting_sets
 from bellman.fold.conditions import check_calibrated_distributions
 from bellman.fold.stage_fold import stage_blocks_of
 from bellman.fold.stage_names import StageNames
 from bellman.native.frozen import freeze
 from bellman.native.identity import Identity
 from bellman.native.predicates import Predicate
-from bellman.native.provenance import binding_provenance
-from bellman.native.records import Provenance, bound_at
-from bellman.native.versions import StageVersion, bind_in_place, stored
-from bellman.refusals import ConstructionError
-from bellman.stage.boxes import builder_rows_of
+from bellman.native.provenance import binding_provenance, source_description
+from bellman.native.records import Provenance
+from bellman.native.versions import StageVersion, bind_in_place, rebuild_in_place, stored
+from bellman.refusals import ConstructionError, Location
 from bellman.stage.calibration_requirements import (
     calibration_requirements,
     collection_values,
     declared_set_terms,
+    membership,
     predicate_value,
 )
-from bellman.stage.grains import construction_table, declared_table
-from bellman.stage.method_table import METHOD_TYPES, admitted_options, attached_bindings
-from bellman.stage.sources import load_calibration, load_methods, load_settings
-from bellman.fold.wire_terms import term_nodes
+from bellman.stage.components import check_bound_values, check_components
+from bellman.stage.grains import construction_table
+from bellman.stage.levels import (
+    addition_records,
+    construct,
+    load_additions,
+    methods_location,
+    methods_source,
+    source_texts,
+)
+from bellman.stage.places import typings
+from bellman.stage.sources import load_calibration, load_settings, settings_key_positions
+from bellman.syntax.lower import parse_with_spans
+from bellman.syntax.union import union
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
-from bellman.typing import sets
 from bellman.typing.sets import endpoints
 from bellman.typing.typed_expressions import predicate_text
-from bellman.syntax.vocabulary import CONTINUATION, STATE
 
 # --- the three binding verbs ---
 
@@ -76,53 +85,34 @@ def calibrate(stage, calibration_source: Union[str, Path, dict]):
     return calibrated_version(stage, calibration_source)
 
 
-def methodize(stage, methods_source):
-    """The stage itself, with the supplied methods bound to their targets
-    and the rows of the method blocks they name in its operative builders
-    (specification 0.6 §§4.1, 7).
-
-    A path or source mapping supplies the entries; a block file an entry
-    names under `block:` is read relative to the methods file. Each known
-    method must admit its target's kind. Unknown methods, unresolved
-    targets, a block whose header does not match its builder and a line of a
-    block that calls an undefined function refuse, and a refused binding
-    leaves the stage as it was. A target holds one binding of each kind, and
-    a later binding replaces the earlier. Nothing is copied, and the initial
-    diagrams and the declared builders, `stage.declared`, do not change.
+def methodize(stage, additions):
+    """The stage itself with the additions read into it: the stage file's
+    tree with each addition attached, in the order given, elaborated anew
+    and held by the stage, so that the components of its signatures, the
+    rows a solution method's lines add at the operative level and the lines
+    an addition appends are those the union of the files gives.
+    `additions` is one addition or a list of them, each the path of a `.bl`
+    file or a mapping `{text, origin}` holding its text. A
+    call is the whole selection of the occurrence: the additions it names
+    replace those read before. The calibration bound before stays bound; the
+    settings stay bound and are checked against the new declarations and
+    components. Refused as the elaboration of the union refuses, and where
+    an addition names another stage, leaving
+    the stage as it was.
 
     See `docs/Bellman-Sym/API/stage/09-binding-verbs.md` §3."""
-    return methodized_version(stage, methods_source)
-
-
-def _methods_folder(source, provenance):
-    """The folder of the methods file, against which the paths of the block
-    files it names are read: the folder of a source given by its path, and
-    otherwise the folder `methods_folder` reads from the provenance."""
-    if isinstance(source, (str, Path)):
-        return Path(source).parent
-    return methods_folder(provenance)
-
-
-def methods_folder(provenance):
-    """The folder of the methods file a provenance records, of a stage or of
-    a record a recipe or a trellis file supplies, for a methods source given
-    as the mapping a factory read from that file: the folder of the path
-    under `sources`, or else the one folder in which every file its
-    `source_lists` names for the methods stands; None where none is
-    known."""
-    recorded = (provenance.get("sources") or {}).get("methods") or {}
-    if "path" in recorded:
-        return Path(recorded["path"]).parent
-    listed = (provenance.get("source_lists") or {}).get("methods") or ()
-    folders = {Path(entry["path"]).parent for entry in listed if "path" in entry}
-    return folders.pop() if len(folders) == 1 else None
+    return methodized_version(stage, additions)
 
 
 def configure(stage, settings_source: Union[str, Path, dict]):
-    """The methodized stage itself, with settings bound. Every name an
-    attached method's settings reference, including names in nested grids or
-    mappings, must have a value in the source or in the settings bound
-    before; a later value of a setting replaces the earlier one, and a refused
+    """The stage itself, with settings bound. Every setting the methods file
+    declares has a value in the source or in the settings bound before, and
+    that value lies in the declared set; every name a bound method's keyword
+    arguments or grid write has a value; a keyword's value lies in the
+    domain the method's row names and a grid's bounds, counts and nodes are
+    in order. A value the source supplies for a name no declaration and no
+    bound method names is bound and listed, so that nothing is dropped. A
+    later value of a setting replaces the earlier one, and a refused
     configuration leaves the stage as it was.
 
     See `docs/Bellman-Sym/API/stage/09-binding-verbs.md` §3."""
@@ -165,40 +155,63 @@ def calibrated_version(stage, calibration_source):
     )
 
 
-def methodized_version(stage, methods_source, *, replace_all=False, base=None):
-    """`stage` with the methods of `methods_source` bound in place, the
-    version `methodize` returns, the rows of the method blocks they name in
-    its operative builders. With `replace_all`, the methods bound before and
-    the blocks they opened are replaced by those of the source as a whole, as
-    the trellis's route replaces a position's methods when its methods source
-    changes; otherwise a later binding replaces an earlier binding of its own
-    kind at its target. `base` is the folder against which the block paths of
-    a source given as a mapping are read, where the caller knows it from the
-    record that supplies the mapping (`bind_stage`); otherwise the folder is
-    read from the source's path or the stage's provenance. Refuses as
-    `methodize` refuses, leaving the stage as it was."""
+def methodized_version(stage, additions):
+    """`stage` with the additions read into it in place, the version
+    `methodize` returns: the stage file's text, which the provenance holds,
+    unioned with each addition's (`bellman.syntax.union`), the whole
+    elaborated at its two levels and its records written over the stage's,
+    every kept answer discarded.
+    Refuses as `methodize` refuses, leaving the stage as it was."""
     if not isinstance(stage, StageVersion):
         raise TypeError(
             "methodize requires an ElaboratedStage, the "
             "stage elaborate_stage and make_stage return"
         )
-    loaded = load_methods(methods_source)
-    provenance = binding_provenance(stage, "methodize", methods_source, loaded)
-    # the declared rows are folded before a block adds its definitions
-    declared_table(stage)
-    bindings, definitions = attached_bindings(
-        stage,
-        loaded,
-        base=_methods_folder(methods_source, provenance)
-        if base is None or isinstance(methods_source, (str, Path))
-        else base,
-        replace_all=replace_all,
+    read = load_additions(additions)
+    text, origin, _ = source_texts(stage)
+    if not text:
+        raise ValueError(
+            f"stage {stage.name!r}: its provenance holds no stage text, and an addition is "
+            "read with the stage file's tree (specification 0.7 §6); elaborate the stage from "
+            "its file with elaborate_stage(load_stage(path))"
+        )
+    unioned = union(
+        parse_with_spans(text, filename=origin),
+        [parse_with_spans(held, filename=where) for held, where in read],
     )
-    rows_changed = bindings.blocks is not stored(stage, "bindings").blocks
-    records = {"bindings": bindings, "provenance": _provenance_record(provenance)}
-    if rows_changed:
-        records["definitions"] = definitions
-    return bind_in_place(stage, rows_changed=rows_changed, **records)
+    fresh = type(stage)(**construct(type(stage), unioned.term, unioned.spans))
+    typings(fresh, unioned.spans)
+    check_components(fresh)
+    bind_in_place(
+        fresh,
+        bindings=replace(
+            stored(fresh, "bindings"),
+            calibration=stage.bindings.calibration,
+            settings=stage.bindings.settings,
+        ),
+    )
+    if fresh.bindings.settings is not None:
+        _check_declared_settings(fresh, fresh.bindings.settings, ())
+        check_bound_values(fresh, fresh.bindings.settings)
+    # the source is described as every binding source is, by its path or
+    # origin and the digest of the loaded mapping, and the additions are
+    # held with their texts, from which the tree is made again
+    description = source_description(methods_source(additions), methods_location(read))
+    provenance = freeze(
+        {
+            **stage.provenance,
+            "operation": "methodize",
+            "parent": stage.provenance,
+            "source": description,
+            "sources": {**dict(stage.provenance.get("sources", {})), "methods": description},
+            "additions": addition_records(read),
+        }
+    )
+    return rebuild_in_place(
+        stage,
+        fresh,
+        provenance=_provenance_record(provenance),
+    )
 
 
 def _provenance_record(provenance):
@@ -206,32 +219,84 @@ def _provenance_record(provenance):
     return Provenance(freeze(dict(provenance)))
 
 
-def configured_version(stage, settings_source):
+def configured_version(stage, settings_source, *, files=None):
     """`stage` with the settings bound in place, the version `configure`
     returns: the settings bound before, each a later value of the source
     replacing its earlier one. Refuses as `configure` refuses, leaving the
-    stage as it was."""
+    stage as it was. `files` names the settings files whose keys supplied
+    the values, in the order they were merged, so that a refused setting
+    carries its key's position in its file as a related location; where it
+    is None, the source itself where it is a path, and no file otherwise."""
     if not isinstance(stage, StageVersion):
         raise TypeError(
             "configure requires an ElaboratedStage, the "
             "stage elaborate_stage and make_stage return"
         )
-    # a refusal says where, what happened, why and what to write
-    # (AMD-SG-006 §6a)
-    if stage.bindings.methods is None:
-        raise ValueError(
-            f"stage {stage.name!r}: no methods are bound, so no setting is named; settings are "
-            "bound after methods (AMD-SG-006 §4); apply methodize(stage, source) first"
-        )
     values = load_settings(settings_source)
+    if files is None:
+        files = (settings_source,) if isinstance(settings_source, (str, Path)) else ()
     merged = {**(stage.bindings.settings or {}), **values}
-    _check_bound_options(stage, merged)
+    _check_declared_settings(stage, merged, tuple(str(path) for path in files))
+    check_bound_values(stage, merged)
     provenance = binding_provenance(stage, "configure", settings_source, values)
     return bind_in_place(
         stage,
         bindings=replace(stage.bindings, settings=freeze(merged)),
         provenance=_provenance_record(provenance),
     )
+
+
+# --- configuration: the declared settings at the values ---
+
+
+def _check_declared_settings(stage, values, files):
+    """The check of every setting the methods file declares at the settings
+    `values` (specification 0.7, S1): a declared setting with no value is
+    refused under `setting-unvalued`, and a value outside the declared set
+    under `setting-outside-set`, each at the position of the declaration,
+    which the setting's record carries as `<file>:<line>`. The settings
+    files `files`, in the order they were merged, give the related locations
+    of a refusal: a value outside its set carries its key's position in its
+    file (`settings_key_positions`) under the role `rejected setting`, and
+    an unvalued setting carries each file under the role `settings source`.
+    The membership is decided as a parameter's is
+    (`calibration_requirements`), at the calibration bound and the values
+    given; a membership the set algebra does not decide is admitted."""
+    definitions = dict(stage.definitions)
+    numbers = {**(stage.bindings.calibration or {}), **values}
+    for name, setexpr in setting_sets(stage).items():
+        definition = definitions[Identity("setting", stage=stage.name, field=name)]
+        file, _, line = definition.address.rpartition(":")
+        position = dict(
+            stage=stage.name,
+            file=file or stage.provenance.get("origin"),
+            line=int(line) if line.isdigit() else None,
+            column=1 if line.isdigit() else None,
+            address=definition.address,
+        )
+        declared = "ℝ" if setexpr is None else to_source(setexpr)
+        if name not in values:
+            raise ConstructionError(
+                f"stage {stage.name!r}, setting {name!r}: the settings source supplies no "
+                f"value for it; every setting the methods file declares is valued when "
+                f"settings are bound; write `{name}: <value>` in the settings source",
+                rule="setting-unvalued",
+                related=tuple(Location("settings source", file=path) for path in files),
+                **position,
+            )
+        if setexpr is None:
+            continue
+        status, reason = membership(stage, definitions, setexpr, values[name], numbers)
+        if status is False:
+            reason = reason or f"the value {values[name]!r} lies outside the declared set {declared}"
+            key = settings_key_positions(files).get(name)
+            raise ConstructionError(
+                f"stage {stage.name!r}, setting {name!r}: {reason}; a setting's value lies in "
+                f"the set its declaration names; write a value in {declared}",
+                rule="setting-outside-set",
+                related=() if key is None else (Location("rejected setting", *key, address=name),),
+                **position,
+            )
 
 
 # --- calibration: the conditions decided at the values ---
@@ -384,430 +449,3 @@ def _interval_within(support, bounds):
         support.upper == bounds.upper and (bounds.upper_closed or not support.upper_closed)
     )
     return lower_ok and upper_ok
-
-
-# --- configuration: the options at the settings ---
-
-
-def _check_bound_options(stage, values):
-    """The check of every method option against the settings and the
-    calibration bound."""
-    for key, method in stage.bindings.methods.items():
-        box = bound_at(key)
-        options = {
-            name: _resolved_option(value, values) for name, value in method.settings.items()
-        }
-        resolved = {name: option.value for name, option in options.items()}
-        missing = tuple(
-            dict.fromkeys(name for option in options.values() for name in option.missing)
-        )
-        if missing:
-            name = missing[0]
-            names = (
-                f"the method !{method.tag} at that place names"
-                if method.tag
-                else "the entry at that place names"
-            )
-            raise ValueError(
-                f"stage {stage.name!r}, box {str(box)!r}: the settings source supplies no value "
-                f"for {name!r}, which {names}; every setting an attached method names is valued "
-                "when settings are bound (AMD-SG-006 §4); "
-                f"write `{name}: <value>` in the settings source"
-            )
-        rule = METHOD_TYPES.get(method.tag)
-        if rule is not None:
-            _check_configured_options(stage, box, method, rule, resolved)
-
-
-def _check_configured_options(stage, box, method, rule, resolved):
-    """The check of resolved values against the method row's closed option
-    types and the fields of the grid kind its setting `grid` names
-    (`admitted_options`, AMD-MB-003 §3): each option by the check of its
-    kind, then the coordinate keys of `orders` and `bounds` against each
-    other. The fields of a grid are read at the coordinates of the object at
-    the box, and those of the exogenous grid of `!egm` at the continuation
-    states."""
-    options = admitted_options(rule, method.settings)
-    grid = options.get("grid")
-    coordinates = (
-        _continuation_coordinates(stage)
-        if grid is not None and grid.kind == "grid kind on the continuation states"
-        else _method_coordinates(stage, box)
-    )
-    for name, option in options.items():
-        if name not in resolved:
-            continue
-        if option.kind not in _OPTION_CHECKS:
-            raise RuntimeError(f"unknown method option type {option.kind!r}")
-        _OPTION_CHECKS[option.kind](stage, box, method, name, resolved[name], coordinates)
-    if "orders" in resolved and "bounds" in resolved:
-        orders, bounds = resolved["orders"], resolved["bounds"]
-        if (
-            isinstance(orders, Mapping)
-            and isinstance(bounds, Mapping)
-            and set(orders) != set(bounds)
-        ):
-            _refuse_option(
-                stage,
-                box,
-                method,
-                "orders/bounds",
-                f"their coordinate keys differ: {tuple(orders)!r} and {tuple(bounds)!r}",
-                "write the same actual coordinate keys in both options",
-            )
-
-
-def _check_positive_integer(stage, box, method, name, value, coordinates):
-    """An option of the kind `positive integer`."""
-    if not _positive_integer(value):
-        _refuse_option(
-            stage,
-            box,
-            method,
-            name,
-            f"{value!r} is not a positive integer",
-            "write an integer greater than zero",
-        )
-
-
-def _check_positive_real(stage, box, method, name, value, coordinates):
-    """An option of the kind `positive real`."""
-    if not (_finite_real(value) and value > 0):
-        _refuse_option(
-            stage,
-            box,
-            method,
-            name,
-            f"{value!r} is not a positive real",
-            "write a finite value greater than zero",
-        )
-
-
-def _check_seed(stage, box, method, name, value, coordinates):
-    """An option of the kind `seed`."""
-    if not (type(value) is int and value >= 0):
-        _refuse_option(
-            stage, box, method, name, f"{value!r} is not a seed", "write a nonnegative integer"
-        )
-
-
-def _check_keyed_by_coordinate(stage, box, method, name, value, coordinates):
-    """Refuse an option that is no nonempty mapping."""
-    if not isinstance(value, Mapping) or not value:
-        _refuse_option(
-            stage,
-            box,
-            method,
-            name,
-            f"{value!r} is not keyed by coordinate",
-            f"write a nonempty mapping keyed by coordinates {tuple(coordinates)!r}",
-        )
-
-
-def _check_orders(stage, box, method, name, value, coordinates):
-    """An option of the kind `positive integers by coordinate`."""
-    _check_keyed_by_coordinate(stage, box, method, name, value, coordinates)
-    unknown = tuple(key for key in value if key not in set(coordinates))
-    if unknown or any(not _positive_integer(item) for item in value.values()):
-        reason = (
-            f"unknown coordinate {unknown[0]!r}; the actual coordinates are {tuple(coordinates)!r}"
-            if unknown
-            else f"{value!r} does not give positive integers"
-        )
-        _refuse_option(
-            stage, box, method, name, reason, "write positive integer orders at actual coordinates"
-        )
-
-
-def _check_bounds(stage, box, method, name, value, coordinates):
-    """An option of the kind `ordered pairs by coordinate`: each pair ordered
-    and each endpoint decidably inside the coordinate's declared set."""
-    _check_keyed_by_coordinate(stage, box, method, name, value, coordinates)
-    unknown = tuple(key for key in value if key not in set(coordinates))
-    if unknown:
-        _refuse_option(
-            stage,
-            box,
-            method,
-            name,
-            f"unknown coordinate {unknown[0]!r}; the "
-            f"actual coordinates are {tuple(coordinates)!r}",
-            "write bounds only at actual coordinates",
-        )
-    for coordinate, pair in value.items():
-        numeric = (
-            isinstance(pair, (list, tuple))
-            and len(pair) == 2
-            and all(_finite_real(item) for item in pair)
-        )
-        if not numeric or pair[0] >= pair[1]:
-            _refuse_option(
-                stage,
-                box,
-                method,
-                name,
-                f"{pair!r} at {coordinate!r} is not an ordered pair",
-                "write [lower, upper] with lower < upper",
-            )
-        for endpoint in pair:
-            member = _point_in_declared_set(stage, endpoint, coordinates[coordinate])
-            if member is not True:
-                word = "lies outside" if member is False else "is not decidably inside"
-                _refuse_option(
-                    stage,
-                    box,
-                    method,
-                    name,
-                    f"endpoint {endpoint!r} {word} the declared set of {coordinate}",
-                    "write endpoints decidably inside the declared set",
-                )
-
-
-def _check_nodes(stage, box, method, name, value, coordinates):
-    """An option of the kind `positive integers by shock`: one node count for
-    each shock the row at the box integrates, in shock order."""
-    count = _integrated_count(stage, box)
-    if (
-        not isinstance(value, (list, tuple))
-        or len(value) != count
-        or any(not _positive_integer(item) for item in value)
-    ):
-        _refuse_option(
-            stage,
-            box,
-            method,
-            name,
-            f"{value!r} does not give one positive integer for each of {count} shocks",
-            "write the node counts as a list in shock order",
-        )
-
-
-def _integrated_count(stage, box):
-    """The number of shocks the expectation at the box `box` integrates: those
-    of the retained operator row named by `box`, where the fold made one, and
-    otherwise the subscript of the expectation occurrence the box names on
-    its line, the expectation of a derivative line, which stands in no row of
-    its own (AMD-MB-001 §4.3, D4; decision MB-A17)."""
-    row = _method_row(stage, box)
-    if row is not None and row.identity == box:
-        return len(row.integrated)
-    address = getattr(box, "address", None)
-    occurrence = getattr(box, "occurrence", None)
-    if address is None:
-        return len(row.integrated) if row is not None else 0
-    record = next(
-        (
-            definition
-            for definition in stage.definitions.values()
-            if definition.kind == "line" and definition.address == address
-        ),
-        None,
-    )
-    if record is None:
-        return len(row.integrated) if row is not None else 0
-    core = record.equations[0] if record.equations else None
-    core = core.core if isinstance(core, T.Slack) else core
-    expectations = [
-        node
-        for node in term_nodes(core)
-        if isinstance(node, T.Operator) and node.head == "E"
-    ]
-    position = 0 if occurrence is None else max(int(occurrence) - 1, 0)
-    if position >= len(expectations):
-        return len(row.integrated) if row is not None else 0
-    return len(expectations[position].subs)
-
-
-def _check_grid(stage, box, method, name, value, coordinates):
-    """An option of the kind `grid kind`, a kind of grid written as a tag,
-    which `methodize` has checked against the table of grid kinds; the
-    grid's fields are checked by their own kinds (AMD-MB-003 §3)."""
-
-
-def _check_spacings(stage, box, method, name, value, coordinates):
-    """An option of the kind `spacing names by coordinate`: a nonempty
-    mapping from actual coordinates to the names of spacings, which the
-    handler reads."""
-    _check_keyed_by_coordinate(stage, box, method, name, value, coordinates)
-    unknown = tuple(key for key in value if key not in set(coordinates))
-    if unknown or any(not isinstance(item, str) or not item for item in value.values()):
-        reason = (
-            f"unknown coordinate {unknown[0]!r}; the actual coordinates are {tuple(coordinates)!r}"
-            if unknown
-            else f"{value!r} does not give the name of a spacing at each coordinate"
-        )
-        _refuse_option(
-            stage, box, method, name, reason, "write the name of a spacing at actual coordinates"
-        )
-
-
-def _check_node_lists(stage, box, method, name, value, coordinates):
-    """An option of the kind `increasing reals by coordinate`: a nonempty
-    mapping from actual coordinates to the points of the grid in each, each a
-    list of finite reals in increasing order, each point decidably inside the
-    declared set of its coordinate."""
-    _check_keyed_by_coordinate(stage, box, method, name, value, coordinates)
-    unknown = tuple(key for key in value if key not in set(coordinates))
-    increasing = all(
-        isinstance(points, (list, tuple))
-        and points
-        and all(_finite_real(point) for point in points)
-        and all(lower < upper for lower, upper in zip(points, points[1:]))
-        for points in value.values()
-    )
-    if unknown or not increasing:
-        reason = (
-            f"unknown coordinate {unknown[0]!r}; the actual coordinates are {tuple(coordinates)!r}"
-            if unknown
-            else f"{value!r} does not give increasing reals at each coordinate"
-        )
-        _refuse_option(
-            stage,
-            box,
-            method,
-            name,
-            reason,
-            "write the points in increasing order at actual coordinates",
-        )
-    for coordinate, points in value.items():
-        for point in points:
-            member = _point_in_declared_set(stage, point, coordinates[coordinate])
-            if member is not True:
-                word = "lies outside" if member is False else "is not decidably inside"
-                _refuse_option(
-                    stage,
-                    box,
-                    method,
-                    name,
-                    f"point {point!r} {word} the declared set of {coordinate}",
-                    "write points decidably inside the declared set",
-                )
-
-
-# the check of each kind of option a method row or a grid kind declares,
-# after the checks it names, as Python requires
-_OPTION_CHECKS = {
-    "positive integer": _check_positive_integer,
-    "positive real": _check_positive_real,
-    "seed": _check_seed,
-    "positive integers by coordinate": _check_orders,
-    "ordered pairs by coordinate": _check_bounds,
-    "positive integers by shock": _check_nodes,
-    "grid kind": _check_grid,
-    "grid kind on the continuation states": _check_grid,
-    "spacing names by coordinate": _check_spacings,
-    "increasing reals by coordinate": _check_node_lists,
-}
-
-
-class ResolvedOption(NamedTuple):
-    """One authored option with the setting names it writes read at the bound
-    settings: its `value`, of the shape the author wrote, and `missing`, the
-    names it writes that the settings do not bind, in the order written."""
-
-    value: object
-    missing: tuple
-
-
-def _resolved_option(value, values):
-    """The `ResolvedOption` of one authored option, each setting name it
-    writes replaced by the value the settings bind, its shape retained."""
-    if isinstance(value, str):
-        return (
-            ResolvedOption(values[value], ())
-            if value in values
-            else ResolvedOption(value, (value,))
-        )
-    if isinstance(value, Mapping):
-        if "__yaml_tag__" in value:
-            return ResolvedOption(value, ())
-        items = {key: _resolved_option(item, values) for key, item in value.items()}
-        return ResolvedOption(
-            {key: item.value for key, item in items.items()},
-            tuple(name for item in items.values() for name in item.missing),
-        )
-    if isinstance(value, (list, tuple)):
-        items = tuple(_resolved_option(item, values) for item in value)
-        return ResolvedOption(
-            type(value)(item.value for item in items),
-            tuple(name for item in items for name in item.missing),
-        )
-    return ResolvedOption(value, ())
-
-
-def _method_row(stage, box):
-    """The retained operator row at a bound method box, where there is one;
-    None for a box that stands in no builder, the box of a definition,
-    `cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣`, whose coordinates the definition
-    carries."""
-    block = box if isinstance(box, str) else box.block
-    if block is None:
-        return None
-    try:
-        rows = builder_rows_of(stage, block).closed
-    except (AttributeError, KeyError, TypeError, ValueError):
-        return None
-    found = tuple(row for row in rows if row.identity == box)
-    if len(found) == 1:
-        return found[0]
-    evaluations = tuple(row for row in rows if row.kind == "Evaluation")
-    return evaluations[0] if len(evaluations) == 1 else None
-
-
-def _method_coordinates(stage, box):
-    """The declared coordinates of the exact object at a method box."""
-    row = _method_row(stage, box)
-    if row is None:
-        definition = stage.definitions.get(box)
-        return dict(definition.coordinates) if definition is not None else {}
-    declared, _ = fields_of(stage)
-    return {
-        identity.field: declared[identity].domain
-        for identity in row.arguments
-        if identity in declared
-    }
-
-
-def _continuation_coordinates(stage):
-    """The declared states of the continuation perch with their declared
-    sets, the coordinates of the exogenous grid of savings of `!egm`
-    (AMD-MB-003 §1)."""
-    declared, _ = fields_of(stage)
-    return {
-        identity.field: declared[identity].domain
-        for identity, sort in header_wire_sorts(stage).items()
-        if identity.perch == CONTINUATION and sort.role == STATE and identity in declared
-    }
-
-
-def _point_in_declared_set(stage, value, declared):
-    """True, false, or None for membership of a numeric endpoint."""
-
-    definitions = {
-        definition.identity.field: definition.equations[0]
-        for definition in stage.definitions.values()
-        if definition.kind == "set" and definition.equations
-    }
-    point = T.Interval(
-        T.Range(left=T.Closed(), lower=T.Number(value), upper=T.Number(value), right=T.Closed())
-    )
-    return sets.within(point, declared, definitions) if declared is not None else None
-
-
-def _refuse_option(stage, box, method, option, reason, correction):
-    raise ConstructionError(
-        f"stage {stage.name!r}, place {box!s}, method !{method.tag}, option {option!r}: {reason}; "
-        f"configure requires the option value to have its declared type; {correction}",
-        stage=stage.name,
-        file=stage.provenance.get("origin"),
-        address=str(box),
-        rule="method-option-value",
-    )
-
-
-def _positive_integer(value):
-    return type(value) is int and value > 0
-
-
-def _finite_real(value):
-    return type(value) is int or type(value) is float and math.isfinite(value)

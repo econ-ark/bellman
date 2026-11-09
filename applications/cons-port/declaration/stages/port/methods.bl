@@ -1,0 +1,41 @@
+@methods: port
+# The methods of the portfolio stage at the occurrences of the two recipes and
+# of trellis.port-cons-vfi.yml, whose settings file settings/port_wide.yml
+# values a multi-exponential capital grid: time iteration on the policy
+# builder with the first-order condition of the share as its line, realized by
+# the function share_search of code/cons_port_tool.py, which compares n_ς
+# shares on the feasible set at each point of the capital grid; Gauss-Hermite
+# quadrature at every occurrence of the expectation; the envelope line of the
+# decision value; the linear representation of the decision value and of its
+# stated derivative on the capital grid; and the forward law drawn by Monte
+# Carlo. The line euler stands in place of the maximization at the operative
+# level, and stage.declared keeps the maximization. Each grid is its own
+# typing entry at its place; methods.reference.bl writes the fixed reference's
+# handlers on an evenly spaced grid.
+
+n_k : ℕ              :: ["number of points of the capital grid"]
+k_min : ℝ₊           :: ["lower bound of the capital grid"]
+k_max : ℝ₊           :: ["upper bound of the capital grid"]
+n_ς : ℕ              :: ["number of shares the search compares"]
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the return shock"]
+n_θ_nodes : ℕ        :: ["quadrature nodes of the income shock"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulation"]
+
+[id=policy, policy.method : !time_iteration
+    | policy.handler : "cons-port:share_search"
+    | policy.grid : !Cartesian(ς=(Γ_ς, n_ς))
+    | E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+    | E_Ψ_θ.handler : "cons-port:gauss_hermite"] {
+    ς = solve_{ς}(E_{Ψ,θ}(D_{w}V[>]*(Ψ - R)))       :: [id=euler]
+}
+
+[id=cntn_to_dcsn
+    | E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+    | E_Ψ_θ.handler : "cons-port:gauss_hermite"
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k, !expmult))] {
+    D_{k}V = E_{Ψ,θ}(D_{w}V[>]*(ς*Ψ + (1-ς)*R))     :: [id=envelope]
+}
+
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)

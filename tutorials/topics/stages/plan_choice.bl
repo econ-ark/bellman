@@ -38,14 +38,12 @@ t_0  : ℝ₊₊   :: ["enrolment age; this stage occurs only in the period whos
     }
 }
 
-[id=cntn_to_dcsn, (V_db[>] : ℝ @ !vlu, dV_db[>] : ℝ₊₊ @ !mrgnvl, V_dc[>] : ℝ @ !vlu, dV_dc[>] : ℝ₊₊ @ !mrgnvl) : !cntn -> (V : ℝ @ !vlu, dV : ℝ₊₊ @ !mrgnvl) : !dcsn] {
-    V  = 𝑙𝑠𝑢𝑚2(V_db[>], V_dc[>] - 𝑢p(t_0), σ_p)                                                                          :: [id=value, "equation 16 with the taste shocks integrated out; the paper prints the closed form only for the contribution and allocation choices, equations 23 and 24"]
-    dV = 𝑝𝑟𝑜𝑏2(V_db[>], V_dc[>] - 𝑢p(t_0), σ_p)*dV_db[>] + (1 - 𝑝𝑟𝑜𝑏2(V_db[>], V_dc[>] - 𝑢p(t_0), σ_p))*dV_dc[>]          :: [id=marginal, "the derivative of the line above in non-pension wealth; the paper does not print it"]
+[id=cntn_to_dcsn, (V_db[>] : ℝ @ !vlu, V_dc[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑙𝑠𝑢𝑚2(V_db[>], V_dc[>] - 𝑢p(t_0), σ_p)    :: [id=value, "equation 16 with the taste shocks integrated out; the paper prints the closed form only for the contribution and allocation choices, equations 23 and 24"]
 }
 
-[id=dcsn_to_arvl, (V, dV) : !dcsn -> (V[<] : ℝ @ !vlu, dV[<] : ℝ₊₊ @ !mrgnvl) : !arvl] {
-    V[<]  = V                                 :: [id=value]
-    dV[<] = dV                                :: [id=marginal]
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = V                                  :: [id=value]
 }
 
 [id=policy, (V_db[>], V_dc[>]) : !cntn -> (j : {db, dc} @ !ctrl) : !dcsn] {

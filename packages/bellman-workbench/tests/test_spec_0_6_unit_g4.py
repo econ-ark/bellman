@@ -346,7 +346,7 @@ def _click(rendered, class_: str) -> None:
 
 
 def test_item_5_a_job_s_result_shows_its_five_parts_apart_and_its_files_are_reached_from_it(
-    scratch_durables, app_state, matsya_state
+    matsya_durables, app_state, matsya_state
 ):
     """Acceptance item 5, first part (amendment 06 §2 items 3, 20, 22, 23
     and 25). In a folder connected to Matsya, a job unit G2's adapter
@@ -365,7 +365,7 @@ def test_item_5_a_job_s_result_shows_its_five_parts_apart_and_its_files_are_reac
     and `Commit…` stands for the recorded adoption."""
     from bellman_workbench import app
 
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = _connected(folder)
     number = _submitted(folder, session)
     job = returned_job(folder.root, session.id, number, 2, {CALIBRATION: (HIGH, LOW)})
@@ -418,7 +418,8 @@ def test_item_5_a_job_s_result_shows_its_five_parts_apart_and_its_files_are_reac
         values = _texts_of(rendered, "bl-matsya-part-value")
         assert values[3] == "constructed", values
         details = _texts_of(rendered, "bl-matsya-part-detail")
-        assert len(details) == 3 and "parameter 'Y'" in details[2], details
+        assert "parameter 'Y'" in details[2], details
+        assert details[3:] == ["External terminal input V[>] · bequest"]
         rendered.find(
             ipyvue.Html, tag="button", class_="bl-text-button bl-matsya-open-copy"
         ).assert_single()
@@ -541,25 +542,14 @@ TENURE = "declaration/stages/tenure/tenure.bl"
 
 
 def test_a_build_is_two_steps_the_request_and_then_the_reviewed_material_with_one_action(
-    scratch_durables, app_state, matsya_state, tmp_path, monkeypatch
+    matsya_durables, app_state, matsya_state, tmp_path, monkeypatch
 ):
-    """Decision SG4-7 (amendment 06 §2 items 4, 9 and 28; the proposal's
-    §4). In a connected folder, a request sent as `Build declaration` at
-    the level `Recipe` sends the request's text alone, as the user's entry:
-    the stand-in's log holds one `session add` and no submission. With an
-    unsaved buffer of a file the recipe reads, the column first offers the
-    three choices of unit G2, `Save`, `Saved version` and `Displayed text`;
-    `Saved version` prepares the text on disk, and the column shows the
-    material, `Build declaration · Recipe`, the recipe with its number of
-    files and the destination, with the one action `Build declaration`.
-    That action sends the prepared inputs as they stand, one `job
-    submit-prepared`, and the job stands as a message of its own; the file
-    on disk is unchanged."""
+    """Review the prompt and a saved file version before sending either."""
     from bellman_workbench import app
 
     log = tmp_path / "calls.jsonl"
     monkeypatch.setenv("BELLMAN_WORKBENCH_MATSYA_STUB_LOG", str(log))
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     _connected(folder)
     app_state(folder.root)
     disk = (folder.root / TENURE).read_text(encoding="utf-8")
@@ -585,7 +575,8 @@ def test_a_build_is_two_steps_the_request_and_then_the_reviewed_material_with_on
             "the build prepared",
         )
         calls = [entry for entry in stub_calls(log) if isinstance(entry, list)]
-        assert [call[:2] for call in calls] == [["session", "add"]], calls
+        assert not any(call[:2] in (["session", "add"], ["job", "submit-prepared"])
+                       for call in calls), calls
         prepared = matsya_state.builds.value[0].prepared
         assert prepared.record is None and TENURE in prepared.differences, prepared
         # the column is drawn again by the task's thread once the build is
@@ -606,7 +597,12 @@ def test_a_build_is_two_steps_the_request_and_then_the_reviewed_material_with_on
         assert what[0] == f"spec.yml · {len(record['files'])} files", what
         assert not any(call[:2] == ["job", "submit-prepared"] for call in calls)
         _click(rendered, "bl-text-button bl-matsya-submit")
+        wait_until(
+            lambda: any(view.job for view in matsya_state.builds.value.values()),
+            20.0, "the submitted job",
+        )
         calls = [entry for entry in stub_calls(log) if isinstance(entry, list)]
+        assert [call[:2] for call in calls].count(["session", "add"]) == 1, calls
         assert [call[:2] for call in calls].count(["job", "submit-prepared"]) == 1, calls
         job = matsya_state.builds.value[0].job
         assert job in matsya_state.jobs.value
@@ -741,7 +737,7 @@ def test_connect_this_folder_to_matsya_writes_the_client_s_project_files_and_nam
 
 
 def test_a_job_that_has_not_ended_is_followed_until_its_result_stands(
-    scratch_durables, app_state, matsya_state
+    matsya_durables, app_state, matsya_state
 ):
     """Amendment 06 §2 items 18 and 20. A job submitted and still queued
     stands as a message with its state and no part; the column reads it
@@ -749,7 +745,7 @@ def test_a_job_that_has_not_ended_is_followed_until_its_result_stands(
     result its five parts stand, with no file written by the following."""
     from bellman_workbench import app
 
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     session = _connected(folder)
     number = _submitted(folder, session)
     app_state(folder.root)

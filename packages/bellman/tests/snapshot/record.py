@@ -26,12 +26,10 @@ selection, the box and the field, separated by tabs, so that the list can be
 compared with the differences a build record names before it re-records.
 
 With `--corpus` it writes instead the recordings of the stage files under
-`applications/` that the corpus test `tests/sym/test_corpus.py` collects, in
+`applications/` that the corpus test `tests/test_snapshot.py` collects, in
 `tests/snapshot/corpus/<application>/`, at the path `recording_path` gives:
 for each file the parsed term `<file>.bl.ast.json` and the encoding of the
-elaborated stage `<file>.bl.stage.json`, which the corpus test compares, and
-for `portfolio-choice/cons.bl` also the encoding of its specified version,
-`cons.bl.specified.stage.json`, which `test_behaviour.py` compares. A
+elaborated stage `<file>.bl.stage.json`, which the corpus test compares. A
 recording the corpus test's tables leave out is not written: the encoding of
 a file the tables hold as not elaborating, and the parsed term of one they
 hold as unparseable. `--corpus FOLDER` writes the same recordings in FOLDER,
@@ -40,7 +38,6 @@ for a comparison with the stored ones.
 from __future__ import annotations
 
 import argparse
-import contextlib
 import functools
 import json
 import sys
@@ -51,11 +48,9 @@ if str(HERE.parent) not in sys.path:
     sys.path.insert(0, str(HERE.parent))
 
 from conftest import (  # noqa: E402
-    CONS_CALIBRATION,
-    CONS_METHODS,
-    CONS_SETTINGS,
     CORPUS,
     ROOT,
+    STAGE_FILES,
     corpus_stage,
     stage_from_text,
 )
@@ -294,8 +289,7 @@ def _within_applications(stage_path):
 def recording_path(stage_path, suffix):
     """The path of a recording of the stage file `stage_path`, a file under
     `applications/`, of the kind `suffix` names: `.ast.json`, the parsed term,
-    `.stage.json`, the encoding of the elaborated stage, or
-    `.specified.stage.json`, the encoding of its specified version. It is the
+    or `.stage.json`, the encoding of the elaborated stage. It is the
     file's name followed by `suffix`, in the folder of the file's application
     under `tests/snapshot/corpus/`:
     `applications/durables/declaration/stages/tenure/tenure.bl` with
@@ -313,11 +307,10 @@ def compared_suffixes(stage_path):
     `.stage.json` unless they hold it as not elaborating."""
     # the corpus test imports this module, so its tables are read when this
     # function is called and not when this module is imported
-    from sym.test_corpus import KNOWN_UNELABORATABLE, KNOWN_UNPARSEABLE, KNOWN_WITHOUT_ENCODING
+    from snapshot.corpus_cases import KNOWN_UNELABORATABLE
     within = _within_applications(stage_path)
     suffixes = []
-    if within.stem not in KNOWN_UNPARSEABLE and within.stem not in KNOWN_WITHOUT_ENCODING:
-        suffixes.append(".ast.json")
+    suffixes.append(".ast.json")
     if within.as_posix() not in KNOWN_UNELABORATABLE:
         suffixes.append(".stage.json")
     return tuple(suffixes)
@@ -344,42 +337,18 @@ def encoding_text(text, origin):
     return _stored_encoding(stage_from_text(text, origin))
 
 
-def specified_encoding_text(text, origin):
-    """The stored text of the encoding of the specified version of the stage
-    elaborated from a stage text whose source is named `origin`, made as
-    `test_behaviour.py` makes the version it compares: the stage calibrated,
-    methodized and configured from the files `CONS_CALIBRATION`,
-    `CONS_METHODS` and `CONS_SETTINGS` of `conftest.py`, which its fixture
-    `cons_sources` names, each given by its path relative to the repository
-    with the repository's root as the working directory, so that the
-    encoding records those paths."""
-    with contextlib.chdir(ROOT):
-        specified = (stage_from_text(text, origin).calibrate(CONS_CALIBRATION.relative_to(ROOT))
-                     .methodize(CONS_METHODS.relative_to(ROOT))
-                     .configure(CONS_SETTINGS.relative_to(ROOT)))
-        return _stored_encoding(specified)
-
-
-# the function that makes the stored text of each kind of recording, by its
-# suffix
-TEXT_OF_RECORDING = {".ast.json": parsed_term_text, ".stage.json": encoding_text,
-                     ".specified.stage.json": specified_encoding_text}
-# the corpus stage of `conftest.py` whose specified version `test_behaviour.py`
-# compares with its recording `.specified.stage.json`
-SPECIFIED = "cons"
+# The function that writes each recording, by its suffix.
+TEXT_OF_RECORDING = {".ast.json": parsed_term_text, ".stage.json": encoding_text}
 
 
 def corpus_recordings(stage_path):
     """The recordings `--corpus` writes of the stage file `stage_path`, by
-    suffix, each as the text stored: those the corpus test compares and, for
-    the file of the corpus stage `SPECIFIED`, the encoding of its specified
-    version."""
+    suffix, each as the text stored and compared by the corpus test."""
     within = _within_applications(stage_path)
     text = (APPLICATIONS / within).read_text(encoding="utf-8")
     origin = "applications/" + within.as_posix()
-    specified = (".specified.stage.json",) if origin == CORPUS[SPECIFIED] else ()
     return {suffix: TEXT_OF_RECORDING[suffix](text, origin)
-            for suffix in compared_suffixes(stage_path) + specified}
+            for suffix in compared_suffixes(stage_path)}
 
 
 def write_corpus_recordings(stage_path, folder=CORPUS_RECORDINGS):
@@ -412,8 +381,7 @@ if __name__ == "__main__":
         for leaf in leaves_of_the_corpus():
             print("\t".join(leaf))
     elif arguments.corpus is not None:
-        from sym.test_corpus import CORPUS as CORPUS_FILES
-        for stage_file in CORPUS_FILES:
+        for stage_file in STAGE_FILES:
             for path in write_corpus_recordings(stage_file, arguments.corpus).values():
                 print(path.relative_to(arguments.corpus).as_posix(), path.stat().st_size, "bytes")
     else:

@@ -12,5 +12,5 @@ The shock stage of the portfolio–consumption model without a portfolio choice:
 
 - The stage has no control, so the decision value is the plain expectation `E_{θ}(V[>])` and there is no policy block: nothing is chosen.
 - The stage declares no arrival perch: `k` is the state of the decision perch, joined by the connector `{disc.a: k}` to the savings that leave the discount stage.
-- The derivative of the decision value in capital, `D_{k}V = E_{θ}(D_{m}V[>]*R)`, stands in the marginal block of the block file `../../methods/noport_envelope.bl`, which `methods/noport.yml` binds with `!marginals`; nothing is differentiated.
+- The derivative of the decision value in capital, `D_{k}V = E_{θ}(D_{m}V[>]*R)`, is the line the methods file `methods.bl` beside this file, an addition to it, adds to the decision value builder; nothing is differentiated.
 - The grids, the quadrature nodes and the simulation settings are numerical configuration and belong to the methods and settings files, not to the stage file.

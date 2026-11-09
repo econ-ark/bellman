@@ -46,7 +46,7 @@ These calculus catalogues supply mathematical explanations rather than supersedi
 | Entry | Meaning | Reference |
 |---|---|---|
 | Operator | A mathematical operation with declared input and output types, called its rank. | [Operators](./operators.md) |
-| Method | A numerical procedure for a supported mathematical target. | [Methods](../06-Methods.md) |
+| Method | A numerical procedure for a supported place. | [Methods](../06-Methods.md) |
 | Settings | Numerical inputs required by the selected procedure. | [Parameters and settings](./parameters-settings.md) |
 | Handler | The implementation of a numerical procedure, including its input/output requirements. | [Handler](../../wiki/handler.md) |
 
@@ -58,7 +58,7 @@ A method may require its own representation and equation inputs. [Initial-algebr
 
 **Compatible types allow composition.** Distinct operations can have the same rank without the same meaning. An approximate method can change the values received by subsequent operations even when its declared boundaries agree. Numerical representation compatibility and approximation error must therefore be checked separately.
 
-**The model supplies its equations.** Stage equations and local definitions are authored in `.bl`. Method entries select supported targets and supply numerical choices; they do not invent omitted economic relations or make an implicit equation optimal. The current source rules of Bellman-SYM's Methodization page determine permitted target and reference forms. A method's tag binds no equation.
+**The model supplies its equations.** Stage equations and local definitions are authored in `.bl`. Method entries select supported places and supply numerical choices; they do not invent omitted economic relations or make an implicit equation optimal. The current source rules of Bellman-SYM's Methodization page determine permitted place and reference forms. A method's tag binds no equation.
 
 The method's documented settings specify the numerical inputs it accepts. A handler must interpret those settings as intended by its package. A grid that defines a discrete economic state or action space is model data; a grid approximating a continuous domain is numerical data. The same integer or real value can have either role depending on what it changes.
 
@@ -66,9 +66,9 @@ The method's documented settings specify the numerical inputs it accepts. A hand
 
 ## 3. Authoring
 
-Stage source is `.bl`. Supporting YAML describes method assignments, settings, calibration and specification recipes. Bellman-SYM's Methodization page gives the current syntax and distinguishes a declared target from an available method attachment, and its page on the Bellman factory explains how bindings are resolved for occurrences.
+Stage source is `.bl`. Supporting YAML describes method assignments, settings, calibration and specification recipes. Bellman-SYM's Methodization page gives the current syntax and distinguishes a declared place from an available method attachment, and its page on the Bellman factory explains how bindings are resolved for occurrences.
 
-Before using a method, establish that the target exists, the handler supports the required operation and its assumptions hold for the model. The comparison with other toolkits, the coverage map of the Rosetta stone, which is being rebuilt, is a separate inventory, not a default handler-selection rule.
+Before using a method, establish that the place exists, the handler supports the required operation and its assumptions hold for the model. The comparison with other toolkits, the coverage map of the Rosetta stone, which is being rebuilt, is a separate inventory, not a default handler-selection rule.
 
 <a id="see-also"></a>
 

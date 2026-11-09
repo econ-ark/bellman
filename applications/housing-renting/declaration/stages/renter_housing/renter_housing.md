@@ -55,9 +55,8 @@ choice set is never empty because renting nothing leaves the wealth and the
 income, which are positive.
 
 The backward block passes the renter's consumption value through
-unchanged, and the marginal block of
-`declaration/methods/marginals_renter_housing.bl`, which the methods file
-binds on that builder with `!marginals`, passes its derivative through:
+unchanged, and the line the methods file `methods.bl`, the addition beside
+this file, appends to that builder's block passes its derivative through:
 
 ```bl
     V = V[>]                     :: [id=value]
@@ -96,7 +95,7 @@ and forward operator views.
 
 ## Numerical methods
 
-`declaration/stages/renter_housing/methods.yml` records the search over the rental quantities at
-the policy block and the decision value and its derivative held on the cash
+`declaration/stages/renter_housing/methods.bl` types the discrete choice over the rental
+quantities on the policy builder and the decision value and its derivative held on the cash
 grid by linear interpolation, which is how the tenure stage reads the value
 of renting at the liquidated wealth.

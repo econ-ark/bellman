@@ -6,16 +6,16 @@ conditions it leaves to be established, the answers of the construction table
 and its places; what it denotes is `denotations.denote`. Its parameters and
 its settings are the records `parameters_of` and `settings_of` answer, which
 the stage's tables `stage.par` and `stage.settings` read, with the tables
-they print, `parameter_rows` and `setting_rows`. The rest are functions of
-this module and are bound as no method, because they name a piece the
-navigation already resolves or have no reader on the surface (AMD-SG-020 §2,
-clauses 2 and 4): `kind`, `branches` and `combination`, which answer from the
-line records whether a stage branches, the continuation fields of each
-branch and how the branches combine; `method_at`; and the
-helpers beneath the printed forms. The methods within a graph or a piece are
-the piece's own `methods`, answered by `boxes.methods_within` alone.
-Every answer is derived from the definitions table, the stored graphs and the
-bindings; nothing is stored beside them.
+they print, `parameter_rows` and `setting_rows`; its places are
+`places.places`. The rest are functions of this module and are bound as no
+method, because they name a piece the navigation already resolves or have no
+reader on the surface (AMD-SG-020 §2, clauses 2 and 4): `kind`, `branches`
+and `combination`, which answer from the line records whether a stage
+branches, the continuation fields of each branch and how the branches
+combine; and the helpers beneath the printed forms. The components within a
+graph or a piece are the piece's own `methods`, answered by
+`boxes.methods_within` alone. Every answer is derived from the definitions
+table, the stored graphs and the bindings; nothing is stored beside them.
 
 A question about one graph is `grains`, about one box `boxes`,
 about the kernel a box applies `kernels`.
@@ -45,6 +45,7 @@ from bellman.fold.block_lines import (
     parameter_sets,
     perches_of,
     require_stage,
+    setting_sets,
     transition_between,
     unread_inputs_of,
 )
@@ -74,12 +75,14 @@ from bellman.stage.grains import (
     stored_graph_name,
     wire_table,
 )
-from bellman.native.records import bound_at, setting_names
-from bellman.stage.method_table import GRID_KINDS, METHOD_TYPES, attachment_places, grid_kind
-from bellman.stage.method_targets import resolve_target, target_inventory
+from bellman.native.records import setting_names
+from bellman.stage.levels import is_declared_version, source_texts
+from bellman.stage.method_table import row_of
+from bellman.stage.places import components_by_place, components_of_box
+from bellman.syntax.lower import parse_with_spans
+from bellman.syntax.union import union
 from bellman.stage.term_operations import reference_term, relation_of, tuple_term
 from bellman.syntax import terms as T
-from bellman.syntax.lower import parse_with_spans
 from bellman.syntax.source import to_source
 from bellman.syntax.vocabulary import (
     ARRIVAL,
@@ -199,14 +202,13 @@ def _symbolic_obligations(stage):
                 explanation=item[2] if len(item) > 2 else "",
             ),
         )
-    # the condition each bound method block's method requires, under the name
-    # its row of the method table gives it, required and checked by nothing
-    # (specification 0.6 §4.1 and decision 2); a marginal block's condition,
-    # `marginal-reading`, is listed by the fold once per derivative line, as
-    # it is for a derivative line written in the stage file, and not here
+    # the condition each solution method whose rows open a builder requires,
+    # under the name its row of the catalogue gives it, required and checked
+    # by nothing (specification 0.6 §4.1 and decision 2); a derivative line's
+    # condition, `marginal-reading`, is listed by the fold once per line
     # (AMD-MB-001 §4.3; decisions MB-B13)
     for block in bound_blocks(stage):
-        if block.condition is not None and not block.marginal:
+        if block.condition is not None:
             entries = (piece_identity(block.builder),)
             found.setdefault(
                 (block.condition, entries),
@@ -217,6 +219,25 @@ def _symbolic_obligations(stage):
                     explanation=METHOD_CONDITIONS[block.condition],
                 ),
             )
+    # the same condition where a builder's method component names the
+    # method and no row of the method is appended (specification 0.7 D8);
+    # not on the declared version, which holds the method's construction
+    # at no level and whose cards no binding changes (decision SC-13)
+    components = () if is_declared_version(stage) else components_by_place(stage).items()
+    for place, held in components:
+        row = row_of(held.method.name) if held.method is not None else None
+        if row is None or row.condition is None or "." in place or "[" in place:
+            continue
+        entries = (piece_identity(place),)
+        found.setdefault(
+            (row.condition, entries),
+            Condition(
+                row.condition,
+                entries,
+                status="required",
+                explanation=METHOD_CONDITIONS[row.condition],
+            ),
+        )
     ranges = law_range_evidence(stage)
     for key, item in tuple(found.items()):
         if item.condition == "range-compatibility" and len(item.entries) == 3:
@@ -689,9 +710,10 @@ def value_carries_derivative(stage, value, coordinates):
     stage writes, carries the derivative in `coordinates`, the coordinate
     names of the perch the value stands at, one per order (AMD-MB-001 §3,
     D1 and D6): by a stated line, the Sort's `derivatives` naming the one
-    coordinate of a first derivative; or by a representation method bound at
-    the Evaluation of the builder that writes it whose row of the method
-    table evaluates a derivative of that order; or, for an arrival value, by
+    coordinate of a first derivative; or by a representation typed at the
+    Evaluation of the builder that writes it, for every object it stores or
+    for the value itself, whose row of the catalogue evaluates a derivative
+    of that order; or, for an arrival value, by
     the pass-through of a stated derivative of the decision value
     (`_passed_through`; D3 and the plan's P1). The builder that reads the
     derivative knows none of this; the answer is information for the stage
@@ -700,19 +722,17 @@ def value_carries_derivative(stage, value, coordinates):
     stated = tuple(coordinate.field for coordinate in sort.derivatives)
     if len(coordinates) == 1 and coordinates[0] in stated:
         return True
-    methods = stage.bindings.methods or {}
     table = construction_table(stage)
+    written = value.field + WRITTEN_MARK.get(value.perch, "")
     for box in blocks_in_file_order(stage):
         for row in table.by_builder(box.name):
             if row.kind != "Evaluation" or value not in row.outputs:
                 continue
-            for key, method in methods.items():
-                row_of_method = METHOD_TYPES.get(method.tag)
-                if (
-                    bound_at(key) == str(row.identity)
-                    and row_of_method is not None
-                    and len(coordinates) in row_of_method.derivatives
-                ):
+            for place, held in components_of_box(stage, row.identity):
+                if held.method is None or written not in {obj for _, obj in place.keys}:
+                    continue
+                row_of_method = row_of(held.method.name)
+                if row_of_method is not None and len(coordinates) in row_of_method.derivatives:
                     return True
     upstream = passed_through(stage, value, coordinates) if value.perch == ARRIVAL else None
     return upstream is not None and value_carries_derivative(stage, *upstream)
@@ -732,11 +752,12 @@ def value_builder(stage, value):
 
 def evaluation_value_address(stage, value):
     """The written address of the Evaluation of the builder that writes the
-    value wire `value`, `<block-id>.evaluate.value`, at which a representation
-    of the value is written (AMD-MB-002 §3); the placeholder `<block-id>`
-    stands where no builder of the stage writes the value."""
+    value wire `value`, `<block-id>.evaluate`, at which a representation of
+    what the builder stores is typed (AMD-MB-002 §3; specification 0.7 D4);
+    the placeholder `<block-id>` stands where no builder of the stage writes
+    the value."""
     builder = value_builder(stage, value) if value is not None else None
-    return f"{builder or '<block-id>'}.evaluate.value"
+    return f"{builder or '<block-id>'}.evaluate"
 
 
 # the perch a value is passed through from, and the two perches of the forward
@@ -965,10 +986,9 @@ def _derivative_missing(stage, reads):
                 f"stage {stage.name!r}: the block {read.builder!r} reads `{read.spelling}`, and "
                 f"the value `{read.value.field}{WRITTEN_MARK[read.value.perch]}` carries no "
                 f"derivative in {', '.join(read.coordinates)}; state it with a derivative line "
-                "of the builder that writes the value, in the stage file or in a marginal "
-                "block bound with `!marginals`, or write at that builder's Evaluation, "
-                f"`on: {evaluation_value_address(stage, value)}`, a representation whose row "
-                "of the method table evaluates it",
+                "of the builder that writes the value, in the stage file or in an addition, or "
+                f"type at that builder's Evaluation, `{evaluation_value_address(stage, value)}"
+                ".method : …`, a representation whose row of the catalogue evaluates it",
                 candidates=(str(value), *read.coordinates),
             )
         )
@@ -983,17 +1003,20 @@ def _unread_inputs(blocks):
     its perch mark (AAS, 17 October 2026). The inputs are read from the
     retained header of each block (`unread_inputs_of`), since the block's own
     inputs leave them out."""
-    return tuple(
-        Diagnostic(
-            "unread-input",
-            box.name,
-            f"the header lists `{sort.identity.field}{WRITTEN_MARK.get(sort.identity.perch, '')}`,"
-            f" which no line of the block reads",
-            candidates=(sort.identity,),
-        )
-        for box in blocks
-        for sort in unread_inputs_of(box)
-    )
+    found = []
+    for box in blocks:
+        for sort in unread_inputs_of(box):
+            written = f"{sort.identity.field}{WRITTEN_MARK.get(sort.identity.perch, '')}"
+            found.append(
+                Diagnostic(
+                    "unread-input",
+                    box.name,
+                    f"the header lists `{written}`, which no line of the block reads",
+                    candidates=(sort.identity,),
+                    write=f"Remove `{written}` from the header, or read it on a line of the block",
+                )
+            )
+    return tuple(found)
 
 
 def _unmatched_fields(ports, blocks, entry=ARRIVAL):
@@ -1196,27 +1219,34 @@ class Parameter(NamedTuple):
 
 
 class Setting(NamedTuple):
-    """One setting of a version, `stage.settings["n_a"]`: its `name`, its
-    configured `value`, and `readers`, the triples of the place that reads
-    it, the method there and the kind of the method's grid where the setting
-    is a field of that grid, `("policy", "!egm", "!Cartesian")`, the kind
-    empty otherwise, `("E_ψ_ξ", "!gauss-hermite", "")`; `readers` is empty
-    for a setting no bound method names. It prints as one line,
-    `n_a = 960, read at policy by !egm for its grid !Cartesian`
-    (AMD-MB-003 §3).
+    """One setting of a version, `stage.settings["n_a"]`: its `name`; its
+    `domain`, the set its declaration in the methods file names, None for a
+    setting no file declares; its configured `value`, or `unbound` where no
+    configuration has valued it; and `readers`, the triples of the place
+    that reads it, the method word there and the kind of the grid where the
+    setting is a bound or a count of a factor of the grid typed at that
+    place, `("policy", "!egm", "!Cartesian")`, the kind empty otherwise,
+    `("dcsn_to_arvl.E_ψ_ξ", "!gauss_hermite", "")`; `readers` is empty for
+    a setting no component names. It prints as one line,
+    `n_a = 960 : ℕ, read at policy by !egm for its grid !Cartesian`
+    (AMD-MB-003 §3; specification 0.7 D5).
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
 
     name: str
     value: object
     readers: tuple
+    domain: object = None
 
     def __str__(self):
         read = "; ".join(
             f"{place} by {by}" + (f" for its grid {grid}" if grid else "")
             for place, by, grid in self.readers
         )
-        return f"{self.name} = {self.value!r}" + (f", read at {read}" if read else "")
+        declared = "" if self.domain is None else f" : {to_source(self.domain)}"
+        if isinstance(self.value, str) and self.value == UNBOUND:
+            return f"{self.name}{declared}, {UNBOUND}" + (f", read at {read}" if read else "")
+        return f"{self.name} = {self.value!r}{declared}" + (f", read at {read}" if read else "")
 
     __repr__ = __str__
 
@@ -1270,55 +1300,66 @@ def descriptions(definition):
 
 
 def settings_of(stage):
-    """Every setting bound to the version, in settings binding order, each
-    its `Setting` record: the value configured in `stage.bindings.settings`
-    and the places and methods of `stage.bindings.methods` that name it. A
-    setting has no declaration in the definitions table, so a version no
-    configuration has bound holds none. Computed at each call and kept
-    nowhere.
+    """Every setting of the version, each its `Setting` record: first the
+    settings the methods file declares, in declaration order, each with its
+    declared set and the value configured in `stage.bindings.settings` or
+    `unbound`; then the names a configuration bound that no file declares,
+    in binding order. Each record lists the places whose components name
+    the setting (`settings_readers`). A setting is listed here and never
+    among the parameters (specification 0.7, S1). Computed at each call and
+    kept nowhere.
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
     require_stage(stage)
-    readers = stage.bindings.settings_readers()
-    return {
-        name: Setting(
+    readers = settings_readers(stage)
+    values = stage.bindings.settings or {}
+
+    def record(name, domain):
+        return Setting(
             name=name,
-            value=value,
+            value=values[name] if name in values else UNBOUND,
             readers=tuple(
                 (
-                    str(place),
-                    f"!{method.tag}" if method.tag else method.handler or "handler only",
-                    _grid_of_setting(method, name),
+                    place,
+                    held.word or (f'"{held.handler}"' if held.handler else ""),
+                    _grid_of_setting(held, name),
                 )
-                for place, method in readers.get(name, ())
+                for place, held in readers.get(name, ())
             ),
+            domain=domain,
         )
-        for name, value in (stage.bindings.settings or {}).items()
-    }
+
+    found = {name: record(name, domain) for name, domain in setting_sets(stage).items()}
+    found.update({name: record(name, None) for name in values if name not in found})
+    return found
 
 
-def _grid_of_setting(method, name):
-    """The kind of the grid of the bound method `method`, `!Cartesian`, where
-    the setting `name` is one of the grid's fields, the names written under
-    `orders`, `bounds`, `spacing` or `nodes` beside `grid: !Cartesian`;
-    the empty text otherwise (AMD-MB-003 §3)."""
-    kind = grid_kind(method.settings.get("grid"))
-    fields = GRID_KINDS.get(kind, ())
-    read = {
-        held
-        for field in fields
-        if field in method.settings
-        for held in setting_names(method.settings[field])
-    }
-    return f"!{kind}" if name in read else ""
+def settings_readers(stage):
+    """The places whose components name each setting, by setting name: for
+    each name a keyword argument of a method word or a factor of a grid
+    writes, the pairs of the place and its `Components`, in the order of the
+    places (`records.setting_names`)."""
+    found = {}
+    for place, held in components_by_place(stage).items():
+        for name in dict.fromkeys(setting_names(held)):
+            found.setdefault(name, []).append((place, held))
+    return found
+
+
+def _grid_of_setting(held, name):
+    """The kind of the grid typed at a place, `!Cartesian`, where the
+    setting `name` is a bound or a count of one of its factors; the empty
+    text otherwise (specification 0.7 D5)."""
+    return "!Cartesian" if held.grid is not None and name in set(setting_names(held.grid)) else ""
 
 
 def setting_rows(stage):
-    """The settings bound to this version, in settings binding order, the
-    table `stage.settings` prints.
+    """The settings of this version, the declared ones first, the table
+    `stage.settings` prints.
 
-    A setting has one read-only row per method reader, with the kind of the
-    method's grid under `grid` where the setting is a field of that grid. A
+    A setting has one read-only row per method reader, with its declared set
+    under `set`, its value or the word `unbound`, and the kind of the grid
+    under `grid` where the setting is a factor of the place's grid. A
     setting with no reader remains in the listing with empty `read at`, `by`
     and `grid` entries.
 
@@ -1326,39 +1367,23 @@ def setting_rows(stage):
     return Rows(
         [
             MappingProxyType(
-                {"name": record.name, "value": record.value, "read at": at, "by": by, "grid": grid}
+                {
+                    "name": record.name,
+                    "domain": record.domain,
+                    "value": record.value,
+                    "read at": at,
+                    "by": by,
+                    "grid": grid,
+                }
             )
             for record in settings_of(stage).values()
             for at, by, grid in record.readers or (("", "", ""),)
-        ]
+        ],
+        {"domain": "set"},
     )
 
 
-def places(stage):
-    """The method targets of this stage as read-only address and kind rows.
-
-    The addresses are the public target inventory. Their kinds come from the
-    retained mathematical objects, independently of any method tag.
-
-    See `docs/Bellman-Sym/API/stage/07-methods.md` §1.
-    """
-
-    require_stage(stage)
-    rows = []
-    seen = set()
-    for address in target_inventory(stage):
-        resolved = resolve_target(stage, address)
-        for place in attachment_places(stage, address, resolved, False, representation=True):
-            kind = f"operator {place.head}" if place.kind == "operator" else place.kind
-            key = address, kind
-            if key in seen:
-                continue
-            seen.add(key)
-            rows.append(MappingProxyType({"address": address, "kind": kind}))
-    return Rows(rows)
-
-
-# --- the listing, the branches, the method at a box and the source spans ---
+# --- the listing, the branches and the source spans ---
 
 
 def stage_listing(stage):
@@ -1414,38 +1439,28 @@ def combination(stage):
     return None
 
 
-def method_at(stage, box_name):
-    """The `Method` held under the key `box_name` of `bindings.methods`, or
-    None: a builder's box carries the method of the whole builder, and an
-    Evaluation, `<block-id>:Evaluation`, the first method bound there; a
-    method of another kind at that box stands under `(box_name, kind)` and is
-    not answered here."""
-    require_stage(stage)
-    return (stage.bindings.methods or {}).get(box_name)
-
-
 def source_spans(stage):
     """The source span of every authored item of the version, by address: the
-    file, line and column it was written at. After the authored items, the
-    mapping holds the place of each side of a block header, each field the
-    side lists and each component of that field's typing (unit T of the model
-    interface specification 0.3, the classification table). Parsed once per
-    version from the text its provenance retains, and empty for a stage built
-    from a term whose text the provenance does not hold. Nothing is stored on
-    the stage."""
+    file, line and column it was written at, in the stage file or in an
+    addition. After the authored items, the mapping holds the place of each
+    side of a block header, each field the side lists, each component of
+    that field's typing and each typing entry of the header (unit T of the
+    model interface specification 0.3, the classification table). Parsed
+    once per version from the texts its provenance retains, the stage file's
+    with its additions unioned (`bellman.syntax.union`), and empty for a stage
+    built from a term whose text the provenance does not hold. Nothing is
+    stored on the stage."""
 
     def compute():
-        text = stage.provenance.get("text")
+        text, origin, additions = source_texts(stage)
         if not text:
             return {}
-        origin = stage.provenance.get("path") or stage.provenance.get("origin")
-        spans = dict(parse_with_spans(text, origin).spans)
-        # the lines and definitions of each bound method block, at their
-        # places in the block file; an address the stage file holds keeps
-        # the stage file's place (specification 0.6 §7)
-        for block in bound_blocks(stage):
-            for address, span in block.spans.items():
-                spans.setdefault(address, span)
-        return spans
+        if additions:
+            unioned = union(
+                parse_with_spans(text, filename=origin),
+                [parse_with_spans(held, filename=where) for held, where in additions],
+            )
+            return dict(unioned.spans)
+        return dict(parse_with_spans(text, origin).spans)
 
     return kept_answer(stage, "spans", compute)

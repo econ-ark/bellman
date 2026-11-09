@@ -1,0 +1,23 @@
+# The smooth-ambiguity savings stage's numerical settings, the values of the
+# settings its methods file declaration/stages/sa_savings/methods.bl
+# declares: the grid of resources of value function iteration and of the
+# representations of the value, of its derivative and of the two certainty
+# equivalents, the number of candidate consumption levels the iteration
+# compares at each point of that grid and its tolerance, the quadrature
+# nodes of the return given the mean of its log and of that mean, and the
+# number and the seed of the simulated paths. No code of this application
+# reads them, so the grid, the candidates, the nodes and the simulation take
+# the values of the consumption and portfolio stages of
+# applications/cons-port/, in declaration/settings/cons.yml, cons_vfi.yml
+# and port.yml there, the nodes of the mean of the log return the same count
+# as the return's, and the tolerance is one millionth.
+settings:
+  m_min: 0.01
+  m_max: 10.0
+  n_m: 100
+  n_c: 200
+  tol_v: 1.0e-6
+  n_Ψ_nodes: 7
+  n_ν_nodes: 7
+  n_sim: 10000
+  sim_seed: 12345

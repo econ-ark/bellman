@@ -1,0 +1,31 @@
+@methods: consumption_choice
+# The methods of the owner's consumption-choice stage, written as an addition
+# to consumption_choice.bl beside this file: the endogenous grid method on the
+# policy builder with its grid of savings as the grid entry of the place, the
+# two candidate lines of the method with their marks !node, the
+# identification line c = c[>], and the envelope line of the decision value
+# builder. With !egm on the policy builder, the three lines of the block
+# policy stand in place of the declared line optimality at the operative
+# level, and the declared level keeps the maximization. Neither block carries
+# a signature, since neither adds a coordinate. The grid entry names the
+# coordinate it discretizes, a_nxt, and writes no factor for the other two
+# coordinates of the continuation perch, H_c in XH and y_c in Y, which take
+# the default. Every setting the grid reads is declared with its set, the
+# bounds as points of Xa, the set the stage declares for a_nxt.
+# The stage file is refused by the elaborator today at its definition
+# XH := linspace(H_min, H_max, n_H), under the rule not-constructed, so this
+# file is read with no stage until that definition is constructed.
+
+n_a : ℕ        :: ["number of points of the savings grid"]
+a_min : Xa     :: ["lower bound of the savings grid"]
+a_max : Xa     :: ["upper bound of the savings grid"]
+
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a_nxt=(a_min, a_max, n_a))] {
+    c[>] = (β*D_{a_nxt}V[>] / (θ * (κ*H_c + ι)^((1-θ)*(1-γ))))^(1/(θ*(1-γ) - 1))  :: [id=InvEuler, !node]
+    w[>] = a_nxt + c[>]                                                             :: [id=regrid, !node]
+    c    = c[>]                                                                     :: [id=cons_choice]
+}
+
+[id=cntn_to_dcsn] {
+    D_{w_d}V = θ * c^(θ*(1-γ)-1) * (κ*H_d + ι)^((1-θ)*(1-γ))      :: [id=marginal]
+}

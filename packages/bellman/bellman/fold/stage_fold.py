@@ -65,6 +65,7 @@ from bellman.fold.stage_names import (
 )
 from bellman.fold.table import BlockRows, ConstructionTable, OperatorRow
 from bellman.fold.wire_terms import (
+    path_text,
     coordinate_declared_set,
     defined_name,
     expectation_occurrences,
@@ -79,7 +80,7 @@ from bellman.fold.wire_terms import (
 from bellman.native.identity import Identity, piece_identity
 from bellman.native.records import Definition
 from bellman.native.versions import StageVersion
-from bellman.refusals import ConstructionError, NotConstructed
+from bellman.refusals import ConstructionError, NotConstructed, construction_error, location
 from bellman.syntax import terms as T
 from bellman.syntax.lower import file_position, item_addresses
 from bellman.syntax.source import to_source
@@ -90,6 +91,7 @@ from bellman.typing.category_codes import (
     coded_meaning,
     reserved_entries,
 )
+from bellman.syntax.union import is_typing_entry
 from bellman.typing.declarations import TOP_LEVEL
 from bellman.typing.line_unknowns import selection_positions
 from bellman.typing.sets import defined, index_factors
@@ -466,8 +468,16 @@ def _forward_edges(ctx, blocks, directions, definitions):
     """The owners of the shocks, the owners in dependency order, and the edge
     each forward builder draws its shocks on (AMD-SG-009 §2)."""
 
-    def refuse(rule, address, message):
-        raise ConstructionError(message, stage=ctx.stage_name, address=address, rule=rule)
+    def refuse(rule, address, message, related=(), write=None):
+        # `related` pairs each second item's role with its address
+        raise ConstructionError(
+            message,
+            stage=ctx.stage_name,
+            address=address,
+            rule=rule,
+            related=tuple(location(role, address=at) for role, at in related),
+            write=write,
+        )
 
     subjects = {
         s for d in definitions if d.kind == "distribution" for s in d.equations[0].subjects
@@ -567,8 +577,10 @@ def _distribution_obligations(plan, obligations):
     of one scalar law."""
     ctx = plan.ctx
 
-    def refuse(rule, address, message):
-        raise ConstructionError(message, stage=ctx.stage_name, address=address, rule=rule)
+    def refuse(rule, address, message, write=None):
+        raise ConstructionError(
+            message, stage=ctx.stage_name, address=address, rule=rule, write=write
+        )
 
     # the parameters whose values are no real numbers: those declared on a
     # collection, `μ : I_J → ℝ`, and on a product set, `b : ℝ × ℝ`
@@ -630,6 +642,7 @@ def _distribution_obligations(plan, obligations):
 def _definitions_of(term, ctx, stage, spans=None) -> tuple:
     """The definitions table of a stage file (AMD-SG-006 §2): every name the
     file declares, once, in file order — a parameter with its declared set,
+    a setting a methods file declares with its declared set,
     a named space, a value definition (`du := D_{c}(u)`) as a function alias
     whose identity kind is `function` and definition kind is `function_alias`,
     an authored function or correspondence, a distribution declaration with
@@ -658,7 +671,88 @@ def _definitions_of(term, ctx, stage, spans=None) -> tuple:
         definitions
         + _line_definitions(blocks, lines, items)
         + _law_definitions(ctx, blocks, directions, lines, items)
+        + _typing_definitions(term, ctx, spans)
     )
+
+
+def _typing_definitions(term, ctx, spans):
+    """A `typing` record for every typing entry and handler binding of the
+    file, at file level or in a block's header (specification 0.7 §4): its
+    identity names the place the entry types, as an absolute path, and the
+    component, `method`, `grid` or `handler`; its one equation is the method
+    word, the grid or the handler's program; its tags hold the subject as
+    written; its address is the entry's file position with its column,
+    `cons.bl:14:5`, from which the file it was written in is read and at
+    which a refusal of the entry is placed. An entry in a block's header whose subject
+    does not start with the block's own id is read relative to the block
+    (rule 7). Two entries at one place for one component are refused here,
+    naming both (`component-typed-twice`)."""
+    found, held = [], {}
+    for address, item in item_addresses(term):
+        if isinstance(item, T.Declare) and is_typing_entry(item.declaration):
+            entries = ((item.declaration, (), address),)
+        elif isinstance(item, T.Block):
+            scope = tuple(address.split("."))
+            entries = tuple(
+                (entry.typing, scope, f"{address}.{to_source(entry.typing.subject)}")
+                for entry in item.tag.entries
+                if isinstance(entry, T.Typer) and is_typing_entry(entry.typing)
+            )
+        else:
+            continue
+        for typing, scope, key in entries:
+            span = None if spans is None else spans.get(key)
+            written = key if span is None or span.line is None else (
+                f"{file_position(span)}:{span.column}"
+            )
+            path = typing.subject
+            segments = tuple(path.segments)
+            if scope and segments[0].name != scope[0]:
+                segments = tuple(T.Segment(name, ()) for name in scope) + segments
+            place = path_text(T.Path(segments[:-1]))
+            component = segments[-1].name
+            value = (
+                typing.program
+                if isinstance(typing, T.Handler)
+                else _classifier_value(typing.classifiers[0])
+            )
+            identity = Identity("typing", stage=ctx.stage_name, address=place, field=component)
+            if identity in held:
+                first_written, first_key = held[identity]
+                raise construction_error(
+                    f"the {component} component of `{place}` is typed twice, at {first_written} "
+                    f"and at {written}; a component is typed by one entry; remove one of the two",
+                    stage=ctx.stage_name,
+                    address=key,
+                    span=None if spans is None else spans.get(key),
+                    rule="component-typed-twice",
+                    related=(
+                        location(
+                            "original declaration",
+                            address=first_key,
+                            span=None if spans is None else spans.get(first_key),
+                        ),
+                    ),
+                    write=f"Remove the entry at {first_written} or the entry at {written}",
+                )
+            held[identity] = (written, key)
+            found.append(
+                Definition(
+                    identity,
+                    kind="typing",
+                    coordinates=(),
+                    equations=(value,),
+                    tags=(to_source(path),),
+                    address=written,
+                )
+            )
+    return tuple(found)
+
+
+def _classifier_value(classifier):
+    """The term a typing entry's classifier carries: the method word or the
+    grid."""
+    return classifier.m if isinstance(classifier, T.Method) else classifier.g
 
 
 def _declared_definitions(term, ctx, spans):
@@ -669,9 +763,11 @@ def _declared_definitions(term, ctx, spans):
     named set is refused where it is written (`_misplaced_marker`)."""
     definitions = []
     for address, item in item_addresses(term):
+        if isinstance(item, T.Declare) and is_typing_entry(item.declaration):
+            continue  # a typing entry declares no name; `_typing_definitions` records it
         written = _written_at(address, spans)
         _misplaced_marker(item, ctx, address, written)
-        if isinstance(item, T.Declare) and _is_typing_entry(item.declaration):
+        if isinstance(item, T.Declare) and is_typing_entry(item.declaration):
             # a typing entry or a handler binding the union left at file
             # level, which the semantics reads (specification 0.7, unit U3)
             continue
@@ -684,7 +780,8 @@ def _declared_definitions(term, ctx, spans):
 
 def _declaration_definitions(item, ctx, address, written):
     """The records a declaration makes: the multiplier of a bound declared in
-    a block body, or a record for each parameter the declaration names."""
+    a block body, or a record for each parameter or setting the declaration
+    names."""
     if isinstance(item.declaration, T.Complementary):
         # the multiplier of a bound declared in a block body: the record
         # holds the declaration with its clause as written, its declared
@@ -705,18 +802,27 @@ def _declaration_definitions(item, ctx, address, written):
         )
     found = []
     for coordinate in item.declaration.subject.coordinates:
-        if isinstance(coordinate, T.Coordinate) and coordinate.stem in ctx.parameter_names:
-            declared = ctx.parameter_sets.get(coordinate.stem)
-            found.append(
-                Definition(
-                    Identity("parameter", stage=ctx.stage_name, field=coordinate.stem),
-                    kind="parameter",
-                    coordinates=(),
-                    equations=() if declared is None else (declared,),
-                    tags=_declared_tags(item.annot),
-                    address=written,
-                )
+        if not isinstance(coordinate, T.Coordinate):
+            continue
+        # a top-level declaration of the stage file is a parameter, and one
+        # of a methods file, an addition, a setting (specification 0.7, S1):
+        # the declaration pass tells them apart by the file of the item
+        if coordinate.stem in ctx.parameter_names:
+            kind, declared = "parameter", ctx.parameter_sets.get(coordinate.stem)
+        elif coordinate.stem in ctx.setting_sets:
+            kind, declared = "setting", ctx.setting_sets.get(coordinate.stem)
+        else:
+            continue
+        found.append(
+            Definition(
+                Identity(kind, stage=ctx.stage_name, field=coordinate.stem),
+                kind=kind,
+                coordinates=(),
+                equations=() if declared is None else (declared,),
+                tags=_declared_tags(item.annot),
+                address=written,
             )
+        )
     return tuple(found)
 
 
@@ -832,20 +938,12 @@ def _misplaced_marker(item, ctx, address, written):
     )
 
 
-def _is_typing_entry(declaration) -> bool:
-    """Whether a top-level declaration is a typing entry or a handler
-    binding, `policy.method : !egm`, whose subject is a path."""
-    return isinstance(declaration, T.Handler) or (
-        isinstance(declaration, T.Declaration) and isinstance(declaration.subject, T.Path)
-    )
-
-
 def _item_words(item) -> str:
     """A top-level statement or declaration in words, `the function alias 𝑑𝑢`,
     as a refusal names it."""
     if isinstance(item, T.Declare):
         declaration = item.declaration
-        if _is_typing_entry(declaration):
+        if is_typing_entry(declaration):
             return f"the entry of {to_source(declaration.subject)}"
         if isinstance(declaration, T.Complementary):
             declaration = declaration.declaration

@@ -1,5 +1,5 @@
 site_name: Project Bellman
-site_description: Build rich, dynamic heterogeneous agent models from reusable stages—in a language both humans and AI can understand.
+site_description: Project Bellman provides a modular human–AI interface for dynamic economic modelling.
 site_url: https://bellman.io/
 
 repo_name: econ-ark/bellman
@@ -74,7 +74,8 @@ plugins:
 # Build-time hooks (no extra pip dependency required), kept in docs/_hooks/.
 hooks:
   - docs/_hooks/obsidian_tags.py  # render standalone Obsidian #tag lines as chips (not <h1>)
-  - docs/_hooks/homepage.py       # the custom homepage uses CSS animations and no docs controls
+  - docs/_hooks/homepage.py       # the custom homepage omits docs controls
+  - docs/_hooks/home_model.py     # native diagrams and their fonts for the homepage
 
 markdown_extensions:
   - pymdownx.arithmatex:
@@ -218,6 +219,8 @@ nav:
   # (the build order of 13 September 2026, an internal plan).
   - Examples:
     - examples/index.md
+    - "Housing adjustment": examples/housing-frictions/index.md
+    - "Pensions and retirement": examples/pension-retirement/index.md
     - "Consumption-Savings IID":
       - "YAML Spec": examples/cons-iid/consumption_savings_iid.md
       - "Formal MDP": examples/formal-mdps/cons_savings_iid_mdp.md

@@ -79,11 +79,9 @@ from bellman.display.printed_records import (
 )
 from bellman.fold.wire_terms import term_nodes
 from bellman.native.hypergraphs import BellmanHypergraph
-from bellman.native.identity import IdentityCollision
 from bellman.native.labels import is_wiring
-from bellman.native.records import Definition, bound_at
 from bellman.native.versions import store, stored
-from bellman.refusals import ConstructionError, NotConstructed, TargetError
+from bellman.refusals import ConstructionError, NotConstructed
 from bellman.stage.boxes import (
     box_obligations,
     boxes_inside,
@@ -96,7 +94,6 @@ from bellman.stage.boxes import (
     methods_bound_within,
     methods_of_line,
     methods_within,
-    piece_and_place,
     piece_named,
     piece_word,
     row_of,
@@ -129,14 +126,11 @@ from bellman.stage.grains import (
     graph_of,
     is_relation,
     kind_of,
-    stored_graph,
     wire_table,
 )
 from bellman.stage.inventory import definitions_listing
 from bellman.stage.kernels import compile_kernel, derivative_pieces, kernel
-from bellman.stage.method_blocks import declared_version
-from bellman.stage.method_table import attachment_places, binding_kind
-from bellman.stage.method_targets import resolve_target
+from bellman.stage.places import inventory
 from bellman.stage.stage_answers import (
     UNBOUND,
     obligations,
@@ -144,6 +138,7 @@ from bellman.stage.stage_answers import (
     parameters_of,
     setting_rows,
     settings_of,
+    settings_readers,
 )
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
@@ -885,11 +880,13 @@ def _handle_named(stage, holder, key, choices, where):
     chosen = [box for box in choices if _matches(box, holder, key)]
     if len(chosen) != 1:
         # a block's authored line that reads no wire is in no graph and is
-        # reached by its name from the block, as every other line is
+        # reached by its name from the block, as every other line is, by its
+        # key within the block or by its address, the name the listing prints
         # (AMD-SG-021 §4.5)
         wireless = {} if holder is None else lines_with_no_wire(stage, holder)
-        if len(chosen) == 0 and key in wireless:
-            return LineHandle(stage, wireless[key])
+        found = [line for inner, line in wireless.items() if key in (inner, line.address)]
+        if len(chosen) == 0 and len(found) == 1:
+            return LineHandle(stage, found[0])
         names = ", ".join(
             [box.name for box in choices]
             + [definition.address for definition in wireless.values()]
@@ -961,10 +958,13 @@ class BubbleHandle(_Handle):
         them, a sub-builder's row unnumbered with its primitives under it;
         `primitives.list()` opens the sub-builders and lists the primitives
         alone with the same numbers; a block's lines, the `!doc` line among
-        them, unnumbered.
+        them, unnumbered. A block of an initial diagram lists the lines its
+        own box holds, on the version that holds the box: the stage file's
+        lines and the lines an addition appends, since a solution method's
+        rows stand in no block of an initial diagram (`levels.construct`).
 
         See `docs/Bellman-Sym/API/stage/04-builder.md` §1."""
-        return bubble_listing(self._lines_read_on(), self.box)
+        return bubble_listing(self.version, self.box)
 
     def denote(self):
         """This piece's mathematical record, with typed wires and contained
@@ -1049,25 +1049,19 @@ class BubbleHandle(_Handle):
 
     def __getitem__(self, key):
         """One box inside it by name, the kind compared without regard to
-        case; a tuple of keys walks one level down per element."""
-        inside, version = boxes_inside(self.box), self._lines_read_on()
+        case; a tuple of keys walks one level down per element. A piece of a
+        block of an initial diagram is read on the version that holds the
+        block, as `list()` names it."""
+        inside = boxes_inside(self.box)
         if isinstance(key, tuple):
             if not key:
                 raise KeyError("a key is a name or a tuple of names, one per level")
             return _walk(
-                _handle_named(version, self.box, key[0], inside, repr(self.box.name)),
+                _handle_named(self.version, self.box, key[0], inside, repr(self.box.name)),
                 key[1:],
                 key[0],
             )
-        return _handle_named(version, self.box, key, inside, repr(self.box.name))
-
-    def _lines_read_on(self):
-        """The version this piece's lines are read on: for a block of an
-        initial diagram the stage as declared (`method_blocks.
-        declared_version`), so that a block file's lines stand in no block of
-        the stage file and no binding changes a line's card (decision
-        SC-22); the version itself otherwise."""
-        return declared_version(self.version) if is_block(self.box) else self.version
+        return _handle_named(self.version, self.box, key, inside, repr(self.box.name))
 
 
 @dataclasses.dataclass(frozen=True, eq=False)
@@ -1328,13 +1322,14 @@ def _declared_sets(stage, arguments):
 
 
 class BoundMethods(Methods):
-    """The methods bound within one piece of a version, the `Methods` record
-    every level's `methods` answers, printed one line to an entry. A method is
-    read by the target it is bound at, `methods["cntn_to_dcsn:Evaluation"]`,
-    or by the target as a methods file writes it, `methods["policy"]` or
-    `methods["cntn_to_dcsn.value"]`: the one method bound within the place
-    that target names (`method_bound_at`). Every entry is read from the
-    version's `bindings.methods` and none is copied.
+    """The components typed within one piece of a version, the `Methods`
+    record every level's `methods` answers, printed one line to a place. A
+    place's components are read by the place as written,
+    `methods["policy"]`, `methods["dcsn_to_arvl.evaluate[V[<]]"]`, or by the
+    name of the box that realizes the place, `methods["policy:Evaluation"]`,
+    where one place is typed at that box (`components_bound_at`). Every
+    entry is read from the typing records of the version and none is
+    copied.
 
     See `docs/Bellman-Sym/API/stage/07-methods.md` §2."""
 
@@ -1342,118 +1337,46 @@ class BoundMethods(Methods):
         super().__init__(entries)
         self._version = version
 
-    def __getitem__(self, target):
-        return method_bound_at(self._version, self._entries, target)
+    def __getitem__(self, place):
+        return components_bound_at(self._version, self._entries, place)
 
 
-def method_bound_at(stage, bound, target):
-    """The method record `bound`, the bindings within one piece of `stage`,
-    holds for `target`: the entry bound under that target; for the target as
-    a methods file writes it, the one method bound within the place the
-    target names, read through the resolution the methods file's own targets
-    go through (`resolve_target`, `attachment_places`), the Evaluation of a
-    builder named by its written address answering its representation alone
-    (AMD-MB-002 §3); and for the whole name of a box of the stage's graphs,
-    the one method bound within that box (`piece_and_place`). A target that
-    names no bound method, or names several different ones, is refused with
+def components_bound_at(stage, bound, place):
+    """The `Components` the mapping `bound`, the places typed within one
+    piece of `stage`, holds for `place`: the entry at that address, or the
+    one entry whose place a box of that name realizes. A name that names no
+    typed place, or whose box realizes several typed places, is refused with
     the reason as a `KeyError`, which a membership test reads as absence."""
-    if target in bound:
-        # a box's identity equals its spelling, so this reads either
-        return bound[target]
+    if place in bound:
+        return bound[place]
     held = (
-        "the methods here are bound at "
-        + ", ".join(
-            f"{key} ({f'!{method.tag}' if method.tag else 'handler only'})"
-            for key, method in bound.items()
-        )
+        "the components here are typed at " + ", ".join(str(key) for key in bound)
         if bound
-        else "no method is bound here"
+        else "no component is typed here"
     )
-    if not isinstance(target, str):
+    if not isinstance(place, str):
         raise KeyError(
-            f"stage {stage.name!r}: a method is read by the target it is bound at or by the "
-            f"target as a methods file writes it, not by {type(target).__name__}; {held}"
+            f"stage {stage.name!r}: a place is read by its address as written or by the name of "
+            f"the box that realizes it, not by {type(place).__name__}; {held}"
         )
-    try:
-        within, representations = _bound_within_target(stage, target)
-    except (TargetError, IdentityCollision) as refusal:
+    found = [
+        address
+        for address in bound
+        if any(box == place for box, _ in _place_named(stage, address).keys)
+    ]
+    if len(found) == 1:
+        return bound[found[0]]
+    if found:
         raise KeyError(
-            f"stage {stage.name!r}: {target!r} is no target a methods file writes and no box "
-            f"of the stage's graphs ({refusal}); {held}"
-        ) from refusal
-    within = set(within)
-    found = {
-        key: method
-        for key, method in bound.items()
-        if bound_at(key) in within
-        and (not representations or binding_kind(method) == "representation")
-    }
-    methods = list(dict.fromkeys(found.values()))
-    if len(methods) == 1:
-        return methods[0]
-    if methods:
-        raise KeyError(
-            f"stage {stage.name!r}: {target!r} names a place within which "
-            f"{len(methods)} different methods are bound, at "
-            f"{', '.join(str(key) for key in found)}; read one by the target it is bound at"
+            f"stage {stage.name!r}: the box {place!r} realizes {len(found)} typed places, "
+            f"{', '.join(found)}; read one by its address"
         )
-    if representations:
-        raise KeyError(
-            f"stage {stage.name!r}: no representation is bound at the Evaluation {target!r}; "
-            f"{held}"
-        )
-    raise KeyError(f"stage {stage.name!r}: no method is bound within {target!r}; {held}")
+    raise KeyError(f"stage {stage.name!r}: no component is typed at {place!r}; {held}")
 
 
-def _bound_within_target(stage, target):
-    """The targets a method bound within the place `target` names stands
-    under: the places a methods file's target resolves to, or, for a name no
-    methods file writes, the box of the stage's graphs of that whole name; and
-    whether the target names the Evaluation of a builder by its written
-    address, the place of a representation (AMD-MB-002 §3). A name that is
-    neither is refused by the second resolution."""
-    try:
-        places = attachment_places(
-            stage, target, resolve_target(stage, target), False, representation=True
-        )
-    except (TargetError, IdentityCollision):
-        piece, _ = piece_and_place(stage, target)
-        within = tuple(methods_within(stage, piece)) if not isinstance(piece, Definition) else ()
-        return within, False
-    within = tuple(key for place in places for key in _bound_within_place(stage, place))
-    return within, any(place.evaluates for place in places)
-
-
-def _bound_within_place(stage, place):
-    """The targets a method bound at one place of a methods file stands under:
-    those within the builder a block id or a `!node` line names; those of the
-    line a line address names; and the place's own box for an operator
-    occurrence, the Evaluation of a builder named by its written address, the
-    box `method_table._representation_place` binds a representation at, and
-    a definition."""
-    if place.kind in ("builder", "node"):
-        builder = _stored_builder(stage, place.block)
-        if builder is None:
-            return ()
-        if place.kind == "node":
-            builder = next(
-                (box for box in builder.arg.boxes if box.name == place.address), builder
-            )
-        return tuple(methods_within(stage, builder))
-    if place.kind == "statement":
-        return tuple(methods_of_line(stage, stored(stage, "definitions")[place.address]))
-    return (place.box,)
-
-
-def _stored_builder(stage, name):
-    """The builder box of that name in the stored builders graphs, or None
-    where the graph that would hold it was refused."""
-    for direction in DIRECTIONS:
-        graph = stored_graph(stage, "builders", direction)
-        for box in () if graph is None else graph.boxes:
-            if box.name == name:
-                return box
-    return None
+def _place_named(stage, address):
+    """The place of the inventory at `address`."""
+    return next(place for place in inventory(stage) if place.address == address)
 
 
 def _is_protocol_name(name):
@@ -1583,16 +1506,18 @@ class Parameters(_NamedRecords):
 @dataclasses.dataclass(frozen=True, eq=False, repr=False)
 class Settings(_NamedRecords):
     """The version's settings, `stage.settings`: a read-only mapping from each
-    setting a configuration binds, by its name, to its record, in binding
-    order. `stage.settings["n_a"]` prints as one line, `n_a = 800`, with the
-    places and the methods that read the setting after it and, where the
-    setting is a field of a method's grid, the grid's kind (AMD-MB-003 §3),
-    and its `value` is
-    the configured value, which `stage.settings.n_a` answers alone. A setting
-    has no declaration in the definitions table, so each record is read from
-    the configured value in `stage.bindings.settings` and the bound methods
-    that name the setting, and none is kept; a version no configuration has
-    bound holds no setting. `list()` answers the table the mapping prints.
+    setting, by its name, to its record: the settings the methods file
+    declares, in declaration order, then the names a configuration bound
+    that no file declares, in binding order.
+    `stage.settings["n_a"]` prints as one line, `n_a = 800 : ℕ`, with the
+    places whose components read the setting after it and, where the
+    setting is a bound or a count of a factor of the grid typed there, the
+    grid's kind, and its `value` is
+    the configured value, which `stage.settings.n_a` answers alone. Each
+    record is read from the setting's declaration in the definitions table,
+    the configured value in `stage.bindings.settings` and the components
+    that name the setting, and none is kept. `list()` answers the table the
+    mapping prints.
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
 
@@ -1602,15 +1527,11 @@ class Settings(_NamedRecords):
     def __getitem__(self, name):
         found = settings_of(self.version)
         if name not in found:
-            bound = self.version.bindings.settings is not None
-            read = ", ".join(self.version.bindings.settings_readers())
+            read = ", ".join(settings_readers(self.version))
             raise KeyError(
-                f"stage {self.version.name!r}: {name!r} is no setting of this version"
-                + (
-                    f"; its settings are {', '.join(found) or 'none'}"
-                    if bound
-                    else ", which binds no settings; configure(stage, source) binds them"
-                )
+                f"stage {self.version.name!r}: {name!r} is no setting of this version; its "
+                f"settings are {', '.join(found) or 'none'}; a setting is declared in the "
+                "methods file, and configure(stage, source) values it"
                 + (f"; the bound methods read {read}" if read else "")
             )
         return found[name]
@@ -1640,9 +1561,10 @@ class Settings(_NamedRecords):
 
     def list(self):
         """The settings as a table, one row for each method that reads a
-        setting, with `name`, `value`, `read at`, `by` and `grid`, the kind of
-        the method's grid where the setting is one of its fields; a setting no
-        method reads has one row with the last three empty.
+        setting, with `name`, the declared set under `set`, `value`, `read
+        at`, `by` and `grid`, the kind of the place's grid where the setting
+        is one of its factors; a setting no method reads has one row with
+        the last three empty.
 
         See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
         return setting_rows(self.version)

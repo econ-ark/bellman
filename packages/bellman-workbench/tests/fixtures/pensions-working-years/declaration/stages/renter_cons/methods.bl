@@ -1,0 +1,16 @@
+@methods: renter_cons
+# Numerical choices for renter_cons.bl: root finding at the maximization, as
+# Appendix D.2 of Dobrescu et al. (2023) solves the renter; linear
+# interpolation of the value and the marginal value of cash on the grid of
+# cash on hand, whose settings the recipe's settings source values; the
+# forward identity and savings deterministic.
+
+n_w : ℕ              :: ["number of points of the grid of cash on hand"]
+w_min : ℝ₊           :: ["lower bound of the grid of cash on hand"]
+w_max : ℝ₊           :: ["upper bound of the grid of cash on hand"]
+
+policy.optimality.argmax.method : !root_find
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(w_d=(w_min, w_max, n_w))
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !deterministic

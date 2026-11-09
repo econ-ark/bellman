@@ -1,0 +1,21 @@
+@methods: keeper_cons_pa
+# The keeper's consumption and mortgage: the endogenous grid method on the
+# policy builder, which inverts the liquid-asset condition for the candidate
+# (Appendix D.2), on the exogenous grid of savings the grid entry names; the
+# backward outputs read by linear interpolation, the value and its three
+# stated derivatives at the decision builder's Evaluation, on the grid of
+# cash on hand.
+
+n_a : ℕ              :: ["number of points of the savings grid"]
+a_min : ℝ₊           :: ["lower bound of the savings grid"]
+a_max : ℝ₊           :: ["upper bound of the savings grid"]
+n_w : ℕ              :: ["number of points of the grid of cash on hand"]
+w_min : ℝ₊           :: ["lower bound of the grid of cash on hand"]
+w_max : ℝ₊           :: ["upper bound of the grid of cash on hand"]
+
+policy.method : !egm
+policy.grid : !Cartesian(a_nxt_kp=(a_min, a_max, n_a))
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(w_d=(w_min, w_max, n_w))
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !deterministic

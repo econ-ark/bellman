@@ -12,12 +12,17 @@
 // name `Semantic graph` among them, fit one row: with the name drawn, the
 // items of .bl-graph-tools wrap where they do not, an item then standing
 // a row below the others. Where they do not fit, the bar carries
-// data-crowded, and brand.css then draws no name, which stays the
-// region's heading for assistive technology, so that the bar keeps one
-// row of 36 px and the canvas begins under it; the items that still do
+// data-narrow first, and brand.css then draws no summary of the
+// categories in Problems, whose text is kept (the Workbench interface
+// review of 4 November 2026, item 3); where the items do not fit one
+// row without the summary either, the bar carries data-crowded too, and
+// brand.css then draws no name, which stays the region's heading for
+// assistive technology, so that the bar keeps one row of 36 px and the
+// canvas begins under it; the items that still do
 // not fit wrap as before (amendment 02 ruling 5). One measure draws the
-// name, reads the rows and sets the attribute in one task, before the
-// browser paints, so that the name is never seen to wrap. The measure is
+// name and the summary, reads the rows and sets the attributes in one
+// task, before the
+// browser paints, so that neither is seen to wrap. The measure is
 // taken again at each change of the graph column's size, of the size of
 // an item or of Problems beside them, of the bar's items, and once the
 // page's fonts have loaded; the name's own size is not observed, since
@@ -77,23 +82,32 @@ module.exports = {
       }
       this.measure();
     },
-    // Whether the items fit one row with the name drawn: the attribute
-    // removed, the items' middles read, which lays the bar out, and the
-    // attribute set again where one middle stands half a row or more from
-    // another.
+    // Whether the items fit one row: both attributes removed, the items'
+    // middles read, which lays the bar out, and where one middle stands
+    // half a row or more from another, data-narrow set and the middles
+    // read again, then data-crowded set where they still wrap. Each measure
+    // starts from both attributes removed and reaches the same attributes
+    // for the same width, so a measure taken again when Problems changes
+    // its size under them changes nothing.
     measure() {
       const bar = this.bar();
       const tools = this.tools();
       if (!bar || !tools) return;
       bar.removeAttribute("data-crowded");
-      const middles = this.items(tools).map((item) => {
-        const box = item.getBoundingClientRect();
-        return (box.top + box.bottom) / 2;
-      });
+      bar.removeAttribute("data-narrow");
       const half = bar.getBoundingClientRect().height > 0 ? 18 : 0;
-      if (middles.length > 1 && half && Math.max(...middles) - Math.min(...middles) >= half) {
-        bar.setAttribute("data-crowded", "");
-      }
+      if (!half) return;
+      const wrapped = () => {
+        const middles = this.items(tools).map((item) => {
+          const box = item.getBoundingClientRect();
+          return (box.top + box.bottom) / 2;
+        });
+        return middles.length > 1 && Math.max(...middles) - Math.min(...middles) >= half;
+      };
+      if (!wrapped()) return;
+      bar.setAttribute("data-narrow", "");
+      if (!wrapped()) return;
+      bar.setAttribute("data-crowded", "");
     },
   },
 };

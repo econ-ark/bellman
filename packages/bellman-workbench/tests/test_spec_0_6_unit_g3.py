@@ -191,7 +191,7 @@ def test_item_2_a_save_or_an_edit_gesture_on_a_returned_model_is_refused_with_th
 
 
 def test_item_3_an_adoption_shows_versions_destinations_and_differences_and_refuses_unsaved_text(
-    scratch_durables,
+    matsya_durables,
 ):
     """The plan of the copy's calibration names the copy's version, its
     destination and the line differences, and retains each dependency the
@@ -200,7 +200,7 @@ def test_item_3_an_adoption_shows_versions_destinations_and_differences_and_refu
     again immediately before writing, with nothing written. A selection that
     omits a dependency that differs is refused until the dependency is
     explicitly retained."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     changed = {CALIBRATION: (HIGH, LOW), SETTINGS: ("n_a:", "n_a: 301 #")}
     copy = downloaded(folder, submitted(folder), 2, changed)
     source = (folder.root / copy / CALIBRATION).read_text(encoding="utf-8")
@@ -237,7 +237,7 @@ def test_item_3_an_adoption_shows_versions_destinations_and_differences_and_refu
 
 
 def test_item_4_a_late_write_failure_is_recorded_and_the_originals_are_restored(
-    scratch_durables,
+    matsya_durables,
 ):
     """A destination without write permission is refused before any file
     changes. A plan of two files whose second write fails, deliberately,
@@ -248,7 +248,7 @@ def test_item_4_a_late_write_failure_is_recorded_and_the_originals_are_restored(
     leaves that edit, and the restore is recorded as failed. The same
     failure once more, then the completion of the reviewed plan, writes
     both files."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     number = submitted(folder)
     changed = {CALIBRATION: (HIGH, LOW), SETTINGS: ("n_a:", "n_a: 301 #")}
     copy = downloaded(folder, number, 2, changed)
@@ -315,7 +315,7 @@ def test_item_4_a_late_write_failure_is_recorded_and_the_originals_are_restored(
 
 
 def test_item_5_a_newer_job_finishing_during_the_review_does_not_replace_the_reviewed_files(
-    scratch_durables, app_state
+    matsya_durables, app_state
 ):
     """The review of iteration 2 of job 3; iteration 3 ends and is
     downloaded beside it while the review stands; the adoption writes
@@ -323,7 +323,7 @@ def test_item_5_a_newer_job_finishing_during_the_review_does_not_replace_the_rev
     after the recorded result opens the commit form with the adopted file
     alone, and nothing is committed. A copy whose file no longer holds the
     reviewed text is refused."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     number = submitted(folder)
     reviewed = downloaded(folder, number, 2, {CALIBRATION: (HIGH, LOW)})
     planned = returned.plan(folder, reviewed, [CALIBRATION])
@@ -405,7 +405,7 @@ def test_item_6_the_variant_import_of_the_lower_housing_cost_leaves_the_baseline
 
 
 def test_a_job_prepared_from_a_named_recipe_is_adopted_at_that_recipe_s_own_files(
-    scratch_durables,
+    matsya_durables,
 ):
     """A job prepared from `declaration/spec.two-stages.yml` returns its
     recipe as `spec.yml` and its trellis file as `trellis.yml`, each changed:
@@ -416,7 +416,7 @@ def test_a_job_prepared_from_a_named_recipe_is_adopted_at_that_recipe_s_own_file
     file stand byte-identical. The copy of a job no prepared record of the
     folder names, and a returned file the record does not name, are each
     refused with the reason (decision SG3-19)."""
-    folder = model.open_folder(scratch_durables)
+    folder = model.open_folder(matsya_durables)
     number = submitted(folder, "declaration/spec.two-stages.yml")
     [held] = (folder.root / matsya_work.PREPARED_FOLDER).glob("*.inputs.json")
     sent = json.loads(held.read_text(encoding="utf-8"))["starting_declaration"]
@@ -469,3 +469,105 @@ def test_a_job_prepared_from_a_named_recipe_is_adopted_at_that_recipe_s_own_file
     )
     assert returned.adopt(folder, refused).changed == ()
     assert every_file(folder.root) == before
+
+
+def test_first_adoption_uses_returned_paths_and_serializes_competing_plans(
+    tmp_path, scratch_durables,
+):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+
+    root = tmp_path / "first-model"
+    root.mkdir()
+    economics = root / "economics.md"
+    economics.write_text("The original model description.\n", encoding="utf-8")
+    folder = model.open_folder(root)
+    sample = model.open_folder(scratch_durables)
+    _, dependencies = matsya_work.required_files(
+        sample, recipe.Source("recipe", "declaration/spec.yml"), {}
+    )
+    declaration = {
+        path.relative_to(scratch_durables).as_posix(): path.read_text(encoding="utf-8")
+        for path in dependencies
+    }
+    first = downloaded(folder, 1, 1, files=declaration)
+    second = downloaded(folder, 2, 1, {CALIBRATION: (HIGH, LOW)}, files=declaration)
+    archived = root / first / "declaration"
+    spec = archived / "spec.yml"
+    original_spec = spec.read_text(encoding="utf-8")
+    spec.write_text(
+        original_spec.replace("trellis: trellis.yml", f"trellis: {archived / 'trellis.yml'}"),
+        encoding="utf-8",
+    )
+    assert returned.plan(folder, first).refusals
+    spec.write_text(original_spec, encoding="utf-8")
+    reviewed = returned.plan(folder, first)
+    competing = returned.plan(folder, second)
+    assert reviewed.refusals == competing.refusals == ()
+    assert {entry["destination"] for entry in reviewed.files} == declaration.keys()
+    assert all(entry["before_sha256"] is None for entry in reviewed.files)
+    assert not (root / "declaration").exists()
+
+    entered, finish = Event(), Event()
+
+    def paused_write(folder, destination, text, digest):
+        entered.set()
+        assert finish.wait(timeout=5)
+        return model.save_file(folder, destination, text, digest)
+
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        building = workers.submit(returned.adopt, folder, reviewed, None, paused_write)
+        try:
+            assert entered.wait(timeout=5)
+            blocked = workers.submit(returned.adopt, folder, competing).result(timeout=5)
+            assert blocked.refusals and not blocked.changed
+        finally:
+            finish.set()
+        adopted = building.result(timeout=5)
+
+    assert not adopted.refusals and set(adopted.changed) == declaration.keys()
+    assert returned.adopt(folder, competing).refusals
+    assert (root / CALIBRATION).read_text(encoding="utf-8") == declaration[CALIBRATION]
+    assert economics.read_text(encoding="utf-8") == "The original model description.\n"
+    assert trellis.show_trellis(folder, recipe.Source("recipe", "declaration/spec.yml")).refusal is None
+
+
+def test_replacement_previews_new_dependency_and_refuses_late_collision(matsya_durables):
+    folder = model.open_folder(matsya_durables)
+    number = submitted(folder)
+    [held] = (folder.root / matsya_work.PREPARED_FOLDER).glob("*.inputs.json")
+    sent = json.loads(held.read_text(encoding="utf-8"))["starting_declaration"]
+    files = {client_path(name): text for name, text in sent.items()}
+    generated = "declaration/calibration/generated.yml"
+    files[generated] = files[CALIBRATION].replace(HIGH, LOW)
+    files["declaration/spec.yml"] = files["declaration/spec.yml"].replace(
+        "calibration/durables,", "calibration/generated,", 1
+    )
+    copy = downloaded(folder, number, 1, files=files)
+    planned = returned.plan(folder, copy, ["declaration/spec.yml", generated])
+    assert planned.refusals == ()
+    new = next(entry for entry in planned.files if entry["destination"] == generated)
+    assert new["before_sha256"] is None and f"+  {LOW}" in new["difference"]
+
+    local = folder.root / generated
+    local.write_text("# local file arrived after review\n", encoding="utf-8")
+    refused = returned.adopt(folder, planned)
+    assert refused.refusals and not refused.changed
+    assert local.read_text(encoding="utf-8") == "# local file arrived after review\n"
+    local.unlink()
+
+    outside = folder.root / "outside.yml"
+    outside.write_text("# outside the declaration\n", encoding="utf-8")
+    local.symlink_to(outside)
+    unsafe = returned.plan(folder, copy, ["declaration/spec.yml", generated])
+    assert any("symbolic link" in refusal for refusal in unsafe.refusals)
+    assert returned.adopt(folder, planned).refusals
+    assert outside.read_text(encoding="utf-8") == "# outside the declaration\n"
+    local.unlink()
+
+    adopted = returned.adopt(folder, planned)
+    assert adopted.refusals == ()
+    assert adopted.changed == ("declaration/spec.yml", generated)
+    assert local.read_text(encoding="utf-8") == files[generated]
+    assert (folder.root / CALIBRATION).read_text(encoding="utf-8") == files[CALIBRATION]
+    assert trellis.show_trellis(folder, recipe.Source("recipe", "declaration/spec.yml")).refusal is None

@@ -10,7 +10,7 @@ type: user-guide
 > [!info]- Relationship with other documents
 > **Builds on** — [Field equations](03-field-equations.md) §3: the consumption stage and its inverse Euler line, the running example of this page.
 > **Formal account** — [Appendix C](appendices/14-appendix-c-syntax-to-semantics.md) R10, §4.5 and §4.6: the reading of the clause and of the declared multiplier, and the theorem that the three spellings denote one relation and, under concavity, one policy.
-> **Used by** — [Methodization](04-methodization.md) §6: how a method such as the endogenous grid method reads a constraint.
+> **Used by** — [Methodization](04-methodization.md) §8: how the lines of a method such as the endogenous grid method carry a constraint's clause.
 > **See also** — [A builder](API/stage/04-builder.md) §§1 and 2: the policy builder, its operations and its printed card; [Refusals](reference/refusals.md): the rules under which the loading software refuses a writing.
 
 ## 1 Three kinds of constraint and where each is written
@@ -106,7 +106,7 @@ A clause names one bounded quantity. On a statement it may have two bounds, writ
     lhs = rhs ⟂ lb <= x <= ub
 ```
 
-The two-bound clause states the condition of §2 for two bounds. The worker's saving stage of the pension application writes one on the pension deposit $c_p$, which lies between zero and earnings $w_d$, in the method block of its policy builder, `applications/pension-retirement/declaration/methods/worker_saving_foc.bl`, whose two lines are the first-order conditions of the stage's maximization:
+The two-bound clause states the condition of §2 for two bounds. The worker's saving stage of the pension application writes one on the pension deposit $c_p$, which lies between zero and earnings $w_d$, in the block `policy` of its methods file, `applications/pension-retirement/declaration/stages/worker_saving/methods.bl`, whose two lines are the first-order conditions of the stage's maximization, brought to the policy builder under time iteration ([Methodization](04-methodization.md) §5):
 
 ```bl
     𝑑𝑢(c) = β*(1 + 𝑑𝜒(c_p))*D_{y_p}V[>] ⟂ 0 <= c_p <= w_d
@@ -162,7 +162,7 @@ The policy block's lines are read into the **policy builder**, the operator the 
 }
 ```
 
-A stage file may instead write the maximization alone and leave the candidate lines to a **method block**, a block in a file of its own that the methods file binds to the policy builder ([Methodization](04-methodization.md) §4.1). A method block writes the second or the third spelling. It holds no maximization line, since the stage file's maximization stays the policy block's declared line, so the first spelling, a property of that line, has no line to attach to there; the first spelling belongs to a stage file that writes the maximization as an operation and attaches to it the first-order condition, which reads the derivative term `D_{a}V[>]`. The block file `cons_egm.bl` of the portfolio–consumption demonstration writes the third spelling, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0`.
+A stage file may instead write the maximization alone and leave the candidate lines to its methods file, whose block `policy` brings them to the policy builder under a solution method ([Methodization](04-methodization.md) §5). Such a block writes the second or the third spelling. It holds no maximization line, since the stage file's maximization stays the policy block's declared line, so the first spelling, a property of that line, has no line to attach to there; the first spelling belongs to a stage file that writes the maximization as an operation and attaches to it the first-order condition, which reads the derivative term `D_{a}V[>]`. The methods file of the portfolio–consumption demonstration, `applications/portfolio-choice/declaration/stages/cons/methods.bl`, writes the third spelling, `c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0`.
 
 ### 4.1 The clause on the first-order condition
 
@@ -177,9 +177,9 @@ The first line is the maximization statement without the mark `!doc`: it is the 
 STAGE cons_argmax / POLICY BUILDER policy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Signature
-  in   𝑉≻   : Xa → [−∞, ∞)
+  in   𝑉≻  : Xa → [−∞, ∞)
        ──────────────────────────────────────────────────────────────────────
-  out  𝑐    : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+  out  𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 Operations
   1  Pullback
@@ -196,8 +196,20 @@ Operations
      in: (2)                            out: 𝑐
      ────────────────────────────────────────────────────────────────────────
      rule: 𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
-           optimality.euler: 𝑑𝑢(𝑐(m_d)) = D_{a}𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
-                               ⟂ 𝑔≻(m_d, 𝑐(m_d)) ≥ 0                     on Xm
+           optimality.euler: 𝑑𝑢(𝑐(m_d))
+                               = (f
+                               ↦ (c, y)
+                               ↦ sup_{a ∈
+                               {a ∈ ℝ |
+                               ∀ epsilon ∈ (0, ∞): (∃ delta ∈ (0, ∞): (∀ t ∈
+                               {t ∈ ℝ |
+                               (t²)^(1/2) > 0
+                               ∧ (t²)^(1/2) < delta
+                               ∧ c + t ∈ ℝ₊}: ((((f(c + t, y) − f(c, y))/t
+                               − a)²)^(1/2)
+                               < epsilon)))}} [a])((a, unit)
+                               ↦ 𝑉≻(𝑔≻(m_d, 𝑐(m_d))))(a≻, ())
+                               ⟂ m_d − 𝑐(m_d) ≥ 0                        on Xm
 
   4  Evaluation
      in: 𝑐                              out: 𝑐
@@ -205,8 +217,8 @@ Operations
      rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons_argmax.bl
-  32  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
-  33  𝑑𝑢(c) = D_{a}V[>] ⟂ m_d - c >= 0             :: [id=optimality.euler]
+  31  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+  32  𝑑𝑢(c) = D_{a}V[>] ⟂ m_d - c >= 0             :: [id=optimality.euler]
 
 Definitions referenced
   Xm    cons_argmax:set:Xm
@@ -241,9 +253,9 @@ where $X_a$ is the declared set `Xa` of the saving; the half-line $a = 0$ is thu
 STAGE cons_obs / POLICY BUILDER policy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Signature
-  in   𝑉≻   : Xa → [−∞, ∞)
+  in   𝑉≻  : Xa → [−∞, ∞)
        ──────────────────────────────────────────────
-  out  𝑐    : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+  out  𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 Where
   A≻,policy = {a, μ ∈ Xa × ℝ₊ | a ≥ 0 ∧ μ · a = 0}
@@ -253,9 +265,21 @@ Declared
 
 Operations
   1  endoggrid:Aggregation
-     in: D_{a}𝑉≻                        out: 𝑐≻, 𝑚_d≻
+     in: 𝑉≻                             out: 𝑐≻, 𝑚_d≻
      ────────────────────────────────────────────────
-     rule: 𝑐≻ = 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a) + μ)                    on (a, μ) ∈ A≻,policy
+     rule: 𝑐≻
+             = 𝑑𝑢𝑖𝑛𝑣((f
+                       ↦ (c, y)
+                         ↦ sup_{a ∈
+                           {a ∈ ℝ |
+                             ∀ epsilon ∈ (0, ∞): (∃ delta ∈ (0, ∞): (∀ t ∈
+                               {t ∈ ℝ |
+                               (t²)^(1/2) > 0
+                               ∧ (t²)^(1/2) < delta
+                               ∧ c + t ∈ ℝ₊}: ((((f(c + t, y) − f(c, y))/t
+                               − a)²)^(1/2)
+                               < epsilon)))}} [a])((a, unit) ↦ 𝑉≻(a))(a, ())
+                       + μ)                              on (a, μ) ∈ A≻,policy
            𝑚_d≻ = a + 𝑐≻                                 on (a, μ) ∈ A≻,policy
 
   2  cons_choice:Pullback
@@ -273,11 +297,11 @@ Conditions
   endoggrid:Aggregation  𝑚_d≻(a, μ) ∈ Xm
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons_obs.bl
-  32  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
-  33  μ[>]   : ℝ₊ ⟂ a >= 0                         :: [id=slackness]
-  34  c[>]   = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>] + μ[>])             :: [id=InvEuler]
-  35  m_d[>] = a + c[>]                            :: [id=endoggrid]
-  36  c      = c[>]                                :: [id=cons_choice]
+  31  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
+  32  μ[>]   : ℝ₊ ⟂ a >= 0                         :: [id=slackness]
+  33  c[>]   = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>] + μ[>])             :: [id=InvEuler]
+  34  m_d[>] = a + c[>]                            :: [id=endoggrid]
+  35  c      = c[>]                                :: [id=cons_choice]
 
 Definitions referenced
   Xm     cons_obs:set:Xm
@@ -329,31 +353,31 @@ $$
 c(m_d) = m_d \quad \text{for } 0 < m_d \le \bar m, \qquad c\bigl(a + (u')^{-1}(V_\succ'(a))\bigr) = (u')^{-1}(V_\succ'(a)) \quad \text{for } a \ge 0 .
 $$
 
-The first part is the **corner**, the pairs at which the household consumes all its cash on hand, and the second is the interior policy on the image $m_{d\succ}(X_a)$; the two share the pair $(\bar m, \bar m)$. The corner is Carroll's segment from the origin to the first grid point (2006, §4.2.2, equation 29). The policy card of the consumption stage `cons` of `applications/portfolio-choice/declaration/stages/cons/cons.bl`, whose policy block holds these lines:
+The first part is the **corner**, the pairs at which the household consumes all its cash on hand, and the second is the interior policy on the image $m_{d\succ}(X_a)$; the two share the pair $(\bar m, \bar m)$. The corner is Carroll's segment from the origin to the first grid point (2006, §4.2.2, equation 29). The policy card of the consumption stage `cons` of `applications/portfolio-choice/declaration/stages/cons/cons.bl`, after its addition `applications/portfolio-choice/declaration/stages/cons/methods.bl` supplies these lines:
 
 ```text
 STAGE cons / POLICY BUILDER policy
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Signature
-  in   𝑉≻   : Xa → [−∞, ∞)
+  in   𝑉≻  : Xa → [−∞, ∞)
        ──────────────────────────────────────────
-  out  𝑐    : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
+  out  𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 Declared
   𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
 
 Operations
   1  InvEuler:Aggregation
-     in: D_{a}𝑉≻                        out: 𝑐≻
+     in: 𝑉≻                             out: 𝑐≻
      ────────────────────────────────────────────
      rule: 𝑐≻(a) ≤ 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a)) ⟂ a ≥ 0
 
-  2  endoggrid:Aggregation
+  2  grid:Aggregation
      in: 𝑐≻                             out: 𝑚_d≻
      ────────────────────────────────────────────
      rule: 𝑚_d≻(a) = a + 𝑐≻(a)
 
-  3  cons_choice:Pullback
+  3  identification:Pullback
      in: 𝑐≻, 𝑚_d≻                       out: 𝑐
      ────────────────────────────────────────────
      rule: 𝑐(𝑚_d≻(a)) = 𝑐≻(a)                                      on 𝑚_d≻(Xa)
@@ -364,20 +388,29 @@ Operations
      rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 Conditions
-  endoggrid:Aggregation  𝑚_d≻(a) ∈ Xm
+  grid:Aggregation  𝑚_d≻(a) ∈ Xm
+  policy            egm-eligibility: the construction satisfies the declared
+                      line where the continuation value 𝑉≻ is concave and
+                      continuously differentiable on (0, ∞) with a finite
+                      positive right derivative at 0   [required]
+
+Method
+  !egm   !Cartesian(a=(a_min, a_max, n_a))   "cons-port:egm"            policy
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  32  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
-  33  c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0          :: [id=InvEuler]
-  34  m_d[>] = a + c[>]                            :: [id=endoggrid]
-  35  c      = c[>]                                :: [id=cons_choice]
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
+
+Source  methods.bl
+  29  c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0          :: [id=InvEuler]
+  30  m_d[>] = a + c[>]                            :: [id=grid]
+  31  c      = c[>]                                :: [id=identification]
 
 Definitions referenced
   Xm     cons:set:Xm
   Xa     cons:set:Xa
   𝑢      cons:function:𝑢
-  𝑑𝑢𝑖𝑛𝑣  cons:function:𝑑𝑢𝑖𝑛𝑣
   Γ      cons:correspondence:Γ
+  𝑑𝑢𝑖𝑛𝑣  cons:function:𝑑𝑢𝑖𝑛𝑣  methods.bl:19
   𝑔≻     cons:g:dcsn_to_cntn
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```

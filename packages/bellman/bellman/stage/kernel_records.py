@@ -34,7 +34,7 @@ from bellman.native.provenance import source_file
 from bellman.refusals import construction_error
 from bellman.stage.boxes import builder_rows_of
 from bellman.stage.grains import wire_table
-from bellman.stage.method_targets import block_box
+from bellman.stage.places import block_box
 from bellman.stage.term_operations import relation_of
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
@@ -145,7 +145,7 @@ def law_of_motion_kernel(stage, identity, label=None, letter=None):
     ctx = StageNames(stage)
     record = stage.definitions[identity]
     block = record.address
-    box = block_box(stage, block, block)
+    box = block_box(stage, block)
     declared_in, declared_out = header_of(box)
     outputs = tuple(ob.identity for ob in declared_out)
     found, lines = {}, {}

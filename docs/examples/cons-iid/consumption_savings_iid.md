@@ -6,7 +6,7 @@ topic: [applications]
 # Consumption-Savings with IID Shocks
 
 > [!note] Source
-> Application folder: [`applications/consumption-savings-iid/`](../../../applications/consumption-savings-iid), which holds the model's stage file, `declaration/stages/cons_savings_iid/cons_savings_iid.bl`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
+> Application folder: [`applications/consumption-savings-iid/`](../../../applications/consumption-savings-iid), which holds the model's stage file, `declaration/stages/cons_savings_iid/cons_savings_iid.bl`, beside it its methods file, `methods.bl`, an addition to the stage file, and its settings file, `declaration/settings/cons_savings_iid.yml`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
 
 **A single-stage lifecycle model solved via EGM.**
 
@@ -48,16 +48,14 @@ where:
 
 ## Files
 
-The application folder holds the stage file and its note in the stage's folder, the methods file and the two block files it binds under `declaration/methods/`, the settings file under `declaration/settings/`, and the structural test:
+The application folder holds the stage file, its note and its methods file in the stage's folder, the settings file under `declaration/settings/`, and the structural test:
 
 | File | Purpose |
 |------|---------|
 | `declaration/stages/cons_savings_iid/cons_savings_iid.bl` | The stage file: declarations, the values and the maximization |
-| `declaration/stages/cons_savings_iid/cons_savings_iid.md` | The stage's note, which explains the stage file and the two block files |
-| `declaration/methods/cons_savings_iid.yml` | The methods file: the endogenous grid method on the policy builder and the marginal blocks on the two value builders |
-| `declaration/methods/cons_savings_iid_egm.bl` | The method block of the policy builder: the inverse Euler line, the endogenous grid and the identification of the policy |
-| `declaration/methods/marginals.bl` | The marginal blocks: the derivatives of the decision value and the arrival value |
-| `declaration/settings/cons_savings_iid.yml` | The settings file: the exogenous grid of savings of the endogenous grid method, `n_a`, `a_min` and `a_max` |
+| `declaration/stages/cons_savings_iid/cons_savings_iid.md` | The stage's note, which explains the stage file and the methods file |
+| `declaration/stages/cons_savings_iid/methods.bl` | The methods file, an addition to the stage file: the endogenous grid method on the policy builder with its grid of savings and the method's three lines, the inverse Euler line, the endogenous grid and the identification of the policy, the derivative lines of the two value builders, and, after the blocks, the linear reading of the consumption function, the closed-form inverse of the marginal utility, Gauss–Hermite quadrature at the two expectations over income, and the representations of the arrival value and of its derivative on the grid of the arrival assets |
+| `declaration/settings/cons_savings_iid.yml` | The settings file: the values of the settings the methods file declares, the grid of savings, the grid of the arrival assets and the quadrature nodes |
 | `tests/test_cons_savings_iid_ast.py` | The structural test, which parses the stage file and compares its terms with terms written by hand |
 
 The earlier dolo-plus form, from which the listings below are taken, kept the model in four YAML files:

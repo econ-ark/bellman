@@ -17,8 +17,8 @@ builder, a sub-builder and a statement. A wire carries its whole type in one
 - the conditions, `Condition` and its entries, with
   `conditions_with_assumptions`, the conditions with a caller's assumptions
   in their place;
-- the records of a version: `Bindings`, `Method`, `MethodOption`, `Metadata`
-  and `Provenance`;
+- the records of a version: `Bindings`, `Components`, `BoundBlock`,
+  `MethodOption`, `Metadata` and `Provenance`;
 - the records of the construction: a block (`BlockData`, `NodeData`,
   `BlockHeader`) and a line (`Line`, `OperatorOccurrence`, `ResolvedName`,
   `ExpressionType`);
@@ -264,6 +264,7 @@ DEFINITION_KINDS_TABLE = (
     "set",
     "distribution",
     "parameter",
+    "setting",
     "function",
     "function_alias",
     "correspondence",
@@ -271,6 +272,7 @@ DEFINITION_KINDS_TABLE = (
     "G",
     "line",
     "multiplier",
+    "typing",
 )
 
 
@@ -282,6 +284,7 @@ DEFINITION_KINDS_AT_TOP_LEVEL = (
     "set",
     "distribution",
     "parameter",
+    "setting",
     "function",
     "function_alias",
     "correspondence",
@@ -297,6 +300,7 @@ DEFINITION_KIND_WORDS = {
     "set": "set",
     "distribution": "distribution",
     "parameter": "parameter",
+    "setting": "setting",
     "function": "function",
     "function_alias": "function alias",
     "correspondence": "correspondence",
@@ -304,6 +308,7 @@ DEFINITION_KIND_WORDS = {
     "G": "value aggregator",
     "line": "line",
     "multiplier": "multiplier",
+    "typing": "typing entry",
 }
 
 
@@ -370,11 +375,16 @@ class Definition:
     or a line's address); its middle segment is the identity kind. `kind` is
     the definition kind, one of `set`, `distribution`, `parameter`,
     `function`, `function_alias`, `correspondence`, `g`, `G`, `line` and
-    `multiplier`, so a function alias has identity kind `function` and
-    definition kind `function_alias`. A multiplier declared in a block body
-    has the identity `<stage>:multiplier:<name>`, its one coordinate the
-    multiplier with its declared set, its one equation the declaration with
-    its clause as written, and the address of its line.
+    `multiplier` and `typing`, so a function alias has identity kind
+    `function` and definition kind `function_alias`. A multiplier declared in
+    a block body has the identity `<stage>:multiplier:<name>`, its one
+    coordinate the multiplier with its declared set, its one equation the
+    declaration with its clause as written, and the address of its line. A
+    typing entry, `policy.method : !egm`, has the identity
+    `<stage>:typing:<place>:<component>`, its one equation the method word,
+    the grid or the handler's program, its one tag the subject as written,
+    and the file position of the entry as its address (specification 0.7
+    §4).
 
     `coordinates` holds the named coordinates of the definition as (name,
     retained set term or None) pairs, the fields and shocks a distribution's
@@ -774,25 +784,24 @@ def checked_assumptions(assumptions):
 
 @dataclasses.dataclass(frozen=True, eq=False, repr=False)
 class Bindings(Record):
-    """This version's `methods`, `calibration` and `settings` mappings.
-    Each is None until bound, and read-only afterwards. Methodization maps
-    targets to methods; calibration maps parameters to values; configuration
-    maps settings to values. Each binding verb writes a new record into the
+    """This version's `calibration` and `settings` mappings, each None until
+    bound and read-only afterwards, and `blocks`, the rows a solution
+    method's lines add at the operative level, by the builder each opens.
+    Calibration maps parameters
+    to values and configuration maps settings to values; the methods of a
+    version are no binding but the components of its signatures, read from
+    the typing records of the definitions table. Each binding verb writes a new record into the
     stage it is called on.
-    The display names the three bindings and the verbs supplying absent ones.
 
     See `docs/Bellman-Sym/API/stage/09-binding-verbs.md` §1."""
 
-    methods: Mapping | None
     calibration: Mapping | None
     settings: Mapping | None
-    # the method blocks bound, by the builder each opens: what a binding with
-    # `block:` adds to the stage, its rows among them (specification 0.6 §7)
     blocks: Mapping | None = None
 
     def __post_init__(self):
-        # the records hold the rows and the sorts of the construction, which
-        # `freeze` does not read, so the caller passes a read-only mapping
+        # the records hold the rows of the construction, which `freeze` does
+        # not read, so the caller passes a read-only mapping
         if self.blocks is not None and (
             not isinstance(self.blocks, MappingProxyType)
             or not all(
@@ -804,7 +813,7 @@ class Bindings(Record):
                 "Bindings.blocks must be a read-only mapping from builder names to "
                 "BoundBlock records"
             )
-        for name in ("methods", "calibration", "settings"):
+        for name in ("calibration", "settings"):
             value = getattr(self, name)
             if value is None:
                 continue
@@ -812,19 +821,10 @@ class Bindings(Record):
                 raise TypeError(
                     f"Bindings.{name} must be a mapping or None; got {type(value).__name__}"
                 )
-            if name == "methods" and not all(
-                isinstance(bound_at(key), (str, Identity)) and isinstance(item, Method)
-                for key, item in value.items()
-            ):
-                raise TypeError(
-                    "Bindings.methods must map box identities, or pairs of a box identity and "
-                    "a kind of binding, to Method records"
-                )
             object.__setattr__(self, name, freeze(dict(value)))
 
     def __str__(self):
-        """The three status lines, from the entries `entries` writes, the one
-        place that writes them."""
+        """The two status lines, from the entries `entries` writes."""
         entries = [
             (label, (content,) if isinstance(content, str) else tuple(content))
             for label, content in self.entries()
@@ -840,49 +840,26 @@ class Bindings(Record):
 
     __repr__ = __str__
 
-    def entries(self, at=None):
-        """The bindings section as (label, content) entries: the three bindings
-        of one version in the order calibration, methods, settings, an absent
-        one naming the verb that supplies it and a bound one listing what it
-        binds in full, one entry per line, nothing abbreviated. The record
-        prints these entries and the stage sheet sets them in its two columns.
+    def entries(self, readers=None, at=None):
+        """The bindings as (label, content) entries: the calibration and the
+        settings of one version, an absent one naming the verb that supplies
+        it and a bound one listing what it binds in full, one entry per line.
+        The stage sheet sets them in its two columns, with the methods line it
+        writes from the components between them.
 
-        `at` is the column the section's content begins at. With it, a settings
-        entry too wide for one line is broken under its own third column, at
-        the one width of every printed form, `layout.WIDTH`, so that a
-        continuation does not read as a further setting; without it the entries
-        are given whole, which is what the width of the label column is
-        computed from.
-
-        A setting a bound method names stands once per reader, with the
-        reader's address and method; a setting no method of the stage names
-        stands with its value alone.
+        `readers` maps each setting name to the pairs of the place and the
+        components that read it (`stage_answers.settings_readers`), so that a
+        setting a method reads stands once per reader; without it a setting
+        stands with its value alone. `at` is the column the section's content
+        begins at: with it, a settings entry too wide for one line is broken
+        under its own third column, at the one width of every printed form,
+        `layout.WIDTH`.
 
         See `docs/Bellman-Sym/API/stage/09-binding-verbs.md` §1."""
         return [
             ("calibration", _calibration_lines(self.calibration)),
-            ("methods", _method_lines(self.methods)),
-            ("settings", _setting_lines(self.settings, self.settings_readers(), at)),
+            ("settings", _setting_lines(self.settings, readers or {}, at)),
         ]
-
-    def settings_readers(self):
-        """The boxes and bound methods that name each setting, by setting name:
-        the names a method entry's own settings hold, which are the settings
-        `configure` binds (`setting_names`).
-
-        See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
-        found = {}
-        for key, method in (self.methods or {}).items():
-            for name in setting_names(getattr(method, "settings", {}) or {}):
-                found.setdefault(name, []).append((bound_at(key), method))
-        return found
-
-
-def bound_at(key):
-    """The box a key of `Bindings.methods` names: the key itself, or the box
-    of a pair `(box, kind)`, the key under which a method of another kind
-    stands at a box that holds a binding already (decision SD-15)."""
-    return key[0] if isinstance(key, tuple) else key
 
 
 def _calibration_lines(calibration):
@@ -893,47 +870,36 @@ def _calibration_lines(calibration):
     return [f"{name} = {value!r}" for name, value in calibration.items()] or ["none bound"]
 
 
-def _method_lines(methods):
-    """The content of the methods entry: each box with the tag of its method,
-    or the verb that binds the methods."""
-    if methods is None:
+def method_lines(components):
+    """The content of the methods entry of a stage sheet: each place with
+    the components typed at it on one line, which the sheet breaks at its
+    spaces where it is too wide, or the verb that binds the methods where no
+    place carries a component."""
+    if not components:
         return "none   methodize(stage, source)"
-    column = max([3] + [len(str(bound_at(key))) for key in methods]) + 3
-    return [
-        f"{bound_at(key)!s:<{column}}"
-        + (f"!{method.tag}" if method.tag else "handler only")
-        + (f"   block {method.block}" if method.block else "")
-        for key, method in methods.items()
-    ] or ["none bound"]
+    column = max([3] + [len(str(place)) for place in components]) + 3
+    return [f"{place!s:<{column}}{held}" for place, held in components.items()]
 
 
 def _setting_lines(settings, readers, at):
     """The content of the settings entry: each setting with its value, once
-    for each box whose method names it, with that box and the method's tag;
-    or the verb that binds the settings. With `at`, the column the content
-    begins at, a line too wide for `layout.WIDTH` is broken under its third
-    column."""
+    for each place whose components name it, with that place and the method
+    word there; or the verb that binds the settings. With `at`, the column
+    the content begins at, a line too wide for `layout.WIDTH` is broken under
+    its third column."""
     if settings is None:
         return "none   configure(stage, source)"
     named = [
-        (name, value, place, method)
+        (name, value, place, held)
         for name, value in settings.items()
-        for place, method in (readers.get(name) or (("", None),))
+        for place, held in (readers.get(name) or (("", None),))
     ]
     column = max([3] + [len(name) for name, _, _, _ in named]) + 3
     wide = max([3] + [len(repr(value)) for _, value, _, _ in named]) + 3
     made = []
-    for name, value, place, method in named:
+    for name, value, place, held in named:
         head = f"{name:<{column}}{repr(value):<{wide}}"
-        by = (
-            f"!{method.tag}"
-            if method and method.tag
-            else method.handler
-            if method and method.handler
-            else "handler only"
-            if method
-            else ""
-        )
+        by = held.word if held is not None else ""
         tail = f"{place}   {by}".rstrip()
         if not tail:
             made.append(head.rstrip())
@@ -963,116 +929,130 @@ def _broken_at_spaces(text, room):
     return broken
 
 
-def setting_names(value):
-    """A string under an authored settings entry is one setting name; the names
-    a bound method's settings hold, which `Bindings.settings_readers` and
-    `block_lines.symbols` read. A tagged value, the kind of a grid written
-    `grid: !Cartesian` and held `{"__yaml_tag__": "Cartesian", "value": ""}`,
-    names no setting (AMD-MB-003 §3)."""
-    if isinstance(value, str):
-        yield value
-    elif hasattr(value, "values") and "__yaml_tag__" in value:
-        return
-    elif hasattr(value, "values"):
-        for item in value.values():
+def setting_names(term):
+    """The names of the settings a component's term reads, in written order:
+    the names among the keyword arguments of a method word, at any depth of
+    its tuples and nested words; the bounds and the counts of a grid's
+    spaced factors, with the arguments of their spacing words, and the count
+    of a feasible factor, where they are names; and the node set of a listed
+    factor, which is a setting a methods file declares, a set the stage
+    defines or an expectation operator, told apart by the reader
+    (specification 0.7 D1, D5)."""
+    if isinstance(term, Components):
+        for held in (term.method, term.grid):
+            yield from setting_names(held)
+    elif isinstance(term, T.Word):
+        for keyword in term.arguments:
+            yield from setting_names(keyword.value)
+    elif isinstance(term, T.Name):
+        yield term.name
+    elif isinstance(term, T.Values):
+        for item in term.items:
             yield from setting_names(item)
-    elif isinstance(value, (tuple, list)):
-        for item in value:
-            yield from setting_names(item)
+    elif isinstance(term, T.Nested):
+        yield from setting_names(term.word)
+    elif isinstance(term, T.Cartesian):
+        for factor in term.factors:
+            yield from setting_names(factor)
+    elif isinstance(term, T.Spaced):
+        for argument in (term.lower, term.upper, term.count):
+            yield from setting_names(argument)
+        yield from setting_names(term.spacing)
+    elif isinstance(term, T.Feasible):
+        yield from setting_names(term.count)
+    elif isinstance(term, T.Listed):
+        yield term.nodes
+
+
+def typing_text(record):
+    """A typing record as an entry of the stage, `policy.method : !egm`,
+    `policy.handler : "cons-port:egm"`: the place and the component, the
+    absolute spelling of a subject the union may have read relative to its
+    block, and the method word, the grid or the program."""
+    subject = f"{record.identity.address}.{record.identity.field}"
+    value = record.equations[0]
+    if isinstance(value, T.Word):
+        return f"{subject} : {to_source(T.Method(value))}"
+    if isinstance(value, T.Cartesian):
+        return f"{subject} : {to_source(T.Grid(value))}"
+    return f'{subject} : "{value}"'
 
 
 @dataclasses.dataclass(frozen=True, eq=False, repr=False)
-class Method(Record):
-    """The method a methods file attaches at one box: the
-    `!egm` on a policy block's solution, the quadrature rule on an
-    expectation, the interpolation scheme at a builder's output. `tag` is
-    the method tag without its `!`; `handler` the handler name; `settings`
-    the entry's settings by name, the values naming the settings `configure`
-    binds, beside the kind of a grid under `grid`, a tag the entry writes,
-    `grid: !Cartesian`, which names no setting (AMD-MB-003 §3). Held in
-    `Bindings.methods` under the name of
-    the box the target resolves to. `block` is the path of the block file
-    the entry names under `block`, as the methods file writes it, relative to
-    that file, or None for a method that binds no block (specification 0.6
-    §7); the rows the block folds to are held beside the bindings, not in
-    this record."""
+class Components(Record):
+    """The components typed at one place of a stage: `method`, the method component, the
+    `Word` of the typing entry `<place>.method : !egm(tol=tol_v)` with its
+    keyword arguments; `grid`, the grid component, the `Cartesian` of
+    `<place>.grid : !Cartesian(a=(a_min, a_max, n_a))`; and `handler`, the
+    program the binding `<place>.handler : "cons-port:egm"` names, which
+    realizes the operator and is no classifier. Each is None where the place
+    carries no entry for it; a place carries at least one. The record is
+    read from the typing records of the definitions table and stored
+    nowhere else (`stage.places`)."""
 
-    tag: str | None
-    handler: str | None
-    settings: Mapping
-    block: str | None = None
-
-    def __repr__(self):
-        """The record as `canonical_text` writes it, but each tag written
-        alone under `settings`, the kind of a grid, as the methods file
-        writes it, `'grid': '!Cartesian'` (AMD-MB-003 §3); `canonical_text`,
-        which the hash and the equality read, is unchanged."""
-        return canonical_text(dataclasses.replace(self, settings=_tags_written(self.settings)))
+    method: object = None
+    grid: object = None
+    handler: str | None = None
 
     def __post_init__(self):
-        if self.tag is not None and (not isinstance(self.tag, str) or not self.tag):
-            raise TypeError(f"Method.tag must be a method name or None; got {self.tag!r}")
-        if self.block is not None and (not isinstance(self.block, str) or not self.block):
-            raise TypeError(
-                f"Method.block must be a block file's path or None; got {self.block!r}"
-            )
+        if self.method is not None and not isinstance(self.method, T.Word):
+            raise TypeError(f"Components.method must be a method word or None; got {self.method!r}")
+        if self.grid is not None and not isinstance(self.grid, T.Cartesian):
+            raise TypeError(f"Components.grid must be a grid or None; got {self.grid!r}")
         if self.handler is not None and (not isinstance(self.handler, str) or not self.handler):
-            raise TypeError(f"Method.handler must be a handler name or None; got {self.handler!r}")
-        if not isinstance(self.settings, Mapping):
-            raise TypeError("Method.settings must map setting names to their authored values")
-        object.__setattr__(self, "settings", freeze(dict(self.settings)))
+            raise TypeError(
+                f"Components.handler must be a program name or None; got {self.handler!r}"
+            )
 
+    @property
+    def word(self):
+        """The method word as written, `!egm`, with no arguments; the empty
+        text where the place carries no method component."""
+        return f"!{self.method.name}" if self.method is not None else ""
 
-def _tags_written(value):
-    """`value` with each tag written alone, `{"__yaml_tag__": "Cartesian",
-    "value": ""}`, replaced by the text a methods file writes, `!Cartesian`,
-    at every depth of its mappings and sequences."""
-    if isinstance(value, Mapping):
-        if set(value) == {"__yaml_tag__", "value"} and value["value"] == "":
-            return f"!{value['__yaml_tag__']}"
-        return {key: _tags_written(item) for key, item in value.items()}
-    if isinstance(value, (tuple, list)):
-        return type(value)(_tags_written(item) for item in value)
-    return value
+    @property
+    def parts(self):
+        """The printed parts, in order: the method word with its arguments,
+        the grid and the handler in quotes, each where present."""
+        parts = []
+        if self.method is not None:
+            parts.append(to_source(T.Method(self.method)))
+        if self.grid is not None:
+            parts.append(to_source(T.Grid(self.grid)))
+        if self.handler is not None:
+            parts.append(f'"{self.handler}"')
+        return tuple(parts)
+
+    def __str__(self):
+        """One line: the parts three spaces apart."""
+        return "   ".join(self.parts)
+
+    __repr__ = __str__
 
 
 @dataclasses.dataclass(frozen=True, eq=False, repr=False)
 class BoundBlock(Record):
-    """What a method block adds to a stage (specification 0.6 §§4.1, 7):
-    the block file the methods file names, as written (`path`) and as read
-    (`origin`, the name its positions carry), its `text`, quoted by a card's
-    `Source` section, the id of the block in that file (`block`), the
-    builder it opens (`builder`), the method's tag and the name of the
-    condition the method's row of the method table requires; the rows the block
-    folds to at the primitive and the sub-builder grain, which stand in the
-    operative builders in place of the builder's declared rows; the
-    definitions it writes into the stage's table, new or in place of the
-    builder's own (`definitions`), and the declared records those replace
-    (`replaced`); the sorts of the fields its header declares
-    (`ports`); the obligations of its rows; the positions of its items in
-    the block file by their addresses under the builder's name (`spans`),
-    the builder's own lines keeping the stage file's; and the addresses of
-    the builder's declared lines, which its card prints under `Declared`.
-    `marginal` says whether the block is a marginal block, whose derivative
-    lines are added to the builder's own and recorded at its Evaluation
-    (`!marginals`, specification 0.6 §5.1; AMD-MB-001 §5.1)."""
+    """What a solution method's rows add to a stage at its operative level
+    (specification 0.6 §§4.1, 7; specification 0.7 D8): the `builder` the
+    method component stands on, the `method` word, the `condition` the
+    method's row of the catalogue requires, listed among the stage's
+    obligations and checked by nothing; the `rows` the lines fold to at the
+    primitive and the sub-builder grain, which stand in the operative
+    builder in place of the builder's declared rows; the `definitions` the
+    rows write into the stage's table, new or in place of the builder's own,
+    and the declared records those replace (`replaced`); the `obligations`
+    of the rows; and the addresses of the builder's `declared_lines`, which
+    its card prints under `Declared`."""
 
-    path: str
-    origin: str
-    text: str
-    block: str
     builder: str
-    tag: str
+    method: str
     condition: str | None
     rows: tuple
     sub_builder_rows: tuple
     definitions: tuple
     replaced: tuple
-    ports: tuple
     obligations: tuple
-    spans: Mapping
     declared_lines: tuple
-    marginal: bool = False
 
 
 @dataclasses.dataclass(frozen=True)

@@ -34,10 +34,10 @@ folder under a parent folder, which is neither a model folder nor inside
 one, and with no stage where none is chosen (unit L, Task 13): the files
 the factory reads in the
 factory's folder `declaration/` (`model.FACTORY_FOLDER`), each stage in a
-folder of its own, `stages/<key>/`, with its stage file and its methods
-file; answers.yml, the .gitignore and README.md at the folder's top. A
-template is copied under its key, its stage file's `@stage:` line and its
-methods file's `stage:` naming that key, and a stage the form marks for
+folder of its own, `stages/<key>/`, with its stage file and its
+additions; answers.yml, the .gitignore and README.md at the folder's top. A
+template is copied under its key, its stage file's `@stage:` line and each
+addition's `@methods:` line naming that key, and a stage the form marks for
 the terminal period stands in that period alone, which the trellis file
 then writes out (unit K, Task 12). `brought_files` names the files a
 template brings by their paths from its folder, as the forms list them.
@@ -73,8 +73,9 @@ and the texts in the same way.
 `folder_template` reads a stage folder of the disk, a folder that holds one
 stage file, another project's `declaration/stages/<key>/` included, or that
 file itself, as a template of the corpus is read (unit K's decision K-D26):
-the stage file with the calibration, settings and methods files of the same
-folder, which `add_stage` copies as it copies a template's, answers.yml then
+the stage file with the calibration and settings files and the additions of
+the same folder, which `add_stage` copies as it copies a template's, answers.yml
+then
 recording the folder's path as the author gave it and the SHA-256 of each
 file the stage brings in place of a template's id.
 
@@ -108,9 +109,9 @@ names it (spec 0.4 §3.6).
 `stages/<key>/<key>.bl` holding the stage's line and the four block headers
 of the page Stages with no field, each block's body the equation `0 = 0`,
 the smallest the grammar admits (unit L, Task 17), with the stage's row
-added to the recipe as `add_stage` adds one; and the empty calibration,
-settings or methods file of a stage at the folder's conventional place
-(`source_path`), which
+added to the recipe as `add_stage` adds one; and the empty calibration or
+settings file, or the empty addition, of a stage at the folder's conventional
+place (`source_path`), which
 `New file` of the Recipe tab writes and names in a slot's place (design
 pass 9 §3).
 
@@ -182,6 +183,7 @@ from bellman_workbench.model import FACTORY_FOLDER, RECIPE, factory_path
 __all__ = [
     "CORPUS",
     "TEMPLATE_SOURCES",
+    "SLOT_KINDS",
     "KINDS",
     "FACTORY_FOLDER",
     "RECIPE",
@@ -257,12 +259,11 @@ CORPUS = Path(__file__).resolve().parents[3] / "applications"
 # cons-port folder on 28 October 2026: the three stage files of the
 # portfolio-consumption model that its recipe spec.port-cons.yml binds, and
 # the stage without a portfolio choice that its reference trellis file
-# binds, each with the calibration, settings and methods files of
+# binds, each with the calibration and settings files and the additions of
 # applications/cons-port/declaration/; and the four stage files of the
-# pension model, applications/pension-retirement/, whose recipe binds each
-# stage's own methods file, followed by a methods slot for each stage but
-# the terminal one, and the calibration of the two saving stages by the
-# slot `$fill` alone.
+# pension model, applications/pension-retirement/, whose recipe names each
+# stage's own addition and binds the calibration of the two saving stages
+# by the slot `$fill` alone.
 TEMPLATE_SOURCES = (
     ("cons-port/declaration/spec.port-cons.yml", ("port", "cons", "disc")),
     ("cons-port/declaration/trellis.reference-cons-only.yml", ("noport",)),
@@ -285,8 +286,15 @@ KINDS = ("calibration", "settings", "methods")
 PERIOD = "period.yml"
 TRELLIS = "trellis.yml"
 ANSWERS = "answers.yml"
-# the name of a stage's methods file in the stage's folder, `stages/<key>/`
-STAGE_METHODS = "methods.yml"
+# the name of a stage's addition in the stage's folder, `stages/<key>/`, a
+# methods file the semantics unions with the stage file (specification 0.7
+# §4; decision S7-W2)
+STAGE_METHODS = "methods.bl"
+
+# the binding kinds a recipe may value through a slot, `$<key>_<kind>`: the
+# calibration and the settings; a methods list names additions and no slot
+# (decision S7-F3)
+SLOT_KINDS = ("calibration", "settings")
 
 # The four blocks of an empty stage file (K-D7), each as its id and the
 # perch words of its two sides, in the order in which the page Stages
@@ -311,8 +319,8 @@ GITIGNORE = (
 
 def stage_folder(key: str) -> str:
     """The folder of the stage `key`, `stages/<key>`, by its posix path from
-    the factory's folder; it holds the stage's file and the methods file
-    its template brings (the one layout of a model folder)."""
+    the factory's folder; it holds the stage's file and the additions its
+    template brings (the one layout of a model folder; decision S7-W2)."""
     return posixpath.join("stages", key)
 
 
@@ -326,12 +334,13 @@ def stage_file(key: str) -> str:
 def companion_path(key: str, kind: str, source: Path) -> str:
     """The path, relative to the model folder, that the companion file
     `source` of the binding `kind` of a template is copied to for the stage
-    `key`: a methods file into the stage's folder as `methods.yml`,
-    `declaration/stages/<key>/methods.yml`, and a calibration or a settings
-    file under its own name into the folder of its kind,
-    `declaration/<kind>/<file name>`."""
+    `key`: an addition into the stage's folder under its own name,
+    `declaration/stages/<key>/methods.bl` or a replacing selection
+    `declaration/stages/<key>/methods.<variant>.bl` (decision S7-W2), and a
+    calibration or a settings file under its own name into the folder of
+    its kind, `declaration/<kind>/<file name>`."""
     if kind == "methods":
-        return factory_path(posixpath.join(stage_folder(key), STAGE_METHODS))
+        return factory_path(posixpath.join(stage_folder(key), source.name))
     return factory_path(posixpath.join(kind, source.name))
 
 
@@ -485,14 +494,15 @@ def _refused(template_id: str, key: str, file: Path, error: Exception) -> Refuse
     """The refusal of the template `template_id` of the stage `key` by the
     error `error` of the package or of the disk at the file `file`: the
     error's sentence and the rule a refusal of the package names
-    (`ConstructionError.rule`, `FactoryError.rule`), None for another
-    refusal or an error of the disk; an exception of no class of the
-    package's refusals (`model.is_refusal`), as a KeyError, as Python
-    prints it under the rule `package-exception`, as the loop lists it
-    (`model.exception_diagnostic`; unit L's final judgment, §6 item 7)."""
+    (`ConstructionError.rule`, `FactoryError.rule`), None for an error of
+    the disk; an exception of no class of the package's refusals
+    (`model.is_refusal`), as a KeyError, is the internal failure the one
+    conversion makes of it (`model.diagnostic_of`), its sentence as Python
+    prints the exception, with no rule, and its traceback written to the
+    page's log, as the loop lists it (Model Interface 0.9 §4)."""
     if not isinstance(error, OSError) and not model.is_refusal(error):
-        sentence = model.exception_diagnostic(error, None).message
-        return RefusedTemplate(template_id, key, file.resolve(), sentence, model.EXCEPTION_RULE)
+        failure = model.diagnostic_of(error, "elaborate", str(file))
+        return RefusedTemplate(template_id, key, file.resolve(), failure.message, None)
     rule = getattr(error, "rule", None)
     return RefusedTemplate(template_id, key, file.resolve(), str(error), rule)
 
@@ -547,13 +557,15 @@ def folder_template(path: str) -> StageTemplate:
     one stands, as a stage of the library is titled (AAS, L-D6), and the
     folder's name where none gives one; `calibration`, the names of the
     parameters the stage declares; and `companions`, for each kind of
-    `KINDS`, the YAML files of the same folder whose one top key among
-    `KINDS` names that kind, as the factory tells a source file's kind
-    (`_source_kind`), in name order. Refused with
+    `KINDS`, the files of the same folder of that kind, in name order: the
+    YAML files whose one top key among `SLOT_KINDS` names the kind, as the
+    factory tells a source file's kind (`_source_kind`), and the additions,
+    the `.bl` files whose first line is `@methods:`
+    (`model.is_addition_file`), which a recipe names beside the stage file
+    (decision S7-W2). Refused with
     a ValueError: a path that is not full; a path that names nothing, or a
-    file that is no `.bl` file; a folder that holds no `.bl` file, or
-    several; a folder that holds more than one methods file, since a stage's
-    folder holds one; and a stage file the package refuses, in the
+    file that is no `.bl` file, or an addition; a folder that holds no stage
+    file, or several; and a stage file the package refuses, in the
     package's sentence."""
     given = Path(path).expanduser()
     if not given.is_absolute():
@@ -561,19 +573,24 @@ def folder_template(path: str) -> StageTemplate:
     if given.is_file():
         if given.suffix != ".bl":
             raise ValueError(f"{path} is no .bl file")
+        if model.is_addition_file(given):
+            raise ValueError(f"{path} is an addition, not a stage file")
         stage = given.resolve()
     elif given.is_dir():
         found = sorted(
             entry
             for entry in given.iterdir()
-            if entry.is_file() and entry.suffix == ".bl" and not entry.name.startswith(".")
+            if entry.is_file()
+            and entry.suffix == ".bl"
+            and not entry.name.startswith(".")
+            and not model.is_addition_file(entry)
         )
         if not found:
-            raise ValueError(f"{path} holds no .bl file")
+            raise ValueError(f"{path} holds no stage file")
         if len(found) > 1:
             names = _listed([entry.name for entry in found])
             raise ValueError(
-                f"{path} holds {len(found)} .bl files, {names}: give the path of the one to copy"
+                f"{path} holds {len(found)} stage files, {names}: give the path of the one to copy"
             )
         stage = found[0].resolve()
     else:
@@ -582,20 +599,16 @@ def folder_template(path: str) -> StageTemplate:
     sources = sorted(
         entry
         for entry in folder.iterdir()
-        if entry.is_file() and entry.suffix in _YAML_SUFFIXES and not entry.name.startswith(".")
+        if entry.is_file()
+        and entry.suffix in (*_YAML_SUFFIXES, ".bl")
+        and not entry.name.startswith(".")
     )
     kinds = {entry: _source_kind(entry) for entry in sources}
     companions = {kind: tuple(e for e in sources if kinds[e] == kind) for kind in KINDS}
-    if len(companions["methods"]) > 1:
-        names = _listed([entry.name for entry in companions["methods"]])
-        raise ValueError(
-            f"{path} holds {len(companions['methods'])} methods files, {names}, and a stage "
-            "brings one"
-        )
     in_layout = folder.parent.name == "stages" and folder.parents[1].name == FACTORY_FOLDER
-    model = _model_title(folder.parents[2] if in_layout else folder)
+    title = _model_title(folder.parents[2] if in_layout else folder)
     declared = tuple(elaborate_stage(load_stage(str(stage))).par.keys())
-    return StageTemplate(path, folder.name, stage, model, declared, companions, path)
+    return StageTemplate(path, folder.name, stage, title, declared, companions, path)
 
 
 # The environment variable that names the library of stages, one folder or
@@ -651,7 +664,10 @@ def library_templates() -> tuple[StageTemplate, ...]:
             continue
         for folder in folders:
             state = _folder_state(folder)
-            stages = [name for name, _, _ in state if name.endswith(".bl")]
+            stages = [
+                name for name, _, _ in state
+                if name.endswith(".bl") and not model.is_addition_file(folder / name)
+            ]
             if len(stages) == 1:
                 template = _library_template(str(folder), state)
                 if template is not None:
@@ -689,16 +705,20 @@ def _library_template(path: str, state: tuple) -> StageTemplate | None:
 
 
 def _source_kind(path: Path) -> str | None:
-    """The kind of the YAML file `path` among `KINDS`, the one top key of
-    `KINDS` it writes, as the factory tells a source file's kind by its top
-    key: `methods` for a methods file, which also writes `stage:`; None for
-    a file that cannot be read as a YAML mapping, by the package's reader of
-    YAML text (`entry_value`), or whose top keys name no kind or two."""
+    """The kind of the file `path` among `KINDS`: `methods` for an addition,
+    a `.bl` file whose first line is `@methods:` (`model.is_addition_file`);
+    for a YAML file the one top key of `SLOT_KINDS` it writes, as the
+    factory tells a source file's kind by its top key; None for any other
+    `.bl` file, for a file that cannot be read as a YAML mapping, by the
+    package's reader of YAML text (`entry_value`), and for one whose top
+    keys name no kind or two."""
+    if path.suffix == ".bl":
+        return "methods" if model.is_addition_file(path) else None
     try:
         document = entry_value(_source_text(path))
     except (OSError, UnicodeDecodeError, ValueError, KeyError):
         return None
-    named = [kind for kind in KINDS if isinstance(document, dict) and kind in document]
+    named = [kind for kind in SLOT_KINDS if isinstance(document, dict) and kind in document]
     return named[0] if len(named) == 1 else None
 
 
@@ -706,10 +726,9 @@ def brought_files(template: StageTemplate) -> tuple[str, ...]:
     """The files the template `template` brings, its companions in the
     order of `KINDS`, each by its posix path from the template's folder,
     the folder of the corpus file it is read from, as that file names it:
-    `calibration/portfolio.yml`, or for a file of another application
-    `../../portfolio-choice/declaration/stages/disc/methods.yml` (unit K,
-    Task 12; the usability walkthrough §4 item 20); for a stage folder of
-    the disk, the folder that holds the stage file, `methods.yml` (unit K's
+    `calibration/portfolio.yml` and `stages/cons/methods.bl` (unit K, Task
+    12; the usability walkthrough §4 item 20); for a stage folder of the
+    disk, the folder that holds the stage file, `methods.bl` (unit K's
     decision K-D26). The forms that list the templates print them under
     each one."""
     if template.origin is not None:
@@ -724,40 +743,62 @@ def brought_files(template: StageTemplate) -> tuple[str, ...]:
 
 
 def slot_name(key: str, kind: str) -> str:
-    """The name of the slot of the binding `kind` of the stage `key`,
-    `cons_calibration`, written `$cons_calibration` in the recipe."""
+    """The name of the slot of the binding `kind` of the stage `key`, a kind
+    of `SLOT_KINDS`, `cons_calibration`, written `$cons_calibration` in the
+    recipe."""
     return f"{key}_{kind}"
 
 
-def recipe_row(key: str) -> str:
+def recipe_row(key: str, additions=()) -> str:
     """The row of the stage `key` in the recipe, in flow style as
     applications/pension-retirement/declaration/spec.yml writes its rows:
     first the stage's file under `stage:`, `stages/<key>/<key>.bl`
-    (`stage_file`), its path from the recipe's folder, then each binding of
-    `KINDS` the list of its one slot."""
-    bindings = ", ".join(f"{kind}: {{all: [${slot_name(key, kind)}]}}" for kind in KINDS)
+    (`stage_file`), its path from the recipe's folder, then the calibration
+    and the settings each the list of its one slot, and the methods the
+    list of `additions`, the stage's own addition by its path from the
+    recipe's folder, `stages/<key>/methods.bl` (`addition_names`), in the
+    form the package reads, `{all: [...]}`, empty where the stage brings
+    none (decision S7-F3)."""
+    bindings = ", ".join(f"{kind}: {{all: [${slot_name(key, kind)}]}}" for kind in SLOT_KINDS)
     # the recipe stands in the factory's folder, so the stage's file is
     # written by its path from that folder, not built by factory_path
-    return f"{{stage: {stage_file(key)}, {bindings}}}"
+    return f"{{stage: {stage_file(key)}, {bindings}, methods: {{all: [{', '.join(additions)}]}}}}"
 
 
-def recipe_text(name: str, keys) -> str:
-    """The recipe of the new folder `name`: three comment lines, each
+def addition_names(key: str, template: StageTemplate) -> tuple[str, ...]:
+    """The addition the recipe row of the stage `key` names (`recipe_row`),
+    by its path from the recipe's folder: the stage's own addition,
+    `stages/<key>/methods.bl`, where the template `template` brings a file
+    of that name (`STAGE_METHODS`), and no name otherwise. A replacing
+    selection the template brings, `methods.<variant>.bl`, is copied beside
+    the stage file and named by no row, since a list that names it beside
+    `methods.bl` unions the two selections; the author chooses it in the
+    Recipe cell (decision S7-W17)."""
+    if any(source.name == STAGE_METHODS for source in template.companions["methods"]):
+        return (posixpath.join(stage_folder(key), STAGE_METHODS),)
+    return ()
+
+
+def recipe_text(name: str, stages) -> str:
+    """The recipe of the new folder `name`: five comment lines, each
     within 79 characters for a folder name of up to 32 characters, which
     say that the recipe names the trellis file and each stage's file by
-    their paths from its folder and that each binding is a slot until the
-    name of a file replaces it, a file of calibration/ or settings/ or the
-    stage's methods file in the stage's folder, stages/<stage>/methods; the
-    trellis file it is read against, `trellis: trellis.yml`, by its path
-    from the recipe's folder; and one row per stage key (`recipe_row`),
-    which names the stage's file by its path from the same folder, or, with
-    no key, the empty mapping `stages: {}` in flow style, to which "new
-    stage" adds a row as text (unit L, Task 13)."""
-    rows = "".join(f"  {key}: {recipe_row(key)}\n" for key in keys)
+    their paths from its folder, that a calibration or a settings binding
+    is a slot until the name of a file of calibration/ or settings/
+    replaces it, and that the methods are the additions beside the stage
+    file, stages/<stage>/methods.bl; the trellis file it is read against,
+    `trellis: trellis.yml`, by its path from the recipe's folder; and one
+    row per stage of `stages`, pairs of the key and the additions its row
+    lists (`recipe_row`), which names the stage's file by its path from the
+    same folder, or, with no stage, the empty mapping `stages: {}` in flow
+    style, to which "new stage" adds a row as text (unit L, Task 13)."""
+    rows = "".join(f"  {key}: {recipe_row(key, additions)}\n" for key, additions in stages)
     return (
         f"# The recipe of {name}: the trellis and stage files,\n"
-        "# by their paths from this folder. A binding is the slot $<stage>_<kind> until\n"
-        "# a file of calibration/ or settings/, or stages/<stage>/methods, replaces it.\n"
+        "# by their paths from this folder. A calibration or settings binding is the\n"
+        "# slot $<stage>_<kind> until a file of calibration/ or settings/ replaces it;\n"
+        "# the methods are additions beside the stage file,\n"
+        "# stages/<stage>/methods.bl.\n"
         f"trellis: {TRELLIS}\n" + (f"stages:\n{rows}" if rows else "stages: {}\n")
     )
 
@@ -852,7 +893,7 @@ def answers_text(
     rows = "".join(
         f"  {key}: {{template: {_quoted(template_id)}}}\n" for key, template_id in stages
     )
-    slots = "".join(f"    - {slot_name(key, kind)}\n" for key, _ in stages for kind in KINDS)
+    slots = "".join(f"    - {slot_name(key, kind)}\n" for key, _ in stages for kind in SLOT_KINDS)
     if terminal:
         periods = (
             f"  - {{stages: [{', '.join(terminal)}], repeat: 1}}\n"
@@ -921,21 +962,22 @@ def source_path(key: str, kind: str) -> str:
     """The path, relative to the model folder, at which the folder's layout
     places the file of the binding `kind` of the stage `key` that "new
     file" writes (K-D7): `declaration/calibration/<key>.yml`,
-    `declaration/settings/<key>.yml`, or the stage's methods file in its
-    folder, `declaration/stages/<key>/methods.yml`, the places to which a
+    `declaration/settings/<key>.yml`, or the stage's addition in its
+    folder, `declaration/stages/<key>/methods.bl`, the places to which a
     template's companions are copied (`companion_path`)."""
-    return companion_path(key, kind, Path(f"{key}.yml"))
+    name = STAGE_METHODS if kind == "methods" else f"{key}.yml"
+    return companion_path(key, kind, Path(name))
 
 
 def empty_source_text(key: str, kind: str) -> str:
     """The empty file of the binding `kind` that "new file" writes for the
     stage `key` (K-D7): the one top key by which the factory tells a
     source's kind, with nothing under it, `calibration: {}` or `settings:
-    {}`; a methods file also names its stage, as every methods file of the
-    corpus does, since a methods file binds the stage it names (spec 0.3c
-    §4.3): `stage: <key>`, then `methods: []`."""
+    {}`; for the methods the empty addition, the line `@methods: <key>` that
+    names the stage it is unioned with (specification 0.7 §4 rule 1) and no
+    entry."""
     if kind == "methods":
-        return f"stage: {key}\nmethods: []\n"
+        return f"@methods: {key}\n"
     return f"{kind}: {{}}\n"
 
 
@@ -1185,15 +1227,20 @@ def create_trellis(
     model folder (§3.3, §4): in the factory's folder `declaration/`
     (`factory_path`), each stage `(key, template id)` of `stages` copied
     from its template into its own folder, `stages/<key>/<key>.bl`, never
-    linked back, with the methods file the template brings copied beside
-    it as `methods.yml`, and the template's calibration and settings files
-    copied into `calibration/` and `settings/` under their own names
-    (`companion_path`), the stage file's `@stage:` line and the methods
-    file's `stage:` naming the key (`_stage_copy`, `_companion_copy`);
-    `period.yml`, the period `label` listing the keys with an empty
-    connector mapping; `trellis.yml`, that period repeated `repeat` times
-    with an empty inter-period mapping; `spec.yml`, one row per stage whose
-    three bindings are slots; and at the folder's top answers.yml,
+    linked back, with the additions the template brings copied beside it
+    under their names, `methods.bl` and a replacing selection
+    `methods.<variant>.bl`, and the template's calibration and
+    settings files copied into `calibration/` and `settings/` under their
+    own names (`companion_path`), the stage file's `@stage:` line and each
+    addition's `@methods:` line naming the key (`_stage_copy`,
+    `_companion_copy`); `period.yml`, the period `label` listing the keys
+    with an empty connector mapping; `trellis.yml`, that period repeated
+    `repeat` times with an empty inter-period mapping; `spec.yml`, one row
+    per stage whose calibration and settings are slots and whose methods
+    list names the stage's own addition `methods.bl`, a replacing selection
+    copied beside it named by no row (`recipe_row`, `addition_names`;
+    decision S7-W17); and at the folder's top
+    answers.yml,
     the .gitignore and a three-line README.md. With no stage, the folder
     holds those files with their lists of stages empty, for "new stage" to
     fill (unit L, Task 13; defect 1 of the UX simulation).
@@ -1240,7 +1287,9 @@ def create_trellis(
     apart = set(terminal) if repeat > 1 else set()
     written_out = keys if apart else ()
     texts = {
-        factory_path(RECIPE): recipe_text(name, keys),
+        factory_path(RECIPE): recipe_text(
+            name, [(key, addition_names(key, template)) for key, template in zip(keys, templates, strict=True)]
+        ),
         factory_path(PERIOD): period_text(label, [key for key in keys if key not in apart]),
         factory_path(TRELLIS): trellis_text(name.replace("-", "_"), repeat, written_out),
         ANSWERS: answers_text(name, destination, label, repeat, stages, written_out),
@@ -1428,66 +1477,31 @@ def _companions(chosen) -> dict[str, tuple[Path, str]]:
     """Each companion file of the templates `chosen`, pairs (stage key,
     template), with the text of its copy (`_companion_copy`), by the path
     it is copied to, relative to the model folder (`companion_path`): a
-    template's methods file into its stage's folder,
-    `declaration/stages/<key>/methods.yml`, and its calibration and
-    settings files into `declaration/<kind>/`, each once. A template brings
-    one methods file at most, as each of `TEMPLATE_SOURCES` does; two
-    files of one name and different contents are refused with a ValueError
-    that names both. A methods file whose lines name a block file under
-    `block:` brings that block file as well, copied as its source writes it
-    into `declaration/methods/`, where the layout places block files
-    (decision SD-14), and the methods file's copy names it there
-    (`_block_copies`; SE-29)."""
+    template's additions into its stage's folder,
+    `declaration/stages/<key>/methods.bl`, and its calibration and
+    settings files into `declaration/<kind>/`, each once. Two files of one
+    name and different contents are refused with a ValueError that names
+    both."""
     planned, copies = {}, {}
-
-    def copied(target, source, text):
-        earlier = planned.setdefault(target, source)
-        if earlier != source and earlier.read_bytes() != source.read_bytes():
-            raise ValueError(
-                f"two templates bring {target} with different contents, {earlier} "
-                f"and {source}"
-            )
-        copies.setdefault(target, (source, text))
-
     for key, template in chosen:
         for kind in KINDS:
             for source in template.companions[kind]:
                 target = companion_path(key, kind, source)
-                text = _companion_copy(source, kind, key)
-                if kind == "methods":
-                    text, blocks = _block_copies(source, target, text)
-                    for block_target, block in blocks:
-                        copied(block_target, block, _source_text(block))
-                copied(target, source, text)
+                earlier = planned.setdefault(target, source)
+                if earlier != source and earlier.read_bytes() != source.read_bytes():
+                    raise ValueError(
+                        f"two templates bring {target} with different contents, {earlier} "
+                        f"and {source}"
+                    )
+                copies.setdefault(target, (source, _companion_copy(source, kind, key)))
     return copies
 
 
-def _block_copies(source: Path, target: str, text: str) -> tuple[str, tuple]:
-    """The text `text` of the copy `target` of the methods file `source`,
-    with each `block:` entry of its `methods` list rewritten as the path,
-    from the copy's folder, of the block file's copy in the factory's
-    `methods/` folder, `../../methods/cons_egm.bl`; and the pairs (that
-    copy's path relative to the model folder, the block file the entry
-    names from the source's folder), in the order of the list. A block
-    path is read from the folder of the methods file that writes it, as the
-    package reads it (SE-29)."""
-    document = entry_value(text)
-    lines = document.get("methods") if isinstance(document, dict) else None
-    blocks = []
-    for index, line in enumerate(lines if isinstance(lines, list) else ()):
-        if not isinstance(line, dict) or not isinstance(line.get("block"), str):
-            continue
-        block = (source.parent / line["block"]).resolve()
-        block_target = factory_path(posixpath.join("methods", block.name))
-        written = posixpath.relpath(block_target, posixpath.dirname(target))
-        text = replace_entry(text, ("methods", index, "block"), written)
-        blocks.append((block_target, block))
-    return text, tuple(blocks)
-
-
-# the line of a stage file that names the stage, `@stage: <name>`: `@stage:`
-# and the spaces after it as the first group, the name as the second
+# the line of a stage file that names the stage, `@stage: <name>`, and the
+# line of an addition that names it, `@methods: <name>`: the key word and
+# the spaces after it as the first group, the name as the second
 _STAGE_LINE = re.compile(r"^(@stage:[ \t]*)(\S+)", re.MULTILINE)
+_METHODS_LINE = re.compile(r"^(@methods:[ \t]*)(\S+)", re.MULTILINE)
 
 
 def _stage_copy(template: StageTemplate, key: str) -> str:
@@ -1502,19 +1516,15 @@ def _stage_copy(template: StageTemplate, key: str) -> str:
 
 def _companion_copy(source: Path, kind: str, key: str) -> str:
     """The text of the copy of the companion file `source`, of the binding
-    `kind`, for the stage key `key`: a methods file that names a stage under
-    `stage:`, which binds the stage it names (spec 0.3c §4.3), with that
-    name written `key` by the package's writer `replace_entry`, every other
-    character kept (unit K, Task 12); any other file, and a methods file
-    that names no stage or names `key`, as its source writes it."""
+    `kind`, for the stage key `key`: an addition with the name its
+    `@methods:` line writes replaced by `key`, every other character kept,
+    since the union refuses an addition that names another stage
+    (specification 0.7 §4 rule 1; unit K, Task 12); a calibration or a
+    settings file as its source writes it."""
     text = _source_text(source)
     if kind != "methods":
         return text
-    try:
-        named = entry_value(text, "stage")
-    except KeyError:
-        return text
-    return text if named == key else replace_entry(text, "stage", key)
+    return _METHODS_LINE.sub(lambda found: found[1] + key, text, count=1)
 
 
 def variant_sources(folder, from_recipe: str, texts=None) -> tuple[str, ...]:
@@ -1532,7 +1542,9 @@ def variant_sources(folder, from_recipe: str, texts=None) -> tuple[str, ...]:
     return (factory_path(from_recipe), factory_path(trellis), *map(factory_path, periods))
 
 
-def create_variant(folder, name: str, from_recipe: str) -> tuple[str, ...]:
+def create_variant(
+    folder, name: str, from_recipe: str, *, copy_bindings: bool = False, dirty_paths=()
+) -> tuple[str, ...]:
     """A second trellis of the model of `folder` written beside the first
     (§4, new variant; rule 4 of the layout), in the factory's folder: the
     recipe `spec.<name>.yml`, a copy of the recipe `from_recipe` of that
@@ -1545,18 +1557,26 @@ def create_variant(folder, name: str, from_recipe: str) -> tuple[str, ...]:
     that "add stage" or "add period" edits. Each copy is its source's text
     with those entries alone written anew by the package's writer
     `replace_entry`, a quoted value within its quotes, every other
-    character kept, comments included; nothing else in the folder is
-    written. Answers the files written, by their paths from the
-    folder: the recipe, the trellis file, then the period files in the
-    order the trellis file names them. Refused with a ValueError before
-    anything is written: a name that is no plain word of letters, digits
+    character kept, comments included. With `copy_bindings`, also copies
+    the recipe's binding files and their parents, once per source
+    (`_copy_variant_bindings`): a calibration or a settings file as
+    `<stem>.<name>_<kind>.yml` beside its original, its `parent:` naming
+    the copy of its parent, and an addition as text, with nothing
+    rewritten, as `methods.<name>.bl` beside the stage file (decision
+    S7-W2; the plan of Model Interface 0.9, §4). The recipe's source lists
+    name the copies. Stage declarations and slots stay as written. The
+    result lists the recipe, trellis, period files, and any binding
+    copies, by their paths from the model folder.
+    Refused with a ValueError before anything is written: a name that is
+    no plain word of letters, digits
     and "-"; a recipe the factory's folder does not hold; a trellis file or
     a period file named at an entry that is no file of that folder, or a
     period file named otherwise than `period.yml` or `period.<x>.yml`; a
     file that does not read as UTF-8 text, or that the package's reader of
     YAML files refuses (`entry_value`), or an entry `replace_entry` cannot
-    write anew; a file of the variant that exists, every one named. A file
-    of the variant that appears on disk while the variant is written is
+    write anew; an unsupported binding file; a copied source in
+    `dirty_paths`; a file of the variant that exists, every one named. A
+    file of the variant that appears on disk while the variant is written is
     refused with a ValueError naming it, and the files written before it
     are removed."""
     folder = Path(folder).resolve()
@@ -1565,8 +1585,17 @@ def create_variant(folder, name: str, from_recipe: str) -> tuple[str, ...]:
     handle = model.open_folder(folder)
     recipe, trellis_name, trellis, templates = _variant_sources(handle.root, from_recipe)
     copies = {template: _period_copy(template, name) for _, template in templates}
+    _refuse_dirty_variant_files(
+        folder, (from_recipe, trellis_name, *copies), dirty_paths
+    )
+    recipe_copy = _replaced(recipe, from_recipe, [("trellis", f"trellis.{name}.yml")])
+    bindings = {}
+    if copy_bindings:
+        recipe_copy, bindings = _copy_variant_bindings(
+            folder, from_recipe, recipe_copy, name, dirty_paths
+        )
     texts = {
-        f"spec.{name}.yml": _replaced(recipe, from_recipe, [("trellis", f"trellis.{name}.yml")]),
+        f"spec.{name}.yml": recipe_copy,
         f"trellis.{name}.yml": _replaced(
             trellis, trellis_name, [(address, copies[template]) for address, template in templates]
         ),
@@ -1574,8 +1603,9 @@ def create_variant(folder, name: str, from_recipe: str) -> tuple[str, ...]:
             copy: _text_of(handle.root, factory_path(template))
             for template, copy in copies.items()
         },
+        **bindings,
     }
-    existing = [factory_path(copy) for copy in texts if (folder / factory_path(copy)).exists()]
+    existing = [factory_path(copy) for copy in texts if os.path.lexists(folder / factory_path(copy))]
     if existing:
         verb = "exists" if len(existing) == 1 else "exist"
         raise ValueError(f"{_listed(existing)} {verb}")
@@ -1593,6 +1623,95 @@ def create_variant(folder, name: str, from_recipe: str) -> tuple[str, ...]:
             (folder / relative).unlink(missing_ok=True)
         raise
     return tuple(factory_path(copy) for copy in texts)
+
+
+def _refuse_dirty_variant_files(folder: Path, files, dirty_paths) -> None:
+    """Refuses to copy files with unsaved buffers in the current tab."""
+    sources = {(folder / factory_path(path)).resolve() for path in files}
+    dirty = sorted(path for path in dirty_paths if (folder / path).resolve() in sources)
+    if dirty:
+        verb = "holds" if len(dirty) == 1 else "hold"
+        raise ValueError(f"{_listed(dirty)} {verb} unsaved text")
+
+
+def _copy_variant_bindings(folder: Path, recipe: str, text: str, name: str, dirty_paths):
+    """The recipe `text` of the variant `name` with each binding source
+    redirected to its copy, and the copies by their paths from the
+    factory's folder: each file a source list of the recipe `recipe` reads,
+    with its parents, copied once, a calibration or a settings file as
+    `<stem>.<name>_<kind>.yml` with its `parent:` naming its parent's copy,
+    and an addition as `methods.<name>.bl` beside the stage file, its text
+    as it stands (decision S7-W2). Refused with a ValueError: a source
+    outside the factory's folder or reached through a symbolic link; a
+    source that is neither a YAML file nor an addition; a source the
+    recipe's text names at no occurrence; a source with unsaved text."""
+    declaration = folder / FACTORY_FOLDER
+    syntactic = load_recipe(declaration, recipe)
+    sources, copies, parents = {}, {}, {}
+
+    def register(path: Path, kind: str) -> str:
+        addition = path.suffix == ".bl" and model.is_addition_file(path)
+        if (
+            (path.suffix not in (".yml", ".yaml") and not addition)
+            or path.resolve() != path
+            or not path.is_relative_to(declaration)
+        ):
+            raise ValueError(
+                f"cannot copy {kind} source {path}: "
+                f"use a YAML file or an addition inside {FACTORY_FOLDER}/ without symlinks"
+            )
+        relative = path.relative_to(declaration)
+        copy = f"{path.stem}.{name}.bl" if addition else f"{path.stem}.{name}_{kind}{path.suffix}"
+        return copies.setdefault(relative.as_posix(), relative.with_name(copy).as_posix())
+
+    lists = [syntactic["provenance"]["registry"]]
+    lists += [
+        record["provenance"]["source_lists"]
+        for period in syntactic["periods"]
+        for record in period["stages"].values()
+    ]
+    for bindings in lists:
+        for kind, entries in bindings.items():
+            for entry in entries:
+                if "path" not in entry or entry["source"] in sources:
+                    continue
+                chain = [Path(path) for path in (entry["path"], *entry.get("parents", ()))]
+                destinations = [register(path, kind) for path in chain]
+                sources[entry["source"]] = destinations[0]
+                for source, target in zip(chain[:-1], destinations[1:], strict=True):
+                    parents[source.relative_to(declaration).as_posix()] = target
+    _refuse_dirty_variant_files(folder, copies, dirty_paths)
+
+    document = entry_value(text)
+    replacements = []
+
+    def redirect(address: tuple, entries) -> None:
+        if entries is None:
+            return
+        for index, value in enumerate(entries if isinstance(entries, list) else [entries]):
+            source = str(value).strip()
+            if source.startswith("$"):
+                continue
+            if source not in sources:
+                raise ValueError(
+                    f"{factory_path(recipe)}: {source!r} at {address + (index,)} "
+                    "is not read by any occurrence"
+                )
+            replacements.append((address + (index,), sources[source]))
+
+    for kind, entries in (document.get("registry") or {}).items():
+        redirect(("registry", kind), entries)
+    for stage, block in document["stages"].items():
+        for kind in KINDS:
+            for scope, entries in (block.get(kind) or {}).items():
+                redirect(("stages", stage, kind, scope), entries)
+    rewritten = {}
+    for path, copy in copies.items():
+        original = _text_of(folder, factory_path(path))
+        rewritten[copy] = (
+            _replaced(original, path, [("parent", parents[path])]) if path in parents else original
+        )
+    return _replaced(text, recipe, replacements), rewritten
 
 
 def registry_sources(folder, recipe: str = RECIPE, texts=None) -> tuple[str, ...]:
@@ -1615,14 +1734,15 @@ def registry_sources(folder, recipe: str = RECIPE, texts=None) -> tuple[str, ...
     )
 
 
-def _variant_sources(root: Path, from_recipe: str, texts=None):
+def _variant_sources(root: Path, from_recipe: str, texts=None, *, inherit_stages=False):
     """What a variant of the recipe `from_recipe` is made from, read from
     the factory's folder of the model folder `root`, each file from `texts`
     where it holds one (`_text_of`): the recipe's text; the name of the
     trellis file it names under `trellis:`, and that file's text; and the
     trellis file's `template:` entries, each as its address in the file,
     `periods[1].template`, and the name of the period file it names, in the
-    order of `periods`. Refused with a ValueError naming the file: a recipe
+    order of `periods`. With `inherit_stages`, omit entries that write
+    their own stage list. Refused with a ValueError naming the file: a recipe
     that is no file of the factory's folder; a trellis file or a period file
     named at an entry that is no file of that folder; a period file named
     otherwise than `period.yml` or `period.<x>.yml`; a file that does not
@@ -1644,6 +1764,8 @@ def _variant_sources(root: Path, from_recipe: str, texts=None):
     templates = []
     for number, entry in enumerate(periods if isinstance(periods, list) else []):
         if not isinstance(entry, dict) or "template" not in entry:
+            continue
+        if inherit_stages and "stages" in entry:
             continue
         address = f"periods[{number}].template"
         template = _named_file(root, trellis, trellis_path, address)
@@ -1741,19 +1863,20 @@ def can_add(folder, recipe: str = RECIPE, texts=None) -> bool:
     return True
 
 
-def period_files(folder, recipe: str = RECIPE, texts=None) -> tuple[str, ...]:
-    """The period files of the recipe `recipe` of the folder, by their names
-    in the factory's folder: those the trellis file it names writes under
-    `template:` (`variant_sources`), the recipe and the trellis file read
-    from `texts` where it holds them, period.yml first and the others in
-    name order, so that "add stage" offers no period file of another recipe
-    (`create_variant`); none where the recipe or its trellis file cannot be
-    read so."""
+def period_files(folder, recipe: str = RECIPE, texts=None, *, inherit_stages=False) -> tuple[str, ...]:
+    """The selected recipe's template files, with period.yml first.
+
+    With `inherit_stages`, include a file only if some period takes its
+    stage list from it. Read the recipe and trellis from `texts` where
+    available. Return no files when either source cannot be read.
+    """
     try:
-        sources = variant_sources(folder, recipe, texts)
+        _, _, _, templates = _variant_sources(
+            Path(folder).resolve(), recipe, texts, inherit_stages=inherit_stages
+        )
     except (OSError, ValueError):
         return ()
-    names = [posixpath.basename(path) for path in sources[2:]]
+    names = {name for _, name in templates}
     return tuple(sorted(names, key=lambda name: (name != PERIOD, name)))
 
 
@@ -1816,13 +1939,14 @@ def add_stage(
     that `folder_template` answers (unit K's decision K-D26): as new files,
     the template's stage file in
     the stage's own folder, `stages/<key>/<key>.bl` in the factory's folder,
-    with the methods file the template brings beside it as `methods.yml`,
-    and its calibration and settings files in `calibration/` and
-    `settings/` (`companion_path`), a companion the folder holds with the
-    same contents being kept, the stage file's `@stage:` line and the
-    methods file's `stage:` naming the key as "new trellis" writes them
+    with the additions the template brings beside it, `methods.bl`, and its
+    calibration and settings files in `calibration/` and `settings/`
+    (`companion_path`), a companion the folder holds with the same contents
+    being kept, the stage file's `@stage:` line and each addition's
+    `@methods:` line naming the key as "new trellis" writes them
     (`_stage_copy`, `_companion_copy`; unit K, Task 12); as edits, the row
-    of `key` with its three slots added at the end of the `stages`
+    of `key`, its two slots and the stage's own addition (`recipe_row`,
+    `addition_names`), added at the end of the `stages`
     of the recipe `recipe`, the key added at the end of the `stages` list
     of the entry `entry` of `period_file`, and, where the folder holds
     answers.yml, the stage with its template's record (`_answers_record`)
@@ -1867,8 +1991,9 @@ def add_stage(
             raise ValueError(f"{target} exists with other contents than {source}")
     # the address of the period's list in `period_file`
     stages = f"{entry}.stages" if entry else "stages"
+    row = recipe_row(key, addition_names(key, template))
     edits = {
-        factory_path(recipe): lambda text: append_to_mapping(text, "stages", key, recipe_row(key)),
+        factory_path(recipe): lambda text: append_to_mapping(text, "stages", key, row),
         factory_path(period_file): lambda text: append_to_sequence(text, stages, key),
     }
     if (folder / ANSWERS).is_file():
@@ -1887,22 +2012,24 @@ def add_stage(
     return Added(tuple(new_files), made, read, notes)
 
 
-def new_stage(folder, key: str, *, recipe: str = RECIPE, texts=None) -> Added:
+def new_stage(folder, key: str, *, recipe: str = RECIPE, texts=None,
+              period_file: str | None = None) -> Added:
     """A stage of the author's own in the folder `folder` (unit K's decision
     K-D7; the plan of unit K, Task 9), answered and not written, as
     `add_stage` answers a template's stage: as the new file, the stage file
     `stages/<key>/<key>.bl` in the factory's folder, the empty stage
-    (`empty_stage_text`); as edits, the row of `key` with its three slots
-    (`recipe_row`) added at the end of the `stages` of the recipe `recipe`
+    (`empty_stage_text`); as edits, the row of `key` with its two slots and
+    an empty methods list (`recipe_row`) added at the end of the `stages`
+    of the recipe `recipe`
     and, where the folder holds answers.yml, the names of those slots added
     to its `required.slots`, the record of the slots written,
     each file edited as text, its comments and layout kept, and read from
     `texts`, the mapping of unsaved texts by a file's resolved path as a
     string, where it holds it, and from disk otherwise; and as notes,
     `spec.yml, stages: <key> written` and `new: stages/<key>/<key>.bl`. No
-    period's list is edited, so that the factory refuses the recipe, which
-    then names a stage that no period holds, until the author writes the
-    key in a period's list. Refused with a ValueError: a folder without the
+    period's list is edited unless `period_file` names one of the recipe's
+    period files. If no period holds the key, the factory refuses the recipe
+    until the author places it. Refused with a ValueError: a folder without the
     recipe; a key that is no identifier, that YAML reads as a boolean or
     null, whose folder `stages/<key>/` exists, or that the recipe holds; an
     entry that `append_to_mapping` or `append_to_sequence` cannot extend."""
@@ -1918,6 +2045,10 @@ def new_stage(folder, key: str, *, recipe: str = RECIPE, texts=None) -> Added:
     }
     if (folder / ANSWERS).is_file():
         edits[ANSWERS] = lambda text: _answers_with_slots(text, key)
+    if period_file is not None:
+        if period_file not in period_files(folder, recipe, texts, inherit_stages=True):
+            raise ValueError(f"no period in {recipe} uses the stages list from {period_file}")
+        edits[factory_path(period_file)] = lambda text: append_to_sequence(text, "stages", key)
     made, read = _edits(folder, edits, texts)
     notes = (_written_note(recipe, "stages", key, ()), _new_note(new_files))
     return Added(new_files, made, read, notes)
@@ -2898,7 +3029,7 @@ def _dotted(path) -> str:
 
 def _answers_with_stage(text: str, key: str, record: str) -> str:
     """answers.yml's text with the stage `key` added to `stages`, its value
-    the text `record` (`_answers_record`), and the names of its three slots
+    the text `record` (`_answers_record`), and the names of its two slots
     to `required.slots` (`_answers_with_slots`)."""
     text = append_to_mapping(text, "stages", key, record)
     return _answers_with_slots(text, key)
@@ -2912,7 +3043,7 @@ def _answers_record(template: StageTemplate) -> str:
     each file the stage brings, its stage file and then its companions in
     the order of `KINDS`, each by its name in that folder and read as it
     stands now, `{origin: "<path>", sha256: {"port.bl": "<digest>",
-    "methods.yml": "<digest>"}}`, so that the folder can later be compared
+    "methods.bl": "<digest>"}}`, so that the folder can later be compared
     with the files the copy was made from."""
     if template.origin is None:
         return f"{{template: {_quoted(template.id)}}}"
@@ -2925,10 +3056,10 @@ def _answers_record(template: StageTemplate) -> str:
 
 
 def _answers_with_slots(text: str, key: str) -> str:
-    """answers.yml's text with the names of the three slots of the stage
+    """answers.yml's text with the names of the two slots of the stage
     `key` added to `required.slots`, the record of the slots written, which
     the checklist does not read (unit K's decision K-D29)."""
-    for kind in KINDS:
+    for kind in SLOT_KINDS:
         text = append_to_sequence(text, "required.slots", slot_name(key, kind))
     return text
 
@@ -2957,13 +3088,13 @@ def _source_files(base: Path, name) -> list[Path]:
     `registry` may stand for, resolved, as the package's reader tries them
     under its registry folder `base` (`_registry_file` of
     `bellman.factory.recipe`): `<name>.yml`, `<name>.yaml` and the name as
-    written, or the name as written alone where it ends in `.yml` or
-    `.yaml`; none for a slot, a name written `$<slot>`, and for a value that
-    is no text."""
+    written, or the name as written alone where it ends in `.yml`, `.yaml`
+    or `.bl`, an addition being named with its extension; none for a slot,
+    a name written `$<slot>`, and for a value that is no text."""
     if not isinstance(name, str) or not name.strip() or name.startswith("$"):
         return []
     written = base / name
-    if written.suffix in _YAML_SUFFIXES:
+    if written.suffix in (*_YAML_SUFFIXES, ".bl"):
         return [written.resolve()]
     return [Path(f"{written}{suffix}").resolve() for suffix in _YAML_SUFFIXES] + [
         written.resolve()
@@ -3930,11 +4061,12 @@ _FORM_MARK = "bellman_workbench"
 _SOURCE_PLACEHOLDER = "{{source}}"
 
 
-def notebook_file(folder) -> str:
-    """The path, relative to the model folder `folder`, of the notebook
-    `write_notebook` writes there, `notebooks/<folder's name>.ipynb`, beside
-    `declaration/` (spec 0.4 §5.9)."""
-    return posixpath.join("notebooks", f"{Path(folder).resolve().name}.ipynb")
+def notebook_file(folder, source: str | None = None, kind: str = "recipe") -> str:
+    """The notebook path for a recipe, keeping the original name for spec.yml."""
+    name = Path(folder).resolve().name
+    if kind == "recipe" and source not in (None, factory_path(RECIPE)):
+        name += f".{Path(source).name}"
+    return posixpath.join("notebooks", f"{name}.ipynb")
 
 
 def write_notebook(folder, source: str, kind: str) -> str | None:
@@ -3950,12 +4082,41 @@ def write_notebook(folder, source: str, kind: str) -> str | None:
     them when the notebook is run. A kind for which the template holds no
     form is refused with a ValueError naming it."""
     folder = Path(folder).resolve()
-    relative = notebook_file(folder)
-    if (folder / relative).exists():
+    relative = notebook_file(folder, source, kind)
+    path = folder / relative
+    source_path = Path(source)
+    if (
+        source_path.is_absolute()
+        or ".." in source_path.parts
+        or not (folder / source_path).resolve().is_relative_to(folder)
+    ):
+        raise ValueError(f"{source} is outside the model folder")
+    if kind == "recipe" and source_path.parent != Path(FACTORY_FOLDER):
+        raise ValueError(f"{source} is not a recipe in {FACTORY_FOLDER}/")
+    if not (folder / source_path).is_file():
+        raise ValueError(f"{source} does not exist")
+    if path.parent.resolve() != path.parent:
+        raise ValueError(f"{path.parent.name}/ must be a folder inside the model")
+    refusal = model.read_only(model.open_folder(folder), relative)
+    if refusal:
+        raise ValueError(refusal)
+    if os.path.lexists(path):
         return None
     text = _notebook_text(posixpath.relpath(source, posixpath.dirname(relative)), kind)
-    if not model.save_file(model.open_folder(folder), relative, text, None).saved:
-        return None
+    path.parent.mkdir(exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", newline="", dir=path.parent, delete=False
+    ) as stream:
+        temporary = Path(stream.name)
+        try:
+            stream.write(text)
+            stream.close()
+            # Publish the complete notebook only if nothing occupies the name.
+            os.link(temporary, path)
+        except FileExistsError:
+            return None
+        finally:
+            temporary.unlink()
     return relative
 
 

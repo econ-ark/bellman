@@ -682,14 +682,18 @@ def test_a1_item_1_the_refusal_after_an_astral_character_is_underlined_at_the_re
     Multilingual Plane, which the editor's document counts as two code
     units and the package as one code point. `  - - 1` typed after
     `c^(1-ρ)/(1-ρ)` is refused at line 8, column 32 in code points; the
-    editor underlines `- 1` on line 8 at that column, the panel's refusal
-    names `cons.bl:8:32` and the status line reads one refusal and the
-    state `not parsed` (implementation review of stage A, correction 2)."""
+    record ends at column 35, where the refused text `- 1` ends, though the
+    parser's token runs on over the spaces and the annotation that follow
+    it (Model Interface 0.9 §3); the editor underlines `- 1` on line 8 at
+    that column, the panel's refusal names `cons.bl:8:32` and the status
+    line reads one refusal and the state `not parsed` (implementation
+    review of stage A, correction 2)."""
     lines = original.split("\n")
     refused_line = lines[7].replace("c^(1-ρ)/(1-ρ)", "c^(1-ρ)/(1-ρ)  - - 1", 1)
     refused_text = edited(original, 8, refused_line)
     (diagnostic,) = model.elaborate_buffer(refused_text, CONS).diagnostics
     assert (diagnostic.line, diagnostic.column, diagnostic.rule) == (8, 32, "syntax")
+    assert (diagnostic.end_line, diagnostic.end_column) == (8, 35)
     tail = "         :: [id=util]"
     assert lines[7].endswith(tail)
 
@@ -1277,7 +1281,7 @@ def test_b_the_folder_opens_on_its_trellis_and_a_trellis_file_shows_its_own(
         ), line
         # no field unjoined outside the earliest period, the two ends not
         # counted (unit L, Task 21)
-        assert " · 6 periods, 18 occurrences · 0 unjoined fields" in line
+        assert " · 6 periods, 18 occurrences · 0 unjoined internal entry fields" in line
         held = tab.evaluate(HELD_COLLECTION_JS)
         assert as_json(held["graphs"]) == as_json(expected.collection["graphs"])
     finally:
@@ -1474,14 +1478,13 @@ def test_b_item_1_a_methods_file_chosen_for_an_occurrence_binds_it_and_keeps_the
     its Recipe tab (unit M, Task 10; design pass 9 §§2 to 4; the rail's
     `Recipe` having left with the rail, unit N, Task 1), where the
     methods select of `cons`, its row opened by a click (design pass 11
-    §2), holds the slot `$cons_method`; choosing `cons`,
-    the file `declaration/methods/cons.yml`, rewrites that entry of the
-    recipe's text alone, as `methods/cons`, its path from the recipe's
-    folder, its comments and the other entries kept, the stage files
-    untouched, and the recipe saved writes it; with `cons.bl` open again,
-    the stage's view
-    then shows `!egm` on the policy's Evaluation and `!Linear` on the
-    continuation's, and the trellis holds the same `method` rows at every
+    §2), holds the addition `methods.bl`; choosing the replacing selection
+    `methods.vfi.bl` rewrites that entry of the recipe's text alone, as
+    `stages/cons/methods.vfi.bl`, its path from the recipe's folder, its
+    comments and the other entries kept, the stage files untouched, and the
+    recipe saved writes it; with `cons.bl` open again, the stage's view
+    then shows `!vfi` on the decision value builder and `!Linear` on its
+    Evaluation, and the trellis holds the same `method` row at every
     consumption occurrence; `declaration/stages/disc/disc.bl` opened as
     `periods[1] / disc` and as `periods[0] / disc` shows the discount
     factor of each, 0.96 and 0.9."""
@@ -1543,6 +1546,10 @@ def test_b_item_1_a_methods_file_chosen_for_an_occurrence_binds_it_and_keeps_the
             select_node(tab, node_id, "backward")
             return dict(tab.evaluate(ATTRIBUTE_ROWS_JS)).get(key)
 
+        def panel_text(node_id):
+            select_node(tab, node_id, "backward")
+            return tab.locator(".bl-panel").text_content()
+
         open_occurrence("periods[1]/cons", CONS)
         tab.click(f'.bl-tab[data-path="{RECIPE_FILE}"]')
         wait_until(lambda: open_path_shown(tab) == RECIPE_FILE, 30.0, "the recipe open")
@@ -1550,9 +1557,9 @@ def test_b_item_1_a_methods_file_chosen_for_an_occurrence_binds_it_and_keeps_the
         entry = '.bl-recipe-entry[data-address="stages.cons.methods.all[0]"]'
         chosen = f"{entry} vscode-option[selected]"
         tab.wait_for_selector(chosen, state="attached", timeout=30_000)
-        assert tab.locator(chosen).text_content().strip() == "$cons_method"
-        choose_option(tab, entry, "cons")
-        rewritten = recipe_text.replace("$cons_method", "methods/cons")
+        assert tab.locator(chosen).text_content().strip() == "methods.bl"
+        choose_option(tab, entry, "methods.vfi.bl")
+        rewritten = recipe_text.replace("stages/cons/methods.bl", "stages/cons/methods.vfi.bl")
         wait_until(lambda: tab.evaluate(DOCUMENT_JS) == rewritten, 15.0, "the text rewritten")
         tab.click(".bl-save")
         wait_until(
@@ -1569,10 +1576,12 @@ def test_b_item_1_a_methods_file_chosen_for_an_occurrence_binds_it_and_keeps_the
         wait_until(
             lambda: " · methods " in status_text(tab), 90.0, "the stage bound with its methods"
         )
+        # the builder's card prints its method in the section `Method`, and
+        # Details then prints no row `method` (SE-9)
         wait_until(
-            lambda: row("policy:Evaluation", "method") == "!egm",
+            lambda: "!vfi" in panel_text("cntn_to_dcsn___group___"),
             30.0,
-            "!egm on the policy's Evaluation",
+            "!vfi on the decision value builder",
         )
         wait_until(
             lambda: row("cntn_to_dcsn:Evaluation", "method") == "!Linear", 30.0, "!Linear"
@@ -1581,15 +1590,14 @@ def test_b_item_1_a_methods_file_chosen_for_an_occurrence_binds_it_and_keeps_the
         whole = trellis.show_trellis(folder, recipe.Source("recipe", RECIPE_FILE)).shown
         own = model.collection(
             model.elaborate_buffer(stage_texts["cons"], "cons.bl").stage.methodize(
-                str(scratch_lifecycle / "declaration/methods/cons.yml")
+                str(scratch_lifecycle / "declaration/stages/cons/methods.vfi.bl")
             )
         )
+        node_id = "cntn_to_dcsn:Evaluation"
         for h in range(3):
-            for node_id in ("policy:Evaluation", "cntn_to_dcsn:Evaluation"):
-                held = model.node_attributes(
-                    whole.collection, "backward", f"periods[{h}]/cons/{node_id}"
-                )
-                assert held["method"] == model.node_attributes(own, "backward", node_id)["method"]
+            address = f"periods[{h}]/cons/{node_id}"
+            held = model.node_attributes(whole.collection, "backward", address)
+            assert held["method"] == model.node_attributes(own, "backward", node_id)["method"]
         for address, value in (("periods[1]/disc", "0.96"), ("periods[0]/disc", "0.9")):
             open_occurrence(address, DISC)
             wait_until(
@@ -1728,11 +1736,11 @@ def test_b_item_3_the_marked_entries_no_slot_and_a_connector_that_names_no_field
     """B item 3 (§4; §2.2 rule 2), with unit K's decisions K-D28 and K-D29:
     the lifecycle registry's empty connector, which its answers mark
     required, is the one entry to check of the checklist, apart from the
-    refusals; its slot `$cons_method`, which its answers also list, is no
+    refusals; its slot `$disc_settings`, which its answers also list, is no
     entry: the status line and the tree count nothing, the slot stands in
-    its select in the Recipe tab (unit M, Task 10), cons's row opened by a
+    its select in the Recipe tab (unit M, Task 10), disc's row opened by a
     click (design pass 11 §2), with no refusal's mark, and the slots'
-    keywords are `cons_method`. A copy of the pension model
+    keywords are `disc_settings`. A copy of the pension model
     whose terminal period's connector names a field no stage declares opens on
     the factory's refusal, and `open at the address` opens
     `declaration/trellis.yml` at line 17, that connector."""
@@ -1748,14 +1756,14 @@ def test_b_item_3_the_marked_entries_no_slot_and_a_connector_that_names_no_field
         )
         assert "to fill" not in tab.locator(".bl-status-line").text_content()
         assert "to fill" not in tab.locator(".bl-tree").text_content()
-        open_recipe_row(tab, "cons")
-        slot = '.bl-recipe-entry[data-address="stages.cons.methods.all[0]"]'
-        assert tab.locator(f"{slot} vscode-option[selected]").text_content() == "$cons_method"
+        open_recipe_row(tab, "disc")
+        slot = '.bl-recipe-entry[data-address="stages.disc.settings.all[0]"]'
+        assert tab.locator(f"{slot} vscode-option[selected]").text_content() == "$disc_settings"
         assert tab.locator(f"{slot} .bl-refusal-mark").count() == 0
         assert not [
             entry for entry in tab.evaluate(ORANGE_ELEMENTS_JS) if "bl-recipe-entry" in entry
         ]
-        assert slot_keywords(tab) == ["cons_method"]
+        assert slot_keywords(tab) == ["disc_settings"]
     finally:
         context.close()
     context, tab = new_tab(browser)
@@ -2268,19 +2276,23 @@ def test_g_a_refused_graph_draws_its_one_node_in_the_refusal_orange(
 def test_amd_mi_001_item_5_the_legend_lists_what_the_graph_holds_and_the_selection_ring_is_ultramarine_light(
     browser, server
 ):
-    """AMD-MI-001 item 5: in the Workbench on `cons.bl` with its methods,
+    """AMD-MI-001 item 5: in the Workbench on `cons.bl` with its addition,
     bound as `periods[0] / cons` by the model folder's recipe,
     `declaration/spec.yml`, with its calibration, settings and methods, the
     legend of `backward` is titled `cons calibrated methodized configured`
-    and holds the three levels the graph draws, each with its swatch,
-    `!egm  policy:Evaluation`, `!Linear  cntn_to_dcsn:Evaluation` and the
-    three marks, and no other tag; the perches appear with `perch
-    overlays`, each by its name and colored by its custom property; the
-    levels and the perches in sentence case (design pass 13 §3; C12);
-    the legend of `backward initial diagram` lists `value  V≻, V, V≺`;
-    and a selected box has the ring of `--bl-graph-ring`, as specification
-    §§2.1 and 5.3 prescribe. A transparent period swatch in the trellis
-    shows its navy background at the center."""
+    and, with the operative builders shown, holds the three levels the
+    graph draws, each with its swatch, the two methods the addition types
+    at their places, `!Linear  cntn_to_dcsn:Evaluation` and `!egm  policy`,
+    the block whose builder the solution method opens (specification 0.7
+    §4, D8; S7-W8), and the three marks, and no other tag; the declared
+    builders, the stage file elaborated alone, list no method (S7-U7). The
+    perches appear with `perch overlays`, each by its name and colored by
+    its custom property; the levels and the perches in sentence case
+    (design pass 13 §3; C12); the legend of `backward initial diagram`
+    lists `value  V≻, V, V≺`; and a selected box has the ring of
+    `--bl-graph-ring`, as specification §§2.1 and 5.3 prescribe. A
+    transparent period swatch in the trellis shows its navy background at
+    the center."""
     context, tab = new_tab(browser)
     try:
         open_file(tab, server, CONS)
@@ -2291,6 +2303,15 @@ def test_amd_mi_001_item_5_the_legend_lists_what_the_graph_holds_and_the_selecti
             == ["cons calibrated, methodized, configured"],
             30.0,
             "the legend of cons with its methods",
+        )
+        # the declared builders list no method; the layers button shows the
+        # operative builders, which list the two the addition types
+        assert list(dict(tab.evaluate(LEGEND_GROUPS_JS))) == ["levels", "marks"]
+        tab.click(".bl-layers-button")
+        wait_until(
+            lambda: "methods" in dict(tab.evaluate(LEGEND_GROUPS_JS)),
+            30.0,
+            "the methods in the legend of the operative builders",
         )
         groups = dict(tab.evaluate(LEGEND_GROUPS_JS))
         assert list(groups) == ["levels", "methods", "marks"]
@@ -2319,7 +2340,7 @@ def test_amd_mi_001_item_5_the_legend_lists_what_the_graph_holds_and_the_selecti
         assert tab.locator(".bl-legend-swatch[style]").count() == 0
         assert sorted(text for text, _, _ in groups["methods"]) == [
             "!Linear  cntn_to_dcsn:Evaluation",
-            "!egm  policy:Evaluation",
+            "!egm  policy",
         ]
         assert [text for text, _, _ in groups["marks"]] == ["· !tag", "at 𝑐", "𝑔≺, 𝑔≻"]
         # the tags the legend's whole text holds: the two methods' and the
@@ -3595,7 +3616,7 @@ def test_comp_problems_are_one_keyboard_control_with_source_navigation(browser, 
         assert tab.locator(".bl-error-mark").count() == 1
         assert tab.locator(".bl-folder .bl-checklist").count() == 0
         label = button.get_attribute("aria-label")
-        assert "errors" in label
+        assert ("1 error" if invalid else "0 errors") in label
         assert ("bl-has-errors" in button.get_attribute("class")) == invalid
         if not invalid:
             assert "0 errors" in label and "to review" in label
@@ -3622,5 +3643,107 @@ def test_comp_problems_are_one_keyboard_control_with_source_navigation(browser, 
         tab.keyboard.press("Enter")
         wait_until(lambda: open_path_shown(tab) == "period.yml", 30.0, "the problem source")
         assert {file.name: file.read_bytes() for file in path.iterdir() if file.is_file()} == before
+    finally:
+        context.close()
+
+
+def test_status_categorizes_a_connector_error_with_successful_bindings(
+    browser, server_on, scratch_lifecycle
+):
+    """An invalid connection must be visible even when the recipe binds."""
+    from workbench_support import open_tree_file, replace_in_editor
+
+    period = scratch_lifecycle / PERIOD_FILE
+    period.write_text(period.read_text().replace("- {}", "- {m_next: m}"))
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(scratch_lifecycle), RECIPE_FILE, minimum=10)
+        open_tree_file(tab, PERIOD_FILE)
+        replace_in_editor(tab, "m_next: m", "m_next: typo")
+        wait_until(
+            lambda: any("typo" in sentence for sentence, *_ in error_lines(tab)),
+            30.0, "the connector error",
+        )
+        assert "calibrated" in status_text(tab)
+        button = tab.locator(".bl-error-mark")
+        assert "Connection error" in button.inner_text()
+        assert "unjoined internal entry field" in status_text(tab)
+        button.click()
+        source = tab.locator(f'.bl-error-place[data-path="{PERIOD_FILE}"]').first
+        line = int(source.get_attribute("data-line"))
+        source.click()
+        wait_until(lambda: active_line(tab) == line, 10.0, "the connector source line")
+        replace_in_editor(tab, "m_next: typo", "m_next: m")
+        # the connector error leaves the list; the registry's route port → cons
+        # stands under `Connections to check` before and after, since the
+        # connector `{m_next: m}` supplies no arrival coordinate `l`
+        wait_until(
+            lambda: not any("typo" in sentence for sentence, *_ in error_lines(tab)),
+            30.0,
+            "the repaired connector",
+        )
+        assert "Connection error" not in button.inner_text()
+    finally:
+        context.close()
+
+
+def test_status_categorizes_partial_stage_binding(browser, server_on, tmp_path):
+    """A rejected calibration is visible even if the stage has bound methods and settings."""
+    from workbench_support import PORTFOLIO_CHOICE, open_tree_file
+
+    folder = repository_copy(PORTFOLIO_CHOICE, tmp_path / "portfolio-choice")
+    calibration = "declaration/calibration/portfolio.yml"
+    source_file = folder / calibration
+    source_file.write_text(source_file.read_text().replace("R: 1.02", "R: -1.0"))
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(folder), RECIPE_FILE, minimum=10)
+        open_tree_file(tab, PORT)
+        wait_until(lambda: status_settled_on(tab, PORT), 30.0, "the constructed stage")
+        wait_until(
+            lambda: any("parameter 'R'" in sentence for sentence, *_ in error_lines(tab)),
+            30.0, "the calibration error",
+        )
+        assert "constructed" in status_text(tab)
+        assert "partially bound" in status_text(tab)
+        button = tab.locator(".bl-error-mark")
+        assert "Binding error" in button.inner_text()
+        button.click()
+        source = tab.locator(f'.bl-error-place[data-path="{calibration}"]').first
+        source.click()
+        wait_until(lambda: open_path_shown(tab) == calibration, 10.0, "the calibration source")
+    finally:
+        context.close()
+
+
+def test_status_links_to_the_unjoined_retirement_branch(browser, server_on, tmp_path):
+    """An early branch with no successor is a source-linked review item."""
+    from workbench_support import RETIREMENT_CHOICE, open_tree_file, replace_in_editor
+
+    folder = repository_copy(RETIREMENT_CHOICE, tmp_path / "retirement-choice")
+    trellis_file = folder / "declaration/trellis.yml"
+    trellis_file.write_text(trellis_file.read_text().replace("repeat: 19", "repeat: 1"))
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(folder), RECIPE_FILE, minimum=10)
+        open_tree_file(tab, PERIOD_FILE)
+        replace_in_editor(tab, "{a_r: a_ret}", "{}")
+        button = tab.locator(".bl-error-mark")
+        wait_until(
+            lambda: "Review connections" in button.inner_text(),
+            20.0, "the unjoined branch review",
+        )
+        button.click()
+        branch = tab.locator(".bl-error-line").filter(has_text="a_r")
+        assert "retire" in branch.inner_text()
+        assert "period 1" in branch.inner_text()
+        source = branch.locator('.bl-error-place[data-path$="ret_choice.bl"]')
+        assert source.get_attribute("data-line") == "11"
+        source.click()
+        wait_until(
+            lambda: open_path_shown(tab) == "declaration/stages/ret_choice/ret_choice.bl",
+            10.0, "the retirement branch declaration",
+        )
+        wait_until(lambda: active_line(tab) == 11, 10.0, "the retirement branch line")
     finally:
         context.close()

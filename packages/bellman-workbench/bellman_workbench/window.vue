@@ -26,7 +26,8 @@
 // their frame widths, in whole pixels. Below it, Matsya gives up width to its least width,
 // then the graph to its own; then the function folds the folder to its
 // rail, the text taking what is left over; then the text narrows to its
-// least width; below that the window scrolls sideways. A fold the function
+// least width. Below the split layout’s minimum width, the window shows
+// one work area across its width. A fold the function
 // makes is not kept. A click on the folder's button opens a folder the
 // function folded, until the window's size next changes, the text giving
 // up the width to its least width.
@@ -149,6 +150,8 @@
 //   fold_request      {region, n}: the fold of `region`, a region of
 //                     `folded`, asked by a command; `n` makes each request
 //                     new
+//   open_path         the open file, whose changes show Source in a narrow window
+//   work_area_request {pane, n}: a named work area to show in a narrow window
 //   contrast_request  a count, which Python raises to turn the
 //                     high-contrast setting on where it is off and off
 //                     where it is on
@@ -254,6 +257,7 @@ module.exports = {
     // with the column gap before it while the trellis view folds Matsya
     // (K-D6, K-D19); the drag under way
     this.sizes = {};
+    this.compactPane = "file";
     this.folds = this.noFolds();
     this.forced = false;
     this.opened = false;
@@ -273,6 +277,7 @@ module.exports = {
       ["pointercancel", (event) => this.endDrag(event)],
       ["dblclick", (event) => this.restore(event)],
       ["click", (event) => this.pressFold(event)],
+      ["click", (event) => this.pressCompact(event)],
       ["resize", () => this.resized()],
       ["keydown", (event) => this.step(event)],
       ["keydown", (event) => this.palette(event)],
@@ -296,17 +301,31 @@ module.exports = {
         attributeFilter: ["aria-pressed"],
       });
     }
+    const problems = frame?.querySelector(".bl-error-mark");
+    if (problems) {
+      this.problemsObserver = new MutationObserver(() => this.mirrorProblems(problems));
+      this.problemsObserver.observe(problems, { attributes: true, attributeFilter: ["aria-label"] });
+      this.mirrorProblems(problems);
+    }
     this.applyLayout();
     this.applyContrast();
   },
   unmounted() {
     for (const [type, listener] of this.listeners) window.removeEventListener(type, listener, true);
     this.viewObserver.disconnect();
+    this.problemsObserver?.disconnect();
     this.drag = null;
   },
   watch: {
     folder() {
+      this.compactPane = "file";
       this.applyLayout();
+    },
+    open_path() {
+      this.selectCompact("file");
+    },
+    work_area_request(request) {
+      if (request) this.selectCompact(request.pane);
     },
     fold_request(request) {
       if (request && request.region) this.fold(request.region);
@@ -442,13 +461,35 @@ module.exports = {
     // The fold of the folder that the function makes is held in `forced`,
     // the width of the Matsya the trellis view folds in `lent`; neither is
     // kept.
-    columns() {
+    columns(preferredPane = null) {
       const frame = this.frame();
       if (!frame) return;
       const { leasts, rail } = this.$options;
+      const columns = this.present(frame);
+      const pageWidth = document.documentElement.clientWidth;
+      const hasMatsya = columns.some(({ name }) => name === "matsya");
+      const splitGap = parseFloat(getComputedStyle(frame).getPropertyValue("--bl-column-gap"));
+      const minimumColumns = leasts.text + leasts.view + 2 * splitGap;
+      const matsyaWidth = hasMatsya ? leasts.matsya + splitGap : 0;
+      const requestedFolder = this.opened ? (this.sizes.folder || leasts.folder) : rail;
+      const splitWidth = Math.max(
+        900,
+        minimumColumns + rail + matsyaWidth,
+        minimumColumns + requestedFolder + (this.folds.matsya ? 0 : matsyaWidth)
+      );
+      if (pageWidth < splitWidth) {
+        frame.dataset.compactPane = this.compactPane;
+        this.selectCompact(preferredPane || this.compactPane);
+        this.applyFolds(frame, { ...this.folds, folder: false, matsya: false });
+        return;
+      }
+      if ("compactPane" in frame.dataset) {
+        delete frame.dataset.compactPane;
+        for (const { region } of columns) frame.querySelector(region).inert = false;
+      }
       // the columns that take width, of which a Matsya the reader folded is
       // none (K-D19)
-      const present = this.present(frame).filter(
+      const present = columns.filter(
         (column) => column.name !== "matsya" || !this.folds.matsya
       );
       const style = getComputedStyle(frame);
@@ -457,7 +498,7 @@ module.exports = {
       const gaps = gap * Math.max(0, present.length - 1);
       // the window's width, read from the document's root, since a
       // .bl-window wider than the window keeps the width of its columns
-      const available = document.documentElement.clientWidth - sides - gaps;
+      const available = pageWidth - sides - gaps;
       const frameWidths = this.frameWidths();
       const width = {};
       for (const { name } of present) {
@@ -519,6 +560,9 @@ module.exports = {
       const folded = { ...this.folds };
       folded.folder = this.folds.folder || forced;
       folded.matsya = this.folds.matsya || lent > 0;
+      this.applyFolds(frame, folded);
+    },
+    applyFolds(frame, folded) {
       for (const [region, state] of Object.entries(folded)) {
         frame.toggleAttribute(`data-folded-${region}`, state);
       }
@@ -529,6 +573,47 @@ module.exports = {
         if (region in folded) {
           button.setAttribute("aria-expanded", String(!folded[region] && !away(region)));
         }
+      }
+    },
+    selectCompact(name) {
+      const frame = this.frame();
+      if (!frame || !("compactPane" in frame.dataset)) return;
+      const columns = this.present(frame);
+      if (!columns.some((column) => column.name === name)) return;
+      const buttons = frame.querySelectorAll(".bl-compact-switch [data-pane]");
+      const selected = Array.from(buttons).find((button) => button.dataset.pane === name);
+      for (const button of buttons) {
+        button.setAttribute("aria-pressed", String(button === selected));
+      }
+      for (const column of columns) {
+        const pane = frame.querySelector(column.region);
+        const away = column.name !== name;
+        if (away && pane.contains(document.activeElement)) selected?.focus();
+        pane.inert = away;
+      }
+      frame.dataset.compactPane = this.compactPane = name;
+    },
+    mirrorProblems(problems) {
+      const shortcut = this.frame()?.querySelector("[data-show-problems]");
+      const label = problems.getAttribute("aria-label");
+      if (!shortcut || !label) return;
+      shortcut.setAttribute("aria-label", `Show ${label[0].toLowerCase()}${label.slice(1)}`);
+      shortcut.dataset.problemCount = problems.querySelector(".bl-error-count")?.textContent || "";
+    },
+    pressCompact(event) {
+      const frame = this.frame();
+      const button = event.target instanceof Element
+        ? event.target.closest(".bl-compact-switch button")
+        : null;
+      if (!frame || !button || !frame.contains(button)) return;
+      if (button.hasAttribute("data-show-problems")) {
+        this.selectCompact("view");
+        const problems = frame.querySelector(".bl-error-mark");
+        if (!problems) return;
+        problems.focus();
+        if (problems.getAttribute("aria-expanded") !== "true") problems.click();
+      } else {
+        this.selectCompact(button.dataset.pane);
       }
     },
     // A change of the window's size ends the reader's opening of a folder
@@ -545,6 +630,11 @@ module.exports = {
     // fold it (K-D6).
     fold(region) {
       if (!(region in this.folds)) return;
+      const frame = this.frame();
+      if (frame && "compactPane" in frame.dataset && ["folder", "matsya"].includes(region)) {
+        this.selectCompact(this.compactPane === region ? "file" : region);
+        return;
+      }
       const shownFolded =
         this.folds[region] ||
         (region === "folder" && this.forced) ||
@@ -553,7 +643,8 @@ module.exports = {
       if (region === "folder") this.opened = shownFolded;
       else if (region === "matsya") this.matsyaOpened = shownFolded;
       this.keepLayout();
-      this.columns();
+      const preferred = shownFolded && ["folder", "matsya"].includes(region) ? region : null;
+      this.columns(preferred);
       if (!shownFolded) this.region_folded(region);
     },
     // A click on a fold button of the window, .bl-fold, folds or opens the
@@ -731,7 +822,7 @@ module.exports = {
     closeProblems(event) {
       if (event.key !== "Escape") return;
       const button = document.querySelector('.bl-error-mark[aria-expanded="true"]');
-      if (!button) return;
+      if (!button || button.closest("[inert]")) return;
       event.preventDefault();
       event.stopImmediatePropagation();
       button.click();
@@ -740,7 +831,9 @@ module.exports = {
     // A pointer action outside Problems closes its list without moving focus.
     outsideProblems(event) {
       const button = document.querySelector('.bl-error-mark[aria-expanded="true"]');
-      if (!button || event.composedPath().some(item => item.classList?.contains("bl-errors"))) return;
+      if (!button || event.composedPath().some(
+        (item) => item.classList?.contains("bl-errors") || item.hasAttribute?.("data-show-problems")
+      )) return;
       button.click();
     },
     // Escape in the Recipe tab's open row closes it before other panels

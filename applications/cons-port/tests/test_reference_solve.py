@@ -1,10 +1,11 @@
 """The solve of the two orders of applications/cons-port against its fixed reference.
 
-The folder's stage files, which write the maximization alone, and its block files are bound in the two
-reference configurations of the order of the period, `beginning_egm` (the share chosen first) and `end_returns`
-(consumption chosen first), on the reference's own settings and handlers (`declaration/trellis.reference-<name>.yml`), and solved by the
-application's tool, `applications/cons-port/code/cons_port_tool.py`, with the handler `cons-port:egm` beside the
-consumption stage's block and `cons-port:share_search_reference` beside the portfolio stage's (decision SD-28).
+The folder's stage files, which write the maximization alone, with the methods files added to them are bound in
+the two reference configurations of the order of the period, `beginning_egm` (the share chosen first) and
+`end_returns` (consumption chosen first), on the reference's own settings and handlers
+(`declaration/trellis.reference-<name>.yml`), and solved by the application's tool,
+`applications/cons-port/code/cons_port_tool.py`, with the handler `cons-port:egm` on the consumption stage's
+policy builder and `cons-port:share_search_reference` on the portfolio stage's (decision SD-28).
 
 The tolerance and the region are those of item 3 of
 `applications/cons-port/code/tests/test_cons_port_acceptance.py`, with its reason: every element of every array
@@ -99,7 +100,7 @@ def test_the_demonstration_reproduces_the_reference_to_1e_12(configuration, arch
     file, grid = CONFIGURATIONS[configuration]
     model = specified(file)
     cons = model["periods"][0]["stages"]["cons"]
-    assert "block cons_egm.bl" in str(cons.methods)
+    assert "!egm" in str(cons.methods)
     terminal = tool.terminal_value(cons, TERMINAL[grid])
     solutions = tool.solve_trellis(model, terminal)
     actual = tool.reference_arrays(configuration, solutions)

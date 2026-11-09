@@ -1,69 +1,69 @@
 {
  "applications/benhabib-2019/declaration/spec.yml": {
   "*": "8ac3d4bce7b1a9f5e2219f71fab1990701f8ce2340067ab848a8ceb7aa41f89f",
-  "benhabib_bellman": "730c387a9e3c2122c31b515099a635667d68f2fb12d21f32a73d10622a1b1859",
-  "bequest": "ccf6559edea0bc41f91c68bd1acd6124cbce737bdc314b858d9cb89c4a2813f0"
+  "benhabib_bellman": "5fd526ec8e81bce3eafc7401b177b4d709abb589322f4aa139c0930a4852ee36",
+  "bequest": "0f4a8e74a1406c17f1602f3f2dcbb4c972f86ef1488966878eff35edc6ac383a"
  },
  "applications/durables/declaration/spec.two-stages.yml": {
   "*": "9253d12cf3f0c5e0bd9690f598b9e93c47e196b3c808589b800a308d523caed8",
-  "adjuster_cons": "4206ddc821f2a1328711bfabda10ce114099c73ceb22129d0986f07d5b3f02e2",
-  "bequest": "bb5a00739b2e8960c6033a095e03350738dadf0d015c21a78cf3b39f91980d96",
-  "keeper_cons": "a0d704db094b576f2abf0c06d0f1f55d0fba5846ee2dd7a7ae0f08e75f5eb4b6"
+  "adjuster_cons": "48a2da2d95db62473586c41c1a984a79bd15d1abc7f73f0e85b9985248e83434",
+  "bequest": "2784fcc6523990c2add0de48f510ded02152d8f81fb116f381c46b1deba269af",
+  "keeper_cons": "2450325452a36e549814130235d7424d0b01ca85492342114278910700ebb692"
  },
  "applications/durables/declaration/spec.yml": {
   "*": "0277c854e7008e5d862a8f2eab81d6b56b8083a5457c95186ec3db8034289efc",
-  "adjuster_cons": "4206ddc821f2a1328711bfabda10ce114099c73ceb22129d0986f07d5b3f02e2",
-  "bequest": "bb5a00739b2e8960c6033a095e03350738dadf0d015c21a78cf3b39f91980d96",
-  "keeper_cons": "a0d704db094b576f2abf0c06d0f1f55d0fba5846ee2dd7a7ae0f08e75f5eb4b6",
-  "tenure": "1b173072368fbf908126096ea08128ee30dece5f66098c29a6659082b85e182d"
+  "adjuster_cons": "48a2da2d95db62473586c41c1a984a79bd15d1abc7f73f0e85b9985248e83434",
+  "bequest": "2784fcc6523990c2add0de48f510ded02152d8f81fb116f381c46b1deba269af",
+  "keeper_cons": "2450325452a36e549814130235d7424d0b01ca85492342114278910700ebb692",
+  "tenure": "892bd3ab5a342b08a7d3d63ce7f34be1978d3ea2168e08b6b786a99aa04f7867"
  },
  "applications/housing-frictions/declaration/spec.yml": {
   "*": "c535fdff71ba67efdcba0bdb2d36d64f4e79edefe8ae2af1babbd01cbd85536b",
-  "adjuster_saving": "7f73b920a8858757251ac1b9434c7d24a03f6ed6c70ab7fe77e496690aeb7e7c",
-  "house_choice": "a9b1cc5fdfc3bdfa1d293e2a33c72423b038a54915bc62e25eadbe1b9473a5fb",
-  "keeper_saving": "3d6cf99aa2420049304528d4bd5d23024dccde438cb5e19d3c81872fb49029ed",
-  "terminal": "cdd6c7b9cf7b502d8059197a28184b9121daac807e8172801c7fd0b7befc7592"
+  "adjuster_saving": "85022ebd7742a27c060b7a503aa9fd50badb9c6e11af26620ca26dce066995bf",
+  "house_choice": "ccfe57f1af025bef3e7ca7a276a3fc45bef1d9909a81aa4134734e168ad431f1",
+  "keeper_saving": "4838f635bf07387939c5188094c2af70eeb05ff58aff82c461a748cfe43ffc3b",
+  "terminal": "9e26fa9e4ad02df32447d63bc8f060b6d5b9105e5986f849b20492771172b0db"
  },
  "applications/pension-retirement/declaration/spec.yml": {
   "*": "b3a562fc4e32e328250ced13b56134b048a2432903fcd7e345124a2ec2669983",
-  "retire_choice": "48852f104ad494377b0095824f54f32f688ab62131264d8d2ba7c00f758acd33",
-  "retiree_saving": "cc26a22ac923f8db1fc7765d8b3c847f046b53cc0e280ccc68e69c563a97c75a",
-  "terminal": "83d0d714418d644e0c3f7a3a7acc970d86202a56dc7532d65df453644c04811f",
-  "worker_saving": "7de559e8d70e065ce835acf75573d111c43ef8891650b7facaf5fcb7c48e4653"
+  "retire_choice": "3c7bfb7712271064868171e3e69c186710fbd8f3f6926c4dfc43e7f7df5aeec2",
+  "retiree_saving": "b104a5bdac79eded2f1c7135dbaef0aa8097b072c093ad6d34b47d7e1e0cd9d1",
+  "terminal": "efbfc12f64f87efecc175ef77a810b98e6fc88aada31012fa00bf449b9b4e021",
+  "worker_saving": "2bb0695adb273edde5b3f729396b8aa836b7fb5be96ae7c01bb543fade925efd"
  },
  "applications/retirement-choice/declaration/spec.yml": {
   "*": "1fbacd40dd6600a01d275bd4e31b76eefe411f74eb7304b920c5f9a8bcedf8e6",
-  "bequest": "c3e02d88bf1f1301f4d1fb8a770d75cc570172b4139bca4d1fa0a04c12fb9bf1",
-  "ret_choice": "1a9ba776d01803c8bc8504e8865566ea33278d5a20f0a96e4766a0d2f0fc0002",
-  "retiree_cons": "2b600000236b212335b0ab006d8d1f583209021f0c6c52d6d83c5e7c19708408",
-  "worker_cons": "07a6652810628dda720dc64e0ec6e4ecf254ccd8542582b2a4b2f45f8bbea2c7"
+  "bequest": "64ab56fe122f6477e15418bccc7abf27eac35dd7f2300e0084521074171a2207",
+  "ret_choice": "a89aacc525d34cac9b8d915afee4f2ecafb7a8a52918540233abffdbe81a16c6",
+  "retiree_cons": "6748d6c0243888261b2a59d46ecc9740877157cf5314e51bcf42bba0d2ab57df",
+  "worker_cons": "54ffa0d1f3e5d90cbe5914032d275550bf6fae8bc7a98ccb6bf7f9192ee721ec"
  },
  "packages/bellman/tests/corpus/branching/examples/cagetti-denardi-2006/registry/spec.yml": {
   "*": "bdf79decd4a4c88c02528385810b78a94a4cfe69739b1383f95c124c378d2a0f",
-  "entrepreneur_ageing": "a853520c367443d906990a63af361a865815bcf01513e4a2795a5a86eccee18f",
-  "entrepreneur_death": "af2f0587e419bc66679e9e4823f41bad092e254241afd25e7a92e0e37a65b583",
-  "old_choice": "a120639a5f629e0a91b86b9eb5d1ad13ca4f50c5c3e73a141fec960edcb15c6a",
-  "old_entrepreneur": "8c8121d78861a0c8dfd0fcd8a6b99a35f5382c152856e2f77a3ca6b5d067436e",
-  "retiree": "6126a27bc823f520ebdab17928e9f5be6808ac7f9b3eb4afe92e640fcf9c81db",
-  "retiree_death": "aa5f1af5d699a68c6244015ae5e31ec2456066a3d4cfde22f7046ad09901a24a",
-  "terminal_old_entrepreneur": "e69d913b878a5f196fea18f585151c087c50c0259de2f9256f64167bff99e141",
-  "terminal_retiree": "e3c345ff50e2d6d2ae6ad943436f1864ef0f8cdd7b0ef08ec8ea9f5fe44fba0f",
-  "terminal_worker": "a81517729fd27315223b98608707385eb2657053da1fe15721b4911fc0617150",
-  "terminal_young_entrepreneur": "c18014a323206ed74eccf71e32c9e48c3d351dce534f34d387312cf6d7fd437b",
-  "worker": "2a98a0d5a219b24880ffec760e64812a095fade2b33a8f18ea6d9c3a83734be8",
-  "worker_ageing": "7559b9dce200100b9fea8561d373eaf83df8d6f23cc18840aa72500a2e4b7d8f",
-  "young_choice": "c22bbb6b21373e71a027a53b4d8820611697d8964f271ae4a9c10810dcec7c40",
-  "young_entrepreneur": "1a3c523f11f3ed8509d09fc3883a7a795de15056835e15c1d41a68d3ca7dab5c"
+  "entrepreneur_ageing": "a9fba682f89295e7ed1716e2c6159c81d2d2f8154c3d2e530336d276ce75fd8d",
+  "entrepreneur_death": "d2dff18237b4a1b62d2087ed88ef2aa7eb3be5b51415b295398b3bbfde27fcc2",
+  "old_choice": "bbf7ba6d93848311f98e347ee3ee5814f0c7279c72125833b73655d9024d4582",
+  "old_entrepreneur": "ef03f59e9c441902b87f3b2c0594189044bd04999ffcf2227b34869e72b5a370",
+  "retiree": "56bdfdc08e45cc86d11cc537ad618c529ba8bccb77a6de6fa8b171e88c1c906f",
+  "retiree_death": "e0cbc50d3f2563174b55c5b310398e56250ba122cb023475fa613d5513640183",
+  "terminal_old_entrepreneur": "5c5cdc668f04f595a20ef2cfa458b975f319afba784c8556ac4d32837d0da94f",
+  "terminal_retiree": "f121aa1a2015cbdaf2c0181f3e7d1fb46949dc0e14f6b1b9e216c13fa1accd52",
+  "terminal_worker": "45d71059753c6ebe49f11deb3069d5c73e2460b3429c26e8a6e60d2c1a510f4d",
+  "terminal_young_entrepreneur": "621439714f1743b27efc71d8eca8f8e6b27995a6bbd1abbe17710f21d7a35d60",
+  "worker": "c7a4855e118544119b36e1095746872062fc6e6299f2e426f0e5ce3f2dfaa67d",
+  "worker_ageing": "d8fa66c333d7d3088510cfaf33cad4a3d4131a9724b92733ffa9ccaae3097ea0",
+  "young_choice": "06c0fc1260c4ca9e74677df74aee921465ab213b554acef4558f05c20334b90a",
+  "young_entrepreneur": "cd26d34ea65385b63a0aaaeb8a8cf7049cd725068ea92d0d76daa1b4addd32b6"
  },
  "packages/bellman/tests/corpus/de-la-croix-pommeret-2021/spec.yml": {
   "*": "3d5c7ce6657a8a6858a752bafe0e4e803403cdcbbff7e0aec653e9402effbeda",
-  "attempt": "ec65dae8a76f0e411aaf3457ead209bc39c644fd2ba73ab2f2e7b7aafce0e40d",
-  "cons_childless": "3462602cd2722147775bc10f7180ebb9a5e2092d544f11adfa92a7db48b2a655",
-  "cons_mother": "270b333fb1705438a634df1cf7a35ad081fdc3527c5acbdd27541b52c9c1a449",
-  "cons_wait": "78016280e73685c587ad0f39558327159233a2f93ea9bdc8c08909856c9af828",
-  "fecundity": "0b27d012b3162b9b0b79bfa70eb09914b320d133c318bc73a54add83865126c6",
-  "terminal_childless": "477b42470119fb87a3721c14c260a1ade3b06a20d81698c10104a63c89463c58",
-  "terminal_mother": "e646b2a1d40a919c30fae39f26a55628987a74c9e510424fd98f4cda0a2d93d0",
-  "terminal_wait": "4d62ddefb10cd8a5065c934784857becd8e5169ce988f02f340966e1f0290c01"
+  "attempt": "0316088298c51e540202bf9d4a59401cff34974a8b98e5feda9218bb24241361",
+  "cons_childless": "c6b21ca85738006c718405cfcfdff1fe685eb4b1979183d4b1ca74b145925d6c",
+  "cons_mother": "a20c1b00a2850fcdcd44c6c121d50c6b7d5efb7baacd504c380534f547951f70",
+  "cons_wait": "12da6c553f61c4bdb33550e9a43ddc9c79db6350e0c950af76bbf1f16d7e28ab",
+  "fecundity": "c990fbb3064f1ea511ed621468cd351ecf7064e3635b696b2d1b431494a0df8f",
+  "terminal_childless": "9e6d3641e5a5e5fe83f70a3aca5de9692f825cc27e144cdf3a312c88560c7653",
+  "terminal_mother": "1d7f1c16a2748fb238a03197d83d98527260807dfe21cd46649432ae625fa65d",
+  "terminal_wait": "71328b4b899c9cc51c3ed7c153ceb732829b792b9d71c7796f5ac9fe81733e80"
  }
 }

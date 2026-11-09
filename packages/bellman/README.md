@@ -194,10 +194,12 @@ group:
   directions of an initial diagram; and `encoding`, the JSON document of a
   stage version;
 - **the binding**: `binding_verbs`, the three binding verbs; `method_table`,
-  the method table and the attachment of methods; `method_targets`, the places
-  a method attaches at; `calibration_requirements`, the check of parameter values against
-  their declared sets; and `sources`, the readers of a calibration, settings
-  or methods source and the one reader of a YAML file.
+  the catalogue of the methods; `places`, the places of a stage and the
+  components typed at them; `components`, the checks of the components
+  against the catalogue; `levels`, the two levels of a stage and the additions
+  a methods source names; `calibration_requirements`, the check of parameter
+  values against their declared sets; and `sources`, the readers of a
+  calibration or a settings source and the one reader of a YAML file.
 
 The interactive view of a stage in Google's Model Explorer reads these
 queries and the drawing's labels, but it stands in `factory`, as
@@ -282,7 +284,8 @@ counts the imports inside functions and classes, prints the cycles among the
 modules, and prints each import that reads a later folder or the root, reading
 the order of the folders from the table of §3, and prints each table entry
 that names no module or no defined name; with `--strict` any of the four fails
-it, and a test of `tests/test_behaviour.py` runs it with `--strict`. No module
+it. Run this source check explicitly with `--strict`; it is separate from
+tests of public behavior. No module
 reads another module's private name.
 
 The tables of `bellman.stage`, `bellman.period` and `bellman.trellis` (§1)
@@ -307,23 +310,29 @@ descriptions of the language's terms in the abstract syntax description
 language, and a change is made in the listing and the file generated again: `syntax/terms.py`
 from `dynspec_full.asdl` by `gen_types.py` beside this file, and the marked
 region of `typing/typed_expressions.py` that holds its generated constructors from
-`semantic.asdl` by `gen_semantic_types.py`. The tests are under `tests/`, in
-three layers: first, the recorded outputs under `tests/snapshot/`, which one
-test compares with what the package prints; second, the acceptance files,
-`tests/test_amd_fac_002.py`, `tests/test_elaborate_stage_binds.py`,
-`tests/test_simple_set_expressions.py` (five acceptance items) and those
-under `tests/cat/`, each holding one
-test for each acceptance item of the change it accepts, and each retired
-when a later change carries its claims, those that the recording cannot
-carry moving to the third layer; and third, the tests of the refusals, one
-for each rule, and of the behavior of the public operations.
-`tests/snapshot/corpus/` holds, one folder per application, the recordings
-of the stage files under `applications/`: the parsed terms and the encodings
-the corpus test `tests/sym/test_corpus.py` compares, and the encoding of the
-specified version of `portfolio-choice/cons.bl`, which
-`tests/test_behaviour.py` compares. `tests/snapshot/record.py --corpus`
-writes each of them again, except the parsed term
-`housing-owner/consumption_choice.bl.ast.json`, whose stem the corpus test
-lists as unparseable. `tests/tools/` holds the
+`semantic.asdl` by `gen_semantic_types.py`. The tests are under `tests/`.
+The recordings in `tests/snapshot/` retain complete views, source terms,
+encodings and printed cards. `tests/test_snapshot.py` compares the complete
+live values, including the recorded refusals of applications whose
+construction is not admitted. Acceptance files check the current changes;
+`tests/test_refusals.py` and `tests/test_behaviour.py` check diagnostics and
+public operations that a fixed recording cannot establish.
+
+Run every package test from the repository root with
+`python -m pytest packages/bellman/tests`. No marker is excluded by default;
+`-m sweep` selects corpus checks alone. The optional test dependency
+`pytest-xdist` permits parallel execution with `-n 4`.
+
+`tests/snapshot/record.py --corpus` writes the source-term and stage-encoding
+recordings under `tests/snapshot/corpus/`. After reviewing any changed
+encoding or schema, run `tests/snapshot/validate_encodings.py` to validate
+every recording against the schema and record their SHA-256 hashes.
+Tests require those exact hashes and full equality with each live encoding:
+together these establish schema validity without revalidating an unchanged
+JSON object. Tests of malformed encodings still exercise the validator.
+`tests/snapshot/record_cards.py` explicitly records the complete formatting
+corpus. Tests never rewrite their expected recordings.
+
+`tests/tools/` holds the
 printers of a parsed AST in ASDL notation and in HTML, which the tests of the
 applications import.

@@ -10,9 +10,10 @@ topic: [applications]
 > This page explains `ret_choice.bl`, the discrete-choice stage of the
 > retirement model, for readers new to Bellman-SYM, the language used for
 > `.bl` stage files. The code blocks quote the working copy,
-> `declaration/stages/ret_choice/ret_choice.bl`, and the block file that
-> holds its derivative line, `declaration/methods/marginals_ret_choice.bl`;
-> when those files change, these excerpts and their explanations must change
+> `declaration/stages/ret_choice/ret_choice.bl`, and the methods file beside
+> it, `declaration/stages/ret_choice/methods.bl`, which holds its derivative
+> line and its method; when those files change, these excerpts and their
+> explanations must change
 > with them. `economics.md` states the whole model, its
 > period and its calibration; `worker_cons.md` and `retiree_cons.md`
 > explain the two consumption stages.
@@ -160,28 +161,24 @@ value, the object the previous period takes as its continuation value.
 ## The derivative of the value
 
 The derivative of the choice value in assets is not written in the stage
-file. It stands in the block file
-`declaration/methods/marginals_ret_choice.bl`, as a **marginal block**, a
-block whose lines state derivatives of the value a backward block writes,
-which the methods file binds on the decision value block with
-`!marginals`:
+file. It stands in the methods file beside it,
+`declaration/stages/ret_choice/methods.bl`, an **addition** to the stage
+file: a `.bl` file that opens with `@methods:` and is read with the stage
+file, whose blocks name blocks of the stage by their ids and add their
+entries and their lines to them. Its block `cntn_to_dcsn` appends the
+derivative line to the decision value block:
 
 ```bl
-@methods: ret_choice
-# The derivative of the value of the discrete choice in assets, stated by the
-# marginal block of the decision value builder: the derivative of the branch
-# value the choice d selects; the cost of work, a constant, contributes nothing.
-
-[id=dcsn_marginal, (V_w[>], V_r[>], d) : !cntn -> (V) : !dcsn] {
+[id=cntn_to_dcsn] {
     D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]  :: [id=marginal]
 }
 ```
 
-The header joins the same perches as the decision value block, lists the
-two branch values and the control `d` at which the line is read, and
-writes the value `V` by name. The line selects the derivative in assets of
-the branch value the choice selects, in the order of the value equation;
-it carries no cost term, the cost being a constant. Where the two branch
+The block carries the builder's id and no signature, since it adds no
+coordinate; the line is read at the control `d`, as the value line is. It
+selects the derivative in assets of the branch value the choice selects, in
+the order of the value equation; it carries no cost term, the cost being a
+constant. Where the two branch
 values cross, the value function has a kink and no derivative, and the
 selected derivative is the one-sided derivative of the branch the
 tie-break chooses. Iskhakov, Jørgensen, Rust and Schjerning (2017, §2.1)
@@ -220,12 +217,13 @@ maximum and a numerical routine needs a stated tie-break rule.
 
 ## Numerical method
 
-`declaration/stages/ret_choice/methods.yml` attaches two methods: the maximum over
-the two branch values to the policy block, with the routine of the FUES
-retirement example that compares them as its handler, and `!marginals`,
-with the block file `marginals_ret_choice.bl`, to the decision value block,
-whose Evaluation records the derivative line as the stated derivative of
-the value in assets.
+The methods file `declaration/stages/ret_choice/methods.bl` types the policy
+builder with the method `!max`, the maximum over the two branch values, by
+the file-level entry `policy.method : !max`, and binds the routine of the
+FUES retirement example that compares them as its handler,
+`policy.handler : "fues-retirement:dcsn_mover"`; its block `cntn_to_dcsn`
+appends the derivative line, which the decision value builder's Evaluation
+records as the stated derivative of the value in assets.
 
 ## Elaboration
 

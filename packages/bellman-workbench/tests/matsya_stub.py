@@ -107,12 +107,13 @@ def _submit_prepared(path: str, delivery: str | None = None) -> int:
     ) or "target" not in prepared:
         print(f"Error: {path} names no session, reviewed entry or target.", file=sys.stderr)
         return 1
-    requests = Path(path).parent.parent / "requests"
+    requests = Path(os.environ.get("BELLMAN_WORKBENCH_MATSYA_STUB_REQUESTS",
+                                   str(Path(path).parent.parent / "requests")))
     _log(
         {
             "submitted": {
                 name: hashlib.sha256(text.encode("utf-8")).hexdigest()
-                for name, text in prepared["starting_declaration"].items()
+                for name, text in prepared.get("starting_declaration", {}).items()
             },
             "requests_before": sorted(p.name for p in requests.glob("*.json")),
         }
@@ -164,11 +165,14 @@ def _ask_without_waiting(session_id: str, delivery: str, question: str) -> int:
     held = state["deliveries"].get(delivery)
     if held is None:
         held = f"turn-{len(state['turns']) + 1}"
+        entries = state.setdefault("entries", {}).setdefault(session_id, [])
+        number = len(entries) + 1
+        entries.append({"number": number, "kind": "user", "text": question})
         state["turns"][held] = {
             "id": held,
             "session": session_id,
             "state": "queued",
-            "question": question,
+            "question": number,
             "configuration_id": CONFIGURATION,
         }
         state["deliveries"][delivery] = held
@@ -229,6 +233,17 @@ def _job_files(job_id: str, folder: str) -> int:
             print(f"Error: the connection closed after {name} was written", file=sys.stderr)
             return 1
     print(json.dumps(job, ensure_ascii=False))
+    return 0
+
+
+def _session_show(session_id: str) -> int:
+    state = _service()
+    print(json.dumps({
+        "id": session_id,
+        "entries": state.get("entries", {}).get(session_id, []),
+        "jobs": [job for job in state["jobs"].values() if job["session"] == session_id],
+        "turns": [turn["id"] for turn in state["turns"].values() if turn["session"] == session_id],
+    }))
     return 0
 
 
@@ -330,6 +345,8 @@ def main() -> int:
         return _job_status(arguments[2])
     if len(arguments) == 5 and arguments[:2] == ["job", "files"] and arguments[4] == "--json":
         return _job_files(arguments[2], arguments[3])
+    if len(arguments) == 4 and arguments[:2] == ["session", "show"] and arguments[3] == "--json":
+        return _session_show(arguments[2])
     if len(arguments) == 5 and arguments[:2] == ["session", "select"] and arguments[4] == "--json":
         return _select(arguments[2], arguments[3])
     if len(arguments) == 4 and arguments[:2] == ["project", "init"] and arguments[3] == "--json":

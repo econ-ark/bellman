@@ -9,7 +9,7 @@ view's element holds, its occurrences and the labels of its joins; at 9:00
 through B's panel, which names the selected box and holds the button
 `open at the block`, §2.4's button "block", and through the file, the line
 and the occurrence the page shows after the button. The page readers the
-screenshots wait on stand in `workbench_support.py`. The nine slots are
+screenshots wait on stand in `workbench_support.py`. The six slots are
 filled in the editor through CodeMirror's own search panel, which an
 economist may use as well as choose the files in B's table. The
 screenshots are written to the folder BELLMAN_WORKBENCH_SCREENSHOTS names,
@@ -97,13 +97,15 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
 ):
     """The demonstration's eight steps in one page, a screenshot at each:
     the folder written from three templates inside a test repository, its
-    nine slots counted and its first commit offered, not made; cons.bl's
+    six slots counted and its first commit offered, not made; cons.bl's
     backward graph and the counts of the object; the Evaluation box's
     kernel with the editor at the policy block's header; the refusal at
-    line 18, column 15, the line then restored; the nine slots filled in
-    spec 0.2 §11's order, cons, port and disc, the count falling from nine
-    to six, three and zero, and cons.bl bound with `!egm` on the policy's
-    Evaluation and `!Linear` on the continuation's; the connectors typed
+    line 18, column 15, the line then restored; the six slots filled in
+    spec 0.2 §11's order, cons, port and disc, the count falling from six
+    to four, two and zero, and cons.bl bound, the operative builders
+    showing `!Linear` on the continuation's Evaluation and `!egm` on the
+    policy builder, since the declared builders print no method row
+    (decision S7-U7); the connectors typed
     and the trellis of six periods drawn with the joins they make, the
     period periods[0] listing its three stages; the view exported, the
     folder's files committed alone and pushed, with git's sentence and the
@@ -145,7 +147,7 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
     try:
         # 0:00 new trellis inside the test repository, typed as the parent
         # folder (unit L, Task 13): six periods of port,
-        # cons and disc; the recipe open, the nine slots' keywords read from
+        # cons and disc; the recipe open, the six slots' keywords read from
         # its Recipe tab (unit M, Task 10) and none counted as a lack (unit
         # K, K-D29),
         # the first commit offered and not made. The commit form stands over
@@ -159,7 +161,7 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
         assert git(work, "rev-list", "--count", "HEAD").strip() == "1"
         tab.click(".bl-form-cancel")
         show_status(tab)
-        wait_until(lambda: len(slot_keywords(tab)) == 9, 30.0, "the nine slots' keywords")
+        wait_until(lambda: len(slot_keywords(tab)) == 6, 30.0, "the six slots' keywords")
         assert "to fill" not in status_text(tab)
         wait_until(lambda: view_laid_out(tab, "trellis", 0), 90.0, "the trellis laid out")
         shot(SHOTS[0])
@@ -200,14 +202,16 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
         replace_in_editor(tab, "a = m_d - - c", "a = m_d - c")
         wait_until(lambda: " · constructed · " in status_text(tab), 30.0, "the line restored")
 
-        # 4:30 the nine slots filled stage by stage in spec 0.2 §11's order,
+        # 4:30 the six slots filled stage by stage in spec 0.2 §11's order,
         # the recipe saved after each stage; the slots' keywords of its Recipe
-        # tab fall from nine to six, three and zero; cons.bl
-        # bound, `!Linear` on the continuation's Evaluation and `!egm` on
-        # the policy's, which stays selected for the screenshot
+        # tab fall from six to four, two and zero; cons.bl bound, and with
+        # the operative builders shown, since the declared builders print no
+        # method row (decision S7-U7), `!Linear` on the continuation's
+        # Evaluation and `!egm` on the policy builder, which stays selected
+        # for the screenshot
         open_text(RECIPE_FILE)
-        for key, left in (("cons", 6), ("port", 3), ("disc", 0)):
-            for kind in creation.KINDS:
+        for key, left in (("cons", 4), ("port", 2), ("disc", 0)):
+            for kind in creation.SLOT_KINDS:
                 slot = creation.slot_name(key, kind)
                 source = DEMO_FILLS[slot]
                 replace_in_editor(tab, f"[${slot}]", f"[{source}]" if source else "[]")
@@ -221,19 +225,25 @@ def test_item_5_the_demonstration_runs_in_headless_chrome(
             "cons.bl bound",
         )
         wait_until(lambda: view_laid_out(tab, "cons", since), 60.0, "the bound graph laid out")
-        for node_id, method in (
-            ("cntn_to_dcsn:Evaluation", "!Linear"),
-            ("policy:Evaluation", "!egm"),
-        ):
-            select_until(
-                tab,
-                node_id,
-                "backward",
-                lambda: node_id in panel_heads(tab)
-                and ["method", method] in tab.evaluate(ATTRIBUTE_ROWS_JS),
-                f"{method} on {node_id}",
-            )
+        tab.click(".bl-layers-button")
+        select_until(
+            tab,
+            "cntn_to_dcsn:Evaluation",
+            "backward",
+            lambda: "cntn_to_dcsn:Evaluation" in panel_heads(tab)
+            and ["method", "!Linear"] in tab.evaluate(ATTRIBUTE_ROWS_JS),
+            "!Linear on cntn_to_dcsn:Evaluation",
+        )
+        select_until(
+            tab,
+            "policy___group___",
+            "backward",
+            lambda: "!egm" in tab.locator(".bl-panel").text_content(),
+            "!egm on the policy builder",
+        )
         shot(SHOTS[4])
+        # the declared builders shown again for the steps that follow
+        tab.click(".bl-layers-button")
 
         # 6:00 the connectors typed in the period file and the trellis file
         # and saved; on a click of the trellis file the trellis of the

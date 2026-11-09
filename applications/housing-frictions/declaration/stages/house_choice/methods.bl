@@ -1,0 +1,40 @@
+@methods: house_choice
+# The methods of the choice of keeping or adjusting the house, an addition to
+# house_choice.bl: the discrete maximum over keeping and adjusting on the
+# policy builder; the deterministic transition of the branching decision
+# builder, whose body is the two labeled branches keep and adjust; the
+# derivatives of the decision value, each the derivative of the value of the
+# branch that d selects; and, on the arrival value builder, the expectation
+# over the two-point law of η as the probability-weighted sum of the two
+# values, at every occurrence of the operator in the block, the derivatives of
+# the arrival value with the factors of the laws of financial assets and
+# housing, and one linear representation of the arrival value and of its two
+# stated derivatives on the grid of the two arrival states. The grid is its
+# own typing entry, one factor per coordinate; the six settings it reads are
+# declared below with their sets and valued in settings/house_choice.yml.
+
+n_y_f : ℕ        :: ["number of points of the grid of financial assets"]
+y_f_min : ℝ₊     :: ["lower bound of the grid of financial assets"]
+y_f_max : ℝ₊     :: ["upper bound of the grid of financial assets"]
+n_y_h : ℕ        :: ["number of points of the grid of housing"]
+y_h_min : ℝ₊₊    :: ["lower bound of the grid of housing"]
+y_h_max : ℝ₊₊    :: ["upper bound of the grid of housing"]
+
+policy.method : !max
+
+dcsn_to_cntn.method : !deterministic
+
+# an adjuster's housing is sold at its value, so its derivative in housing is
+# the adjuster's derivative in total resources
+[id=cntn_to_dcsn] {
+    D_{m_f}V = (D_{w_kp}V_kp[>], D_{w_adj}V_adj[>])[d]  :: [id=marginal_financial]
+    D_{m_h}V = (D_{h_kp}V_kp[>], D_{w_adj}V_adj[>])[d]  :: [id=marginal_housing]
+}
+
+[id=dcsn_to_arvl
+    | E_η.method : !sum
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(y_f=(y_f_min, y_f_max, n_y_f), y_h=(y_h_min, y_h_max, n_y_h))] {
+    D_{y_f}V[<] = E_{η}((1 + r)*D_{m_f}V)               :: [id=marginal_financial]
+    D_{y_h}V[<] = E_{η}(D_{m_h}V)                       :: [id=marginal_housing]
+}

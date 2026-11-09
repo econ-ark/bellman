@@ -13,9 +13,9 @@ savings. The stage is equation (32) of Dobrescu and Shanker, §2.3, and its
 Euler equation is (37). It is the stage whose solution time the paper's
 Tables 3 and 4 report, because it is the stage the upper envelope works in.
 
-The code blocks below quote the stage file beside this page and the two
-block files its methods file binds, `declaration/methods/marginals_owner_cons.bl`
-and `declaration/methods/owner_cons_egm.bl`. Where a line carries a written
+The code blocks below quote the stage file beside this page and the methods
+file beside it, `methods.bl`, the addition that writes the stage's derivative
+line and the lines of the endogenous grid method. Where a line carries a written
 note, the quote shortens it to `...`.
 
 ## Perches
@@ -78,15 +78,20 @@ stage, which already holds the expectation over next period's income, so no
 expectation is written here. The housing size the aggregator reads is the
 decision-perch field `H_d`, the size chosen in the housing stage.
 
-The marginal block of `marginals_owner_cons.bl`, which the methods file
-binds on this builder with `!marginals`, states the envelope condition, the
-derivative of the optimized value with respect to cash at the chosen
-consumption; the conditions under which it is the derivative are the usual
-ones, which `stage.obligations()` lists under `marginal-reading`:
+The line the methods file appends to this builder's block `cntn_to_dcsn`, whose
+header types the representations of the value and of this derivative on the cash
+grid, states the envelope condition, the derivative of the optimized value with
+respect to cash at the chosen consumption; the conditions under which it is the
+derivative are the usual ones, which `stage.obligations()` lists under
+`marginal-reading`:
 
 ```bl
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
-    D_{w_d}V = 𝑑𝑢(c)                 :: [id=marginal]
+[id=cntn_to_dcsn
+    | evaluate[V].method : !Linear
+    | evaluate[V].grid : !Cartesian(w_d=(w_min, w_max, w_points))
+    | evaluate[D_{w_d}V].method : !Linear
+    | evaluate[D_{w_d}V].grid : !Cartesian(w_d=(w_min, w_max, w_points))] {
+    D_{w_d}V = 𝑑𝑢(c)                      :: [id=marginal]
 }
 ```
 
@@ -100,15 +105,46 @@ The policy block states the choice:
 
 The statement is the definition of the control: the maximizer of current
 utility and discounted continuation value over the feasible set. The methods
-file opens the policy builder with the endogenous grid method and the method
-block of `owner_cons_egm.bl`, whose three statements are one way of
-computing the control, not a second definition:
+file types the endogenous grid method on the policy builder, in the header of
+its block `policy`, and appends to that block three statements, which are one
+way of computing the control, not a second definition; with `!egm` in the method
+component they stand in place of the maximization at the operative level, and
+`stage.declared` keeps the maximization:
 
 ```bl
-[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(β*D_{a_nxt_o}V[>])                 :: [id=InvEuler]
-    w_d[>] = a_nxt_o + c[>]                            :: [id=endoggrid]
-    c      = c[>]                                      :: [id=cons_choice]
+[id=policy, policy.method : !egm(upper_envelope=upper_envelope,
+        c_max=c_max,
+        n_constraint_points=n_constraint_points,
+        n_constraint_points_nxt=n_constraint_points_nxt,
+        fues_m_bar=fues_m_bar,
+        fues_lb=fues_lb,
+        fues_include_intersections=fues_include_intersections,
+        fues_return_intersections_separately=fues_return_intersections_separately,
+        fues_single_intersection=fues_single_intersection,
+        fues_endog_mbar=fues_endog_mbar,
+        fues_padding_mbar=fues_padding_mbar,
+        fues_no_double_jumps=fues_no_double_jumps,
+        fues_disable_jump_checks=fues_disable_jump_checks,
+        fues_use_post_state_jump_test=fues_use_post_state_jump_test,
+        fues_left_turn_no_jump_strict=fues_left_turn_no_jump_strict,
+        fues_post_clean_double_jumps=fues_post_clean_double_jumps,
+        fues_detect_decreasing_policy=fues_detect_decreasing_policy,
+        fues_post_clean_passes=fues_post_clean_passes,
+        fues_jump_check_tol=fues_jump_check_tol,
+        fues_correct_jumps=fues_correct_jumps,
+        fues_min_segment_length=fues_min_segment_length,
+        fues_eps_d=fues_eps_d,
+        fues_eps_sep=fues_eps_sep,
+        fues_eps_fwd_back=fues_eps_fwd_back,
+        fues_parallel_guard=fues_parallel_guard,
+        tax_enabled=tax_enabled,
+        tax_c_lb_pct=tax_c_lb_pct,
+        tax_c_ub_pct=tax_c_ub_pct,
+        tax_n_points_per_node=tax_n_points_per_node)
+    | policy.grid : !Cartesian(a_nxt_o=(a_nxt_min, a_nxt_max, a_nxt_points))] {
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(β*D_{a_nxt_o}V[>])    :: [id=InvEuler]
+    w_d[>] = a_nxt_o + c[>]               :: [id=endoggrid]
+    c      = c[>]                         :: [id=cons_choice]
 }
 ```
 
@@ -144,14 +180,15 @@ applications/housing-renting/declaration/stages/owner_cons/owner_cons.bl: Elabor
 
 ## Numerical methods
 
-`declaration/stages/owner_cons/methods.yml` attaches the endogenous grid method, with the method
-block of `declaration/methods/owner_cons_egm.bl`, to the policy block, and binds the
-marginal block of `declaration/methods/marginals_owner_cons.bl` on the decision value
-builder; the method's settings name the savings grid, the upper envelope named in the settings, the
-candidate points at the borrowing limit and the candidate segments at the tax
-thresholds among its settings, and holds the decision value and its
-derivative on the cash grid by linear interpolation. The upper envelope is
-not a statement of the stage: comparing the candidates is part of realising
-the maximisation the first statement declares. The paper's reference
-solutions replace the whole entry by value function iteration on a dense
-grid, which the file records in a comment.
+`declaration/stages/owner_cons/methods.bl`, the addition beside the stage file, types the
+endogenous grid method on the policy builder, with the savings grid as its grid entry and, as
+keyword arguments valued by declared settings, the upper envelope routine, the candidate points
+at the borrowing limit and the candidate segments at the tax thresholds; it appends the method's
+three lines to the policy block and the envelope line to the decision value builder, and holds
+the decision value and its derivative on the cash grid by linear interpolation. The upper
+envelope is not a statement of the stage: comparing the candidates is part of realizing the
+maximization the first statement declares. The paper's reference solutions replace the whole
+selection by value function iteration on a dense grid, the second addition `methods.vfi.bl`,
+which a reader names in place of the first.
+
+The `fues_` settings preserve the individual FUES options, and the `tax_` settings preserve the four options for candidates at tax thresholds. The DCEGM and CONSAV selections have no additional options. Each option has its own declared set. This application supplies no numerical handler.

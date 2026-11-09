@@ -22,11 +22,11 @@ topic: [factory]
 > [!info]- Relationship with other documents
 > **Builds on** — [The Bellman factory](../../08-bellman-factory.md) §3: the registry and the recipe of the durables model; [Model directory layout](../../reference/model-directory-layout.md): the folders of a registry.
 > **Used by** — [The trellis factory](trellis-factory.md): the functions that elaborate and bind the syntactic trellis a recipe gives.
-> **See also** — [Stage functions](stage-factory.md) §3: the form of a methods entry.
+> **See also** — [Stage functions](stage-factory.md) §3: the additions `methodize` reads.
 
 ## 1 The smallest registry
 
-A registry with one stage, the discounting stage `disc.bl` of the portfolio application, needs eight files, which a model folder keeps in its subfolder `declaration/` ([Model directory layout](../../reference/model-directory-layout.md)). The stage file and its methods file stand in the stage's folder, `stages/disc/disc.bl` and `stages/disc/methods.yml`, the second holding `methods: [{on: cntn_to_dcsn}]`, an entry that recognizes the discounting builder without selecting a numerical routine; `calibration/main.yml` holds `calibration: {β: 0.96}` and `calibration/near_terminal.yml` holds `calibration: {β: 0.98}`; `settings/main.yml` holds `settings: {}`; the [period](../../../wiki/period.md) template `period.yml` and the trellis file `trellis.yml` are:
+A registry with one stage, the discounting stage `disc.bl` of the portfolio application, needs eight files, which a model folder keeps in its subfolder `declaration/` ([Model directory layout](../../reference/model-directory-layout.md)). The stage file and its methods file stand in the stage's folder, `stages/disc/disc.bl` and `stages/disc/methods.bl`, the second an addition that opens with `@methods: disc` and types the two forward builders, `arvl_to_dcsn.method : !deterministic` and `dcsn_to_cntn.method : !deterministic` ([Methodization](../../04-methodization.md)); `calibration/main.yml` holds `calibration: {β: 0.96}` and `calibration/near_terminal.yml` holds `calibration: {β: 0.98}`; `settings/main.yml` holds `settings: {}`; the [period](../../../wiki/period.md) template `period.yml` and the trellis file `trellis.yml` are:
 
 ```yaml
 !period
@@ -57,7 +57,7 @@ stages:
     settings:
       all: [settings/main]
     methods:
-      all: [stages/disc/methods]
+      all: [stages/disc/methods.bl]
 ```
 
 One call reads the registry, here the folder `declaration/` of a model folder `discounting/`, and binds the slot:
@@ -82,31 +82,29 @@ bellman.trellis.load_recipe(directory, recipe, **fills)
 
 ### 2.1 The recipe file
 
-The recipe is a mapping with three keys, and it names every file it reads by its path from its own folder, the registry directory. `trellis:` names the trellis file, `trellis: trellis.yml`, and is required. `stages:` maps each stage key to a mapping whose `stage`, required, names the stage file, `stage: stages/disc/disc.bl`; whose `calibration`, `settings` and `methods` blocks each hold an `all` list and any number of range lists keyed `"lo-hi"`; and whose optional `periods: [lo, hi]` restricts the stage to an interval of periods; a kind whose block is absent gets the empty mapping. `registry:` maps a kind to a list of sources whose names no stage declares. A source is named relative to the registry without its extension, `calibration/main`; a slot is a `$name`. No file is read in place of a path the recipe does not write: an entry that names no stage file is refused even where a file `stages/<key>/<key>.bl` stands in the registry.
+The recipe is a mapping with three keys, and it names every file it reads by its path from its own folder, the registry directory. `trellis:` names the trellis file, `trellis: trellis.yml`, and is required. `stages:` maps each stage key to a mapping whose `stage`, required, names the stage file, `stage: stages/disc/disc.bl`; whose `calibration`, `settings` and `methods` blocks each hold an `all` list and any number of range lists keyed `"lo-hi"`; and whose optional `periods: [lo, hi]` restricts the stage to an interval of periods; a kind whose block is absent gets the empty mapping. `registry:` maps a kind to a list of sources whose names no stage declares. A calibration or settings source is named relative to the registry without its extension, `calibration/main`, and an addition with it, `stages/disc/methods.bl`; a slot is a `$name`. No file is read in place of a path the recipe does not write: an entry that names no stage file is refused even where a file `stages/<key>/<key>.bl` stands in the registry.
 
 ### 2.2 The merge
 
-For a stage, a kind and a period, the list is the `all` list followed by the range list whose interval holds the period, if one does, and its entries are merged in that order:
+For a stage, a kind and a period, the list is the `all` list followed by the range list whose interval holds the period, if one does. The entries of a calibration or a settings list are merged in that order:
 
 | Values being merged | Rule |
 |---|---|
 | Mappings | Merge matching keys recursively and add new keys. |
-| Methods lists | Match entries by their `on` target; merge matching entries and append new targets. |
 | Scalars and ordinary lists | The later value replaces the earlier one. |
 
-A later source changes the entries it names and keeps the rest. A methods entry lacking `on` cannot be matched, and a list holding one replaces the earlier list whole. Methods use the [form of a methods entry](stage-factory.md#3-methodization), `on` required and `method`, `handler`, `block` and `settings` optional. The merge resolves data; it does not check that a method suits the equations it is attached to, which is the stage's own methodize verb's work.
+A later source changes the entries it names and keeps the rest. A methods list is not merged: the `.bl` additions it names are read in that order and unioned with the stage file when the occurrence is constructed, a component typed by two of them refused, so that the whole list is the stage occurrence's selection ([The Bellman factory](../../08-bellman-factory.md) §3.2). The merge resolves data; it does not check that a method suits the equations it is attached to, which is the elaboration's work.
 
 ### 2.3 Slots and fills
 
-A slot's position in its list is its precedence, a slot bound by no keyword contributes nothing, and the same slot may stand in the lists of several stages and kinds, where one fill is read wherever the slot stands. A slot name is a Python identifier other than `directory` and `recipe`. A fill takes one of three shapes:
+A slot's position in its list is its precedence, a slot bound by no keyword contributes nothing, and the same slot may stand in the lists of several stages and kinds, where one fill is read wherever the slot stands. A slot name is a Python identifier other than `directory` and `recipe`. A fill takes one of two shapes:
 
 | Shape | Example | Read as |
 |---|---|---|
 | Flat | `fill={"β": 0.95}` | read against the declarations of the stages that receive the slot; refused when it names both parameters and settings |
 | By kind | `fill={"calibration": {"β": 0.95}, "settings": {"n_a": 200}}` | split, each list taking the part of its kind |
-| Methods | `adjuster_method={"methods": [{"on": "policy", "method": "!egm"}]}` | a methods mapping, merged into the methods list by `on`, an entry of `!marginals` matched only by another of `!marginals` |
 
-A mapping whose every top-level key is one of `calibration`, `settings` and `methods` is read by kind; any other mapping is flat. For a calibration fill a stage declares its parameters; for a settings fill it declares the keys of the settings files its settings list names and the setting names its methods files reference, since a stage file declares no setting. A methods fill is a method choice, and a recipe gives each stage its own methods slot, because one slot named by two stages' lists would attach one stage's handler to the other. The record's provenance holds, for each slot of each list, an entry `{"slot": name, "bound": whether the keyword was given, "names": the fill's names the stage declares}`.
+A mapping whose every top-level key is one of `calibration` and `settings` is read by kind; any other mapping is flat. For a calibration fill a stage declares its parameters; for a settings fill it declares the keys of the settings files its settings list names and the settings its methods files declare, read as they apply at each period the stage occupies, since a stage file declares no setting. A methods list takes no slot and a fill no methods part, which is refused under `fill-names-nothing`: a change of methods is a replacing selection, another addition named in the stage's list. The record's provenance holds, for each slot of each list, an entry `{"slot": name, "bound": whether the keyword was given, "names": the fill's names the stage declares}`.
 
 ### 2.4 The registry block
 
@@ -114,15 +112,15 @@ A source named under `registry:` assigns names that no stage declares. They stan
 
 ### 2.5 Files and parents
 
-A source name resolves to the file spelled `.yml` or `.yaml`, and the file's kind is read from its top key, `calibration`, `settings` or `methods`, not from its name or extension. A file may name a `parent:` source, which is read first and merged as an earlier entry of the same list; a parent chain is limited to ten files and may not cycle. The keys `parent`, `description`, `version` and `__comment__` of a source file are not part of the mapping it contributes.
+A source name resolves to the file spelled `.yml` or `.yaml`, and the file's kind is read from its top key, `calibration` or `settings`, not from its name or extension; an addition in a methods list is read whole, as the elaboration reads it, and a YAML file there is refused under `recipe-source`. A file may name a `parent:` source, which is read first and merged as an earlier entry of the same list; a parent chain is limited to ten files and may not cycle. The keys `parent`, `description`, `version` and `__comment__` of a source file are not part of the mapping it contributes.
 
 ### 2.6 Refusals
 
-Each refusal is a `FactoryError` carrying its rule name. `recipe-shape`: the recipe has no `stages` key, or names no trellis file; a stage entry or a kind's block is not a mapping; a stage entry names no stage file; a kind's block has no `all` list; `periods:` is not a pair; a range is not written `lo-hi`; two ranges of one stage and kind overlap; a stage key is listed twice. `readable-file`: the path an entry writes under `stage:` names no file, or no `.bl` file, refused as `load_stage` refuses it, at the address `stages.<key>.stage`. `recipe-source`: a source name is written absolute or with `..`; a source file is not in the registry; a `parent:` is not a name, or its chain cycles or exceeds ten files. `recipe-slot-unknown`: a keyword names no slot. `recipe-template-agreement`: the recipe names a stage that no period of the trellis file holds, or a period holds a stage the recipe omits at a period it occupies, the stage and both files named. `slot-value-not-a-mapping`: a slot is given a string. `fill-names-nothing`: a fill key that no receiving stage declares and no `registry` block admits, the receiving stages and their declarations named. `fill-mixes-kinds`: a flat fill names both parameters and settings. `trellis-file-shape`: the trellis file has no `periods`, or a record has no `stage`.
+Each refusal is a `FactoryError` carrying its rule name. `recipe-shape`: the recipe has no `stages` key, or names no trellis file; a stage entry or a kind's block is not a mapping; a stage entry names no stage file; a kind's block has no `all` list; `periods:` is not a pair; a range is not written `lo-hi`; two ranges of one stage and kind overlap; a stage key is listed twice. `readable-file`: the path an entry writes under `stage:` names no file, or no `.bl` file, refused as `load_stage` refuses it, at the address `stages.<key>.stage`. `recipe-source`: a source name is written absolute or with `..`; a source file is not in the registry; a `parent:` is not a name, or its chain cycles or exceeds ten files. `recipe-slot-unknown`: a keyword names no slot. `recipe-template-agreement`: the recipe names a stage that no period of the trellis file holds, or a period holds a stage the recipe omits at a period it occupies, the stage and both files named. `slot-value-not-a-mapping`: a slot is given a string. `fill-names-nothing`: a fill key that no receiving stage declares and no `registry` block admits, the receiving stages and their declarations named; a fill with a methods part. `fill-mixes-kinds`: a flat fill names both parameters and settings. `trellis-file-shape`: the trellis file has no `periods`, or a record has no `stage`.
 
 ## 3 The syntactic trellis it returns
 
-The result is a dictionary and is read by key. Every adjustment to the model, a fill, a value that differs by period or a method choice, is made in it before elaboration and binding.
+The result is a dictionary and is read by key. Every adjustment to the model, a fill, a value that differs by period or a replacing selection, is made in it before elaboration and binding.
 
 | Access | Result |
 |---|---|

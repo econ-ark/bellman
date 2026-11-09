@@ -142,9 +142,9 @@ A connector names states. The value fields at a join are identified along the
 edge those states establish and not by their spelling, since a value name is
 local to its stage: the tenure stage's `V_kp[>]` is the decision value of
 `keeper_cons`, whose derivatives `D_{w_kp}V_kp[>]` and `D_{h_kp}V_kp[>]` the
-marginal block of `declaration/methods/marginals_tenure.bl` reads, and its
-`V_adj[>]` that of `adjuster_cons`, whose derivative `D_{w_adj}V_adj[>]` it
-reads, because the keep branch ends where the first stage begins and the adjust
+derivative lines of `declaration/stages/tenure/methods.bl` read, and its
+`V_adj[>]` that of `adjuster_cons`, whose derivative `D_{w_adj}V_adj[>]` they
+read, because the keep branch ends where the first stage begins and the adjust
 branch where the second does.
 
 The index of `periods[h]` counts periods before terminal, so `periods[0]` is the
@@ -154,9 +154,8 @@ stage, `declaration/stages/bequest/bequest.bl`, active in the terminal period al
 `a_bq`, `h_bq` and `z_bq`, the savings, the housing stock and the income state
 the two consumption stages continue to, reads a continuation value of zero, and
 writes the value of the wealth left after the last decision; its methods file,
-`declaration/stages/bequest/methods.yml`, which the recipes name, binds the
-marginal blocks of `declaration/methods/marginals_bequest.bl` that state the
-value's derivatives. `trellis.yml` writes the terminal period out, the three stages of
+`declaration/stages/bequest/methods.bl`, an addition to the stage file that the
+recipes name, writes the derivative lines of its two value builders. `trellis.yml` writes the terminal period out, the three stages of
 `period.yml` and the bequest, with two connectors: the first from both
 consumption stages to the bequest's arrival fields,
 `{a_nxt_kp: a_bq, h_nxt_kp: h_bq, z_nxt_kp: z_bq, a_nxt_adj: a_bq, h_nxt_adj: h_bq, z_nxt_adj: z_bq}`,
@@ -225,21 +224,20 @@ writes.
    autoregression with a standard normal innovation. The finite Markov chain the
    code integrates against, the number of its states, the width it spans and the
    floor on its transition probabilities are numerical choices, and they are in
-   `declaration/stages/tenure/methods.yml` and `declaration/settings/durables.yml`.
+   `declaration/stages/tenure/methods.bl` and `declaration/settings/durables.yml`.
 4. **The rule at a tie** between keeping and adjusting, which the code fixes at
    adjusting. A tie leaves the choice undetermined in the model, so the rule is a
    setting of the selection method.
 
 ## Numerical methods
 
-`declaration/stages/keeper_cons/methods.yml`, `declaration/stages/adjuster_cons/methods.yml` and
-`declaration/stages/tenure/methods.yml` name the routines of the replication code and the
-settings they read, and `declaration/settings/durables.yml` supplies the values. They
-also bind the block files of `declaration/methods/`: the method blocks of
-`keeper_cons_egm.bl` and `adjuster_cons_egm.bl`, which hold the endogenous grid
-lines of the two consumption stages, whose stage files state the maximizations
-alone, and the marginal blocks of the files `marginals_<stage>.bl`, which hold
-the derivative lines of the value builders. In outline: the keeper inverts the Euler
+`declaration/stages/keeper_cons/methods.bl`, `declaration/stages/adjuster_cons/methods.bl` and
+`declaration/stages/tenure/methods.bl`, the methods files beside the stage files, are additions
+to them: each types the routines of the replication code at the places of the stage, with the
+settings they read as keyword arguments and declares those settings with their sets, and
+`declaration/settings/durables.yml` supplies the values. The two consumption stages' files also
+write the endogenous grid lines on the policy builder, whose stage files state the maximizations
+alone, and every file writes the derivative lines of its value builders. In outline: the keeper inverts the Euler
 equation on a grid of savings for each income state and housing point, adds the
 constrained segment at the lowest saving, and selects among candidates by value
 with the fast upper envelope scan; the adjuster follows Box 2 of the paper, with
@@ -248,8 +246,11 @@ point of a grid of new housing, the point at the borrowing limit, the endogenous
 grid of total wealth, and the same envelope scan over the pooled candidates; the
 tenure stage compares the two branch values, reads the consumption stages'
 decision functions by interpolation, and integrates over income with Tauchen's
-chain. The nested alternative the paper benchmarks against, which maximises over
-new housing by a sectioned golden-section search, replaces the adjuster's entry.
+chain. The nested alternative the paper benchmarks against, which maximizes over
+new housing by a sectioned golden-section search, is a second addition of the
+adjuster, `declaration/stages/adjuster_cons/methods.adjuster_method.bl`, which no
+recipe of the folder names; a recipe that wants it names it after the first in
+the stage's methods list.
 
 Two conventions of the code differ from the stage files without changing the
 model. The code multiplies the marginal values by the discount factor in the
@@ -263,10 +264,10 @@ rate, which the stage files admit.
 ## Elaboration
 
 `keeper_cons.bl` and `adjuster_cons.bl` construct their three views and reach
-the specified version with `declaration/calibration/durables.yml`, their methods files in
-their stage folders and `declaration/settings/durables.yml` attached; `bequest.bl` constructs,
-calibrates from the same calibration file and binds the marginal blocks its methods
-file names. `tenure.bl` constructs as a
+the specified version with `declaration/calibration/durables.yml`, the additions
+`methods.bl` in their stage folders and `declaration/settings/durables.yml` bound;
+`bequest.bl` constructs, calibrates from the same calibration file and takes the
+derivative lines its addition writes. `tenure.bl` constructs as a
 branching stage, and a period listing it elaborates. Loading the four files
 with the present package prints:
 

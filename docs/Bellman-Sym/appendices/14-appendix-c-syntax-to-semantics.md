@@ -832,7 +832,7 @@ the choice of level is the methods file's, and it does not change what the
 block denotes. Every mathematical operation remains present at its appropriate detail,
 including within an unmarked equation. Only `!node` creates a separately
 authored node; a method's convenience does not create a
-new authored equation or target.
+new authored equation or place.
 
 **The result of an occurrence.** An occurrence of an operation inside an
 unmarked equation, `E_{η}(v(g(x, c, η)))` in the line
@@ -929,9 +929,10 @@ the derivative is single-valued almost everywhere and set-valued at a kink,
 as a value with a discrete choice downstream is at its switching points;
 differentiability at the point a line reads is a condition the rules
 record, not a type. A derivative line (§2.2), `D_{w}V = 𝑑𝑢(c)` in the
-value builder's block of the stage file, or the same line in a marginal
-block the methods file binds on that builder, states the derivative of the
-value the builder writes, in the state coordinate of the perch at which
+value builder's block of the stage file, or the same line in the block of
+the methods file that names the builder's block by its id,
+`[id=cntn_to_dcsn]`, states the derivative of the value the builder
+writes, in the state coordinate of the perch at which
 that value stands. It is the author's assertion about that value, an
 identity that holds under the envelope conditions, and not the definition
 of a new field; it proves nothing. Under an envelope theorem's hypotheses,
@@ -954,17 +955,18 @@ constraints need their own derivative line. No term and no role supplies a
 formula that is absent from the written lines: nothing is differentiated,
 and the only analytic source of a derivative is a line the author writes.
 
-**A method block on the policy builder.** A stage file may write its policy
-block with the maximization alone and leave the computation to a method
-block, which the methods file binds on the policy builder with `block:`
-([Methodization](../04-methodization.md) §4.1). The block's lines are read
-by these rules as the lines of a stage block are, with the stage's
-declarations in scope: for the endogenous grid method (Carroll 2006), the
-candidate lines of the endogenous-grid paragraph above, the candidate line
-carrying the clause of R10. Their operations are the **method rows** of the
-operative policy builder, `stage.builder`; the declared builder,
-`stage.declared`, and the initial diagram keep the maximization, which the
-builder's card prints under `Declared` as the line the rows are to reach.
+**The lines of a solution method on the policy builder.** A stage file may
+write its policy block with the maximization alone and leave the
+computation to its methods file, whose block `policy` types a solution
+method on the policy builder and brings the method's lines
+([Methodization](../04-methodization.md) §5). Those lines are read by these
+rules as the lines of a stage block are, with the stage's declarations in
+scope: for the endogenous grid method (Carroll 2006), the candidate lines
+of the endogenous-grid paragraph above, the candidate line carrying the
+clause of R10. Their operations are the **rows** of the operative policy
+builder, `stage.builder`; the declared builder, `stage.declared`, and the
+initial diagram keep the maximization, which the builder's card prints
+under `Declared` as the line whose policy the rows are to compute.
 The rows reach it only under a condition that the stage records and nothing
 checks, listed by `stage.obligations()` under the method table's name for
 it: for the endogenous grid method, `egm-eligibility`, that the continuation
@@ -975,26 +977,25 @@ $\varphi$ is strictly increasing from $\mathrm f(0)$ to infinity, and the
 policy is $\mathrm f \circ \varphi^{-1}$ at cash on hand of at least
 $\mathrm f(0)$ and the whole of cash on hand below it (§4.5).
 
-**Marginal blocks.** Where the stage file writes no derivative line, the
-author writes it in a marginal block of the block file, which the methods
-file binds on a backward value builder with `!marginals`. The block's lines
-are derivative lines of the value that builder writes, `D_{w}V = 𝑑𝑢(c)`,
-and its header is the builder's header restricted to what the lines read.
-Each line is recorded at the builder's Evaluation as a stated derivative,
-beside the method that represents the value; it adds no wire and no box,
-and the builder's signature is unchanged,
-$(\mathrm V_\succ) \mapsto (\mathrm V)$, whether the block is bound or not.
+**Derivative lines of the methods file.** Where the stage file writes no
+derivative line, the author writes it in the methods file, in a block that
+names the backward value builder's block by its id and carries no
+signature. The block's lines are derivative lines of the value that builder
+writes, `D_{w}V = 𝑑𝑢(c)`. Each line is recorded at the builder's Evaluation
+as a stated derivative, beside the method that represents the value; it
+adds no wire and no box, and the builder's signature is unchanged,
+$(\mathrm V_\succ) \mapsto (\mathrm V)$, whether the line is added or not.
 Nothing is differentiated: each line is a line the author wrote, and its
 reading as the derivative of the value the builder writes is the author's
 assertion, which `stage.obligations()` lists as `marginal-reading` and
 nothing checks. How the derivative of a value is evaluated is a property of
 the value, fixed where the value is built: by the stated line, whose values
 the representation at the builder's Evaluation stores, or by the
-representation of the value itself; the methods file names that
-representation at the Evaluation, `<block-id>.evaluate.value` or
-`<block-id>.evaluate.marginal`. A block that reads `D_{a}V[>]` declares that
-reading and nothing else; it knows only that the value it reads is a
-function. At a
+representation of the value itself; the methods file types that
+representation at the Evaluation, `cntn_to_dcsn.evaluate` for the value and
+its stated derivative together, or `cntn_to_dcsn.evaluate[D_{m}V]` for the
+derivative alone. A block that reads `D_{a}V[>]` declares that reading and
+nothing else; it knows only that the value it reads is a function. At a
 constrained choice the line is read at the policy, where the multiplier of
 the constraint is the residual of the first-order condition. For
 $Q(w,c)=\mathrm u(c)+\beta\,\mathrm v_\succ(w-c)$ with the bound
@@ -1121,7 +1122,7 @@ undetermined.
 builder, an Aggregation whose rule holds the relation with the system's
 unknowns on both sides, reached by one `solve` occurrence at its first
 statement that holds the system's unknowns, so that a method attached to the
-policy block addresses the system as one target. Its rule is the conjunction, over the system's statements, of each
+policy block addresses the system as one place. Its rule is the conjunction, over the system's statements, of each
 statement read at the decision state $x$: every function at the coordinates
 of its own perch, every continuation coordinate replaced by the matching
 component of the law of motion at $x$ and the policy,
@@ -1643,24 +1644,31 @@ y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))
 }
 ```
 
-Its methods file binds two block files, written in the same syntax: the
-marginal blocks of `marginals.bl` state the derivatives of the two values,
-and the method block `egm` of `cons_savings_iid_egm.bl` opens the policy
-builder with the endogenous grid method ([Methodization](../04-methodization.md) §4.1):
+Its methods file, `methods.bl` beside the stage file, writes three blocks
+named by the stage's block ids, in the same syntax: the block `policy`
+types the endogenous grid method on the policy builder, with its grid of
+savings, and brings the method's three lines, and the blocks
+`cntn_to_dcsn` and `dcsn_to_arvl` add the derivative lines of the two
+values ([Methodization](../04-methodization.md) §1):
 
 ```bl
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
-    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
-}
-
-[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
-    D_{b}V[<] = E_{y}(R * D_{w}V)   :: [id=marginal]
-}
-
-[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, method : !egm
+    | policy.grid : !Cartesian(a=(a_min, a_max, n_a))] {
     c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
     w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
+}
+```
+
+```bl
+[id=cntn_to_dcsn] {
+    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+```
+
+```bl
+[id=dcsn_to_arvl] {
+    D_{b}V[<] = E_{y}(R * D_{w}V)   :: [id=marginal]
 }
 ```
 
@@ -1673,16 +1681,17 @@ does not itself impose. The shock $y$ is listed on the arrival
 side as an argument of the transition, not as a coordinate of the arrival
 state, and is realized between arrival and decision. The value statement
 lowers to $Q(w, c) = \mathrm u(c) + \beta\,\mathrm v_\succ(w - c)$, the
-method block's candidate to $\mathrm f(a) = (\beta\,\mathrm{dv}_\succ(a))^{-1/\gamma}$,
+methods file's candidate to $\mathrm f(a) = (\beta\,\mathrm{dv}_\succ(a))^{-1/\gamma}$,
 and the implicit statement, written `c[~] = c[>]` with the optional mark
 of the decision perch, to the Euler equation
 $\mathrm{du}(c) = \beta\,\mathrm{dv}_\succ(w - c)$. The stage file's
 policy line, `c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[>])`, forms an operation
 of the kind `Argmax`, whose output is the set of maximizing policies (R7,
 R8); its binder supplies the feasible set $\Gamma(w)=(0,w]$ for the
-control's derived type. The method block's three lines take the place of
-the maximization in the policy builder the methods file opens, since a
-block defines its control once (the rule `defined-once`). The interior-only
+control's derived type. The three lines of the methods file's block `policy` take the place of
+the maximization in the operative policy builder, the stage keeping the
+maximization at the declared level, since a block defines its control once
+(the rule `defined-once`). The interior-only
 form, a stage file whose policy block states the control by the candidate
 and the implicit statement alone, remains admitted. The arrival value's
 statement and its derivative line are derived in §4.4. The declared set `γ : ℝ₊` admits
@@ -1763,8 +1772,8 @@ location parameter written `μ_y`, $p_0$ is `p_zero`, and $\delta_0$ is
 unit probability at zero. This avoids using one symbol for both a law
 and its numerical parameter.
 
-**Step 5, the derivative line.** The marginal block `arvl_marginal` writes
-`D_{b}V[<] = E_{y}(R * D_{w}V)`, which lowers in the same way to
+**Step 5, the derivative line.** The methods file's block `dcsn_to_arvl`
+writes `D_{b}V[<] = E_{y}(R * D_{w}V)`, which lowers in the same way to
 $\mathrm{dv}_\prec(b) = R \int \mathrm{dv}_\sim(y + R\,b)\,\nu_y(\mathrm dy)$:
 `D_{w}V` denotes $\mathrm{dv}_\sim$, the derivative of the decision value
 in $w$, and the factor $R$ is the derivative of the law $w = y + R\,b$ in
@@ -2132,10 +2141,10 @@ syntax alone. When candidates overlap and the required coverage and selection
 conditions hold, R12 describes selection by value; an upper-envelope method
 approximates that operation. The application's stage files stand under
 `applications/pension-retirement/declaration/stages/`: `worker_saving.bl` states the
-worker's maximization, the method block of
-`applications/pension-retirement/declaration/methods/worker_saving_foc.bl` writes its two
+worker's maximization, the block `policy` of its methods file,
+`applications/pension-retirement/declaration/stages/worker_saving/methods.bl`, writes its two
 first-order conditions with the clauses `⟂ m_f - c - c_p >= 0` and
-`⟂ 0 <= c_p <= w_d` of R10, and `applications/pension-retirement/economics.md`
+`⟂ 0 <= c_p <= w_d` of R10 under time iteration, and `applications/pension-retirement/economics.md`
 records their correspondence with the paper's equations.
 
 ## 5 Assumptions and scope

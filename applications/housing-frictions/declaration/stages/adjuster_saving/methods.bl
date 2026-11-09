@@ -1,0 +1,31 @@
+@methods: adjuster_saving
+# The methods of the adjuster's saving stage, an addition to
+# adjuster_saving.bl: time iteration on the policy builder, whose operative
+# lines are the two Euler relations euler_financial and euler_housing and
+# whose joint maximization the stage file marks !doc, with the grid of the one
+# decision state m at whose points the relations are solved for c and
+# h_choice; the envelope line of the decision value in total resources; and
+# the decision value V represented linearly and its derivative D_{m}V by the
+# shape-preserving cubic, each at its own Evaluation with its own grid entry
+# on m, since the derivative, which the choice stage reads as D_{w_adj}V_adj[>]
+# in both of its derivative lines, is kept decreasing between knots at which
+# its values decrease. Each grid is its own typing entry; the three settings
+# they read are declared below with their sets and valued in
+# settings/adjuster_saving.yml, which gives n_m, m_min and m_max the values of
+# settings/keeper_saving.yml, since a setting two stages of a period declare
+# is one setting of the period.
+
+n_m : ℕ          :: ["number of points of the grid of total resources"]
+m_min : ℝ₊₊      :: ["lower bound of the grid of total resources"]
+m_max : ℝ₊₊      :: ["upper bound of the grid of total resources"]
+
+policy.method : !time_iteration
+policy.grid : !Cartesian(m=(m_min, m_max, n_m))
+
+[id=cntn_to_dcsn
+    | evaluate[V].method : !Linear
+    | evaluate[V].grid : !Cartesian(m=(m_min, m_max, n_m))
+    | evaluate[D_{m}V].method : !pchip
+    | evaluate[D_{m}V].grid : !Cartesian(m=(m_min, m_max, n_m))] {
+    D_{m}V = 𝑢_c(c)                                     :: [id=marginal_resources]
+}

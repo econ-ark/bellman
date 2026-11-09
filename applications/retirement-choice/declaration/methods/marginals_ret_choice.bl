@@ -1,8 +1,0 @@
-@methods: ret_choice
-# The derivative of the value of the discrete choice in assets, stated by the
-# marginal block of the decision value builder: the derivative of the branch
-# value the choice d selects; the cost of work, a constant, contributes nothing.
-
-[id=dcsn_marginal, (V_w[>], V_r[>], d) : !cntn -> (V) : !dcsn] {
-    D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]  :: [id=marginal]
-}

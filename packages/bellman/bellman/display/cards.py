@@ -38,7 +38,6 @@ from __future__ import annotations
 import dataclasses
 import re
 from collections import namedtuple
-from collections.abc import Mapping
 from pathlib import PurePosixPath
 
 from bellman.display.printed_records import (
@@ -48,7 +47,6 @@ from bellman.display.printed_records import (
     wires_by_value_bundle,
 )
 from bellman.display.sheets import Sheet
-from bellman.native.frozen import freeze
 from bellman.native.identity import OPERATOR_KINDS, Identity
 from bellman.native.labels import function_name
 from bellman.native.predicates import And, Compare, Complementarity, IsInteger, Member, Not
@@ -94,6 +92,8 @@ WORDS = {
     "conditions": "Conditions",
     "method": "Method",
     "options": "Options",
+    "keywords": "Keywords",
+    "grid": "Grid",
     "source": "Source",
     "definitions": "Definitions referenced",
     "file": "File",
@@ -421,20 +421,25 @@ class KernelClause(_Displayed):
 
 @dataclasses.dataclass(frozen=True, repr=False, eq=False)
 class MethodClause(_Displayed, Record):
-    """A bound method, its authored options, option types and configured
-    values."""
+    """The components typed at one place, as a card's `Method` section
+    prints them: the place's `address`, its `method` word with its keyword
+    arguments, its `grid` and its `handler`, each None where not typed,
+    `written`, the components on one line as the `Method` row prints them,
+    and `options`, the rows of the `Options` section, one `(keyword, value)`
+    pair per keyword argument of the method word, the value the configured
+    value of the setting the argument names where one is bound and the
+    argument as written otherwise (`denotations._method_clause`)."""
 
     address: object
-    tag: str | None
+    method: object
+    grid: object
     handler: str | None
     _: dataclasses.KW_ONLY
-    settings: object
-    option_types: object
-    values: object
+    written: str
+    options: tuple = ()
 
     def __post_init__(self):
-        for name in ("settings", "option_types", "values"):
-            object.__setattr__(self, name, freeze(getattr(self, name)))
+        object.__setattr__(self, "options", tuple(tuple(pair) for pair in self.options))
 
 
 @dataclasses.dataclass(frozen=True, repr=False)
@@ -445,15 +450,6 @@ class BlockDenoted(Denoted):
     prints after the identity."""
 
     written_at: str = ""
-
-
-@dataclasses.dataclass(frozen=True, repr=False)
-class BlockMethodClause(MethodClause):
-    """A bound method that names a method block (specification 0.6 §4): the
-    `MethodClause` with `block`, the block file as the methods file writes
-    it, which its `Method` row prints after the method's tag."""
-
-    block: str = ""
 
 
 @dataclasses.dataclass(frozen=True, repr=False)
@@ -861,18 +857,35 @@ def _lines(document, column):
 
 
 def method_card(answer):
-    """The card of one row of the method table: what the method admits and
-    its options."""
+    """The card of one row of the method table: what the method admits, the
+    keyword arguments the package reads, each with its domain and whether
+    the word requires it, and the perch on whose states its grid lies where
+    it reads one."""
     tag = getattr(answer, "_tag", "")
     admitted = _CardBlock("admits")
     for item in answer.admits:
         admitted.row(layout.text(" ".join(item) if isinstance(item, tuple) else str(item)))
-    options = _CardBlock("options")
-    for name, option in answer.options.items():
-        options.row(layout.text(f"{name}, {option}"))
-    if not answer.options:
-        options.row(layout.text("none"))
-    return _assemble([f"{WORDS['method-address']} !{tag}"], _blocks((admitted, options)), ())
+    keywords = _CardBlock("keywords")
+    for name, keyword in answer.keywords.items():
+        keywords.row(layout.text(f"{name}, {keyword}"))
+    if not answer.keywords:
+        keywords.row(layout.text("none"))
+    grid = _CardBlock("grid")
+    grid.row(layout.text(grid_sentence(getattr(answer, "grid", None))))
+    return _assemble(
+        [f"{WORDS['method-address']} !{tag}"], _blocks((admitted, keywords, grid)), ()
+    )
+
+
+def grid_sentence(perch):
+    """The words of a row's `grid` column: the states on which the word's
+    grid lies, the perch named by its word (`PERCH_WORD`), or `none` for a
+    word that reads no grid."""
+    if perch is None:
+        return "none"
+    if perch == "output":
+        return "on the states of the perch at which the function the place holds stands"
+    return f"on the states of the {PERCH_WORD[perch]} perch"
 
 
 def definition_listing(record, key, key_width):
@@ -960,7 +973,7 @@ def _stage_card(record):
     ]
     after = [
         _declared_block(names, record),
-        _operations_block(
+        _OperationRows(
             names,
             tuple(
                 _OperationsPart(heading=WORDS[direction], record=held)
@@ -1004,7 +1017,7 @@ def _ordinary_card(record):
     if isinstance(record, OperatorCard):
         after.append(_rule_block(names, record))
     if getattr(record, "pieces", ()):
-        after.append(_operations_block(names, (_OperationsPart(heading=None, record=record),)))
+        after.append(_OperationRows(names, (_OperationsPart(heading=None, record=record),)))
     after.append(_conditions_block(names, record))
     after.extend(_method_blocks(record))
     return _card(
@@ -1203,10 +1216,10 @@ def _defines_block(names, record):
             # and its measure at the written parameters its second
             block.row(symbol, _after("=" if identity in laws else "~", names.rule(held)))
             laws.add(identity)
-        elif kind == "parameter" or (sort and sort[0] in ("scalar", "state")):
+        elif kind in ("parameter", "setting") or (sort and sort[0] in ("scalar", "state")):
             carrier = _carrier_document(names, denoted)
             head = _after("∈", carrier) if carrier is not None else layout.text("")
-            if held is not None and kind == "parameter":
+            if held is not None and kind in ("parameter", "setting"):
                 head = layout.concat(head, ",  = ", names.rule(held))
             block.row(symbol, head)
         else:
@@ -1466,15 +1479,6 @@ def _output_documents(names, wire):
 # The pieces of one record in `Operations`, under its heading, which the
 # stage card gives each direction and a builder's card gives none.
 _OperationsPart = namedtuple("_OperationsPart", "heading record")
-
-
-def _operations_block(names, parts, *, opened=True):
-    """The `Operations` section: one entry per piece in order of application,
-    each its number and key, its `in:` and `out:` line, its short line and
-    its rule lines (`_OperationRows`); built with `opened` false, on the stage
-    card, each entry is a builder and prints no short line and no rule line.
-    `parts` is a sequence of `_OperationsPart`."""
-    return _OperationRows(names, parts, opened=opened)
 
 
 # One entry of `Operations`: the column at which its number stands, two
@@ -1824,62 +1828,20 @@ def _method_blocks(record):
     return blocks
 
 
-def _block_of(method):
-    """The block file a bound method names, or the empty word for a method
-    that names none."""
-    return method.block if isinstance(method, BlockMethodClause) else ""
-
-
 # The rows of one bound method: the `Method` row and the `Options` rows.
 _MethodDocuments = namedtuple("_MethodDocuments", "method options")
 
 
 def _method_documents(method):
-    """The `Method` row, `!egm   handler` with the bound address at the
-    margin, and the `Options` rows, `name = value`, as a `_MethodDocuments`."""
-    said = (
-        "   ".join(
-            part
-            for part in (
-                f"!{method.tag}" if method.tag else "",
-                method.handler or ("" if _block_of(method) else "handler"),
-                f"block {_block_of(method)}" if _block_of(method) else "",
-            )
-            if part
-        )
-        or "none"
-    )
-    document = layout.text(said)
+    """The `Method` row, the components as the clause writes them on one
+    line, with the place at the margin, and the `Options` rows,
+    `name = value`, one per pair the clause's `options` holds, as a
+    `_MethodDocuments`."""
+    document = layout.text(method.written or "none")
     if method.address:
         document = layout.concat(document, layout.margin(str(method.address)))
-    options = [
-        layout.text(f"{name} = {_option_value(setting, method.values)}")
-        for name, setting in method.settings.items()
-    ]
+    options = [layout.text(f"{key} = {value}") for key, value in method.options]
     return _MethodDocuments(method=document, options=options)
-
-
-def _option_value(value, values):
-    """Display nested options after substituting supplied setting values; a
-    tag written alone, the kind of a grid, as the methods file writes it,
-    `!Cartesian` (AMD-MB-003 §3)."""
-    if isinstance(value, str) and value in values:
-        value = values[value]
-    tag = value.get("__yaml_tag__") if isinstance(value, Mapping) else None
-    if tag is not None and set(value) == {"__yaml_tag__", "value"} and value["value"] == "":
-        return f"!{tag}"
-    if isinstance(value, Mapping):
-        return (
-            "{"
-            + ", ".join(f"{key!r}: {_option_value(item, values)}" for key, item in value.items())
-            + "}"
-        )
-    if isinstance(value, (tuple, list)):
-        text = ", ".join(_option_value(item, values) for item in value)
-        if isinstance(value, list):
-            return "[" + text + "]"
-        return "(" + text + ("," if len(value) == 1 else "") + ")"
-    return repr(value)
 
 
 # --- the footer ---

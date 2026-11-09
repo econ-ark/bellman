@@ -600,7 +600,8 @@
     });
     g.outs.forEach(function (p) { parts.push(portHandle(p, true, down, gesture)); });
     return h('div', { className: frame.className, style: style, tabIndex: -1, role: 'group', onPointerDown: frame.onPointerDown,
-      title: g.cut ? d.label : undefined, 'aria-label': d.closed ? 'closed layer ' + d.label : d.label }, parts);
+      title: d.description || (g.cut ? d.label : undefined),
+      'aria-label': d.closed ? 'closed layer ' + d.label : d.label }, parts);
   }
 
   /* A closed period of a trellis graph's root (the fix wave Q3a, item 10;
@@ -879,8 +880,10 @@
     var d = props.data || {}, path, at = null;
     var routes = (d.parts || []).filter(function (points) { return points && points.length > 1; });
     var last = routes.length ? routes[routes.length - 1] : null;
-    if (last) {
-      path = routes.map(function (points) { return 'M' + points.map(function (p) { return p.x + ',' + p.y; }).join('L'); }).join('');
+    if (last || d.paint) {
+      path = (d.paint || routes).map(function (points) {
+        return 'M' + points.map(function (p) { return p.x + ',' + p.y; }).join('L');
+      }).join('');
       if (d.join) at = d.joinAt;        // where the layout kept room for the join's label
     } else {
       var step = RF.getSmoothStepPath({ sourceX: props.sourceX, sourceY: props.sourceY, sourcePosition: props.sourcePosition,
@@ -888,20 +891,15 @@
       path = step[0];
       if (d.join) at = { x: step[1], y: step[2] };
     }
-    var lit = d.lit ? ' bf-lit' : '', parts;
-    if (d.cable) {
-      // a cable (design pass 10 §6; design pass 12 §1): one stroke at a wire's weight, whatever it carries, dashed for
-      // a stub to an `outside` marker (brand.css, .bf-cable-outer); the 12-px transparent path takes the pointer
-      var cls = 'bf-cable' + (d.bundle || (d.pairBundle && d.count > 1 && !d.branch) ? ' bf-cable-bundle' : '') + (d.dashed ? ' bf-cable-dashed' : '') + lit;
-      parts = [
-        h('path', { key: 'o', d: path, fill: 'none', className: 'react-flow__edge-path bf-cable-outer ' + cls }),
-        h('path', { key: 'i', d: path, fill: 'none', stroke: 'transparent', strokeWidth: 12 }, h('title', null, d.title))
-      ];
-    } else {
-      parts = [
-        h('path', { key: 'p', d: path, fill: 'none', className: 'react-flow__edge-path' + lit }),
-        h('path', { key: 'i', d: path, fill: 'none', stroke: 'transparent', strokeWidth: 9 }, h('title', null, d.title))
-      ];
+    var lit = d.lit ? ' bf-lit' : '', parts = [];
+    if (path) {
+      var cls = d.cable ? ' bf-cable-outer bf-cable' +
+        (d.bundle || (d.pairBundle && d.count > 1 && !d.branch) ? ' bf-cable-bundle' : '') +
+        (d.dashed ? ' bf-cable-dashed' : '') : '';
+      parts.push(h('path', { key: 'p', d: path, fill: 'none', className: 'react-flow__edge-path' + cls + lit }));
+      parts.push(h('path', { key: 'i', d: path, fill: 'none', stroke: 'transparent', strokeWidth: d.cable ? 12 : 9,
+        className: d.members ? 'bf-shared-hit' : undefined,
+        style: d.initialTrunk ? { pointerEvents: 'stroke' } : undefined }, h('title', null, d.title)));
     }
     // the count of the wires a cable, or a bundle of a stage's builders graph, carries where it carries more than
     // one, at its plug (design pass 13 §1, rule 5; design pass 14 §1, rule 3; S-D3): the slash across its first run
@@ -916,8 +914,9 @@
       parts.push(h('text', { key: 'bc', x: bus.at.x, y: bus.at.y, className: 'bf-cable-count' }, String(d.count)));
     }
     // a cable runs from its plug into its socket and draws no arrowhead (design pass 11 §1a), and a wire at a closed
-    // period's box none (the fix wave Q3a, item 10; design pass 13 §1, rule 4)
-    if (last && !d.pair && !d.cable && !d.closed) {
+    // period's box none (the fix wave Q3a, item 10; design pass 13 §1, rule 4). A branch of a shared route
+    // ends at the junction, where there is no reading port.
+    if (last && !d.shared && !d.sharedInput && !d.cable && !d.closed) {
       var end = last[last.length - 1];
       var before = last.slice(0, -1).reverse().find(function (point) { return point.x !== end.x || point.y !== end.y; });
       // a wire's arrowhead is 6.5 px long and wide (M-D15)
@@ -1434,30 +1433,24 @@
      period` control of `controls`, {id, later}, stands before the layer of
      the period after it in time, in the order of the periods (§3.6);
      where `stages` holds, the control `+ stage` of an open period's layer
-     stands after its toggle (unit K's decision K-D14); and in an occurrence
-     of `compact`, drawn compact, each builder's box stands with its toggle
-     and nothing inside it, and a node that stands in the occurrence itself
-     is not drawn (AAS, L-D7). */
-  function traversal(m, open, controls, stages, compact) {
+     stands after its toggle (unit K's decision K-D14). Use the drawing to
+     include compact builder segments and skip layers with no visible box. */
+  function traversal(m, open, controls, stages, drawing) {
     var order = [], placed = new Set(), before = {};
     (controls || []).forEach(function (c) { (before[c.later] = before[c.later] || []).push(c.id); });
     m.order.forEach(function (id) {
       var above = L.chain(m.nodes[id].namespace);
       for (var i = 0; i < above.length; i++) {
-        // a stage occurrence drawn as a card, compact or closed, holds its builders' segments with nothing
-        // inside them (AAS, L-D7; design pass 13 §2, one drawing for both)
-        var card = L.OCCURRENCE.test(above[i]) && (compact.has(above[i]) || !open.has(above[i]));
-        var layer = above[i] + L.LAYER_ENDING, segment = i > 0 && L.OCCURRENCE.test(above[i - 1]) && (compact.has(above[i - 1]) || !open.has(above[i - 1]));
+        var layer = above[i] + L.LAYER_ENDING;
+        if (!drawing.place[layer] && !drawing.builders[layer]) return;
         if (!placed.has(layer)) {
           placed.add(layer);
           (before[above[i]] || []).forEach(function (box) { order.push({ box: box }); });
           order.push({ box: layer }, { toggle: layer });
           if (stages && open.has(above[i]) && PERIOD.test(above[i])) order.push({ stage: layer });
         }
-        if (segment) return;
-        if (!open.has(above[i]) && !(card && i + 1 < above.length)) return;
       }
-      if (!compact.has(m.nodes[id].namespace)) order.push({ box: id });
+      if (drawing.place[id]) order.push({ box: id });
     });
     return order;
   }
@@ -1800,6 +1793,8 @@
       return map;
     }, [p.joins]);
     var _joinChosen = useState(null), joinChosen = _joinChosen[0], setJoinChosen = _joinChosen[1];
+    var _sharedChoice = useState(null), sharedChoice = _sharedChoice[0], setSharedChoice = _sharedChoice[1];
+    var sharedList = useRef(null), sharedPress = useRef(null);
     var chosenRecord = useRef(null);
     var moving = useRef(null);
     /* What the layout splits into its wires (AAS, L-D25; design pass 7
@@ -1979,6 +1974,71 @@
     // A new list of join wires, given at a reading or taken away by an input
     // edit, ends the selection of a join wire.
     useEffect(function () { chooseJoin(null, null); }, [p.joins]);
+    useEffect(function () { setSharedChoice(null); }, [p.joins, p.graph, p.reading]);
+    function openShared(edge) {
+      var keys = new Set();
+      edge.data.members.forEach(function (id) {
+        var branch = edges.find(function (e) { return e.id === id; });
+        if (branch && joinsByKey.has(branch.data.key)) keys.add(branch.data.key);
+      });
+      if (!keys.size) return;
+      choose(null); chooseJoin(null, null); chooseBundle(null); setPairing(null);
+      setSharedChoice({ edge: edge.id, keys: Array.from(keys) });
+    }
+    function edgeElement(id) {
+      return host.current && host.current.querySelector('.react-flow__edge[data-id="' + CSS.escape(id) + '"]');
+    }
+    function focusEdge(id) {
+      var element = edgeElement(id) || host.current;
+      if (element) element.focus({ preventScroll: true });
+    }
+    function closeShared() {
+      setSharedChoice(null);
+      focusEdge(sharedChoice.edge);
+    }
+    R.useLayoutEffect(function () {
+      if (sharedChoice && sharedList.current) placeList(sharedList.current, edgeElement(sharedChoice.edge), host.current);
+    }, [sharedChoice, laid]);
+    useEffect(function () {
+      if (!sharedChoice) return;
+      var button = sharedList.current && sharedList.current.querySelector('.bf-stage-item');
+      if (button) button.focus({ preventScroll: true });
+      function outside(event) {
+        if (sharedList.current && !sharedList.current.contains(event.target)) setSharedChoice(null);
+      }
+      document.addEventListener('click', outside, true);
+      return function () { document.removeEventListener('click', outside, true); };
+    }, [sharedChoice]);
+    function chooseEdge(edge) {
+      if (edge.data.members) openShared(edge);
+      else if (edge.data.record) { choose(null); chooseJoin(edge.id, edge.data.record); }
+      else if (edge.data.bundle) { choose(null); chooseJoin(null, null); chooseBundle(edge.data.bundle); }
+    }
+    function pressInRegion(event) {
+      pressed.current = true;
+      setTimeout(function () { pressed.current = false; }, 0);
+      sharedPress.current = null;
+      if (!event.target.closest('.react-flow__edgeupdater')) return;
+      var branch = event.target.closest('.bf-join-wire.selected');
+      if (!branch) return;
+      // A click can select the line under a drag target. A drag still uses the selected connector.
+      var hits = document.elementsFromPoint(event.clientX, event.clientY);
+      var run = hits.map(function (hit) { return hit.closest('.bf-shared-run, .bf-join-pair'); })
+        .filter(Boolean).map(function (hit) { return edges.find(function (e) { return e.id === hit.dataset.id; }); })
+        .find(function (edge) {
+          return edge && (edge.data.members || edge.data.branches || []).includes(branch.dataset.id);
+        });
+      if (run) sharedPress.current = { id: run.id, members: run.data.members || run.data.branches };
+    }
+    function clickInRegion(event) {
+      var press = sharedPress.current;
+      sharedPress.current = null;
+      if (!press || !event.target.closest('.react-flow__edgeupdater')) return;
+      var edge = edges.find(function (e) { return e.id === press.id; });
+      if (!edge || (edge.data.members || edge.data.branches) !== press.members) return;
+      event.stopPropagation();
+      chooseEdge(edge);
+    }
     // The join wires that leave or reach the cable port `port`, a record
     // of `cablePorts`, of the stage occurrence at `ns`: a wire's record
     // names its writing port by its node and its port, which the card's
@@ -2511,7 +2571,8 @@
               node.type = 'box';
               // a box of a trellis graph, its own Inputs and Outputs among them, whose joined ports' marks are drawn as a
               // card's are (AAS, M-D15)
-              node.data = { type: b.type, label: b.spec.label, role: b.spec.role || 'label', style: styleOf(b.node, graph, p.styles), colors: colors, sub: b.spec.sub || '', geom: b.geom, dir: b.dir,
+              node.data = { type: b.type, label: b.spec.label, description: b.node.description,
+                role: b.spec.role || 'label', style: styleOf(b.node, graph, p.styles), colors: colors, sub: b.spec.sub || '', geom: b.geom, dir: b.dir,
                 trellis: trellis };
             }
             return node;
@@ -2524,6 +2585,15 @@
             var index = outs.map(function (p) { return p.handle; }).indexOf(w.sourceHandle);
             return index >= 0 && index >= outs.length / 2;
           }
+          var sharedInputs = new Set(), sharedControls = new Set(Object.keys(r.paint));
+          built.bundles.forEach(function (u) {
+            if (!u.wires.some(function (id) { return !!r.paint[id]; })) return;
+            sharedControls.add(u.id);
+            u.wires.forEach(function (id) { sharedControls.add(id); });
+          });
+          r.sharedRuns.forEach(function (run) {
+            if (run.terminal) run.members.forEach(function (id) { sharedInputs.add(id); });
+          });
           var wires = built.wires.map(function (w) {
             // the title of a wire that carries joins holds, after its label, the joins' text as the exporter writes
             // it (K-D4); a bundle's, the labels of its wires, each once, one a line, then their joins (AAS, L-D25)
@@ -2540,22 +2610,29 @@
             // (AAS, L-D25); a wire of the bundle selected, split, is drawn lit. A cable of a route's values, which
             // nothing splits, is a join wire, named by its first wire, whose record Python gives (design pass 12
             // §2), its label the labels of its wires, which its title keeps once the record is found
-            var pair = u && !u.whole ? u : null;
+            var pair = u && !u.whole ? u : null, shared = !!r.bundles[w.bundle];
+            var initialLeg = !!w.initialRoute && Object.hasOwn(r.parts, w.id);
             return { id: w.id, type: 'wire', source: w.source, target: w.target, sourceHandle: w.sourceHandle,
               targetHandle: w.targetHandle, selectable: !!pair, focusable: false, reconnectable: false,
               // a wire of a bundle of a pair of periods, whose own route ends where the bundle's wires meet and
               // whose run into the socket the shared piece draws, is .bf-cable-shared (K-D5)
-              className: [pair ? 'bf-pair-bundle' : '', w.cable ? 'bf-cable-edge' : '', w.bundle ? 'bf-cable-shared' : ''].filter(Boolean).join(' ') || undefined,
+              className: [pair ? 'bf-pair-bundle' : '', w.cable && !initialLeg ? 'bf-cable-edge' : '',
+                shared ? 'bf-cable-shared' : '', initialLeg ? 'bf-initial-route-leg' : ''].filter(Boolean).join(' ') || undefined,
               domAttributes: pair ? { 'data-from': pair.from, 'data-to': pair.to } : undefined,
-              data: { parts: r.parts[w.id] || [r.routes[w.id]], label: pair ? w.label : u ? labels.join('\n') : w.label,
-                title: title, join: w.bundle ? '' : w.join, joinAt: w.bundle ? null : r.joins[w.id] || null,
-                key: pair ? null : wireKey(w.from, w.out, w.to, w.into), record: null, shared: !!w.bundle,
+              data: { parts: r.parts[w.id] || [r.routes[w.id]],
+                paint: initialLeg ? r.paint[w.id] || r.parts[w.id] || [] : r.paint[w.id],
+                sharedInput: sharedInputs.has(w.id) || (initialLeg && !r.initialArrows[w.id]),
+                sharedControl: sharedControls.has(w.id),
+                label: pair ? w.label : u ? labels.join('\n') : w.label,
+                title: title, join: shared || initialLeg ? '' : w.join, joinAt: shared ? null : r.joins[w.id] || null,
+                key: pair || initialLeg ? null : wireKey(w.from, w.out, w.to, w.into), record: null, shared: shared,
                 bundle: pair ? pair.id : null, pairOf: w.pairOf || null, pairBundle: !!u,
                 // a cable's body, its dashed stub, the count of its wires, its place in its card's stack of plugs
                 // and its branch (design pass 10 §6; design pass 13 §1, rule 5)
-                cable: !!w.cable, dashed: !!w.dashed, count: w.count || 1, below: lowerHalf(w), branch: w.branch || null,
+                cable: !initialLeg && !!w.cable, dashed: !!w.dashed, count: initialLeg ? 1 : w.count || 1,
+                below: lowerHalf(w), branch: w.branch || null,
                 // a wire at a closed period's box, which draws no arrowhead (the fix wave Q3a, item 10)
-                closed: !!w.closed,
+                closed: !initialLeg && !!w.closed,
                 // the handles of its two ports, which are lit with it (design pass 13 §1, rule 7)
                 handles: [[w.sourceHandle, w.targetHandle]],
                 ends: ends, lit: lights(ends, chosen) || (!!w.pairOf && w.pairOf === bundleChosen) } };
@@ -2568,19 +2645,64 @@
              record of the pair (`trellis.join_wires`). */
           var byId = {};
           built.wires.forEach(function (w) { byId[w.id] = w; });
-          var pairs = built.bundles.map(function (u) {
-            var first = byId[u.wires[0]], drawn = r.bundles[u.id];
+          function pairEdge(u, drawn) {
+            var first = byId[u.wires[0]];
             var ends = u.wires.map(function (id) { return [byId[id].source, byId[id].target]; });
             var title = first.reading.join ? u.join + '\n' + first.reading.join : u.join;
             return { id: u.id, type: 'wire', source: first.source, target: first.target, sourceHandle: first.sourceHandle,
               targetHandle: first.targetHandle, selectable: false, focusable: false, reconnectable: false,
               className: u.cable ? 'bf-cable-edge' : undefined,
               data: { parts: [drawn.points], label: u.join, title: title, join: u.join, joinAt: drawn.join, pair: true,
-                cable: !!u.cable, count: u.count || u.wires.length, branch: null,
+                branches: u.wires, sharedControl: sharedControls.has(u.id),
+                cable: !!u.cable, closed: !!first.closed, count: u.count || u.wires.length, branch: null,
                 handles: u.wires.map(function (id) { return [byId[id].sourceHandle, byId[id].targetHandle]; }),
                 key: wireKey(u.from, null, u.reader, u.into), record: null, ends: ends, lit: lights(ends, chosen) } };
+          }
+          var byPair = Object.fromEntries(built.bundles.map(function (u) { return [u.id, u]; }));
+          var pairs = built.bundles.filter(function (u) { return !!r.bundles[u.id]; })
+            .map(function (u) { return pairEdge(u, r.bundles[u.id]); });
+          var sharedRuns = r.sharedRuns.map(function (run) {
+            if (run.pair && byPair[run.pair]) return pairEdge(byPair[run.pair], { points: run.points, join: null });
+            var members = run.members.map(function (id) { return byId[id]; }), first = members[0];
+            var ends = members.map(function (w) { return [w.source, w.target]; });
+            var writers = members.map(function (w) { return L.chain(m.nodes[w.from].namespace)[1] || w.from; });
+            var title = 'Shared connection\n' + Array.from(new Set(writers)).join('\n');
+            return { id: run.id, type: 'wire', source: first.source, target: first.target,
+              sourceHandle: first.sourceHandle, targetHandle: first.targetHandle,
+              className: 'bf-shared-run', ariaLabel: title, selectable: true, focusable: true, reconnectable: false,
+              data: { parts: [run.points], title: title, members: run.members,
+                cable: members.every(function (w) { return w.cable; }), closed: members.some(function (w) { return w.closed; }),
+                shared: !run.terminal, ends: ends, lit: lights(ends, chosen) } };
           });
-          setNodes(next); setEdges(wires.concat(pairs));
+          var initialRoutes = r.initialRoutes.map(function (route) {
+            var members = route.wires.map(function (id) { return byId[id]; }), first = members[0];
+            var ends = members.map(function (w) { return [w.source, w.target]; });
+            var record = route.route;
+            var title = [record.source + ' → ' + record.destination, record.branch]
+              .concat((record.pairs || []).map(function (pair) {
+                return pair.source_field + ' → ' + pair.destination_field;
+              })).filter(Boolean).join('\n');
+            return { id: route.id, type: 'wire', source: first.source, target: first.target,
+              sourceHandle: first.sourceHandle, targetHandle: first.targetHandle,
+              className: 'bf-initial-route bf-cable-edge', selectable: false, focusable: false, reconnectable: false,
+              domAttributes: { 'data-route-source': record.source, 'data-route-destination': record.destination,
+                'data-route-branch': record.branch || '', 'data-route-count': route.count },
+              data: { parts: [route.points], paint: r.paint[route.id], title: title, cable: true, initialTrunk: true,
+                count: route.count, below: lowerHalf(first),
+                ends: ends, lit: lights(ends, chosen) } };
+          });
+          var initialById = new Map(initialRoutes.map(function (edge) { return [edge.id, edge]; }));
+          var initialShared = r.initialSharedRuns.map(function (run) {
+            var routes = run.routes.map(function (id) { return initialById.get(id); }), first = routes[0];
+            var ends = routes.flatMap(function (edge) { return edge.data.ends; });
+            var title = 'Shared connection\n\n' + routes.map(function (edge) { return edge.data.title; }).join('\n\n');
+            return { id: run.id, type: 'wire', source: first.source, target: first.target,
+              sourceHandle: first.sourceHandle, targetHandle: first.targetHandle,
+              className: 'bf-initial-shared-run', selectable: false, focusable: false, reconnectable: false,
+              data: { parts: [run.points], title: title, shared: true, cable: run.cable, initialTrunk: true,
+                ends: ends, lit: lights(ends, chosen) } };
+          });
+          setNodes(next); setEdges(wires.concat(pairs, sharedRuns, initialShared, initialRoutes));
           // Hidden descendants retain their expansion preference, but are not open in the drawing.
           p.report.open = Array.from(open).filter(function (ns) {
             return !!m.layers[ns] && L.chain(ns).every(function (ancestor) { return open.has(ancestor); });
@@ -2776,10 +2898,11 @@
         return n.selected === (n.id === selection) ? n : Object.assign({}, n, { selected: n.id === selection });
       }); });
       setEdges(function (list) { return list.map(function (e) {
-        var lit = lights(e.data.ends, selection) || (!!e.data.pairOf && e.data.pairOf === bundleChosen);
+        var lit = lights(e.data.ends, selection) || (!!e.data.pairOf && e.data.pairOf === bundleChosen) ||
+          !!(e.data.members && e.data.members.includes(joinChosen));
         return e.data.lit === lit ? e : Object.assign({}, e, { data: Object.assign({}, e.data, { lit: lit }) });
       }); });
-    }, [selection, bundleChosen, nodes.length, edges.length]);
+    }, [selection, bundleChosen, joinChosen, nodes.length, edges.length]);
     // A wire whose record Python gives is a join wire: it takes a click and
     // focus, and each end its record names movable takes a drag (J-D33;
     // unit K's decision K-D23); the one selected is marked selected and
@@ -2790,12 +2913,14 @@
     useEffect(function () {
       setEdges(function (list) {
         var next = list.map(function (e) {
-          if (e.data.bundle) return e;
+          if (e.data.bundle || e.data.members || e.data.initialTrunk) return e;
           var record = joinsByKey.get(e.data.key) || null;
           var chosen = !!record && e.id === joinChosen;
           if (e.data.record === record && !!e.selected === chosen) return e;
           return Object.assign({}, e, {
-            selectable: !!record, focusable: !!record, reconnectable: reconnectEnds(record), selected: chosen,
+            selectable: !!record, focusable: !!record, selected: chosen,
+            // Select a connector before exposing the drag targets on a shared path.
+            reconnectable: chosen || !e.data.sharedControl ? reconnectEnds(record) : false,
             // a cable keeps its class beside a join wire's, and a wire of a bundle of a pair of periods its own
             // (design pass 10 §6; K-D5)
             className: [e.data.cable ? 'bf-cable-edge' : '', e.data.shared ? 'bf-cable-shared' : '',
@@ -2937,7 +3062,7 @@
       // view not at all (AAS, M-D16); one that arrives by the keyboard
       // focuses the selected box or the first item and reveals it (§2.4).
       if (pressed.current) return;
-      var order = traversal(m, laid.open, laid.controls, laid.stages, laid.compact);
+      var order = traversal(m, laid.open, laid.controls, laid.stages, laid.read);
       var first = order.find(function (item) { return item.box === selection; }) || order[0];
       if (first) focusItem(first, laid);
     }
@@ -2961,6 +3086,15 @@
       var isToggle = event.target.classList.contains('bf-toggle');
       var isStage = event.target.classList.contains('bf-add-stage');
       var control = event.target.classList.contains('bf-add-period') ? event.target : null;
+      var sharedEdge = event.target.closest('.bf-shared-run');
+      if (sharedEdge && ['Enter', ' ', 'Delete', 'Backspace'].includes(event.key)) {
+        event.preventDefault();
+        if (event.key === 'Enter' || event.key === ' ') {
+          var edge = edges.find(function (e) { return e.id === sharedEdge.dataset.id; });
+          if (edge) openShared(edge);
+        }
+        return;
+      }
       // The keyboard's route of an item (§3.5): the arrow keys move among
       // the candidates, Enter sends the event dropped and Escape leaves;
       // any other key leaves and acts as it does outside the route.
@@ -3013,7 +3147,7 @@
         p.host.dispatchEvent(new CustomEvent('removed', { bubbles: true, detail: {
           reading: live ? p.reading : null, occurrence: selection } }));
       } else if (event.key === 'Tab' && laid && laid.model === m) {
-        var order = traversal(m, laid.open, laid.controls, laid.stages, laid.compact);
+        var order = traversal(m, laid.open, laid.controls, laid.stages, laid.read);
         var index = order.findIndex(function (item) {
           return node && item[isStage ? 'stage' : isToggle ? 'toggle' : 'box'] === node.dataset.id;
         });
@@ -3183,10 +3317,30 @@
       else element.style.top = element.style.left = element.style.maxHeight = '';
     } : null;
     var pairList = pairListProps ? h(PairList, Object.assign({ onJoin: joinPairs, onClose: closePairs, place: placePairs }, pairListProps)) : null;
+    var sharedOptions = (sharedChoice ? sharedChoice.keys : []).map(function (key) {
+      return { key: key, record: joinsByKey.get(key), edge: edges.find(function (e) { return e.data.key === key; }) };
+    }).filter(function (choice) { return choice.record && choice.edge; });
+    var sharedDialog = sharedOptions.length ? h('div', { ref: sharedList, className: 'bf-stage-list bf-shared-list',
+      role: 'dialog', 'aria-label': 'Shared connection', onKeyDown: function (event) {
+        event.stopPropagation();
+        if (event.key === 'Escape') { event.preventDefault(); closeShared(); }
+      } },
+      listHead(LIST_ICONS.join, h('span', { className: 'bf-list-name' }, 'Shared connection'), null, closeShared),
+      sharedOptions.map(function (choice) {
+        var record = choice.record, route = record.from + ' → ' + record.to;
+        var detail = [record.branch, record.join].filter(Boolean).join(' · ');
+        return h('button', { key: choice.key, type: 'button', className: 'bf-stage-item',
+          title: [route, detail].filter(Boolean).join('\n'), onClick: function () {
+            setSharedChoice(null);
+            chooseJoin(choice.edge.id, record);
+            focusEdge(choice.edge.id);
+          } }, h('span', { className: 'bf-stage-key' }, route),
+          detail ? h('span', { className: 'bf-stage-model' }, detail) : null);
+      })) : null;
 
     return h('div', { ref: host, className: 'bf-region' + (dragging || frameLine ? ' bf-connecting' : ''), style: { position: 'absolute', inset: 0 },
       tabIndex: inside ? -1 : 0, onFocus: enterRegion, onBlur: leaveRegion, onKeyDown: keyInRegion,
-      onPointerDownCapture: function () { pressed.current = true; setTimeout(function () { pressed.current = false; }, 0); },
+      onPointerDownCapture: pressInRegion, onClickCapture: clickInRegion,
       onKeyDownCapture: function () { pressed.current = false; },
       onPointerMoveCapture: pointerOverPorts, onPointerLeave: function () {
         markNearest(null);
@@ -3202,8 +3356,7 @@
         onEdgesChange: function (changes) {
           changes.forEach(function (c) {
             var edge = c.type === 'select' && c.selected ? edges.find(function (e) { return e.id === c.id; }) : null;
-            if (edge && edge.data.record) { choose(null); chooseJoin(edge.id, edge.data.record); }
-            else if (edge && edge.data.bundle) { choose(null); chooseJoin(null, null); chooseBundle(edge.data.bundle); }
+            if (edge) chooseEdge(edge);
           });
           onEdgesChange(changes.filter(function (c) { return c.type !== 'select'; }));
         },
@@ -3222,6 +3375,7 @@
         onConnectEnd: function () { cableDrag.current = null; setCableState(null); },
         // an end of a join wire dragged: React Flow names the end kept
         onReconnectStart: function (_event, edge, kept) {
+          sharedPress.current = null;
           ended.current = false;
           moving.current = { record: edge.data && edge.data.record, end: kept === 'target' ? 'writing' : 'reading' };
         },
@@ -3249,7 +3403,7 @@
         },
         onDragEnter: dragOver, onDragOver: dragOver, onDrop: dropItem, onDragLeave: leaveDrag
       }, h(RF.ViewportPortal, null, h('svg', { style: { position: 'absolute', overflow: 'visible', pointerEvents: 'none' } }, lines)))),
-      list, pairList, controls, stagesButton);
+      list, pairList, sharedDialog, controls, stagesButton);
   }
 
   /* One control of the canvas's foot by its word (FOOT_CONTROLS; design

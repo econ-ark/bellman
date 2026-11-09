@@ -13,49 +13,43 @@ topic: [stage-object]
 # Parameters and settings
 
 > [!summary]
-> `stage.par` answers the parameters of a stage and `stage.settings` the settings bound to it, each a read-only mapping read by the name the file writes, `stage.par["ρ"]` and `stage.settings["n_a"]`. A parameter is part of the economic problem; a setting is a numerical choice of the method that computes it. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, calibrated and configured by `applications/cons-port/reference/legacy/syntax/calibration.yaml` and `settings.yaml`, and methodized by `applications/portfolio-choice/declaration/stages/cons/methods.yml`, whose methods fill the settings table's last three columns: the place at which each setting is read, the method that reads it and, where the setting is a field of that method's grid, the grid's kind.
+> `stage.par` answers a table of the parameters of a stage and `stage.settings` a table of its settings; each entry is read by the name the file declares, `stage.par["ρ"]` and `stage.settings["n_a"]`, and neither table can be edited. A parameter is part of the economic problem and is declared in the stage file; a setting is a numerical choice of a method, declared with its set in the methods file and valued by configuration. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, calibrated by `applications/portfolio-choice/declaration/calibration/portfolio.yml`, configured by `applications/portfolio-choice/declaration/settings/cons.yml`, and methodized by `applications/portfolio-choice/declaration/stages/cons/methods.bl`, the methods file beside the stage file, whose declarations fill the settings table's `set` column and whose entries fill its last three columns: the place at which each setting is read, the method there and, where the setting is a bound or a count of that place's grid, the grid's kind.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [The stage](01-the-stage.md): the object `stage` below; [The binding verbs](09-binding-verbs.md): `calibrate` and `configure`, which bind the values these tables read.
 > **Used by** — [Methods and places](07-methods.md): the methods that read the settings.
-> **See also** — [API](../index.md) §2.4: every path of the stage object in one table; [Methodization](../../04-methodization.md): the settings file a method reads.
+> **See also** — [API](../index.md) §2.4: every path of the stage object in one table; [Methodization](../../04-methodization.md) §4: the declaration of a setting and the settings file.
 
-[Parameters](../../../wiki/parameters.md) are the declared constants of the model, such as the risk aversion `ρ`, each declared in the stage file on a set and given a value by [calibration](../../../wiki/calibration.md); change one and the economic problem changes. [Settings](../../../wiki/settings.md) are the numerical choices of the methods, such as a grid size or a tolerance, given by configuration; none of them is an assertion of the model. The two tables are queries: each reads the one place the stage holds what it answers, and neither keeps a copy.
+[Parameters](../../../wiki/parameters.md) are the declared constants of the model, such as the risk aversion `ρ`, each declared in the stage file on a set and given a value by [calibration](../../../wiki/calibration.md); change one and the economic problem changes. [Settings](../../../wiki/settings.md) are the numerical choices of the methods, such as the bounds and the count of a grid, each declared in the methods file on a set and given a value by configuration; none of them is an assertion of the model. The two tables are queries: each reads the one place the stage holds what it answers, and neither keeps a copy.
 
 ```python
 from bellman.stage import elaborate_stage, load_stage
 
 stage = elaborate_stage(load_stage("applications/portfolio-choice/declaration/stages/cons/cons.bl"))
-calibrated = stage.calibrate("applications/cons-port/reference/legacy/syntax/calibration.yaml")
-specified = (calibrated.methodize("applications/portfolio-choice/declaration/stages/cons/methods.yml")
-             .configure("applications/cons-port/reference/legacy/syntax/settings.yaml"))
 ```
 
 ## 1 The parameters
 
-`stage.par` answers one row per declared parameter, with the set it is declared on, its bound value or the word `unbound`, and the description the file gives. `stage.par["ρ"]` answers the record of one parameter, keyed by its name as the file declares it, which prints on one line; its `value` is the number the calibration binds. `list()` answers the table the mapping prints, and `view()` the same table as text.
+`stage.par` answers one row per declared parameter, with the set it is declared on, its value or, before calibration, the word `unbound`, and the description the file gives. `stage.par["ρ"]` answers the record of one parameter, keyed by its name as the file declares it, which prints on one line; its `value` is the number the calibration binds. `list()` answers the rows, a record that prints as the table, and `view()` the table as text. Since `calibrate` binds the stage it is called on, `calibrated` below is `stage` itself, now with its parameter's value:
 
 ```python
 print(stage.par)
-print(stage.par["ρ"])
-print()
+calibrated = stage.calibrate("applications/portfolio-choice/declaration/calibration/portfolio.yml")
 print(calibrated.par)
 print(calibrated.par["ρ"])
-print(calibrated.par["ρ"].value)
+print(calibrated.par["ρ"].value, calibrated is stage)
 ```
 
 ```text
 name  set       value    describes
 ρ     [1, inf)  unbound
-ρ : [1, inf), unbound
-
 name  set       value  describes
 ρ     [1, inf)  6.0
 ρ = 6.0 : [1, inf)
-6.0
+6.0 True
 ```
 
-The record is read from the parameter's declaration in the definitions table and the value in the version's bindings. The key is the name the file declares, and no other spelling is a key:
+The record is read from the parameter's declaration in the stage file and from the value calibration binds. The key is the name the file declares, and no other spelling is a key:
 
 ```python
 try:
@@ -70,50 +64,85 @@ except KeyError as refusal:
 
 ## 2 The settings
 
-`stage.settings` answers one row for each method that reads a setting, with the setting's name, its configured value, the place it is read at, the method that reads it and, where the setting is a field of that method's grid, the grid's kind; a setting that no method reads has one row with the last three empty. A method that takes a grid names it by the setting `grid`, whose value is the grid's kind written as a tag, `grid: !Cartesian`, with the grid's fields beside it ([Methodization](../../04-methodization.md) §3); the kind is no setting, and the column `grid` gives it on the row of each setting that one of the fields names. Here the representation at the decision builder's Evaluation reads `n_m`, `m_min` and `m_max` as its grid of resources, and the endogenous grid method on the policy builder reads `n_a`, `a_min` and `a_max` as its exogenous grid of savings. One settings file may serve every stage of an application, so a stage can be bound settings that no method bound to it reads, here among others `n_k`, `n_θ_nodes` and `n_Ψ_nodes`, the grid and quadrature sizes of the application's portfolio stage. `stage.settings["n_m"]` answers the record of one setting, and its `value` is the configured value.
+`stage.settings` answers one row per setting, with the setting's name, the set the methods file declares it on, its configured value or the word `unbound`, the place at which it is read, the method typed there and, where the setting is a bound or a count of a factor of that place's grid, the grid's kind. The settings the methods file declares come first, in declaration order; a key of the settings file that no declaration names follows, with its value and the other columns empty, since it binds nothing (the last listing of this section). A method reads a setting by its name: here the grid of the representation at the decision builder's Evaluation, `cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))`, reads `n_m`, `m_min` and `m_max` as the count and the bounds of its grid of resources, and the grid of the endogenous grid method on the policy builder, `grid : !Cartesian(a=(a_min, a_max, n_a))`, reads `n_a`, `a_min` and `a_max` as its grid of savings ([Methodization](../../04-methodization.md) §3.2). `stage.settings["n_m"]` answers the record of one setting, and its `value` is the configured value.
 
 ```python
+specified = (calibrated.methodize("applications/portfolio-choice/declaration/stages/cons/methods.bl")
+             .configure("applications/portfolio-choice/declaration/settings/cons.yml"))
 print(specified.settings)
 print(specified.settings["n_m"])
 print(specified.settings["n_m"].value)
 ```
 
 ```text
-name           value    read at                  by       grid
-grid_spacing   expmult
-n_m            8000     cntn_to_dcsn:Evaluation  !Linear  !Cartesian
-m_min          0.01     cntn_to_dcsn:Evaluation  !Linear  !Cartesian
-m_max          2000.0   cntn_to_dcsn:Evaluation  !Linear  !Cartesian
-n_a            800      policy                   !egm     !Cartesian
-a_min          1e-10    policy                   !egm     !Cartesian
-a_max          100.0    policy                   !egm     !Cartesian
-n_k            800
-k_min          1e-10
-k_max          1000.0
-n_θ_nodes      7
-n_Ψ_nodes      7
-n_joint_nodes  49
-n_sim          10000
-sim_seed       42
-tol_vfi        1e-08
-max_iter       1000
-n_m = 8000, read at cntn_to_dcsn:Evaluation by !Linear for its grid !Cartesian
-8000
+name   set  value  read at                by       grid
+n_a    ℕ    800    policy                 !egm     !Cartesian
+a_min  Xa   1e-06  policy                 !egm     !Cartesian
+a_max  Xa   100.0  policy                 !egm     !Cartesian
+n_m    ℕ    100    cntn_to_dcsn.evaluate  !Linear  !Cartesian
+m_min  Xm   0.01   cntn_to_dcsn.evaluate  !Linear  !Cartesian
+m_max  Xm   10.0   cntn_to_dcsn.evaluate  !Linear  !Cartesian
+n_m = 100 : ℕ, read at cntn_to_dcsn.evaluate by !Linear for its grid !Cartesian
+100
 ```
 
-A setting has no declaration in the definitions table, so the table is read from the settings the version binds and the bound methods that name them. A version that no configuration has bound holds no setting, and a key it does not hold is refused with the reason:
+Each record is read from the setting's declaration in the methods file, the value configuration binds and the entries that name the setting. A stage elaborated from its stage file alone holds no setting, and a key the stage does not hold is refused with the reason:
 
 ```python
-print(len(stage.settings))
+bare = elaborate_stage(load_stage("applications/portfolio-choice/declaration/stages/cons/cons.bl"))
+print(len(bare.settings))
 try:
-    stage.settings["n_a"]
+    bare.settings["n_a"]
 except KeyError as refusal:
     print(refusal)
 ```
 
 ```text
 0
-"stage 'cons': 'n_a' is no setting of this version, which binds no settings; configure(stage, source) binds them"
+"stage 'cons': 'n_a' is no setting of this version; its settings are none; a setting is declared in the methods file, and configure(stage, source) values it"
+```
+
+Before configuration a declared setting stands in the table with the value `unbound`, as a parameter does before calibration, with the place that reads it; `configure` refuses a value outside the declared set, under `setting-outside-set`, and a declared setting that neither the settings file nor an earlier configuration of the version values, under `setting-unvalued`; a later configuration keeps the values bound before and replaces those it names again ([The binding verbs](09-binding-verbs.md) §3; [Refusals](../../reference/refusals.md#setting-unvalued)). The listing reads a second elaboration of the stage file with its methods file, since the verbs bind the stage they are called on and `stage` above is configured already:
+
+```python
+methodized = elaborate_stage(load_stage("applications/portfolio-choice/declaration/stages/cons/cons.bl",
+                                        ["applications/portfolio-choice/declaration/stages/cons/methods.bl"]))
+print(methodized.settings)
+```
+
+```text
+name   set  value    read at                by       grid
+n_a    ℕ    unbound  policy                 !egm     !Cartesian
+a_min  Xa   unbound  policy                 !egm     !Cartesian
+a_max  Xa   unbound  policy                 !egm     !Cartesian
+n_m    ℕ    unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
+m_min  Xm   unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
+m_max  Xm   unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
+```
+
+A settings file may hold the values of other stages of the application as well, so a stage can be given values that none of its declarations names. `configure` binds such a value, and `stage.settings` lists it after the declared settings, with no set and no place that reads it, which is where a misspelled key shows. A second configuration adds its values to those bound before, so the consumption stage configured by its own settings file and then by the settings file of the portfolio stage, `applications/portfolio-choice/declaration/settings/port.yml`, lists that file's keys, among them `n_k`, `n_Ψ_nodes` and `n_θ_nodes`, the grid and quadrature sizes of the portfolio stage:
+
+```python
+methodized.configure("applications/portfolio-choice/declaration/settings/cons.yml")
+print(methodized.configure("applications/portfolio-choice/declaration/settings/port.yml").settings)
+```
+
+```text
+name       set  value   read at                by       grid
+n_a        ℕ    800     policy                 !egm     !Cartesian
+a_min      Xa   1e-06   policy                 !egm     !Cartesian
+a_max      Xa   100.0   policy                 !egm     !Cartesian
+n_m        ℕ    100     cntn_to_dcsn.evaluate  !Linear  !Cartesian
+m_min      Xm   0.01    cntn_to_dcsn.evaluate  !Linear  !Cartesian
+m_max      Xm   10.0    cntn_to_dcsn.evaluate  !Linear  !Cartesian
+n_k             800
+k_min           1e-10
+k_max           1000.0
+n_Ψ_nodes       7
+n_θ_nodes       7
+n_ς             50
+n_sim           10000
+sim_seed        12345
 ```
 
 ## 3 One value by its name

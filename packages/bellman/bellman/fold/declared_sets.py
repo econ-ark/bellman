@@ -74,11 +74,16 @@ def check_declared_sets(stage, obligations, selected=frozenset()):
                 raise ConstructionError(
                     f"the field {identity.field} is produced by {pblock!r} on {produced} and "
                     f"consumed by {cblock!r} on {consumed}, and {produced} does not lie in "
-                    f"{consumed}; declare matching sets, or state the control's feasible set in "
-                    f"the declarative maximisation statement (D18, D19)",
+                    f"{consumed}; declare the field with one set in both blocks, or state the "
+                    f"control's feasible set in the maximization line",
                     stage=stage.name,
                     address=pblock,
                     rule="set-mismatch",
+                    write=(
+                        f"Declare {identity.field} with one set in blocks {pblock!r} and "
+                        f"{cblock!r}, or state the control's feasible set in the maximization "
+                        f"line"
+                    ),
                 )
 
 

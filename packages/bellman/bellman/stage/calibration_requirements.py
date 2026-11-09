@@ -71,7 +71,7 @@ def calibration_requirements(stage, values):
         if setexpr is None:
             result = _in_primitive_domain("primitive:real", value), ""
         else:
-            result = _membership(stage, definitions, setexpr, value, values)
+            result = membership(stage, definitions, setexpr, value, values)
         status, reason = result
         if status is False:
             declared = "ℝ" if setexpr is None else to_source(setexpr)
@@ -153,9 +153,11 @@ def _set_terms(definitions):
     }
 
 
-def _membership(stage, definitions, setexpr, value, values, active=frozenset(), path=()):
+def membership(stage, definitions, setexpr, value, values, active=frozenset(), path=()):
     """Whether a value lies in a declared set: `(True, "")`, `(False,
-    reason)` or `(_UNDECIDED, "")`. A primitive set is read from its domain,
+    reason)` or `(_UNDECIDED, "")`, which the check of the parameter values
+    at calibration and the check of the declared settings at configuration
+    (`binding_verbs`) both read. A primitive set is read from its domain,
     a set the file defines through its definition, an interval from its
     endpoints at the values, a finite set of labels from its members, an
     integer range or a listed set from its members at the values, a product
@@ -172,7 +174,7 @@ def _membership(stage, definitions, setexpr, value, values, active=frozenset(), 
         return False, f"the value {value!r} lies outside the declared set {declared}"
 
     if isinstance(setexpr, T.Space):
-        return _membership(stage, definitions, setexpr.set, value, values, active, path)
+        return membership(stage, definitions, setexpr.set, value, values, active, path)
     if isinstance(setexpr, T.Named):
         primitive = PRIMITIVE_SETS.get(setexpr.name)
         if primitive is not None:
@@ -188,7 +190,7 @@ def _membership(stage, definitions, setexpr, value, values, active=frozenset(), 
         definition = definitions.get(identity)
         if definition is None or definition.kind != "set":
             return _UNDECIDED, ""
-        return _membership(
+        return membership(
             stage, definitions, definition.equations[0], value, values, active | {identity}, path
         )
     if isinstance(setexpr, T.Interval):
@@ -204,6 +206,9 @@ def _membership(stage, definitions, setexpr, value, values, active=frozenset(), 
         right_ok = value <= upper if upper_closed else value < upper
         return (True, "") if left_ok and right_ok else outside(to_source(setexpr))
     if isinstance(setexpr, T.FiniteSet):
+        if isinstance(value, bool):
+            member = "true" if value else "false"
+            return (True, "") if member in setexpr.members else outside(to_source(setexpr))
         if isinstance(value, str) and not isinstance(value, bool) and value in setexpr.members:
             return True, ""
         return outside(to_source(setexpr))
@@ -306,7 +311,7 @@ def _entries(
     undecided = False
     for index, (setexpr, entry) in enumerate(zip(sets_of, entries)):
         key = _Position(index + 1) if positional else keys[index]
-        status, reason = _membership(
+        status, reason = membership(
             stage, definitions, setexpr, entry, values, active, path + (key,)
         )
         if status is False:

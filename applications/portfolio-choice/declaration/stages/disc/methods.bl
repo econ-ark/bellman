@@ -1,0 +1,9 @@
+@methods: disc
+# The methods of the discount stage, written as an addition to disc.bl beside
+# this file: the two forward builders are deterministic, a representation of
+# a forward builder's measure that takes no grid. The two value builders take
+# no method. No line is added, so no block is written: each entry is a
+# file-level line routed to its place by its path.
+
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !deterministic

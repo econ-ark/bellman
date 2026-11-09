@@ -38,8 +38,11 @@
 // setDiagnostics takes the refusals Python found, with 1-based positions
 // counted in code points, converts them to the code units the document
 // counts, and sets them through @codemirror/lint; no linter runs in the
-// browser. A refusal without an end is underlined over the text its
-// message quotes at its position (see tokenEnd). A refusal with an `action`,
+// browser. Each record is {line, column, end_line, end_column, message,
+// severity, rule}: the underline runs over the range the package reports,
+// and stands at the position alone where the record carries no end, since
+// the editor guesses none; the hover shows the message and, after it, the
+// rule as the diagnostic's source. A refusal with an `action`,
 // {name, edits, expected}, has one button of that name in its tooltip,
 // which applies `edits` as replaceSpans does, when the document is
 // `expected` (`take the line out`, spec 0.4 §3.3). setHideTypes(true) draws
@@ -192,27 +195,6 @@ function columnOf(lineText, offset) {
   let column = 1;
   for (let i = 0; i < end; i += unitsAt(text, i)) column++;
   return column;
-}
-
-// The end offset of a diagnostic without an end. A syntax refusal names the
-// place where the parser stopped and quotes, between backticks, the text it
-// found there: the rest of the line for a statement it cannot continue
-// (`- 1         :: [id=util]`), one word for a word it does not know
-// (`!arvx`). The underline covers the quoted text that stands at `from`,
-// without an annotation `:: […]` and the spaces before it; when the message
-// quotes nothing that stands at `from`, the run of non-space characters
-// there; and nothing when `from` is at the line's end.
-function tokenEnd(doc, from, message) {
-  const line = doc.lineAt(from);
-  const rest = line.text.slice(from - line.from);
-  for (const [, quoted] of (message ?? "").matchAll(/`([^`\n]+)`/g)) {
-    if (!rest.startsWith(quoted)) continue;
-    const marker = quoted.indexOf("::");
-    const statement = (marker >= 0 ? quoted.slice(0, marker) : quoted).trimEnd();
-    if (statement.length > 0) return from + statement.length;
-  }
-  const match = /^\S+/.exec(rest);
-  return match ? from + match[0].length : from;
 }
 
 // The 1-based line and column of the main cursor of `state`, the column
@@ -576,9 +558,12 @@ export function create(parent, options = {}) {
         const from = offsetOf(doc, d.line, d.column);
         const to =
           d.end_line == null || d.end_column == null
-            ? tokenEnd(doc, from, d.message)
+            ? from
             : Math.max(from, offsetOf(doc, d.end_line, d.end_column));
         const diagnostic = { from, to, severity: d.severity ?? "error", message: d.message ?? "" };
+        // the rule, which the lint tooltip prints after the message as the
+        // diagnostic's source (Model Interface 0.9 §3)
+        if (d.rule) diagnostic.source = d.rule;
         // A refusal's action: one button, which applies its edits while the
         // document is its `expected` text (spec 0.4 §3.3, J-D19).
         if (d.action) {

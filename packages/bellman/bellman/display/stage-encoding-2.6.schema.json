@@ -151,13 +151,15 @@
             "set",
             "distribution",
             "parameter",
+            "setting",
             "function",
             "function alias",
             "correspondence",
             "law of motion",
             "value aggregator",
             "line",
-            "multiplier"
+            "multiplier",
+            "typing entry"
           ]
         },
         "coordinates": {
@@ -487,12 +489,27 @@
       }
     },
     "method": {
+      "description": "The components typed at one place: the method word and the grid as terms, null where not typed, and the handler's program (specification 0.7, the ruling On structure).",
       "type": "object",
       "properties": {
-        "tag": {
-          "type": [
-            "string",
-            "null"
+        "method": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/term"
+            }
+          ]
+        },
+        "grid": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/term"
+            }
           ]
         },
         "handler": {
@@ -500,31 +517,40 @@
             "string",
             "null"
           ]
-        },
-        "settings": {
-          "$ref": "#/$defs/settings"
-        },
-        "block": {
-          "type": "string"
         }
       },
       "required": [
-        "tag",
-        "handler",
-        "settings"
+        "method",
+        "grid",
+        "handler"
       ],
       "additionalProperties": false
     },
     "pieceMethod": {
+      "description": "The components typed at one place within a box, with the place's address.",
       "type": "object",
       "properties": {
         "at": {
           "type": "string"
         },
-        "tag": {
-          "type": [
-            "string",
-            "null"
+        "method": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/term"
+            }
+          ]
+        },
+        "grid": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/term"
+            }
           ]
         },
         "handler": {
@@ -532,19 +558,13 @@
             "string",
             "null"
           ]
-        },
-        "settings": {
-          "$ref": "#/$defs/settings"
-        },
-        "block": {
-          "type": "string"
         }
       },
       "required": [
         "at",
-        "tag",
-        "handler",
-        "settings"
+        "method",
+        "grid",
+        "handler"
       ],
       "additionalProperties": false
     },
@@ -1137,51 +1157,50 @@
             "records.AuthoredCard",
             "records.Bindings",
             "records.BlockData",
+            "records.BlockDenoted",
             "records.BlockHeader",
             "records.Builders",
             "records.CategoryCodes",
+            "records.Components",
             "records.Composite",
+            "records.Condition",
             "records.Declared",
             "records.Definition",
             "records.DefinitionCard",
             "records.Denoted",
-            "records.BlockDenoted",
+            "records.ExpressionType",
             "records.Hypothesis",
+            "records.ImageAtPoint",
+            "records.ImageByName",
+            "records.ImageSet",
             "records.InitialDiagrams",
             "records.KernelClause",
             "records.Line",
             "records.Metadata",
-            "records.Method",
             "records.MethodClause",
-            "records.BlockMethodClause",
-            "records.ImageByName",
             "records.NodeData",
             "records.OperatorCard",
             "records.OperatorOccurrence",
             "records.Piece",
-            "records.ImageAtPoint",
             "records.Provenance",
             "records.Refusal",
             "records.ResolvedName",
             "records.Rule",
-            "records.Condition",
-            "records.ExpressionType",
-            "records.WireType",
             "records.Semgraph",
-            "records.ImageSet",
             "records.StageDenotation",
             "records.Statement",
             "records.TitleBlock",
             "records.UndeclaredSet",
             "records.Wire",
+            "records.WireType",
             "semantic.Apply",
             "semantic.Compose",
             "semantic.FiniteMeasureSet",
             "semantic.FunctionSet",
-            "semantic.StochasticKernelSet",
             "semantic.MeasurableMapSet",
             "semantic.PowerSet",
             "semantic.ProbabilityMeasureSet",
+            "semantic.StochasticKernelSet",
             "terms.Add",
             "terms.Annotation",
             "terms.Arrival",
@@ -1190,6 +1209,7 @@
             "terms.Between",
             "terms.Block",
             "terms.Call",
+            "terms.Cartesian",
             "terms.Closed",
             "terms.Complementary",
             "terms.Constant",
@@ -1204,11 +1224,14 @@
             "terms.Eq",
             "terms.Equation",
             "terms.FILE",
+            "terms.Feasible",
             "terms.FiniteSet",
             "terms.Functions",
             "terms.Ge",
+            "terms.Grid",
             "terms.Group",
             "terms.Gt",
+            "terms.Handler",
             "terms.In",
             "terms.Inequality",
             "terms.Infoset",
@@ -1216,33 +1239,43 @@
             "terms.Interval",
             "terms.Key",
             "terms.KeyValue",
+            "terms.Keyword",
             "terms.Law",
             "terms.Le",
+            "terms.Listed",
+            "terms.Literal",
             "terms.Lt",
             "terms.Marked",
             "terms.Metadata",
+            "terms.Method",
             "terms.Mul",
+            "terms.Name",
             "terms.Named",
             "terms.Neg",
+            "terms.Nested",
             "terms.Node",
             "terms.Number",
             "terms.Open",
             "terms.Operator",
             "terms.Parameter",
+            "terms.Path",
             "terms.PathAssignment",
             "terms.Points",
             "terms.Pos",
             "terms.Pow",
             "terms.Product",
+            "terms.Quoted",
             "terms.Range",
             "terms.Rel",
             "terms.Residual",
             "terms.Role",
+            "terms.Segment",
             "terms.Select",
             "terms.Shock",
             "terms.Signature",
             "terms.Slack",
             "terms.Space",
+            "terms.Spaced",
             "terms.State",
             "terms.Statement",
             "terms.SteadyState",
@@ -1251,12 +1284,16 @@
             "terms.Sym",
             "terms.T",
             "terms.Tag",
+            "terms.Tagged",
+            "terms.Term",
             "terms.TimeValue",
             "terms.Tuple",
             "terms.Typer",
             "terms.Value",
+            "terms.Values",
             "terms.Var",
-            "terms.Variable"
+            "terms.Variable",
+            "terms.Word"
           ]
         },
         "fields": {
@@ -2034,12 +2071,6 @@
       "inputs",
       "outputs"
     ],
-    "records.Method": [
-      "tag",
-      "handler",
-      "settings",
-      "block"
-    ],
     "records.Metadata": [
       "entries"
     ],
@@ -2126,20 +2157,11 @@
     ],
     "records.MethodClause": [
       "address",
-      "tag",
+      "method",
+      "grid",
       "handler",
-      "settings",
-      "option_types",
-      "values"
-    ],
-    "records.BlockMethodClause": [
-      "address",
-      "tag",
-      "handler",
-      "settings",
-      "option_types",
-      "values",
-      "block"
+      "written",
+      "options"
     ],
     "records.ImageByName": [
       "expression"
@@ -2260,6 +2282,76 @@
       "outer",
       "inner",
       "outputs"
+    ],
+    "terms.Path": [
+      "segments"
+    ],
+    "terms.Segment": [
+      "name",
+      "selectors"
+    ],
+    "terms.Term": [
+      "at"
+    ],
+    "terms.Handler": [
+      "subject",
+      "program"
+    ],
+    "terms.Method": [
+      "m"
+    ],
+    "terms.Grid": [
+      "g"
+    ],
+    "terms.Word": [
+      "name",
+      "arguments"
+    ],
+    "terms.Keyword": [
+      "key",
+      "value"
+    ],
+    "terms.Name": [
+      "name"
+    ],
+    "terms.Literal": [
+      "value"
+    ],
+    "terms.Quoted": [
+      "text"
+    ],
+    "terms.Values": [
+      "items"
+    ],
+    "terms.Nested": [
+      "word"
+    ],
+    "terms.Cartesian": [
+      "factors"
+    ],
+    "terms.Spaced": [
+      "coordinate",
+      "lower",
+      "upper",
+      "count",
+      "spacing"
+    ],
+    "terms.Listed": [
+      "coordinate",
+      "nodes"
+    ],
+    "terms.Feasible": [
+      "coordinate",
+      "set",
+      "count"
+    ],
+    "terms.Tagged": [
+      "tag"
+    ],
+    "records.Components": [
+      "method",
+      "grid",
+      "handler"
     ]
   }
 }

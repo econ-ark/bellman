@@ -1,0 +1,51 @@
+@methods: sa_savings
+# The methods of the smooth-ambiguity savings stage, an addition to
+# sa_savings.bl, the stage file beside this one. Value function iteration
+# stands on the decision value builder, compares n_c candidate consumption
+# levels at each point of the builder's grid of resources m_d and stops at
+# the tolerance tol_v. The four expectations, the two of the value builder's
+# !node lines and the two of the policy builder's objective, are taken by
+# Gauss-Hermite quadrature with one node count per shock. The value builder
+# gains the envelope condition of the decision value under Epstein-Zin
+# aggregation, and the value and its derivative are represented apart at
+# that builder's Evaluation, by a shape-preserving cubic and by linear
+# interpolation. Each !node line takes a representation at the node's own
+# Evaluation: the risk certainty equivalent on the resources and, on the
+# mean of the log return, at the nodes of the quadrature at E_ν, whose
+# expectation reads it; the ambiguity certainty equivalent on the resources.
+# The forward builder draws the two shocks by Monte Carlo. The policy
+# builder and the forward builder gain no line, so their entries are
+# file-level lines routed by their paths. The settings the entries read are
+# declared first, with their sets; their values stand in
+# declaration/settings/sa_savings.yml.
+
+m_min : ℝ₊₊          :: ["lower bound of the grid of resources"]
+m_max : ℝ₊₊          :: ["upper bound of the grid of resources"]
+n_m : ℕ              :: ["number of points of the grid of resources"]
+n_c : ℕ              :: ["number of candidate consumption levels of the grid search"]
+tol_v : ℝ₊₊          :: ["tolerance of value function iteration"]
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the return given the mean of its log"]
+n_ν_nodes : ℕ        :: ["quadrature nodes of the mean of the log return"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulated draws"]
+
+[id=cntn_to_dcsn, method : !vfi(n_c=n_c, tol=tol_v)
+    | cntn_to_dcsn.grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | risk_ce.E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+    | ambiguity_ce.E_ν.method : !gauss_hermite(n_ν=n_ν_nodes)
+    | evaluate[V].method : !pchip
+    | evaluate[V].grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | evaluate[D_{m_d}V].method : !Linear
+    | evaluate[D_{m_d}V].grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | risk_ce.evaluate.method : !Linear
+    | risk_ce.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m), ν=E_ν)] {
+    D_{m_d}V = (1-β)*c^(-ρ)*V^ρ    :: [id=marginal]
+}
+
+cntn_to_dcsn.ambiguity_ce.evaluate.method : !Linear
+cntn_to_dcsn.ambiguity_ce.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))
+
+policy.objective.E_ν.method : !gauss_hermite(n_ν=n_ν_nodes)
+policy.objective.E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)

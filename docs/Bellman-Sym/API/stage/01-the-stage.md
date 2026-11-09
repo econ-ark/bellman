@@ -23,7 +23,7 @@ Each python block on this page runs after the blocks above it, in one session st
 
 ## 1 Making a stage
 
-A stage file holds declarations and [blocks](../../01-stage.md#3-builder-blocks). Each block lists the fields it reads and the fields it writes, and it denotes an operator: on value functions when it is read backward, on finite measures over the states when it is read forward. The consumption stage of the portfolio application, from which the listings of these pages are printed, is the running example. The household holds resources `m` at the arrival [perch](../../../wiki/perch.md); the block `arvl_to_dcsn` writes `m_d = m` at the decision perch, where consumption `c` is chosen, and the block `dcsn_to_cntn` writes savings `a = m_d - c`. The policy block has four lines, `optimality`, `InvEuler`, `endoggrid` and `cons_choice`, whose ids the listings use and which [A builder](04-builder.md) §2 reads one by one. The block `cntn_to_dcsn` writes the value `V` and states its derivative in `m_d` by a derivative line, `D_{m_d}V = 𝑑𝑢(c)`. The line `InvEuler` reads the derivative of the continuation value in `a` by the derivative term `D_{a}V[>]`; neither derivative is a field of a header. The file, as the repository holds it:
+A stage file holds declarations and [blocks](../../01-stage.md#3-builder-blocks). Each block lists the fields it reads and the fields it writes, and it denotes an operator: on value functions when it is read backward, on finite measures over the states when it is read forward. The consumption stage of the portfolio application, from which the listings of these pages are printed, is the running example. The household holds resources `m` at the arrival [perch](../../../wiki/perch.md); the block `arvl_to_dcsn` writes `m_d = m` at the decision perch, where consumption `c` is chosen, and the block `dcsn_to_cntn` writes savings `a = m_d - c`. The policy block states the choice by its maximization, the line `optimality`; the three lines of the endogenous grid method, `InvEuler`, `grid` and `identification`, stand in the methods file beside the stage file, `methods.bl`, which [A builder](04-builder.md) §2 reads one by one after methodization ([Methodization](../../04-methodization.md)). The block `cntn_to_dcsn` writes the value `V` and states its derivative in `m_d` by a derivative line, `D_{m_d}V = 𝑑𝑢(c)`. The line `InvEuler` of the methods file reads the derivative of the continuation value in `a` by the derivative term `D_{a}V[>]`; neither derivative is a field of a header. The file, as the repository holds it:
 
 ```python
 from pathlib import Path
@@ -40,11 +40,10 @@ Xa := ℝ₊
 ρ : [1, inf)
 
 𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
-𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marg_util]
-𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)          :: [id=inv_marg_util]
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marginal_utility]
 Γ(x : ℝ₊₊) := (0, x]
 
-[id=arvl_to_dcsn, (m : Xm) : !arvl -> (m_d : Xm) : !dcsn] {
+[id=arvl_to_dcsn, (m : Xm, l : ℝ₊) : !arvl -> (m_d : Xm) : !dcsn] {
     m_d = m
 }
 
@@ -62,14 +61,11 @@ Xa := ℝ₊
 }
 
 [id=policy, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-    c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])   :: [id=optimality, !doc]
-    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0       :: [id=InvEuler]
-    m_d[>] = a + c[>]                :: [id=endoggrid]
-    c      = c[>]                    :: [id=cons_choice]
+    c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])   :: [id=optimality]
 }
 ```
 
-`load_stage(path)` reads a stage file into its **record**, a dictionary that holds the file's text and origin under `stage`, the calibration and the settings as empty mappings, the methods as the empty methods mapping `{"methods": []}`, and the file's origin and digest under `provenance`. `elaborate_stage(record)` parses the text and constructs the stage. The result is a **stage occurrence**: the file elaborated once, with its own bindings, sharing no object with any other elaboration of the same file. One file may be elaborated at several positions, in one [period](../../../wiki/period.md) or across periods, and each elaboration is a separate stage occurrence, which prints the name the file declares and, when it stands in a [trellis](../../../wiki/trellis.md), records its position there in its `provenance`. A stage occurrence is never adjusted in place: it varies only through one of its three bindings or through a different text, which is elaborated again, and a text derived from the file is elaborated as a stage occurrence of its own, with its origin recorded.
+`load_stage(path)` reads a stage file into its **record**, a dictionary that holds the file's text and origin under `stage`, the calibration and the settings as empty mappings, under `methods` the list of the additions it read, `[]` for the stage file alone, and the file's origin and digest under `provenance`; `load_stage(path, [methods_path])` reads the stage file with the methods files its list names, and `methods` then holds one record with the keys `origin` and `text` for each addition, in the order given. `elaborate_stage(record)` parses the text and constructs the stage. The result is a **stage occurrence**: the file elaborated once, with its own bindings, sharing no object with any other elaboration of the same file. One file may be elaborated at several positions, in one [period](../../../wiki/period.md) or across periods, and each elaboration is a separate stage occurrence, which prints the name the file declares and, when it stands in a [trellis](../../../wiki/trellis.md), records its position there in its `provenance`. A stage occurrence is never adjusted in place: it varies only through one of its three bindings or through a different text, which is elaborated again, and a text derived from the file is elaborated as a stage occurrence of its own, with its origin recorded.
 
 ```python
 from bellman.stage import elaborate_stage, load_stage
@@ -82,9 +78,9 @@ print(repr(stage))
 ElaboratedStage('cons', symbolic)
 ```
 
-The short form names the class, the declared name of the stage and its version: `symbolic` before any binding, then `calibrated`, `methodized` or `specified` as the verbs of [The binding verbs](09-binding-verbs.md) are applied.
+The short form names the class, the declared name of the stage and its version. Where the bindings present follow the order calibration, methodization, configuration from its start, the version is one word: `symbolic` before any binding, then `calibrated`, `methodized` and `specified` as the verbs of [The binding verbs](09-binding-verbs.md) are applied in that order. Otherwise the version is the list of the bindings present, in that order: a stage occurrence constructed with its methods files and not yet calibrated prints `methods`, and `methods, settings` once it is configured.
 
-A record may also hold, as mappings, the sources of the three bindings, and `elaborate_stage(record)` binds each source the record supplies, in the order of [The binding verbs](09-binding-verbs.md) §1: a non-empty `calibration` as `calibrate` binds it, a `methods` mapping whose list under `methods` holds at least one entry as `methodize` binds it, and a non-empty `settings` as `configure` binds it. An empty source binds nothing, so the record `load_stage` returns gives the symbolic stage, as above, and `elaborate_stage(record, bind=False)` gives the symbolic stage whatever the record holds. The stage is constructed, the bindings are made on it, and it is copied once, at the end; the result equals, provenance included, the stage the three verbs bind one after another on `elaborate_stage(record, bind=False)` with the record's own mappings, each binding that stage itself. A source is refused as its verb refuses it, and settings given without methods are refused, since a setting is read against the method that names it.
+A record may also hold, as mappings, the sources of the calibration and the settings, and under `methods` the additions `load_stage` read, which are read with the stage text when the stage is constructed and bound by no verb: `elaborate_stage(record)` constructs the stage from the stage file with its additions and binds each source the record supplies, in the order of [The binding verbs](09-binding-verbs.md) §1, a non-empty `calibration` as `calibrate` binds it and a non-empty `settings` as `configure` binds it. Under `methods` anything but that list is refused under `record-shape`, the mapping `{"methods": []}` among it, and the refusal says to write `methods: []`; an empty mapping is admitted as the empty source of a record written by hand. An empty source binds nothing, so the record `load_stage(path)` returns gives the symbolic stage, as above, and `elaborate_stage(record, bind=False)` gives the symbolic stage whatever the record holds, the additions left out with the other sources. The stage is constructed, the bindings are made on it, and it is copied once, at the end; for a record without additions the result equals, provenance included, the stage the two verbs bind one after another on `elaborate_stage(record, bind=False)` with the record's own mappings, each binding that stage itself. A source is refused as its verb refuses it.
 
 ```python
 record = load_stage("applications/portfolio-choice/declaration/stages/cons/cons.bl")
@@ -135,10 +131,9 @@ print(stage.provenance)
 ```text
 ['name', 'metadata', 'definitions', 'initial', '_builders', 'bindings', 'provenance']
 calibration   none   calibrate(stage, source)
-methods       none   methodize(stage, source)
 settings      none   configure(stage, source)
 origin   applications/portfolio-choice/declaration/stages/cons/cons.bl
-sha256   08c03d33a2b2c19b5655ba97c515c6d650999398fb0ba3d1c2111cd49e37cc8f
+sha256   e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667
 ```
 
 | Attribute | Python type | What it holds |
@@ -148,10 +143,10 @@ sha256   08c03d33a2b2c19b5655ba97c515c6d650999398fb0ba3d1c2111cd49e37cc8f
 | `definitions` | read-only mapping from an identity to a `Definition` | every declared name once, and one record for each line of a block |
 | `initial` | record of two graphs | the graphs on fields, `backward` and `forward` |
 | `_builders` | record of two graphs | the graphs on functions and measures, backward and forward, which `stage.builder` reads by the pair of perches each builder joins |
-| `bindings` | record of four mappings | the calibration, the methods, the settings and the method blocks of this version, none of them bound on a symbolic stage |
+| `bindings` | record of three mappings | the calibration and the settings of this version, each `None` until bound, and `blocks`, the rows a solution method's lines add at the operative level, by the builder each opens; the methods of a version are no binding but the components of its signatures, read from the typing entries of the definitions table ([Methods and places](07-methods.md)) |
 | `provenance` | read-only mapping | the file's path, text and digest, under `versions` the version of the package and the digests of its grammar files, and under `sources` where each binding was read from and its digest; on a bound version, the verb that made it, its source and, under `parent`, the provenance of the version it was made from; for a stage occurrence in a trellis, also its position there |
 
-Nothing else is stored. Whatever the definitions, the graphs and the bindings determine is computed when it is asked for, and the answer is then kept on the version it was asked of. A binding verb keeps the answers the stage had computed from the definitions and the graphs alone, which no binding changes but one that binds a method block, whose definitions and lines enter the definitions table, and discards those that read a binding, which the stage computes again when they are asked for; a verb that binds a method block, whose rows change the operative builders, keeps only the answers of the stage file's own construction and of the initial diagrams. Of the three bindings, the calibration completes the economic problem, and the methods and the settings record how it is to be computed, changing no assertion of the model.
+Nothing else is stored. Whatever the definitions, the graphs and the bindings determine is computed when it is asked for, and the answer is then kept on the version it was asked of. `calibrate` and `configure` keep the answers the stage had computed from the definitions and the graphs alone, which neither changes, and discard those that read a binding, which the stage computes again when they are asked for; `methodize` elaborates the stage anew from the union of the stage file with its methods file, whose entries and lines enter the definitions table and whose solution method's lines change the operative builders, and keeps only the answers of the stage file's own construction and of the initial diagrams ([The binding verbs](09-binding-verbs.md) §1). Of the three bindings, the calibration completes the economic problem, and the methods and the settings record how it is to be computed, changing no assertion of the model.
 
 ```python
 print(stage.name, len(stage.definitions))
@@ -159,7 +154,7 @@ print(sorted(stage.provenance))
 ```
 
 ```text
-cons 21
+cons 17
 ['origin', 'sha256', 'sources', 'text', 'versions']
 ```
 
@@ -199,18 +194,19 @@ applications/portfolio-choice/declaration/stages/cons/cons.bl
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PERCHES ──────────────────────────────────────────────────────────────────────
-  ≺ arrival        m≺ state, V≺ value
+  ≺ arrival        m≺ state, l≺ state, V≺ value
   ∼ decision       m_d state, c control, V value
   ≻ continuation   a≻ state, V≻ value
 
 FIELDS ───────────────────────────────────────────────────────────────────────
-  states           m≺ at arrival, m_d at decision, a≻ at continuation
+  states           m≺ at arrival, l≺ at arrival, m_d at decision, a≻ at
+                   continuation
   controls         c at decision
   values           V at every perch
   shocks           none
 
 BLOCKS ───────────────────────────────────────────────────────────────────────
-  → arvl_to_dcsn   (m≺) : !arvl -> (m_d) : !dcsn
+  → arvl_to_dcsn   (m≺, l≺) : !arvl -> (m_d) : !dcsn
   → dcsn_to_cntn   (m_d) : !dcsn, at c -> (a≻) : !cntn
   ← cntn_to_dcsn   (V≻) : !cntn, at c -> (V) : !dcsn
   ← dcsn_to_arvl   (V) : !dcsn -> (V≺) : !arvl
@@ -221,15 +217,14 @@ DEFINITIONS ──────────────────────�
   ───────────────────  ─────   ─────────────────────────────────────────────
   sets                     2   Xm := ℝ₊₊, Xa := ℝ₊
   parameters               1   ρ : [1, inf)
-  functions                3   𝑢, 𝑑𝑢, 𝑑𝑢𝑖𝑛𝑣 on ℝ₊₊
+  functions                2   𝑢, 𝑑𝑢 on ℝ₊₊
   correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊
   laws of motion           2   m_d = m; a = m_d - c
-  value aggregators        3   V = 𝑢(c) + V[>]; V[<] = V; policy, two kernels
-  block lines              9   arvl_to_dcsn.1, dcsn_to_cntn.1,
+  value aggregators        3   V = 𝑢(c) + V[>], D_{m_d}(V) = 𝑑𝑢(c); V[<] = V;
+                               c = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])
+  block lines              6   arvl_to_dcsn.1, dcsn_to_cntn.1,
                                cntn_to_dcsn.value, cntn_to_dcsn.marginal,
-                               dcsn_to_arvl.value, policy.optimality,
-                               policy.InvEuler, policy.endoggrid,
-                               policy.cons_choice
+                               dcsn_to_arvl.value, policy.optimality
 
 GRAPHS ───────────────────────────────────────────────────────────────────────
   initial diagrams  backward present, forward present
@@ -242,7 +237,7 @@ BINDINGS ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄�
   settings         none   configure(stage, source)
 
 DIRECTIONS ───────────────────────────────────────────────────────────────────
-  forward    ≺ m≺  →  ∼ m_d  →  ≻ a≻
+  forward    ≺ m≺, l≺  →  ∼ m_d  →  ≻ a≻
   backward   ≺ V≺  ←  ∼ V  ←  ≻ V≻
   policy     ∼ c  ←  ≻ V≻
 ```
@@ -294,16 +289,13 @@ STAGE cons
 Signature
   backward
     in   𝑉≻  : Xa → [−∞, ∞)
-         ───────────────────────────────────────────
-    out  𝑉≺  : Xm → ℝ
+         ──────────────────────────────────────
+    out  𝑉≺  : Xm × ℝ₊ → ℝ
          𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
   forward
-    in   μ≺  : finite measure on Xm
-         ───────────────────────────────────────────
+    in   μ≺  : finite measure on Xm × ℝ₊
+         ──────────────────────────────────────
     out  μ≻  : finite measure on Xa
-
-Declared
-  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
 
 Operations
   backward
@@ -324,21 +316,28 @@ Operations
        in: μ                            out: μ≻
 
 Conditions
-  cntn_to_dcsn:Aggregation      𝑉(m_d) ∈ [−∞, ∞)
-  dcsn_to_arvl:Aggregation      𝑉≺(m) ∈ ℝ
-  policy.endoggrid:Aggregation  𝑚_d≻(a) ∈ Xm
-  𝑢                             ¬(1 − ρ = 0)
+  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
+  𝑢                         ¬(1 − ρ = 0)
+  cntn_to_dcsn.marginal     marginal-reading: the right side of each
+                              derivative line equals the derivative, in the
+                              named coordinate, of the value the builder
+                              writes, under the envelope conditions: concavity
+                              of the continuation value, interiority of the
+                              maximizer or the multiplier's term at a binding
+                              constraint, differentiability of the reward in
+                              the control, a measurable selection of the
+                              policy, and differentiability of the value at
+                              the point read; listed and not checked
+                              [required]
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  14  m_d = m
-  18  a = m_d - c
-  22  V        = 𝑢(c) + V[>]                       :: [id=value]
-  23  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
-  27  V[<] = V                                     :: [id=value]
-  31  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
-  32  c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0          :: [id=InvEuler]
-  33  m_d[>] = a + c[>]                            :: [id=endoggrid]
-  34  c      = c[>]                                :: [id=cons_choice]
+  13  m_d = m
+  17  a = m_d - c
+  21  V        = 𝑢(c) + V[>]                       :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
+  26  V[<] = V                                     :: [id=value]
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
 
 Definitions referenced
   Xm    cons:set:Xm
@@ -346,7 +345,6 @@ Definitions referenced
   ρ     cons:parameter:ρ
   𝑢     cons:function:𝑢
   Γ     cons:correspondence:Γ
-  𝑔≻    cons:g:dcsn_to_cntn
 
 File
   applications/portfolio-choice/declaration/stages/cons/cons.bl
@@ -372,6 +370,7 @@ print(stage.fields())
 
 ```text
 cons:arvl:m     ≺ arvl  state  in Xm
+cons:arvl:l     ≺ arvl  state  in ℝ₊
 cons:dcsn:m_d   ∼ dcsn  state  in Xm
 cons:dcsn:c     ∼ dcsn  control  in ℝ₊₊
 cons:cntn:a     ≻ cntn  state  in Xa
@@ -390,13 +389,11 @@ print(stage.diagnostics())
 
 ```text
 arithmetic-definedness      ¬(1 − ρ = 0)
-finite-real-arithmetic      The operands of Add at policy.endoggrid must be finite real numbers.
 finite-real-arithmetic      The operands of Add at policy.optimality must be finite real numbers.
 aggregation-admissibility   V(m_d) ∈ [−∞, ∞)
-marginal-reading            The right side of cntn_to_dcsn.marginal equals the derivative of V in m_d under the envelope conditions.
-aggregation-admissibility   V≺(m) ∈ ℝ
+marginal-reading            the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
+aggregation-admissibility   V≺(m, l) ∈ ℝ
 finite-real-arithmetic      The operands of Add at policy must be finite real numbers.
-aggregation-admissibility   m_d≻(a) ∈ Xm
 range-compatibility         m_d − c(m_d) ∈ Xa   [established]
 
 complete_signature         True
