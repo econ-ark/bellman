@@ -130,8 +130,8 @@ body:has(.bellman-home) .md-top {
 .bellman-home__hero {
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   padding: clamp(48px, 7vw, 96px) var(--bellman-home-pad) clamp(48px, 6vw, 88px);
-  background: var(--bl-ice);
-  color: #172a52;
+  background: var(--bl-ultramarine);
+  color: #fff;
 }
 
 .bellman-home__art {
@@ -179,7 +179,7 @@ body:has(.bellman-home) .md-top {
 
 .bellman-home h1 {
   margin: 0;
-  color: #172a52;
+  color: #fff;
   font-family: "PP Monument Extended", Archivo, Helvetica, Arial, sans-serif;
   font-size: clamp(40px, 6.4vw, 110px);
   font-weight: 400;
@@ -196,7 +196,7 @@ body:has(.bellman-home) .md-top {
 .bellman-home__modular > span {
   display: inline-block;
   padding: 0 .08em;
-  border: 1px solid rgba(23, 42, 82, .3);
+  border: 1px solid #fff;
   line-height: 1.02;
   animation: bellman-module-z .6s cubic-bezier(.2,1.35,.3,1) var(--letter-delay) both;
 }
@@ -225,24 +225,24 @@ body:has(.bellman-home) .md-top {
   display: inline-flex;
   align-items: center;
   padding: 12px 20px;
-  border: 1px solid #172a52;
-  color: #172a52;
+  border: 1px solid #fff;
+  color: #fff;
   transition: background .15s, color .15s;
 }
 
 .bellman-home__button:hover {
-  background: #c5e5f1;
-  color: #172a52;
+  background: #fff;
+  color: var(--bl-ultramarine);
 }
 
 .bellman-home__button--primary {
-  background: #172a52;
-  color: #fff;
+  background: #fff;
+  color: var(--bl-ultramarine);
 }
 
 .bellman-home__button--primary:hover {
-  border-color: #22397a;
-  background: #22397a;
+  border-color: #172a52;
+  background: #172a52;
   color: #fff;
 }
 
