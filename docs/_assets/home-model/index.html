@@ -7,35 +7,50 @@
 <link rel="stylesheet" href="../workbench/flow/base.css">
 <link rel="stylesheet" href="../workbench/graph.css">
 <link id="vscode-codicon-stylesheet" rel="stylesheet" href="../workbench/codicons/codicon.css">
-<link rel="stylesheet" href="embed.css">
+<link rel="stylesheet" href="embed.css?v=20261110p">
 <script type="module" src="../workbench/vscode-elements/bundled.js"></script>
 <script defer src="../workbench/flow/elk.bundled.js"></script>
 <script defer src="../workbench/flow/bellman-flow.js"></script>
-<script defer src="embed.js"></script>
+<script type="module" src="embed.js?v=20261110p"></script>
 </head>
 <body>
 <main class="workbench-frame" aria-label="Model diagram and authored source">
-  <div class="frame-bar">
-    <div role="tablist" aria-label="Model view" class="view-tabs">
-      <button role="tab" id="diagram-tab" aria-controls="diagram-panel" aria-selected="true">Diagram</button>
-      <button role="tab" id="source-tab" aria-controls="source-panel" aria-selected="false" tabindex="-1">Source</button>
-    </div>
-    <span id="filename" class="filename"></span>
+  <div role="tablist" aria-label="Model pane" class="compact-tabs" hidden>
+    <button type="button" role="tab" id="source-tab" aria-controls="source-panel" aria-selected="false" tabindex="-1">Source</button>
+    <button type="button" role="tab" id="diagram-tab" aria-controls="diagram-panel" aria-selected="true">Diagram</button>
   </div>
-  <div id="diagram-panel" role="tabpanel" aria-labelledby="diagram-tab" class="diagram-panel" tabindex="0">
-    <div class="native-window bl-window"><section class="bl-view"><div class="bl-canvas">
-      <div id="graph" class="bl-view-host"></div>
-      <div class="bl-graph-controls"><span id="native-controls" class="bl-graph-icons"></span></div>
-    </div></section></div>
-    <div id="loading" class="loading-state" role="status">
-      <span id="loading-text">Loading the model diagram…</span>
-      <a id="fallback-link" href="../../overview/07-workbench/" target="_top" hidden>Read the Workbench guide</a>
-    </div>
-  </div>
-  <div id="source-panel" role="tabpanel" aria-labelledby="source-tab" hidden tabindex="0">
-    <div class="source-info"><span>Forward declaration</span><span id="line-range"></span></div>
-    <p id="source-status" class="source-status" role="status">Loading the authored source…</p>
-    <pre id="source-code" aria-label="Authored model source"></pre>
+  <div class="pane-layout">
+    <section id="source-panel" class="source-panel" aria-labelledby="source-heading" data-wrap="true">
+      <div class="pane-bar">
+        <h2 id="source-heading">Source</h2>
+        <span id="filename" class="filename"></span>
+        <button type="button" id="wrap-source" aria-pressed="true" title="Wrap long source lines">Wrap lines</button>
+      </div>
+      <div class="source-scroll" tabindex="0" aria-label="Read-only model source">
+        <p id="source-status" class="source-status" role="status">Loading the authored source…</p>
+        <pre id="source-code" aria-label="Authored model source"></pre>
+      </div>
+    </section>
+    <div id="pane-resizer" role="separator" tabindex="0" aria-label="Source pane width" aria-controls="source-panel diagram-panel" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="38"></div>
+    <section id="diagram-panel" class="diagram-panel" aria-labelledby="diagram-heading">
+      <div class="pane-bar graph-bar">
+        <h2 id="diagram-heading">Diagram</h2>
+        <div class="graph-options">
+          <label for="graph-kind">Graph<select id="graph-kind" disabled><option value="initial">Initial</option><option value="operator">Operator</option></select></label>
+          <label for="graph-direction">Direction<select id="graph-direction" disabled><option value="backward">Backward</option><option value="forward" selected>Forward</option></select></label>
+        </div>
+      </div>
+      <div class="diagram-body">
+        <div class="native-window bl-window"><section class="bl-view"><div class="bl-canvas">
+          <div id="graph" class="bl-view-host"></div>
+          <div class="bl-graph-controls"><span id="native-controls" class="bl-graph-icons"></span></div>
+        </div></section></div>
+        <div id="loading" class="loading-state" role="status">
+          <span id="loading-text">Loading the model diagram…</span>
+          <a id="fallback-link" href="../../overview/07-workbench/" target="_top" hidden>Read the Workbench guide</a>
+        </div>
+      </div>
+    </section>
   </div>
   <noscript><a href="../../overview/07-workbench/" target="_top">Read the Workbench guide</a> to explore the model.</noscript>
 </main>
