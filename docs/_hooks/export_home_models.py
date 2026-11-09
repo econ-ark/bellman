@@ -18,8 +18,12 @@ MODELS = {
 
 def export_models():
     """Export current stage declarations without numerical bindings."""
-    sys.path.insert(0, str(ROOT / "packages/bellman"))
-    from bellman.stage import elaborate_stage, layers_to_open, load_stage, to_model_explorer
+    sys.path[:0] = [str(ROOT / "packages/bellman"), str(ROOT / "packages/bellman-workbench")]
+    from bellman.stage import (
+        LAYER_COLORS, NODE_STYLE, OUTPUT_STYLE,
+        elaborate_stage, layers_to_open, load_stage, to_model_explorer,
+    )
+    from bellman_workbench.model import forward_display_collection
 
     OUTPUT.mkdir(parents=True, exist_ok=True)
     for name, (application, stage_name, first, last) in MODELS.items():
@@ -31,12 +35,20 @@ def export_models():
         if not excerpt.startswith("[id=") or not excerpt.rstrip().endswith("}"):
             raise ValueError(f"Review the forward excerpt of {source_path}.")
         stage = elaborate_stage(load_stage(str(source)))
-        collection = to_model_explorer(stage)
+        collection = forward_display_collection(asdict(to_model_explorer(stage)))
         graph = "forward initial diagram"
         data = {
-            "collection": asdict(collection),
+            "collection": collection,
             "graph": graph,
-            "layers": list(layers_to_open(collection, graph, 1)),
+            "layers": {
+                entry["id"]: list(layers_to_open(collection, entry["id"], 1))
+                for entry in collection["graphs"]
+            },
+            "styles": {
+                "node": asdict(NODE_STYLE),
+                "output": asdict(OUTPUT_STYLE),
+                "layers": {level: list(colors) for level, colors in LAYER_COLORS.items()},
+            },
             "source_path": source_path,
             "source_sha256": digest,
         }
