@@ -652,7 +652,7 @@ body:has(.bellman-home) .md-top {
 .home-project__rows p { margin: 0; padding-right: 56px; max-width: 48ch; font-size: 17px; line-height: 1.55; }
 .home-project__arrow { position: absolute; right: 0; }
 .home-project__rows a:hover h3, .home-project__rows a:hover .home-project__arrow { color: var(--bl-ultramarine); }
-.home-start { display: grid; grid-template-columns: 1fr 1fr; padding: 0 var(--bellman-home-pad); background: var(--bl-ultramarine); color: var(--bl-ice); }
+.home-start { display: grid; grid-template-columns: 1fr 1fr; padding: 0 max(var(--bellman-home-pad), calc((100% - 1440px) / 2)); background: var(--bl-ultramarine); color: var(--bl-ice); }
 .home-start > a { position: relative; padding: 52px 72px 56px 0; color: inherit; }
 .home-start > a + a { border-left: 1px solid rgb(237 247 252 / .35); padding-left: clamp(28px, 5vw, 76px); }
 .home-start h2 { font-size: clamp(23px, 2.2vw, 32px); }
