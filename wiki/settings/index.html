@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/wiki/settings/">
+        <link rel="canonical" href="https://bellman.io/wiki/settings/">
       
       
         <link rel="prev" href="../semiconjugacy/">
@@ -2818,13 +2818,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5780,6 +5807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../handler/" class="md-nav__link">
         
   
@@ -5984,6 +6039,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -6377,6 +6460,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -6393,6 +6494,47 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-declared-with-their-domains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 Declared with their domains
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-bound-by-configure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 Bound by configure
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -7490,6 +7632,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-declared-with-their-domains" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1 Declared with their domains
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-bound-by-configure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2 Bound by configure
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -7601,11 +7773,30 @@
 
 
 <h1 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">&para;</a></h1>
-<p><strong>Settings</strong> specify numerical choices such as approximation-grid size, tolerance and iteration limits. They configure how a computation is approximated. <a href="../parameters/">Parameters</a> instead define the economic model, including any discrete domain that is part of that model.</p>
-<p>The <a href="../stage/">stage</a> verb is <code>stage.configure(settings_source)</code>, with a path or mapping; <code>configure_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a>. Configuration requires prior <a href="../methodization/">methodization</a> and values for all settings referenced by the methods. The values are stored in the version's bindings, while method records retain the authored setting names.</p>
-<p><code>stage.settings</code> lists every configured setting with its value, the place that reads it and the method there; a setting that no method bound to the stage reads, such as a key of a settings file that several stages share, stands with the last two empty. <code>stage.settings["n_m"]</code> answers one setting's record, whose <code>value</code> is the configured value (<a href="../../Bellman-Sym/API/stage/06-par-and-settings/">Parameters and settings</a> §2). A spelling mistake in a key therefore declares no new required setting and does not establish that a <a href="../handler/">handler</a> uses it.</p>
-<p>An empty settings mapping is legitimate for a recognition-only example, but it supplies no algorithm. Conversely, recording a grid size does not demonstrate numerical accuracy or adequate boundary treatment. A compatible handler must state which options it supports and how they relate to the declared mathematical domain.</p>
-<p>The entry <a href="../specified_stage/">specified stage</a> explains the order of the bindings and why each binding gives a new <a href="../stage/">stage version</a>; neither implies commutativity. The <a href="../trellis/">syntactic trellis</a> holds the merged mappings, and the stage verb binds; the <a href="../spec_factory/">specification factory</a> explains how sources combine. Exact configuration behavior is in <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
+<div class="admonition abstract">
+<p class="admonition-title">Summary</p>
+<p><strong>Settings</strong> are the values a numerical method reads: the bounds and the count of a <a href="../grid/">grid</a>, a tolerance, an iteration limit, the number of quadrature nodes, a rule chosen among finitely many labels. They configure how a computation is approximated; <a href="../parameters/">parameters</a> define the economic model. A setting is declared with its domain in the methods file, the <a href="../addition/">addition</a> to the stage file, and its value, written in the settings file, is bound by <code>configure</code>, which refuses a value outside the declared set.</p>
+</div>
+<details class="info">
+<summary>Relationship with other documents</summary>
+<p><strong>Formal account</strong> — <a href="../../bellman-calculus/06-Methods/">Methods</a> §6: a setting as a declared name a method's label reads, with no value in the signature.
+<strong>Builds on</strong> — <a href="../grid/">Grid</a>: the component whose factors name settings; <a href="../methods/">Methods</a>: the words whose keyword arguments name them.
+<strong>Used by</strong> — <a href="../../Bellman-Sym/API/stage/06-par-and-settings/">Parameters and settings</a>: the table <code>stage.settings</code>; <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>: the verb <code>configure</code>.</p>
+</details>
+<p>A setting is told from a parameter by the file that declares it: a parameter is declared by the <a href="../stage/">stage file</a> and defines the model, including any discrete domain that is part of the model; a setting is declared by the methods file and configures a method.</p>
+<h2 id="1-declared-with-their-domains">1 Declared with their domains<a class="headerlink" href="#1-declared-with-their-domains" title="Permanent link">&para;</a></h2>
+<p>A methods file declares each setting it reads at file level, in the form the stage file declares a parameter, with its set and a description:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>n_a : ℕ              :: ["number of points of the savings grid"]
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>a_min : Xa           :: ["lower bound of the savings grid"]
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>a_max : Xa           :: ["upper bound of the savings grid"]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>tol_v : ℝ₊₊          :: ["tolerance of value function iteration"]
+</code></pre></div>
+<p>A bound of a grid is a point of the set the stage declares for the coordinate, <code>Xa</code> for the savings <code>a</code> or a literal set such as <code>ℝ₊</code>; a count is a natural number; a tolerance is a positive real; a setting valued in a finite set of labels, such as a tie-breaking rule, is declared on that set. A name is declared once in a stage, and two declarations of one name with different sets are refused. The scope of a declaration is the addition and the stage it is unioned with; where two stages of one <a href="../period/">period</a> each declare one name, they denote one setting of that period, as a parameter name does. A grid entry names settings and holds no number: <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> names three. A method word's keyword argument names a declared setting where the choice is to be configured, <code>!gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)</code>, and may hold a number or a quoted string where the method's catalogue row admits one. An undeclared name is refused as any other is.</p>
+<h2 id="2-bound-by-configure">2 Bound by configure<a class="headerlink" href="#2-bound-by-configure" title="Permanent link">&para;</a></h2>
+<p>The values stand in the settings file, and the <a href="../stage/">stage</a> verb <code>stage.configure(settings_source)</code>, with a path or a mapping, binds them as <code>calibrate</code>, the verb of <a href="../calibration/">calibration</a>, binds a parameter's value; <code>configure_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a>. Configuration follows the union of the stage file with its additions and the elaboration of the unioned stage, so that the settings it binds are those the methods file declares, read against the methods and grids that name them. It refuses a value outside the declared set, naming the line of the methods file where the setting is declared, and a name with no value. A key of a shared settings file that no declaration names binds nothing and declares no new setting, so a spelling mistake in a key is found at configuration and not hidden. The bound values stand in the stage's record of bindings; no value is part of a signature.</p>
+<p><code>stage.settings</code> lists every declared setting with its value, the <a href="../operator/">operator</a> that reads it, the method there and, where the setting is a factor of that operator's grid, the grid's kind; <code>stage.settings["n_a"]</code> answers one setting's record, whose <code>value</code> is the configured value (<a href="../../Bellman-Sym/API/stage/06-par-and-settings/">Parameters and settings</a> §2). <code>stage.par</code> lists the parameters and no setting.</p>
+<p>An empty settings mapping is admissible for a stage whose methods declare no setting; it chooses no method. Recording a grid size demonstrates neither numerical accuracy nor adequate treatment of the bounds: at configuration the package checks each bound pair ordered and inside the coordinate's set, each count at least two and each node set strictly increasing, and nothing more. The entry <a href="../specified_stage/">specified stage</a> states the order in which the three bindings, calibration, <a href="../methodization/">methodization</a> and configuration, are made, and the <a href="../spec_factory/">specification factory</a> states how the sources of a <a href="../spec_factory/">recipe</a> combine. Exact configuration behavior is in <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
 
 
 
@@ -7707,18 +7898,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

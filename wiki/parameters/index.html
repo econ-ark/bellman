@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/wiki/parameters/">
+        <link rel="canonical" href="https://bellman.io/wiki/parameters/">
       
       
         <link rel="prev" href="../ordering_conventions/">
@@ -2818,13 +2818,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5780,6 +5807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../handler/" class="md-nav__link">
         
   
@@ -5984,6 +6039,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7664,7 +7747,7 @@
 <p><strong>Parameters</strong> define the mathematical economic model: for example, discounting, risk aversion, the coefficients of <a href="../operator/#kernels">shock probability distributions</a> and scalars that define an economic state domain. A declaration in a <code>.bl</code> <a href="../stage/">stage file</a> supplies a parameter's name and domain. <a href="../calibration/">Calibration</a> supplies its value through a separate source mapping. A parameter is no <a href="../field/">field</a> and no <a href="../semgraph/">wire</a> of a graph: it is named inside the definitions that use it, and its declaration and value stay open to inspection.</p>
 <p><code>stage.par</code> lists the parameters of a <a href="../stage/">stage version</a>, each with its declared set and its bound value or the word <code>unbound</code>. <code>stage.par["ρ"]</code> answers one parameter's record, read by the name the file declares, and its <code>value</code> is the number calibration bound (<a href="../../Bellman-Sym/API/stage/06-par-and-settings/">Parameters and settings</a> §1).</p>
 <h2 id="parameters-versus-settings">Parameters versus settings<a class="headerlink" href="#parameters-versus-settings" title="Permanent link">&para;</a></h2>
-<p>A discrete set of housing choices can be part of the model itself; the scalars defining that set are parameters. A finite grid used only to approximate a continuous savings domain is a numerical representation; its size belongs to the <a href="../settings/">settings</a>. The classification depends on what the quantity means, not whether it happens to be an integer or is called a grid size.</p>
+<p>A discrete set of housing choices can be part of the model itself; the scalars defining that set are parameters. A finite <a href="../grid/">grid</a> used only to approximate a continuous savings domain is a numerical representation; its bounds and size belong to the <a href="../settings/">settings</a>. The classification depends on what the quantity means, not whether it happens to be an integer or is called a grid size.</p>
 <p>In the constrained consumption example, <code>ρ : (1, inf)</code> declares risk aversion above one. A calibration mapping can supply <code>ρ: 2</code>. The domain belongs to the equation's meaning; a <a href="../handler/">handler</a> option cannot silently replace it. See <a href="../../Bellman-Sym/01-stage/">Stages</a> and <a href="../../Bellman-Sym/03-field-equations/">Field equations</a>.</p>
 <p>A parameter is declared by a stage and belongs to the <a href="../period/">period</a> the stage stands in: a name two stages of one period declare is one parameter of that period. Its declared sets must be the same or have a nonempty intersection the package can establish for real sets and intervals with numeric endpoints; its calibration sources must supply one value. Conflicting declarations or values are refused with the period and declaring stages identified. The same spelling in another period is another parameter (<a href="../../Bellman-Sym/API/factory/trellis-factory/">The trellis factory</a> §4). A field name, by contrast, is local to its stage. Every declared parameter needs a value for calibration. Shared mappings may contain extra keys, but those keys do not create new parameter declarations. The <a href="../trellis/">syntactic trellis</a> holds the merged mappings that the <a href="../spec_factory/">specification factory</a> produces from such sources, and the stage verb binds and checks its required inputs.</p>
 <p>Parameter restrictions defining admissible economic models are distinct from search choices made by an external estimation algorithm. That distinction does not create an estimation API in <a href="../sym/">Bellman-SYM</a>. Numerical feasibility, existence of an optimum and statistical identification also do not follow merely from supplying admissible parameter values.</p>
@@ -7769,18 +7852,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

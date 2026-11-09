@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/examples/housing_renting/housing_owner/">
+        <link rel="canonical" href="https://bellman.io/examples/housing_renting/housing_owner/">
       
       
         <link rel="prev" href="../../buffer-stock/buffer_stock/">
@@ -2816,13 +2816,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5332,6 +5325,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5427,6 +5426,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -6063,6 +6090,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6267,6 +6322,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -8169,16 +8252,17 @@ $$</p>
 <li><span class="arithmatex">\((w, H_\text{nxt}, y) \xrightarrow{c} (a_\text{nxt}, H_\text{nxt}, y)\)</span>: consumption, <span class="arithmatex">\(a_\text{nxt} = w - c\)</span></li>
 </ul>
 <h2 id="4-files">4 Files<a class="headerlink" href="#4-files" title="Permanent link">&para;</a></h2>
-<p>The application folder holds each stage file with its methods file and its note in the stage's folder, the block files that the methods files bind, the paper the model follows and the structural tests:</p>
+<p>The application folder holds each stage file with its methods file and its note in the stage's folder, the block files that the methods files bind, the settings file of the consumption stage's exogenous grid of savings, the paper the model follows and the structural tests:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>applications/housing-owner/
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── README.md
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── declaration/
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>│   ├── methods/                   consumption_choice_egm.bl  marginals_consumption_choice.bl  marginals_housing_choice.bl
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│   └── stages/
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>│       ├── housing_choice/        housing_choice.bl  methods.yml  housing_choice.md
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>│       └── consumption_choice/    consumption_choice.bl  methods.yml  consumption_choice.md
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>├── reference/                     fella-2014.pdf
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>└── tests/                         test_housing_choice_ast.py  test_consumption_choice_ast.py
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│   ├── settings/                  housing-owner.yml
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>│   └── stages/
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>│       ├── housing_choice/        housing_choice.bl  methods.yml  housing_choice.md
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>│       └── consumption_choice/    consumption_choice.bl  methods.yml  consumption_choice.md
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>├── reference/                     fella-2014.pdf
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>└── tests/                         test_housing_choice_ast.py  test_consumption_choice_ast.py
 </code></pre></div>
 <p>The listings below are taken from the earlier dolo-plus folder, which held the model in YAML files:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>housing_owner_only_doloplus/
@@ -8767,18 +8851,18 @@ valued.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

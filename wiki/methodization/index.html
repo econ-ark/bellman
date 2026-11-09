@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/wiki/methodization/">
+        <link rel="canonical" href="https://bellman.io/wiki/methodization/">
       
       
         <link rel="prev" href="../matsya_instructions/">
       
       
-        <link rel="next" href="../operator/">
+        <link rel="next" href="../methods/">
       
       
         
@@ -2818,13 +2818,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5780,6 +5807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../handler/" class="md-nav__link">
         
   
@@ -6061,6 +6116,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -7690,47 +7773,62 @@
 
 
 <h1 id="methodization">Methodization<a class="headerlink" href="#methodization" title="Permanent link">&para;</a></h1>
-<p><strong>Methodization</strong> records numerical choices for existing supported computations in a <a href="../stage/">stage</a>. A <strong>method</strong> names a technique; a <a href="../handler/">handler</a> identifies the routine or adapter that performs it. Their <a href="../settings/">settings</a> describe numerical options. None supplies a missing model equation or proves that a computed policy is optimal.</p>
-<p>The consumption stage <code>cons.bl</code> of the portfolio application attaches the endogenous grid method to its policy <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">block</a>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">methods</span><span class="p">:</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">policy</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!egm</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">handler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cons-port:egm</span>
+<p><strong>Methodization</strong> binds numerical methods to the operators of a <a href="../stage/">stage</a>. A <a href="../methods/">method</a> names a technique and is a component of the <a href="../signature/">signature</a> of the <a href="../operator/">operator</a> it serves, written as a typing of the operator's name; a <a href="../handler/">handler</a> identifies the routine that performs it; the <a href="../settings/">settings</a> are the values the methods read. None supplies a missing model equation or proves that a computed policy is optimal.</p>
+<p>The methods of a stage are written in its methods file, the <a href="../addition/">addition</a> to the stage file: a <code>.bl</code> file read by the stage grammar and unioned with the stage file before elaboration. The buffer-stock addition binds the endogenous grid method on the policy <a href="../builder/">builder</a>, with the method's grid of savings, and piecewise linear interpolation on the Evaluation that stores the policy:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>@methods: buffer_stock
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>n_a : ℕ              :: ["number of points of the savings grid"]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>a_min : Xa           :: ["lower bound of the savings grid"]
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>a_max : Xa           :: ["upper bound of the savings grid"]
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    | evaluate.method : !Linear] {
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;])       :: [id=InvEuler]
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    m[&gt;] = a + c[&gt;]                 :: [id=g_cntn_to_dcsn]
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    c[~] = c[&gt;]                     :: [id=cons_choice]
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>}
 </code></pre></div>
-<p>The method binds at the Evaluation that closes the policy <a href="../builder/">builder</a>, <code>policy:Evaluation</code>, because the block writes the grid line <code>m_d[&gt;] = a + c[&gt;]</code>, which gives the cash on hand at each saving; <code>stage.methods["policy"]</code> then answers it by the target as the file writes it. Only <code>on</code> is required: an entry without a method, <code>- on: policy</code>, records the target and attaches no numerical algorithm. A handler, a grid, settings and the roles of named equations are optional according to the method's contract.</p>
+<p>The method stands on the policy builder, <code>policy</code>: the block of the addition names the stage's block by its <code>id</code>, its entry <code>policy.method : !egm</code> types the builder's method component, its entry <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> types the builder's <a href="../grid/">grid</a> component, the group <code>| evaluate.method : !Linear</code> types the Evaluation inside the block, and its three lines are the rows by which the method computes the policy at the operative level, the stage keeping the declared maximization in <code>stage.declared</code> (<a href="../addition/">addition</a> §3). <code>stage.methods["policy"]</code> answers the method by the place it binds at. A handler is written as a binding in the same form, <code>policy.handler : "cons-port:egm"</code>, with or without a method word. The settings the entries name are declared in the addition with their domains and valued in the settings file.</p>
 <h2 id="where-a-method-stands">Where a method stands<a class="headerlink" href="#where-a-method-stands" title="Permanent link">&para;</a></h2>
-<p>A method type states the places it admits and the numerical options it reads (<a href="../../Bellman-Sym/reference/methods/">method types</a>). A place is a whole builder, a line marked <code>!node</code> or any other <a href="../statement/">statement</a> with an id, a function the <a href="../stage/">stage file</a> defines, the representation of a value function at the output of a <a href="../backward_builder/">backward builder</a>, or one occurrence of an <a href="../operator/">operator</a> inside a line. The address written under <code>on</code> names it:</p>
+<p>A method type states the kinds of operator it admits and the keyword arguments it reads (<a href="../../Bellman-Sym/reference/methods/">method types</a>). A place is an operator <code>stage.places()</code> lists: a whole builder; the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes a builder, where a representation of what it stores stands; a line marked <code>!node</code> or any other <a href="../statement/">statement</a> with an id; a function the <a href="../stage/">stage file</a> defines; or one occurrence of an operator inside a line. The path written before <code>.method</code> names it:</p>
 <table>
 <thead>
 <tr>
-<th>Address</th>
+<th>Path</th>
 <th>Place</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Block id, <code>policy</code></td>
-<td>The builder the block denotes; with <code>!egm</code>, the Evaluation that closes a policy block that writes the grid line.</td>
+<td>The builder the block denotes, where a solution method such as <code>!egm</code> or <code>!vfi</code> stands.</td>
 </tr>
 <tr>
-<td>Block id and line id, <code>cntn_to_dcsn.value</code></td>
-<td>One authored line; a representation method named there stands at the Evaluation of the <a href="../field/">field</a> the line defines, as <code>!Cartesian</code> on <code>cntn_to_dcsn.value</code> stands at <code>cntn_to_dcsn:Evaluation</code>.</td>
+<td>Block id and <code>evaluate</code>, <code>cntn_to_dcsn.evaluate</code></td>
+<td>The Evaluation that closes the builder, where a representation stands: one entry for everything the Evaluation stores, or one entry per stored object, <code>evaluate[V[&lt;]]</code> for the value and <code>evaluate[D_{k}V[&lt;]]</code> for the derivative a derivative line states, each with its own grid.</td>
 </tr>
 <tr>
-<td>Operator name, <code>argmax</code></td>
-<td>Every occurrence of that operator in the stage.</td>
+<td>Block id and line id, <code>risk_ce</code></td>
+<td>One authored line marked <code>!node</code>, whose result a representation can store.</td>
 </tr>
 <tr>
-<td>Block id, line id and operator, <code>policy.choice.argmax</code></td>
-<td>One occurrence, overriding the stage-wide choice.</td>
+<td>Operator head inside a block, <code>E_ψ_ξ</code></td>
+<td>Every occurrence of that operator in the block.</td>
+</tr>
+<tr>
+<td>Block id, line id and operator, <code>dcsn_to_arvl.value.E_ψ_ξ</code></td>
+<td>One occurrence.</td>
+</tr>
+<tr>
+<td>Function name, <code>𝑢</code></td>
+<td>A declared function, where a representation can store it.</td>
 </tr>
 </tbody>
 </table>
-<p><code>!vfi</code> stands on the backward decision builder alone, and a root finder on the <a href="../../Bellman-Sym/reference/operations/#argmax"><code>Argmax</code></a> row of an operative maximization line or on a joint <code>solve</code>. <code>stage.places()</code> lists the addresses of a stage with the kind of each place. A <a href="../term_address/">term address</a> can be inspectable without supporting attachment. Implicit statements and operator occurrences need not carry <code>!node</code>; an authored node needs an explicit id to be a method target. Arithmetic inside an equation is not automatically an independent target. A block-level <code>!egm</code> on a policy block that writes no grid line is refused, and the refusal names the requirement.</p>
-<p>Interpolation or an upper-envelope routine does not create an authored equation. The constrained part of the policy must be declared, as the clause on the candidate line of <code>cons.bl</code> declares the corner, or an added numerical boundary segment identified as an extension outside the interior equality (<a href="../../Bellman-Sym/10-constraints/">Constraints</a> §4.3).</p>
+<p><code>stage.places()</code> lists the places of a stage with the kind of each. A <a href="../term_address/">term address</a> can be inspectable without admitting a method; the derivative operator <code>D</code> admits none. Interpolation or an upper-envelope routine does not create an authored equation. The constrained part of the policy must be declared, as the clause on the candidate line of <code>cons.bl</code> declares the corner, or an added numerical boundary segment identified as an extension outside the interior equality (<a href="../../Bellman-Sym/10-constraints/">Constraints</a> §4.3).</p>
 <h2 id="specification-contract">Specification contract<a class="headerlink" href="#specification-contract" title="Permanent link">&para;</a></h2>
-<p>The stage verb <code>stage.methodize(methods_source)</code> accepts a methods path or mapping and returns a new <a href="../stage/">stage version</a> whose <code>stage.methods</code> holds each method by the place it binds at; <code>methodize_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a>. Duplicate targets are errors, and unknown methods and unresolved targets are refused.</p>
-<p>The entry <a href="../specified_stage/">specified stage</a> states the order of the bindings. The <a href="../trellis/">syntactic trellis</a> holds the merged mappings, and the stage verb binds; the <a href="../spec_factory/">specification factory</a> states how the <a href="../spec_factory/">recipe</a> combines source overrides, and it creates no mathematical targets. Target eligibility and numerical capability require implementation checks in addition to the declared contract. See <a href="../../Bellman-Sym/04-methodization/">Methodization</a> and <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
+<p>The stage verb <code>stage.methodize</code> reads the method and grid components the unioned stage carries and binds their handlers, and <code>methodize_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a>, where each <a href="../stage/">stage occurrence</a> takes the additions its <a href="../spec_factory/">recipe</a> names, in order. A component typed by two files is refused, an unknown method word and an unresolved path are refused, and a method at an operator of a kind it does not admit is refused naming the place.</p>
+<p>The entry <a href="../specified_stage/">specified stage</a> states the order of the bindings. The <a href="../spec_factory/">specification factory</a> states how the recipe combines its sources, and it creates no mathematical targets. Target eligibility and numerical capability require implementation checks in addition to the declared contract. See <a href="../../Bellman-Sym/04-methodization/">Methodization</a> and <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
 
 
 
@@ -7786,13 +7884,13 @@
         
         
           
-          <a href="../operator/" class="md-footer__link md-footer__link--next" aria-label="Next: operator">
+          <a href="../methods/" class="md-footer__link md-footer__link--next" aria-label="Next: Methods">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                operator
+                Methods
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -7832,18 +7930,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

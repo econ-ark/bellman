@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/bellman-calculus/11-abstract-grammar/">
+        <link rel="canonical" href="https://bellman.io/bellman-calculus/11-abstract-grammar/">
       
       
         <link rel="prev" href="../10-semi-conjugacy/">
@@ -2821,13 +2821,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -3086,10 +3079,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-related-documents" class="md-nav__link">
+  <a href="#5-the-typing-entries-of-a-methods-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5 Related documents
+        5 The typing entries of a methods file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-related-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6 Related documents
       
     </span>
   </a>
@@ -5147,6 +5151,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5242,6 +5252,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5878,6 +5916,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6082,6 +6148,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7629,10 +7723,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-related-documents" class="md-nav__link">
+  <a href="#5-the-typing-entries-of-a-methods-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5 Related documents
+        5 The typing entries of a methods file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-related-documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6 Related documents
       
     </span>
   </a>
@@ -7717,11 +7822,11 @@
 <summary>Relationship with other documents</summary>
 <p><strong>Builds on</strong> — <a href="../07-stage-composition/">Stage composition</a> and <a href="../08-periods-and-trellis/">Periods and the trellis</a> define the compatible compositions.
 <strong>Formal account</strong> — <a href="../APPX-B-INITIAL-ALGEBRA/">Initial-algebra semantics</a> treats specified terms and interpretations; <a href="../APPX-C-STAGE-TERM/">The stage term</a> gives the stage-level signature.
-<strong>Used by</strong> — <a href="../../Bellman-Sym/01-stage/">Stages</a>, <a href="../../Bellman-Sym/03-field-equations/">Field equations</a>, <a href="../../Bellman-Sym/06-period/">Period Syntax</a> and <a href="../../Bellman-Sym/07-trellis/">Trellis Syntax</a> state the authoring rules; Bellman-SYM's <a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> states the interpretation rules.</p>
+<strong>Used by</strong> — <a href="../../Bellman-Sym/01-stage/">Stages</a>, <a href="../../Bellman-Sym/03-field-equations/">Field equations</a>, <a href="../../Bellman-Sym/06-period/">Period Syntax</a>, <a href="../../Bellman-Sym/07-trellis/">Trellis Syntax</a> and <a href="../../Bellman-Sym/04-methodization/">Methodization</a> state the authoring rules; Bellman-SYM's <a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> states the interpretation rules.</p>
 </details>
 <h2 id="1-two-grammars">1 Two grammars<a class="headerlink" href="#1-two-grammars" title="Permanent link">&para;</a></h2>
 <p>The <strong>concrete grammar</strong> specifies which source strings are well formed. The <strong>abstract grammar</strong> describes the structure of their expressions after punctuation is removed. Schmidt distinguishes the derivation tree from the string that abbreviates it.<sup id="fnref:schmidt"><a class="footnote-ref" href="#fn:schmidt">1</a></sup> For the current language, <code>.bl</code> stage declarations and arithmetic equations are parsed, while supporting YAML records model composition and bindings. The mathematical composition notation used here is a separate description of the resulting operations.</p>
-<p>The syntax pages use <strong>ASDL</strong>, the Zephyr Abstract Syntax Description Language, to describe constructor positions and their types.<sup id="fnref:asdl"><a class="footnote-ref" href="#fn:asdl">2</a></sup> An <strong>ASDL field</strong> is a named position in a constructor, distinct from an economic field. The symbols <code>?</code> and <code>*</code> denote an optional position and a list. These notations describe syntax structure; they do not make every mathematical diagram on this page a concrete parser constructor.</p>
+<p>The syntax pages use <strong>ASDL</strong>, the Zephyr Abstract Syntax Description Language, to describe constructor positions and their types.<sup id="fnref:asdl"><a class="footnote-ref" href="#fn:asdl">2</a></sup> An <strong>ASDL field</strong> is a named position in a constructor, distinct from an economic field. The symbols <code>?</code> and <code>*</code> denote an optional position and a list. These notations describe syntax structure; they do not make every mathematical diagram on this page a concrete parser constructor. An operator's method and grid components, written as typing entries of the operator's name, are described in <a href="../06-Methods/">Methods</a> §2.</p>
 <p>The following is schematic mathematical composition notation, not the <code>.bl</code> abstract grammar or a loader schema. It suppresses documentation names and binding records to show the composition operands:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>model_term = TRELLIS(period* periods, connector* inter_connectors)
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>period     = PERIOD(stage_occurrence* stages, connector* connectors)
@@ -7820,8 +7925,39 @@ N\equiv\langle\mathrm{TRELLIS},\langle P_0,\ldots,P_{H-1}\rangle,
 <p>In the specified construction, parser trees and source locations are temporary. The stage retains interpreted equations, definitions and typed diagrams. Periods and the trellis retain their outer records, with fresh objects for distinct occurrences; reuse of a module does not imply one shared mutable stage object or a retained whole-trellis syntax graph. These statements describe the construction specified for the language, not completion of every runtime component.</p>
 <p>The mathematical signatures used here are <strong>many-sorted</strong>: their symbols have declared input and output types. Their vocabulary is the specified signature under discussion. Adding a form requires extending that signature and its interpretation; defining a local function within the admitted language is a different act. Neither statement proves all the identities an extension might need.</p>
 <p>Branching also requires its own interpretation. A finite choice compares complete feasible branch values; an exogenous branch uses the declared conditional probabilities. Evaluating all feasible branch values and then maximizing is generally different from evaluating a single branch selected by a pre-existing predicate. Ties and measurable policy selection retain the qualifications in <a href="../09-branching/">Branching</a>.</p>
+<h2 id="5-the-typing-entries-of-a-methods-file">5 The typing entries of a methods file<a class="headerlink" href="#5-the-typing-entries-of-a-methods-file" title="Permanent link">&para;</a></h2>
+<p>A methods file adds to a stage file the numerical choices of its operators without changing the model: a <strong>typing entry</strong> types one component of an operator by the path of that component, <code>policy.method : !egm(tol=tol_v)</code> for the method and <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> for the grid, the discretized domain on which the operator's function is represented; a <strong>handler binding</strong>, <code>policy.handler : "cons-port:egm"</code>, names the program that realizes the operator. An entry stands inside a block's header, in the groups that <code>|</code> opens after the block's own entries, or at file level with the full path. A typing entry assigns the method or the grid component of one operator's signature, so that the operator is realized by that method on that grid while the model's equations are unchanged, and a handler binding names the program that realizes it (<a href="../../wiki/handler/">the handler</a>); this section records the constructors the entries parse to, in the house dialect of the ASDL notation, with the grammar that owns each line: <code>(core)</code> for a form that dyno's own files could carry, <code>(stage)</code> for a form that belongs to the typing layer of Bellman-SYM.</p>
+<details class="ast">
+<summary>Abstract grammar: the typing entries</summary>
+<p>The host constructors keep their profiles; the lines below are added as alternatives of existing sorts (<code>+=</code>) or as new sorts. <code>Declaration</code> is the host's, reused: a typing entry is a <code>Declaration</code> whose subject is a <code>Path</code> and whose one classifier is the <code>Method</code> or the <code>Grid</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>entry      += Tagged(word tag)                               -- (core)  a tag with keyword arguments
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>word        = Word(identifier name, keyword* arguments)       -- (core)  a name with its keyword arguments
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>keyword     = Keyword(identifier key, argument value)         -- (core)
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>argument    = Name(identifier name)                           -- (core)  the name of a setting
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>            | Literal(number value)                           -- (core)
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>            | Quoted(string text)                             -- (core)
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>            | Values(argument* items)                         -- (core)  a tuple of values
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>            | Nested(word word)                               -- (core)  a word with arguments of its own
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>subject    += Path(segment* segments)                         -- (stage) the path of a component
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>segment     = Segment(identifier name, selector* selectors)   -- (stage) a name with its selectors
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>selector   += Term(expr at)                                   -- (stage) a term as a selector
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>typer      += Handler(subject subject, string program)        -- (stage) the handler binding
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>classifier += Method(word m)                                  -- (stage) the method component
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>classifier += Grid(grid g)                                    -- (stage) the grid component
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>grid        = Cartesian(factor* factors)                      -- (stage) one factor per coordinate
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>factor      = Spaced(identifier coordinate, argument lower, argument upper,
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>                     argument count, word? spacing)           -- (stage) bounds, a count, a spacing word
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>            | Listed(identifier coordinate, identifier nodes) -- (stage) a node set, or the operator whose nodes the coordinate takes
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>            | Feasible(identifier coordinate, identifier set, argument count)   -- (stage) a control's feasible set with a count
+</code></pre></div>
+<p>The requirements the notation cannot state are part of well-formedness instead: a path has at least one segment and its last segment names the component, <code>method</code>, <code>grid</code> or <code>handler</code>; a word's arguments are keyed once each; a grid has at least one factor and names no coordinate twice, and the order of its factors carries no meaning; a bound or a count of a factor is the name of a declared setting or a number; a spacing is a word, with or without arguments.</p>
+<p><strong>Keys.</strong> <code>segments</code> are the names from the block to the component, each with the selectors that name the object an Evaluation stores (<code>evaluate[V]</code>, <code>evaluate[D_{k}V[&lt;]]</code>); <code>m</code> is the method word with its keyword arguments, read by the catalogue of methods; <code>g</code> is the grid; <code>program</code> is the handler's name as the quoted string writes it. These are ASDL fields, not keys to write in a file.</p>
+<p><strong>Head.</strong> Inside a header, an entry is one entry of the block's annotation, whatever group it is written in; at file level it is a declaration whose subject is a dotted path. The <code>!</code> marks a word, the dot joins the segments of a path, <code>=</code> joins a keyword to its value, and a quoted string names a handler.</p>
+<p><strong>Denotes.</strong> The method and the grid are the classifier components of the operator's signature, read by the numerical semantics and by nothing in the exact semantics; the handler is a binding beside the term. <a href="../06-Methods/">Methods</a> gives the account.</p>
+<p><strong>Status.</strong> The grammar parses these entries and lowers them to the constructors above. A grid's kind is <code>Cartesian</code>; a sparse kind is reserved. Which words are admitted at which operator, which keywords each reads, and whether a factor's name is a node set or an expectation operator are judged when the entries bind, not by this grammar box.</p>
+</details>
 <p><a id="see-also"></a></p>
-<h2 id="5-related-documents">5 Related documents<a class="headerlink" href="#5-related-documents" title="Permanent link">&para;</a></h2>
+<h2 id="6-related-documents">6 Related documents<a class="headerlink" href="#6-related-documents" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../wiki/ffp/">FFP</a>, <a href="../../wiki/functional_form/">functional form</a>, and <a href="../../wiki/asdl/">ASDL</a> define the programming-language terms.</li>
 <li><a href="../APPX-A-SEMANTICS/">Semantics</a> relates interpreted equations to numerical methods.</li>
@@ -7958,18 +8094,18 @@ N\equiv\langle\mathrm{TRELLIS},\langle P_0,\ldots,P_{H-1}\rangle,
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

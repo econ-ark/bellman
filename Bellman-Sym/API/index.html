@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/API/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/API/">
       
       
         <link rel="prev" href="../11-solutions-at-the-perches/">
@@ -2823,13 +2823,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5047,6 +5040,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5142,6 +5141,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5778,6 +5805,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -5982,6 +6037,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -8450,7 +8533,7 @@
 <td><a id="stage-methods"></a><code>stage.methods</code></td>
 <td>The methods bound to this version, by target, as a read-only mapping, read by the target a method is bound at or by the target as the methods file writes it, <code>methods["policy"]</code>.</td>
 <td><code>BoundMethods</code></td>
-<td><code>policy:Evaluation !egm …</code></td>
+<td><code>policy !egm block ../../methods/cons_egm.bl …</code></td>
 <td><code>stage/elaborated.py</code>, <code>ElaboratedStage.methods</code></td>
 </tr>
 <tr>
@@ -8464,7 +8547,7 @@
 <td><a id="stage-settings"></a><code>stage.settings</code></td>
 <td>The settings bound to this version, a read-only mapping from each setting's name to its record, <code>settings["n_a"]</code>, with its configured value and the methods that read it; empty before <code>configure</code>.</td>
 <td><code>Settings</code></td>
-<td><code>name value read at by …</code></td>
+<td><code>name value read at by grid …</code></td>
 <td><code>stage/elaborated.py</code>, <code>ElaboratedStage.settings</code></td>
 </tr>
 <tr>
@@ -8611,7 +8694,7 @@
 <td><a id="stage-initial-methods"></a><code>stage.initial.methods</code></td>
 <td>The read-only methods mapping for pieces within both directions, empty before methodization.</td>
 <td><code>BoundMethods</code></td>
-<td><code>policy:Evaluation !egm …</code></td>
+<td><code>policy !egm block ../../methods/cons_egm.bl …</code></td>
 <td><code>stage/pieces.py</code>, <code>Graphs.methods</code></td>
 </tr>
 <tr>
@@ -8695,7 +8778,7 @@
 <td><a id="stage-initial-backward-methods"></a><code>stage.initial.backward.methods</code></td>
 <td>The bindings at pieces within this graph and the authored lines they represent, as a read-only mapping.</td>
 <td><code>BoundMethods</code></td>
-<td><code>policy:Evaluation !egm …</code></td>
+<td><code>policy !egm block ../../methods/cons_egm.bl …</code></td>
 <td><code>stage/pieces.py</code>, <code>GraphHandle.methods</code></td>
 </tr>
 <tr>
@@ -8772,7 +8855,7 @@
 <td><a id="stage-builder-methods"></a><code>stage.builder.methods</code></td>
 <td>The read-only methods mapping for the pieces within both builders graphs, empty before methodization; a graph the construction refused holds none.</td>
 <td><code>BoundMethods</code></td>
-<td><code>policy:Evaluation !egm …</code></td>
+<td><code>policy !egm block ../../methods/cons_egm.bl …</code></td>
 <td><code>stage/pieces.py</code>, <code>BuilderPairs.methods</code></td>
 </tr>
 <tr>
@@ -8961,7 +9044,7 @@
 <td><a id="stage-builder-bwd-methods"></a><code>stage.builder.bwd.methods</code></td>
 <td>The bindings at pieces within this graph and the authored lines they represent, as a read-only mapping.</td>
 <td><code>BoundMethods</code></td>
-<td><code>policy:Evaluation !egm …</code></td>
+<td><code>policy !egm block ../../methods/cons_egm.bl …</code></td>
 <td><code>stage/pieces.py</code>, <code>GraphHandle.methods</code></td>
 </tr>
 <tr>
@@ -9136,7 +9219,7 @@
 <td><a id="stage-builder-cntn-dcsn-methods"></a><code>stage.builder["cntn", "dcsn"].methods</code></td>
 <td>Bindings at this piece, inside it, and at the authored lines of the block it is built from.</td>
 <td><code>BoundMethods</code></td>
-<td><code>cntn_to_dcsn:Evaluation !Cartesian</code></td>
+<td><code>cntn_to_dcsn:Evaluation !Linear</code></td>
 <td><code>stage/pieces.py</code>, <code>BubbleHandle.methods</code></td>
 </tr>
 <tr>
@@ -9262,7 +9345,7 @@
 <td><a id="stage-initial-backward-cntn-to-dcsn-value-methods"></a><code>stage.initial.backward["cntn_to_dcsn"]["value"].methods</code></td>
 <td>The read-only bindings at this box and the authored lines it represents.</td>
 <td><code>BoundMethods</code></td>
-<td><code>cntn_to_dcsn:Evaluation !Cartesian</code></td>
+<td><code>cntn_to_dcsn:Evaluation !Linear</code></td>
 <td><code>stage/pieces.py</code>, <code>BoxHandle.methods</code></td>
 </tr>
 <tr>
@@ -9316,9 +9399,9 @@
 </tr>
 <tr>
 <td><a id="stage-settings-name"></a><code>stage.settings[name]</code></td>
-<td>One setting of a version, <code>stage.settings["n_a"]</code>: its <code>name</code>, its configured <code>value</code>, and <code>readers</code>, the pairs of the place that reads it and the method there, <code>("cntn_to_dcsn:Evaluation", "!Cartesian")</code>, empty for a setting no bound method names.</td>
+<td>One setting of a version, <code>stage.settings["n_a"]</code>: its <code>name</code>, its configured <code>value</code>, and <code>readers</code>, the triples of the place that reads it, the method there and the kind of the method's grid where the setting is a field of that grid, <code>("policy", "!egm", "!Cartesian")</code>, the kind empty otherwise, <code>("E_ψ_ξ", "!gauss-hermite", "")</code>; <code>readers</code> is empty for a setting no bound method names.</td>
 <td><code>Setting</code></td>
-<td><code>["n_a"]</code>: <code>n_a = 800</code></td>
+<td><code>["n_a"]</code>: <code>n_a = 800, read at policy by !egm for its grid !Cartesian</code></td>
 <td><code>stage/pieces.py</code>, <code>Settings.__getitem__</code></td>
 </tr>
 <tr>
@@ -9330,23 +9413,23 @@
 </tr>
 <tr>
 <td><a id="stage-settings-list"></a><code>stage.settings.list()</code></td>
-<td>The settings as a table, one row for each method that reads a setting, with <code>name</code>, <code>value</code>, <code>read at</code> and <code>by</code>; a setting no method reads has one row with the last two empty.</td>
+<td>The settings as a table, one row for each method that reads a setting, with <code>name</code>, <code>value</code>, <code>read at</code>, <code>by</code> and <code>grid</code>, the kind of the method's grid where the setting is one of its fields; a setting no method reads has one row with the last three empty.</td>
 <td><code>Rows</code></td>
-<td><code>name value read at by …</code></td>
+<td><code>name value read at by grid …</code></td>
 <td><code>stage/pieces.py</code>, <code>Settings.list</code></td>
 </tr>
 <tr>
 <td><a id="stage-settings-view"></a><code>stage.settings.view()</code></td>
 <td>The table of the settings as printed text.</td>
 <td><code>str</code></td>
-<td><code>name value read at by …</code></td>
+<td><code>name value read at by grid …</code></td>
 <td><code>stage/pieces.py</code>, <code>Settings.view</code></td>
 </tr>
 <tr>
 <td><a id="stage-methods-target"></a><code>stage.methods[target]</code></td>
 <td>The method a methods file attaches at one box: the <code>!egm</code> on a policy block's solution, the quadrature rule on an expectation, the interpolation scheme at a builder's output.</td>
 <td><code>Method</code></td>
-<td><code>["policy"]</code>: <code>Method(tag='egm', handler='cons-port:egm', settings={})</code></td>
+<td><code>["policy"]</code>: <code>Method(tag='egm', handler='cons-port:egm', settings={'bounds': {'a': ('a_mi…</code></td>
 <td><code>stage/pieces.py</code>, <code>BoundMethods.__getitem__</code></td>
 </tr>
 </tbody>
@@ -9453,18 +9536,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

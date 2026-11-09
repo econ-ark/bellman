@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/asva/01-numerical-steps/">
+        <link rel="canonical" href="https://bellman.io/asva/01-numerical-steps/">
       
       
         <link rel="prev" href="../">
@@ -2816,13 +2816,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5169,6 +5162,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5264,6 +5263,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5900,6 +5927,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6104,6 +6159,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7964,7 +8047,7 @@
 <p><code>egm</code> builds the one-dimensional step of §2 from the records that the package <code>bellman</code> answers for a consumption stage, with no stage in hand:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">step</span> <span class="o">=</span> <span class="n">egm</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">savings</span><span class="p">,</span> <span class="n">evaluation</span><span class="p">)</span>
 </code></pre></div>
-<p><code>policy</code> and <code>decision</code> are the records <code>stage.dcsn.builder.policy.kernels()</code> and <code>stage.dcsn.builder.bwd.kernels()</code> (<a href="../../Bellman-Sym/API/stage/04-builder/">A builder</a> §5): for each piece of the builder, its compiled function with the names of its arguments and outputs, and the parameters' names and bound values. <code>egm</code> reads from <code>policy</code> the inverse Euler equation and the endogenous grid, and from <code>decision</code> the law of motion and the aggregation, and refuses any other record. <code>savings</code> is the grid of the continuation state and <code>evaluation</code> the grid of the decision state, both read by the caller from the stage's settings. The step returned, <code>step(value, marginal)</code>, takes the continuation value and its derivative as functions of the continuation state and returns the arrays of one endogenous grid step, <code>EndogenousGridStep</code>: the control, the continuation state, the value and the marginal value on the evaluation grid, and the endogenous grid with its control and value on the savings grid. The three functions the step applies are compiled once for their text, and the parameter values are passed at each call, so a new calibration needs no compilation. The lesson <code>tutorials/topics/kernels.ipynb</code> of the repository shows the records the step is built from.</p>
+<p><code>policy</code> and <code>decision</code> are the records <code>stage.dcsn.builder.policy.kernels()</code> and <code>stage.dcsn.builder.bwd.kernels()</code> (<a href="../../Bellman-Sym/API/stage/04-builder/">A builder</a> §5): for each piece of the builder, its compiled function with the names of its arguments and outputs, and the parameters' names and bound values. <code>egm</code> reads from <code>policy</code> the inverse Euler equation and the endogenous grid, and from <code>decision</code> the law of motion and the aggregation, and refuses any other record. <code>savings</code> is the grid of the continuation state and <code>evaluation</code> the grid of the decision state, both read by the caller from the stage's methods and settings: the exogenous grid of savings that the stage's <code>!egm</code> entry names by its setting <code>grid</code> and the grid that the representation at the decision builder's Evaluation names the same way, each given by its kind, <code>!Cartesian</code>, and the order and bounds written beside it, with the values the stage's settings bind (<a href="../../Bellman-Sym/04-methodization/">Methodization</a> §3). The step returned, <code>step(value, marginal)</code>, takes the continuation value and its derivative as functions of the continuation state and returns the arrays of one endogenous grid step, <code>EndogenousGridStep</code>: the control, the continuation state, the value and the marginal value on the evaluation grid, and the endogenous grid with its control and value on the savings grid. The three functions the step applies are compiled once for their text, and the parameter values are passed at each call, so a new calibration needs no compilation. The lesson <code>tutorials/topics/kernels.ipynb</code> of the repository shows the records the step is built from.</p>
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Carroll, C. D. (2006). "The method of endogenous gridpoints for solving dynamic stochastic optimization problems." <em>Economics Letters</em> 91(3), 312–320.</li>
@@ -8070,18 +8153,18 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

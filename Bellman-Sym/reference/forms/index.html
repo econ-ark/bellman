@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/reference/forms/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/reference/forms/">
       
       
         <link rel="prev" href="../laws/">
@@ -2914,13 +2914,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5138,6 +5131,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5233,6 +5232,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5869,6 +5896,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6073,6 +6128,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7885,7 +7968,7 @@
 <p>A <strong>kernel</strong> is the function an <a href="../operations/">operation</a> of a stage applies: the law of motion 𝑔 that a <a href="../operations/#pullback">pullback</a> or a <a href="../operations/#pushforward">push-forward</a> applies, and the value aggregator 𝐺 that an <a href="../operations/#aggregation">aggregation</a> applies. <code>compile_kernel()</code> answers the kernel of such an operation as a plain Python function, made from the source text that <code>kernel().python</code> holds. It answers one where the row writes its output as a function of its inputs, or states a relation with an explicit side whose function it compiles; a pullback or an aggregation whose row states a relation with no explicit side, such as the identification <code>c = c[&gt;]</code>, is refused under the rule <code>kernel-target</code> of <a href="../refusals/">Refusals</a>, and a row that reads a derivative term, <code>c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0</code> in <code>cons.bl</code>, is refused under the rule <code>kernel-form</code>, naming the term, as a kernel that calls a function defined by <code>D_{c}(𝑢)</code> is (below). The function takes the kernel's arguments and then the parameters the kernel reads, and computes on numbers or on NumPy arrays. The values the <a href="../../../wiki/calibration/">calibration</a> gives those parameters stand in <code>kernel().parameter_values</code>, <code>None</code> on a version not yet calibrated, and are passed at each call, so that a new calibration needs no new compilation. The text holds numbers and infinity, the kernel's arguments, the parameters, the arithmetic of §2, and the functions the stage file defines in closed form, such as <code>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)</code>, written as functions inside the one function. An expectation over a label shock, a shock whose law gives each label of a finite set its probability, compiles to the sum of the values weighted by those probabilities.</p>
 <p>The named functions <code>exp</code>, <code>log</code>, <code>max</code>, <code>min</code> and <code>Inv</code>, and a function the stage file defines by a derivative or an inverse, such as <code>𝑑𝑢 := D_{c}(𝑢)</code>, have no compile rule: their definitions state what they denote, and a kernel that calls one is not compiled, under the rule <code>kernel-form</code> of <a href="../refusals/">Refusals</a>. The same function written in closed form, <code>𝑑𝑢(c : ℝ₊₊) := c^(-ρ)</code>, compiles. The other operations, among them an expectation that stands as an operation of its own, whatever the law of its shock, and a maximization, have no compiled kernel: <code>compile_kernel()</code> refuses them under the rule <code>kernel-target</code>.</p>
 <h2 id="4-the-blocks-of-a-block-file">4 The blocks of a block file<a class="headerlink" href="#4-the-blocks-of-a-block-file" title="Permanent link">&para;</a></h2>
-<p>A <strong>block file</strong> is a file of blocks that a methods file names under <code>block:</code> (<a href="../../04-methodization/">Methodization</a> §4.1). It opens with the stage's mark, <code>@stage: cons</code>, may define functions in closed form, <code>𝑑𝑢(c : ℝ₊₊) := c^(-ρ)</code>, whose kernels compile as a stage file's do (§3), and holds blocks of two forms, each written as a block of a stage file is (<a href="../../01-stage/">Stages</a>):</p>
+<p>A <strong>block file</strong> is a file of blocks that a methods file names under <code>block:</code> (<a href="../../04-methodization/">Methodization</a> §4.1). It opens with a line naming its stage, <code>@methods: cons</code>, or with the stage's mark, <code>@stage: cons</code>, either of which the package accepts; it may define functions in closed form, <code>𝑑𝑢(c : ℝ₊₊) := c^(-ρ)</code>, whose kernels compile as a stage file's do (§3), and holds blocks of two forms, each written as a block of a stage file is (<a href="../../01-stage/">Stages</a>):</p>
 <table>
 <thead>
 <tr>
@@ -8006,18 +8089,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

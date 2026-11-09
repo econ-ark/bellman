@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/overview/05-semantics/">
+        <link rel="canonical" href="https://bellman.io/overview/05-semantics/">
       
       
         <link rel="prev" href="../04-periods-and-trellis/">
@@ -2952,13 +2952,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5176,6 +5169,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5271,6 +5270,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5907,6 +5934,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6111,6 +6166,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7895,7 +7978,7 @@ Q(m,c)=u(c)+\beta\,W(m-c),
 <p>In the <strong>forward builders graph</strong> each wire carries a finite measure over the states of a perch, the distribution of the population, whose total mass need not be one; a shock's own distribution remains a probability measure. Each box carries a measure forward through the same equations. Only the two forward blocks appear. The <strong>distribution extension</strong> extends a measure over the states by the distribution of a shock, giving the joint measure of the states and the shock; this stage has two, one for <code>ψ</code> and one for <code>ξ</code>. The <strong>push-forward</strong> carries the joint measure through the law of motion <code>m = R*k/(Γ*ψ) + ξ</code>.</p>
 <p>The second forward builder is one push-forward at the policy: it carries the decision measure through <code>a = m − 𝑐(m)</code> to the continuation measure <code>μ[&gt;]</code>, referring to the policy as the decision builder does, and no wire joins it to the policy builder. The forward graph can therefore be evaluated only once a policy has been chosen, by the backward graph or by the user. The two graphs are two readings of one set of equations, on functions and on measures, and <a href="../../bellman-calculus/05-Operators%20and%20builders/">Operators and builders</a> states the duality that relates them.</p>
 <h2 id="6-specifying-the-stage">6 Specifying the stage<a class="headerlink" href="#6-specifying-the-stage" title="Permanent link">&para;</a></h2>
-<p>Three steps <strong>specify</strong> a stage. <strong>Calibration</strong> supplies a value for every declared parameter. <strong>Methodization</strong> attaches a numerical method to a <strong>target</strong>, an address in the stage: a block, a named statement, an operator occurrence such as the expectation <code>E_{ψ,ξ}</code>, or a definition. <strong>Configuration</strong> supplies the <a href="../../wiki/settings/">settings</a> the attached methods read, such as the size of a grid. We make them in that order, and each returns a new version of the stage with copied graphs and updated bindings, leaving the earlier version unchanged. The equations keep the names of the parameters, so a sweep over <code>β</code> gives one version for each value. An entry of a methods file that names only a target checks that the target names a place in the stage, without choosing a routine for it. The buffer-stock methods file binds the endogenous grid method on the policy builder with its block file, so that the builder's operations are the three lines of the method while the stage keeps the maximization as the builder it declares, and binds the two marginal blocks of <code>marginals.bl</code> on the decision and arrival builders, whose lines are recorded at the builders' Evaluations as the stated derivatives of the values. The stage lists the condition under which the method's lines reach the maximization, <code>egm-eligibility</code>, and the reading of each derivative line, <code>marginal-reading</code>, among its obligations, and checks neither.</p>
+<p>Three steps <strong>specify</strong> a stage. <strong>Calibration</strong> supplies a value for every declared parameter. <strong>Methodization</strong> attaches a numerical method to a <strong>target</strong>, an address in the stage: a block, a named statement, an operator occurrence such as the expectation <code>E_{ψ,ξ}</code>, a definition, or the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes a builder, such as <code>policy.evaluate</code>, where a representation is written. <strong>Configuration</strong> supplies the <a href="../../wiki/settings/">settings</a> the attached methods read, such as the size of a grid. We make them in that order, and each adds its binding to the stage it is called on and returns that stage; nothing is copied, and a later binding of a target replaces the earlier one (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a>). The equations keep the names of the parameters, so a sweep over <code>β</code> binds each value in turn to the one stage, whose graphs no binding changes. An entry of a methods file that names only a target checks that the target names a place in the stage, without choosing a routine for it. The buffer-stock methods file binds the endogenous grid method on the policy builder with its block file, so that the builder's operations are the three lines of the method while the stage keeps the maximization as the builder it declares, and binds the two marginal blocks of <code>marginals.bl</code> on the decision and arrival builders, whose lines are recorded at the builders' Evaluations as the stated derivatives of the values. The stage lists the condition under which the method's lines reach the maximization, <code>egm-eligibility</code>, and the reading of each derivative line, <code>marginal-reading</code>, among its obligations, and checks neither.</p>
 <p>For a trellis, the three trellis verbs bind every stage occurrence from the mappings its record holds (<a href="../06-workflow/">Workflow</a> §1). A <strong>specified stage</strong> is the result: constructed, calibrated, methodized and configured. #specification</p>
 <h2 id="7-what-a-specified-stage-is-not">7 What a specified stage is not<a class="headerlink" href="#7-what-a-specified-stage-is-not" title="Permanent link">&para;</a></h2>
 <p>Nothing above has solved the household's problem, and a specified stage does not contain a solution. It contains no numerical routine: an entry of a methods file names a technique and a routine without running them. It contains no terminal data: the continuation value <code>𝑉[&gt;]</code> is an input the stage leaves open, supplied by the next period or by a terminal value function. And it has established none of the analytic conditions of §4. Solving requires the routines, the composed model and the continuation or terminal data. <a href="../../Bellman-Sym/04-methodization/">Methodization</a> describes the routines, and <a href="../../Bellman-Sym/07-trellis/">Trellises</a> the terminal data.</p>
@@ -8000,18 +8083,18 @@ Q(m,c)=u(c)+\beta\,W(m-c),
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

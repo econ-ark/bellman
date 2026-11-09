@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/API/factory/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/API/factory/">
       
       
         <link rel="prev" href="../">
@@ -2825,13 +2825,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5780,6 +5807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../wiki/handler/" class="md-nav__link">
         
   
@@ -5984,6 +6039,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7749,7 +7832,7 @@
 <h2 id="2-the-record">2 The record<a class="headerlink" href="#2-the-record" title="Permanent link">&para;</a></h2>
 <p>Every function that elaborates or binds reads records of one form: <code>{"stage": {"text": text, "origin": origin}, "calibration": {...}, "settings": {...}, "methods": {...}, "provenance": {...}}</code>. <code>load_stage(path)</code> of <code>bellman.stage</code> writes this form with the three mappings empty; <code>load_trellis</code> and <code>load_recipe</code> of <code>bellman.trellis</code> write it complete for every period. The three mappings are present even when they are empty, and <code>None</code> is not an empty mapping; a loaded methods mapping may hold a <code>methods</code> list, and the record's <code>methods</code> value is the mapping, never the list. <code>label</code> is the one optional key besides <code>provenance</code>, and a path string in place of the <code>stage</code> mapping is refused, since elaboration reads no file. Nothing that elaborates or binds merges anything: precedence is settled in the syntactic trellis, by <code>load_recipe</code> when a registry is read, or by the application when it writes the records itself.</p>
 <h2 id="3-the-order-of-the-bindings">3 The order of the bindings<a class="headerlink" href="#3-the-order-of-the-bindings" title="Permanent link">&para;</a></h2>
-<p>The bindings are made in the order calibrate, methodize, configure, on a trellis as on a stage. Configuration is defined on methodized versions only, because the settings are read against the methods that name them. Each verb returns a new version and leaves its argument unchanged; a trellis verb binds a stage occurrence where the mapping the syntactic trellis holds at its key differs from what the stage occurrence holds, and copies it where it does not. The four stopping points, the symbolic trellis and the trellis after each verb, are therefore the results of the four calls, <code>elaborate_trellis</code> and then the three trellis verbs, each reading its mapping from the syntactic trellis given as its second argument. No call solves a model.</p>
+<p>The bindings are made in the order calibrate, methodize, configure, on a trellis as on a stage. Configuration is defined on methodized versions only, because the settings are read against the methods that name them. A stage verb adds its binding to the stage it is called on and returns it; a trellis verb returns a new elaborated trellis and leaves its argument unchanged, and it binds a stage occurrence where the mapping the syntactic trellis holds at its key differs from what the stage occurrence holds, and copies it where it does not. The four stopping points, the symbolic trellis and the trellis after each verb, are therefore the results of the four calls, <code>elaborate_trellis</code> and then the three trellis verbs, each reading its mapping from the syntactic trellis given as its second argument. No call solves a model.</p>
 <h2 id="4-the-refusals">4 The refusals<a class="headerlink" href="#4-the-refusals" title="Permanent link">&para;</a></h2>
 <p>A refusal of the factory is raised as <code>FactoryError</code>, which <code>bellman.refusals</code> exports, and carries a rule name under <code>.rule</code>. Each diagnostic names the rule, the address, the objects concerned and what to write.</p>
 <table>
@@ -7924,18 +8007,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

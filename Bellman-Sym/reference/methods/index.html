@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/reference/methods/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/reference/methods/">
       
       
         <link rel="prev" href="../forms/">
@@ -2881,13 +2881,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5105,6 +5098,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5200,6 +5199,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5836,6 +5863,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6040,6 +6095,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7682,11 +7765,10 @@
 <li><em>builder</em>, a whole <a href="../../../wiki/builder/">builder</a>, named by the id of its <a href="../symbols-conventions/#5-equations-and-nodes">block</a>, such as <code>policy</code> or <code>cntn_to_dcsn</code>;</li>
 <li><em>node</em>, a line marked <code>!node</code>, and <em>statement</em>, any other line with an id, both named <code>&lt;block id&gt;.&lt;line id&gt;</code>;</li>
 <li><em>definition</em>, a function the stage file defines, named as the file writes it, such as <code>𝑢</code>;</li>
-<li><em>boundary</em>, the representation of a value function that a <a href="../../../wiki/backward_builder/">backward builder</a> delivers where no line of the stage writes one;</li>
-<li><em>operator</em> and a head, one occurrence of that operator in a line, named by <code>&lt;block id&gt;.&lt;line id&gt;.&lt;head&gt;</code>; the operator's stage-wide name, such as <code>E_Ψ_θ</code>, names every occurrence of it in the stage at once, and one entry then binds them all; the heads <code>evaluate</code> and <code>upper_env</code> name places a methods file reaches by their addresses and have no row on <a href="../forms/">Expression forms</a>, although <code>applications/retirement-choice/declaration/stages/worker_cons/worker_cons.bl</code> writes <code>upper_env(w[&gt;], c[&gt;], v[&gt;])</code> as a call.</li>
+<li><em>operator</em> and a head, one occurrence of that operator in a line, named by <code>&lt;block id&gt;.&lt;line id&gt;.&lt;head&gt;</code>; the operator's stage-wide name, such as <code>E_Ψ_θ</code>, names every occurrence of it in the stage at once, and one entry then binds them all; the heads <code>evaluate</code> and <code>upper_env</code> name places a methods file reaches by their addresses and have no row on <a href="../forms/">Expression forms</a>, although <code>applications/retirement-choice/declaration/stages/worker_cons/worker_cons.bl</code> writes <code>upper_env(w[&gt;], c[&gt;], v[&gt;])</code> as a call. The operator <code>evaluate</code> also names the <a href="../operations/#evaluation">Evaluation</a> that closes the policy builder or a backward value builder, where a representation of what the builder writes is bound: <code>policy.evaluate</code> for the policy function, and <code>&lt;block id&gt;.evaluate.value</code> and <code>&lt;block id&gt;.evaluate.marginal</code> for the value function a <a href="../../../wiki/backward_builder/">backward builder</a> writes and the derivative of it that a derivative line states (<a href="../../04-methodization/">Methodization</a> §2).</li>
 </ul>
-<p><strong>options</strong> lists the <a href="../../../wiki/settings/">settings</a> the method reads, each with the kind of value it takes. An entry gives them under <code>settings:</code>; it must give every setting marked <em>required</em>, and it may give the others.</p>
-<p><strong>takes a block</strong> says whether an entry of the method may name a block file under <code>block:</code>, whose block the method binds on the builder <code>on:</code> names (<a href="../../04-methodization/">Methodization</a> §4.1). <strong>derivatives it evaluates</strong> says, for a representation method, which derivatives of the represented function the representation evaluates: a block of a later stage that reads the derivative of the value by the term <code>D_{a}V[&gt;]</code> is served by the representation alone where no derivative line states that derivative, and the stage that reads it checks nothing against this column (<a href="../../07-trellis/">Trellises</a> §2.1). The column is information about the representation; a derivative line bound with <code>!marginals</code> and a representation bound on the line's id are the other two ways the derivative of a value is evaluated (<a href="../../04-methodization/">Methodization</a> §4.1). <strong>condition</strong> names the condition under which the method's construction reaches the stage file's declared line, with its sentence; <code>stage.obligations()</code> lists it under that name, and nothing checks it.</p>
+<p><strong>options</strong> lists the <a href="../../../wiki/settings/">settings</a> the method reads, each with the kind of value it takes. An entry gives them under <code>settings:</code>; it must give every setting marked <em>required</em>, and it may give the others, save that a representation at the policy builder's Evaluation where <code>!egm</code> stands writes no grid and one at an authored <code>evaluate(knots, values, x)</code> needs none (<a href="../../04-methodization/">Methodization</a> §3). A method that takes a grid names it by the setting <code>grid</code>, whose value is the grid's kind written as a tag, such as <code>grid: !Cartesian</code>; the cell then lists, beside each kind of grid, the fields that kind admits as further settings of the entry, <code>orders</code> and <code>bounds</code> for <code>!Cartesian</code> among them. The grid of a representation, <code>!Linear</code> or <code>!pchip</code>, lies in the coordinates of the represented function, and the exogenous grid of savings of <code>!egm</code> in the states of the continuation perch (<a href="../../04-methodization/">Methodization</a> §3).</p>
+<p><strong>takes a block</strong> says whether an entry of the method may name a block file under <code>block:</code>, whose block the method binds on the builder <code>on:</code> names (<a href="../../04-methodization/">Methodization</a> §4.1). <strong>derivatives it evaluates</strong> says, for a representation method, which derivatives of the represented function the representation evaluates: a block of a later stage that reads the derivative of the value by the term <code>D_{a}V[&gt;]</code> is served by the representation alone where no derivative line states that derivative, and the stage that reads it checks nothing against this column (<a href="../../07-trellis/">Trellises</a> §2.1). The column is information about the representation; a derivative line, in the stage file or bound with <code>!marginals</code>, whose values the representation at the builder's Evaluation stores, is the other way the derivative of a value is evaluated, and the methods file names that representation <code>&lt;block id&gt;.evaluate.marginal</code> or <code>&lt;block id&gt;.evaluate.value</code> (<a href="../../04-methodization/">Methodization</a> §4.1). <strong>condition</strong> names the condition under which the method's construction reaches the stage file's declared line, with its sentence; <code>stage.obligations()</code> lists it under that name, and nothing checks it.</p>
 <p><strong>denotes</strong> links to the section of <a href="../../../bellman-calculus/catalogues/operators/">Appendix E.3</a> that defines the object the method realizes. That object is the one E.3 defines for the first operator in the row's <strong>bound at</strong> cell, so a method bound at two operators links only the section of the first of them. A method bound at no operator, such as <code>!deterministic</code>, <code>!histogram</code> or <code>!identity</code>, is bound on a whole builder; the method table names no operator for it, so its row links no section and shows a dash; E.3 defines the backward builders in <a href="../../../bellman-calculus/catalogues/operators/#backward-builders">§2</a> and the forward builders in <a href="../../../bellman-calculus/catalogues/operators/#forward-builders-measure-side">§3</a>. A method realizes its object through its <a href="../../../wiki/handler/">handler</a>, the routine that carries the method out, and an adapter, which converts the stage's objects into the routine's representation and converts its results back.</p>
 <p><strong>defined in</strong> links to the line of <code>packages/bellman/bellman/stage/method_table.py</code> in the repository <code>econ-ark/bellman</code> that defines the method type's row of <code>METHOD_TYPES</code>; the module's docstring names this page in return. <strong>read from</strong> names the module under <code>packages/bellman/bellman/</code>, the table and the key.</p>
 <!-- reference-table -->
@@ -7711,12 +7793,12 @@
 <td><a id="egm"></a><code>!egm</code></td>
 <td><code>method: !egm</code></td>
 <td><code>builder</code><br>operator <code>argmax</code></td>
-<td><code>orders</code>: positive integers by coordinate<br><code>bounds</code>: ordered pairs by coordinate</td>
+<td><code>grid</code>: grid kind on the continuation states (required)<br>beside <code>grid: !Cartesian</code>: <code>orders</code>: positive integers by coordinate (required), <code>bounds</code>: ordered pairs by coordinate (required), <code>spacing</code>: spacing names by coordinate, <code>nodes</code>: increasing reals by coordinate</td>
 <td>yes</td>
 <td>none</td>
 <td><code>egm-eligibility</code>: the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable on (0, ∞) with a finite positive right derivative at 0</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1159">line 1159</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1561">line 1561</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"egm"</code></td>
 </tr>
 <tr>
@@ -7726,9 +7808,9 @@
 <td>none</td>
 <td>yes</td>
 <td>none</td>
-<td><code>marginal-reading</code>: the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes; for the decision builder's line the reading rests on the envelope conditions, which the package lists and does not check</td>
+<td><code>marginal-reading</code>: the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked</td>
 <td>—</td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1168">line 1168</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1572">line 1572</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"marginals"</code></td>
 </tr>
 <tr>
@@ -7740,7 +7822,7 @@
 <td>none</td>
 <td>none</td>
 <td>—</td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1177">line 1177</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1580">line 1580</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"vfi"</code></td>
 </tr>
 <tr>
@@ -7752,43 +7834,31 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#implicit-and-auxiliary-operators">E.3 §7 Implicit and auxiliary operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1193">line 1193</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1596">line 1596</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"time-iteration"</code></td>
-</tr>
-<tr>
-<td><a id="cartesian"></a><code>!Cartesian</code></td>
-<td><code>method: !Cartesian</code></td>
-<td><code>builder</code><br><code>node</code><br><code>statement</code><br><code>definition</code><br><code>boundary</code><br>operator <code>evaluate</code></td>
-<td><code>orders</code>: positive integers by coordinate (required)<br><code>bounds</code>: ordered pairs by coordinate (required)</td>
-<td>no</td>
-<td>the derivatives its basis admits, one route by which a stage solved by value function iteration supplies the derivative a later stage's endogenous grid step reads</td>
-<td>none</td>
-<td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1200">line 1200</a></td>
-<td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"Cartesian"</code></td>
 </tr>
 <tr>
 <td><a id="linear"></a><code>!Linear</code></td>
 <td><code>method: !Linear</code></td>
-<td><code>builder</code><br><code>node</code><br><code>statement</code><br><code>definition</code><br><code>boundary</code><br>operator <code>evaluate</code></td>
-<td><code>orders</code>: positive integers by coordinate<br><code>bounds</code>: ordered pairs by coordinate<br><code>grid</code>: untyped</td>
+<td><code>node</code><br><code>statement</code><br><code>definition</code><br>operator <code>evaluate</code></td>
+<td><code>grid</code>: grid kind (required)<br>beside <code>grid: !Cartesian</code>: <code>orders</code>: positive integers by coordinate (required), <code>bounds</code>: ordered pairs by coordinate (required), <code>spacing</code>: spacing names by coordinate, <code>nodes</code>: increasing reals by coordinate</td>
 <td>no</td>
-<td>the first derivative, piecewise constant between its nodes and so a step function, which an inverse Euler step that reads it turns into a step candidate; a second derivative is zero and is not offered</td>
+<td>the first derivative, piecewise constant between its nodes and so a step function, which an inverse Euler step that reads it turns into a step candidate; the second derivative is zero and is not offered</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1206">line 1206</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1606">line 1606</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"Linear"</code></td>
 </tr>
 <tr>
 <td><a id="pchip"></a><code>!pchip</code></td>
 <td><code>method: !pchip</code></td>
-<td><code>builder</code><br><code>node</code><br><code>statement</code><br><code>definition</code><br><code>boundary</code><br>operator <code>evaluate</code></td>
-<td><code>orders</code>: positive integers by coordinate<br><code>bounds</code>: ordered pairs by coordinate</td>
+<td><code>node</code><br><code>statement</code><br><code>definition</code><br>operator <code>evaluate</code></td>
+<td><code>grid</code>: grid kind (required)<br>beside <code>grid: !Cartesian</code>: <code>orders</code>: positive integers by coordinate (required), <code>bounds</code>: ordered pairs by coordinate (required), <code>spacing</code>: spacing names by coordinate, <code>nodes</code>: increasing reals by coordinate</td>
 <td>no</td>
-<td>the derivatives its basis admits, one route by which a stage solved by value function iteration supplies the derivative a later stage's endogenous grid step reads</td>
+<td>the first and second derivatives its basis admits</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1212">line 1212</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1618">line 1618</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"pchip"</code></td>
 </tr>
 <tr>
@@ -7800,7 +7870,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1215">line 1215</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1626">line 1626</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"gauss-hermite"</code></td>
 </tr>
 <tr>
@@ -7812,7 +7882,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1221">line 1221</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1632">line 1632</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"quadrature"</code></td>
 </tr>
 <tr>
@@ -7824,7 +7894,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1222">line 1222</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1633">line 1633</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"exact"</code></td>
 </tr>
 <tr>
@@ -7836,7 +7906,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1223">line 1223</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1634">line 1634</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"exact-markov"</code></td>
 </tr>
 <tr>
@@ -7848,7 +7918,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1224">line 1224</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1635">line 1635</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"markov"</code></td>
 </tr>
 <tr>
@@ -7860,7 +7930,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1225">line 1225</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1636">line 1636</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"markov-expectation"</code></td>
 </tr>
 <tr>
@@ -7872,7 +7942,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1226">line 1226</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1637">line 1637</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"sum"</code></td>
 </tr>
 <tr>
@@ -7884,7 +7954,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1227">line 1227</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1638">line 1638</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"tauchen"</code></td>
 </tr>
 <tr>
@@ -7896,7 +7966,7 @@
 <td>none</td>
 <td>none</td>
 <td>—</td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1240">line 1240</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1651">line 1651</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"deterministic"</code></td>
 </tr>
 <tr>
@@ -7908,7 +7978,7 @@
 <td>none</td>
 <td>none</td>
 <td>—</td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1241">line 1241</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1652">line 1652</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"histogram"</code></td>
 </tr>
 <tr>
@@ -7920,7 +7990,7 @@
 <td>none</td>
 <td>none</td>
 <td>—</td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1248">line 1248</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1659">line 1659</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"identity"</code></td>
 </tr>
 <tr>
@@ -7932,7 +8002,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1249">line 1249</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1660">line 1660</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"monte-carlo"</code></td>
 </tr>
 <tr>
@@ -7944,7 +8014,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1258">line 1258</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1669">line 1669</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"max"</code></td>
 </tr>
 <tr>
@@ -7956,7 +8026,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1259">line 1259</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1670">line 1670</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"discrete-choice"</code></td>
 </tr>
 <tr>
@@ -7968,7 +8038,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1260">line 1260</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1671">line 1671</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"golden_section"</code></td>
 </tr>
 <tr>
@@ -7980,7 +8050,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#primitive-operators">E.3 §4 Constituent operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1266">line 1266</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1677">line 1677</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"scipy-bounded"</code></td>
 </tr>
 <tr>
@@ -7992,7 +8062,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#implicit-and-auxiliary-operators">E.3 §7 Implicit and auxiliary operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1267">line 1267</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1678">line 1678</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"root-find"</code></td>
 </tr>
 <tr>
@@ -8004,7 +8074,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#implicit-and-auxiliary-operators">E.3 §7 Implicit and auxiliary operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1273">line 1273</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1684">line 1684</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"newton"</code></td>
 </tr>
 <tr>
@@ -8016,7 +8086,7 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#implicit-and-auxiliary-operators">E.3 §7 Implicit and auxiliary operations</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1274">line 1274</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1685">line 1685</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"analytic-inverse"</code></td>
 </tr>
 <tr>
@@ -8028,17 +8098,17 @@
 <td>none</td>
 <td>none</td>
 <td><a href="../../../bellman-calculus/catalogues/operators/#branching-operators">E.3 §6 Branch values and envelopes</a></td>
-<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1277">line 1277</a></td>
+<td><a href="https://github.com/econ-ark/bellman/blob/4742e477c627672e3492ee594c034e91a0e0e652/packages/bellman/bellman/stage/method_table.py#L1688">line 1688</a></td>
 <td><code>stage/method_table.py</code>, <code>METHOD_TYPES</code>, <code>"FUES"</code></td>
 </tr>
 </tbody>
 </table>
 <!-- /reference-table -->
 
-<p>A methods file that names a tag absent from the table is refused, and so is an entry that places a method at a kind of place its row does not admit, omits a required setting, or writes a setting the row does not name without naming a handler that reads it; each refusal is under the rule <code>method-attachment</code> of <a href="../refusals/">Refusals</a>. Configuration checks the values of the settings, and a value of the wrong kind is refused under the rule <code>method-option-value</code>.</p>
+<p>A methods file that names a tag absent from the table is refused, and so is an entry that places a method at a kind of place its row does not admit, omits a required setting, or writes a setting the row does not name without naming a handler that reads it; each refusal is under the rule <code>method-attachment</code> of <a href="../refusals/">Refusals</a>, except that <code>!Cartesian</code> written as a method, the fields of a grid written without the setting <code>grid</code>, and a grid written at the policy builder's Evaluation under <code>!egm</code> are refused under <code>grid-kind-as-method</code>, <code>grid-without-kind</code> and <code>grid-under-egm</code>. Configuration checks the values of the settings, and a value of the wrong kind is refused under the rule <code>method-option-value</code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Grids and the model's sets</p>
-<p>The settings <code>orders</code> and <code>bounds</code> describe a numerical grid: the number of points and the interval, coordinate by coordinate, at which a function is computed and between which it is interpolated. Changing them changes the approximation and leaves the model as it was. A finite set of alternatives the household chooses from is part of the model and is declared in the stage file.</p>
+<p>The settings <code>orders</code> and <code>bounds</code> describe a numerical grid: the number of points and the interval, coordinate by coordinate, at which a function is computed and between which it is interpolated. A representation and <code>!egm</code> write them beside the setting <code>grid</code>, which names the grid's kind; <code>!vfi</code>, <code>!histogram</code> and <code>!root-find</code> write them alone. Changing them changes the approximation and leaves the model as it was. A finite set of alternatives the household chooses from is part of the model and is declared in the stage file.</p>
 </div>
 
 
@@ -8141,18 +8211,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

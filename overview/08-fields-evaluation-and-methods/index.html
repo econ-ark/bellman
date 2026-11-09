@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/overview/08-fields-evaluation-and-methods/">
+        <link rel="canonical" href="https://bellman.io/overview/08-fields-evaluation-and-methods/">
       
       
         <link rel="prev" href="../07-workbench/">
@@ -2930,13 +2930,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5154,6 +5147,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5249,6 +5248,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5885,6 +5912,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6089,6 +6144,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7787,19 +7870,20 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">methods</span><span class="p">:</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">E_Ψ</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!gauss-hermite</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="nt">n_nodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">n_Ψ_nodes</span><span class="p p-Indicator">]</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cntn_to_dcsn.risk_ce</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">options</span><span class="p">:</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">orders</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m_d</span><span class="p">:</span><span class="w"> </span><span class="nv">n_m</span><span class="p p-Indicator">}</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">bounds</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m_d</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">m_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">m_max</span><span class="p p-Indicator">]}</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!Linear</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">orders</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m_d</span><span class="p">:</span><span class="w"> </span><span class="nv">n_m</span><span class="p p-Indicator">}</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">bounds</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m_d</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">m_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">m_max</span><span class="p p-Indicator">]}</span>
 </code></pre></div>
-<p>A method that computes an operation stands on the operator. Gauss–Hermite quadrature is a rule for one integral against a normal or lognormal distribution, and <code>E_Ψ</code> names the expectation. A method that stores a function stands where a function has a name: <code>!Cartesian</code> holds <span class="arithmatex">\(CE\)</span> by its values on a grid, and <code>cntn_to_dcsn.risk_ce</code> names the line that returns <span class="arithmatex">\(CE\)</span>. A method of one kind is refused at a place of the other. Quadrature says how the expectation inside the line is computed and says nothing about how <span class="arithmatex">\(CE\)</span> is held, so the package refuses it on the line:</p>
+<p>A method that computes an operation stands on the operator. Gauss–Hermite quadrature is a rule for one integral against a normal or lognormal distribution, and <code>E_Ψ</code> names the expectation. A method that stores a function stands where a function has a name: <code>!Linear</code> holds <span class="arithmatex">\(CE\)</span> by its values on a grid and reads it between them by linear interpolation, and <code>cntn_to_dcsn.risk_ce</code> names the line that returns <span class="arithmatex">\(CE\)</span>. The setting <code>grid</code> names the grid by its kind, <code>!Cartesian</code>, a product of one grid for each coordinate, and the grid's order and bounds stand beside it. A method of one kind is refused at a place of the other. Quadrature says how the expectation inside the line is computed and says nothing about how <span class="arithmatex">\(CE\)</span> is held, so the package refuses it on the line:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>!gauss-hermite does not admit target kind node; method-attachment admits operator E
 </code></pre></div>
 <p>An option a method requires is written beside it, and <code>configure</code> refuses a value outside its type.</p>
-<p>The places a stage admits are its own answer, <code>stage.places()</code>, with the kind of each. A method that stores a function admits the evaluated fields, a declared function and the stored form of a builder's output; a method that computes an operation admits the operator. A function that the file does not name, such as <span class="arithmatex">\(V_\succ \circ g_\succ\)</span>, is no place at all: an author who wants it stored writes it on a line of its own and marks the line <code>!node</code>.</p>
+<p>The places a stage admits are its own answer, <code>stage.places()</code>, with the kind of each. A method that stores a function admits the evaluated fields, a declared function and the stored form of a builder's output, at the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes the builder, which the methods file names by what it stores: <code>policy.evaluate</code> for the policy function, and <code>cntn_to_dcsn.evaluate.value</code> and <code>cntn_to_dcsn.evaluate.marginal</code> for a value function and the derivative of it that a derivative line states. A method that computes an operation admits the operator. A function that the file does not name, such as <span class="arithmatex">\(V_\succ \circ g_\succ\)</span>, is no place at all: an author who wants it stored writes it on a line of its own and marks the line <code>!node</code>.</p>
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <p>Hernández-Lerma, O., Laura-Guarachi, L. R., Mendoza-Palacios, S. and González-Sánchez, D. (2022). <em>An Introduction to Optimal Control Theory: The Dynamic Programming Approach</em>. Springer. Remark 2.19.</p>
 <p>Sargent, T. J. and Stachurski, J. (2025). <em>Dynamic Programming, Volume II: General States</em>. Chapter 1, equations (1.16) and (1.18).</p>
@@ -7904,18 +7988,18 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

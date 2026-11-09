@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/wiki/semgraph/">
+        <link rel="canonical" href="https://bellman.io/wiki/semgraph/">
       
       
         <link rel="prev" href="../semantics/">
@@ -2818,13 +2818,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5780,6 +5807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../handler/" class="md-nav__link">
         
   
@@ -5984,6 +6039,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -8308,7 +8391,7 @@ rule. Conditions on formula domains remain explicit.</p>
 builders graph, or a refusal where one cannot be constructed. A query derives
 the requested grain from those retained objects and caches it for the stage
 version. <code>ElaboratedStage</code> has seven attributes: <code>name</code>, <code>metadata</code>,
-<code>definitions</code>, <code>initial</code>, <code>_builders</code>, <code>bindings</code> and <code>provenance</code>, the fifth the stored record of the two builders graphs, which <code>stage.builder</code> reads. The object is a <a href="../stage/">stage occurrence</a>, one stage file elaborated at one position of a <a href="../period/">period</a>, and it is not adjusted in place: a binding gives a new stage version, and a different text is elaborated again as its own stage occurrence. Definitions retain
+<code>definitions</code>, <code>initial</code>, <code>_builders</code>, <code>bindings</code> and <code>provenance</code>, the fifth the stored record of the two builders graphs, which <code>stage.builder</code> reads. The object is a <a href="../stage/">stage occurrence</a>, one stage file elaborated at one position of a <a href="../period/">period</a>; a binding adds to it in place and returns it, and a different text is elaborated again as its own stage occurrence. Definitions retain
 source equations; queries derive their mathematical and display information.</p>
 <!-- /synth -->
 
@@ -8496,18 +8579,18 @@ Related concepts are <a href="../stage/">stage</a>, <a href="../perch/">perch</a
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

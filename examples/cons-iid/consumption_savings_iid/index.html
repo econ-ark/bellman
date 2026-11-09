@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/examples/cons-iid/consumption_savings_iid/">
+        <link rel="canonical" href="https://bellman.io/examples/cons-iid/consumption_savings_iid/">
       
       
         <link rel="prev" href="../../">
@@ -2816,13 +2816,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5199,6 +5192,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5294,6 +5293,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5930,6 +5957,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6134,6 +6189,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7882,7 +7965,7 @@ $$</p>
 <li><strong>Decision → Continuation</strong>: Consumption choice, <code>a = w - c</code></li>
 </ul>
 <h2 id="files">Files<a class="headerlink" href="#files" title="Permanent link">&para;</a></h2>
-<p>The application folder holds the stage file and its note in the stage's folder, the methods file and the two block files it binds under <code>declaration/methods/</code>, and the structural test:</p>
+<p>The application folder holds the stage file and its note in the stage's folder, the methods file and the two block files it binds under <code>declaration/methods/</code>, the settings file under <code>declaration/settings/</code>, and the structural test:</p>
 <table>
 <thead>
 <tr>
@@ -7910,6 +7993,10 @@ $$</p>
 <tr>
 <td><code>declaration/methods/marginals.bl</code></td>
 <td>The marginal blocks: the derivatives of the decision value and the arrival value</td>
+</tr>
+<tr>
+<td><code>declaration/settings/cons_savings_iid.yml</code></td>
+<td>The settings file: the exogenous grid of savings of the endogenous grid method, <code>n_a</code>, <code>a_min</code> and <code>a_max</code></td>
 </tr>
 <tr>
 <td><code>tests/test_cons_savings_iid_ast.py</code></td>
@@ -8124,18 +8211,15 @@ propagates the expected marginal value, accounting for the return <code>r</code>
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

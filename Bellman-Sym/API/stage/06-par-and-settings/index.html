@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/API/stage/06-par-and-settings/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/API/stage/06-par-and-settings/">
       
       
         <link rel="prev" href="../05-piece/">
@@ -2905,13 +2905,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5129,6 +5122,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5224,6 +5223,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5860,6 +5887,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6064,6 +6119,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7731,7 +7814,7 @@
 <h1 id="parameters-and-settings">Parameters and settings<a class="headerlink" href="#parameters-and-settings" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p><code>stage.par</code> answers the parameters of a stage and <code>stage.settings</code> the settings bound to it, each a read-only mapping read by the name the file writes, <code>stage.par["ρ"]</code> and <code>stage.settings["n_a"]</code>. A parameter is part of the economic problem; a setting is a numerical choice of the method that computes it. Every listing is printed by the package from <code>applications/portfolio-choice/declaration/stages/cons/cons.bl</code>, calibrated and configured by <code>applications/cons-port/reference/legacy/syntax/calibration.yaml</code> and <code>settings.yaml</code>, and methodized by <code>applications/portfolio-choice/declaration/stages/cons/methods.yml</code>, whose methods fill the settings table's last two columns, the place at which each setting is read and the method that reads it.</p>
+<p><code>stage.par</code> answers the parameters of a stage and <code>stage.settings</code> the settings bound to it, each a read-only mapping read by the name the file writes, <code>stage.par["ρ"]</code> and <code>stage.settings["n_a"]</code>. A parameter is part of the economic problem; a setting is a numerical choice of the method that computes it. Every listing is printed by the package from <code>applications/portfolio-choice/declaration/stages/cons/cons.bl</code>, calibrated and configured by <code>applications/cons-port/reference/legacy/syntax/calibration.yaml</code> and <code>settings.yaml</code>, and methodized by <code>applications/portfolio-choice/declaration/stages/cons/methods.yml</code>, whose methods fill the settings table's last three columns: the place at which each setting is read, the method that reads it and, where the setting is a field of that method's grid, the grid's kind.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -7774,19 +7857,19 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>"stage 'cons': 'rho' is no parameter of the stage; a parameter is read by the name the file declares, and the parameters are ρ"
 </code></pre></div>
 <h2 id="2-the-settings">2 The settings<a class="headerlink" href="#2-the-settings" title="Permanent link">&para;</a></h2>
-<p><code>stage.settings</code> answers one row for each method that reads a setting, with the setting's name, its configured value, the place it is read at and the method that reads it; a setting that no method reads has one row with the last two empty. One settings file may serve every stage of an application, so a stage can be bound settings that no method bound to it reads, here among others <code>n_k</code>, <code>n_θ_nodes</code> and <code>n_Ψ_nodes</code>, the grid and quadrature sizes of the application's portfolio stage. <code>stage.settings["n_m"]</code> answers the record of one setting, and its <code>value</code> is the configured value.</p>
+<p><code>stage.settings</code> answers one row for each method that reads a setting, with the setting's name, its configured value, the place it is read at, the method that reads it and, where the setting is a field of that method's grid, the grid's kind; a setting that no method reads has one row with the last three empty. A method that takes a grid names it by the setting <code>grid</code>, whose value is the grid's kind written as a tag, <code>grid: !Cartesian</code>, with the grid's fields beside it (<a href="../../../04-methodization/">Methodization</a> §3); the kind is no setting, and the column <code>grid</code> gives it on the row of each setting that one of the fields names. Here the representation at the decision builder's Evaluation reads <code>n_m</code>, <code>m_min</code> and <code>m_max</code> as its grid of resources, and the endogenous grid method on the policy builder reads <code>n_a</code>, <code>a_min</code> and <code>a_max</code> as its exogenous grid of savings. One settings file may serve every stage of an application, so a stage can be bound settings that no method bound to it reads, here among others <code>n_k</code>, <code>n_θ_nodes</code> and <code>n_Ψ_nodes</code>, the grid and quadrature sizes of the application's portfolio stage. <code>stage.settings["n_m"]</code> answers the record of one setting, and its <code>value</code> is the configured value.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_m"</span><span class="p">])</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_m"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>name           value    read at                  by
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>name           value    read at                  by       grid
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>grid_spacing   expmult
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>n_m            8000     cntn_to_dcsn:Evaluation  !Cartesian
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>m_min          0.01     cntn_to_dcsn:Evaluation  !Cartesian
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>m_max          2000.0   cntn_to_dcsn:Evaluation  !Cartesian
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>n_a            800
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>a_min          1e-10
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>a_max          100.0
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>n_m            8000     cntn_to_dcsn:Evaluation  !Linear  !Cartesian
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>m_min          0.01     cntn_to_dcsn:Evaluation  !Linear  !Cartesian
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>m_max          2000.0   cntn_to_dcsn:Evaluation  !Linear  !Cartesian
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>n_a            800      policy                   !egm     !Cartesian
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>a_min          1e-10    policy                   !egm     !Cartesian
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>a_max          100.0    policy                   !egm     !Cartesian
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>n_k            800
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>k_min          1e-10
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>k_max          1000.0
@@ -7797,7 +7880,7 @@
 <a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>sim_seed       42
 <a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>tol_vfi        1e-08
 <a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>max_iter       1000
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>n_m = 8000, read at cntn_to_dcsn:Evaluation by !Cartesian
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>n_m = 8000, read at cntn_to_dcsn:Evaluation by !Linear for its grid !Cartesian
 <a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>8000
 </code></pre></div>
 <p>A setting has no declaration in the definitions table, so the table is read from the settings the version binds and the bound methods that name them. A version that no configuration has bound holds no setting, and a key it does not hold is refused with the reason:</p>
@@ -7919,18 +8002,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

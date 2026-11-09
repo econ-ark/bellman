@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/wiki/symbolic_stage/">
+        <link rel="canonical" href="https://bellman.io/wiki/symbolic_stage/">
       
       
         <link rel="prev" href="../sub_builder/">
@@ -2818,13 +2818,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5780,6 +5807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../handler/" class="md-nav__link">
         
   
@@ -5984,6 +6039,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7603,7 +7686,7 @@
 <h1 id="symbolic-stage">Symbolic stage<a class="headerlink" href="#symbolic-stage" title="Permanent link">&para;</a></h1>
 <p>A <strong>symbolic stage</strong> is the constructed <a href="../stage/">stage</a> before numerical methods, <a href="../settings/">settings</a> and <a href="../calibration/">calibration</a> values are attached. It is what <code>elaborate_stage(load_stage(path))</code> returns for one stage file, and what <code>elaborate_trellis</code> places at every position of a <a href="../trellis/">trellis</a>. It does not mean that the stage retains a parser tree or has no interpreted mathematical equations.</p>
 <p><code>load_stage(path)</code> reads a <code>.bl</code> stage file into a source record, and <code>elaborate_stage(record)</code> parses and checks it and returns a stage containing its <a href="../semgraph/">semgraph</a> (semantic graph). On the symbolic stage <code>stage.methods</code> and <code>stage.settings</code> are empty, <code>stage.par</code> lists every <a href="../parameters/">parameter</a> as <code>unbound</code>, and <code>repr(stage)</code> prints <code>ElaboratedStage('cons', symbolic)</code> for the consumption stage. Typed <a href="../field/">fields</a>, equations and definitions describe the problem, with parameter names still symbolic. Further functional interpretation requires its stated assumptions; construction is not a numerical solution.</p>
-<p>A <strong>stage file</strong> is reusable <code>.bl</code> source; at the elaborator boundary it is also called a stage module. A <strong>stage occurrence</strong> is that file elaborated at one position of a <a href="../period/">period</a>, with its own three bindings; several stage occurrences of one file may sit in one period or across periods, each a separate object that shares nothing with the others, prints the file's declared name and records its position in its provenance. A stage occurrence is not adjusted in place: each binding gives a new <a href="../stage/">stage version</a>, and a text derived from the file is elaborated as its own stage occurrence with its origin recorded. Period and trellis assembly uses outer records; it elaborates the stage file at each position as its own stage occurrence and retains no whole-model syntax tree.</p>
+<p>A <strong>stage file</strong> is reusable <code>.bl</code> source; at the elaborator boundary it is also called a stage module. A <strong>stage occurrence</strong> is that file elaborated at one position of a <a href="../period/">period</a>, with its own three bindings; several stage occurrences of one file may sit in one period or across periods, each a separate object that shares nothing with the others, prints the file's declared name and records its position in its provenance. Each binding adds to the stage occurrence in place and returns it, and a text derived from the file is elaborated as its own stage occurrence with its origin recorded. Period and trellis assembly uses outer records; it elaborates the stage file at each position as its own stage occurrence and retains no whole-model syntax tree.</p>
 <p>The entry <a href="../specified_stage/">specified stage</a> describes the bindings that follow, in the recommended order calibration, <a href="../methodization/">methodization</a> and configuration. Methodization supplies numerical choices without replacing missing mathematics.</p>
 <p>See <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a> and <a href="../../Bellman-Sym/API/stage/01-the-stage/">The stage</a>.</p>
 
@@ -7707,18 +7790,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

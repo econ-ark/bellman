@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/reference/operations/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/reference/operations/">
       
       
         <link rel="prev" href="../../appendices/15-appendix-d-node-tag-and-field-indexing/">
@@ -2925,13 +2925,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5149,6 +5142,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5244,6 +5243,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5880,6 +5907,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6084,6 +6139,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7825,7 +7908,7 @@
 <p>Five kinds stand in the backward builders, which act on functions, and three in the forward builders, which act on finite measures. Each builder is named below by the pair of perches it joins, as the title of its card prints it, <code>cntn → dcsn</code> for the decision builder, which <code>stage.builder["cntn", "dcsn"]</code> reads (<a href="../../API/stage/03-build/">The builders graphs</a> §1); the policy builder is named by its own key, <code>policy</code>. The lines of a stage file form the rows of each kind as follows.</p>
 <ul>
 <li><code>Pullback</code>: the lines of a backward block that read functions of the later perch at the states of an earlier perch form one row that composes those functions with the law of motion of the forward block on the same edge, <code>a = m_d - c</code> in <code>cons.bl</code>. Such a row stands in <code>cntn → dcsn</code>, along 𝑔≻ read at the policy, and in <code>dcsn → arvl</code>, along 𝑔≺; in <code>policy</code> one stands along 𝑔≻ where an objective or residuals that the builder constructs read such a function, as the <code>solve_{…}(…)</code> line of <code>port.bl</code> does, and the identification line of §4 forms another, along the coordinate map 𝑚_d≻. Where the forward block branches, as in <code>ret_choice.bl</code>, one such row stands for each branch, <code>Pullback:work</code> and <code>Pullback:retire</code>, along the law of motion read at that branch's label, <code>𝑔_work≻(a_d) = 𝑔≻(a_d, work)</code>. A policy line written at the continuation perch, its left side marked <code>[&gt;]</code>, such as <code>c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0</code> in <code>cons.bl</code>, reads the function at the continuation states and forms none.</li>
-<li><code>Aggregation</code>: the lines of a backward block that write its values together form one in the block's builder, <code>dcsn → arvl</code> or <code>cntn → dcsn</code>, each right side read as the value aggregator 𝐺 and printed as one equation of the row's rule, as <code>V = 𝑢(c) + V[&gt;]</code> alone forms the <code>Aggregation</code> of <code>cntn → dcsn</code> in <code>cons.bl</code>. A derivative line of the same block, <code>D_{m_d}V = 𝑑𝑢(c)</code>, forms no part of it: it states the derivative of the value the builder writes and stands at the builder's <code>Evaluation</code>. In a policy block, or in a <a href="../../04-methodization/#41-a-method-block-and-a-marginal-block">method block</a> that opens the policy builder, adjacent explicit lines written at the continuation perch together form one, as <code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;])</code> and <code>m[&gt;] = a + c[&gt;]</code> of the method block of <code>buffer_stock_egm.bl</code>, which the buffer-stock methods file binds on <code>policy</code>, form <code>endoggrid:Aggregation</code>, and a line stating a relation, a <code>solve_{…}(…)</code> line and the objective of an <code>argmax_{…}(…)</code> line not marked <code>!doc</code> each form one, in <code>policy</code> (§4). In both kinds of block, a line that takes the expectation of an expression other than one function it reads forms one more for that expression: in <code>port.bl</code>, the row of the derivative line of <code>cntn → dcsn</code>, which the package's card names <code>marginal:Aggregation:1</code>, and <code>foc:Aggregation:1</code> of <code>policy</code>; a line marked <code>!node</code> forms its own in its <a href="../../../wiki/sub_builder/">sub-builder</a> and joins no other.</li>
+<li><code>Aggregation</code>: the lines of a backward block that write its values together form one in the block's builder, <code>dcsn → arvl</code> or <code>cntn → dcsn</code>, each right side read as the value aggregator 𝐺 and printed as one equation of the row's rule, as <code>V = 𝑢(c) + V[&gt;]</code> alone forms the <code>Aggregation</code> of <code>cntn → dcsn</code> in <code>cons.bl</code>. A derivative line of the same block, <code>D_{m_d}V = 𝑑𝑢(c)</code>, forms no part of it: it states the derivative of the value the builder writes and stands at the builder's <code>Evaluation</code>. In a policy block, or in a <a href="../../04-methodization/#41-a-method-block-and-a-marginal-block">method block</a> that opens the policy builder, adjacent explicit lines written at the continuation perch together form one, as <code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;])</code> and <code>m[&gt;] = a + c[&gt;]</code> of the method block of <code>buffer_stock_egm.bl</code>, which the buffer-stock methods file binds on <code>policy</code>, form <code>g_cntn_to_dcsn:Aggregation</code>, and a line stating a relation, a <code>solve_{…}(…)</code> line and the objective of an <code>argmax_{…}(…)</code> line not marked <code>!doc</code> each form one, in <code>policy</code> (§4). In both kinds of block, a line that takes the expectation of an expression other than one function it reads forms one more for that expression: in <code>port.bl</code>, the row of the derivative line of <code>cntn → dcsn</code>, which the package's card names <code>marginal:Aggregation:1</code>, and <code>foc:Aggregation:1</code> of <code>policy</code>; a line marked <code>!node</code> forms its own in its <a href="../../../wiki/sub_builder/">sub-builder</a> and joins no other.</li>
 <li><code>Expectation</code>: an occurrence <code>E_{θ}(·)</code> in a line of a backward block forms one, one row per occurrence on the builder's card, <code>value:Expectation:1</code>; at the primitive grain of the whole graph, <code>stage.builder.bwd.primitives</code>, the expectations of a block's several lines stand as one box named by the block, <code>cntn_to_dcsn:Expectation</code> in <code>port.bl</code>, which is the name the table below shows. In <code>policy</code>, the objective of an <code>argmax_{…}(…)</code> line forms one where it holds an expectation, as in <code>ez_savings.bl</code>.</li>
 <li><code>Argmax</code>: an <code>argmax_{…}(…)</code> line of a policy block that is not marked <code>!doc</code> forms one, in <code>policy</code>, as <code>d = argmax_{d}(V_w[&gt;] - δ, V_r[&gt;])</code> in <code>ret_choice.bl</code>.</li>
 <li><code>Evaluation</code>: no line forms one. It is the closing row of every backward builder, the policy builder among them, and of every <a href="../../../wiki/sub_builder/">sub-builder</a>, the operator a line marked <code>!node</code> denotes, and it places each output in its declared carrier. On the card of <code>policy</code> of <code>cons.bl</code> its rule is the declared carrier with its feasibility, <code>𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)</code>, since the relation that defines the function it carries is printed at the row that forms it, <code>cons_choice:Pullback</code>; the row's own card, <code>stage.dcsn.builder.policy["Evaluation"]</code>, prints that relation under <code>Rule</code>, <code>𝑐(𝑚_d≻(a)) = 𝑐≻(a) on 𝑚_d≻(Xa)</code>.</li>
@@ -8054,18 +8137,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

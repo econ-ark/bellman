@@ -10,10 +10,10 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/wiki/handler/">
+        <link rel="canonical" href="https://bellman.io/wiki/handler/">
       
       
-        <link rel="prev" href="../ffp/">
+        <link rel="prev" href="../grid/">
       
       
         <link rel="next" href="../initial_algebra/">
@@ -2818,13 +2818,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5777,6 +5804,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -6053,6 +6108,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7672,12 +7755,12 @@
 
 
 <h1 id="handler">Handler<a class="headerlink" href="#handler" title="Permanent link">&para;</a></h1>
-<p>A <strong>handler</strong> is the executable callable used to carry out a selected numerical operation. A <strong>method</strong> is the algorithmic choice; the handler is its particular implementation. <a href="../methodization/">Methodization</a> associates a method with a supported operation of a <a href="../stage/">stage</a>, while <a href="../settings/">settings</a> supply numerical choices such as a grid size or tolerance.</p>
+<p>A <strong>handler</strong> is the executable callable used to carry out a selected numerical operation. A <a href="../methods/">method</a> is the algorithmic choice; the handler is its particular implementation. <a href="../methodization/">Methodization</a> associates a method with a supported operation of a <a href="../stage/">stage</a>, while <a href="../settings/">settings</a> supply numerical choices such as a grid size or tolerance.</p>
 <h2 id="implementation-and-mathematical-meaning">Implementation and mathematical meaning<a class="headerlink" href="#implementation-and-mathematical-meaning" title="Permanent link">&para;</a></h2>
 <p>A handler's <a href="../signature/">inputs and outputs</a> must match the operation's required objects. Where a toolkit uses a different representation, an <strong>adapter</strong> converts the inputs into that representation and converts the results back. The adapter and the callable are distinct parts of the calculation.</p>
 <p>For example, a solver may represent a continuation value by an interpolated function and the probability distribution of a shock by finitely many weighted outcomes. Its recorded contract must state where it is exact and which approximations are introduced. Neither an import path nor a method name proves <a href="../adequacy/">correctness</a> or <a href="../semiconjugacy/">semiconjugacy (strong / order)</a>.</p>
 <h2 id="finding-an-implementation">Finding an implementation<a class="headerlink" href="#finding-an-implementation" title="Permanent link">&para;</a></h2>
-<p>A methods file names the handler beside the method it carries out, as a package and the name of a callable in it: the consumption stage of the portfolio application binds <code>!egm</code> with <code>handler: cons-port:egm</code>, and the retirement application's consumption stages bind it with <code>handler: asva:make_egm_1d</code>, the one-dimensional endogenous-grid step of asva, the numerical toolkit installed beside the package. A handler builds its numerical <a href="../operator/">operator</a> from the records that a <a href="../builder/">builder</a>'s <code>kernels()</code> answers, which refer to no stage, and from the grids it reads from the settings (<a href="../../Bellman-Sym/04-methodization/">Methodization</a> §4).</p>
+<p>A methods file, the <a href="../addition/">addition</a> to the <a href="../stage/">stage file</a>, names the handler as a binding of the operator's place, written as the method is and valued by a quoted string that gives a package and the name of a callable in it: the consumption stage of the portfolio application binds <code>!egm</code> with <code>policy.handler : "cons-port:egm"</code>, and the retirement application's consumption stages bind it with <code>policy.handler : "asva:make_egm_1d"</code>, the one-dimensional endogenous-grid step of asva, the numerical toolkit installed beside the package. A handler may be written with or without a method word, and it is no component of the signature: the method and the <a href="../grid/">grid</a> are (<a href="../../bellman-calculus/06-Methods/">Methods</a> §7). A handler builds its numerical <a href="../operator/">operator</a> from the records that a <a href="../builder/">builder</a>'s <code>kernels()</code> answers, which refer to no stage, from the grid the operator's grid component names, and from the keyword arguments of the method word beyond those the package reads.</p>
 <p>A handler is not the mathematical definition of the operation. Those definitions remain in the stage and the <a href="../bellman_calculus/">Bellman calculus</a>.</p>
 
 
@@ -7717,7 +7800,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../ffp/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Functional programming and FFP">
+          <a href="../grid/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Grid">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -7727,7 +7810,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Functional programming and FFP
+                Grid
               </div>
             </div>
           </a>
@@ -7780,18 +7863,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

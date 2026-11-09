@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/asva/">
+        <link rel="canonical" href="https://bellman.io/asva/">
       
       
         <link rel="prev" href="../examples/cons-port-stages/solving-conjugates/">
@@ -2816,13 +2816,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5045,6 +5038,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5140,6 +5139,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5776,6 +5803,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../wiki/handler/" class="md-nav__link">
         
   
@@ -5980,6 +6035,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7728,12 +7811,19 @@
 </tbody>
 </table>
 <h2 id="3-asva-and-bellman">3 Asva and bellman<a class="headerlink" href="#3-asva-and-bellman" title="Permanent link">&para;</a></h2>
-<p>A methods file may name an asva function as the <a href="../wiki/handler/">handler</a> of a method. The <a href="../examples/retirement/retirement_choice/">retirement-choice application</a> attaches the endogenous grid method to the consumption stages of its retiree and its worker with the entry</p>
+<p>A methods file may name an asva function as the <a href="../wiki/handler/">handler</a> of a method. The <a href="../examples/retirement/retirement_choice/">retirement-choice application</a> attaches the endogenous grid method to the consumption stages of its retiree and its worker with entries such as the worker's, which names the method block of <code>worker_cons_egm.bl</code> and the exogenous grid of savings by the setting <code>grid</code>, its kind the tag <code>!Cartesian</code> with the grid's order and bounds beside it (<a href="../Bellman-Sym/04-methodization/">Methodization</a> §3):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">policy</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!egm</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">handler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">asva:make_egm_1d</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">../../methods/worker_cons_egm.bl</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">handler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">asva:make_egm_1d</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">      </span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">orders</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="nt">b</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">n_a</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nt">bounds</span><span class="p">:</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">        </span><span class="nt">b</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">a_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">a_max</span><span class="p p-Indicator">]</span>
 </code></pre></div>
-<p><code>bellman</code> binds the method at the <a href="../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes the policy block, <code>policy:Evaluation</code>, the operation that places the policy in its declared set of functions (<a href="../Bellman-Sym/reference/methods/#egm">the method type <code>!egm</code></a>), and records the handler's name with it; it neither imports the function nor calls it. The reader's own code builds the step and applies it: from the <a href="../wiki/specified_stage/">specified stage</a> it computes the arrays and the functions that <code>make_egm_1d</code> or another asva function takes, or it passes the records of the stage's kernels to <code>egm</code> (<a href="01-numerical-steps/">Numerical steps</a> §6).</p>
+<p><code>bellman</code> keeps the method on the policy builder, <code>policy</code>, whose operations the method block writes (<a href="../Bellman-Sym/reference/methods/#egm">the method type <code>!egm</code></a>), and records the handler's name with it; it neither imports the function nor calls it. The reader's own code builds the step and applies it: from the <a href="../wiki/specified_stage/">specified stage</a> it computes the arrays and the functions that <code>make_egm_1d</code> or another asva function takes, or it passes the records of the stage's kernels to <code>egm</code> (<a href="01-numerical-steps/">Numerical steps</a> §6).</p>
 <p>A test of the runner holds fills keyed by slot name, and these are the keyword arguments of <code>load_recipe</code> and <code>assemble_trellis</code> of <code>bellman.trellis</code>, so that one test selects one variant of the model that a registry's recipe describes (<a href="02-the-runner/">The runner</a> §2).</p>
 <h2 id="4-simulation">4 Simulation<a class="headerlink" href="#4-simulation" title="Permanent link">&para;</a></h2>
 <p>This release of asva does not simulate. The module <code>asva.simulate</code> is installed with the package, and its two functions that simulate a population of agents, <code>simulate</code> over the periods and <code>simulate_period</code> over the stages of one period, raise an error when they are called. The simulated panels that an estimation needs are therefore computed by the reader's own code (<a href="05-estimation/">Estimation</a> §1).</p>
@@ -7842,18 +7932,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../_javascripts/meaning_map.js"></script>
       
         <script src="../_javascripts/figure_sequences.js"></script>
       
         <script src="../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

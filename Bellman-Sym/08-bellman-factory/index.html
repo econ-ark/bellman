@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/08-bellman-factory/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/08-bellman-factory/">
       
       
         <link rel="prev" href="../07-trellis/">
@@ -3043,13 +3043,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5267,6 +5260,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5362,6 +5361,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5998,6 +6025,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6202,6 +6257,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -8174,7 +8257,7 @@
 </tr>
 </tbody>
 </table>
-<p>The stage's own verbs are unchanged: <code>stage.calibrate(values or path)</code>, <code>stage.methodize(methods or path)</code> and <code>stage.configure(settings or path)</code> each return a new version of one stage (<a href="../API/stage/09-binding-verbs/">The binding verbs</a>), and the trellis verbs apply them once for each distinct stage occurrence and mapping, copying the result to the other positions of that pair (§6).</p>
+<p>The stage's own verbs are unchanged: <code>stage.calibrate(values or path)</code>, <code>stage.methodize(methods or path)</code> and <code>stage.configure(settings or path)</code> each add their binding to the one stage they are called on and return it (<a href="../API/stage/09-binding-verbs/">The binding verbs</a>), and the trellis verbs apply them once for each distinct stage occurrence and mapping, copying the result to the other positions of that pair (§6).</p>
 <h2 id="3-the-registry-and-the-recipe">3 The registry and the recipe<a class="headerlink" href="#3-the-registry-and-the-recipe" title="Permanent link">&para;</a></h2>
 <p>The <strong>registry</strong> is the folder the recipe stands in, and nothing else: every path the recipe writes is read from it. In a model folder the registry is the subfolder <code>declaration/</code>, which holds every file the language reads (<a href="../reference/model-directory-layout/">Model directory layout</a>). The durables registry holds the recipe, the trellis file and the period template at its top, with the three files of a second route beside them (§3.6); the calibration and settings files under <code>calibration/</code> and <code>settings/</code>; under <code>stages/</code> one folder for each stage, holding its stage file and, where the stage has them, its methods file <code>methods.yml</code> and its note; and under <code>methods/</code> the block files the methods files name, which hold the endogenous grid lines of the two consumption stages and the derivative lines of the value builders. A file is read whether it is spelled <code>.yml</code> or <code>.yaml</code>, and a calibration, settings or methods file is told apart by its top key, not by its extension.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>applications/durables/declaration/
@@ -8677,18 +8760,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/overview/07-workbench/">
+        <link rel="canonical" href="https://bellman.io/overview/07-workbench/">
       
       
         <link rel="prev" href="../06-workflow/">
@@ -2974,13 +2974,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5198,6 +5191,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5293,6 +5292,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5929,6 +5956,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6133,6 +6188,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7855,7 +7938,7 @@
 <p>A value typed in a row of <code>Parameters</code> or <code>Settings</code>, with Enter, or a method chosen in <code>Methods</code>, is written to the file that writes it (§7): only the characters of that value change, and the file's comments, layout and other entries stay as written. A parameter shown <code>unvalued</code> is added to the file the tab names, at the end of its calibration, <code>Y: 1.0</code>. Values typed one after another are written in turn, each once, and each stays in its input from its Enter, the status line reading <code>elaborating</code> until it is written; the tree then marks the file changed, and the loop binds the stage again. A parameter's value is written whatever it reads as, a number, a text, a list or a matrix, <code>[ [0.9, 0.1], [0.1, 0.9] ]</code>, and the package checks it against the set the parameter is declared in when it binds the stage: a value outside that set, such as <code>1e-5</code>, which reads as text, or a matrix for a parameter declared in ℝ, is refused in the package's sentence, which stands in the list under the Problems button (§3) and as the hover of the row's input, marked in orange. A list or a matrix is added for a parameter that no file values; in place of a value a file writes, the package's writer refuses it, since it writes no list in place of a value. A setting's value must read as a value of the kind the file writes there: where it writes a number, or no value, any number. A number with an exponent reads as a number only when written with a decimal point and a signed exponent, <code>1.0e-5</code>, so that <code>1e-5</code> is refused there: <code>1e-5 reads as text, not as a number</code>. The type a setting must have is checked by the package when it binds the stage again, and its refusal then stands in the list under the Problems button. A text that does not read as a value, and any write to a file that holds unsaved text in the editor, <code>declaration/calibration/durables.yml holds unsaved text</code>, are refused, and the file is left as it was: the row's input or choice is marked in orange, and the sentence stands in the list under the Problems button with the file and, where the row has one, its line. A recipe that lists no file of a kind for the occurrence, as the portfolio model's recipe lists no settings file for <code>disc</code>, leaves that tab with no file and with the words <code>the recipe lists no settings source for disc</code>; that binding is skipped, which is no refusal, so the list under the Problems button holds no line for it; <code>Parameters</code> still lists the declarations. A stage shown without a recipe shows on the three tabs the words <code>no recipe values them</code>.</p>
 <p>The <strong>Semantic graph</strong> shows the <a href="../../wiki/semgraph/">semgraph</a>, the semantic graph constructed from the stage file. Its bar, the column's first row and its only head, holds the words <code>Semantic graph</code>, two selects and two view tabs; in the trellis view, the select of the restriction (§7) and, over the forward trellis graph, the button <code>Stages</code> (§8); and at its right end the Problems button (§3). The select <code>Graph</code>, in a stage's view and in the trellis view alike, shows <code>Operator</code>, the <a href="../../wiki/builder/">builders</a> and their operators, or <code>Initial</code>, the fields grouped by perch with the blocks between them, and in the trellis the fields of every stage occurrence shown, each connection drawn as a wire from the field it reads to the field it supplies; the select <code>Direction</code> shows <code>Backward</code> or <code>Forward</code>; and the view tabs <code>Stage</code> and <code>Trellis</code> show the graph of the stage file open in the editor or the periods and their stage occurrences (§7), the tab of the graph shown selected. A <strong>layer</strong> is a frame that contains boxes, such as a builder, a <a href="../../wiki/sub_builder/">sub-builder</a>, a perch, a <a href="../../wiki/period/">period</a> or a stage occurrence. Its toggle, a chevron pointing right, opens it, and the same toggle, then pointing down, closes it to one box.</p>
 <p>At the foot of the graph, four icon buttons change its layout direction, zoom in, zoom out and fit the whole graph. Their hovers read <code>Lay out from left to right</code> or <code>Lay out from top to bottom</code>, naming the next layout direction, then <code>Zoom in</code>, <code>Zoom out</code> and <code>Fit</code>. Every graph opens laid out from top to bottom; the direction chosen with the first button holds for every graph of every stage and of the trellis while the page is open, and the browser remembers it for the next start. In a stage's view, <code>Perch overlays</code> adds or removes a straight line between the boxes at each end of a wire, colored by the wire's perch. Beside it, <code>Operative builders</code> switches the builders the graph and Details show between the declared builders, the operators the blocks of the stage file denote, and the operative builders, which hold the operations a method block bound in the methods file adds (<a href="../../Bellman-Sym/04-methodization/">Methodization</a>); the page opens on the declared builders, and the button does nothing where no method adds operations or while an initial diagram is shown. The wheel zooms, and dragging the navy background pans. Tab and Shift+Tab reach the boxes in order, bringing a box into view before it takes focus. Enter selects the focused box. Escape clears the selection in the graph, editor and panels. A trellis graph that can be read whole opens fitted to the pane. Otherwise it opens on its terminal period, at the largest scale, no larger than the ordinary size and no smaller than the least scale at which labels remain legible, at which that period's frame fills the width of the pane, moved toward the nearer end of the graph so that the markers of the data that enter or leave the graph (§8) stand beside the frame where the pane has room, the frame's top just under the top of the pane where the frame is taller than the pane. A stage's graph opens at the largest scale within the same bounds at which its width fits the pane, whole where it fits and otherwise from its beginning. <code>Fit</code> shows the whole graph without enlarging its labels above their ordinary size.</p>
-<p>An operator's box prints its symbol, <code>𝑉≻ ∘ 𝑔≻</code>, and the tag of a method bound within it, <code>𝑉(m_d) · !Cartesian</code>. Its kind, such as <code>Pullback</code>, stands in Details (§3). A field's box also prints its declared set. The selected box and the wires that enter or leave it are marked in ultramarine, a bright blue. On the navy background, a period's frame has no fill of its own, and stage occurrences, builders and sub-builders have successively lighter blue fills. A builder's output has a bright blue border. Orange marks a refusal and, on a stage occurrence's card, the segment of the builder that joins the continuation perch (§8).</p>
+<p>An operator's box prints its symbol, <code>𝑉≻ ∘ 𝑔≻</code>, and the tag of a method bound within it, <code>𝑉(m_d) · !Linear</code>. Its kind, such as <code>Pullback</code>, stands in Details (§3). A field's box also prints its declared set. The selected box and the wires that enter or leave it are marked in ultramarine, a bright blue. On the navy background, a period's frame has no fill of its own, and stage occurrences, builders and sub-builders have successively lighter blue fills. A builder's output has a bright blue border. Orange marks a refusal and, on a stage occurrence's card, the segment of the builder that joins the continuation perch (§8).</p>
 <p>The legend stands last in Details, folded under <code>Legend</code> whether or not anything is selected. It names the version drawn and the levels present, with swatches matching their appearance on navy: <code>period</code>, <code>stage occurrence</code>, <code>builder</code>, <code>sub-builder</code>, <code>primitive operator</code> and <code>builder's output</code>, or <code>perch</code>, <code>field</code> and <code>block</code> in an initial diagram. It lists each bound method's tag and place, such as <code>!egm  policy:Evaluation</code>, and names the marks the graph holds: <code>· !tag</code> means <code>bound method</code>, <code>at 𝑐</code> means <code>at a policy</code>, and <code>𝑔≺, 𝑔≻</code> means <code>law of motion</code>. With <code>Perch overlays</code> on, the legend also shows arrival in pale blue, decision in periwinkle, a light blue-violet, and continuation in bright blue. In an initial diagram it lists each role and its fields, such as <code>value  V≻, V, V≺</code>. The position of a box carries no meaning.</p>
 <h2 id="3-typing-and-selecting">3 Typing and selecting<a class="headerlink" href="#3-typing-and-selecting" title="Permanent link">&para;</a></h2>
 <p>At every pause of the typing the file is elaborated again, and two seconds after the typing stops the graph agrees with the text again. When the text elaborates, the graph is redrawn and the view keeps the layers that were open and the box that was selected. When it is refused, the refusal is underlined at its line and column, with the elaborator's sentence on hover, and marked in the gutter; Details marks it by its place and its rule, <code>refused at declaration/stages/cons/cons.bl:18:15 · rule syntax</code>, the sentence stands in the list under the Problems button, and the graph keeps the last state that elaborated, dimmed, with the digest of the text it was made from above it, <code>last constructed 08c03d3</code>, until the text elaborates again. Where the elaborator constructs one direction of a stage and refuses the other, the constructed graph is drawn and the refused one is a single node that names it with its rule, <code>forward builders graph refused (not-constructed)</code>; Details names its line and its rule, and its button <code>Item</code> moves the editor to that line.</p>
@@ -8035,18 +8118,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

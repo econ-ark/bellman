@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/API/stage/07-methods/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/API/stage/07-methods/">
       
       
         <link rel="prev" href="../06-par-and-settings/">
@@ -2905,13 +2905,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5129,6 +5122,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5224,6 +5223,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5860,6 +5887,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6064,6 +6119,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7741,39 +7824,44 @@
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>             <span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/cons-port/reference/legacy/syntax/settings.yaml"</span><span class="p">))</span>
 </code></pre></div>
 <h2 id="1-the-places">1 The places<a class="headerlink" href="#1-the-places" title="Permanent link">&para;</a></h2>
-<p><code>stage.places()</code> answers one row per place at which a method may be bound, its address as a methods file writes it in the first column and its kind in the second: a builder, by the id of its block; a statement, by the line's address <code>&lt;block&gt;.&lt;line&gt;</code>; an operator of one line, <code>&lt;block&gt;.&lt;line&gt;.&lt;operator&gt;</code>, or of every line of the stage that holds it, by the operator's name alone; and a definition, by its name. A line marked <code>!node</code> is a place of the kind <code>node</code>, and on some stages <code>evaluate</code>, the representation of the value function a backward builder delivers, is a place of the kind <code>boundary</code>; the consumption stage has neither (<a href="../../../reference/methods/">Methods</a> §1). The kinds are read from the objects of the stage, whatever method is later bound there.</p>
+<p><code>stage.places()</code> answers one row per place at which a method may be bound, its address as a methods file writes it in the first column and its kind in the second: a builder, by the id of its block; a statement, by the line's address <code>&lt;block&gt;.&lt;line&gt;</code>; an operator of one line, <code>&lt;block&gt;.&lt;line&gt;.&lt;operator&gt;</code>, or of every line of the stage that holds it, by the operator's name alone; and a definition, by its name. A line marked <code>!node</code> is a place of the kind <code>node</code>, and the consumption stage has no such line. After the lines of the policy builder and of each backward value builder stand the addresses of the <a href="../../../reference/operations/#evaluation">Evaluation</a> that closes it, of the kind <code>operator evaluate</code>, where a representation of what the builder writes is bound: <code>policy.evaluate</code> for the policy function, and for a backward value builder <code>cntn_to_dcsn.evaluate.value</code> for the value function, with <code>cntn_to_dcsn.evaluate.marginal</code> for the derivative of it that a derivative line states, where one stands (<a href="../../../04-methodization/">Methodization</a> §2). A representation is bound at these addresses and at no builder. The kinds are read from the objects of the stage, whatever method is later bound there.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">places</span><span class="p">())</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>address                   kind
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>arvl_to_dcsn              builder
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>dcsn_to_cntn              builder
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>cntn_to_dcsn              builder
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>cntn_to_dcsn.value        statement
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>cntn_to_dcsn.marginal     statement
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>dcsn_to_arvl              builder
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>dcsn_to_arvl.value        statement
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>dcsn_to_arvl.marginal     statement
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>policy                    builder
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>policy.optimality         statement
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>policy.InvEuler           statement
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>policy.endoggrid          statement
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>policy.cons_choice        statement
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>policy.cons_choice.solve  operator solve
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>solve                     operator solve
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>𝑢                         definition
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>𝑑𝑢                        definition
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>𝑑𝑢𝑖𝑛𝑣                     definition
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>Γ                         definition
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>address                         kind
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>arvl_to_dcsn                    builder
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>dcsn_to_cntn                    builder
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>cntn_to_dcsn                    builder
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>cntn_to_dcsn.value              statement
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>cntn_to_dcsn.marginal           statement
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>cntn_to_dcsn.evaluate.value     operator evaluate
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>cntn_to_dcsn.evaluate.marginal  operator evaluate
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>dcsn_to_arvl                    builder
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>dcsn_to_arvl.value              statement
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>dcsn_to_arvl.evaluate.value     operator evaluate
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>policy                          builder
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>policy.optimality               statement
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>policy.optimality.argmax        operator argmax
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>policy.InvEuler                 statement
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>policy.InvEuler.D               operator D
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>policy.grid                     statement
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>policy.identification           statement
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>policy.evaluate                 operator evaluate
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>argmax                          operator argmax
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>D                               operator D
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>𝑢                               definition
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>𝑑𝑢                              definition
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>Γ                               definition
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>𝑑𝑢𝑖𝑛𝑣                           definition
 </code></pre></div>
 <p>A target that names no place is refused when the methods file is bound, as is an unknown method and a known method at a place it does not admit: a quadrature rule, for instance, belongs to an expectation and not to the policy builder. <a href="../../../reference/methods/">Methods</a> states the places each method type admits. Choosing a method adds no condition of convergence or of existence, and runs nothing.</p>
 <h2 id="2-the-methods-of-a-version">2 The methods of a version<a class="headerlink" href="#2-the-methods-of-a-version" title="Permanent link">&para;</a></h2>
-<p><code>specified.methods</code> answers every method the version binds, one line each: the target the method is bound at and the method, or <code>handler only</code> where the entry names a handler and no method. Before methodization it is empty and prints <code>none</code>.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">methods</span><span class="p">)</span>
+<p><code>specified.methods</code> answers every method the version binds, one line each: the target the method is bound at and the method, or <code>handler only</code> where the entry names a handler and no method. Before methodization it is empty and prints <code>none</code>, as a stage elaborated afresh from the same file shows; the binding verbs bind the stage they are called on, so <code>stage</code> and <code>specified</code> above name one stage.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/cons.bl"</span><span class="p">))</span><span class="o">.</span><span class="n">methods</span><span class="p">)</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">methods</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>none
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>policy:Evaluation         !egm
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>cntn_to_dcsn:Evaluation   !Cartesian
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>policy                    !egm   block ../../methods/cons_egm.bl
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>cntn_to_dcsn:Evaluation   !Linear
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>arvl_to_dcsn              !deterministic
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>dcsn_to_cntn              handler only
 </code></pre></div>
@@ -7787,50 +7875,59 @@
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>methods:
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  - on: policy
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    method: !egm
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    handler: cons-port:egm
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>  - on: cntn_to_dcsn.value
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    method: !Cartesian
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    settings:
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>      orders:
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        m_d: n_m
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>      bounds:
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>        m_d: [m_min, m_max]
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    handler: cons-port:_make_interp
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>  - on: cntn_to_dcsn.marginal
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>    method: !Cartesian
-<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>    settings:
-<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>      orders:
-<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>        m_d: n_m
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>      bounds:
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>        m_d: [m_min, m_max]
-<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>    handler: cons-port:_make_interp
-<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>
-<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>  - on: dcsn_to_arvl
-<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>
-<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>  - on: arvl_to_dcsn
-<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>    method: !deterministic
-<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>
-<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>  - on: dcsn_to_cntn
-<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>    handler: cons-port:transition_fwd
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    block: ../../methods/cons_egm.bl
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    handler: cons-port:egm
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    settings:
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>      grid: !Cartesian
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>      orders:
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        a: n_a
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>      bounds:
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        a: [a_min, a_max]
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>  - on: cntn_to_dcsn.evaluate.value
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    method: !Linear
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    settings:
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>      grid: !Cartesian
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>      orders:
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>        m_d: n_m
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>      bounds:
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>        m_d: [m_min, m_max]
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>    handler: cons-port:_make_interp
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>  - on: cntn_to_dcsn.evaluate.marginal
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>    method: !Linear
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>    settings:
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a>      grid: !Cartesian
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>      orders:
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>        m_d: n_m
+<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>      bounds:
+<a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>        m_d: [m_min, m_max]
+<a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>    handler: cons-port:_make_interp
+<a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>
+<a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a>  - on: dcsn_to_arvl
+<a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a>
+<a id="__codelineno-6-37" name="__codelineno-6-37" href="#__codelineno-6-37"></a>  - on: arvl_to_dcsn
+<a id="__codelineno-6-38" name="__codelineno-6-38" href="#__codelineno-6-38"></a>    method: !deterministic
+<a id="__codelineno-6-39" name="__codelineno-6-39" href="#__codelineno-6-39"></a>
+<a id="__codelineno-6-40" name="__codelineno-6-40" href="#__codelineno-6-40"></a>  - on: dcsn_to_cntn
+<a id="__codelineno-6-41" name="__codelineno-6-41" href="#__codelineno-6-41"></a>    handler: cons-port:transition_fwd
 </code></pre></div>
-<p>The version binds four methods, the four lines <code>specified.methods</code> prints above. A method bound at a builder's output, the policy or a value function, is kept at the evaluation that closes the builder, where that output is represented (<a href="../../../04-methodization/">Methodization</a> §3): the entry <code>on: policy</code> of <code>!egm</code> is kept at <code>policy:Evaluation</code>, and the two <code>!Cartesian</code> entries on the lines <code>cntn_to_dcsn.value</code> and <code>cntn_to_dcsn.marginal</code> are one method kept at <code>cntn_to_dcsn:Evaluation</code>. The entry <code>on: dcsn_to_arvl</code>, which names no method, handler, setting or grid, is checked against the places and binds nothing.</p>
+<p>The version binds four methods, the four lines <code>specified.methods</code> prints above. A solution method is kept on the builder its entry names: the entry <code>on: policy</code> of <code>!egm</code>, which names the block file the method opens the builder with and its exogenous grid of savings, is kept at <code>policy</code>. A representation is kept at the Evaluation that closes the builder, where the builder's output is represented, and the methods file writes that place (<a href="../../../04-methodization/">Methodization</a> §2): the two <code>!Linear</code> entries, written at the decision builder's Evaluation for the value, <code>cntn_to_dcsn.evaluate.value</code>, and for its stated derivative, <code>cntn_to_dcsn.evaluate.marginal</code>, are one method kept at <code>cntn_to_dcsn:Evaluation</code>. Each entry names the grid of resources on which the representation stores its values by the setting <code>grid</code>, whose value is the grid's kind, the tag <code>!Cartesian</code>, with the grid's order and bounds beside it (<a href="../../../04-methodization/">Methodization</a> §3). The entry <code>on: dcsn_to_arvl</code>, which names no method, handler or setting, is checked against the places and binds nothing.</p>
 <p>The mapping's entries give each target's method and <a href="../../../../wiki/handler/">handler</a>, the registered routine that carries the method out. An entry may name a method, a handler or both, and <code>None</code> marks the one it omits:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">specified</span><span class="o">.</span><span class="n">methods</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;32</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="n">tag</span><span class="si">!r:</span><span class="s2">&lt;16</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">method</span><span class="o">.</span><span class="n">handler</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>policy:Evaluation                'egm'            'cons-port:egm'
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cntn_to_dcsn:Evaluation          'Cartesian'      'cons-port:_make_interp'
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>policy                           'egm'            'cons-port:egm'
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cntn_to_dcsn:Evaluation          'Linear'         'cons-port:_make_interp'
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>arvl_to_dcsn                     'deterministic'  None
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>dcsn_to_cntn                     None             'cons-port:transition_fwd'
 </code></pre></div>
-<p>One method is read by the target it is bound at, or by the target as the methods file writes it: <code>specified.methods["policy"]</code> answers the one method bound within the policy block. The answer is the method's record, with its tag, its handler and the settings it names.</p>
+<p>One method is read by the target it is bound at, or by the target as the methods file writes it: <code>specified.methods["policy"]</code> answers the one method bound within the policy block, and <code>specified.methods["cntn_to_dcsn.evaluate.value"]</code> the representation bound at the decision builder's Evaluation. The answer is the method's record, with its tag, its handler and the settings it names. The record prints the kind of a grid as the methods file writes it, <code>'grid': '!Cartesian'</code>, and its <code>settings</code> hold it as <code>load_methods</code> of <code>bellman.stage.sources</code> holds a tag written alone, <code>{'__yaml_tag__': 'Cartesian', 'value': ''}</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">methods</span><span class="p">[</span><span class="s2">"policy"</span><span class="p">]))</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">methods</span><span class="p">[</span><span class="s2">"cntn_to_dcsn.value"</span><span class="p">]))</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">methods</span><span class="p">[</span><span class="s2">"cntn_to_dcsn.evaluate.value"</span><span class="p">]))</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Method(tag='egm', handler='cons-port:egm', settings={})
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Method(tag='Cartesian', handler='cons-port:_make_interp', settings={'bounds': {'m_d': ('m_min', 'm_max')}, 'orders': {'m_d': 'n_m'}})
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Method(tag='egm', handler='cons-port:egm', settings={'bounds': {'a': ('a_min', 'a_max')}, 'grid': '!Cartesian', 'orders': {'a': 'n_a'}}, block='../../methods/cons_egm.bl')
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>Method(tag='Linear', handler='cons-port:_make_interp', settings={'bounds': {'m_d': ('m_min', 'm_max')}, 'grid': '!Cartesian', 'orders': {'m_d': 'n_m'}}, block=None)
 </code></pre></div>
 <p>A target within which no method is bound, or within which two different methods are bound, is refused with a <code>KeyError</code> that names the methods bound there.</p>
 <h2 id="3-methods-at-every-level">3 Methods at every level<a class="headerlink" href="#3-methods-at-every-level" title="Permanent link">&para;</a></h2>
@@ -7841,12 +7938,12 @@
 <a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="nb">print</span><span class="p">()</span>
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">bwd</span><span class="p">[</span><span class="s2">"evaluation"</span><span class="p">]</span><span class="o">.</span><span class="n">methods</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>policy:Evaluation         !egm
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>cntn_to_dcsn:Evaluation   !Cartesian
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>policy                    !egm   block ../../methods/cons_egm.bl
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>cntn_to_dcsn:Evaluation   !Linear
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
-<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>cntn_to_dcsn:Evaluation   !Cartesian
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>cntn_to_dcsn:Evaluation   !Linear
 <a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>
-<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>cntn_to_dcsn:Evaluation   !Cartesian
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>cntn_to_dcsn:Evaluation   !Linear
 </code></pre></div>
 
 
@@ -7949,18 +8046,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

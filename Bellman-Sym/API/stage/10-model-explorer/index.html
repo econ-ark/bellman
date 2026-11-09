@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/API/stage/10-model-explorer/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/API/stage/10-model-explorer/">
       
       
         <link rel="prev" href="../09-binding-verbs/">
@@ -3027,13 +3027,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5251,6 +5244,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5346,6 +5345,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5982,6 +6009,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6186,6 +6241,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -8128,8 +8211,8 @@
 <h3 id="41-the-perches">4.1 The perches<a class="headerlink" href="#41-the-perches" title="Permanent link">&para;</a></h3>
 <p>The three perch overlays, <code>arrival</code>, <code>decision</code> and <code>continuation</code>, stand in the second file of §2, <code>cons.edge-overlays.json</code>, and the view opens without them. The viewer draws an overlay edge as a straight line from the border of one node to the border of the other, not along the edge of the graph, and neither an overlay nor its edges has a setting that makes it follow that edge; the perch of every wire stands on its ports (§3.2). A reader who wants the overlays opens the panel of edge overlays from the toolbar above the graph and loads the file with its button Upload. Each overlay is drawn in the color the project's site gives its perch, navy for arrival, a dark orange for decision and ultramarine for continuation, while a node it touches is selected, and paints every edge whose wire stands at its perch, with no label. The viewer also outlines the nodes a selected node reads from in green and those it writes to in orange, with the edges between them in the same colors; these colors are the viewer's own, which the two files do not set, and an edge they draw carries no label. Bellman Workbench, the editor that draws the same graph beside the stage file, marks the selected box and the wires that enter or leave it in a bright blue and outlines no other box, and its legend lists the color of each perch while its overlays are on (<a href="../../../../overview/07-workbench/">Bellman Workbench</a> §2).</p>
 <h3 id="42-the-methods">4.2 The methods<a class="headerlink" href="#42-the-methods" title="Permanent link">&para;</a></h3>
-<p>A method bound within a primitive operator is shown on the operator's node by one mark: the second line of its label ends with <code>·</code> and the method's tag, written with its <code>!</code> as the methods file writes it. On <code>cons</code> methodized by <code>applications/portfolio-choice/declaration/stages/cons/methods.yml</code>, <code>cntn_to_dcsn:Evaluation</code> is labeled <code>Evaluation</code> over <code>𝑉(m_d) · !Cartesian</code> and <code>policy:Evaluation</code> <code>Evaluation</code> over <code>𝑐(m_d) · !egm</code>, the method of the entry <code>on: policy</code> being kept at the evaluation that closes the policy builder (<a href="../07-methods/">Methods and places</a> §2), and no other node carries a tag. The <code>!</code> tells a tag apart from the id of a statement, which a symbol may write after the same <code>·</code>, <code>𝐺 · InvEuler</code>. No color stands for a method: the method is named by its tag, by which the search box finds it, <code>method=!egm</code> (§3.4), and the operation it realizes is stated in <a href="../../../reference/methods/">Method types</a>. A version within which no method is bound, such as the symbolic <code>cons</code>, shows no mark.</p>
-<p>The side panel of such a node lists the method: <code>method</code>, its tag; <code>handler</code>, the routine the methods file names for it (<a href="../../../../wiki/handler/">handler</a>); <code>option</code>, the rows of the card's <code>Options</code> section; and, on a configured version, <code>setting</code>, each setting those options name, as the version's settings print it (<a href="../06-par-and-settings/">Parameters and settings</a> §2); the options and the settings are numbered where there are several, <code>option 1</code>, <code>option 2</code>. On the specified <code>cons</code>, calibrated by <code>applications/cons-port/reference/legacy/syntax/calibration.yaml</code>, methodized as above and configured by <code>applications/cons-port/reference/legacy/syntax/settings.yaml</code>, <code>cntn_to_dcsn:Evaluation</code> lists, among its attributes, <code>method</code> <code>!Cartesian</code>, <code>handler</code> <code>cons-port:_make_interp</code>, <code>option 1</code> <code>orders = {'m_d': 8000}</code> and <code>setting 1</code> <code>n_m = 8000, read at cntn_to_dcsn:Evaluation by !Cartesian</code>. A method bound at a builder, and at none of its operators, stands in the attributes of the builder's layer, and no label carries its tag: in the forward graph of the methodized <code>cons</code>, the layer <code>arvl_to_dcsn</code> lists <code>method</code> <code>!deterministic</code>. Such a method lists no <code>setting</code> of its own, since the builder's layer lists every setting of a configured version (§3.3). The legend of Bellman Workbench lists each method bound in the graph it shows with its place, an operator's id or a layer's name, <code>!egm  policy:Evaluation</code> in the backward graph and <code>!deterministic  arvl_to_dcsn</code> in the forward graph (<a href="../../../../overview/07-workbench/">Bellman Workbench</a> §2).</p>
+<p>A method bound within a primitive operator is shown on the operator's node by one mark: the second line of its label ends with <code>·</code> and the method's tag, written with its <code>!</code> as the methods file writes it. On <code>cons</code> methodized by <code>applications/portfolio-choice/declaration/stages/cons/methods.yml</code>, <code>cntn_to_dcsn:Evaluation</code> is labeled <code>Evaluation</code> over <code>𝑉(m_d) · !Linear</code> and <code>policy:Evaluation</code> <code>Evaluation</code> over <code>𝑐(m_d) · !egm</code>, the method of the entry <code>on: policy</code>, which is kept on the policy builder (<a href="../07-methods/">Methods and places</a> §2), being marked on the Evaluation that closes that builder, and no other node carries a tag. The <code>!</code> tells a tag apart from the id of a statement, which a symbol may write after the same <code>·</code>, <code>𝐺 · InvEuler</code>. No color stands for a method: the method is named by its tag, by which the search box finds it, <code>method=!egm</code> (§3.4), and the operation it realizes is stated in <a href="../../../reference/methods/">Method types</a>. A version within which no method is bound, such as the symbolic <code>cons</code>, shows no mark.</p>
+<p>The side panel of such a node lists the method: <code>method</code>, its tag; <code>handler</code>, the routine the methods file names for it (<a href="../../../../wiki/handler/">handler</a>); <code>option</code>, the rows of the card's <code>Options</code> section; and, on a configured version, <code>setting</code>, each setting those options name, as the version's settings print it (<a href="../06-par-and-settings/">Parameters and settings</a> §2); the options and the settings are numbered where there are several, <code>option 1</code>, <code>option 2</code>. On the specified <code>cons</code>, calibrated by <code>applications/cons-port/reference/legacy/syntax/calibration.yaml</code>, methodized as above and configured by <code>applications/cons-port/reference/legacy/syntax/settings.yaml</code>, <code>cntn_to_dcsn:Evaluation</code> lists, among its attributes, <code>method</code> <code>!Linear</code>, <code>handler</code> <code>cons-port:_make_interp</code>, <code>option 1</code> <code>grid = !Cartesian</code>, the kind of its grid, <code>option 2</code> <code>orders = {'m_d': 8000}</code> and <code>setting 1</code> <code>n_m = 8000, read at cntn_to_dcsn:Evaluation by !Linear for its grid !Cartesian</code>. A method bound at a builder, and at none of its operators, stands in the attributes of the builder's layer, and no label carries its tag: in the forward graph of the methodized <code>cons</code>, the layer <code>arvl_to_dcsn</code> lists <code>method</code> <code>!deterministic</code>. Such a method lists no <code>setting</code> of its own, since the builder's layer lists every setting of a configured version (§3.3). The legend of Bellman Workbench lists each method bound in the graph it shows with its place, an operator's id or a layer's name, <code>!egm  policy:Evaluation</code> in the backward graph and <code>!deterministic  arvl_to_dcsn</code> in the forward graph (<a href="../../../../overview/07-workbench/">Bellman Workbench</a> §2).</p>
 <h2 id="5-a-trellis">5 A trellis<a class="headerlink" href="#5-a-trellis" title="Permanent link">&para;</a></h2>
 <p><code>explore(trellis)</code> and <code>write_model_explorer(trellis, folder)</code> take the dictionary that <code>elaborate_trellis</code> returns, or a version the trellis verbs bound (<a href="../../factory/trellis-factory/">The trellis factory</a> §§3 and 4), and write one collection of two graphs, the backward and the forward trellis and no initial diagram, labeled <code>trellis</code>: the files are <code>trellis.graph.json</code> and <code>trellis.edge-overlays.json</code>, which <code>explore(trellis)</code> writes into <code>model-explorer/</code> in the working directory unless <code>folder=</code> names another. Where the construction refused one direction of a stage occurrence, the trellis's graph of that direction is one node labeled as in §3.5, whose attribute <code>refusal</code> opens with the occurrence's address. <code>explore(trellis)</code> opens the backward graph with its periods open and located on <code>periods[1]</code>, the first period after the terminal one: the page selects that period's layer, lists its attributes, and fits the window to it, and the other periods stand beside it, a scroll away. A trellis of one period is fitted to the window whole.</p>
 <p>Each <a href="../../../../wiki/period/">period</a> is a layer <code>periods[h]</code>, white with a navy border, <code>h</code> being its index in the dictionary and <code>periods[0]</code> the terminal period; its attribute <code>age</code> shows the age where the trellis's registry gives <code>last_age</code>, as the drawing of <code>diagram_trellis</code> writes it, and the index stands in the layer's name and in no attribute. Each stage occurrence is a layer inside its period, named by its key, <code>periods[0]/cons</code>, whose attribute <code>stage</code> shows the stage's name and bindings; it holds that occurrence's builders exactly as the view of the stage does. Every node id and port id is the id in the stage's own view, prefixed by its occurrence, <code>periods[0]/cons/cntn_to_dcsn:Aggregation</code>, so that two occurrences of one stage are told apart. The viewer lays out the periods side by side and the stages of a period next to one another, each graph in the direction its wires pass, and the builders of an occurrence from top to bottom. In the forward graph economic time runs from left to right, with the terminal period at the right and the stages of a period in their forward order, as in the drawing of <code>diagram_trellis</code>; the backward graph, laid out in the direction its value functions pass, from the terminal period back, stands the other way round.</p>
@@ -8244,18 +8327,15 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+
   </body>
 </html>

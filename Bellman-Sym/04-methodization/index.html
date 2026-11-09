@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/04-methodization/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/04-methodization/">
       
       
         <link rel="prev" href="../03-field-equations/">
@@ -2970,13 +2970,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5194,6 +5187,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5289,6 +5288,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5925,6 +5952,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6129,6 +6184,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7845,10 +7928,11 @@
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    c      = c[&gt;]                     :: [id=cons_choice]
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>}
 </code></pre></div>
-<p>For this interior variant, save the following mapping as <code>cons_interior_methods.yml</code>. It attaches the endogenous grid method, <a href="../reference/methods/#egm"><code>!egm</code></a>, which calculates candidate consumption at given savings and recovers its cash-on-hand coordinate:</p>
+<p>For this interior variant, save the following mapping as <code>cons_interior_methods.yml</code>. It attaches the endogenous grid method, <a href="../reference/methods/#egm"><code>!egm</code></a>, which calculates candidate consumption at given savings and recovers its cash-on-hand coordinate. The savings at which it does so form its exogenous grid, which the entry names by the setting <code>grid</code>: the grid's kind is the tag on its value, <code>!Cartesian</code>, and the grid's order and bounds in the savings coordinate <code>a</code> stand beside it, written as the names of the settings <code>n_a</code>, <code>a_min</code> and <code>a_max</code> (§3):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">methods</span><span class="p">:</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">policy</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!egm</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian,</span><span class="nt"> orders</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">a</span><span class="p">:</span><span class="w"> </span><span class="nv">n_a</span><span class="p p-Indicator">},</span><span class="nt"> bounds</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">a</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">a_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">a_max</span><span class="p p-Indicator">]}}</span>
 </code></pre></div>
 <p>Here <code>policy</code> is the interior block's chosen identifier. The equations supply the inverse marginal utility calculation and the implicit condition for consumption. The <code>!egm</code> tag selects a numerical technique for these equations; it supplies no missing condition. Renaming the block requires changing <code>on:</code> to its new address, but leaves the mathematics unchanged. This attachment belongs to <code>cons_interior.bl</code>; the constrained <code>cons.bl</code> writes neither these candidate lines nor the derivative line.</p>
 <h2 id="2-computations-and-addresses">2 Computations and addresses<a class="headerlink" href="#2-computations-and-addresses" title="Permanent link">&para;</a></h2>
@@ -7891,7 +7975,8 @@
 </tr>
 </tbody>
 </table>
-<p>A declared function or an evaluated field is treated through its exact definition unless a method attached to it supplies a numerical representation. A builder output and the left side of a <code>!node</code> statement are evaluated fields; a declared function such as utility is not a field. The stage file itself never states a representation: the methods file alone chooses one. An interpolation method attached to either kind of function means that the method stores values on the named grid and uses an interpolant to represent the function between them. This is mathematics supplied by the method and does not change the exact <a href="../reference/operations/#evaluation">Evaluation</a>, which remains the identity into the declared set of functions. The <code>!node</code> mark determines whether a line's left-side field is evaluated; the attachment determines the representation used for its function.</p>
+<p>A declared function or an evaluated field is treated through its exact definition unless a method attached to it supplies a numerical representation. A builder output and the left side of a <code>!node</code> statement are evaluated fields; a declared function such as utility is not a field. The stage file itself never states a representation: the methods file alone chooses one and writes where it stands. An interpolation method attached to either kind of function means that the method stores values on the named grid and uses an interpolant to represent the function between them. This is mathematics supplied by the method and does not change the exact <a href="../reference/operations/#evaluation">Evaluation</a>, which remains the identity into the declared set of functions. The <code>!node</code> mark determines whether a line's left-side field is evaluated; the attachment determines the representation used for its function.</p>
+<p>The outputs of the policy builder and of a backward value builder are stored at the <a href="../reference/operations/#evaluation">Evaluation</a> that closes the builder, and the methods file names that Evaluation by what it evaluates: <code>policy.evaluate</code> for the policy function, <code>&lt;block-id&gt;.evaluate.value</code> for the value function a backward value builder writes, and <code>&lt;block-id&gt;.evaluate.marginal</code> for the derivative of that value a derivative line states. A representation named on a builder itself or on a derivative line is refused, and the refusal names the address to write (<a href="../reference/refusals/">Refusals</a>).</p>
 <p>Which methods a target admits follows from what the target is. #functional-semantics</p>
 <table>
 <thead>
@@ -7908,7 +7993,7 @@
 <td>treatment as a field</td>
 </tr>
 <tr>
-<td>an evaluated field: a builder output or the left side of a <code>!node</code> statement</td>
+<td>an evaluated field: the left side of a <code>!node</code> statement, named by the line's address</td>
 <td>a representation: an interpolant or a table on the grid the settings name</td>
 <td>treatment as a declared function</td>
 </tr>
@@ -7920,15 +8005,25 @@
 <tr>
 <td>a builder</td>
 <td>a <a href="../../wiki/handler/">handler</a> for the builder as a whole; <a href="../reference/methods/#vfi"><code>!vfi</code></a> stands on the backward decision builder alone, which it realizes with its maximization; with <code>block:</code>, a method block on the policy builder, under <code>!egm</code>, or a marginal block, whose derivative lines state the derivatives of the value a backward value builder writes, under <a href="../reference/methods/#marginals"><code>!marginals</code></a> (§4.1)</td>
-<td></td>
+<td>a representation, which is written at the builder's Evaluation (the rows below)</td>
 </tr>
 <tr>
-<td>a derivative line of a value builder, named by the builder and the line, <code>cntn_to_dcsn.envelope</code></td>
-<td>a representation of the stated derivative, bound at the value builder's Evaluation beside the representation of the value (§4.1)</td>
-<td>treatment as a field: the derivative is a property of the value</td>
+<td>the Evaluation of a backward value builder, written <code>cntn_to_dcsn.evaluate.value</code> for the value function it stores and <code>cntn_to_dcsn.evaluate.marginal</code> for the derivative of that value its derivative lines state</td>
+<td>a representation: one method at the Evaluation for the value and its stated derivative, which share it (§4, §4.1)</td>
+<td><code>.evaluate.marginal</code> where no derivative line stands at the builder; a solution method, which stands on the builder</td>
 </tr>
 <tr>
-<td>the Evaluation of a policy block that writes the grid line (the cash on hand at each saving, <code>m_d[&gt;] = a + c[&gt;]</code>), named by the block id</td>
+<td>a derivative line of a value builder, <code>cntn_to_dcsn.envelope</code></td>
+<td>the operation's own method on an operator the line holds, such as a quadrature rule on its expectation</td>
+<td>a representation: the line states a property of the value, whose derivative is represented at <code>cntn_to_dcsn.evaluate.marginal</code></td>
+</tr>
+<tr>
+<td>the Evaluation of the policy builder, written <code>policy.evaluate</code>, where the policy function is stored</td>
+<td>a representation of the policy, such as <code>!Linear</code></td>
+<td><code>policy.evaluate.value</code> and <code>policy.evaluate.marginal</code>, since a policy builder writes neither; a solution method</td>
+</tr>
+<tr>
+<td>the Evaluation of a policy block that writes the grid line (the cash on hand at each saving, <code>m_d[&gt;] = a + c[&gt;]</code>), named by the block id in an entry with no <code>block:</code></td>
 <td><code>!egm</code>, which stores the policy from the pairs the block's lines give at the savings</td>
 <td>a policy block that writes no grid line</td>
 </tr>
@@ -7953,7 +8048,19 @@
 <tbody>
 <tr>
 <td><code>policy</code></td>
-<td>The authored policy block. With <code>!egm</code>, the Evaluation that closes the block, where the block writes the grid line.</td>
+<td>The authored policy block. With <code>!egm</code> and no <code>block:</code>, the Evaluation that closes the block, where the block writes the grid line.</td>
+</tr>
+<tr>
+<td><code>policy.evaluate</code></td>
+<td>The Evaluation of the policy builder, where the policy function is stored: the place of its representation.</td>
+</tr>
+<tr>
+<td><code>cntn_to_dcsn.evaluate.value</code></td>
+<td>The Evaluation of the decision value builder, for the value function it stores.</td>
+</tr>
+<tr>
+<td><code>cntn_to_dcsn.evaluate.marginal</code></td>
+<td>The same Evaluation, for the derivative of the value a derivative line of the builder states.</td>
 </tr>
 <tr>
 <td><code>policy.cons_choice</code></td>
@@ -7971,15 +8078,21 @@
 </table>
 <p>An occurrence-specific attachment overrides the stage-wide attachment for that occurrence. Naming an operator this way does not turn its containing statement into an authored node. A <code>!node</code> statement needs its own identifier to be a method target; its automatically assigned positional address is insufficient.</p>
 <p>The block-level <code>!egm</code> form requires the grid line, a line whose left side is a decision coordinate under the continuation mark; a policy block that writes no grid line is refused with the requirement named, and a first-order condition written as an operation takes a root finder instead.</p>
-<p>Neither a block called <code>policy</code> nor a method called <code>!egm</code> creates automatic <code>evaluate</code> or <code>upper_env</code> targets. A stage with discrete choices likewise needs its authored branch-selection equations; see <a href="../05-branching/">Branching</a>.</p>
+<p>Neither a block called <code>policy</code> nor a method called <code>!egm</code> creates an <code>evaluate</code> occurrence or an <code>upper_env</code> target. The address <code>policy.evaluate</code> names the Evaluation every policy builder closes with, not an authored <code>evaluate(…)</code>, which keeps its own address <code>&lt;block-id&gt;.&lt;statement-id&gt;.evaluate</code>; <code>evaluate</code> alone names a stage's one authored occurrence and is refused where the stage authors none or several. A stage with discrete choices likewise needs its authored branch-selection equations; see <a href="../05-branching/">Branching</a>.</p>
 <h2 id="3-method-places-and-options">3 Method places and options<a class="headerlink" href="#3-method-places-and-options" title="Permanent link">&para;</a></h2>
 <p>The expectation of the buffer-stock application, <code>applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl</code>, integrates the shocks <span class="arithmatex">\(\psi\)</span> and <span class="arithmatex">\(\xi\)</span>. The method type of <a href="../reference/methods/#gauss-hermite"><code>!gauss-hermite</code></a> admits an expectation operator and gives <code>n_nodes</code> the type "one positive integer per shock". Its methods entry therefore lists the two node-count settings in the order <span class="arithmatex">\(\psi\)</span>, <span class="arithmatex">\(\xi\)</span>. These are the two parts of every public method type: <code>admits</code> and <code>options</code>.</p>
-<p>The admitted place depends on what the method does. A quadrature or maximization method computes a primitive operator and stands on that operator. A representation method stores a declared function or an evaluated field and stands at that function's definition or at the field's closing Evaluation. The third placement class is a handler for a whole builder, which stands on the builder. A declared function such as utility is not a field, and a function the stage file does not name has no address at which a method can stand.</p>
-<p>An option has a name and a value type. Common types include positive integers, real numbers, positive real numbers, ordered pairs and seeds. <code>orders</code> and <code>bounds</code> are records keyed by the actual coordinates being gridded. The keys must name coordinates of the function, but the method may grid only a subset: a <a href="../reference/methods/#linear"><code>!Linear</code></a> representation of a function of <span class="arithmatex">\((m,z_d)\)</span> may, for example, grid <span class="arithmatex">\(m\)</span> separately for each income state <span class="arithmatex">\(z_d\)</span>. An order must be positive, and each bound must be an ordered pair inside its coordinate's declared set. <code>n_nodes</code> has one positive-integer entry per shock, in shock order. Methodization checks that required option names are present. Configuration checks the supplied values and joint conditions. An option unknown to the method is refused unless the entry names a handler that owns the option; such a handler-specific option is retained as untyped rather than treated as part of the method's contract.</p>
+<p>The admitted place depends on what the method does. A quadrature or maximization method computes a primitive operator and stands on that operator. A representation method stores a declared function or an evaluated field and stands at that function's definition or at the field's closing Evaluation, whose address the methods file writes (§2). The third placement class is a handler for a whole builder, which stands on the builder. A declared function such as utility is not a field, and a function the stage file does not name has no address at which a method can stand.</p>
+<p>An option has a name and a value type. Common types include positive integers, real numbers, positive real numbers, ordered pairs and seeds. <code>n_nodes</code> has one positive-integer entry per shock, in shock order. Methodization checks that required option names are present. Configuration checks the supplied values and joint conditions. An option unknown to the method is refused unless the entry names a handler that owns the option; such a handler-specific option is retained as untyped rather than treated as part of the method's contract.</p>
+<p>A representation names two things: the <strong>basis</strong>, the rule by which a value between the nodes is read, and the <strong>grid</strong>, the finite set of nodes at which the function's values are stored. The basis is the method, <a href="../reference/methods/#linear"><code>!Linear</code></a> for piecewise linear interpolation or <a href="../reference/methods/#pchip"><code>!pchip</code></a> for the shape-preserving cubic, and the derivatives the representation evaluates follow from it. The grid is the setting <code>grid</code>, which the method requires: its value is the grid's kind written as a tag, and the grid's fields stand beside it as further settings of the entry. The kind the package defines is <code>!Cartesian</code>, a product of one grid for each coordinate, whose fields are <code>orders</code>, the number of points in each coordinate, and <code>bounds</code>, the interval in each, both required, and, where written, <code>spacing</code>, the name of the spacing in each coordinate, or <code>nodes</code>, the points themselves:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cntn_to_dcsn.evaluate.value</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!Linear</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian,</span><span class="nt"> orders</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m</span><span class="p">:</span><span class="w"> </span><span class="nv">n_m</span><span class="p p-Indicator">},</span><span class="nt"> bounds</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">m_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">m_max</span><span class="p p-Indicator">]}}</span>
+</code></pre></div>
+<p><code>orders</code> and <code>bounds</code> are records keyed by the actual coordinates being gridded. The keys must name coordinates of the function, but the method may grid only a subset: a <code>!Linear</code> representation of a function of <span class="arithmatex">\((m,z_d)\)</span> may, for example, grid <span class="arithmatex">\(m\)</span> separately for each income state <span class="arithmatex">\(z_d\)</span>. An order must be positive, and each bound must be an ordered pair inside its coordinate's declared set. The endogenous grid method names its exogenous grid of savings in the same way, under its own entry, and its coordinates are the states of the continuation perch, <code>orders: {a: n_a}</code> for the savings <code>a</code> (§1.1). A representation at the policy builder's Evaluation, where <code>!egm</code> stands in that builder, writes no grid, and a grid written there is refused, since the knots of its interpolant are the pairs of cash on hand and consumption that the method computes at each saving; nor does a representation of an authored <code>evaluate(knots, values, x)</code> need one, since its first argument holds the knots. <code>!Cartesian</code> is a kind of grid and not a method, and the fields of a grid written without the setting <code>grid</code> are refused, each refusal naming the form to write (<a href="../reference/refusals/">Refusals</a>).</p>
 <p>Methodization adds no convergence or existence requirement. Defining equations, declared sets and authored constraints remain part of the exact stage, and ordinary type and calibration-definedness checks remain in force.</p>
 <p>The listing <code>method_types</code>, which <code>bellman.stage</code> exports, gives the registered method types by their written tags, and <a href="../reference/methods/">Method types</a> prints them in one table with the places each admits and its options. A stage's <code>places()</code> query lists the addresses to which methods may attach and the kind of each place. These are inspection queries: they neither attach a method nor execute one.</p>
 <h2 id="4-writing-the-methodization-file">4 Writing the methodization file<a class="headerlink" href="#4-writing-the-methodization-file" title="Permanent link">&para;</a></h2>
-<p>Every entry requires one <code>on:</code> address. A method tag is optional: an entry containing only <code>on</code> records recognition without attaching a numerical method, and a handler may be given when the operator family determines the method. Separate targets require separate entries. Two entries may name one target when their methods are of different kinds, a solution method, a representation and a marginal block, since each kind has a place of its own: a solution method such as <code>!egm</code> stands on the builder, a representation such as <code>!Linear</code> at the Evaluation that closes it, and a marginal block adds its lines to the builder; a second entry of one kind on one target is refused. Do not put a comma-separated list in <code>on:</code> or write a nested <code>schemes:</code> list.</p>
+<p>Every entry requires one <code>on:</code> address. A method tag is optional: an entry containing only <code>on</code> records recognition without attaching a numerical method, and a handler may be given when the operator family determines the method. Separate targets require separate entries. Two entries may name one builder when their methods are of different kinds, a solution method and a marginal block, since each kind has a place of its own: a solution method such as <code>!vfi</code> stands on the builder, and a marginal block under <code>!marginals</code> adds its lines to the builder; a second entry of one kind on one target is refused. A representation entry does not name a builder alone: its target is the builder's Evaluation, such as <code>policy.evaluate</code> beside <code>!egm</code> on <code>policy</code>, or <code>cntn_to_dcsn.evaluate.value</code> beside <code>!marginals</code> on <code>cntn_to_dcsn</code>. The value and its stated derivative are two addresses of one Evaluation, which holds one representation method: where a methods file writes both, the two entries must name the same method and form one binding, and two different methods there are refused. Do not put a comma-separated list in <code>on:</code> or write a nested <code>schemes:</code> list.</p>
 <p>The available entry fields are:</p>
 <table>
 <thead>
@@ -7998,12 +8111,8 @@
 <td>Optional YAML tag naming the numerical technique, such as <code>!egm</code>.</td>
 </tr>
 <tr>
-<td><code>grid</code></td>
-<td>Optional grid on which a representation stores its values, for a method whose type admits the option, such as <code>!Linear</code>, or for a named handler that reads it.</td>
-</tr>
-<tr>
 <td><code>settings</code></td>
-<td>Optional mapping of method options to values or references. Referenced setting values are supplied during configuration.</td>
+<td>Optional mapping of method options to values or references. Referenced setting values are supplied during configuration. The grid of a method that takes one is the setting <code>grid</code>, its kind written as a tag, with the grid's fields beside it (§3).</td>
 </tr>
 <tr>
 <td><code>handler</code></td>
@@ -8017,43 +8126,50 @@
 </table>
 <p>Option names depend on the chosen method. Use the method's documented contract; changing a tag does not establish that another method accepts the same options or solves the same relation.</p>
 <p>A <strong>handler</strong> is a numerical routine, or an adapter calling one, registered for the requested computation. One handler may carry out an entire builder, including internal interpolation or maximization. Alternatively, supported authored boundaries may have separate handlers. The handler's documented capabilities determine which choices it honors. Merely recording an option does not show that a routine uses it, or that two routines agree to a chosen tolerance.</p>
-<p>A handler evaluates only the equations of the stage file. A builder's <code>kernels()</code> answers them as one record that refers to no stage. A <strong>kernel</strong> is the mathematical data an operation uses: a law of motion, a value aggregator, a shock distribution, a correspondence or a policy reference. The record lists each operation of the builder in the order of application, with the plain Python function its kernel compiles to, or its printed relation where its rule is no explicit function, the names of the function's arguments and outputs, and the parameters with the values the calibration binds (<a href="../API/stage/04-builder/">A builder</a> §5). A handler builds its numerical operator from such records and from the grids it reads from the settings, and the operator reads no stage. The endogenous-grid handler of the portfolio–consumption application, <code>cons-port:egm</code>, is one call of <code>egm</code> in asva, the numerical toolkit beside the package, <code>asva.egm(stage.dcsn.builder.policy.kernels(), stage.dcsn.builder.bwd.kernels(), savings, evaluation)</code>, with the savings grid and the evaluation grid read from the settings. Each function is made from the source text its kernel holds under <code>python</code>, which reaches array functions through the name <code>np</code> alone; a handler written for another array package executes the same text and then binds <code>np</code>, in the namespace of the function, to that package.</p>
+<p>A handler evaluates only the equations of the stage file. A builder's <code>kernels()</code> answers them as one record that refers to no stage. A <strong>kernel</strong> is the mathematical data an operation uses: a law of motion, a value aggregator, a shock distribution, a correspondence or a policy reference. The record lists each operation of the builder in the order of application, with the plain Python function its kernel compiles to, or its printed relation where its rule is no explicit function, the names of the function's arguments and outputs, and the parameters with the values the calibration binds (<a href="../API/stage/04-builder/">A builder</a> §5). A handler builds its numerical operator from such records and from the grids it reads from the settings, and the operator reads no stage. The endogenous-grid handler of the portfolio–consumption application, <code>cons-port:egm</code>, is one call of <code>egm</code> in asva, the numerical toolkit beside the package, <code>asva.egm(stage.dcsn.builder.policy.kernels(), stage.dcsn.builder.bwd.kernels(), savings, evaluation)</code>, with the savings grid that the <code>!egm</code> entry names and the evaluation grid that the representation at the decision builder's Evaluation names, each read at the values the settings bind (§3). Each function is made from the source text its kernel holds under <code>python</code>, which reaches array functions through the name <code>np</code> alone; a handler written for another array package executes the same text and then binds <code>np</code>, in the namespace of the function, to that package.</p>
 <details class="note">
 <summary>Technical details</summary>
 <p>Read tagged methods YAML through <code>bellman.stage.sources.load_methods</code>, which preserves method tags and handles YAML's treatment of the key <code>on</code>. Ordinary YAML loading is not a substitute for that loader. Loading a method tag records a choice; it does not verify the numerical algorithm or prove that its assumptions hold.</p>
 </details>
 <h3 id="41-a-method-block-and-a-marginal-block">4.1 A method block and a marginal block<a class="headerlink" href="#41-a-method-block-and-a-marginal-block" title="Permanent link">&para;</a></h3>
 <p>A stage file may state the policy by its maximization alone, as <code>cons.bl</code> of §1 does, and leave the computation to a <strong>method block</strong>: a block written in a file of its own, the <strong>block file</strong>, whose header carries the signature of a builder of the stage and whose lines compute that builder's output. A methods line names the block file under <code>block:</code>, by a path from the methods file's own folder, and the builder under <code>on:</code>. The methods file of the consumption stage of the portfolio–consumption application, <code>applications/cons-port/declaration/methods/cons.yml</code>, holds these three entries:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">methods</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">policy</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!egm</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cons_egm.bl</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">handler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cons-port:egm</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cntn_to_dcsn</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!marginals</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cons_egm.bl</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cntn_to_dcsn.envelope</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">orders</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m</span><span class="p">:</span><span class="w"> </span><span class="nv">n_m</span><span class="p p-Indicator">},</span><span class="nt"> bounds</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">m_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">m_max</span><span class="p p-Indicator">]}}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">methods</span><span class="p">:</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">policy</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!egm</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cons_egm.bl</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="nt">handler</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cons-port:egm</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian,</span><span class="nt"> orders</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">a</span><span class="p">:</span><span class="w"> </span><span class="nv">n_a</span><span class="p p-Indicator">},</span><span class="nt"> bounds</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">a</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">a_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">a_max</span><span class="p p-Indicator">]}}</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cntn_to_dcsn</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!marginals</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">block</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cons_egm.bl</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cntn_to_dcsn.evaluate.marginal</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="kt">!Linear</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">    </span><span class="nt">settings</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">grid</span><span class="p">:</span><span class="w"> </span><span class="kt">!Cartesian,</span><span class="nt"> orders</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m</span><span class="p">:</span><span class="w"> </span><span class="nv">n_m</span><span class="p p-Indicator">},</span><span class="nt"> bounds</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">m</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">m_min</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">m_max</span><span class="p p-Indicator">]}}</span>
 </code></pre></div>
-<p>The block file <code>cons_egm.bl</code> beside it opens with the stage's mark, defines marginal utility and its inverse in closed form, and holds one block of each kind; the stage's decision state is <code>m</code>, its continuation state <code>a</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>@stage: cons
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>𝑑𝑢(c : ℝ₊₊) := c^(-ρ)
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>[id=egm, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0    :: [id=InvEuler]
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    m[&gt;] = a + c[&gt;]                        :: [id=grid]
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    c    = c[&gt;]                            :: [id=identification]
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>}
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>[id=dcsn_marginal, (c) : !cntn -&gt; (V) : !dcsn] {
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    D_{m}V = 𝑑𝑢(c)                         :: [id=envelope]
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>}
+<p>The block file <code>cons_egm.bl</code> beside it opens with the line <code>@methods: cons</code>, defines marginal utility and its inverse in closed form, and holds one block of each kind; the stage's decision state is <code>m</code>, its continuation state <code>a</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>@methods: cons
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>𝑑𝑢(c : ℝ₊₊) := c^(-ρ)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>[id=egm, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    c[&gt;]   &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0    :: [id=InvEuler]
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    m[&gt;]   = a + c[&gt;]                        :: [id=grid]
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    c      = c[&gt;]                            :: [id=identification]
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>}
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>[id=dcsn_marginal, (c) : !cntn -&gt; (V) : !dcsn] {
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>    D_{m}V = 𝑑𝑢(c)                           :: [id=envelope]
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>}
 </code></pre></div>
-<p>The first entry binds <code>!egm</code> on the policy builder with the block <code>egm</code>, which writes the three lines of §1.1 with its candidate line as the inequality <code>c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0</code> (<a href="../10-constraints/">Constraints</a> §4.3). Its header lists the value it reads and the control it writes, and nothing else; the derivative of the continuation value is read by the term, and the header lists nothing for it. <code>methodize</code> elaborates the block with the stage's declarations and the block file's own definitions in scope, and its lines become the policy builder's <strong>method rows</strong>, the operations of that builder in <code>stage.builder</code>. The initial diagrams keep the stage file's maximization, and so do the builders as the stage file states them, which <code>stage.declared</code> reads by the same keys as <code>stage.builder</code>. The stage records the condition under which the method rows reach the declared maximization, and <code>stage.obligations()</code> lists it under the name <code>egm-eligibility</code>; nothing checks it.</p>
+<p>The first entry binds <code>!egm</code> on the policy builder with the block <code>egm</code>, which writes the three lines of §1.1 with its candidate line as the inequality <code>c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0</code> (<a href="../10-constraints/">Constraints</a> §4.3), and names the exogenous grid of savings at which the candidate line is evaluated, the settings <code>n_a</code>, <code>a_min</code> and <code>a_max</code> (§3). Its header lists the value it reads and the control it writes, and nothing else; the derivative of the continuation value is read by the term, and the header lists nothing for it. <code>methodize</code> elaborates the block with the stage's declarations and the block file's own definitions in scope, and its lines become the policy builder's <strong>method rows</strong>, the operations of that builder in <code>stage.builder</code>. The initial diagrams keep the stage file's maximization, and so do the builders as the stage file states them, which <code>stage.declared</code> reads by the same keys as <code>stage.builder</code>. The stage records the condition under which the method rows reach the declared maximization, and <code>stage.obligations()</code> lists it under the name <code>egm-eligibility</code>; nothing checks it.</p>
 <p>The block reads the derivative of the continuation value by the term <code>D_{a}V[&gt;]</code> and declares nothing about how it is evaluated: the stage that built that value fixed it, and this block knows only that the value it reads is a function. The second entry binds <code>!marginals</code> on the decision value builder with the block file's <strong>marginal block</strong>, a block whose lines are <strong>derivative lines</strong>, each stating a derivative of the value the builder writes as the author asserts it: the envelope condition <code>D_{m}V = 𝑑𝑢(c)</code>, the derivative of the decision value in cash on hand. Its header is the builder's header restricted to what its line reads, the control <code>c</code> and the value <code>V</code>. <code>methodize</code> records the line at the builder's closing <a href="../reference/operations/#evaluation">Evaluation</a>, beside the representation method bound there, as a stated derivative of the value by coordinate, with the line's id and its source; the builder's signature is unchanged, no wire and no box is added, and the value's record lists the coordinate <code>m</code> under <code>derivatives</code>. The reading of the line as the derivative of the value rests on the envelope conditions; <code>stage.obligations()</code> lists it under <code>marginal-reading</code> and nothing checks it.</p>
-<p>How the derivative of a value is evaluated is a property of the value, fixed here, in the methods file of the stage that writes it, in one of three ways: by the stated line, whose values a representation stores beside the value's; by the representation of the value itself, where its method's row says it evaluates the derivative (<a href="../reference/methods/">Method types</a>, the column <strong>derivatives it evaluates</strong>); or by a representation of the stated derivative of its own, bound on the derivative line's id, as the third entry binds <code>!Cartesian</code> on <code>cntn_to_dcsn.envelope</code>, so that the derivative is interpolated apart from the value. A later stage whose block reads <code>D_{a}V[&gt;]</code> of this stage's value receives the derivative so fixed and declares nothing (<a href="../07-trellis/">Trellises</a> §2.1). The demonstration's consumption stage declares no arrival perch: its decision value is the value the stage exports, and its decision state <code>m</code> is where the trellis joins the stage before it. A stage with an arrival builder whose law between the perches is the identity, <code>V[&lt;] = V</code> or <code>V[&lt;] = E_{y}V</code>, writes no derivative line on it, since the stored derivative values pass through the same map; where the pass-through crosses an expectation the package lists the condition that the derivative of the expectation is the expectation of the derivative, as <code>differentiation-under-the-integral</code>, and checks nothing. Where the law is not the identity, the author writes the arrival derivative line with the law's factor, as the buffer-stock model writes <code>D_{k}V[&lt;] = E_{ψ,ξ}(R*(Γ*ψ)^(-ρ)*D_{m}V)</code>. Nothing is differentiated: the package computes no derivative that no line states and no representation evaluates. A stage file whose value builder writes the derivative line itself, as <code>cons_interior.bl</code> of §1.1 does, needs no marginal block. <a href="../reference/forms/">Expression forms</a> §4 gives the two forms of a block file.</p>
+<p>How the derivative of a value is evaluated is a property of the value, fixed here, in the methods file of the stage that writes it, in one of two ways: by the stated line, whose values the representation at the builder's Evaluation stores beside the value's; or, where no line states the derivative, by the representation of the value itself, where its method's row says it evaluates the derivative (<a href="../reference/methods/">Method types</a>, the column <strong>derivatives it evaluates</strong>). The methods file writes that representation at the builder's Evaluation, by the value, <code>cntn_to_dcsn.evaluate.value</code>, or by the stated derivative, <code>cntn_to_dcsn.evaluate.marginal</code>, as the third entry binds <code>!Linear</code> on the grid of resources its setting <code>grid</code> names; the two addresses name one Evaluation, which holds one representation method (§4). A later stage whose block reads <code>D_{a}V[&gt;]</code> of this stage's value receives the derivative so fixed and declares nothing (<a href="../07-trellis/">Trellises</a> §2.1). The demonstration's consumption stage declares no arrival perch: its decision value is the value the stage exports, and its decision state <code>m</code> is where the trellis joins the stage before it. A stage with an arrival builder whose law between the perches is the identity, <code>V[&lt;] = V</code> or <code>V[&lt;] = E_{y}V</code>, writes no derivative line on it, since the stored derivative values pass through the same map; where the pass-through crosses an expectation the package lists the condition that the derivative of the expectation is the expectation of the derivative, as <code>differentiation-under-the-integral</code>, and checks nothing. Where the law is not the identity, the author writes the arrival derivative line with the law's factor, as the buffer-stock model writes <code>D_{k}V[&lt;] = E_{ψ,ξ}(R*(Γ*ψ)^(-ρ)*D_{m}V)</code>. Nothing is differentiated: the package computes no derivative that no line states and no representation evaluates. A stage file whose value builder writes the derivative line itself, as <code>cons_interior.bl</code> of §1.1 does, needs no marginal block. <a href="../reference/forms/">Expression forms</a> §4 gives the two forms of a block file.</p>
 <h2 id="5-loading-and-attaching-choices">5 Loading and attaching choices<a class="headerlink" href="#5-loading-and-attaching-choices" title="Permanent link">&para;</a></h2>
 <p>Stages are written in <code>.bl</code>; the three attachment files remain YAML:</p>
 <table>
@@ -8083,23 +8199,23 @@
 </tbody>
 </table>
 <p>For <code>cons.bl</code>, use the recognition-only <code>methodization.yml</code> in §1 and supply <code>settings.yml</code> as an empty mapping and <code>calibration.yml</code> with <code>ρ: 2</code>. The sequence is:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">elaborate_stage</span><span class="p">,</span> <span class="n">load_stage</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"cons.bl"</span><span class="p">))</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">calibrated</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">"calibration.yml"</span><span class="p">)</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">methodized</span> <span class="o">=</span> <span class="n">calibrated</span><span class="o">.</span><span class="n">methodize</span><span class="p">(</span><span class="s2">"methodization.yml"</span><span class="p">)</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">specified</span> <span class="o">=</span> <span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"settings.yml"</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">elaborate_stage</span><span class="p">,</span> <span class="n">load_stage</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"cons.bl"</span><span class="p">))</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">calibrated</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">"calibration.yml"</span><span class="p">)</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">methodized</span> <span class="o">=</span> <span class="n">calibrated</span><span class="o">.</span><span class="n">methodize</span><span class="p">(</span><span class="s2">"methodization.yml"</span><span class="p">)</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">specified</span> <span class="o">=</span> <span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"settings.yml"</span><span class="p">)</span>
 </code></pre></div>
 <p>Loading reads the file into a source record, and elaboration constructs the initial stage from it, with no methods, settings, or calibration attached. Each subsequent operation adds its binding to the stage it is called on and returns that stage, so <code>calibrated</code>, <code>methodized</code> and <code>specified</code> name one stage (<a href="../API/stage/09-binding-verbs/">The binding verbs</a>). The recommended order shown above puts calibration first and configuration last. The package also accepts methodization followed by calibration and configuration, or methodization followed by configuration and calibration. It refuses configuration before methodization because the chosen methods determine which settings are needed. Calibration supplies parameter values without replacing the symbolic equations. These three accepted orders prepare the same specified stage; with recognition-only methods they supply no maximization algorithm and do not solve the model. For the interior example, substitute <code>cons_interior.bl</code> and <code>cons_interior_methods.yml</code>, with settings appropriate to that method.</p>
 <p>Duplicate method targets, unknown method tags and unresolved targets are errors. A refusal names the entry and the stage's available places. Methodization also refuses a missing required option or an option the method does not admit, except for an untyped option owned by a named handler. Configuration requires a methodized stage, values for every required option reference and values satisfying the option types and joint conditions. Calibration requires every declared parameter and binds only declared parameter names. Extra supplied settings remain in the settings mapping, but do not become declarations.</p>
 <p>The queries below inspect the three public parts of this process without executing a numerical routine:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">method_types</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">method_types</span><span class="p">[</span><span class="s2">"!Cartesian"</span><span class="p">])</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">calibrated</span><span class="o">.</span><span class="n">places</span><span class="p">())</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">method_types</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">method_types</span><span class="p">[</span><span class="s2">"!Linear"</span><span class="p">])</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">calibrated</span><span class="o">.</span><span class="n">places</span><span class="p">())</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 </code></pre></div>
-<p>Each <code>method_types</code> entry displays its admitted places and typed options. <code>places()</code> lists the addresses and kinds available on this stage (<a href="../API/stage/07-methods/">Methods and places</a>). <code>settings</code> lists each setting value and, for every method that reads it, the place under <code>read at</code> and the method under <code>by</code> (<a href="../API/stage/06-par-and-settings/">Parameters and settings</a>). A setting that no method reads remains listed with no reader.</p>
+<p>Each <code>method_types</code> entry displays its admitted places and typed options. <code>places()</code> lists the addresses and kinds available on this stage (<a href="../API/stage/07-methods/">Methods and places</a>). <code>settings</code> lists each setting value and, for every method that reads it, the place under <code>read at</code>, the method under <code>by</code> and, where the setting is a field of the method's grid, the grid's kind under <code>grid</code> (<a href="../API/stage/06-par-and-settings/">Parameters and settings</a>). A setting that no method reads remains listed with no reader.</p>
 <p><a href="../08-bellman-factory/">The Bellman factory</a> applies the same sequence to each stage occurrence of a trellis, meaning one stage file elaborated at one position of a period (<a href="../06-period/#4-constructing-a-period">Periods</a>). Repeated stage occurrences have independent graphs and specifications; that independence does not imply that lifecycle operations can be applied in any order.</p>
 <h2 id="6-candidate-consumption-and-interpolation">6 Candidate consumption and interpolation<a class="headerlink" href="#6-candidate-consumption-and-interpolation" title="Permanent link">&para;</a></h2>
 <p>In the separate interior example in §1.1, <code>c[&gt;]</code> is candidate consumption indexed by savings, and <code>m_d[&gt;]</code> is its associated cash on hand. The equation <code>c = c[&gt;]</code>, interpreted through <code>a = m_d-c</code>, constrains the unknown consumption choice. It does not assert that every numerical root maximizes value.</p>
@@ -8208,18 +8324,18 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

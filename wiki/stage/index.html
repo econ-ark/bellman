@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/wiki/stage/">
+        <link rel="canonical" href="https://bellman.io/wiki/stage/">
       
       
         <link rel="prev" href="../specified_stage/">
@@ -2818,13 +2818,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5049,6 +5042,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5144,6 +5143,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5780,6 +5807,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../handler/" class="md-nav__link">
         
   
@@ -5984,6 +6039,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -7677,7 +7760,7 @@
 <p>A household begins with assets <span class="arithmatex">\(b\)</span>, observes income <span class="arithmatex">\(y\)</span>, and chooses consumption <span class="arithmatex">\(c\)</span> from resources <span class="arithmatex">\(w=Rb+y\)</span>, leaving savings <span class="arithmatex">\(a=w-c\)</span>. Arrival information precedes income, decision information includes observed income, and continuation information includes the consumption choice. Assume resources suffice for the consumption decision and savings suffice for continuation value; the household's information can be richer than these scalar states.</p>
 <p>For an admissible continuation function <span class="arithmatex">\(W\)</span>, the objective is <span class="arithmatex">\(Q(w,c)=u(c)+\beta W(w-c)\)</span>. A policy selects a feasible maximizer, and arrival value averages the resulting decision value over income. Existence of that maximizer, measurability, and finiteness of the expectation are assumptions to check. The <a href="../../Bellman-Sym/01-stage/">complete walkthrough</a> states domains, a conditional distribution of income, and sufficient conditions.</p>
 <h2 id="a-stage-file-and-its-stage-occurrences">A stage file and its stage occurrences<a class="headerlink" href="#a-stage-file-and-its-stage-occurrences" title="Permanent link">&para;</a></h2>
-<p>A <strong>stage occurrence</strong> is one use of the stage file in a <a href="../period/">period</a> at a particular position in the model: the file elaborated there, with its own three bindings. Its <a href="../field/">fields</a>, policy and numerical choices remain local to that occurrence. A parameter name declared by two stages of the same period, however, names one <a href="../parameters/">period parameter</a> with one reconciled declaration and value; the same name in another period names another parameter. The construction gives each stage occurrence its own semgraph and specification, prints the file's declared name for every one, and records the position in the occurrence's provenance. The elaborated object is not adjusted in place: each binding gives a new <strong>stage version</strong>, the stage occurrence as it stands after that binding.</p>
+<p>A <strong>stage occurrence</strong> is one use of the stage file in a <a href="../period/">period</a> at a particular position in the model: the file elaborated there, with its own three bindings. Its <a href="../field/">fields</a>, policy and numerical choices remain local to that occurrence. A parameter name declared by two stages of the same period, however, names one <a href="../parameters/">period parameter</a> with one reconciled declaration and value; the same name in another period names another parameter. The construction gives each stage occurrence its own semgraph and specification, prints the file's declared name for every one, and records the position in the occurrence's provenance. Each binding adds to the elaborated object in place and returns it; a <strong>stage version</strong> is the stage occurrence as it stands after elaboration or after one of its bindings.</p>
 <p>The stage's <a href="../semgraph/">semgraph (semantic graph)</a> retains its interpreted equations and definitions. Whole <a href="../builder/">builders</a>, named Bellman operations, and authored <code>!node</code> computations provide inspection boundaries. Scalar arithmetic inside a state transition or <a href="../aggregation/">value aggregator</a> is not another advertised level of that semgraph.</p>
 <p>The <a href="../../Bellman-Sym/03-field-equations/">field-equation tutorial</a> develops consumption as a separate stage file, which can then be joined to discounting and portfolio choice through compatible <a href="../connector/">connectors</a>.</p>
 
@@ -7781,18 +7864,18 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

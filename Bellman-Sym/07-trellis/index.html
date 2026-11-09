@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/07-trellis/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/07-trellis/">
       
       
         <link rel="prev" href="../06-period/">
@@ -2977,13 +2977,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5201,6 +5194,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5296,6 +5295,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5932,6 +5959,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../wiki/handler/" class="md-nav__link">
         
   
@@ -6136,6 +6191,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -8004,7 +8087,7 @@
 <p>Supply this function as terminal data when the model is realized; no entry of <code>inter_connectors</code> is reserved for it. For the value-only stage files of the preceding page, use the domain in the table and the analytic conditions in <a href="../06-period/#31-choosing-the-period-boundary">Periods</a>. A constant zero terminal value is admissible for those equations. Terminal data for a continuation given in closed form must also carry the derivatives that the blocks of the stage reading it name by their terms, <code>D_{a}V[&gt;]</code>, agreeing with the supplied value function (§2.1). The join rule above prescribes no representation for terminal data.</p>
 <p>In a retirement model, a connector for one adjacent period pair must contain both routes when both are needed: working continuation fields connect to the next working or choice stage, and retired continuation fields connect to the next retired stage. Writing the two routes as separate entries of <code>inter_connectors</code> would assign them to different period joins. Retirement is absorbing only if the retired route continues to exclude a return to working stages.</p>
 <h3 id="21-the-derivative-a-method-reads">2.1 The derivative a method reads<a class="headerlink" href="#21-the-derivative-a-method-reads" title="Permanent link">&para;</a></h3>
-<p>A block that a method binds, such as the block of <code>!egm</code> (<a href="../reference/methods/">Method types</a>), may read the derivative of its stage's continuation value by the term <code>D_{a}V[&gt;]</code> (<a href="../03-field-equations/">Field equations</a> §2). The block declares that reading and nothing else: how the derivative is evaluated is a property of the value, fixed by the stage that supplies the continuation, the stage whose exported value a connector joins to this stage's continuation fields (<a href="../04-methodization/">Methodization</a> §4.1). That stage's value carries the derivative when its methods file fixed one: by a derivative line, in its stage file or in a marginal block bound with <code>!marginals</code>; by a representation of the value whose row of the method table evaluates the derivative; or by a representation of the stated derivative bound on the derivative line's id. A derivative line stated at the decision builder serves the arrival value through an arrival builder whose law between the perches is the identity, <code>V[&lt;] = V</code> or <code>V[&lt;] = E_{y}V</code>, where the stored derivative values pass through. Where that stage's derivative line in turn reads the derivative of the stage after it, as the portfolio stage's line reads <code>D_{m_next}V[&gt;]</code> under its expectation, the requirement passes to that stage, and so on up to a stage whose continuation is given in closed form, such as the terminal continuation, whose derivatives are supplied with the terminal data (§2). The join of two stages compares value fields alone, and a connector selects values alone.</p>
+<p>A block that a method binds, such as the block of <code>!egm</code> (<a href="../reference/methods/">Method types</a>), may read the derivative of its stage's continuation value by the term <code>D_{a}V[&gt;]</code> (<a href="../03-field-equations/">Field equations</a> §2). The block declares that reading and nothing else: how the derivative is evaluated is a property of the value, fixed by the stage that supplies the continuation, the stage whose exported value a connector joins to this stage's continuation fields (<a href="../04-methodization/">Methodization</a> §4.1). That stage's value carries the derivative when its methods file fixed one, in one of two ways. The first is a derivative line, in its stage file or in a marginal block bound with <code>!marginals</code>, whose values the representation at the value builder's <a href="../reference/operations/#evaluation">Evaluation</a> stores; the methods file writes that representation at <code>&lt;block-id&gt;.evaluate.value</code> or <code>&lt;block-id&gt;.evaluate.marginal</code>. The second is a representation of the value whose row of the method table evaluates the derivative. A derivative line stated at the decision builder serves the arrival value through an arrival builder whose law between the perches is the identity, <code>V[&lt;] = V</code> or <code>V[&lt;] = E_{y}V</code>, where the stored derivative values pass through. Where that stage's derivative line in turn reads the derivative of the stage after it, as the portfolio stage's line reads <code>D_{m_next}V[&gt;]</code> under its expectation, the requirement passes to that stage, and so on up to a stage whose continuation is given in closed form, such as the terminal continuation, whose derivatives are supplied with the terminal data (§2). The join of two stages compares value fields alone, and a connector selects values alone.</p>
 <p>A reading that no route meets is reported, not refused: the trellis is built and bound, and the route that needs the derivative is left uncertified. <code>bellman.trellis.derivative_missing(trellis)</code> answers one <code>derivative-missing</code> diagnostic for each such reading, addressed to the stage occurrence whose value carries no derivative in the coordinate read, such as <code>periods[0].stages['port']</code>; its sentence names that stage, the value and the coordinate, as the reading block's term writes them, <code>D_{m_next}V[&gt;]</code>, and the ways the stage's methods file may fix the derivative. When every value carries the derivatives its neighbors read, the query answers an empty tuple.</p>
 <h2 id="3-the-two-shapes-of-a-period">3 The two shapes of a period<a class="headerlink" href="#3-the-two-shapes-of-a-period" title="Permanent link">&para;</a></h2>
 <p>A period's <code>stages:</code> takes one of two shapes, and the shape decides which call reads the file and where the bindings come from.</p>
@@ -8193,18 +8276,18 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../_javascripts/meaning_map.js"></script>
       
         <script src="../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>

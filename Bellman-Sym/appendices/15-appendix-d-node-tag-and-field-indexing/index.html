@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://econ-ark.github.io/bellman/Bellman-Sym/appendices/15-appendix-d-node-tag-and-field-indexing/">
+        <link rel="canonical" href="https://bellman.io/Bellman-Sym/appendices/15-appendix-d-node-tag-and-field-indexing/">
       
       
         <link rel="prev" href="../14-appendix-c-syntax-to-semantics/">
@@ -3008,13 +3008,6 @@
   </span>
   
   
-    
-  
-  
-    <span class="md-status md-status--not yet drafted — stub notes only"></span>
-  
-
-  
 
       </a>
     </li>
@@ -5232,6 +5225,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -5327,6 +5326,34 @@
     
   
     Accretion modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/addition/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Addition (methods file)
   
 
     
@@ -5963,6 +5990,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../wiki/grid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Grid
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../wiki/handler/" class="md-nav__link">
         
   
@@ -6167,6 +6222,34 @@
     
   
     Methodization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../wiki/methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Methods
   
 
     
@@ -8164,16 +8247,33 @@ an explicit choice to govern the corresponding group.</p>
 quadrature rule approximates an integral; a root finder approximates a
 solution of the stated relation. Neither supplies a missing shock law,
 constraint, or optimality condition. A numerical grid is part of a chosen
-representation, whereas the field's domain belongs to the model.</p>
+representation, whereas the field's domain belongs to the model: the
+methods file names the grid by the setting <code>grid</code>, whose value is the
+grid's kind written as a tag, <code>grid: !Cartesian</code>, with the grid's fields,
+<code>orders</code> and <code>bounds</code>, beside it, and the method by its basis, such as
+<code>!Linear</code> (see <a href="../../04-methodization/">Methodization</a> §3).</p>
 <p><strong>The name <code>evaluate</code>.</strong> An authored <code>evaluate(knots, values, x)</code> denotes
 evaluation of a stated representation, with coordinates first and values
 second. The numerical interpolation and extrapolation must be specified
-as Appendix C R7 requires. A methods interface may also use <code>evaluate</code>
-as an address for a declared output representation. That address does
-not assert that an <code>evaluate</code> expression was written in the stage, and
-it must not create one. Its resolution must distinguish the supported
-cases and report ambiguity or absence. See
-<a href="../../04-methodization/">Methodization</a> for the attachment syntax.</p>
+as Appendix C R7 requires. It is an operation inside its line, with
+declared arguments, and a method attaches to it at its own address,
+<code>&lt;block-id&gt;.&lt;statement-id&gt;.evaluate</code>, where a representation needs no grid,
+since the first argument holds the knots; <code>evaluate</code> alone names the one
+authored occurrence of a stage and is refused where the stage authors
+none or several. A methods file also writes <code>evaluate</code> after a block id
+for the <a href="../../reference/operations/#evaluation">Evaluation</a> that closes
+the builder, the place of a declared output representation, and says what
+that Evaluation evaluates:
+<code>&lt;block-id&gt;.evaluate</code> for the policy function of the policy builder,
+<code>&lt;block-id&gt;.evaluate.value</code> for the value function of a backward value
+builder, and <code>&lt;block-id&gt;.evaluate.marginal</code> for the derivative of that
+value a derivative line states. That address names an operation every
+such builder closes with; it does not assert that an <code>evaluate</code>
+expression was written in the stage, and it creates none. A form that
+names what its builder does not write, <code>policy.evaluate.value</code> or
+<code>.evaluate.marginal</code> where no derivative line stands, is refused, and so
+is a representation named on the builder itself or on a derivative line.
+See <a href="../../04-methodization/">Methodization</a> for the attachment syntax.</p>
 <h2 id="7-policy-relations-and-numerical-decomposition">7 Policy relations and numerical decomposition<a class="headerlink" href="#7-policy-relations-and-numerical-decomposition" title="Permanent link">&para;</a></h2>
 <p>The policy block of the consumption stage <code>cons</code> of Appendix C §4.2,
 written in the interior form with its candidate line an equation, provides
@@ -8366,18 +8466,18 @@ storage records, or an execution order for a numerical solver.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.indexes", "navigation.path", "navigation.top", "navigation.footer", "search.highlight", "search.suggest", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
+  
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../_javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="../../../_javascripts/meaning_map.js"></script>
       
         <script src="../../../_javascripts/figure_sequences.js"></script>
       
         <script src="../../../_javascripts/rosetta-card-nav.js"></script>
       
     
+  
+    <script src="../../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  
+
   </body>
 </html>
