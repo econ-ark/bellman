@@ -482,6 +482,8 @@ body:has(.bellman-home) .md-top {
 
 /* Lower sections share a measured grid; the native diagram supplies its own chrome. */
 .bellman-home [hidden] { display: none !important; }
+.home-arrow { display: inline-flex; width: 20px; height: 20px; flex: 0 0 auto; vertical-align: middle; pointer-events: none; }
+.home-arrow svg { display: block; width: 100%; height: 100%; fill: currentColor; }
 .home-features, .home-applications, .home-project, .home-start {
   --home-rule: rgb(197 229 241 / .24);
   font-family: Archivo, Helvetica, Arial, sans-serif;
@@ -512,7 +514,7 @@ body:has(.bellman-home) .md-top {
   line-height: 1.5;
 }
 .home-section-heading > a { flex-shrink: 0; }
-.home-section-heading a span, .home-model-description a span, .home-model-workbench span { margin-left: 12px; }
+.home-section-heading a .home-arrow, .home-model-description a .home-arrow, .home-model-workbench .home-arrow { width: 18px; height: 18px; margin-left: 12px; }
 .home-section-heading a:hover, .home-model-description a:hover, .home-model-workbench:hover { text-decoration: underline; text-underline-offset: 5px; }
 .home-features { position: relative; isolation: isolate; }
 .home-features::after {
@@ -581,7 +583,7 @@ body:has(.bellman-home) .md-top {
 .home-feature h2 { margin: 0 0 12px; font: 400 clamp(20px, 1.9vw, 26px)/1.25 var(--bl-statement); letter-spacing: -.02em; }
 .home-feature p { margin: 0; max-width: 32ch; color: var(--bl-ice-2); font-size: 16px; line-height: 1.55; }
 .home-feature h2, .home-feature p { grid-column: 1; }
-.home-feature > span { grid-column: 2; grid-row: 1; align-self: start; color: var(--bl-ice-3); font-size: 21px; line-height: 1.25; }
+.home-feature > .home-arrow { grid-column: 2; grid-row: 1; align-self: start; margin-top: 4px; color: var(--bl-ice-3); }
 .home-feature:hover h2 { color: var(--bl-ice-2); }
 /* The original cubes overlay the same image-backed section as the text. */
 .home-architecture.pm-dis {
@@ -619,7 +621,8 @@ body:has(.bellman-home) .md-top {
   cursor: pointer;
 }
 .home-model-tabs button[aria-selected=true], .home-model-tabs button:hover { color: var(--bl-ice); }
-.home-model-tabs button[aria-selected=true]::after { content: "→"; position: absolute; right: 0; top: 24px; font: 22px/1 Archivo, sans-serif; }
+.home-model-tabs .home-arrow { position: absolute; right: 0; top: 50%; transform: translateY(-50%); visibility: hidden; }
+.home-model-tabs button[aria-selected=true] .home-arrow { visibility: visible; }
 .home-model-description { padding-top: 28px; }
 .home-model-description p { margin: 0 0 20px; max-width: 31ch; color: var(--bl-ice-2); font-size: 17px; line-height: 1.6; }
 .home-model-workbench { margin-top: 0; padding-top: 24px; }
@@ -647,20 +650,19 @@ body:has(.bellman-home) .md-top {
 .home-project__rows h3 { margin: 0; font: 400 clamp(22px, 2.2vw, 30px)/1.25 var(--bl-statement); letter-spacing: -.025em; }
 .home-project__rows h3 span { display: block; margin-top: 8px; font: 12px/1.5 Archivo, sans-serif; letter-spacing: 0; color: var(--bl-slate); }
 .home-project__rows p { margin: 0; padding-right: 56px; max-width: 48ch; font-size: 17px; line-height: 1.55; }
-.home-project__arrow { position: absolute; right: 0; font-size: 27px; }
+.home-project__arrow { position: absolute; right: 0; }
 .home-project__rows a:hover h3, .home-project__rows a:hover .home-project__arrow { color: var(--bl-ultramarine); }
 .home-start { display: grid; grid-template-columns: 1fr 1fr; padding: 0 var(--bellman-home-pad); background: var(--bl-ultramarine); color: var(--bl-ice); }
 .home-start > a { position: relative; padding: 52px 72px 56px 0; color: inherit; }
 .home-start > a + a { border-left: 1px solid rgb(237 247 252 / .35); padding-left: clamp(28px, 5vw, 76px); }
 .home-start h2 { font-size: clamp(23px, 2.2vw, 32px); }
 .home-start p { margin: 16px 0 0; font-size: 16px; line-height: 1.5; }
-.home-start > a > span { position: absolute; top: 52px; right: 28px; font-size: 28px; line-height: 1; }
-.home-start > a:last-child > span { right: 0; }
+.home-start > a > .home-arrow { position: absolute; top: 58px; right: 28px; }
+.home-start > a:last-child > .home-arrow { right: 0; }
 .home-start a:hover h2 { text-decoration: underline; text-underline-offset: 7px; }
 @media (max-width: 900px) {
   .home-feature-list { width: min(100%, 480px); }
   .home-feature { padding-top: 22px; padding-bottom: 24px; }
-  .home-feature > span { top: 22px; }
   .home-applications__layout { grid-template-columns: minmax(190px, .8fr) minmax(0, 1.6fr); gap: 28px; }
   .home-model-panel { height: 580px; }
   .home-project__rows > a { grid-template-columns: minmax(190px, .8fr) minmax(0, 1.6fr); gap: 28px; }
@@ -669,7 +671,7 @@ body:has(.bellman-home) .md-top {
   .home-features, .home-applications { padding-top: 40px; padding-bottom: 48px; }
   .home-section-heading { gap: 16px; margin-bottom: 28px; }
   .home-section-heading > a { font-size: 14px; }
-  .home-section-heading a span { margin-left: 4px; }
+  .home-section-heading a .home-arrow { margin-left: 4px; }
   .home-applications__layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .home-features__layout { min-height: 0; }
   .home-feature-list { padding: 20px; }
@@ -681,7 +683,6 @@ body:has(.bellman-home) .md-top {
   .home-feature h2 { font-size: 21px; margin-bottom: 10px; }
   .home-feature p { max-width: 36ch; font-size: 16px; }
   .home-model-tabs button { padding-top: 16px; padding-bottom: 16px; font-size: 23px; }
-  .home-model-tabs button[aria-selected=true]::after { top: 19px; }
   .home-model-description { padding-top: 22px; }
   .home-model-description p { max-width: 36ch; margin-bottom: 14px; font-size: 16px; }
   .home-model-workbench { padding-top: 22px; }
@@ -696,7 +697,7 @@ body:has(.bellman-home) .md-top {
   .home-start { grid-template-columns: minmax(0, 1fr); }
   .home-start > a, .home-start > a + a { padding: 32px 40px 36px 0; border-left: 0; }
   .home-start > a + a { border-top: 1px solid rgb(237 247 252 / .35); }
-  .home-start > a > span { right: 0; top: 32px; }
+  .home-start > a > .home-arrow { right: 0; top: 36px; }
   .home-start p { max-width: 28ch; }
 }
 @media (prefers-reduced-motion: reduce) {

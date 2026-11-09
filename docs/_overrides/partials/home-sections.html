@@ -8,9 +8,9 @@
   </div>
   <div class="home-features__layout">
     <div class="home-feature-list">
-      <a class="home-feature" href="{{ 'wiki/elaborated_stage/#1-the-complete-typed-statement-of-the-problem' | url }}"><h2>The Bellman language</h2><p>Express economic relationships as a typed semantic ontology.</p><span aria-hidden="true">↗</span></a>
-      <a class="home-feature" href="{{ 'wiki/semgraph/' | url }}"><h2>Typed semantics</h2><p>Humans and AI can inspect the quantities, equations and mathematical operations that define the model.</p><span aria-hidden="true">↗</span></a>
-      <a class="home-feature" href="{{ 'wiki/rho/' | url }}"><h2>AI-assisted implementation</h2><p>Use explicit model meaning to support code generation and numerical implementation.</p><span aria-hidden="true">↗</span></a>
+      <a class="home-feature" href="{{ 'wiki/elaborated_stage/#1-the-complete-typed-statement-of-the-problem' | url }}"><h2>The Bellman language</h2><p>Express economic relationships as a typed semantic ontology.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+      <a class="home-feature" href="{{ 'wiki/semgraph/' | url }}"><h2>Typed semantics</h2><p>Humans and AI can inspect the quantities, equations and mathematical operations that define the model.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+      <a class="home-feature" href="{{ 'wiki/rho/' | url }}"><h2>AI-assisted implementation</h2><p>Use explicit model meaning to support code generation and numerical implementation.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
     </div>
   </div>
   <div class="home-media__caption">
@@ -22,18 +22,18 @@
 </section>
 
 <section class="home-applications" id="examples" aria-labelledby="applications-heading">
-  <div class="home-section-heading"><h2 id="applications-heading">Applications</h2><a href="{{ 'examples/' | url }}">All examples <span aria-hidden="true">→</span></a></div>
+  <div class="home-section-heading"><h2 id="applications-heading">Applications</h2><a href="{{ 'examples/' | url }}">All examples <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
   <div class="home-applications__layout">
     <div class="home-model-choice">
       <div class="home-model-tabs" hidden role="tablist" aria-label="Example models" aria-orientation="vertical">
-        <button type="button" role="tab" id="model-housing" data-model="housing" aria-controls="home-model-panel" aria-selected="true">Housing</button>
-        <button type="button" role="tab" id="model-pensions" data-model="pensions" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Pensions</button>
-        <button type="button" role="tab" id="model-buffer-stock" data-model="buffer-stock" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Buffer-stock saving</button>
+        <button type="button" role="tab" id="model-housing" data-model="housing" aria-controls="home-model-panel" aria-selected="true">Housing<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></button>
+        <button type="button" role="tab" id="model-pensions" data-model="pensions" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Pensions<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></button>
+        <button type="button" role="tab" id="model-buffer-stock" data-model="buffer-stock" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Buffer-stock saving<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></button>
       </div>
-      <div class="home-model-description" data-model-description="housing"><p>A household chooses whether to keep its home or adjust its housing stock.</p><a href="{{ 'examples/housing-frictions/' | url }}">Read the model <span aria-hidden="true">→</span></a></div>
-      <div class="home-model-description" data-model-description="pensions" hidden><p>A worker chooses consumption and pension contributions before deciding whether to retire next period.</p><a href="{{ 'examples/pension-retirement/' | url }}">Read the model <span aria-hidden="true">→</span></a></div>
-      <div class="home-model-description" data-model-description="buffer-stock" hidden><p>A household chooses consumption and saving under permanent and temporary income risk.</p><a href="{{ 'examples/buffer-stock/buffer_stock/' | url }}">Read the model <span aria-hidden="true">→</span></a></div>
-      <a class="home-model-workbench" href="{{ 'overview/07-workbench/' | url }}">Workbench guide <span aria-hidden="true">↗</span></a>
+      <div class="home-model-description" data-model-description="housing"><p>A household chooses whether to keep its home or adjust its housing stock.</p><a href="{{ 'examples/housing-frictions/' | url }}">Read the model <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
+      <div class="home-model-description" data-model-description="pensions" hidden><p>A worker chooses consumption and pension contributions before deciding whether to retire next period.</p><a href="{{ 'examples/pension-retirement/' | url }}">Read the model <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
+      <div class="home-model-description" data-model-description="buffer-stock" hidden><p>A household chooses consumption and saving under permanent and temporary income risk.</p><a href="{{ 'examples/buffer-stock/buffer_stock/' | url }}">Read the model <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
+      <a class="home-model-workbench" href="{{ 'overview/07-workbench/' | url }}">Workbench guide <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
       <noscript><p><a href="{{ 'examples/pension-retirement/' | url }}">Pensions</a> and <a href="{{ 'examples/buffer-stock/buffer_stock/' | url }}">Buffer-stock saving</a> are also available in the examples.</p></noscript>
     </div>
     <div id="home-model-panel" class="home-model-panel" role="tabpanel" aria-labelledby="model-housing">
@@ -45,15 +45,15 @@
 <section class="home-project" id="project" aria-labelledby="project-heading">
   <div class="home-section-heading"><h2 id="project-heading">The project</h2><p>Tools for writing and inspecting economic models.</p></div>
   <div class="home-project__rows">
-    <a href="{{ 'Bellman-Sym/' | url }}"><h3>Bellman-SYM<span>Language</span></h3><p>State quantities, equations and the order of decisions.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="{{ 'overview/07-workbench/' | url }}"><h3>Workbench</h3><p>Edit model files beside diagrams constructed from their equations.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="{{ 'matsya/' | url }}"><h3>Matsya</h3><p>Draft model declarations from prose and equations, then review the result.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="{{ 'bellman-calculus/' | url }}"><h3>Bellman calculus</h3><p>Read the mathematics of staged decision problems and their operators.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="{{ 'asva/' | url }}"><h3>Asva</h3><p>Build numerical steps, compare model variants and estimate parameters.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
+    <a href="{{ 'Bellman-Sym/' | url }}"><h3>Bellman-SYM<span>Language</span></h3><p>State quantities, equations and the order of decisions.</p><span class="home-arrow home-project__arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+    <a href="{{ 'overview/07-workbench/' | url }}"><h3>Workbench</h3><p>Edit model files beside diagrams constructed from their equations.</p><span class="home-arrow home-project__arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+    <a href="{{ 'matsya/' | url }}"><h3>Matsya</h3><p>Draft model declarations from prose and equations, then review the result.</p><span class="home-arrow home-project__arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+    <a href="{{ 'bellman-calculus/' | url }}"><h3>Bellman calculus</h3><p>Read the mathematics of staged decision problems and their operators.</p><span class="home-arrow home-project__arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+    <a href="{{ 'asva/' | url }}"><h3>Asva</h3><p>Build numerical steps, compare model variants and estimate parameters.</p><span class="home-arrow home-project__arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
   </div>
 </section>
 
 <section class="home-start" aria-label="Start using Bellman">
-  <a href="{{ 'overview/00-install/' | url }}"><h2>Start here</h2><p>Install Bellman and open an example.</p><span aria-hidden="true">↗</span></a>
-  <a href="{{ config.repo_url }}/issues/new"><h2>Ask about a model</h2><p>Describe your model or ask a question on GitHub.</p><span aria-hidden="true">↗</span></a>
+  <a href="{{ 'overview/00-install/' | url }}"><h2>Start here</h2><p>Install Bellman and open an example.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+  <a href="{{ config.repo_url }}/issues/new"><h2>Ask about a model</h2><p>Describe your model or ask a question on GitHub.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
 </section>

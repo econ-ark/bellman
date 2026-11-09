@@ -8,6 +8,11 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.02
 
+### 2026-11-10 — Evaluation and interpolation definitions
+
+- [Fields, functions and types](bellman-calculus/04-fields,%20functions%20and%20types.md#5-refinement-and-numerical-methods) distinguishes applying a policy from Evaluation's identity on the retained function.
+- [Methods](bellman-calculus/06-Methods.md#5-the-grid-as-the-discretized-domain) states the admitted-data and interpolation conditions for nodal reproduction and idempotence. The change is mathematical documentation; numerical implementations are unchanged.
+
 ### 2026-11-09 — Homepage examples and project guide
 
 - The opening section adopts the revised description, artwork crop, face lighting, corner triangle and button placement, while retaining the link to homepage examples.
