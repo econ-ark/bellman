@@ -2,7 +2,7 @@
 
 {% block extrahead %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ '_stylesheets/home.css' | url }}?v=20261109c">
+  <link rel="stylesheet" href="{{ '_stylesheets/home.css' | url }}?v=20261109d">
 {% endblock %}
 
 {% block header %}
@@ -37,10 +37,10 @@
     </div>
     <div class="bellman-home__copy">
       {{ home_sections[0] }}
-      <div class="bellman-home__actions">
-        <a class="bellman-home__button bellman-home__button--primary" href="{{ 'examples/' | url }}">Start with an example</a>
-        <a class="bellman-home__button bellman-home__github" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">{% include "partials/github-icon.html" %}GitHub<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
-      </div>
+    </div>
+    <div class="bellman-home__actions">
+      <a class="bellman-home__button bellman-home__button--primary" href="{{ 'examples/' | url }}">Start with an example</a>
+      <a class="bellman-home__button bellman-home__github" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">{% include "partials/github-icon.html" %}GitHub<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
     </div>
     <div class="bellman-home__art bellman-home__art--corner">
       {% include "partials/brand-loop-decision.html" %}
