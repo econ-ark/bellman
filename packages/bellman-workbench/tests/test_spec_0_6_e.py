@@ -385,7 +385,7 @@ def test_item_6_the_exporter_answers_the_declared_builders_under_the_keyword_dec
     bound method's line, and keeps the stage's label; the operative collection holds the block's rows, the reading
     port of its first operation naming no unread input, since the one input the header lists, `𝑉≻`, is read by the
     block's derivative term `D_{a}V[>]` (AMD-MB-001 §4.2), and the decision builder's Evaluation names both methods
-    it holds, `!marginals` and `!Cartesian`."""
+    it holds, `!marginals` and `!Linear`."""
     text = (demonstration_folder / DEMONSTRATION_CONS).read_text(encoding="utf-8")
     unbound = elaborate_text(text, str(demonstration_folder / DEMONSTRATION_CONS))
     assert dataclasses.asdict(to_model_explorer(unbound, declared=True)) == dataclasses.asdict(
@@ -412,8 +412,8 @@ def test_item_6_the_exporter_answers_the_declared_builders_under_the_keyword_dec
     # the decision builder's Evaluation holds a marginal block and a representation, one method of each kind
     # (SB-14), both of which its node names (SE-26)
     evaluation = node_named(graph_named(operative, "backward"), "cntn_to_dcsn:Evaluation")
-    assert {item["key"]: item["value"] for item in evaluation["attrs"]}["method"] == "!marginals, !Cartesian"
-    assert evaluation["label"].endswith(" · !marginals, !Cartesian"), evaluation["label"]
+    assert {item["key"]: item["value"] for item in evaluation["attrs"]}["method"] == "!marginals, !Linear"
+    assert evaluation["label"].endswith(" · !marginals, !Linear"), evaluation["label"]
     # the one input the block's header lists is read by the derivative term, so no reading port of the opened
     # builder's first operation names an unread input (AMD-MB-001 §4.2)
     graph = graph_named(operative, "backward")

@@ -326,7 +326,9 @@ def test_a_refused_forward_direction_is_reported_at_its_pairs(elaborate_text):
     # the listing, the keys and the methods answer for the backward side
     assert list(broken.builder.list()) == ["cntn_to_dcsn", "dcsn_to_arvl"]
     assert list(broken.builder) == [("cntn", "dcsn"), ("dcsn", "arvl")] and len(broken.builder) == 2
-    bound = broken.methodize({"methods": [{"on": "cntn_to_dcsn", "method": "Linear"}]})
+    grid = {"grid": "!Cartesian", "orders": {"V": "n_V"}, "bounds": {"V": ["V_min", "V_max"]}}
+    bound = broken.methodize({"methods": [{"on": "cntn_to_dcsn.evaluate.value", "method": "Linear",
+                                           "settings": grid}]})
     assert {str(place): method.tag for place, method in bound.builder.methods.items()} == {
         "cntn_to_dcsn:Evaluation": "Linear"}
 

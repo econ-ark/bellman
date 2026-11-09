@@ -77,6 +77,9 @@ __all__ = [
     "Folder",
     "open_folder",
     "factory_path",
+    "ADDITION_LINE",
+    "is_addition",
+    "is_addition_file",
     "folder_tree",
     "git_marks",
     "git_summary",
@@ -271,9 +274,38 @@ def factory_path(name: str) -> str:
     return posixpath.join(FACTORY_FOLDER, name)
 
 
-def _role(relative: Path) -> str:
-    """The role of a file of the model folder by the factory's convention:
-    a `.bl` file is a stage; `trellis*.yml` a trellis, `period*.yml` a
+# The metadata line that opens an addition, a methods file that the
+# semantics unions with its stage file (specification 0.7 §4), where a stage
+# file opens with `@stage:`. The Workbench never elaborates an addition as a
+# stage: it opens as text, and the package reads it with its stage
+# (decisions S7-W1 and S7-W2).
+ADDITION_LINE = "@methods:"
+
+
+def is_addition(text: str) -> bool:
+    """Whether the text of a `.bl` file is an addition: its first line that
+    is not blank begins with `ADDITION_LINE`."""
+    for line in text.splitlines():
+        if line.strip():
+            return line.lstrip().startswith(ADDITION_LINE)
+    return False
+
+
+def is_addition_file(path: Path) -> bool:
+    """Whether the file at `path` is a `.bl` file whose text is an addition
+    (`is_addition`); a file that cannot be read is none."""
+    if Path(path).suffix != ".bl":
+        return False
+    try:
+        return is_addition(Path(path).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def _role(relative: Path, root: Path) -> str:
+    """The role of a file of the model folder `root` by the factory's
+    convention: a `.bl` file is a stage, or `methods` where it is an
+    addition (`is_addition_file`); `trellis*.yml` a trellis, `period*.yml` a
     period; a recipe is `<stem>.yml` or a name that begins `<stem>.` and
     ends `.yml` or `.yaml` (`spec.yml`, `spec.yaml`, `spec.<name>.yml`),
     where the stem is `RECIPE_STEM`; a `.yml` file under a folder
@@ -283,7 +315,7 @@ def _role(relative: Path) -> str:
     file is `other`."""
     name = relative.name
     if relative.suffix == ".bl":
-        return "stage"
+        return "methods" if is_addition_file(Path(root) / relative) else "stage"
     if relative.suffix not in (".yml", ".yaml"):
         return "other"
     if name == f"{RECIPE_STEM}.yml" or (
@@ -340,7 +372,7 @@ def folder_tree(folder: Folder) -> list[dict]:
                     "name": child.name,
                     "path": relative.as_posix(),
                     "kind": "file",
-                    "role": _role(relative),
+                    "role": _role(relative, folder.root),
                     "git": marks.get(relative.as_posix(), ""),
                     "children": [],
                 }

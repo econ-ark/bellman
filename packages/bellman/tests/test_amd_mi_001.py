@@ -34,7 +34,7 @@ def test_item_1_each_box_reads_its_kind_and_the_head_of_its_symbol_on_two_lines(
         "GraphInputs": "Inputs",
         "cntn_to_dcsn:Pullback": "𝑉≻ ∘ 𝑔≻",
         "cntn_to_dcsn:Aggregation": "𝐺",
-        "cntn_to_dcsn:Evaluation": "𝑉(m_d), 𝑑𝑉(m_d) · !Cartesian",
+        "cntn_to_dcsn:Evaluation": "𝑉(m_d), 𝑑𝑉(m_d) · !Linear",
         "dcsn_to_arvl:Pullback": "𝑉, 𝑑𝑉 ∘ 𝑔≺",
         "dcsn_to_arvl:Aggregation": "𝐺",
         "dcsn_to_arvl:Evaluation": "𝑉≺(m), 𝑑𝑉≺(m)",

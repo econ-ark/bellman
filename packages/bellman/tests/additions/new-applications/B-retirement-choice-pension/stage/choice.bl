@@ -1,0 +1,19 @@
+@stage: ret_choice
+# The retirement choice of applications/retirement-choice, entered at its
+# decision perch: the two identity arrival builders of ret_choice.bl are left
+# out, as cons.bl and port.bl of cons-port leave theirs out. Verbatim otherwise.
+
+δ : ℝ₊₊          :: ["utility cost of working, charged in the period whose wage it earns"]
+
+[id=dcsn_to_cntn, (a_d : ℝ₊, d : !ctrl @ {work, retire}) : !dcsn -> ()] {
+    [label=work,   () -> (a_w : ℝ₊) : !cntn] { a_w = a_d }
+    [label=retire, () -> (a_r : ℝ₊) : !cntn] { a_r = a_d }
+}
+
+[id=cntn_to_dcsn, (V_w[>] : [-inf, inf) @ !vlu, V_r[>] : [-inf, inf) @ !vlu, d) : !cntn -> (V : [-inf, inf) @ !vlu) : !dcsn] {
+    V = (V_w[>] - δ, V_r[>])[d]                   :: [id=choice_value]
+}
+
+[id=policy, (V_w[>], V_r[>]) : !cntn -> (d : {work, retire} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(V_w[>] - δ, V_r[>])        :: [id=choice]
+}

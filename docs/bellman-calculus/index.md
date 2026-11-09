@@ -14,7 +14,7 @@ topic: [calculus]
 # Bellman calculus
 
 > [!summary]
-> The Bellman calculus describes staged recursive decision problems through their states, information, equations and composed operators. These pages explain the mathematical interpretation, with one buffer-stock running example and explicitly unfinished chapters on methods and composition.
+> The Bellman calculus describes staged recursive decision problems through their states, information, equations and composed operators. These pages explain the mathematical interpretation, with one buffer-stock running example and explicitly unfinished chapters on composition.
 
 > [!info]- Relationship with other documents
 > **Used by** — [Bellman-SYM](../Bellman-Sym/index.md) documents the `.bl` stage source and supporting YAML whose meaning these pages state; Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the interpretation rules and their assumptions.
@@ -41,7 +41,7 @@ Start with [Introduction](./01-Introduction%20to%20T-calculus.md) and the [buffe
 | [Stages and perches](./03-Stages%20and%20perches.md) | Information, sufficient states, conditional laws and stage operators. |
 | [Fields, functions and types](./04-fields,%20functions%20and%20types.md) | Random quantities, value domains, representative functions and binding. |
 | [Operators and builders](./05-Operators%20and%20builders.md) | Unfinished notes on transition expectation, evaluation, selection and implicit relations. |
-| [Methods](./06-Methods.md) | Unfinished outline of numerical procedures and their requirements. |
+| [Methods](./06-Methods.md) | The signature of an operator with its method and grid components, composition over the field component, the grid as a retract, the handler, the two erasures and the two levels of a stage. |
 | [Stage composition](./07-stage-composition.md) | Unfinished notes on compatible joins within periods. |
 | [Periods and the trellis](./08-periods-and-trellis.md) | Unfinished notes on occurrence-specific composition and boundary data. |
 | [Branching](./09-branching.md) | Unfinished notes on labeled choices and exogenous selection. |

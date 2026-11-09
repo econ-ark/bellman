@@ -3,17 +3,20 @@ stage: bellman
 # Numerical choices for stages/benhabib_bellman/benhabib_bellman.bl, whose stage name is
 # `bellman`, taken from the legacy registry's bellman_methods.yml. The handlers
 # are the legacy's placeholders `dolo:<callable>`: no callable realizes these
-# method tags yet. The legacy entries name no setting, so no setting of
-# settings/default.yml is read at a place.
+# method tags yet. The legacy entries name no setting; the entry of the
+# endogenous grid method names the grid of wealth of settings/default.yml,
+# n_a, a_min and a_max, as its exogenous grid of savings, by the setting grid,
+# whose kind is the tag !Cartesian, with its order and bounds beside it.
 #
 # Two legacy entries are not copied. `upper_env` (`!FUES`): the stage writes
 # no upper-envelope operator for it to attach to. `policy.InvEuler`
 # (`!analytic-inverse`): the method attaches to the node, and `configure` then
 # stops at that node with an error the package does not catch.
-# The legacy's `evaluate` entry, `!Linear` on the line c = c[>], is not copied
-# either: the interpolation of the policy is part of the `!egm` method, which
-# stands at the Evaluation of the policy block, and a second entry reaching that
-# box would be refused as a conflict.
+# The legacy's `evaluate` entry, `!Linear` on the line c = c[>], which reads
+# the consumption function on the endogenous grid by linear interpolation, is
+# not copied either: the application binds no representation of the policy.
+# One would be written at the policy builder's Evaluation, policy.evaluate,
+# where it stands beside !egm on policy.
 
 methods:
   # The endogenous grid method opens the policy builder with the method block
@@ -22,6 +25,7 @@ methods:
     method: !egm
     block: ../../methods/benhabib_bellman_egm.bl
     handler: dolo:egm_backward
+    settings: {grid: !Cartesian, orders: {a: n_a}, bounds: {a: [a_min, a_max]}}
 
   # The derivative of the decision value in wealth is stated by the marginal
   # block of marginals_benhabib_bellman.bl on the decision value builder.

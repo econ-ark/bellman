@@ -1,0 +1,18 @@
+@methods: retiree_saving
+# The methods of the retiree's saving stage as an addition to
+# retiree_saving.bl: the derivative of the decision value in resources, the
+# envelope condition, appended to the decision value builder, and the
+# derivatives of the arrival value in financial and in pension assets, with the
+# factors of the law of resources, appended to the arrival value builder. The
+# two blocks of marginals_retiree_saving.bl are named by the builders' ids. No
+# method word is written; the stage's policy builder writes its Euler equation
+# beside the maximization tagged !doc, which the addition leaves as it stands.
+
+[id=cntn_to_dcsn] {
+    D_{m_r}V = 𝑑𝑢(c)                                  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl] {
+    D_{y_f_r}V[<] = (1 + r_f)*D_{m_r}V                :: [id=marginal_financial]
+    D_{y_p_r}V[<] = (1 + r_p)*D_{m_r}V                :: [id=marginal_pension]
+}

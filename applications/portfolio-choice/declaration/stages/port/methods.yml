@@ -14,10 +14,11 @@ methods:
     #   method: !root-find
     #   handler: hark:solve_stage_rootfind
 
-  - on: evaluate
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     handler: cons-port:_make_interp
     settings:
+      grid: !Cartesian
       orders:
         k_d: n_k
       bounds:

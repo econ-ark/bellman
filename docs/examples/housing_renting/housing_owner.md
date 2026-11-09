@@ -73,13 +73,14 @@ where:
 
 ## 4 Files
 
-The application folder holds each stage file with its methods file and its note in the stage's folder, the block files that the methods files bind, the paper the model follows and the structural tests:
+The application folder holds each stage file with its methods file and its note in the stage's folder, the block files that the methods files bind, the settings file of the consumption stage's exogenous grid of savings, the paper the model follows and the structural tests:
 
 ```
 applications/housing-owner/
 ├── README.md
 ├── declaration/
 │   ├── methods/                   consumption_choice_egm.bl  marginals_consumption_choice.bl  marginals_housing_choice.bl
+│   ├── settings/                  housing-owner.yml
 │   └── stages/
 │       ├── housing_choice/        housing_choice.bl  methods.yml  housing_choice.md
 │       └── consumption_choice/    consumption_choice.bl  methods.yml  consumption_choice.md

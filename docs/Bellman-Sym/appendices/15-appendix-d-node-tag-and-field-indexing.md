@@ -316,17 +316,34 @@ Methods and their settings are written separately from the stage. A
 quadrature rule approximates an integral; a root finder approximates a
 solution of the stated relation. Neither supplies a missing shock law,
 constraint, or optimality condition. A numerical grid is part of a chosen
-representation, whereas the field's domain belongs to the model.
+representation, whereas the field's domain belongs to the model: the
+methods file names the grid by the setting `grid`, whose value is the
+grid's kind written as a tag, `grid: !Cartesian`, with the grid's fields,
+`orders` and `bounds`, beside it, and the method by its basis, such as
+`!Linear` (see [Methodization](../04-methodization.md) §3).
 
 **The name `evaluate`.** An authored `evaluate(knots, values, x)` denotes
 evaluation of a stated representation, with coordinates first and values
 second. The numerical interpolation and extrapolation must be specified
-as Appendix C R7 requires. A methods interface may also use `evaluate`
-as an address for a declared output representation. That address does
-not assert that an `evaluate` expression was written in the stage, and
-it must not create one. Its resolution must distinguish the supported
-cases and report ambiguity or absence. See
-[Methodization](../04-methodization.md) for the attachment syntax.
+as Appendix C R7 requires. It is an operation inside its line, with
+declared arguments, and a method attaches to it at its own address,
+`<block-id>.<statement-id>.evaluate`, where a representation needs no grid,
+since the first argument holds the knots; `evaluate` alone names the one
+authored occurrence of a stage and is refused where the stage authors
+none or several. A methods file also writes `evaluate` after a block id
+for the [Evaluation](../reference/operations.md#evaluation) that closes
+the builder, the place of a declared output representation, and says what
+that Evaluation evaluates:
+`<block-id>.evaluate` for the policy function of the policy builder,
+`<block-id>.evaluate.value` for the value function of a backward value
+builder, and `<block-id>.evaluate.marginal` for the derivative of that
+value a derivative line states. That address names an operation every
+such builder closes with; it does not assert that an `evaluate`
+expression was written in the stage, and it creates none. A form that
+names what its builder does not write, `policy.evaluate.value` or
+`.evaluate.marginal` where no derivative line stands, is refused, and so
+is a representation named on the builder itself or on a derivative line.
+See [Methodization](../04-methodization.md) for the attachment syntax.
 
 ## 7 Policy relations and numerical decomposition
 

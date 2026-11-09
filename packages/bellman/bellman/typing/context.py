@@ -964,20 +964,31 @@ class TypingContext:
         differentiates; a product-valued one is refused under
         `derivative-scalar-coordinate`. A derivative of a field, `D_{a}V[>]`,
         names a state coordinate of the perch at which the field is read, and
-        not a discrete one; any other name is refused under
-        `derivative-coordinate`, naming the perch's coordinates
-        (AMD-MB-001 §4.2)."""
+        not a discrete one; for the value of a branch, `D_{a_w}V_w[>]`, a
+        state the branch writes, not one of another branch of the same perch.
+        Any other name is refused under `derivative-coordinate`, naming the
+        coordinates of the perch or of the branch (AMD-MB-001 §4.2)."""
         perch = self._derivative_field_perch(expr, address)
         if perch is not None:
+            field = to_source(expr.args[0])
             states = self._state_names_at(perch)
+            where, read = f"the {perch} perch", f"at which {field} is read"
+            branch = (
+                self.declarations.branch_of_value(expr.args[0].symbol.name)
+                if perch == CONTINUATION
+                else None
+            )
+            if branch is not None:
+                label, states = branch
+                where = f"the branch {label!r} of the {perch} perch"
+                read = f"whose fields {field} is a function of"
             discrete = name in states and self._is_discrete_field(name)
             if name not in states or discrete:
-                field = to_source(expr.args[0])
                 listed = ", ".join(states) if states else "none"
                 what = (
-                    f"a discrete coordinate of the {perch} perch, over which no derivative is defined"
+                    f"a discrete coordinate of {where}, over which no derivative is defined"
                     if discrete
-                    else f"no state coordinate of the {perch} perch, at which {field} is read"
+                    else f"no state coordinate of {where}, {read}"
                 )
                 raise self.declarations.error(
                     "derivative-coordinate",
@@ -986,7 +997,7 @@ class TypingContext:
                         f"the derivative {to_source(expr)} names {name!r}, which is {what}; "
                         f"a derivative of a value is taken in a state coordinate of the perch "
                         f"at which the value is read, written without its mark, and the "
-                        f"coordinates of the {perch} perch are {listed}"
+                        f"coordinates of {where} are {listed}"
                     ),
                 )
             return

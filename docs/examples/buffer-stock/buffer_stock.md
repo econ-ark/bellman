@@ -71,159 +71,220 @@ $$
 ## State-Space Diagram
 
 ```
-(a) ──shocks (ψ, ξ)──▶ (m) ──c──▶ (a_nxt)
+(k) ──shocks (ψ, ξ)──▶ (m) ──c──▶ (a)
 ```
 
-A single stage per period: the prestate $a$ (end-of-period assets from the previous period) is transformed by two shocks into market resources $m$; consumption $c$ determines end-of-period assets $a_{\text{nxt}} = m - c$.
+A single stage per period: the arrival state $k$, the assets carried from the previous period, is transformed by two shocks into market resources $m$; consumption $c$ determines the end-of-period assets $a = m - c$.
 
-## Stage YAML
+## Stage File
 
-```yaml
-name: BufferStockConsumption
+The stage file, `declaration/stages/buffer_stock/buffer_stock.bl`, states the model: the sets of resources and assets, the parameters with their descriptions, the two shocks and their laws, utility and the set of feasible consumption, the two forward blocks, the two value blocks and the policy block, whose line is the maximization alone.
 
-symbols:
-  spaces:
-    Xm: "@def R+"       # market resources
-    Xa: "@def R+"        # end-of-period assets
+```bl
+@stage: buffer_stock
 
-  prestate:
-    a: "@in Xa"          # end-of-period assets (from previous period)
+Xm := ℝ₊₊
+Xa := ℝ₊₊
 
-  exogenous:
-    psi:
-      - "@in R++"
-      - "@dist LogNormal(1, sigma_psi)"     # permanent shock, E[psi] = 1
-    xi:
-      - "@in R+"
-      - "@dist Mixture(p_zero, 0, LogNormal(1, sigma_xi) / (1 - p_zero))"
-                                             # transitory shock, E[xi] = 1
+β : (0,1)        :: ["discount factor"]
+ρ : (1, inf)     :: ["coefficient of relative risk aversion, greater than one"]
+R : ℝ₊₊          :: ["gross interest rate"]
+Γ : ℝ₊₊          :: ["deterministic permanent income growth factor"]
+σ_ψ : ℝ₊         :: ["standard deviation of the log permanent shock"]
+σ_ξ : ℝ₊         :: ["standard deviation of the log transitory shock, conditional on a positive draw"]
+μ_ξ : ℝ          :: ["log-mean of the positive transitory draw; E[ξ] = 1 requires μ_ξ = -log(1 - p_zero) - σ_ξ^2/2"]
+p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
 
-  states:
-    m: "@in Xm"          # market resources (after shocks)
+ψ : ℝ₊₊
+ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)
+ξ : ℝ₊
+ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
 
-  poststates:
-    a_nxt: "@in Xa"      # end-of-period assets
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
+𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]
+𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]
 
-  controls:
-    c: "@in R+"
+Γ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}   :: [id=feasible_consumption]
 
-  values:
-    V[<]: "@in R"
-    V: "@in R"
+[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {
+    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]
+}
 
-  values_marginal:
-    dV[<]: "@in R+"
-    dV: "@in R+"
+[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {
+    a = m - c                       :: [id=savings]
+}
 
-  parameters:
-    beta: "@in (0,1)"
-    rho: "@in (1, Inf)"
-    R: "@in R++"
-    G: "@in R++"
-    sigma_psi: "@in R+"
-    sigma_xi: "@in R+"
-    p_zero: "@in [0,1)"
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]               :: [id=value]
+}
 
-equations:
-  arvl_to_dcsn_transition: |
-    m = R * a[<] / (G * psi) + xi
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]
+}
 
-  dcsn_to_cntn_transition: |
-    a_nxt[>] = m - c
-
-  cntn_to_dcsn_builder:
-    Bellman: |
-      V = max_c{c^(1-rho)/(1-rho) + beta * V[>]}
-    InvEuler: |
-      c = (beta * dV[>])^(-1/rho)
-    ShadowBellman: |
-      dV = c^(-rho)
-
-  dcsn_to_arvl_builder:
-    Bellman: |
-      V[<] = E_{psi, xi}[(G * psi)^(1-rho) * V]
-    ShadowBellman: |
-      dV[<] = R * E_{psi, xi}[(G * psi)^(-rho) * dV]
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
+}
 ```
 
 ### Arrival Transition
 
-The arrival transition $m = R\,a^{<}\!/(\Gamma\psi) + \xi$ combines two steps from the levels problem:
+The arrival block `arvl_to_dcsn` writes $m = R\,k/(\Gamma\psi) + \xi$, which combines two steps from the levels problem:
 
-1. **Bank balances**: $b = R\,a\,/(\Gamma\psi)$, where the denominator $\Gamma\psi$ is the realized permanent income growth factor.
+1. **Bank balances**: $b = R\,k/(\Gamma\psi)$, where the denominator $\Gamma\psi$ is the realized permanent income growth factor.
 2. **Market resources**: $m = b + \xi$, adding transitory income.
 
 ### Builders
 
-**cntn_to_dcsn_builder** ($\mathbb{B}$): The decision builder contains the maximization problem and its EGM sub-equations:
+- `cntn_to_dcsn`, the decision value builder: $V = u(c) + \beta V^{>}$, at the consumption the policy chooses.
+- `policy`, the policy builder: the maximization of $u(c') + \beta V^{>}$ over consumption $c' < m$.
+- `dcsn_to_arvl`, the arrival value builder: $V^{<} = \mathbb{E}_{\psi,\xi}[(\Gamma\psi)^{1-\rho}\, V]$, the decision value read at $m = R\,k/(\Gamma\psi) + \xi$.
 
-- `Bellman`: the Bellman equation at the decision perch
-- `InvEuler`: inverted Euler equation for EGM (consumption from marginal continuation value)
-- `ShadowBellman`: envelope condition (marginal value from consumption)
+The stage file states no derivative and no numerical method: the marginal blocks state the derivatives, and the methods file binds the methods, as the next section shows.
 
-**dcsn_to_arvl_builder** ($\mathbb{I}$): The arrival builder integrates over both shocks with the normalization weight:
+## Methods, Block Files and Settings
 
-- `Bellman`: $V^{<}(a) = \mathbb{E}_{\psi,\xi}[(\Gamma\psi)^{1-\rho}\, V(m)]$ where $m = Ra/(\Gamma\psi) + \xi$
-- `ShadowBellman`: $dV^{<}(a) = R\,\mathbb{E}_{\psi,\xi}[(\Gamma\psi)^{-\rho}\, dV(m)]$
+The methods file, `declaration/methods/buffer_stock.yml`, binds the endogenous grid method on the policy builder with its block file and its exogenous grid of savings; the linear interpolation of the consumption function at the policy builder's [Evaluation](../../Bellman-Sym/reference/operations.md#evaluation), `policy.evaluate`, which writes no grid, since its knots are the pairs the method computes; the marginal blocks of the decision and arrival value builders; Gauss–Hermite quadrature at the expectation over the two shocks; and the linear interpolation of the arrival value and its stated derivative at the arrival builder's Evaluation, `dcsn_to_arvl.evaluate.value` and `dcsn_to_arvl.evaluate.marginal`, on the grid of assets. Each grid is the setting `grid`, whose value is the grid's kind, the tag `!Cartesian`, with the grid's order and bounds beside it ([Methodization](../../Bellman-Sym/04-methodization.md) §3):
 
-The $R$ factor in the marginal-value propagation arises from differentiating the arrival transition with respect to $a$.
+```yaml
+stage: buffer_stock
+# The buffer-stock stage's methods. The stage file writes the values and the
+# maximization alone; the block file buffer_stock_egm.bl, beside this file,
+# opens the policy builder with the endogenous grid method, and the block file
+# marginals.bl states the derivatives of the decision value and the arrival
+# value, one marginal block for each value builder.
+#
+# At the decision side, the endogenous grid method stands on the policy builder
+# itself, and its setting grid names the exogenous grid of savings a on which
+# its candidate line is evaluated: the kind of the grid is the tag on the value
+# of grid, !Cartesian, and its order and bounds, the settings n_a, a_min and
+# a_max, stand beside it. The consumption function is read by linear
+# interpolation between the candidate pairs the method computes; the
+# interpolation is bound at the policy builder's Evaluation, policy.evaluate,
+# and writes no grid, since its knots are the pairs the method stores. The
+# decision value's derivative, D_{m}V = 𝑑𝑢(c), is read through the interpolated
+# consumption and takes no representation of its own, and the decision value
+# is not represented, as the HARK solution builds no value function.
+#
+# At the arrival builder dcsn_to_arvl, the expectation over the two income
+# shocks is taken by quadrature with the node counts the settings name, seven
+# for each shock, the point mass of the transitory shock at zero exact; and the
+# arrival value and its stated derivative, D_{k}V[<], are represented at the
+# Evaluation of the arrival builder, dcsn_to_arvl.evaluate.value and
+# dcsn_to_arvl.evaluate.marginal, by the basis !Linear, read between its nodes
+# by linear interpolation, on the grid of assets k that the setting grid names
+# by its kind, !Cartesian, with its order and bounds beside it.
+# The counts and the grids are those of the HARK solution of this model in the
+# QuantEcon community library (projects/HARK/buffer-stock/tutorial.ipynb,
+# HARK 0.17.1), whose seven values per shock are equiprobable conditional means
+# and whose 960 asset points from 0.001 to 20 are exponentially nested with
+# factor 3, one grid serving as the exogenous grid of savings and as the grid of
+# assets; the method table names no equiprobable rule and no nesting, so the
+# rule here is Gauss-Hermite and each grid is stated by its order and bounds.
+methods:
+  - on: policy
+    method: !egm
+    block: buffer_stock_egm.bl
+    settings: {grid: !Cartesian, orders: {a: n_a}, bounds: {a: [a_min, a_max]}}
+  - on: policy.evaluate
+    method: !Linear
+  - on: cntn_to_dcsn
+    method: !marginals
+    block: marginals.bl
+  - on: dcsn_to_arvl
+    method: !marginals
+    block: marginals.bl
+  - on: E_ψ_ξ
+    method: !gauss-hermite
+    settings: {n_nodes: [n_ψ_nodes, n_ξ_nodes]}
+  - on: dcsn_to_arvl.evaluate.marginal
+    method: !Linear
+    settings: {grid: !Cartesian, orders: {k: n_k}, bounds: {k: [k_min, k_max]}}
+  - on: dcsn_to_arvl.evaluate.value
+    method: !Linear
+    settings: {grid: !Cartesian, orders: {k: n_k}, bounds: {k: [k_min, k_max]}}
+```
+
+The block file `buffer_stock_egm.bl` holds the method block of the endogenous grid method: the inverted Euler equation, the grid line that gives the resources at each saving, and the identification of consumption with its candidate.
+
+```bl
+@methods: buffer_stock
+# The endogenous grid method as the method block of the policy builder, whose
+# stage file states the maximization alone. The candidate line reads the
+# derivative of the continuation value by the term D_{a}V[>].
+# The grid line inverts the law of motion a = m - c, giving the decision state
+# m at each saving, and is named g_cntn_to_dcsn, the map from the continuation
+# perch to the decision perch; the methods file binds the interpolation of the
+# consumption function at the policy builder's Evaluation, policy.evaluate.
+
+[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
+    c[~] = c[>]                     :: [id=cons_choice]
+}
+```
+
+The block file `marginals.bl` holds the two marginal blocks. The decision value's line is the envelope condition; the arrival value's line keeps the factor $R/(\Gamma\psi)$ of the law of motion with the normalization $(\Gamma\psi)^{1-\rho}$, which together give the weight $R\,(\Gamma\psi)^{-\rho}$ inside the expectation.
+
+```bl
+@methods: buffer_stock
+# The derivatives of the two values of the buffer-stock stage, each stated by
+# the marginal block of the value builder that writes the value. The decision
+# value's line is the envelope condition. The arrival value's line keeps the
+# factor R/(Γ*ψ) of the law m = R*k/(Γ*ψ) + ξ and the normalization
+# (Γ*ψ)^(1-ρ) of the value, since that law is not the identity.
+
+[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+    D_{m}V = 𝑑𝑢(c)                                  :: [id=marginal]
+}
+
+[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+    D_{k}V[<] = E_{ψ,ξ}(R * (Γ*ψ)^(-ρ) * D_{m}V)    :: [id=marginal]
+}
+```
+
+The settings file, `declaration/settings/buffer_stock.yml`, gives the numbers of quadrature nodes of the two shocks, the exogenous grid of savings and the grid of assets:
+
+```yaml
+# The buffer-stock stage's numerical settings: the quadrature nodes of the two
+# income shocks at the arrival builder's expectation, the exogenous grid of
+# savings a of the endogenous grid method, and the grid of assets k on which
+# the arrival value and its derivative are represented. The values are those
+# of the HARK solution of this model in the QuantEcon community library
+# (projects/HARK/buffer-stock/tutorial.ipynb): seven points per shock, and 960
+# asset points from 0.001 to 20, one grid in that solution for savings and for
+# assets.
+settings:
+  n_ψ_nodes: 7
+  n_ξ_nodes: 7
+  n_a: 960
+  a_min: 0.001
+  a_max: 20.0
+  n_k: 960
+  k_min: 0.001
+  k_max: 20.0
+```
 
 ## Period and Trellis
 
-### Period Template
-
-```yaml
-name: BufferStockPeriod
-
-stages:
-  - consumption: !stage
-```
-
-A single non-branching stage per period.
-
-### Stationary Trellis
-
-```yaml
-name: BufferStockLifecycle
-
-periods:
-  - buffer_stock_period: !period    # repeated identically (stationary)
-
-inter_connectors:
-  - rename: {a_nxt: a}             # end-of-period assets → next period's prestate
-```
-
-The model is stationary: every period uses the same stage file with the same parameters. The inter-period connector maps the poststate `a_nxt` to the next period's prestate `a`.
+The model is stationary: every period holds the one stage with the same parameters, and the inter-period connector joins the end-of-period assets $a$ of one period to the arrival state $k$ of the next. The application holds no recipe and no trellis file; [Trellises](../../Bellman-Sym/07-trellis.md) states how a trellis is written.
 
 ## Solution Method: EGM
 
 The Endogenous Grid Method solves this model by inverting the Euler equation:
 
 1. **Start** with continuation marginal value $dV^{>}(a)$ on an exogenous grid of end-of-period assets $\{a_1, \dots, a_n\}$.
-2. **Expectation** (dcsn_to_arvl_builder): $dV^{<}(a_i) = R\,\mathbb{E}_{\psi,\xi}[(\Gamma\psi)^{-\rho}\, dV(Ra_i/(\Gamma\psi) + \xi)]$.
+2. **Expectation** (the marginal block `arvl_marginal`): $dV^{<}(a_i) = R\,\mathbb{E}_{\psi,\xi}[(\Gamma\psi)^{-\rho}\, dV(Ra_i/(\Gamma\psi) + \xi)]$.
 3. **InvEuler**: $c_i = (\beta \cdot dV^{<}(a_i))^{-1/\rho}$.
-4. **Endogenous grid**: $m_i = a_i + c_i$.
-5. **Envelope**: $dV_i = c_i^{-\rho}$.
+4. **Endogenous grid** (`g_cntn_to_dcsn`): $m_i = a_i + c_i$.
+5. **Envelope** (the marginal block `dcsn_marginal`): $dV_i = c_i^{-\rho}$.
 6. **Iterate** until convergence.
 
 The normalization weight $(\Gamma\psi)^{-\rho}$ in the marginal-value expectation (step 2) is the key difference from a model without permanent income growth.
 
 ## Calibration (Baseline)
 
-```yaml
-calibration:
-  R: 1.03              # gross interest rate
-  beta: 0.96           # discount factor
-  G: 1.03              # permanent income growth factor
-  rho: 2               # CRRA coefficient
-  sigma_psi: 0.1       # std dev of log permanent shock
-  sigma_xi: 0.1        # std dev of log transitory shock (conditional on employment)
-  p_zero: 0.005        # unemployment probability
-
-settings:
-  grid_max_a: 50        # maximum assets for grid
-  grid_size: 100        # number of grid points
-```
+The application holds no calibration file. A baseline calibration takes `R` = 1.03, `β` = 0.96, `Γ` = 1.03, `ρ` = 2, `σ_ψ` = 0.1, `σ_ξ` = 0.1 and `p_zero` = 0.005; `μ_ξ` follows from `σ_ξ` and `p_zero` by the description the stage file gives it, `μ_ξ = -log(1 - p_zero) - σ_ξ^2/2`, so that the mean of $\xi$ is one. The numerical settings are those of the settings file above.
 
 ## Key Features
 
@@ -237,4 +298,4 @@ The transitory shock $\xi$ has a point mass at zero (probability $\wp > 0$): the
 
 ### Weighted Expectations in the Arrival Builder
 
-The dcsn_to_arvl_builder propagates both value and marginal value through a $(\Gamma\psi)$-weighted expectation. This weight is an artifact of the normalization, not an economic primitive: in the levels problem, the arrival builder would be a plain expectation $V^{<} = \mathbb{E}[V]$.
+The arrival builder `dcsn_to_arvl` writes the value, and the marginal block `arvl_marginal` states its derivative, each as a $(\Gamma\psi)$-weighted expectation. This weight is an artifact of the normalization, not an economic primitive: in the levels problem, the arrival builder would be a plain expectation $V^{<} = \mathbb{E}[V]$.

@@ -1,6 +1,6 @@
 policy                    !egm   block cons_egm.bl
 cntn_to_dcsn:Evaluation   !marginals   block cons_egm.bl
-cntn_to_dcsn:Evaluation   !Cartesian
+cntn_to_dcsn:Evaluation   !Linear
 
 STAGE cons / FORWARD BUILDER dcsn → cntn (dcsn_to_cntn)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -62,9 +62,10 @@ Method
   !marginals   block cons_egm.bl                       cntn_to_dcsn:Evaluation
 
 Method
-  !Cartesian   handler                                 cntn_to_dcsn:Evaluation
+  !Linear   handler                                    cntn_to_dcsn:Evaluation
 
 Options
+  grid = !Cartesian
   orders = {'m': 'n_m'}
   bounds = {'m': ('m_min', 'm_max')}
 ──────────────────────────────────────────────────────────────────────────────
@@ -123,6 +124,11 @@ Conditions
 
 Method
   !egm   cons-port:egm   block cons_egm.bl                              policy
+
+Options
+  grid = !Cartesian
+  orders = {'a': 'n_a'}
+  bounds = {'a': ('a_min', 'a_max')}
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
   17  c = argmax_{cp : Γ(m)}(𝑢(cp) + V[>])  :: [id=optimality]

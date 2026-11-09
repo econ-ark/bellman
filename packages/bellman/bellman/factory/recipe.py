@@ -30,8 +30,10 @@ from bellman.factory.loading import (
     KINDS,
     METADATA,
     _mapping_and_digest,
+    is_addition_path,
     load_stage,
     plain_python,
+    read_addition,
     read_trellis_file,
 )
 from bellman.refusals import FactoryError
@@ -533,7 +535,9 @@ def _setting_names(read, key, *, directory, file, cache):
                 )
     for listed in read["stages"][key]["methods"].values():
         for name in listed:
-            if not name.startswith("$"):
+            # the settings an addition declares are the semantics' to read
+            # (specification 0.7, unit U3), so an addition names none here
+            if not name.startswith("$") and not is_addition_path(name):
                 mapping = _read_source(
                     name,
                     "methods",
@@ -548,9 +552,13 @@ def _setting_names(read, key, *, directory, file, cache):
 
 
 def _strings_in(value):
-    """Every string among the values of a nested mapping or sequence."""
+    """Every string among the values of a nested mapping or sequence, but
+    those of a tagged value, the kind of a grid written `grid: !Cartesian`,
+    which names no setting (AMD-MB-003 §3)."""
     if isinstance(value, str):
         yield value
+    elif isinstance(value, Mapping) and "__yaml_tag__" in value:
+        return
     elif isinstance(value, Mapping):
         for item in value.values():
             yield from _strings_in(item)
@@ -837,9 +845,9 @@ def _syntactic_periods(read, templates, *, stages, slot_parts, directory, file, 
             entry = read["stages"][key]
             if not _is_active(entry["periods"], h):
                 continue
-            mappings, lists = {}, {}
+            mappings, lists, additions = {}, {}, []
             for kind in KINDS:
-                mappings[kind], lists[kind] = _merged_source_list(
+                mappings[kind], lists[kind], added = _merged_source_list(
                     _source_names_at(entry, kind, h, file=file),
                     kind,
                     key,
@@ -848,6 +856,7 @@ def _syntactic_periods(read, templates, *, stages, slot_parts, directory, file, 
                     cache=cache,
                     slot_parts=slot_parts,
                 )
+                additions.extend(added)
             provenance = {**stages[key]["provenance"], "source_lists": lists}
             if entry["periods"] is not None:
                 provenance["active"] = list(entry["periods"])
@@ -856,6 +865,8 @@ def _syntactic_periods(read, templates, *, stages, slot_parts, directory, file, 
                 **mappings,
                 "provenance": provenance,
             }
+            if additions:
+                records[key]["additions"] = additions
         periods.append({"stages": records, "connectors": copy.deepcopy(template["connectors"])})
     return periods
 
@@ -874,14 +885,31 @@ def _source_names_at(entry, kind, h, *, file):
 
 
 def _merged_source_list(names, kind, stage, *, directory, file, cache, slot_parts):
-    """The merged assignments of one source list and its ordered provenance
-    entries: a file's entry from `_read_source`, a slot's from `slot_parts`,
-    its `names` the list of the fill's names of this kind that this stage
-    declares, each entry with its range key where it stands in a range list;
-    an unbound slot contributes nothing."""
-    chain, entries = [], []
+    """The merged assignments of one source list, its ordered provenance
+    entries and, for a methods list, the additions it names: a file's entry
+    from `_read_source`, a slot's from `slot_parts`, its `names` the list of
+    the fill's names of this kind that this stage declares, each entry with
+    its range key where it stands in a range list; an unbound slot
+    contributes nothing. A name of a methods list that ends in `.bl` names an
+    addition, a methods file in the stage grammar, read into its text and its
+    origin in the order named (specification 0.7, D3), with an entry of its
+    own among the provenance entries."""
+    chain, entries, additions = [], [], []
     for name, range_key in names:
         address = f"stages.{stage}.{kind}.{range_key or 'all'}"
+        if kind == "methods" and is_addition_path(name):
+            path = _registry_file(name, directory=directory, file=file, address=address)
+            addition = read_addition(path)
+            additions.append(addition)
+            entry = {
+                "source": name,
+                "path": str(path),
+                "sha256": sha256(addition["text"].encode("utf-8")).hexdigest(),
+            }
+            if range_key is not None:
+                entry["range"] = range_key
+            entries.append(entry)
+            continue
         if name.startswith("$"):
             slot = slot_parts[name[1:]]
             part = slot.parts[kind]
@@ -908,7 +936,7 @@ def _merged_source_list(names, kind, stage, *, directory, file, cache, slot_part
     # `{"methods": []}` when the list names no source, the form into which
     # `load_trellis` reads an inline mapping, so that the two readers of a
     # trellis write one record
-    return (load_methods(merged) if kind == "methods" else merged), entries
+    return (load_methods(merged) if kind == "methods" else merged), entries, additions
 
 
 # --- the sources ---

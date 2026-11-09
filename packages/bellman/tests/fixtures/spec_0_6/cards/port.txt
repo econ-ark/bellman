@@ -109,6 +109,7 @@ Method
   !Linear   handler                                    cntn_to_dcsn:Evaluation
 
 Options
+  grid = !Cartesian
   orders = {'k': 'n_k'}
   bounds = {'k': ('k_min', 'k_max')}
 ──────────────────────────────────────────────────────────────────────────────

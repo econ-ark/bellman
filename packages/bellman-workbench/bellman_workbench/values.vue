@@ -9,7 +9,7 @@
         <tr><th v-for="word in columns" :key="word">{{ word }}</th></tr>
       </thead>
       <tbody class="bl-code-small">
-        <tr v-for="row in rows" :key="tab + ' ' + row.name" class="bl-values-row"
+        <tr v-for="(row, index) in rows" :key="tab + ' ' + index" class="bl-values-row"
             :data-name="row.name">
           <td class="bl-values-name">
             <button v-if="row.line" :data-path="row.file" :data-line="row.line"
@@ -22,23 +22,16 @@
           <template v-if="tab === 'Methods'">
             <td>
               <select v-if="row.choices.length" class="bl-values-method"
-                      :class="{ 'bl-refusal-mark': row.name === refused || row.refused }"
-                      :title="row.refused ? row.note : null"
+                      :class="{ 'bl-refusal-mark': row.name === refused }"
                       :disabled="disabled || !file" @change="chooseTag(row, $event)">
                 <option v-if="!row.choices.includes(row.value)" :value="row.value" selected
                         disabled>{{ row.value || "no method" }}</option>
                 <option v-for="tag in row.choices" :key="tag" :value="tag"
                         :selected="tag === row.value">{{ tag }}</option>
               </select>
-              <span v-else class="bl-values-tag" :class="{ 'bl-refusal-mark': row.refused }"
-                    :title="row.refused ? row.note : null">{{ row.value }}</span>
+              <span v-else class="bl-values-tag">{{ row.value }}</span>
             </td>
-            <td class="bl-values-detail">
-              <span v-if="row.note && !row.refused" class="bl-values-refusal">{{
-                row.note
-              }}</span>
-              <template v-else>{{ row.detail }}</template>
-            </td>
+            <td class="bl-values-detail">{{ row.detail }}</td>
           </template>
           <template v-else>
             <td class="bl-values-detail">{{ row.detail }}</td>
@@ -75,25 +68,22 @@
 // that no table drawn from an earlier reading takes it out; the input of a
 // parameter whose value the package refuses is marked, the package's
 // sentence its hover (unit L, Task 16; defects 4 and 5 of the UX
-// simulation). The choice of a Methods row whose entry the package refuses
-// is marked alone, the package's sentence its hover and not printed in the
-// row (AMD-MI-002 §6a rule 1; unit L, Task 18; defect 8 of the UX
-// simulation).
+// simulation). A Methods row is one method the stage binds, read from the
+// package (decision S7-W1 of specification 0.7); a row that offers no
+// choice shows its method as text, and a refusal of the methods stands in
+// the list under the error mark.
 //
 // Properties, each set from Python:
 //   tab       the tab shown: Parameters, Settings or Methods
-//   rows      one row each, {name, detail, value, choices, note, refused,
-//             file, line}: `name` the parameter, the setting or the
-//             target; `detail` the set the parameter is declared in, the
-//             kind of the setting's value, or the method the stage binds
-//             within the target; `value` the value as the file writes it,
-//             or as it was typed while its write waits, or the method's
-//             tag; `choices` the tags the package admits at the target,
-//             none for a parameter or a setting; `note` the refusal of the
-//             stage where it binds no method at the target, the package's
-//             refusal of the target's entry, or the package's refusal of a
-//             parameter's value; `refused` true where the package refuses
-//             the target's entry; `file` and `line` where the value or the
+//   rows      one row each, {name, detail, value, choices, note, file,
+//             line}: `name` the parameter, the setting or the place of a
+//             bound method; `detail` the set the parameter is declared in,
+//             the kind of the setting's value, or the method the stage
+//             binds there; `value` the value as the file writes it, or as
+//             it was typed while its write waits, or the method's tag;
+//             `choices` the tags the package admits at the place, none for
+//             a parameter or a setting; `note` the package's refusal of a
+//             parameter's value; `file` and `line` where the value or the
 //             method is written, null where no file writes it
 //   file      the file the tab writes, null where the recipe lists none,
 //             the tab then taking no value

@@ -1,0 +1,60 @@
+@methods: house_choice
+# Deliberate refusals (aspect A24) on the choice of keeping or adjusting the
+# house, whose stage file is
+# applications/housing-frictions/declaration/stages/house_choice/house_choice.bl.
+# No block of this file belongs to the application's methods; each is written
+# as an author rewriting stages/house_choice/methods.yml might write it by
+# mistake, and each comment names the rule of the union (the proposal's §4)
+# that refuses it. Every method written here takes no parameter, so the file
+# declares no setting. The derivative lines are those methods.house_choice.bl
+# appends, written again so that each block has a body, an empty body being
+# refused.
+
+# Refused twice. First, two sets on one coordinate: the partial signature
+# gives the choice d the set {adjust, keep}, where the stage's signature of
+# policy gives it {keep, adjust}. The two terms denote one set of labels, but
+# the order of the labels is the order in which (V_kp[>], V_adj[>])[d] selects,
+# so the terms differ in content and rule 4 refuses a coordinate of one name
+# with different content. Second, a line id twice: the line restates the
+# stage's discrete maximization under its id choice, which the stage's block
+# policy already holds (rule 5), and it would define d a second time besides
+# (defined-once, finding F1). The block's own method, written by its relative
+# subject, is admissible.
+[id=policy, method : !max, () -> (d : {adjust, keep} @ !ctrl) : !dcsn] {
+    d = argmax_{d}(V_kp[>], V_adj[>])                   :: [id=choice]
+}
+
+# Refused: a subject naming another block. The group places the expectation
+# of the arrival value builder in the decision value builder, whose
+# derivative lines the arrival value's derivative lines read, and its subject
+# begins with dcsn_to_arvl, a block other than the enclosing cntn_to_dcsn
+# (rule 7). The derivative lines are admissible.
+[id=cntn_to_dcsn
+    | dcsn_to_arvl.E_η.method : !sum] {
+    D_{m_f}V = (D_{w_kp}V_kp[>], D_{w_adj}V_adj[>])[d]  :: [id=marginal_financial]
+    D_{m_h}V = (D_{h_kp}V_kp[>], D_{w_adj}V_adj[>])[d]  :: [id=marginal_housing]
+}
+
+# Refused: the same slot twice. The relative subject E_η.method and the
+# subject dcsn_to_arvl.E_η.method, whose first segment is the enclosing block
+# and so is read from it (rule 7), name one slot, the method slot of the
+# expectation's occurrences in this block, and fill it with two different
+# methods; rule 4 refuses two entries of one key with different content,
+# naming both. The derivative lines are admissible.
+[id=dcsn_to_arvl
+    | E_η.method : !sum
+    | dcsn_to_arvl.E_η.method : !exact] {
+    D_{y_f}V[<] = E_{η}((1 + r)*D_{m_f}V)               :: [id=marginal_financial]
+    D_{y_h}V[<] = E_{η}(D_{m_h}V)                       :: [id=marginal_housing]
+}
+
+# Refused: a line id twice, inside a branch. The nested block is merged by its
+# label keep with the stage's branch of that label (rule 3 read by label under
+# the parent matched by id, finding F19), and its line restates the branch's
+# line housing_kept under the same id (rule 5); it would define h_kp a second
+# time besides (defined-once).
+[id=dcsn_to_cntn] {
+    [label=keep] {
+        h_kp = m_h                                      :: [id=housing_kept]
+    }
+}

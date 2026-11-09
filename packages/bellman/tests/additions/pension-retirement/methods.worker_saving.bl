@@ -1,0 +1,49 @@
+@methods: worker_saving
+# The methods of the worker's saving stage as an addition to
+# applications/pension-retirement/declaration/stages/worker_saving/worker_saving.bl:
+# time iteration on the policy builder, with the two first-order conditions of
+# worker_saving_foc.bl appended as its lines, the Euler equation in financial
+# assets and the Euler equation in pension assets, each with its
+# complementarity clause; the envelope line and the pension line of the
+# decision value, and the two derivative lines of the arrival value, from the
+# two blocks of marginals_worker_saving.bl. The block ids foc, dcsn_marginal
+# and arvl_marginal of the block files become the ids of the builders they
+# were bound to, policy, cntn_to_dcsn and dcsn_to_arvl. The YAML file binds
+# no representation and no setting, and leaves the expectation E_w unbound.
+#
+# The YAML gives !time-iteration no grid. Under D5 (AAS, 4 November 2026;
+# the writer's sheet §7) the policy builder's grid is its own typing entry,
+# here the decision grid on which the two relations are solved, one factor
+# per state coordinate of the decision perch, m_f, m_p and w_d (F40); the
+# nine settings it reads are declared with their domains (the sheet §6) and
+# are valued in no file, since the application has no settings file.
+#
+# The block file foc writes no line that defines c or c_p: both lines are
+# relations with a ⟂ clause, so nothing is left out under the writer's
+# sheet §4.1.
+
+n_m_f : ℕ            :: ["number of points of the grid of financial resources"]
+m_f_min : ℝ₊₊        :: ["lower bound of the grid of financial resources"]
+m_f_max : ℝ₊₊        :: ["upper bound of the grid of financial resources"]
+n_m_p : ℕ            :: ["number of points of the grid of pension assets"]
+m_p_min : Xp         :: ["lower bound of the grid of pension assets"]
+m_p_max : Xp         :: ["upper bound of the grid of pension assets"]
+n_w_d : ℕ            :: ["number of points of the grid of earnings"]
+w_d_min : ℝ₊₊        :: ["lower bound of the grid of earnings"]
+w_d_max : ℝ₊₊        :: ["upper bound of the grid of earnings"]
+
+[id=policy, policy.method : !time_iteration
+    | policy.grid : !Cartesian(m_f=(m_f_min, m_f_max, n_m_f), m_p=(m_p_min, m_p_max, n_m_p), w_d=(w_d_min, w_d_max, n_w_d))] {    # the YAML named no grid for !time-iteration; the decision grid is written as D5 directs (F40)
+    𝑑𝑢(c) = β*D_{y_f}V[>] ⟂ m_f - c - c_p >= 0                  :: [id=euler_financial]
+    𝑑𝑢(c) = β*(1 + 𝑑𝜒(c_p))*D_{y_p}V[>] ⟂ 0 <= c_p <= w_d        :: [id=euler_pension]
+}
+
+[id=cntn_to_dcsn] {
+    D_{m_f}V = 𝑑𝑢(c)                            :: [id=marginal_financial]
+    D_{m_p}V = β*D_{y_p}V[>]                    :: [id=marginal_pension]
+}
+
+[id=dcsn_to_arvl] {    # no form in §4: two blocks of marginals_worker_saving.bl chosen by signature, whose line ids marginal_financial and marginal_pension repeat those of the first block
+    D_{y_f_w}V[<] = E_{w}((1 + r_f)*D_{m_f}V)   :: [id=marginal_financial]
+    D_{y_p_w}V[<] = E_{w}((1 + r_p)*D_{m_p}V)   :: [id=marginal_pension]
+}

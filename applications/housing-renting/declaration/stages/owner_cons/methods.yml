@@ -6,12 +6,16 @@ stage: owner_cons
 # limit and the candidate segments at the tax thresholds, removes the
 # candidates below the upper envelope with the routine the settings name, and
 # holds the decision value, its derivative and the consumption policy on the
-# cash grid by linear interpolation.
+# cash grid by linear interpolation. Each grid is written by its kind, the tag
+# !Cartesian on the setting grid, with its order and bounds beside it: the
+# savings grid in the settings of the !egm entry, and the cash grid in the
+# settings of the two representations, whose basis is !Linear.
 methods:
   - on: policy
     method: !egm
     block: ../../methods/owner_cons_egm.bl
     settings:
+      grid: !Cartesian
       orders: [a_nxt_points]
       bounds: [[a_nxt_min, a_nxt_max]]
       upper_envelope: upper_envelope
@@ -32,15 +36,17 @@ methods:
     method: !marginals
     block: ../../methods/marginals_owner_cons.bl
 
-  - on: cntn_to_dcsn.value
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [w_points]
       bounds: [[w_min, w_max]]
 
-  - on: cntn_to_dcsn.marginal
+  - on: cntn_to_dcsn.evaluate.marginal
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [w_points]
       bounds: [[w_min, w_max]]
 

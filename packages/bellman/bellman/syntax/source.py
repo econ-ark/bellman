@@ -27,6 +27,11 @@ value, a reserved set glyph (`Y := ℝ₊`), a finite set (`D := {work, retire}`
 a comprehension (`H := {i : ℤ | i >= 0, i <= 1}`), or an expression
 (`𝑑𝑢 := D_{c}(𝑢)`).
 
+The parts of a typing entry print as the entry writes them: the path of a
+component (`policy.evaluate[V[<]].method`), a word with its keyword arguments
+(`!egm(tol=tol_v)`), a grid with its factors (`!Cartesian(a=(a_min, a_max,
+n_a, !expmult))`), and the method or the grid classifier as that word or grid.
+
 The forms printed are those the corpus under `applications/` uses. A generated
 constructor outside them raises `NotImplementedError` naming the constructor.
 """
@@ -70,10 +75,92 @@ def to_source(term) -> str:
         return _clause(term)
     if isinstance(term, T.Complementary):
         return _complementary(term)
+    if isinstance(term, T.Path):
+        return _path(term)
+    if isinstance(term, T.word):
+        return _word(term)
+    if isinstance(term, T.keyword):
+        return _keyword(term)
+    if isinstance(term, T.argument):
+        return _argument(term)
+    if isinstance(term, T.grid):
+        return _grid(term)
+    if isinstance(term, T.factor):
+        return _factor(term)
+    if isinstance(term, T.Method):
+        return _word(term.m)
+    if isinstance(term, T.Grid):
+        return _grid(term.g)
     raise NotImplementedError(
         f"to_source prints an expression, a set expression, a block "
-        f"statement, a bound, or a declared multiplier; a {type(term).__name__} is none "
-        f"of these"
+        f"statement, a bound, a declared multiplier, or a part of a typing entry; a "
+        f"{type(term).__name__} is none of these"
+    )
+
+
+# --- the parts of a typing entry ---
+
+
+def _path(path) -> str:
+    """The path of a component as written, `policy.evaluate[V[<]].method`:
+    its segments joined by dots, each with its selectors in brackets."""
+    return ".".join(
+        segment.name + "".join(f"[{_selector(sel)}]" for sel in segment.selectors)
+        for segment in path.segments
+    )
+
+
+def _word(word) -> str:
+    """A `!`-word with its keyword arguments, `!egm(tol=tol_v)`; a word
+    without arguments prints bare, `!Linear`."""
+    if not word.arguments:
+        return "!" + word.name
+    return "!" + word.name + "(" + ", ".join(_keyword(k) for k in word.arguments) + ")"
+
+
+def _keyword(keyword) -> str:
+    return f"{keyword.key}={_argument(keyword.value)}"
+
+
+def _argument(value) -> str:
+    """The value of a keyword argument: a name, a number, a quoted string, a
+    tuple of values, or a nested word with its own arguments."""
+    if isinstance(value, T.Name):
+        return value.name
+    if isinstance(value, T.Literal):
+        return _number(value.value)
+    if isinstance(value, T.Quoted):
+        return f'"{value.text}"'
+    if isinstance(value, T.Values):
+        return "(" + ", ".join(_argument(item) for item in value.items) + ")"
+    if isinstance(value, T.Nested):
+        return _word(value.word)
+    raise NotImplementedError(
+        f"to_source has no rule for the argument constructor {type(value).__name__}"
+    )
+
+
+def _grid(grid) -> str:
+    """A grid with its factors, `!Cartesian(a=(a_min, a_max, n_a))`."""
+    if not isinstance(grid, T.Cartesian):
+        raise NotImplementedError(f"to_source has no rule for the grid constructor {type(grid).__name__}")
+    return "!Cartesian(" + ", ".join(_factor(factor) for factor in grid.factors) + ")"
+
+
+def _factor(factor) -> str:
+    """One factor of a grid as written: the triple with its optional spacing
+    word, the pair of a feasible set and a count, or the name of the nodes."""
+    if isinstance(factor, T.Spaced):
+        items = [_argument(factor.lower), _argument(factor.upper), _argument(factor.count)]
+        if factor.spacing is not None:
+            items.append(_word(factor.spacing))
+        return f"{factor.coordinate}=({', '.join(items)})"
+    if isinstance(factor, T.Listed):
+        return f"{factor.coordinate}={factor.nodes}"
+    if isinstance(factor, T.Feasible):
+        return f"{factor.coordinate}=({factor.set}, {_argument(factor.count)})"
+    raise NotImplementedError(
+        f"to_source has no rule for the factor constructor {type(factor).__name__}"
     )
 
 
@@ -478,6 +565,8 @@ def _subscript(subscript) -> str:
 def _selector(sel) -> str:
     if isinstance(sel, (T.Key, T.Pos)):
         return str(sel.at)
+    if isinstance(sel, T.Term):
+        return _expr(sel.at, _SUM)
     raise NotImplementedError(
         f"to_source has no rule for the selector constructor {type(sel).__name__}"
     )

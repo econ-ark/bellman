@@ -1,0 +1,3 @@
+# The additions of the case studies
+
+The methods files, written as additions to their stage files, of the sixteen pre-implementation case studies of specification 0.7, with each case study's refusals file and the stage and addition files of the two new applications, copied here for the tests, since a test of the package reads only files of the package and of the applications. `expected.json`, written by the specification's tool from the check reports of the case studies, records for each run the stage file, the additions, the count of places the elaborated union gives and the names the addition created. Unit U6 moves the methods files to the applications and retires this copy.

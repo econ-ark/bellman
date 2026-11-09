@@ -523,10 +523,12 @@ def test_the_files_a_cell_may_take(lifecycle_folder):
     assert found[0].stage == "cons"
     # since decision SD-39 cons-port's `methods/cons.yml` binds the
     # demonstration's block file at the policy and at the decision builder,
-    # and `!Cartesian` on the envelope line; the arrival builder's entries
+    # and `!Linear` at the decision builder's Evaluation for the stated
+    # derivative, `cntn_to_dcsn.evaluate.marginal` (AMD-MB-002; AMD-MB-003); the arrival
+    # builder's entries
     # went with the arrival perch (AMD-MB-001 D8); its first comment line
     # names the stage file (SE-34)
-    assert found[0].targets == ("policy", "cntn_to_dcsn", "cntn_to_dcsn.envelope")
+    assert found[0].targets == ("policy", "cntn_to_dcsn", "cntn_to_dcsn.evaluate.marginal")
     assert found[0].comment.startswith("The consumption stage's methods. The stage file writes the maximization alone")
     assert recipe.choices(folder, "nothing") == []
 
@@ -1010,41 +1012,39 @@ def test_find_occurrence_and_uses_of_read_the_unsaved_recipe(scratch_folder):
 def test_the_methods_tab_offers_at_each_target_the_tags_the_package_admits_there(
     model_folder,
 ):
-    """Each row of the Methods tab offers the tags that the package admits
-    at the row's target, `admitted_methods` of `bellman.stage`, which tries
-    each method of the method table at the target's place under its
-    placement rule (AMD-MI-002 §5 rule 5; unit L, Task 18, defect 8 of the
-    UX simulation; K-I150). On the portfolio model's `cons.bl`, bound as the
-    recipe binds it, the policy block offers `!egm`, since it writes the
-    grid line, and not `!vfi`, which stands on the backward decision
-    builder alone; the forward blocks `arvl_to_dcsn` and `dcsn_to_cntn`
-    offer neither; each of the two statements offers the three
-    representations; and `!gauss-hermite`, which stands at an expectation
-    alone, is offered at no row. Every entry binds, so that no row is
-    refused."""
+    """Each row of the Methods tab is a method the stage binds, read from
+    `stage.methods` (decision S7-W1 of specification 0.7), and a row whose
+    method one YAML entry binds offers the tags that the package admits at
+    that entry's target, `admitted_methods` of `bellman.stage` (AMD-MI-002 §5
+    rule 5; unit L, Task 18; K-I150). On the portfolio model's `cons.bl`,
+    bound as the recipe binds it, the policy block offers `!egm`, since it
+    writes the grid line, and not `!vfi`, which stands on the backward
+    decision builder alone; the forward blocks `arvl_to_dcsn` and
+    `dcsn_to_cntn` offer neither; the one representation that the entries of
+    the value and of its marginal bind at the decision builder's Evaluation
+    is one row, named by its place, which offers no tag, since a tag written
+    at one of the two entries would leave them apart; and `!gauss-hermite`,
+    which stands at an expectation alone, is offered at no row."""
     folder = model.open_folder(model_folder)
     found = recipe.find_occurrence(folder, RECIPE, CONS)
     text = Path(found.origin).read_text(encoding="utf-8")
     cons = recipe.bind_occurrence(elaborate_text(text, found.origin), found)
     tab = recipe.methods_tab(folder, cons.stage, cons.record, "cons")
     assert (tab.file, tab.sentence) == ("declaration/stages/cons/methods.yml", None)
-    shown = {row.target: row.choices for row in tab.rows}
-    assert list(shown) == [
-        "policy",
-        "cntn_to_dcsn.value",
-        "cntn_to_dcsn.marginal",
-        "dcsn_to_arvl",
-        "arvl_to_dcsn",
-        "dcsn_to_cntn",
+    assert [(row.target, row.bound) for row in tab.rows] == [
+        ("policy", "!egm"),
+        ("cntn_to_dcsn:Evaluation", "!Linear"),
+        ("arvl_to_dcsn", "!deterministic"),
+        ("dcsn_to_cntn", "handler only"),
     ]
-    assert shown == {target: admitted_methods(cons.stage, target) for target in shown}
+    shown = {row.target: row.choices for row in tab.rows}
+    for target in ("policy", "arvl_to_dcsn", "dcsn_to_cntn"):
+        assert shown[target] == admitted_methods(cons.stage, target)
     assert "!egm" in shown["policy"] and "!vfi" not in shown["policy"]
     for target in ("arvl_to_dcsn", "dcsn_to_cntn"):
         assert {"!egm", "!vfi"}.isdisjoint(shown[target])
-    representations = ("!Cartesian", "!Linear", "!pchip")
-    assert shown["cntn_to_dcsn.value"] == shown["cntn_to_dcsn.marginal"] == representations
+    assert shown["cntn_to_dcsn:Evaluation"] == ()
     assert not any("!gauss-hermite" in choices for choices in shown.values())
-    assert not any(row.refused for row in tab.rows)
 
 
 # the stage files of the pension model of the UX simulation whose Methods
@@ -1052,6 +1052,7 @@ def test_the_methods_tab_offers_at_each_target_the_tags_the_package_admits_there
 # written for `arvl_to_dcsn` of `renter_cons`, whose required option
 # `n_paths` the entry does not write
 RENTER_CONS = "declaration/stages/renter_cons/renter_cons.bl"
+RENTER_CONS_METHODS = "declaration/stages/renter_cons/methods.yml"
 TENURE_PA = "declaration/stages/tenure_pa/tenure_pa.bl"
 MONTE_CARLO_REFUSED = (
     "Method target 'arvl_to_dcsn' in stage 'renter_cons': !monte-carlo has missing required "
@@ -1060,22 +1061,22 @@ MONTE_CARLO_REFUSED = (
 )
 
 
-def test_a_refused_methods_entry_marks_its_row_alone_and_a_branching_stage_offers_its_tags(
+def test_a_refused_methods_entry_binds_no_method_and_a_branching_stage_offers_its_tags(
     tmp_path,
 ):
-    """A methods entry that `methodize` refuses marks its own row alone,
-    and the other rows show the methods their entries bind; a branching
-    stage's rows offer the tags the package admits at their targets (unit L,
-    Task 18; defects 8 and 9 of the UX simulation). On a copy of the pension
-    model the UX simulation's post-doc built, `renter_cons.bl` bound as
-    `periods[1] / renter_cons` binds each entry of its methods file, and the
-    row `arvl_to_dcsn`, a forward block, offers no `!egm`. `!monte-carlo`,
-    which that block admits, written there in place of `!deterministic`, is
-    refused by `methodize`, since the entry writes no `n_paths`, and the stage
-    bound again binds no method, the package's sentence its note: the row
-    `arvl_to_dcsn` is then refused, that sentence its note and no method its
-    bound one, and each of the four other rows shows the method its entry
-    binds, with no note. The branching `tenure_pa.bl` bound as `periods[1] /
+    """A methods entry that `methodize` refuses leaves the stage with no
+    method bound, so that the Methods tab, which reads `stage.methods`
+    (decision S7-W1 of specification 0.7), has no row and the package's
+    sentence stands among the binding's notes, under the error mark; a
+    branching stage's rows offer the tags the package admits at their
+    targets (unit L, Task 18; defect 9 of the UX simulation). On a copy of
+    the pension model the UX simulation's post-doc built, `renter_cons.bl`
+    bound as `periods[1] / renter_cons` shows the four methods it binds, the
+    representation that the value's and the marginal's entries bind at one
+    Evaluation in one row, and the row `arvl_to_dcsn`, a forward block,
+    offers no `!egm`. `!monte-carlo`, which that block admits, written there
+    in place of `!deterministic`, is refused by `methodize`, since the entry
+    writes no `n_paths`. The branching `tenure_pa.bl` bound as `periods[1] /
     tenure_pa` shows a row for each entry of its methods file, each bound
     and offering the tags the package admits at its target, and the tab
     says no sentence."""
@@ -1092,15 +1093,13 @@ def test_a_refused_methods_entry_marks_its_row_alone_and_a_branching_stage_offer
     renter = bound(RENTER_CONS, "renter_cons")
     tab = recipe.methods_tab(folder, renter.stage, renter.record, "renter_cons")
     rows = {row.target: row for row in tab.rows}
-    targets = [
-        "policy.optimality.argmax",
-        "cntn_to_dcsn.value",
-        "cntn_to_dcsn.marginal_cash",
-        "arvl_to_dcsn",
-        "dcsn_to_cntn",
-    ]
-    assert list(rows) == targets and tab.sentence is None
-    assert all((row.bound, row.note, row.refused) == (row.tag, None, False) for row in tab.rows)
+    assert {target: row.bound for target, row in rows.items()} == {
+        "policy.optimality.argmax": "!root-find",
+        "cntn_to_dcsn:Evaluation": "!Linear",
+        "arvl_to_dcsn": "!deterministic",
+        "dcsn_to_cntn": "!deterministic",
+    }
+    assert tab.sentence is None
     assert rows["arvl_to_dcsn"].choices == admitted_methods(renter.stage, "arvl_to_dcsn")
     assert "!egm" not in rows["arvl_to_dcsn"].choices
     assert "!monte-carlo" in rows["arvl_to_dcsn"].choices
@@ -1112,31 +1111,16 @@ def test_a_refused_methods_entry_marks_its_row_alone_and_a_branching_stage_offer
     renter = bound(RENTER_CONS, "renter_cons")
     assert MONTE_CARLO_REFUSED in renter.notes
     tab = recipe.methods_tab(folder, renter.stage, renter.record, "renter_cons")
-    rows = {row.target: row for row in tab.rows}
-    assert list(rows) == targets
-    refused = rows.pop("arvl_to_dcsn")
-    assert (refused.tag, refused.bound, refused.note, refused.refused) == (
-        "!monte-carlo",
-        None,
-        MONTE_CARLO_REFUSED,
-        True,
-    )
-    assert refused.choices == admitted_methods(renter.stage, "arvl_to_dcsn")
-    assert {target: (row.bound, row.note, row.refused) for target, row in rows.items()} == {
-        "policy.optimality.argmax": ("!root-find", None, False),
-        "cntn_to_dcsn.value": ("!Linear", None, False),
-        "cntn_to_dcsn.marginal_cash": ("!Linear", None, False),
-        "dcsn_to_cntn": ("!deterministic", None, False),
-    }
+    assert (tab.rows, tab.file, tab.sentence) == ((), RENTER_CONS_METHODS, None)
 
     tenure = bound(TENURE_PA, "tenure_pa")
     tab = recipe.methods_tab(folder, tenure.stage, tenure.record, "tenure_pa")
     assert tab.sentence is None
-    assert [(row.target, row.tag, row.bound, row.note, row.refused) for row in tab.rows] == [
-        ("policy", "!max", "!max", None, False),
-        ("cntn_to_dcsn", "!Linear", "!Linear", None, False),
-        ("dcsn_to_cntn", "!monte-carlo", "!monte-carlo", None, False),
-        ("arvl_to_dcsn", "!deterministic", "!deterministic", None, False),
+    assert [(row.target, row.tag, row.bound) for row in tab.rows] == [
+        ("policy", "!max", "!max"),
+        ("cntn_to_dcsn.evaluate.value", "!Linear", "!Linear"),
+        ("dcsn_to_cntn", "!monte-carlo", "!monte-carlo"),
+        ("arvl_to_dcsn", "!deterministic", "!deterministic"),
     ]
     for row in tab.rows:
         assert row.choices and row.choices == admitted_methods(tenure.stage, row.target)

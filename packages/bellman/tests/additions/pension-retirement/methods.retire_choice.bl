@@ -1,0 +1,16 @@
+@methods: retire_choice
+# The methods of the choice between work and retirement as an addition to
+# applications/pension-retirement/declaration/stages/retire_choice/retire_choice.bl:
+# the derivatives of the choice value in the two assets, those of the branch
+# value the choice d selects, as authored lines of the decision value builder,
+# from the block dcsn_marginal of marginals_retire_choice.bl, whose id becomes
+# the builder's id cntn_to_dcsn. The YAML file binds no method on the policy
+# builder, whose discrete argmax over {work, retire} stands as the stage file
+# writes it. The branching block dcsn_to_cntn, whose two nested blocks are
+# labeled work and retire and whose four branch lines carry ids, takes
+# nothing: the union keeps it as the stage file writes it (rule 3).
+
+[id=cntn_to_dcsn] {
+    D_{y_f_d}V = (D_{y_f_wk}V_wk[>], D_{y_f_rt}V_rt[>])[d]  :: [id=marginal_financial]
+    D_{y_p_d}V = (D_{y_p_wk}V_wk[>], D_{y_p_rt}V_rt[>])[d]  :: [id=marginal_pension]
+}

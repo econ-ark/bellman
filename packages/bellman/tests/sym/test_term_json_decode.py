@@ -353,7 +353,7 @@ def test_root_mapping_without_class_key():
 
 
 def test_a_class_name_from_outside_terms():
-    for name in ["Path", "Tree", "Lark", "Token", "Transformer", "MappingProxyType", "dataclass", "field",
+    for name in ["PosixPath", "Tree", "Lark", "Token", "Transformer", "MappingProxyType", "dataclass", "field",
                  "dict", "list", "object", "str", "FILE.items", "bellman.syntax.terms.FILE", ""]:
         message = defect(file_of({"__class__": name}))
         assert "items[0]" in message and repr(name) in message, name

@@ -497,43 +497,55 @@ def _sorted_positions(found, previous):
             inventory.append((h, key, address, occurrence, None))
             continue
         try:
-            text, origin, digest, _ = stage_text_of(occurrence, address)
+            source = stage_text_of(occurrence, address)
         except FactoryError as error:
             error.add_note(f"Stage occurrence: {address}")
             raise
-        held = _unchanged_stage_at(previous, h, key, digest, origin)
+        held = _unchanged_stage_at(previous, h, key, source)
         if held is not None:
             inventory.append((h, key, address, held, None))
             continue
         module = texts.setdefault(
-            (digest, origin), {"text": text, "origin": origin, "occurrences": []}
+            source.construction,
+            {
+                "text": source.text,
+                "origin": source.origin,
+                "additions": source.additions,
+                "occurrences": [],
+            },
         )
-        if module["text"] != text:
+        if module["text"] != source.text:
             raise FactoryError(
                 f"{address}: distinct module texts have the same SHA-256",
                 rule="record-shape",
                 address=address,
-                written=digest,
+                written=source.digest,
                 write="one text per digest",
             )
         module["occurrences"].append(address)
-        inventory.append((h, key, address, occurrence, (digest, origin)))
+        inventory.append((h, key, address, occurrence, source.construction))
     return inventory, texts
 
 
-def _unchanged_stage_at(previous, h, key, digest, origin):
-    """The stage `previous` holds at `(h, key)` where it holds one of the
-    text `digest` at `origin`, else None."""
+def _unchanged_stage_at(previous, h, key, source):
+    """The stage `previous` holds at `(h, key)` where it holds one constructed
+    from the text and the additions of `source`, else None."""
     if previous is None or h >= len(previous["periods"]):
         return None
     held = previous["periods"][h]["stages"].get(key)
-    if (
-        isinstance(held, ElaboratedStage)
-        and held.provenance.get("sha256") == digest
-        and held.provenance.get("origin") == origin
-    ):
+    if isinstance(held, ElaboratedStage) and _construction_of(held) == source.construction:
         return held
     return None
+
+
+def _construction_of(stage):
+    """What the construction of a stage version depended on, as its provenance
+    records it: the digest and the origin of its text and those of each
+    addition, comparable with `StageText.construction`."""
+    provenance = stage.provenance
+    return (provenance.get("sha256"), provenance.get("origin")) + tuple(
+        (addition["sha256"], addition["origin"]) for addition in provenance.get("additions", ())
+    )
 
 
 def _constructed(texts):
@@ -542,7 +554,9 @@ def _constructed(texts):
     constructed = {}
     for construction, module in texts.items():
         try:
-            constructed[construction] = construct_stage(module["text"], module["origin"])
+            constructed[construction] = construct_stage(
+                module["text"], module["origin"], module["additions"]
+            )
         except Exception as error:
             error.add_note("Affected stage occurrences: " + ", ".join(module["occurrences"]))
             raise
@@ -924,14 +938,15 @@ def _stages_with_records(elaborated, syntactic):
                     written=repr(record[kind_name])[:80],
                     write=f"{kind_name}: {{...}}",
                 )
-        digest = stage_text_of(record, address).digest
-        if digest != occurrence.provenance.get("sha256"):
+        source = stage_text_of(record, address)
+        if source.construction != _construction_of(occurrence):
             raise FactoryError(
-                f"{address} of the second argument holds another text than the version the first "
-                "holds; a changed stage file is constructed again before it is bound",
+                f"{address} of the second argument holds another text, or other additions, than "
+                "the version the first holds; a changed stage file is constructed again before "
+                "it is bound",
                 rule="record-shape",
                 address=address,
-                written=digest,
+                written=source.digest,
                 write="elaborate_trellis(syntactic, elaborated) before the verbs",
             )
     return [(h, key, address, occurrence, records[h, key]) for h, key, address, occurrence in left]

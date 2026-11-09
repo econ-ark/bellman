@@ -1,0 +1,35 @@
+@methods: buffer_stock
+# The methods of the buffer-stock stage as an addition to buffer_stock.bl: the
+# endogenous grid method on the policy builder with its savings grid, the
+# linear reading of the consumption function at the policy builder's
+# Evaluation, the derivative lines of the two value builders, the quadrature of
+# the arrival expectation with one node count per shock, and the linear
+# representation of the arrival value and of its derivative on the asset grid,
+# each named at its own Evaluation.
+
+n_a : ℕ              :: ["number of points of the savings grid"]
+a_min : Xa           :: ["lower bound of the savings grid"]
+a_max : Xa           :: ["upper bound of the savings grid"]
+n_k : ℕ              :: ["number of points of the asset grid"]
+k_min : Xa           :: ["lower bound of the asset grid"]
+k_max : Xa           :: ["upper bound of the asset grid"]
+n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
+n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
+
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+    | evaluate.method : !Linear] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
+    c[~] = c[>]                     :: [id=cons_choice]
+}
+
+[id=cntn_to_dcsn] {
+    D_{m}V = 𝑑𝑢(c)                                  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl
+    | E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))] {
+    D_{k}V[<] = E_{ψ,ξ}(R * (Γ*ψ)^(-ρ) * D_{m}V)    :: [id=marginal]
+}

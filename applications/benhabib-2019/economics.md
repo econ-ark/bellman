@@ -171,8 +171,8 @@ Table 4 is a transition matrix.
 
 ## Numerical methods
 
-`declaration/stages/benhabib_bellman/methods.yml` holds the entries of the legacy's
-`bellman_methods.yml` that have a target in the stage: `!egm` at `policy`, with
+`declaration/stages/benhabib_bellman/methods.yml` holds one entry of the legacy's
+`bellman_methods.yml`, `!egm` at `policy`, with
 the legacy's handler. The handler is a placeholder, `dolo:egm_backward`; no
 callable realizes the tag yet. The `!egm`
 entry opens the policy builder with the method block of
@@ -189,8 +189,9 @@ parts of the legacy file are not copied:
   a setting;
 - the `!analytic-inverse` entry at `policy.InvEuler`, because `configure` stops
   with an error at a method bound at a node;
-- the `evaluate` entry, `!Linear` on the line `c = c[>]`, because the
-  interpolation of the policy is part of the `!egm` method;
+- the `evaluate` entry, `!Linear` on the line `c = c[>]`; the interpolation of
+  the policy is a representation written at the policy builder's Evaluation,
+  `policy.evaluate`, and the application binds none there;
 - the `!Identity` entry at `dcsn_to_arvl`, because the stage has no arrival
   perch and so no builder from the decision perch to it.
 

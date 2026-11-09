@@ -1,8 +1,9 @@
 stage: tenure
 
 # Numerical choices for tenure.bl, taken from the replication code of Dobrescu
-# and Shanker (2026), Application 2. The stage constructs, and the four targets
-# below, policy, cntn_to_dcsn, E_ε and arvl_to_dcsn, resolve on tenure.bl.
+# and Shanker (2026), Application 2. The stage constructs, and the five targets
+# below, policy, cntn_to_dcsn, cntn_to_dcsn.evaluate.value, E_ε and
+# arvl_to_dcsn, resolve on tenure.bl.
 
 methods:
   # The comparison of the two branch values and the choice of branch. A tie
@@ -22,11 +23,18 @@ methods:
 
   # The branch values and their marginals are the consumption stages' decision
   # functions read at the branch states, by linear interpolation in cash on hand
-  # and in total wealth.
-  - on: cntn_to_dcsn
+  # and in total wealth; the representation stands at the decision builder's
+  # Evaluation, cntn_to_dcsn.evaluate.value, by the basis !Linear on the grid
+  # of assets and housing that the setting grid names by its kind, !Cartesian,
+  # with its order and bounds, the settings n_a, a_min, a_max and n_h, h_min,
+  # h_max, beside it.
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     handler: dcsmm:interp_as_scalar
     settings:
+      grid: !Cartesian
+      orders: {a_d: n_a, h_d: n_h}
+      bounds: {a_d: [a_min, a_max], h_d: [h_min, h_max]}
       extrapolate: extrap_policy
       clamp_factor: clamp_max_factor
 

@@ -14,14 +14,29 @@ it has no position, before the message, and its rule after it.
 import pytest
 
 from bellman.native.hypergraphs import copy_native
-from bellman.refusal_examples import EXAMPLES
-from bellman.stage import load_stage
+from bellman.refusal_examples import EXAMPLES, INVERSE_EULER
+from bellman.stage import admitted_methods, load_stage
 from bellman.trellis import load_recipe
 from bellman.refusal_catalogue import catalogue, refusal_of
-from bellman.refusals import (FACTORY_RULES, RULES, TARGET_RULES, ConstructionError, FactoryError,
+from bellman.refusals import (FACTORY_RULES, RULE_B_C, RULES, TARGET_RULES, ConstructionError, FactoryError,
                               NotConstructed, TargetError)
 from bellman.stage.grains import graph_of
-from conftest import branching, cons_obs_text, shock_branching, stage_from_text
+from conftest import CORPUS, branching, cons_obs_text, corpus_text, shock_branching, stage_from_text
+
+# the value line of the branching fixture, after which its tests write a
+# derivative line of the choice value
+CHOICE_VALUE = "    V = (V_w[>], V_r[>])[d]                :: [id=choice_value]\n"
+# the grid line and the identification of the inverse Euler form, which the
+# tests of the candidate rules change
+GRID_LINE = "    m[>] = a + c[>]        :: [id=grid]\n"
+IDENTIFICATION = "    c = c[>]               :: [id=identification]\n"
+
+
+def cons_with(written, changed):
+    """The consumption stage's text with one line changed, elaborated."""
+    text = corpus_text("cons")
+    assert text.count(written) == 1, written
+    return stage_from_text(text.replace(written, changed), CORPUS["cons"])
 
 
 def printed(error):
@@ -65,6 +80,23 @@ def test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_i
         for refusal in (error, word):
             for internal in ("Error trying to process rule", "word_type", "TAGBANG"):
                 assert internal not in str(refusal)
+    if rule == "typing-entry-unattached":
+        # the same refusal for an entry of a block's header, a typing entry
+        # before the signature and a handler binding in a group, at the
+        # block's address
+        for header in ("[id=b, policy.method : !egm, (x : ℝ) : !arvl -> (y : ℝ) : !dcsn]",
+                       '[id=b, (x : ℝ) : !arvl -> (y : ℝ) : !dcsn | handler : "cons-port:egm"]'):
+            with pytest.raises(ConstructionError) as refused:
+                elaborate_text(f"@stage: t\n{header} {{\n    y = x\n}}\n")
+            assert (refused.value.rule, refused.value.address) == (rule, "b")
+        # and for an entry of a nested branch block's header, at the branch's address
+        written = "[label=work, () -> (a_w : ℝ₊) : !cntn]"
+        for nested in ("[label=work, () -> (a_w : ℝ₊) : !cntn | method : !egm]",
+                       '[label=work, () -> (a_w : ℝ₊) : !cntn | handler : "cons-port:egm"]',
+                       "[label=work, policy.method : !egm, () -> (a_w : ℝ₊) : !cntn]"):
+            with pytest.raises(ConstructionError) as refused:
+                elaborate_text(branching((written, nested)))
+            assert (refused.value.rule, refused.value.address) == (rule, "dcsn_to_cntn.work")
     if rule == "defined-once":
         assert (error.line, error.column) == (4, 5)
         entry = next(item for item in catalogue() if item.rule == rule)
@@ -77,6 +109,107 @@ def test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_i
                    for word in ("Remove one definition", "another name", "`!doc`"))
         documentary = example.text.replace("[id=first, !node]", "[id=first, !doc]")
         assert elaborate_text(documentary).name == "t"
+        # a derivative term stated twice in one block, the housing-frictions
+        # probe (F68): refused at the second line naming the first
+        marginal = "    D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]\n"
+        with pytest.raises(ConstructionError) as refused:
+            cons_with(marginal, marginal + "    D_{m_d}V = 2*𝑑𝑢(c)              :: [id=marginal2]\n")
+        assert (refused.value.rule, refused.value.address) == (rule, "cntn_to_dcsn.marginal2")
+        assert "block 'cntn_to_dcsn' already states D_{m_d}V at" in refused.value.message
+        assert "(term address 'cntn_to_dcsn.marginal')" in refused.value.message
+    if rule == "name-in-scope":
+        # a set a typing names that the stage does not define, the three forms
+        # of the cons-port probe (F35) and a product in a set's definition,
+        # each refused at the item that names it with the sets in scope; an
+        # undefined function stays an external callable, recorded as an
+        # obligation and refused by no rule
+        for written, changed, address, what in (
+            ("ρ : [1, inf)\n", "ρ : [1, inf)\nn_m : Foo\n", "5", "the declaration of 'n_m'"),
+            ("(m_d, c : !ctrl @ ℝ₊₊) : !dcsn", "(m_d, c : !ctrl @ Foo) : !dcsn", "dcsn_to_cntn",
+             "the header of block 'dcsn_to_cntn', which types c"),
+            ("𝑑𝑢(c : ℝ₊₊) := c^(-ρ)", "𝑑𝑢(c : Foo) := c^(-ρ)", "6",
+             "the argument 'c' of the function '𝑑𝑢'"),
+            ("Xa := ℝ₊\n", "Xa := ℝ₊\nXq := Xm × Foo\n", "4", "the definition of the set 'Xq'"),
+        ):
+            with pytest.raises(ConstructionError) as refused:
+                cons_with(written, changed)
+            assert (refused.value.rule, refused.value.address) == (rule, address)
+            assert f"{what} names the set 'Foo'" in refused.value.message
+            assert "the sets in scope here: Xm, Xa" in refused.value.message
+            assert "ℝ, ℝ₊, ℝ₊₊, ℤ, ℕ" in refused.value.message
+        # a function of the stage written where a set stands, defined with a
+        # parameter list or as the inverse of a function, is refused under
+        # the same rule, naming the function and its definition
+        for written, changed, address, what, function in (
+            ("ρ : [1, inf)\n", "ρ : [1, inf)\nn_m : 𝑑𝑢\n", "5", "the declaration of 'n_m'", "𝑑𝑢"),
+            ("Xa := ℝ₊\n", "Xa := ℝ₊\nXq := Xm × 𝑑𝑢\n", "4",
+             "the definition of the set 'Xq'", "𝑑𝑢"),
+            ("Γ(x : ℝ₊₊) := (0, x]\n", "Γ(x : ℝ₊₊) := (0, x]\n𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)\nn_m : 𝑑𝑢𝑖𝑛𝑣\n",
+             "9", "the declaration of 'n_m'", "𝑑𝑢𝑖𝑛𝑣"),
+        ):
+            with pytest.raises(ConstructionError) as refused:
+                cons_with(written, changed)
+            assert (refused.value.rule, refused.value.address) == (rule, address)
+            assert (
+                f"{what} names the set {function!r}, which the stage defines as a function at"
+                in refused.value.message
+            )
+            assert "and as no set" in refused.value.message
+        marginal = "    D_{m_d}V = 𝑑𝑢(c)                :: [id=marginal]\n"
+        stage = cons_with(marginal, marginal.replace("𝑑𝑢(c)", "𝑓𝑜𝑜(c)"))
+        assert "external-callable-signature-and-provider" in {
+            item.condition for item in stage.obligations()
+        }
+    if rule == "derivative-coordinate":
+        # the value of a branch is a function of that branch's states alone:
+        # the pension-retirement probe, a coordinate of the other branch in a
+        # derivative of the work value, is refused naming the branch and its
+        # coordinates, and the branch's own coordinate is admitted
+        def with_marginal(term):
+            return branching((CHOICE_VALUE, CHOICE_VALUE
+                              + f"    D_{{a_d}}V = ({term}, D_{{a_r}}V_r[>])[d]  :: [id=marginal]\n"))
+
+        with pytest.raises(ConstructionError) as refused:
+            elaborate_text(with_marginal("D_{a_r}V_w[>]"))
+        assert (refused.value.rule, refused.value.address) == (rule, "cntn_to_dcsn.marginal")
+        assert ("names 'a_r', which is no state coordinate of the branch 'work' of the cntn perch"
+                in refused.value.message)
+        assert "the coordinates of the branch 'work' of the cntn perch are a_w" in refused.value.message
+        assert elaborate_text(with_marginal("D_{a_w}V_w[>]")).name == "t"
+    if rule == "candidate-coordinate":
+        # admitted: the control at the candidates, the decision state (the grid
+        # line) and the value candidate an upper envelope compares, as the
+        # worker's block of retirement-choice writes them; the value candidate
+        # is refused where no envelope reads it (F39)
+        value_candidate = GRID_LINE + "    v[>] = 𝑢(c[>]) + V[>]    :: [id=cand_value]\n"
+        envelope = "    c = upper_env(m[>], c[>], v[>])    :: [id=envelope]\n"
+        with_envelope = INVERSE_EULER.replace(GRID_LINE, value_candidate).replace(IDENTIFICATION, envelope)
+        assert elaborate_text(with_envelope).name == "t"
+        with pytest.raises(ConstructionError) as refused:
+            elaborate_text(INVERSE_EULER.replace(GRID_LINE, value_candidate))
+        assert (refused.value.rule, refused.value.address) == (rule, "policy.cand_value")
+        assert "writes v[>], a candidate of 'v'" in refused.value.message
+        assert "no upper envelope of block 'policy' compares it" in refused.value.message
+    if rule == "candidate-read":
+        # the grid line, a decision state at the candidates, is read by the
+        # Evaluation as the knots of the policy and needs no reader among the
+        # lines; the control's candidate is read by the grid line
+        closed = "    c = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])     :: [id=closed]\n"
+        assert elaborate_text(INVERSE_EULER.replace(IDENTIFICATION, closed)).name == "t"
+    if rule == "one-builder-per-output":
+        # a second value builder and a second forward builder with the same
+        # outputs and perches are refused under this rule and not under
+        # `forward-composite` (F17, continued)
+        for block, address, first in (
+            ("[id=value2, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n"
+             "    V = 2*𝑢(c) + V[>]    :: [id=value]\n}\n", "value2", "cntn_to_dcsn"),
+            ("[id=step2, (m, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] {\n    a = m - 2*c\n}\n",
+             "step2", "dcsn_to_cntn"),
+        ):
+            with pytest.raises(ConstructionError) as refused:
+                elaborate_text(INVERSE_EULER + block)
+            assert (refused.value.rule, refused.value.address) == (rule, address)
+            assert f"which block '{first}' already writes" in refused.value.message
 
 
 def test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_decision_state(cons, elaborate_text):
@@ -148,6 +281,18 @@ def test_the_smallest_example_breaking_a_rule_of_the_identity_table_is_refused_u
         assert error.stage == example.corpus
     for word in example.words:
         assert word in str(error), (word, str(error))
+    if rule == RULE_B_C:
+        # a line of a branch is addressed under its label and an occurrence in
+        # it by the operator after that (F12), and a line that holds one head
+        # twice is one address answering both occurrences, listed once among
+        # the places (F62): on the branching stage with a derivative line of
+        # the choice value, each target answers its admitted methods, where
+        # it was refused under a TargetError before
+        stage = stage_from_text(branching((CHOICE_VALUE, CHOICE_VALUE
+                                           + "    D_{a_d}V = (D_{a_w}V_w[>], D_{a_r}V_r[>])[d]  :: [id=marginal]\n")))
+        assert isinstance(admitted_methods(stage, "dcsn_to_cntn.work.working"), tuple)
+        assert isinstance(admitted_methods(stage, "cntn_to_dcsn.marginal.D"), tuple)
+        assert [row["address"] for row in stage.places()].count("cntn_to_dcsn.marginal.D") == 1
 
 
 @pytest.mark.parametrize("rule", FACTORY_RULES)
@@ -343,24 +488,24 @@ def test_a_method_the_target_does_not_admit_is_refused_at_its_attachment(cons):
 
 
 def test_method_options_refuse_invalid_authored_or_configured_values(cons, port):
-    typo = {"methods": [{"on": "cntn_to_dcsn.value", "method": "Cartesian",
+    typo = {"methods": [{"on": "cntn_to_dcsn.value", "method": "Linear",
                           "handler": "test:interpolate",
-                          "settings": {"ordrs": {"m_d": "n_m"},
+                          "settings": {"grid": "!Cartesian", "ordrs": {"m_d": "n_m"},
                                        "bounds": {"m_d": ["m_min", "m_max"]}}}]}
     with pytest.raises(TargetError) as refused:
         copy_native(cons).methodize(typo)
     assert all(word in str(refused.value)
-               for word in ("cntn_to_dcsn.value", "!Cartesian", "orders", "ordrs"))
-    unknown = {"methods": [{"on": "cntn_to_dcsn.value", "method": "Cartesian",
-                             "settings": {"orders": {"m_d": "n_m"},
+               for word in ("cntn_to_dcsn.value", "!Linear", "orders", "ordrs"))
+    unknown = {"methods": [{"on": "cntn_to_dcsn.value", "method": "Linear",
+                             "settings": {"grid": "!Cartesian", "orders": {"m_d": "n_m"},
                                           "bounds": {"m_d": ["m_min", "m_max"]},
                                           "vendor_flag": True}}]}
     with pytest.raises(TargetError, match="unknown option.*vendor_flag.*handler"):
         copy_native(cons).methodize(unknown)
 
     source = {"stage": "cons", "methods": [{
-        "on": "cntn_to_dcsn.value", "method": "Cartesian",
-        "settings": {"orders": {"m_d": "n_m"},
+        "on": "cntn_to_dcsn.value", "method": "Linear",
+        "settings": {"grid": "!Cartesian", "orders": {"m_d": "n_m"},
                      "bounds": {"m_d": ["m_min", "m_max"]}},
     }]}
     # each binding binds a stage of its own (specification 0.6 decision 1 and R4)
@@ -381,8 +526,8 @@ def test_method_options_refuse_invalid_authored_or_configured_values(cons, port)
                     "method-option-value", "cons", "cntn_to_dcsn:Evaluation")
 
     wrong_coordinate = copy_native(cons).methodize({"stage": "cons", "methods": [{
-        "on": "cntn_to_dcsn.value", "method": "Cartesian",
-        "settings": {"orders": {"m": "n_m"},
+        "on": "cntn_to_dcsn.value", "method": "Linear",
+        "settings": {"grid": "!Cartesian", "orders": {"m": "n_m"},
                      "bounds": {"m": ["m_min", "m_max"]}},
     }]})
     with pytest.raises(ValueError, match="coordinate.*m_d"):
@@ -842,22 +987,27 @@ def test_methodize_replaces_a_second_binding_and_refuses_a_source_naming_another
     the rule and what to write."""
     from bellman.stage.binding_verbs import methodize
     stage = copy_native(cons)
+    grid = {"grid": "!Cartesian", "orders": {"m_d": "n_m"}, "bounds": {"m_d": ["m_min", "m_max"]}}
     methodized = methodize(stage, {"stage": "cons", "methods": [
-        {"on": "cntn_to_dcsn.value", "method": "!Linear"}]})
+        {"on": "cntn_to_dcsn.value", "method": "!Linear", "settings": grid}]})
     assert methodize(methodized, {"stage": "cons", "methods": [
-        {"on": "cntn_to_dcsn.value", "method": "!pchip"}]}) is stage
+        {"on": "cntn_to_dcsn.value", "method": "!pchip", "settings": grid}]}) is stage
     assert str(stage.methods) == "cntn_to_dcsn:Evaluation   !pchip"
     with pytest.raises(ValueError) as refused:
         methodize(copy_native(cons), {"stage": "port", "methods": []})
     assert str(refused.value) == (
         "stage 'cons': the methods source names the stage 'port'; a methods file binds the stage it names "
         "(spec 0.3c §4.3); write `stage: cons` in the source or apply it to the stage 'port'")
+    # the value and its stated derivative are two written addresses of one
+    # Evaluation, which holds one representation (AMD-MB-002)
     with pytest.raises(ValueError) as refused:
-        methodize(copy_native(port), {"stage": "port", "methods": [{"on": "evaluate", "method": "!Linear", "handler": "h"},
-                                                       {"on": "cntn_to_dcsn", "method": "!Linear", "handler": "h"}]})
+        methodize(copy_native(port), {"stage": "port", "methods": [
+            {"on": "cntn_to_dcsn.evaluate.value", "method": "!Linear", "handler": "h"},
+            {"on": "cntn_to_dcsn.evaluate.marginal", "method": "!pchip", "handler": "h"}]})
     assert str(refused.value) == (
-        "stage 'port', box 'cntn_to_dcsn:Evaluation': the targets 'evaluate' and 'cntn_to_dcsn' conflict, both reaching it with "
-        "a method; a box holds one method (AMD-SG-006 §4, rule 9); write one entry for that box")
+        "stage 'port', box 'cntn_to_dcsn:Evaluation': the targets 'cntn_to_dcsn.evaluate.value' and "
+        "'cntn_to_dcsn.evaluate.marginal' conflict, both reaching it with a method; a box holds one method "
+        "(AMD-SG-006 §4, rule 9); write one entry for that box")
 
 
 # the names that would collide with the spelling of an identity (AMD-SG-016 §3),

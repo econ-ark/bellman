@@ -36,6 +36,7 @@ from bellman.native.identity import (
 from bellman.refusals import ConstructionError, NotConstructed, construction_error
 from bellman.syntax import terms
 from bellman.syntax.source import to_source
+from bellman.syntax.walk import nodes
 from bellman.syntax.vocabulary import (
     ARRIVAL,
     CONTINUATION,
@@ -45,6 +46,7 @@ from bellman.syntax.vocabulary import (
     MULTIPLIER,
     PERCH_OF_SIDE,
     PERCHES,
+    PRIMITIVE_SETS,
     ROLE_WORD,
     SHCK,
     SHOCK,
@@ -76,6 +78,7 @@ from bellman.typing.line_unknowns import (
     is_number_alone,
     item_kind,
     listed_identity,
+    named_sets,
     names_fields,
     occurrence_paths,
     outputs_and_unknowns,
@@ -282,6 +285,8 @@ class Declarations:
         self.side_perches = {}  # block id -> the same, inferred where omitted
         self.bodies = {}  # block id -> [(ordinal, address, Statement)]
         self.branch_labels = {}  # block id -> the labels of its nested blocks, in source order
+        self.branch_fields = {}  # (block id, label) -> the stems the nested block writes
+        self.value_branches = {}  # the wire type of a branch value -> its branch's label
         self.multipliers = {}  # stem -> _Multiplier, in textual order
         self.deferred = []  # _Deferred, in the order the items are met
         self.definition_order = ()
@@ -376,6 +381,11 @@ class Declarations:
         self.metadata[item.key] = (item.value, address)
 
     def read_declaration(self, declaration, address) -> None:
+        if isinstance(declaration, terms.Handler) or isinstance(declaration.subject, terms.Path):
+            # a typing entry or a handler binding the union left at file
+            # level, the component of a definition or of a stage-wide
+            # operator, which the semantics reads (specification 0.7, unit U3)
+            return
         if declaration.value is not None:
             names = ", ".join(coordinate_text(c) for c in declaration.subject.coordinates)
             raise self.error(
@@ -961,6 +971,11 @@ class Declarations:
                     ),
                 )
         self.branch_labels.setdefault(block_id, []).append(label)
+        self.branch_fields[(block_id, label)] = tuple(
+            listing.stem
+            for listing in self.side_entries(block_id, OUTPUT)
+            if listing.address == address
+        )
         for item in block.body:
             item_address = self.address_of[id(item)]
             if not isinstance(item, terms.Statement):
@@ -1251,6 +1266,112 @@ class Declarations:
                 ("function", "named space"),
             )
 
+    def check_set_names(self) -> None:
+        """Every set a typing names is a named set the stage defines or a set
+        of the language: the set of a top-level declaration, `n_m : Foo`, of
+        a header coordinate, `c : Foo`, of a function's argument,
+        `𝑑𝑢(c : Foo)`, of a multiplier, `μ[>] : Foo`, and a set the definition
+        of a named set reads, `Xq := Xm × Foo`. A name that is neither is
+        refused under `name-in-scope` with the sets in scope, as a bare name
+        a line mentions is (F35 of the case studies of specification 0.7); a
+        function or a correspondence of the stage written where a set stands,
+        `n_m : 𝑑𝑢`, is refused under the same rule naming it. A set the stage
+        defines may be defined after the typing that names it. An assignment
+        whose right side is no function of the stage, `XH := linspace(H_min,
+        H_max, n_H)`, is refused by the typing walk under `not-constructed`,
+        and a typing that names it is left to that refusal."""
+        sites = [
+            (declaration.domain_term, declaration.address, f"the declaration of {name!r}")
+            for name, declaration in self.scalars.items()
+        ]
+        sites.extend(
+            (
+                listing.domain_term,
+                listing.address,
+                f"the header of block {listing.block_id!r}, which types {listing.text}",
+            )
+            for listing in self.listings
+        )
+        sites.extend(
+            (term, definition.address, f"the argument {stem!r} of the function {definition.name!r}")
+            for definition in self.functions.values()
+            for stem, term in definition.domains
+        )
+        sites.extend(
+            (self.space_terms[name], address, f"the definition of the set {name!r}")
+            for name, address in self.spaces.items()
+        )
+        sites.extend(
+            (
+                multiplier.domain_term,
+                multiplier.address,
+                f"the declaration of the multiplier {multiplier.stem!r}",
+            )
+            for multiplier in self.multipliers.values()
+        )
+        for term, address, what in sites:
+            for name in named_sets(term):
+                if name in self.spaces or name in PRIMITIVE_SETS:
+                    continue
+                definition = self.functions.get(name)
+                if definition is not None and not self.defines_a_function(definition):
+                    continue
+                if definition is not None:
+                    correspondence = isinstance(definition.body, terms.setexpr)
+                    kind = "correspondence" if correspondence else "function"
+                    raise self.error(
+                        "name-in-scope",
+                        address,
+                        (
+                            f"{what} names the set {name!r}, which the stage defines as a "
+                            f"{kind} at {self.where(definition.address)} and as no set; a "
+                            f"typing names a set. Write one of the sets in scope here: "
+                            f"{self.sets_in_scope_text()}"
+                        ),
+                    )
+                raise self.error(
+                    "name-in-scope",
+                    address,
+                    (
+                        f"{what} names the set {name!r}, which the stage does not define: it is "
+                        f"no named set of the stage and no set of the language. Define it, "
+                        f"`{name} := …`, or write one of the sets in scope here: "
+                        f"{self.sets_in_scope_text()}"
+                    ),
+                )
+
+    def defines_a_function(self, definition) -> bool:
+        """Whether the typing walk reads `definition` as a function or a
+        correspondence: a definition with a parameter list, `𝑑𝑢(c : ℝ₊₊) :=
+        c^(-ρ)`, or an assignment whose right side is the derivative of a
+        function, `𝑑𝑢 := D_{c}(𝑢)`, the inverse of a function, `𝑑𝑢𝑖𝑛𝑣 :=
+        Inv(𝑑𝑢)`, or the name of a function of the stage. An assignment
+        whose right side is any other expression, `XH := linspace(H_min,
+        H_max, n_H)` or `Xa := (0, ā)`, is refused by the typing walk under
+        `not-constructed` (F5 of the case studies of specification 0.7)."""
+        if definition.slot != "value":
+            return True
+        body = definition.body
+        if isinstance(body, terms.Operator):
+            return body.head == "D"
+        if isinstance(body, terms.Call):
+            return body.fun == "Inv"
+        return (
+            isinstance(body, terms.Sym)
+            and isinstance(body.symbol, terms.Constant)
+            and body.symbol.name in self.functions
+        )
+
+    def sets_in_scope_text(self) -> str:
+        """The sets a typing may name, for a refusal: the named sets the stage
+        defines, in definition order, then the sets of the language, each by
+        its glyph once."""
+        names = list(self.spaces)
+        for primitive in PRIMITIVE_SETS.values():
+            if primitive.glyph not in names:
+                names.append(primitive.glyph)
+        return ", ".join(names)
+
     def check_one_meaning(self, name, address, meaning, kinds) -> None:
         """Refuse `name`, which has `meaning` at `address`, where it is also
         a function or a named space, the first of `kinds` it is."""
@@ -1384,6 +1505,33 @@ class Declarations:
             for block_id, _ in self.blocks
         }
         return fields, signatures
+
+    def check_one_builder_per_output(self) -> None:
+        """One block writes a field between two perches: a second block whose
+        sides join the same perches and whose output side lists a field the
+        first writes is the same builder written twice, and is refused under
+        `one-builder-per-output` naming both blocks (F17 of the case studies
+        of specification 0.7). Read after the perches of the sides are placed.
+        Two blocks between the same perches that write different fields are
+        the question of `forward-composite`."""
+        writers = {}  # (input perch, output perch, field) -> the block that writes it
+        for block_id, address in self.blocks:
+            perch_in, perch_out = self.side_perches[block_id]
+            for listing in self.side_entries(block_id, OUTPUT):
+                first = writers.setdefault((perch_in, perch_out, listing.stem), block_id)
+                if first == block_id:
+                    continue
+                raise self.error(
+                    "one-builder-per-output",
+                    address,
+                    (
+                        f"block {block_id!r} writes {listing.stem} at the {perch_out} perch from "
+                        f"the {perch_in} perch, which block {first!r} already writes; one builder "
+                        f"writes a field between two perches (rule one-builder-per-output). Write "
+                        f"the lines of the two blocks in one block, or make block {block_id!r} "
+                        f"write another field"
+                    ),
+                )
 
     def check_header_coordinate(self, listing) -> None:
         """A backward block's header lists the value fields it reads and
@@ -2284,6 +2432,26 @@ class Declarations:
                         f"no branch names its fields; read it at its branch's position"
                     ),
                 )
+            self.value_branches[wire] = labels[places[0]]
+
+    def branch_of_value(self, stem: str):
+        """The branch a continuation value is the value of and the states that
+        branch writes, `("work", ("y_f_wk", "y_p_wk"))` for `V_wk[>]`, read
+        from the value's position in the selection tuples (`check_positions`);
+        None for a value that stands in no branch. A derivative of the value,
+        `D_{x}V_wk[>]`, names one of these states and not a state of another
+        branch of the same perch."""
+        wire = Identity("field", stage=self.stage, perch=CONTINUATION, field=stem)
+        label = self.value_branches.get(wire)
+        if label is None:
+            return None
+        block_id = next(b for b, labels in self.branch_labels.items() if label in labels)
+        states = tuple(
+            field
+            for field in self.branch_fields[(block_id, label)]
+            if self.field_roles.get(field) == STATE
+        )
+        return label, states
 
     def check_draw(self, block_id, key, labels) -> None:
         """A label a shock selects: the shock has a distribution giving one
@@ -2522,6 +2690,10 @@ class Declarations:
             if multiplier.block == block_id
         ]
         definitions = {}  # lhs spelling -> the address of its operative equation
+        stated = {}  # (coordinate, value spelling) -> the address of the derivative line
+        candidates = []  # (candidate spelling, address, place in the block) of each candidate line
+        reads_of = []  # (place in the block, the spellings the line reads) of each line
+        envelope_reads = self.envelope_reads(block_id)
         for ordinal, address, item in self.bodies[block_id]:
             core = item.core
             equation = core.core if isinstance(core, terms.Slack) else core
@@ -2533,6 +2705,8 @@ class Declarations:
                 # about the value its term names, read at that value's perch; it
                 # defines no field and states no candidate (AMD-MB-001 §4.3)
                 left_fields = [field_spelling(equation.lhs.args[0], address, self)]
+                if DOC not in marks:
+                    self.check_stated_once(block_id, equation.lhs, left_fields[0], address, stated)
             else:
                 left_fields = outputs_and_unknowns(
                     equation.lhs,
@@ -2559,8 +2733,21 @@ class Declarations:
             reads = [equation.rhs] + self.clause_reads(core, equation, address)
             for term in reads:
                 self.check_names_in_scope(block_id, term, defined, listings, address)
+            read_terms = list(reads)
             if not names_fields(equation.lhs):
                 self.check_names_in_scope(block_id, equation.lhs, defined, listings, address)
+                read_terms.append(equation.lhs)
+            reads_of.append(
+                (
+                    ordinal,
+                    {spelling for term in read_terms for spelling in free_names(term, address, self)},
+                )
+            )
+            if names_fields(equation.lhs) and DOC not in marks:
+                for lhs in left_fields:
+                    if self.policy_candidate_spelling(block_id, lhs):
+                        self.check_candidate_coordinate(block_id, lhs, address, envelope_reads)
+                        candidates.append((lhs, address, ordinal))
             if self.block_is_backward(block_id):
                 output_perch = self.backward_perches(block_id)[1]
                 # a candidate written as an inequality,
@@ -2590,6 +2777,7 @@ class Declarations:
         for multiplier in self.multipliers.values():
             if multiplier.block == block_id:
                 self.check_bound_names(block_id, multiplier)
+        self.check_candidates_read(block_id, candidates, reads_of)
 
     def backward_line_perch(self, block_id, spelling, output_perch):
         """The perch for checking a backward line's state reads. A named
@@ -2648,6 +2836,109 @@ class Declarations:
                     ),
                 )
             definitions[lhs] = address
+
+    def check_stated_once(self, block_id, lhs, spelling, address, stated) -> None:
+        """A derivative line states each derivative term, `D_{m_d}V`, once in
+        its block; `stated` holds the address of the line that first states
+        each term, by its coordinate and the value's spelling (`defined-once`
+        extended to derivative terms, F68 of the case studies of specification
+        0.7)."""
+        key = (lhs.subs[0].name, spelling)
+        first = stated.get(key)
+        if first is not None:
+            raise self.error(
+                "defined-once",
+                address,
+                (
+                    f"block {block_id!r} already states D_{{{key[0]}}}{spelling_text(spelling)} "
+                    f"at {self.where(first)}, and this derivative line states it again; a "
+                    "derivative term is stated once within a block"
+                ),
+            )
+        stated[key] = address
+
+    def envelope_reads(self, block_id) -> set:
+        """The spellings the upper envelopes of a block compare: the names read
+        by the arguments of each `upper_env` call in the block's lines, among
+        them the value candidate `v[>]` of `c = upper_env(w[>], c[>], v[>])`,
+        for which the language has no other spelling."""
+        found = set()
+        for _, address, item in self.bodies[block_id]:
+            core = item.core.core if isinstance(item.core, terms.Slack) else item.core
+            for node in nodes(core.rhs):
+                if isinstance(node, terms.Call) and node.fun == "upper_env":
+                    for argument in node.args:
+                        found.update(free_names(argument, address, self))
+        return found
+
+    def candidate_names(self) -> tuple:
+        """The names a candidate line may write under the continuation mark:
+        the controls of the stage, and the states of the decision perch,
+        whose candidate line is the grid line."""
+        controls = [
+            listing.stem
+            for listing in self.listings
+            if self.field_roles.get(listing.stem) == CONTROL
+        ]
+        states = [
+            listing.stem
+            for listing in self.listings
+            if listing.wire_type is not None
+            and listing.wire_type.perch == DECISION
+            and self.field_roles.get(listing.stem) == STATE
+        ]
+        return tuple(dict.fromkeys(controls)), tuple(dict.fromkeys(states))
+
+    def check_candidate_coordinate(self, block_id, spelling, address, envelope_reads) -> None:
+        """A candidate line of a policy block, `x[>] = …`, names a control at
+        the candidate points, `c[>]`, a state of the decision perch, the grid
+        line `m[>] = a + c[>]`, or the value candidate an upper envelope of
+        the block compares; any other name is refused under
+        `candidate-coordinate` with the coordinates in scope (F39 of the case
+        studies of specification 0.7)."""
+        controls, states = self.candidate_names()
+        if spelling.stem in controls or spelling.stem in states or spelling in envelope_reads:
+            return
+        raise self.error(
+            "candidate-coordinate",
+            address,
+            (
+                f"the line writes {spelling_text(spelling)}, a candidate of {spelling.stem!r}, "
+                f"which is no control and no state of the {DECISION} perch, and no upper "
+                f"envelope of block {block_id!r} compares it; a candidate line of a solution "
+                f"method names a control at the candidate points, a state of the decision "
+                f"perch, which is the grid line, or the value candidate an upper envelope "
+                f"reads (rule candidate-coordinate). The controls are "
+                f"{', '.join(controls) or 'none'} and the states of the {DECISION} perch are "
+                f"{', '.join(states) or 'none'}"
+            ),
+        )
+
+    def check_candidates_read(self, block_id, candidates, reads_of) -> None:
+        """A candidate a policy block writes is read by a later line of the
+        block or is the grid line, a state of the decision perch at the
+        candidates, whose points are the knots at which the policy is stored;
+        a candidate nothing reads is refused under `candidate-read` naming
+        the line (F61 of the case studies of specification 0.7)."""
+        _, states = self.candidate_names()
+        for spelling, address, ordinal in candidates:
+            if spelling.stem in states:
+                continue
+            if any(spelling in read for place, read in reads_of if place > ordinal):
+                continue
+            raise self.error(
+                "candidate-read",
+                address,
+                (
+                    f"the line writes the candidate {spelling_text(spelling)}, which no later "
+                    f"line of block {block_id!r} reads; a candidate is read by a later line of "
+                    f"the block, as an identification `{spelling.stem} = "
+                    f"{spelling_text(spelling)}` reads it, or is the grid line, a state of the "
+                    f"decision perch at the candidates, whose points are the knots at which the "
+                    f"policy is stored (rule candidate-read). Read the candidate on a later "
+                    f"line, or remove the line"
+                ),
+            )
 
     def clause_reads(self, core, equation, address) -> list:
         """The expressions a line's clause reads, after `⟂`: none for a line

@@ -141,6 +141,13 @@ def corpus_stage(name):
     return stage_from_text(corpus_text(name), CORPUS[name])
 
 
+def fresh_stage(path):
+    """The symbolic stage of the stage file at `path`, a path in the
+    repository, elaborated anew at each call for a test that binds methods on
+    it."""
+    return stage_from_text((ROOT / path).read_text(encoding="utf-8"), path)
+
+
 @pytest.fixture(scope="session")
 def cons():
     return corpus_stage("cons")

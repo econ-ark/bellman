@@ -7,10 +7,11 @@ methods:
     settings:
       n_nodes: [n_θ_nodes]
 
-  - on: evaluate
-    method: !Cartesian
+  - on: cntn_to_dcsn.evaluate.value
+    method: !Linear
     handler: cons-port:solve_nest_egm
     settings:
+      grid: !Cartesian
       orders:
         k_d: n_m
       bounds:

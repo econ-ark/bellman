@@ -39,12 +39,13 @@ The separate `cons_interior.bl` in [Field equations](03-field-equations.md#3-an-
 }
 ```
 
-For this interior variant, save the following mapping as `cons_interior_methods.yml`. It attaches the endogenous grid method, [`!egm`](reference/methods.md#egm), which calculates candidate consumption at given savings and recovers its cash-on-hand coordinate:
+For this interior variant, save the following mapping as `cons_interior_methods.yml`. It attaches the endogenous grid method, [`!egm`](reference/methods.md#egm), which calculates candidate consumption at given savings and recovers its cash-on-hand coordinate. The savings at which it does so form its exogenous grid, which the entry names by the setting `grid`: the grid's kind is the tag on its value, `!Cartesian`, and the grid's order and bounds in the savings coordinate `a` stand beside it, written as the names of the settings `n_a`, `a_min` and `a_max` (§3):
 
 ```yaml
 methods:
   - on: policy
     method: !egm
+    settings: {grid: !Cartesian, orders: {a: n_a}, bounds: {a: [a_min, a_max]}}
 ```
 
 Here `policy` is the interior block's chosen identifier. The equations supply the inverse marginal utility calculation and the implicit condition for consumption. The `!egm` tag selects a numerical technique for these equations; it supplies no missing condition. Renaming the block requires changing `on:` to its new address, but leaves the mathematics unchanged. This attachment belongs to `cons_interior.bl`; the constrained `cons.bl` writes neither these candidate lines nor the derivative line.
@@ -63,18 +64,22 @@ A **block** is the authored header and body that define a transition, value calc
 | Alias address | The identity of an explicit intermediate equation, retained for inspection even when substitution removes an intermediate calculation. |
 | Numerical representation | A grid, interpolant, quadrature rule, or other object a selected method uses to approximate the mathematical calculation. |
 
-A declared function or an evaluated field is treated through its exact definition unless a method attached to it supplies a numerical representation. A builder output and the left side of a `!node` statement are evaluated fields; a declared function such as utility is not a field. The stage file itself never states a representation: the methods file alone chooses one. An interpolation method attached to either kind of function means that the method stores values on the named grid and uses an interpolant to represent the function between them. This is mathematics supplied by the method and does not change the exact [Evaluation](reference/operations.md#evaluation), which remains the identity into the declared set of functions. The `!node` mark determines whether a line's left-side field is evaluated; the attachment determines the representation used for its function.
+A declared function or an evaluated field is treated through its exact definition unless a method attached to it supplies a numerical representation. A builder output and the left side of a `!node` statement are evaluated fields; a declared function such as utility is not a field. The stage file itself never states a representation: the methods file alone chooses one and writes where it stands. An interpolation method attached to either kind of function means that the method stores values on the named grid and uses an interpolant to represent the function between them. This is mathematics supplied by the method and does not change the exact [Evaluation](reference/operations.md#evaluation), which remains the identity into the declared set of functions. The `!node` mark determines whether a line's left-side field is evaluated; the attachment determines the representation used for its function.
+
+The outputs of the policy builder and of a backward value builder are stored at the [Evaluation](reference/operations.md#evaluation) that closes the builder, and the methods file names that Evaluation by what it evaluates: `policy.evaluate` for the policy function, `<block-id>.evaluate.value` for the value function a backward value builder writes, and `<block-id>.evaluate.marginal` for the derivative of that value a derivative line states. A representation named on a builder itself or on a derivative line is refused, and the refusal names the address to write ([Refusals](reference/refusals.md)).
 
 Which methods a target admits follows from what the target is. #functional-semantics
 
 | Target | Admits | Does not admit |
 |---|---|---|
 | a declared function | an admitted representation or function method | treatment as a field |
-| an evaluated field: a builder output or the left side of a `!node` statement | a representation: an interpolant or a table on the grid the settings name | treatment as a declared function |
+| an evaluated field: the left side of a `!node` statement, named by the line's address | a representation: an interpolant or a table on the grid the settings name | treatment as a declared function |
 | an operator occurrence inside an unmarked statement (`E`, `argmax`, `solve`) | the operation's own method: quadrature, a maximizer, a root finder | a representation, since the occurrence's result is not an authored object |
-| a builder | a [handler](../wiki/handler.md) for the builder as a whole; [`!vfi`](reference/methods.md#vfi) stands on the backward decision builder alone, which it realizes with its maximization; with `block:`, a method block on the policy builder, under `!egm`, or a marginal block, whose derivative lines state the derivatives of the value a backward value builder writes, under [`!marginals`](reference/methods.md#marginals) (§4.1) | |
-| a derivative line of a value builder, named by the builder and the line, `cntn_to_dcsn.envelope` | a representation of the stated derivative, bound at the value builder's Evaluation beside the representation of the value (§4.1) | treatment as a field: the derivative is a property of the value |
-| the Evaluation of a policy block that writes the grid line (the cash on hand at each saving, `m_d[>] = a + c[>]`), named by the block id | `!egm`, which stores the policy from the pairs the block's lines give at the savings | a policy block that writes no grid line |
+| a builder | a [handler](../wiki/handler.md) for the builder as a whole; [`!vfi`](reference/methods.md#vfi) stands on the backward decision builder alone, which it realizes with its maximization; with `block:`, a method block on the policy builder, under `!egm`, or a marginal block, whose derivative lines state the derivatives of the value a backward value builder writes, under [`!marginals`](reference/methods.md#marginals) (§4.1) | a representation, which is written at the builder's Evaluation (the rows below) |
+| the Evaluation of a backward value builder, written `cntn_to_dcsn.evaluate.value` for the value function it stores and `cntn_to_dcsn.evaluate.marginal` for the derivative of that value its derivative lines state | a representation: one method at the Evaluation for the value and its stated derivative, which share it (§4, §4.1) | `.evaluate.marginal` where no derivative line stands at the builder; a solution method, which stands on the builder |
+| a derivative line of a value builder, `cntn_to_dcsn.envelope` | the operation's own method on an operator the line holds, such as a quadrature rule on its expectation | a representation: the line states a property of the value, whose derivative is represented at `cntn_to_dcsn.evaluate.marginal` |
+| the Evaluation of the policy builder, written `policy.evaluate`, where the policy function is stored | a representation of the policy, such as `!Linear` | `policy.evaluate.value` and `policy.evaluate.marginal`, since a policy builder writes neither; a solution method |
+| the Evaluation of a policy block that writes the grid line (the cash on hand at each saving, `m_d[>] = a + c[>]`), named by the block id in an entry with no `block:` | `!egm`, which stores the policy from the pairs the block's lines give at the savings | a policy block that writes no grid line |
 | the [Argmax](reference/operations.md#argmax) row of an operative `argmax` line, one the block computes with rather than marks `!doc` ([Constraints](10-constraints.md) §3), that carries its first-order condition as a property (a line whose id is dotted, `optimality.euler`) | `!egm`, which inverts the property for the candidate, or a root finder | |
 
 An author who wants an occurrence's result represented, the expectation of a continuation value held as an interpolant for instance, writes the expectation on its own line and marks the line `!node`; the result is then an authored function and admits a representation. The converse does not hold: attaching a method to an occurrence, a quadrature rule to an expectation, does not make the occurrence a `!node` or a separately addressable computation. A methods line without `block:` names a computation that the stage file created and creates none. A line with `block:` names a method block, whose lines, elaborated with the stage's declarations in scope, become the method rows of the builder the line names, in the builders graph, and satisfy the declared line only under the condition the stage records (§4.1).
@@ -87,7 +92,10 @@ Supported implicit equations and operator occurrences can receive methods withou
 
 | Address | Target |
 |---|---|
-| `policy` | The authored policy block. With `!egm`, the Evaluation that closes the block, where the block writes the grid line. |
+| `policy` | The authored policy block. With `!egm` and no `block:`, the Evaluation that closes the block, where the block writes the grid line. |
+| `policy.evaluate` | The Evaluation of the policy builder, where the policy function is stored: the place of its representation. |
+| `cntn_to_dcsn.evaluate.value` | The Evaluation of the decision value builder, for the value function it stores. |
+| `cntn_to_dcsn.evaluate.marginal` | The same Evaluation, for the derivative of the value a derivative line of the builder states. |
 | `policy.cons_choice` | The consumption example's authored implicit equation. |
 | `argmax` | Every `argmax` occurrence in this stage. |
 | `policy.choice.argmax` | The `argmax` in the retirement example's statement `choice` within block `policy`. |
@@ -96,15 +104,25 @@ An occurrence-specific attachment overrides the stage-wide attachment for that o
 
 The block-level `!egm` form requires the grid line, a line whose left side is a decision coordinate under the continuation mark; a policy block that writes no grid line is refused with the requirement named, and a first-order condition written as an operation takes a root finder instead.
 
-Neither a block called `policy` nor a method called `!egm` creates automatic `evaluate` or `upper_env` targets. A stage with discrete choices likewise needs its authored branch-selection equations; see [Branching](05-branching.md).
+Neither a block called `policy` nor a method called `!egm` creates an `evaluate` occurrence or an `upper_env` target. The address `policy.evaluate` names the Evaluation every policy builder closes with, not an authored `evaluate(…)`, which keeps its own address `<block-id>.<statement-id>.evaluate`; `evaluate` alone names a stage's one authored occurrence and is refused where the stage authors none or several. A stage with discrete choices likewise needs its authored branch-selection equations; see [Branching](05-branching.md).
 
 ## 3 Method places and options
 
 The expectation of the buffer-stock application, `applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl`, integrates the shocks $\psi$ and $\xi$. The method type of [`!gauss-hermite`](reference/methods.md#gauss-hermite) admits an expectation operator and gives `n_nodes` the type "one positive integer per shock". Its methods entry therefore lists the two node-count settings in the order $\psi$, $\xi$. These are the two parts of every public method type: `admits` and `options`.
 
-The admitted place depends on what the method does. A quadrature or maximization method computes a primitive operator and stands on that operator. A representation method stores a declared function or an evaluated field and stands at that function's definition or at the field's closing Evaluation. The third placement class is a handler for a whole builder, which stands on the builder. A declared function such as utility is not a field, and a function the stage file does not name has no address at which a method can stand.
+The admitted place depends on what the method does. A quadrature or maximization method computes a primitive operator and stands on that operator. A representation method stores a declared function or an evaluated field and stands at that function's definition or at the field's closing Evaluation, whose address the methods file writes (§2). The third placement class is a handler for a whole builder, which stands on the builder. A declared function such as utility is not a field, and a function the stage file does not name has no address at which a method can stand.
 
-An option has a name and a value type. Common types include positive integers, real numbers, positive real numbers, ordered pairs and seeds. `orders` and `bounds` are records keyed by the actual coordinates being gridded. The keys must name coordinates of the function, but the method may grid only a subset: a [`!Linear`](reference/methods.md#linear) representation of a function of $(m,z_d)$ may, for example, grid $m$ separately for each income state $z_d$. An order must be positive, and each bound must be an ordered pair inside its coordinate's declared set. `n_nodes` has one positive-integer entry per shock, in shock order. Methodization checks that required option names are present. Configuration checks the supplied values and joint conditions. An option unknown to the method is refused unless the entry names a handler that owns the option; such a handler-specific option is retained as untyped rather than treated as part of the method's contract.
+An option has a name and a value type. Common types include positive integers, real numbers, positive real numbers, ordered pairs and seeds. `n_nodes` has one positive-integer entry per shock, in shock order. Methodization checks that required option names are present. Configuration checks the supplied values and joint conditions. An option unknown to the method is refused unless the entry names a handler that owns the option; such a handler-specific option is retained as untyped rather than treated as part of the method's contract.
+
+A representation names two things: the **basis**, the rule by which a value between the nodes is read, and the **grid**, the finite set of nodes at which the function's values are stored. The basis is the method, [`!Linear`](reference/methods.md#linear) for piecewise linear interpolation or [`!pchip`](reference/methods.md#pchip) for the shape-preserving cubic, and the derivatives the representation evaluates follow from it. The grid is the setting `grid`, which the method requires: its value is the grid's kind written as a tag, and the grid's fields stand beside it as further settings of the entry. The kind the package defines is `!Cartesian`, a product of one grid for each coordinate, whose fields are `orders`, the number of points in each coordinate, and `bounds`, the interval in each, both required, and, where written, `spacing`, the name of the spacing in each coordinate, or `nodes`, the points themselves:
+
+```yaml
+  - on: cntn_to_dcsn.evaluate.value
+    method: !Linear
+    settings: {grid: !Cartesian, orders: {m: n_m}, bounds: {m: [m_min, m_max]}}
+```
+
+`orders` and `bounds` are records keyed by the actual coordinates being gridded. The keys must name coordinates of the function, but the method may grid only a subset: a `!Linear` representation of a function of $(m,z_d)$ may, for example, grid $m$ separately for each income state $z_d$. An order must be positive, and each bound must be an ordered pair inside its coordinate's declared set. The endogenous grid method names its exogenous grid of savings in the same way, under its own entry, and its coordinates are the states of the continuation perch, `orders: {a: n_a}` for the savings `a` (§1.1). A representation at the policy builder's Evaluation, where `!egm` stands in that builder, writes no grid, and a grid written there is refused, since the knots of its interpolant are the pairs of cash on hand and consumption that the method computes at each saving; nor does a representation of an authored `evaluate(knots, values, x)` need one, since its first argument holds the knots. `!Cartesian` is a kind of grid and not a method, and the fields of a grid written without the setting `grid` are refused, each refusal naming the form to write ([Refusals](reference/refusals.md)).
 
 Methodization adds no convergence or existence requirement. Defining equations, declared sets and authored constraints remain part of the exact stage, and ordinary type and calibration-definedness checks remain in force.
 
@@ -112,7 +130,7 @@ The listing `method_types`, which `bellman.stage` exports, gives the registered 
 
 ## 4 Writing the methodization file
 
-Every entry requires one `on:` address. A method tag is optional: an entry containing only `on` records recognition without attaching a numerical method, and a handler may be given when the operator family determines the method. Separate targets require separate entries. Two entries may name one target when their methods are of different kinds, a solution method, a representation and a marginal block, since each kind has a place of its own: a solution method such as `!egm` stands on the builder, a representation such as `!Linear` at the Evaluation that closes it, and a marginal block adds its lines to the builder; a second entry of one kind on one target is refused. Do not put a comma-separated list in `on:` or write a nested `schemes:` list.
+Every entry requires one `on:` address. A method tag is optional: an entry containing only `on` records recognition without attaching a numerical method, and a handler may be given when the operator family determines the method. Separate targets require separate entries. Two entries may name one builder when their methods are of different kinds, a solution method and a marginal block, since each kind has a place of its own: a solution method such as `!vfi` stands on the builder, and a marginal block under `!marginals` adds its lines to the builder; a second entry of one kind on one target is refused. A representation entry does not name a builder alone: its target is the builder's Evaluation, such as `policy.evaluate` beside `!egm` on `policy`, or `cntn_to_dcsn.evaluate.value` beside `!marginals` on `cntn_to_dcsn`. The value and its stated derivative are two addresses of one Evaluation, which holds one representation method: where a methods file writes both, the two entries must name the same method and form one binding, and two different methods there are refused. Do not put a comma-separated list in `on:` or write a nested `schemes:` list.
 
 The available entry fields are:
 
@@ -120,8 +138,7 @@ The available entry fields are:
 |---|---|
 | `on` | One supported computation address in the stage. |
 | `method` | Optional YAML tag naming the numerical technique, such as `!egm`. |
-| `grid` | Optional grid on which a representation stores its values, for a method whose type admits the option, such as `!Linear`, or for a named handler that reads it. |
-| `settings` | Optional mapping of method options to values or references. Referenced setting values are supplied during configuration. |
+| `settings` | Optional mapping of method options to values or references. Referenced setting values are supplied during configuration. The grid of a method that takes one is the setting `grid`, its kind written as a tag, with the grid's fields beside it (§3). |
 | `handler` | Optional identifier of the registered numerical routine used to carry out the computation. |
 | `block` | Optional path of a block file, written from the folder of the methods file, whose block the method binds on the builder that `on` names; only a method whose type takes a block admits it, such as `!egm` or `!marginals` (§4.1). |
 
@@ -129,7 +146,7 @@ Option names depend on the chosen method. Use the method's documented contract; 
 
 A **handler** is a numerical routine, or an adapter calling one, registered for the requested computation. One handler may carry out an entire builder, including internal interpolation or maximization. Alternatively, supported authored boundaries may have separate handlers. The handler's documented capabilities determine which choices it honors. Merely recording an option does not show that a routine uses it, or that two routines agree to a chosen tolerance.
 
-A handler evaluates only the equations of the stage file. A builder's `kernels()` answers them as one record that refers to no stage. A **kernel** is the mathematical data an operation uses: a law of motion, a value aggregator, a shock distribution, a correspondence or a policy reference. The record lists each operation of the builder in the order of application, with the plain Python function its kernel compiles to, or its printed relation where its rule is no explicit function, the names of the function's arguments and outputs, and the parameters with the values the calibration binds ([A builder](API/stage/04-builder.md) §5). A handler builds its numerical operator from such records and from the grids it reads from the settings, and the operator reads no stage. The endogenous-grid handler of the portfolio–consumption application, `cons-port:egm`, is one call of `egm` in asva, the numerical toolkit beside the package, `asva.egm(stage.dcsn.builder.policy.kernels(), stage.dcsn.builder.bwd.kernels(), savings, evaluation)`, with the savings grid and the evaluation grid read from the settings. Each function is made from the source text its kernel holds under `python`, which reaches array functions through the name `np` alone; a handler written for another array package executes the same text and then binds `np`, in the namespace of the function, to that package.
+A handler evaluates only the equations of the stage file. A builder's `kernels()` answers them as one record that refers to no stage. A **kernel** is the mathematical data an operation uses: a law of motion, a value aggregator, a shock distribution, a correspondence or a policy reference. The record lists each operation of the builder in the order of application, with the plain Python function its kernel compiles to, or its printed relation where its rule is no explicit function, the names of the function's arguments and outputs, and the parameters with the values the calibration binds ([A builder](API/stage/04-builder.md) §5). A handler builds its numerical operator from such records and from the grids it reads from the settings, and the operator reads no stage. The endogenous-grid handler of the portfolio–consumption application, `cons-port:egm`, is one call of `egm` in asva, the numerical toolkit beside the package, `asva.egm(stage.dcsn.builder.policy.kernels(), stage.dcsn.builder.bwd.kernels(), savings, evaluation)`, with the savings grid that the `!egm` entry names and the evaluation grid that the representation at the decision builder's Evaluation names, each read at the values the settings bind (§3). Each function is made from the source text its kernel holds under `python`, which reaches array functions through the name `np` alone; a handler written for another array package executes the same text and then binds `np`, in the namespace of the function, to that package.
 
 > [!note]- Technical details
 > Read tagged methods YAML through `bellman.stage.sources.load_methods`, which preserves method tags and handles YAML's treatment of the key `on`. Ordinary YAML loading is not a substitute for that loader. Loading a method tag records a choice; it does not verify the numerical algorithm or prove that its assumptions hold.
@@ -144,37 +161,44 @@ methods:
     method: !egm
     block: cons_egm.bl
     handler: cons-port:egm
+    settings: {grid: !Cartesian, orders: {a: n_a}, bounds: {a: [a_min, a_max]}}
   - on: cntn_to_dcsn
     method: !marginals
     block: cons_egm.bl
-  - on: cntn_to_dcsn.envelope
-    method: !Cartesian
-    settings: {orders: {m: n_m}, bounds: {m: [m_min, m_max]}}
+  - on: cntn_to_dcsn.evaluate.marginal
+    method: !Linear
+    settings: {grid: !Cartesian, orders: {m: n_m}, bounds: {m: [m_min, m_max]}}
 ```
 
-The block file `cons_egm.bl` beside it opens with the stage's mark, defines marginal utility and its inverse in closed form, and holds one block of each kind; the stage's decision state is `m`, its continuation state `a`:
+The block file `cons_egm.bl` beside it opens with the line `@methods: cons`, defines marginal utility and its inverse in closed form, and holds one block of each kind; the stage's decision state is `m`, its continuation state `a`:
 
 ```bl
-@stage: cons
+@methods: cons
 𝑑𝑢(c : ℝ₊₊) := c^(-ρ)
 𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
 
+
 [id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-    c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0    :: [id=InvEuler]
-    m[>] = a + c[>]                        :: [id=grid]
-    c    = c[>]                            :: [id=identification]
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0    :: [id=InvEuler]
+    m[>]   = a + c[>]                        :: [id=grid]
+    c      = c[>]                            :: [id=identification]
 }
 
+
+
+
+
+
 [id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
-    D_{m}V = 𝑑𝑢(c)                         :: [id=envelope]
+    D_{m}V = 𝑑𝑢(c)                           :: [id=envelope]
 }
 ```
 
-The first entry binds `!egm` on the policy builder with the block `egm`, which writes the three lines of §1.1 with its candidate line as the inequality `c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0` ([Constraints](10-constraints.md) §4.3). Its header lists the value it reads and the control it writes, and nothing else; the derivative of the continuation value is read by the term, and the header lists nothing for it. `methodize` elaborates the block with the stage's declarations and the block file's own definitions in scope, and its lines become the policy builder's **method rows**, the operations of that builder in `stage.builder`. The initial diagrams keep the stage file's maximization, and so do the builders as the stage file states them, which `stage.declared` reads by the same keys as `stage.builder`. The stage records the condition under which the method rows reach the declared maximization, and `stage.obligations()` lists it under the name `egm-eligibility`; nothing checks it.
+The first entry binds `!egm` on the policy builder with the block `egm`, which writes the three lines of §1.1 with its candidate line as the inequality `c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0` ([Constraints](10-constraints.md) §4.3), and names the exogenous grid of savings at which the candidate line is evaluated, the settings `n_a`, `a_min` and `a_max` (§3). Its header lists the value it reads and the control it writes, and nothing else; the derivative of the continuation value is read by the term, and the header lists nothing for it. `methodize` elaborates the block with the stage's declarations and the block file's own definitions in scope, and its lines become the policy builder's **method rows**, the operations of that builder in `stage.builder`. The initial diagrams keep the stage file's maximization, and so do the builders as the stage file states them, which `stage.declared` reads by the same keys as `stage.builder`. The stage records the condition under which the method rows reach the declared maximization, and `stage.obligations()` lists it under the name `egm-eligibility`; nothing checks it.
 
 The block reads the derivative of the continuation value by the term `D_{a}V[>]` and declares nothing about how it is evaluated: the stage that built that value fixed it, and this block knows only that the value it reads is a function. The second entry binds `!marginals` on the decision value builder with the block file's **marginal block**, a block whose lines are **derivative lines**, each stating a derivative of the value the builder writes as the author asserts it: the envelope condition `D_{m}V = 𝑑𝑢(c)`, the derivative of the decision value in cash on hand. Its header is the builder's header restricted to what its line reads, the control `c` and the value `V`. `methodize` records the line at the builder's closing [Evaluation](reference/operations.md#evaluation), beside the representation method bound there, as a stated derivative of the value by coordinate, with the line's id and its source; the builder's signature is unchanged, no wire and no box is added, and the value's record lists the coordinate `m` under `derivatives`. The reading of the line as the derivative of the value rests on the envelope conditions; `stage.obligations()` lists it under `marginal-reading` and nothing checks it.
 
-How the derivative of a value is evaluated is a property of the value, fixed here, in the methods file of the stage that writes it, in one of three ways: by the stated line, whose values a representation stores beside the value's; by the representation of the value itself, where its method's row says it evaluates the derivative ([Method types](reference/methods.md), the column **derivatives it evaluates**); or by a representation of the stated derivative of its own, bound on the derivative line's id, as the third entry binds `!Cartesian` on `cntn_to_dcsn.envelope`, so that the derivative is interpolated apart from the value. A later stage whose block reads `D_{a}V[>]` of this stage's value receives the derivative so fixed and declares nothing ([Trellises](07-trellis.md) §2.1). The demonstration's consumption stage declares no arrival perch: its decision value is the value the stage exports, and its decision state `m` is where the trellis joins the stage before it. A stage with an arrival builder whose law between the perches is the identity, `V[<] = V` or `V[<] = E_{y}V`, writes no derivative line on it, since the stored derivative values pass through the same map; where the pass-through crosses an expectation the package lists the condition that the derivative of the expectation is the expectation of the derivative, as `differentiation-under-the-integral`, and checks nothing. Where the law is not the identity, the author writes the arrival derivative line with the law's factor, as the buffer-stock model writes `D_{k}V[<] = E_{ψ,ξ}(R*(Γ*ψ)^(-ρ)*D_{m}V)`. Nothing is differentiated: the package computes no derivative that no line states and no representation evaluates. A stage file whose value builder writes the derivative line itself, as `cons_interior.bl` of §1.1 does, needs no marginal block. [Expression forms](reference/forms.md) §4 gives the two forms of a block file.
+How the derivative of a value is evaluated is a property of the value, fixed here, in the methods file of the stage that writes it, in one of two ways: by the stated line, whose values the representation at the builder's Evaluation stores beside the value's; or, where no line states the derivative, by the representation of the value itself, where its method's row says it evaluates the derivative ([Method types](reference/methods.md), the column **derivatives it evaluates**). The methods file writes that representation at the builder's Evaluation, by the value, `cntn_to_dcsn.evaluate.value`, or by the stated derivative, `cntn_to_dcsn.evaluate.marginal`, as the third entry binds `!Linear` on the grid of resources its setting `grid` names; the two addresses name one Evaluation, which holds one representation method (§4). A later stage whose block reads `D_{a}V[>]` of this stage's value receives the derivative so fixed and declares nothing ([Trellises](07-trellis.md) §2.1). The demonstration's consumption stage declares no arrival perch: its decision value is the value the stage exports, and its decision state `m` is where the trellis joins the stage before it. A stage with an arrival builder whose law between the perches is the identity, `V[<] = V` or `V[<] = E_{y}V`, writes no derivative line on it, since the stored derivative values pass through the same map; where the pass-through crosses an expectation the package lists the condition that the derivative of the expectation is the expectation of the derivative, as `differentiation-under-the-integral`, and checks nothing. Where the law is not the identity, the author writes the arrival derivative line with the law's factor, as the buffer-stock model writes `D_{k}V[<] = E_{ψ,ξ}(R*(Γ*ψ)^(-ρ)*D_{m}V)`. Nothing is differentiated: the package computes no derivative that no line states and no representation evaluates. A stage file whose value builder writes the derivative line itself, as `cons_interior.bl` of §1.1 does, needs no marginal block. [Expression forms](reference/forms.md) §4 gives the two forms of a block file.
 
 ## 5 Loading and attaching choices
 
@@ -207,12 +231,12 @@ The queries below inspect the three public parts of this process without executi
 ```python
 from bellman.stage import method_types
 
-print(method_types["!Cartesian"])
+print(method_types["!Linear"])
 print(calibrated.places())
 print(specified.settings)
 ```
 
-Each `method_types` entry displays its admitted places and typed options. `places()` lists the addresses and kinds available on this stage ([Methods and places](API/stage/07-methods.md)). `settings` lists each setting value and, for every method that reads it, the place under `read at` and the method under `by` ([Parameters and settings](API/stage/06-par-and-settings.md)). A setting that no method reads remains listed with no reader.
+Each `method_types` entry displays its admitted places and typed options. `places()` lists the addresses and kinds available on this stage ([Methods and places](API/stage/07-methods.md)). `settings` lists each setting value and, for every method that reads it, the place under `read at`, the method under `by` and, where the setting is a field of the method's grid, the grid's kind under `grid` ([Parameters and settings](API/stage/06-par-and-settings.md)). A setting that no method reads remains listed with no reader.
 
 [The Bellman factory](08-bellman-factory.md) applies the same sequence to each stage occurrence of a trellis, meaning one stage file elaborated at one position of a period ([Periods](06-period.md#4-constructing-a-period)). Repeated stage occurrences have independent graphs and specifications; that independence does not imply that lifecycle operations can be applied in any order.
 

@@ -1099,9 +1099,12 @@ def test_task_10_the_methods_tab_offers_at_policy_the_tags_the_package_admits_th
     the row `policy` offers the tags the package admits at that target,
     `admitted_methods` of `bellman.stage`, in the method table's order, and
     no other: `!egm`, since the policy block writes the grid line, and not
-    `!vfi`, which stands on the backward decision builder alone; the select
-    of the row `cntn_to_dcsn.value`, a statement, offers the three
-    representations. `!time-iteration` chosen at `policy` replaces `!egm` at
+    `!vfi`, which stands on the backward decision builder alone; the row
+    `cntn_to_dcsn:Evaluation`, the one representation that the entries of
+    the value and of its marginal bind at the decision builder's
+    Evaluation, shows `!Linear` as text, with no select, since the tab reads
+    the methods the stage binds (decision S7-W1 of specification 0.7).
+    `!time-iteration` chosen at `policy` replaces `!egm` at
     line 5 of the methods file on disk, no other line changing, and the row
     then shows the tag chosen."""
     methods = scratch_folder / CONS_METHODS
@@ -1119,9 +1122,9 @@ def test_task_10_the_methods_tab_offers_at_policy_the_tags_the_package_admits_th
         policy = tab.locator(METHOD_SELECT.format("policy"))
         policy.wait_for(timeout=30_000)
         assert policy.locator("option").all_text_contents() == list(admitted)
-        value = tab.locator(METHOD_SELECT.format("cntn_to_dcsn.value"))
-        representations = ["!Cartesian", "!Linear", "!pchip"]
-        assert value.locator("option").all_text_contents() == representations
+        value = tab.locator('.bl-values-row[data-name="cntn_to_dcsn:Evaluation"]')
+        assert value.locator(".bl-values-tag").text_content() == "!Linear"
+        assert value.locator("select").count() == 0
         policy.select_option("!time-iteration")
         lines[4] = "    method: !time-iteration"
         wait_until(

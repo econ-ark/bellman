@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from bellman.period import backward_order, period_joins
+from bellman.stage.method_table import grid_kind
 from bellman.trellis import inter_period_joins
 from bellman.distributions.families import numeric_value
 from bellman.distributions.edges import distribution_declarations
@@ -112,19 +113,34 @@ def spaced(stage, low, high, count):
 
 
 def evaluation_grid(stage):
-    """The grid on which the stage occurrence represents its value: the orders and bounds of the representation
-    at `cntn_to_dcsn:Evaluation`, read against its settings, spaced as the setting `grid_spacing` says."""
-    options = representation_at(stage, "cntn_to_dcsn:Evaluation").settings
-    ((coordinate, order),) = options["orders"].items()
-    low, high = options["bounds"][coordinate]
-    return spaced(stage, float(setting(stage, low)), float(setting(stage, high)), int(setting(stage, order)))
+    """The grid on which the stage occurrence represents its value: the grid of the representation at
+    `cntn_to_dcsn:Evaluation` (`cartesian_points`)."""
+    return cartesian_points(stage, representation_at(stage, "cntn_to_dcsn:Evaluation"))
 
 
 def savings_grid(stage):
-    """The exogenous grid of savings of the endogenous-grid method: the settings `n_a`, `a_min`, `a_max`, spaced
-    as the setting `grid_spacing` says."""
-    held = stage.bindings.settings
-    return spaced(stage, float(held["a_min"]), float(held["a_max"]), int(held["n_a"]))
+    """The exogenous grid of savings of the endogenous-grid method: the grid of the `!egm` entry on the policy
+    builder (`cartesian_points`), `orders: {a: n_a}` and `bounds: {a: [a_min, a_max]}` in the consumption stage's
+    methods file."""
+    return cartesian_points(stage, method_at(stage, "policy"))
+
+
+def cartesian_points(stage, method):
+    """The points of the one-dimensional grid a bound method names by its setting `grid: !Cartesian`: the order and
+    the bounds that stand beside `grid` as settings of the entry, read against the stage occurrence's settings and
+    spaced as the setting `grid_spacing` says. A grid of another kind is refused, since the tool reads a Cartesian
+    grid alone, and so is a grid that writes `spacing` or `nodes` beside it, which the tool does not read."""
+    options = method.settings
+    if grid_kind(options.get("grid")) != "Cartesian":
+        raise ValueError(f"stage {stage.name!r}: the method !{method.tag} names the grid {options.get('grid')!r}; this "
+                         "tool reads the grid `grid: !Cartesian` with `orders` and `bounds` beside it")
+    unread = [field for field in ("spacing", "nodes") if field in options]
+    if unread:
+        raise ValueError(f"stage {stage.name!r}: the method !{method.tag} writes {' and '.join(unread)} beside its "
+                         "grid; this tool spaces the points by the setting grid_spacing and reads neither")
+    ((coordinate, order),) = options["orders"].items()
+    low, high = options["bounds"][coordinate]
+    return spaced(stage, float(setting(stage, low)), float(setting(stage, high)), int(setting(stage, order)))
 
 
 def lognormal_law(stage):

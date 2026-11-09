@@ -260,7 +260,10 @@ def test_an_unknown_handler_is_refused_with_the_handlers_the_tool_realizes(endin
     # the method opens the policy builder with the block file beside the methods file, which the stage file needs
     # since AAS's instruction of 21 October 2026 (SD-33); `ending` holds the representation and the marginal block
     block = str(DECLARATION / "methods" / "cons_egm.bl")
-    cons = consumption_stage().methodize({"methods": [{"on": "policy", "method": "!egm", "block": block, "handler": "cons-port:unknown"}]}
+    # the exogenous grid of savings the method requires, as methods/cons.yml writes it (AMD-MB-003)
+    savings = {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}
+    cons = consumption_stage().methodize({"methods": [{"on": "policy", "method": "!egm", "block": block, "handler": "cons-port:unknown",
+                                                       "settings": savings}]}
                             ).configure(str(DECLARATION / "settings" / "cons.yml"))
     with pytest.raises(ValueError) as refused:
         tool.stage_operator(cons)

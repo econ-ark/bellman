@@ -150,7 +150,7 @@ def _checked_methods(data: Any, source: Optional[str] = None) -> dict:
             raise TypeError(f"{location}: settings must be a mapping")
         # `block` is the path of a block file, relative to the methods file
         # (specification 0.6 §4)
-        for key in ("handler", "grid", "block"):
+        for key in ("handler", "block"):
             if key in entry and (not isinstance(entry[key], str) or not entry[key].strip()):
                 raise ValueError(f"{location}: {key} must be a nonempty string")
         result["methods"].append(entry)
@@ -169,9 +169,11 @@ def entry_key(entry):
     method table, `solution` where the row names none or the entry names a
     handler alone. One entry of each kind may stand on one target in one
     source, as the binding rule admits, since each kind has its own place:
-    `!egm` on `policy` stands on the builder, `!Linear` on `policy` at the
-    Evaluation that closes it, and `!marginals` on `policy` adds its lines
-    (decision MB-U4, extended on 31 October 2026, MB-U53)."""
+    `!vfi` on `cntn_to_dcsn` stands on the builder and `!marginals` on
+    `cntn_to_dcsn` adds its lines at the builder's Evaluation, while a
+    representation names that Evaluation itself, `cntn_to_dcsn.evaluate.value`,
+    a target of its own (decision MB-U4, extended on 31 October 2026, MB-U53;
+    AMD-MB-002)."""
     method = entry.get("method")
     name = method.get("__yaml_tag__") if isinstance(method, Mapping) else method
     tag = name[1:] if isinstance(name, str) and name.startswith("!") else name
@@ -273,8 +275,33 @@ class DuplicateKey(ValueError):
 
 class TagPreservingLoader(yaml.SafeLoader):
     """A SafeLoader that keeps every `!tag` as `{"__yaml_tag__": tag, ...}`,
-    reads the YAML keys `on` and `off` as those words, and refuses a mapping
-    key written twice with `DuplicateKey`."""
+    reads the YAML keys `on` and `off` as those words, refuses a mapping key
+    written twice with `DuplicateKey`, and ends a tag at a flow indicator
+    inside a flow collection, as YAML 1.2 does (`scan_tag`)."""
+
+    def scan_tag(self):
+        """The token of a tag. Inside a flow collection, a tag `!<name>`
+        followed directly by a comma or a closing bracket ends before it, as
+        YAML 1.2 reads a tag (its `ns-tag-char` excludes the flow
+        indicators), so that `{grid: !Cartesian, orders: {a: n_a}}` reads
+        `!Cartesian` as the tag of an empty value (AMD-MB-003 §1); the
+        scanner of PyYAML, which follows YAML 1.1 here, reads `Cartesian,` as
+        the tag and refuses the text. The name is read over the letters, the
+        digits and the characters `-;/?:@&=+$_.~*'()`; a tag that holds any
+        other character, `%` and `!` among them, or that another character
+        follows, is scanned by PyYAML's scanner."""
+        if self.flow_level:
+            length = 1
+            ch = self.peek(length)
+            while ch.isascii() and (ch.isalnum() or ch in "-;/?:@&=+$_.~*'()"):
+                length += 1
+                ch = self.peek(length)
+            if length > 1 and ch in ",]}":
+                start_mark = self.get_mark()
+                suffix = self.prefix(length)[1:]
+                self.forward(length)
+                return yaml.tokens.TagToken(("!", suffix), start_mark, self.get_mark())
+        return super().scan_tag()
 
     def construct_mapping(self, node, deep=False):
         """A YAML mapping, its keys `on` and `off` read as those words; a key

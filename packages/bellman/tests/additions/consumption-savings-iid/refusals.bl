@@ -1,0 +1,53 @@
+@methods: cons_savings_iid
+# Deliberate refusals (aspect A24) on the stage cons_savings_iid, whose stage
+# file is
+# applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl.
+# No item of this file belongs to the application's methods; each is written
+# as an author might write it by mistake, and each comment names the rule of
+# the union (the proposal's §4) or of the box's well-formedness that refuses it.
+# The settings are declared as in methods.bl, and the grid is its own typing
+# entry (D5, decided), so that only the refusals remain.
+
+n_a : ℕ          :: ["number of points of the savings grid"]
+a_min : ℝ₊       :: ["lower bound of the savings grid"]
+a_max : ℝ₊       :: ["upper bound of the savings grid"]
+
+# Refused: a name defined in both files with different content (rule 2). The
+# stage file defines 𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢); an author who copies the closed form
+# of the inverse marginal utility from another application's methods file
+# defines the name a second time. methods.bl asks for the closed form by a
+# method at the definition instead, 𝑑𝑢𝑖𝑛𝑣.method : !analytic_inverse.
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/γ)
+
+# Refused: the same slot twice. The relative subject evaluate.method and the
+# absolute subject policy.evaluate.method name one slot, the method slot of the
+# Evaluation of policy (rule 7, a path inside a block read from the block),
+# and fill it with two different representations; rule 4 refuses two entries
+# of one key with different content, naming both.
+[id=policy, method : !egm
+    | grid : !Cartesian(a=(a_min, a_max, n_a))
+    | evaluate.method : !Linear
+    | policy.evaluate.method : !pchip] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
+}
+
+# Refused: a subject naming another block. The group's subject begins with
+# dcsn_to_arvl, a block other than the enclosing cntn_to_dcsn, so it would
+# place the representation of the arrival value from inside the decision value
+# builder (rule 7). The envelope line itself is the one methods.bl appends.
+[id=cntn_to_dcsn
+    | dcsn_to_arvl.evaluate.method : !Linear] {
+    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+
+# Refused twice. First, two sets on one coordinate: the partial signature
+# appends nothing to the domain, by its empty side, and gives the arrival value
+# V[<] the set ℝ₊ in the codomain, where the stage's signature of dcsn_to_arvl
+# gives it ℝ (rule 4, a coordinate of one name with different content); with
+# γ > 1 the value is negative, so the author's set is also false. Second, a
+# line id twice: the derivative line is written under the id value, which the
+# stage's line V[<] = E_{y}(V) of the same block already holds (rule 5).
+[id=dcsn_to_arvl, () -> (V[<] : ℝ₊ @ !vlu) : !arvl] {
+    D_{b}V[<] = E_{y}(R * D_{w}V)   :: [id=value]
+}

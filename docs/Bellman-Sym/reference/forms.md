@@ -70,7 +70,7 @@ The named functions `exp`, `log`, `max`, `min` and `Inv`, and a function the sta
 
 ## 4 The blocks of a block file
 
-A **block file** is a file of blocks that a methods file names under `block:` ([Methodization](../04-methodization.md) §4.1). It opens with the stage's mark, `@stage: cons`, may define functions in closed form, `𝑑𝑢(c : ℝ₊₊) := c^(-ρ)`, whose kernels compile as a stage file's do (§3), and holds blocks of two forms, each written as a block of a stage file is ([Stages](../01-stage.md)):
+A **block file** is a file of blocks that a methods file names under `block:` ([Methodization](../04-methodization.md) §4.1). It opens with a line naming its stage, `@methods: cons`, or with the stage's mark, `@stage: cons`, either of which the package accepts; it may define functions in closed form, `𝑑𝑢(c : ℝ₊₊) := c^(-ρ)`, whose kernels compile as a stage file's do (§3), and holds blocks of two forms, each written as a block of a stage file is ([Stages](../01-stage.md)):
 
 | Written | Reading |
 |---|---|

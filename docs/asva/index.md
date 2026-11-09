@@ -47,15 +47,22 @@ From the root of the repository, `pip install -e packages/asva` installs the pac
 
 ## 3 Asva and bellman
 
-A methods file may name an asva function as the [handler](../wiki/handler.md) of a method. The [retirement-choice application](../examples/retirement/retirement_choice.md) attaches the endogenous grid method to the consumption stages of its retiree and its worker with the entry
+A methods file may name an asva function as the [handler](../wiki/handler.md) of a method. The [retirement-choice application](../examples/retirement/retirement_choice.md) attaches the endogenous grid method to the consumption stages of its retiree and its worker with entries such as the worker's, which names the method block of `worker_cons_egm.bl` and the exogenous grid of savings by the setting `grid`, its kind the tag `!Cartesian` with the grid's order and bounds beside it ([Methodization](../Bellman-Sym/04-methodization.md) §3):
 
 ```yaml
   - on: policy
     method: !egm
+    block: ../../methods/worker_cons_egm.bl
     handler: asva:make_egm_1d
+    settings:
+      grid: !Cartesian
+      orders:
+        b: n_a
+      bounds:
+        b: [a_min, a_max]
 ```
 
-`bellman` binds the method at the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that closes the policy block, `policy:Evaluation`, the operation that places the policy in its declared set of functions ([the method type `!egm`](../Bellman-Sym/reference/methods.md#egm)), and records the handler's name with it; it neither imports the function nor calls it. The reader's own code builds the step and applies it: from the [specified stage](../wiki/specified_stage.md) it computes the arrays and the functions that `make_egm_1d` or another asva function takes, or it passes the records of the stage's kernels to `egm` ([Numerical steps](01-numerical-steps.md) §6).
+`bellman` keeps the method on the policy builder, `policy`, whose operations the method block writes ([the method type `!egm`](../Bellman-Sym/reference/methods.md#egm)), and records the handler's name with it; it neither imports the function nor calls it. The reader's own code builds the step and applies it: from the [specified stage](../wiki/specified_stage.md) it computes the arrays and the functions that `make_egm_1d` or another asva function takes, or it passes the records of the stage's kernels to `egm` ([Numerical steps](01-numerical-steps.md) §6).
 
 A test of the runner holds fills keyed by slot name, and these are the keyword arguments of `load_recipe` and `assemble_trellis` of `bellman.trellis`, so that one test selects one variant of the model that a registry's recipe describes ([The runner](02-the-runner.md) §2).
 

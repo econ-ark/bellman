@@ -1,0 +1,38 @@
+@methods: ez_savings
+# Deliberate refusals (aspect A24) on the stage ez_savings, whose stage file is
+# applications/epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl.
+# No block of this file belongs to the methods of methods.bl; each is written
+# as an author might write it by mistake, and each comment names the rule of
+# the union (the proposal's §4) that refuses it. The settings the blocks read
+# are declared as methods.bl declares them (writer's sheet §6), so that no
+# other problem is reported.
+
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the gross return"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulation"]
+
+# Refused twice. First, the same slot twice: `E_Ψ.method` names every
+# occurrence of the operator E_Ψ in the block (finding F3), here the one in
+# the line `value`, and `value.E_Ψ.method` names that occurrence by its line;
+# the two subjects differ as text, name one slot under rule 7, and fill it
+# with two methods, which the box of §4 refuses (each slot holds at most one
+# entry) and rule 4 refuses once a typing is keyed by the slot its path
+# names. Second, a subject naming another block: `policy.evaluate.method`
+# begins with the id of the block `policy` inside the block `cntn_to_dcsn`
+# (rule 7). The derivative line is the one methods.bl appends.
+[id=cntn_to_dcsn
+    | E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+    | value.E_Ψ.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)
+    | policy.evaluate.method : !Linear] {
+    D_{m_d}V = (1-β)*c^(-ρ)*V^ρ        :: [id=marginal]
+}
+
+# Refused twice. First, two sets on one coordinate: the partial signature
+# gives the control c the set ℝ₊, which admits zero consumption, where the
+# stage's signature of dcsn_to_cntn gives it ℝ₊₊ (rule 4, a coordinate of one
+# name with different content; finding F16). Second, a line id twice: the
+# line restates the law of motion under its id `savings`, which the stage's
+# block already holds (rule 5).
+[id=dcsn_to_cntn, (c : !ctrl @ ℝ₊) : !dcsn -> ()] {
+    a = (m_d - c)*Ψ        :: [id=savings]
+}

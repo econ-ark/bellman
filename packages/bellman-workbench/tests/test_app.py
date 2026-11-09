@@ -203,7 +203,7 @@ def test_the_legend_of_cons_with_its_methods_lists_its_levels_methods_and_marks(
         ("builder's output", "output"),
     ]
     assert [entry.text for entry in groups["methods"]] == [
-        "!Cartesian  cntn_to_dcsn:Evaluation",
+        "!Linear  cntn_to_dcsn:Evaluation",
         "!egm  policy:Evaluation",
     ]
     assert [entry.text for entry in groups["marks"]] == ["· !tag", "at 𝑐", "𝑔≺, 𝑔≻"]
@@ -243,7 +243,7 @@ def test_the_legend_of_a_trellis_lists_each_place_of_a_bound_method_once(conspor
     ]
     places = [entry.text for entry in groups["methods"]]
     assert sorted(places) == [
-        "!Cartesian  cons/cntn_to_dcsn:Evaluation",
+        "!Linear  cons/cntn_to_dcsn:Evaluation",
         "!Linear  port/cntn_to_dcsn:Evaluation",
         "!egm  cons/policy:Evaluation",
         "!gauss-hermite  port/cntn_to_dcsn:Expectation",

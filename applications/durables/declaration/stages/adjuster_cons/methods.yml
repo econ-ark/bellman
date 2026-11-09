@@ -12,11 +12,21 @@ methods:
   # takes consumption from the asset Euler equation, adds the point at the
   # borrowing limit, forms the endogenous grid of total wealth, and selects
   # among the pooled candidates by value with the fast upper envelope scan.
+  # The setting grid names the exogenous grid of the method, savings and new
+  # housing, by its kind, !Cartesian, with its order and bounds in each
+  # coordinate beside it. The routine of the replication code reads the orders
+  # and the bounds of this grid by its own keys housing_orders, housing_bounds,
+  # savings_orders and savings_bounds, and the spacing of savings, which the
+  # setting grid does not state, by savings_spacing; these keys stand below
+  # until it reads the setting grid.
   - on: policy
     method: !egm
     block: ../../methods/adjuster_cons_egm.bl
     handler: fues-durables:make_adjuster_ops
     settings:
+      grid: !Cartesian
+      orders: {a_nxt_adj: n_a, h_nxt_adj: n_h}
+      bounds: {a_nxt_adj: [a_min, a_max], h_nxt_adj: [h_min, h_max]}
       housing_orders: [n_h]
       housing_bounds: [[h_min, h_max]]
       savings_orders: [n_a]
@@ -47,13 +57,17 @@ methods:
 
   # The value the backward block writes, on the line value, and the derivative
   # of the value the marginal block states, on the line marginal_wealth, are
-  # each tabulated on a grid of total wealth, one table per income state; the
-  # second entry binds a representation of the stated derivative on the
-  # derivative line's id.
-  - on: cntn_to_dcsn.value
+  # each tabulated on a grid of total wealth, one table per income state, at
+  # the decision builder's Evaluation and read by linear interpolation, the
+  # basis !Linear, on the grid that the setting grid names by its kind,
+  # !Cartesian, with its order and bounds beside it: the first entry names the
+  # value there, cntn_to_dcsn.evaluate.value, and the second the stated
+  # derivative, cntn_to_dcsn.evaluate.marginal.
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     handler: dcsmm:interp_as_3
     settings:
+      grid: !Cartesian
       orders:
         m: n_w
       bounds:
@@ -61,10 +75,11 @@ methods:
       extrapolate: extrap_policy
       clamp_factor: clamp_max_factor
 
-  - on: cntn_to_dcsn.marginal_wealth
+  - on: cntn_to_dcsn.evaluate.marginal
     method: !Linear
     handler: dcsmm:interp_as_3
     settings:
+      grid: !Cartesian
       orders:
         m: n_w
       bounds:

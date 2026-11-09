@@ -988,9 +988,11 @@ Nothing is differentiated: each line is a line the author wrote, and its
 reading as the derivative of the value the builder writes is the author's
 assertion, which `stage.obligations()` lists as `marginal-reading` and
 nothing checks. How the derivative of a value is evaluated is a property of
-the value, fixed where the value is built: by the stated line, by the
-representation of the value, or by a representation of the derivative bound
-on the derivative line's id. A block that reads `D_{a}V[>]` declares that
+the value, fixed where the value is built: by the stated line, whose values
+the representation at the builder's Evaluation stores, or by the
+representation of the value itself; the methods file names that
+representation at the Evaluation, `<block-id>.evaluate.value` or
+`<block-id>.evaluate.marginal`. A block that reads `D_{a}V[>]` declares that
 reading and nothing else; it knows only that the value it reads is a
 function. At a
 constrained choice the line is read at the policy, where the multiplier of

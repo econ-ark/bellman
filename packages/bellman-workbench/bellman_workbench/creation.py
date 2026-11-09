@@ -443,7 +443,8 @@ def _corpus_records(path: str, state: tuple) -> dict:
     which is not kept, so that it is read again at the next reading."""
     file = Path(path)
     # a recipe is the folder's `spec.yml` or a variant `spec.<name>.yml`, as `model._role` reads a name
-    read = load_recipe(file.parent, file.name) if model._role(Path(file.name)) == "recipe" else load_trellis(file)
+    is_recipe = model._role(Path(file.name), file.parent) == "recipe"
+    read = load_recipe(file.parent, file.name) if is_recipe else load_trellis(file)
     records = {}
     for period in read["periods"]:
         for key, record in period["stages"].items():
@@ -3019,7 +3020,7 @@ def named_files(folder, texts=None) -> frozenset:
         listed = []
     named, trellises = set(), {}
     for path in listed:
-        role = model._role(path.relative_to(root))
+        role = model._role(path.relative_to(root), root)
         document = _document_of(path, texts) if role in ("recipe", "trellis") else None
         if not isinstance(document, dict):
             continue

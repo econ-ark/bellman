@@ -44,9 +44,14 @@ __all__ = (
     "Diagnostic",
     "FACTORY_RULES",
     "FactoryError",
+    "GRID_KIND_AS_METHOD",
+    "GRID_UNDER_EGM",
+    "GRID_WITHOUT_KIND",
     "METHOD_ATTACHMENT",
     "METHOD_CONDITIONS",
     "NotConstructed",
+    "REPRESENTATION_ON_BUILDER",
+    "REPRESENTATION_ON_DERIVATIVE_LINE",
     "RULES",
     "RULE_A",
     "RULE_B_C",
@@ -55,6 +60,7 @@ __all__ = (
     "RULE_FORM",
     "RULE_G",
     "RULE_H",
+    "RULE_I",
     "RULE_II",
     "RULE_TWO",
     "TARGET_AMBIGUOUS",
@@ -86,7 +92,8 @@ RULES = (
     # Each name, block id, statement id, and law is written once.
     "declared-once",
     # Within one block, an operative equation defines each name-sided left
-    # side once. A documentary line (`!doc`) defines none.
+    # side once, and a derivative line states each derivative term, `D_{m}V`,
+    # once. A documentary line (`!doc`) defines and states none.
     "defined-once",
     # A name is a field, a function, a named space, a shock, or a parameter —
     # one of them — and is not the name of a numerical operator.
@@ -98,7 +105,8 @@ RULES = (
     # mark, or its role, and the three must agree.
     "field-perch",
     # Every name a statement or a definition body mentions is declared where
-    # the statement stands.
+    # the statement stands, and every set a typing names, `n_m : Foo`, is a
+    # named set the stage defines or a set of the language.
     "name-in-scope",
     # A selection takes a coordinate of a declared family by a key the family
     # admits.
@@ -124,6 +132,20 @@ RULES = (
     # The fields a statement's right side mentions are at the left side's
     # perch, before it, or forward of it along the stage's transitions.
     "forward-composite",
+    # One block writes a field between two perches: a second block that
+    # joins the same perches and writes a field the first writes is refused
+    # naming both blocks.
+    "one-builder-per-output",
+    # A candidate line of a policy block, `x[>] = …`, names a control at the
+    # candidate points, `c[>]`, a state of the decision perch, the grid line
+    # `m[>] = a + c[>]`, or the value candidate an upper envelope of the
+    # block compares; any other name is refused with the coordinates in
+    # scope.
+    "candidate-coordinate",
+    # A candidate a policy block writes is read by a later line of the block
+    # or is the grid line, whose points are the knots of the policy; a
+    # candidate nothing reads is refused naming the line.
+    "candidate-read",
     # A transition block's statements define the state transition g and
     # contain no expectation: the forward builder is the push-forward of a
     # measure through g, and integration over a shock belongs to a value
@@ -139,7 +161,8 @@ RULES = (
     # The one formal argument a derivative names is scalar, not product-valued.
     "derivative-scalar-coordinate",
     # A derivative of a value field, `D_{a}V[>]`, names a state coordinate of the
-    # perch at which the field is read, and not a discrete one (AMD-MB-001 §4.2).
+    # perch at which the field is read, and not a discrete one (AMD-MB-001 §4.2);
+    # for the value of a branch, `D_{a_w}V_w[>]`, a state the branch writes.
     "derivative-coordinate",
     # Every field is produced and consumed: a block writes it or the stage
     # receives it, and a block reads it or the stage delivers it.
@@ -159,6 +182,29 @@ RULES = (
     "identity-collision",
     # The item is a form the construction rules read.
     "readable-form",
+    # A typing entry or a handler binding, `policy.method : !egm`, is written
+    # in a methods file, which the union attaches to its stage and the
+    # semantics reads; a stage elaborated alone carries none.
+    "typing-entry-unattached",
+    # Over the files of a stage, a component is typed once, whether by an
+    # absolute or a relative spelling of its path, a name is defined once, or
+    # identically in each file, and a line id names one line of a block; the
+    # union of the stage file and its additions refuses a second entry,
+    # definition or line naming both positions.
+    "declared-twice",
+    # A nested block of an addition merges with the branch of the same label
+    # under its parent, and a path inside a block names a line or an operator
+    # of that block: a label the parent lacks, and a first segment that names
+    # another block, are refused.
+    "label-not-in-parent",
+    # The field names determine a signature: a coordinate an addition restates
+    # keeps the stage's typing, and a different type on it, or a different
+    # perch word on its side, is refused.
+    "type-conflict",
+    # An addition names the stage it adds to, `@methods: <stage>`, with the
+    # name the stage file gives itself, and a metadata line of another key
+    # agrees with the stage file's line of that key.
+    "metadata-mismatch",
     # A multiplier is declared inside the block whose continuation grid it
     # extends, once, marked `[>]`, with one declared set and one bound after
     # ⟂ that names continuation states, multipliers of the block, parameters,
@@ -380,16 +426,26 @@ def construction_error(
 # stands once its target is read is the placement rule of its row of the
 # method table, whose refusal is `METHOD_ATTACHMENT`.
 RULE_A = "(a) a builder box by its block id; `<block-id>_builder` for a transition block"
-RULE_B_C = "(b), (c) a node box or a line by `<block-id>.<statement-id>`"
-RULE_II = "(ii) a positional address `<block-id>.<n>` is not a target; the line needs an id"
+RULE_B_C = (
+    "(b), (c) a node box or a line by `<block-id>.<statement-id>`, a line of a branch by "
+    "`<block-id>.<label>.<statement-id>`"
+)
+RULE_II = "(c.ii) a positional address `<block-id>.<n>` is not a target; the line needs an id"
 RULE_D = "(d) every occurrence of an operator by its stage-wide name"
-RULE_E = "(e) one occurrence by `<block-id>.<statement-id>.<operator>`"
+RULE_E = "(e) every occurrence of an operator in one line by `<block-id>.<statement-id>.<operator>`"
 RULE_G = (
-    "(g) `evaluate`: the one authored occurrence, else the boundary "
-    "representation; two or more authored occurrences are named by their addresses"
+    "(g) `evaluate` alone: the one authored occurrence; two or more are named by their "
+    "addresses, and a stage that authors none is refused naming `<block-id>.evaluate.value`"
 )
 RULE_H = "(h) one target per entry; a comma-separated entry is split by L02"
-RULE_FORM = "a target has one, two, or three dot-separated parts"
+RULE_I = (
+    "(i) the Evaluation of a builder by `<block-id>.evaluate`, `<block-id>.evaluate.value` "
+    "or `<block-id>.evaluate.marginal`"
+)
+RULE_FORM = (
+    "a target has one, two, or three dot-separated parts, or four where the second is a "
+    "branch label"
+)
 RULE_TWO = "a target reaches one place; two is a construction defect"
 
 # The four failures a target can suffer beyond the identity table: a name the
@@ -400,8 +456,28 @@ TARGET_AMBIGUOUS = "target-ambiguous"
 TARGET_VERSION = "target-version"
 METHOD_ATTACHMENT = "method-attachment"
 
+# The two places a representation is not attached to, each refused naming the
+# address the author writes (AMD-MB-002 §4): a builder, whose Evaluation is
+# written `<block-id>.evaluate` or `<block-id>.evaluate.value`, and a
+# derivative line, whose stated derivative is represented at
+# `<block-id>.evaluate.marginal`.
+REPRESENTATION_ON_BUILDER = "representation-on-builder"
+REPRESENTATION_ON_DERIVATIVE_LINE = "representation-on-derivative-line"
+
+# The three forms of a grid the method table does not read, each refused
+# naming the form the author writes (AMD-MB-003 §3): a kind of grid,
+# `!Cartesian`, written as a method, where the basis is the method and the
+# grid its setting `grid: !Cartesian`; the fields of a grid, `orders` and
+# `bounds`, written beside a basis or beside `!egm` without the setting
+# `grid` that names the grid's kind; and a grid written on the Evaluation of
+# the policy builder where `!egm` stores the pairs that are the interpolant's
+# knots.
+GRID_KIND_AS_METHOD = "grid-kind-as-method"
+GRID_WITHOUT_KIND = "grid-without-kind"
+GRID_UNDER_EGM = "grid-under-egm"
+
 # The one vocabulary of `TargetError.rule`: the rules of the identity table
-# above, in the order the table writes them, and the four failures beside
+# above, in the order the table writes them, and the nine failures beside
 # them. The constructor refuses a rule outside it, so that every site names
 # one of them.
 TARGET_RULES = (
@@ -412,12 +488,18 @@ TARGET_RULES = (
     RULE_E,
     RULE_G,
     RULE_H,
+    RULE_I,
     RULE_FORM,
     RULE_TWO,
     TARGET_NOT_FOUND,
     TARGET_AMBIGUOUS,
     TARGET_VERSION,
     METHOD_ATTACHMENT,
+    REPRESENTATION_ON_BUILDER,
+    REPRESENTATION_ON_DERIVATIVE_LINE,
+    GRID_KIND_AS_METHOD,
+    GRID_WITHOUT_KIND,
+    GRID_UNDER_EGM,
 )
 
 

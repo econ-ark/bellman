@@ -4,7 +4,10 @@ stage: tenure_choice
 # every point of the asset grid, forms the arrival value as the product of the
 # decision value with the transition matrix of the income chain, and holds the
 # decision value and its derivative on the asset grid, reading the renter's
-# value at the liquidated wealth by linear interpolation.
+# value at the liquidated wealth by linear interpolation. The asset grid is
+# written by its kind, the tag !Cartesian on the setting grid, with its order
+# and bounds beside it, in the settings of the two representations, whose
+# basis is !Linear.
 methods:
   - on: policy
     method: !discrete-choice
@@ -20,15 +23,17 @@ methods:
     method: !marginals
     block: ../../methods/marginals_tenure_choice.bl
 
-  - on: cntn_to_dcsn.choice_value
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [a_points]
       bounds: [[a_min, a_max]]
 
-  - on: cntn_to_dcsn.choice_marginal
+  - on: cntn_to_dcsn.evaluate.marginal
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [a_points]
       bounds: [[a_min, a_max]]
 

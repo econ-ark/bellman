@@ -1,0 +1,18 @@
+@methods: bequest
+# The methods of the bequest stage as an addition to bequest.bl: the derivative
+# of the terminal value in wealth, appended to the decision value builder, and
+# the derivatives of the arrival value in assets and in housing, appended to the
+# arrival value builder, each with the factor of the law
+# x = R*a_bq + R_H*(1 - δ)*h_bq. The two blocks of marginals_bequest.bl, which
+# the YAML chose by their signatures, are named here by the builders' ids; their
+# signatures add no coordinate and are not written (writer's sheet §1). No
+# method word is written: the stage has no choice, no shock and no grid.
+
+[id=cntn_to_dcsn] {
+    D_{x}V = θ*α*(K + x)^(-γ_c)                        :: [id=marginal_wealth]
+}
+
+[id=dcsn_to_arvl] {
+    D_{a_bq}V[<] = R*D_{x}V                            :: [id=marginal_assets]
+    D_{h_bq}V[<] = R_H*(1 - δ)*D_{x}V                  :: [id=marginal_housing]
+}

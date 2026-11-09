@@ -1,21 +1,21 @@
 {
  "applications/benhabib-2019/declaration/spec.yml": {
   "*": "8ac3d4bce7b1a9f5e2219f71fab1990701f8ce2340067ab848a8ceb7aa41f89f",
-  "benhabib_bellman": "436d8c013d35aeaae8315d1a190513cb7f9c3df56fc98f3854161da4ef44b65a",
+  "benhabib_bellman": "730c387a9e3c2122c31b515099a635667d68f2fb12d21f32a73d10622a1b1859",
   "bequest": "ccf6559edea0bc41f91c68bd1acd6124cbce737bdc314b858d9cb89c4a2813f0"
  },
  "applications/durables/declaration/spec.two-stages.yml": {
   "*": "9253d12cf3f0c5e0bd9690f598b9e93c47e196b3c808589b800a308d523caed8",
-  "adjuster_cons": "9bddbfdbc3fcbc2d206653c7ce8959a14544edaf4afc5af517b193fa65bea4ff",
+  "adjuster_cons": "4206ddc821f2a1328711bfabda10ce114099c73ceb22129d0986f07d5b3f02e2",
   "bequest": "bb5a00739b2e8960c6033a095e03350738dadf0d015c21a78cf3b39f91980d96",
-  "keeper_cons": "58c41f0cef997c19174e4875b25857b2e0810ec3994777a56abe06248f28e7cd"
+  "keeper_cons": "a0d704db094b576f2abf0c06d0f1f55d0fba5846ee2dd7a7ae0f08e75f5eb4b6"
  },
  "applications/durables/declaration/spec.yml": {
   "*": "0277c854e7008e5d862a8f2eab81d6b56b8083a5457c95186ec3db8034289efc",
-  "adjuster_cons": "9bddbfdbc3fcbc2d206653c7ce8959a14544edaf4afc5af517b193fa65bea4ff",
+  "adjuster_cons": "4206ddc821f2a1328711bfabda10ce114099c73ceb22129d0986f07d5b3f02e2",
   "bequest": "bb5a00739b2e8960c6033a095e03350738dadf0d015c21a78cf3b39f91980d96",
-  "keeper_cons": "58c41f0cef997c19174e4875b25857b2e0810ec3994777a56abe06248f28e7cd",
-  "tenure": "b3421e32c8b2ef4f95124fd4c0a4286a434190f58933ae88729818635db41060"
+  "keeper_cons": "a0d704db094b576f2abf0c06d0f1f55d0fba5846ee2dd7a7ae0f08e75f5eb4b6",
+  "tenure": "1b173072368fbf908126096ea08128ee30dece5f66098c29a6659082b85e182d"
  },
  "applications/housing-frictions/declaration/spec.yml": {
   "*": "c535fdff71ba67efdcba0bdb2d36d64f4e79edefe8ae2af1babbd01cbd85536b",
@@ -35,8 +35,8 @@
   "*": "1fbacd40dd6600a01d275bd4e31b76eefe411f74eb7304b920c5f9a8bcedf8e6",
   "bequest": "c3e02d88bf1f1301f4d1fb8a770d75cc570172b4139bca4d1fa0a04c12fb9bf1",
   "ret_choice": "1a9ba776d01803c8bc8504e8865566ea33278d5a20f0a96e4766a0d2f0fc0002",
-  "retiree_cons": "d7df8df2da9f6442369e8ced04950073f76491d225d2903d6ae535a4175d8edf",
-  "worker_cons": "2a5478c340bf566523369506ebf858258522db9f39e37481c0b129421c1dd9e8"
+  "retiree_cons": "2b600000236b212335b0ab006d8d1f583209021f0c6c52d6d83c5e7c19708408",
+  "worker_cons": "07a6652810628dda720dc64e0ec6e4ecf254ccd8542582b2a4b2f45f8bbea2c7"
  },
  "packages/bellman/tests/corpus/branching/examples/cagetti-denardi-2006/registry/spec.yml": {
   "*": "bdf79decd4a4c88c02528385810b78a94a4cfe69739b1383f95c124c378d2a0f",

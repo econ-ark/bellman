@@ -107,7 +107,7 @@ def test_item_1_load_recipe_returns_the_syntactic_trellis_and_load_trellis_retur
 @pytest.mark.sweep
 def test_item_2_elaborate_trellis_places_full_symbolic_copies_the_order_follows_the_fields_and_a_planted_cycle_is_refused(cons, text_of, path_of, monkeypatch):
     constructions, construct = [], trellis_module.construct_stage
-    monkeypatch.setattr(trellis_module, "construct_stage", lambda text, origin: constructions.append(origin) or construct(text, origin))
+    monkeypatch.setattr(trellis_module, "construct_stage", lambda text, origin, additions=(): constructions.append(origin) or construct(text, origin, additions))
     elaborated = elaborate_trellis(load_recipe(DURABLES, TWO_STAGES))
     assert len(elaborated["periods"]) == 51 and len(positions(elaborated)) == 103
     # three constructions, one per distinct stage text, for the 103 positions

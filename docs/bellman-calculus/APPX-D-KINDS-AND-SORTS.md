@@ -17,16 +17,16 @@ topic: [calculus]
 # Appendix D — Kinds, sorts, and types
 
 > [!summary]
-> We distinguish declared sorts from the sets that interpret them, and kinds from greatest sorts. The field classification uses information context, role, and value domain, with shocks treated separately. The propositions state which conclusions follow from these declarations and which require additional conventions or nonempty examples.
+> We distinguish declared sorts from the sets that interpret them, and kinds from greatest sorts. The field classification uses information context, role, and value domain, with shocks treated separately. The propositions state which conclusions follow from these declarations and which require additional conventions or nonempty examples. The grid of a numerical method is a sort of its own and no subsort of a state space.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [Fields, functions and types](./04-fields%2C%20functions%20and%20types.md) distinguishes random fields, value domains, and representing functions.
 > **Used by** — Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the current typing context and information rules.
-> **See also** — [Stage term](./APPX-C-STAGE-TERM.md) describes the mathematical signature.
+> **See also** — [Stage term](./APPX-C-STAGE-TERM.md) describes the mathematical signature; [Methods](./06-Methods.md) §5 states the grid as the discretized domain, with a representation as a retract on it.
 
 <a id="0-setup"></a>
 
-## 1. Setup
+## 1 Setup
 
 A **many-sorted signature** $\Sigma=\langle S,\Omega\rangle$ lists sorts and operations with specified input and output sorts. We fix an interpretation assigning each sort $s$ a carrier $A_s$, the set interpreting it. A declared sort name, its carrier, and an element of that carrier are different objects.
 
@@ -34,7 +34,7 @@ The subset construction below is a local mathematical account of field classific
 
 <a id="1-definitions"></a>
 
-## 2. Definitions
+## 2 Definitions
 
 **D1 (Signature).** The sort set $S$ specifies categories of inputs and outputs. For a finite sequence $w=(s_1,\ldots,s_n)$ and output sort $s$, $\Omega_{w,s}$ is the set of operation symbols with those input sorts and that output sort. Its number of arguments is $n$. We call the input–output specification its type or rank; terminology concerning “rank” differs between sources (Goguen, Thatcher, Wagner and Wright 1977, §2).
 
@@ -70,7 +70,7 @@ It is the greatest lower bound because every subset contained in both components
 
 <a id="2-the-field-type-system-step-by-step"></a>
 
-## 3. Field classification
+## 3 Field classification
 
 **Step 1 — the ambient declarations.** Let $F$ be the set of declared random-quantity names with their metadata, including shocks. Let $F_{\mathrm{loc}}\subseteq F$ be the declarations assigned a native perch. Shock declarations are classified by their transition and law separately; they need not belong to $F_{\mathrm{loc}}$. We explicitly use `Field` as an ambient kind and a greatest local declaration sort with carrier $F$. This greatest-sort convention does not follow merely from connectedness in D3.
 
@@ -106,14 +106,17 @@ This is a local intersection sort under D7, not an assertion that three arbitrar
 | `Value` | representing value functions | specified function spaces $\mathsf V_p$ on $\mathsf X_p$ |
 | `Policy` | measurable feasible action functions | $\Pi_\Gamma=\{\pi:\mathsf X_\sim\to\mathsf A:\pi\text{ measurable},\ \pi(x)\in\Gamma(x)\}$ |
 | `Dist` | probability measures | $\mathsf M_p$ on $\mathsf X_p$ |
+| `Grid` | the discretized domain of a function an operator stores or evaluates | the finite subsets $G \subset \mathsf X$ of the domain of that function, each with its inclusion $\iota : G \to \mathsf X$; one such subset is the grid component of the operator's signature ([Methods](./06-Methods.md) §5) |
 
 Here $\Gamma(x)$ is the feasible action set and $\operatorname{Gr}(\Gamma)$ its set of feasible state–action pairs. The declared field $V[>]$ has a continuation representing function under the state-generated measurability and measurable-domain assumptions in [Fields, functions and types](./04-fields%2C%20functions%20and%20types.md). No separate `V_fn` source declaration is required. A law over population states is distinct from the law of an individual shock. Forward propagation uses the operators $\mathbb M_\prec$ and $\mathbb M_{\succ,\pi}$, under a specified policy.
+
+**The grid is a sort of its own.** The grid component of an operator's signature is typed by the family `Grid`: the carrier of the sort is the set of finite subsets of the domain of the function the operator stores or evaluates, each with its inclusion, and one grid is an element of that carrier. The inclusion is a map in one interpretation and establishes no declared subsort relation between the grid and the state sort (D5). A function stored at the points of a grid is not thereby a member of the value sort $\mathsf V_p$: it becomes one through the interpolant that extends it, the section of [Methods](./06-Methods.md) §5. A discrete domain the model declares, such as a finite set of housing sizes, is a value domain $D_f$ of a field and no grid.
 
 **Internal functions remain typed.** A utility function, a local function definition, and an intermediate expression retain their parameter and result types when substituted. A bound parameter may be renamed consistently, but its type and scope remain. No separate named sort for “reward function” is required to make $\mathrm u:\mathbb R_{++}\to\mathbb R$ a typed function. The pointwise-kernel description does not settle the unfinished representation of Epstein–Zin certainty equivalents. #todo
 
 <a id="3-propositions"></a>
 
-## 4. Propositions
+## 4 Propositions
 
 **P1 (Partitions on the stated domains).** The perch classifier partitions $F_{\mathrm{loc}}$, while the role classifier partitions $F$.
 
@@ -164,7 +167,7 @@ Its forward operators are $\mathbb M_\prec:\mathsf M_\prec\to\mathsf M_\sim$ and
 
 <a id="4-worked-example--buffer-stock"></a>
 
-## 5. Buffer-stock example
+## 5 Buffer-stock example
 
 | Declaration or object | Family | Classification or type | Interpretation |
 |---|---|---|---|
@@ -185,18 +188,18 @@ Here $0<\beta<1$ is the discount factor. The constraints and integrability condi
 
 <a id="5-remarks-and-open-questions"></a>
 
-## 6. Remarks and open questions
+## 6 Remarks and open questions
 
 - A field's value domain, its space of random variables, and its representative-function space must remain distinct. [Fields, functions and types](./04-fields%2C%20functions%20and%20types.md) now uses this distinction throughout.
 - Local functions retain typed parameters and results after substitution. Operators retain their domain/codomain types whether or not an operator-valued sort is introduced.
 - A transition and a probability kernel are distinct objects: a measurable transition with its shock law induces a kernel. Rewards, conditional laws, and policy selection additionally determine Bellman evaluation.
 - Domain refinement uses $D_f\subseteq D$, not $D_f=D$. The exact-domain fibers form a different partition and do not provide the same inclusion order.
-- A discrete state domain is model data; a numerical grid approximating a continuous domain is a method choice. An encoding or embedding does not by itself establish a declared subsort relation.
+- A discrete state domain is model data; a numerical grid approximating a continuous domain is the grid component of an operator's signature, a sort of its own (§3, Step 6). An encoding or embedding does not by itself establish a declared subsort relation.
 - Whether to add a greatest `Function` sort encompassing value and policy functions is a further design choice. Connectedness alone cannot provide it. The general source-level treatment of all such intersection and kind constructions remains a design question; this appendix states the local conventions needed for its propositions.
 
 <a id="6-sources"></a>
 
-## 7. Sources
+## 7 Sources
 
 - Goguen, J. A., Thatcher, J. W., Wagner, E. G., and Wright, J. B. (1977). Initial algebra semantics and continuous algebras. *Journal of the ACM* 24(1), 68–95, §2, pp. 69–75. Signatures, carriers, and their interpretations.
 - Martí-Oliet, N., and Meseguer, J. (1996). Inclusions and subtypes I: First-order case. *Journal of Logic and Computation* 6(3), 409–438, §2.1, Definition 2.2, p. 413. Declared subsort order requires compatible carrier inclusion.

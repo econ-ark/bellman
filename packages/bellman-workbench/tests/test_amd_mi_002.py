@@ -727,20 +727,25 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     line 13 of that file; a text nested deeper than the reader can follow,
     typed within quotes for the text setting `keeper_upper_envelope`, reads
     as a string and is written at line 37 in double quotes, since its plain
-    form does not read. The Methods tab lists the four methods of
-    `stages/tenure/methods.yml`, each with the method the stage binds, and
-    offers at each the tags the package admits at its target, although
-    `places()` refuses to list the places of the branching stage, the tab
-    saying no sentence and `recipe.places_refusal` answering the package's
-    sentence (unit L, Task 18).
-    At `periods[3]/keeper_cons` the Methods tab offers `!pchip` for
-    `cntn_to_dcsn.value`, whose method `!Linear` is written at line 38 of
-    `stages/keeper_cons/methods.yml`, and the choice replaces it there; an
+    form does not read. The Methods tab lists the five methods the stage
+    binds (`stage.methods`; decision S7-W1 of specification 0.7), and offers
+    at each that an entry of `stages/tenure/methods.yml` binds the tags the
+    package admits at the entry's target, although `places()` refuses to
+    list the places of the branching stage, the tab saying no sentence and
+    `recipe.places_refusal` answering the package's sentence (unit L, Task
+    18); the block binding `!marginals`, which the entry on the decision
+    builder binds at its Evaluation beside `!Linear`, is named by that place
+    and offers none.
+    At `periods[3]/keeper_cons` the Methods tab shows the one `!Linear` that
+    the entries of the value and of its marginal bind at the decision
+    builder's Evaluation, named by that place and offering no tag;
+    `write_method` replaces the `!Linear` of `cntn_to_dcsn.evaluate.value`
+    at line 62 of `stages/keeper_cons/methods.yml` by `!pchip`, and an
     alias typed as the tag is refused. No other byte of the copy changes,
-    and the tabs read again show each value written; the stage no longer
-    binds a method at `cntn_to_dcsn.value`, since `methodize` refuses two
-    methods at the one box that the target and `cntn_to_dcsn.marginal_cash`
-    reach.
+    and the tabs read again show each value written; the stage then binds
+    no method, since `methodize` refuses two methods at the one box that
+    the target and `cntn_to_dcsn.evaluate.marginal` reach, and the Methods
+    tab has no row.
 
     In the page, on the copy as the fixture made it (the brief's rule 7;
     the amendment's §5 rules 1 and 6), `tenure.bl` opened from the tree and
@@ -748,7 +753,7 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     four tabs in its bar, Fields first and shown. Parameters names the
     calibration file it writes and shows `R` `1.045`, linked to line 11 of
     that file, and `Y` `unvalued`; Settings shows `n_a`, an integer, `300`;
-    Methods shows its four rows, each with a choice of method, and no
+    Methods shows its five rows, four with a choice of method, and no
     sentence, the package's refusal to list the stage's places standing
     once in the list under the error mark (unit L, Task 18). `1.05` typed
     for `R`, with Enter, changes line 11 of the calibration file alone, and
@@ -892,19 +897,22 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
 
     methods = recipe.methods_tab(folder, tenure.stage, tenure.record, "tenure")
     assert (methods.file, methods.sentence) == (tenure_methods, None)
-    assert [
-        (row.target, row.tag, row.bound, row.note, row.place, row.refused)
-        for row in methods.rows
-    ] == [
-        (target, tag, tag, None, recipe.Place(tenure_methods, f"methods[{n}].method", line), False)
-        for n, (target, tag, line) in enumerate(
-            (
-                ("policy", "!max", 12),
-                ("cntn_to_dcsn", "!Linear", 21),
-                ("E_ε", "!tauchen", 33),
-                ("arvl_to_dcsn", "!monte-carlo", 43),
-            )
-        )
+    assert [(row.target, row.tag, row.bound, row.place) for row in methods.rows] == [
+        ("E_ε", "!tauchen", "!tauchen", recipe.Place(tenure_methods, "methods[3].method", 47)),
+        ("cntn_to_dcsn:Evaluation", "!marginals", "!marginals", None),
+        ("policy", "!max", "!max", recipe.Place(tenure_methods, "methods[0].method", 13)),
+        (
+            "cntn_to_dcsn.evaluate.value",
+            "!Linear",
+            "!Linear",
+            recipe.Place(tenure_methods, "methods[2].method", 32),
+        ),
+        (
+            "arvl_to_dcsn",
+            "!monte-carlo",
+            "!monte-carlo",
+            recipe.Place(tenure_methods, "methods[4].method", 57),
+        ),
     ]
     # each row offers the tags the package admits at its target, although
     # `places()` refuses to list the places of the branching stage (unit L,
@@ -916,33 +924,27 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     refused_places = str(raised.value)
     assert recipe.places_refusal(tenure.stage) == refused_places
     for row in methods.rows:
-        assert row.choices and row.choices == admitted_methods(tenure.stage, row.target)
+        offered = admitted_methods(tenure.stage, row.target) if row.place else ()
+        assert row.choices == offered
 
     keeper = bound(KEEPER_CONS, "keeper_cons")
     methods = recipe.methods_tab(folder, keeper.stage, keeper.record, "keeper_cons")
     assert (methods.file, methods.sentence) == (keeper_methods, None)
-    value = next(row for row in methods.rows if row.target == "cntn_to_dcsn.value")
-    assert value == recipe.MethodRow(
-        "cntn_to_dcsn.value",
-        "!Linear",
-        "!Linear",
-        None,
-        ("!Cartesian", "!Linear", "!pchip"),
-        recipe.Place(keeper_methods, "methods[1].method", 38),
-        False,
-    )
+    assert recipe.MethodRow(
+        "cntn_to_dcsn:Evaluation", "!Linear", "!Linear", (), None
+    ) in methods.rows
     refused = recipe.write_method(
-        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.value", "!Linear", "*pchip"
+        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.evaluate.value", "!Linear", "*pchip"
     )
     assert (refused.saved, refused.reason) == (
         False,
         "*pchip writes an alias, which a typed value may not",
     )
     written = recipe.write_method(
-        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.value", "!Linear", "!pchip"
+        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.evaluate.value", "!Linear", "!pchip"
     )
     assert written.saved
-    lines[keeper_methods][37] = "    method: !pchip"
+    lines[keeper_methods][61] = "    method: !pchip"
     assert written.text == "\n".join(lines[keeper_methods])
 
     # no other file of the copy changed, and no file was added
@@ -964,12 +966,11 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     assert recipe.settings_tab(folder, tenure.record, "tenure").rows[0].value == "400"
     keeper = bound(KEEPER_CONS, "keeper_cons")
     rows = recipe.methods_tab(folder, keeper.stage, keeper.record, "keeper_cons").rows
-    value = next(row for row in rows if row.target == "cntn_to_dcsn.value")
-    # `cntn_to_dcsn.value` and `cntn_to_dcsn.marginal_cash` reach one box,
-    # which holds one method, so that `methodize` now refuses the stage
-    # (AMD-SG-006 §4, rule 9) and the stage binds no method there
-    assert (value.tag, value.bound) == ("!pchip", None)
-    conflict = "'cntn_to_dcsn.value' and 'cntn_to_dcsn.marginal_cash' conflict"
+    # `cntn_to_dcsn.evaluate.value` and `cntn_to_dcsn.evaluate.marginal`
+    # reach one box, which holds one method, so that `methodize` now refuses
+    # the stage (AMD-SG-006 §4, rule 9) and the stage binds no method
+    assert rows == ()
+    conflict = "'cntn_to_dcsn.evaluate.value' and 'cntn_to_dcsn.evaluate.marginal' conflict"
     assert any(conflict in note for note in keeper.notes)
 
     # the copy as the fixture made it, for the steps that follow
@@ -1026,7 +1027,7 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     chosen("Methods")
     assert page.locator(".bl-values-file").text_content() == f"writes {tenure_methods}"
     assert page.locator(".bl-values-sentence").count() == 0
-    assert page.locator(".bl-values-row").count() == 4
+    assert page.locator(".bl-values-row").count() == 5
     assert page.locator(".bl-values-method").count() == 4
     # the package's refusal to list the places, once under the error mark
     wait_until(

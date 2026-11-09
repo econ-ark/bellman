@@ -1,0 +1,47 @@
+@methods: cons_savings_iid
+# The methods of the consumption-savings stage with independent income, whose
+# stage file is
+# applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl,
+# as an addition to that file: the three entries of
+# applications/consumption-savings-iid/declaration/methods/cons_savings_iid.yml
+# and nothing else. The endogenous grid method on the policy builder with its
+# grid of savings and the three lines of cons_savings_iid_egm.bl, and
+# the derivative lines of the decision value and of the arrival value from
+# marginals.bl. The policy block's lines are written as the block file writes
+# them, the identification line c[~] = c[>] included: under D8, decided by AAS
+# on 4 November 2026, a block whose slot holds a solution method is read with
+# the method's lines in place of the declared lines at the operative level,
+# and stage.declared keeps the stage file's maximization. The entries the YAML
+# does not bind stand in methods.additions.bl, added after this file.
+
+# The settings this file reads, declared with their sets (writer's sheet §6):
+# the bounds are points of ℝ₊, the set the stage gives the savings a, and the
+# count is in ℕ. The values stay in
+# applications/consumption-savings-iid/declaration/settings/cons_savings_iid.yml.
+# The grid of savings is the typing entry policy.grid of the policy block
+# (D5, decided; writer's sheet §7).
+n_a : ℕ          :: ["number of points of the savings grid"]
+a_min : ℝ₊       :: ["lower bound of the savings grid"]
+a_max : ℝ₊       :: ["upper bound of the savings grid"]
+
+# The endogenous grid method, its grid of savings on the coordinate a, and the
+# three lines of cons_savings_iid_egm.bl: the inverted Euler equation, the
+# inverted law of motion and the identification of the decision's consumption
+# with the candidate.
+[id=policy, method : !egm
+    | policy.grid : !Cartesian(a=(a_min, a_max, n_a))] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
+    c[~] = c[>]                     :: [id=cons_choice]
+}
+
+# The envelope line of the decision value.
+[id=cntn_to_dcsn] {
+    D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
+}
+
+# The derivative line of the arrival value, with the factor R of the law of
+# motion w = y + b*R.
+[id=dcsn_to_arvl] {
+    D_{b}V[<] = E_{y}(R * D_{w}V)   :: [id=marginal]
+}

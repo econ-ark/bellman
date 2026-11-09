@@ -13,13 +13,13 @@ This page describes mathematical composition terms for stages, periods and trell
 > [!info]- Relationship with other documents
 > **Builds on** — [Stage composition](./07-stage-composition.md) and [Periods and the trellis](./08-periods-and-trellis.md) define the compatible compositions.
 > **Formal account** — [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) treats specified terms and interpretations; [The stage term](./APPX-C-STAGE-TERM.md) gives the stage-level signature.
-> **Used by** — [Stages](../Bellman-Sym/01-stage.md), [Field equations](../Bellman-Sym/03-field-equations.md), [Period Syntax](../Bellman-Sym/06-period.md) and [Trellis Syntax](../Bellman-Sym/07-trellis.md) state the authoring rules; Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the interpretation rules.
+> **Used by** — [Stages](../Bellman-Sym/01-stage.md), [Field equations](../Bellman-Sym/03-field-equations.md), [Period Syntax](../Bellman-Sym/06-period.md), [Trellis Syntax](../Bellman-Sym/07-trellis.md) and [Methodization](../Bellman-Sym/04-methodization.md) state the authoring rules; Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the interpretation rules.
 
 ## 1 Two grammars
 
 The **concrete grammar** specifies which source strings are well formed. The **abstract grammar** describes the structure of their expressions after punctuation is removed. Schmidt distinguishes the derivation tree from the string that abbreviates it.[^schmidt] For the current language, `.bl` stage declarations and arithmetic equations are parsed, while supporting YAML records model composition and bindings. The mathematical composition notation used here is a separate description of the resulting operations.
 
-The syntax pages use **ASDL**, the Zephyr Abstract Syntax Description Language, to describe constructor positions and their types.[^asdl] An **ASDL field** is a named position in a constructor, distinct from an economic field. The symbols `?` and `*` denote an optional position and a list. These notations describe syntax structure; they do not make every mathematical diagram on this page a concrete parser constructor.
+The syntax pages use **ASDL**, the Zephyr Abstract Syntax Description Language, to describe constructor positions and their types.[^asdl] An **ASDL field** is a named position in a constructor, distinct from an economic field. The symbols `?` and `*` denote an optional position and a list. These notations describe syntax structure; they do not make every mathematical diagram on this page a concrete parser constructor. An operator's method and grid components, written as typing entries of the operator's name, are described in [Methods](./06-Methods.md) §2.
 
 The following is schematic mathematical composition notation, not the `.bl` abstract grammar or a loader schema. It suppresses documentation names and binding records to show the composition operands:
 
@@ -130,9 +130,48 @@ The mathematical signatures used here are **many-sorted**: their symbols have de
 
 Branching also requires its own interpretation. A finite choice compares complete feasible branch values; an exogenous branch uses the declared conditional probabilities. Evaluating all feasible branch values and then maximizing is generally different from evaluating a single branch selected by a pre-existing predicate. Ties and measurable policy selection retain the qualifications in [Branching](./09-branching.md).
 
+## 5 The typing entries of a methods file
+
+A methods file adds to a stage file the numerical choices of its operators without changing the model: a **typing entry** types one component of an operator by the path of that component, `policy.method : !egm(tol=tol_v)` for the method and `policy.grid : !Cartesian(a=(a_min, a_max, n_a))` for the grid, the discretized domain on which the operator's function is represented; a **handler binding**, `policy.handler : "cons-port:egm"`, names the program that realizes the operator. An entry stands inside a block's header, in the groups that `|` opens after the block's own entries, or at file level with the full path. A typing entry assigns the method or the grid component of one operator's signature, so that the operator is realized by that method on that grid while the model's equations are unchanged, and a handler binding names the program that realizes it ([the handler](../wiki/handler.md)); this section records the constructors the entries parse to, in the house dialect of the ASDL notation, with the grammar that owns each line: `(core)` for a form that dyno's own files could carry, `(stage)` for a form that belongs to the typing layer of Bellman-SYM.
+
+> [!ast]- Abstract grammar: the typing entries
+> The host constructors keep their profiles; the lines below are added as alternatives of existing sorts (`+=`) or as new sorts. `Declaration` is the host's, reused: a typing entry is a `Declaration` whose subject is a `Path` and whose one classifier is the `Method` or the `Grid`.
+>
+> ```asdl
+> entry      += Tagged(word tag)                               -- (core)  a tag with keyword arguments
+> word        = Word(identifier name, keyword* arguments)       -- (core)  a name with its keyword arguments
+> keyword     = Keyword(identifier key, argument value)         -- (core)
+> argument    = Name(identifier name)                           -- (core)  the name of a setting
+>             | Literal(number value)                           -- (core)
+>             | Quoted(string text)                             -- (core)
+>             | Values(argument* items)                         -- (core)  a tuple of values
+>             | Nested(word word)                               -- (core)  a word with arguments of its own
+> subject    += Path(segment* segments)                         -- (stage) the path of a component
+> segment     = Segment(identifier name, selector* selectors)   -- (stage) a name with its selectors
+> selector   += Term(expr at)                                   -- (stage) a term as a selector
+> typer      += Handler(subject subject, string program)        -- (stage) the handler binding
+> classifier += Method(word m)                                  -- (stage) the method component
+> classifier += Grid(grid g)                                    -- (stage) the grid component
+> grid        = Cartesian(factor* factors)                      -- (stage) one factor per coordinate
+> factor      = Spaced(identifier coordinate, argument lower, argument upper,
+>                      argument count, word? spacing)           -- (stage) bounds, a count, a spacing word
+>             | Listed(identifier coordinate, identifier nodes) -- (stage) a node set, or the operator whose nodes the coordinate takes
+>             | Feasible(identifier coordinate, identifier set, argument count)   -- (stage) a control's feasible set with a count
+> ```
+>
+> The requirements the notation cannot state are part of well-formedness instead: a path has at least one segment and its last segment names the component, `method`, `grid` or `handler`; a word's arguments are keyed once each; a grid has at least one factor and names no coordinate twice, and the order of its factors carries no meaning; a bound or a count of a factor is the name of a declared setting or a number; a spacing is a word, with or without arguments.
+>
+> **Keys.** `segments` are the names from the block to the component, each with the selectors that name the object an Evaluation stores (`evaluate[V]`, `evaluate[D_{k}V[<]]`); `m` is the method word with its keyword arguments, read by the catalogue of methods; `g` is the grid; `program` is the handler's name as the quoted string writes it. These are ASDL fields, not keys to write in a file.
+>
+> **Head.** Inside a header, an entry is one entry of the block's annotation, whatever group it is written in; at file level it is a declaration whose subject is a dotted path. The `!` marks a word, the dot joins the segments of a path, `=` joins a keyword to its value, and a quoted string names a handler.
+>
+> **Denotes.** The method and the grid are the classifier components of the operator's signature, read by the numerical semantics and by nothing in the exact semantics; the handler is a binding beside the term. [Methods](./06-Methods.md) gives the account.
+>
+> **Status.** The grammar parses these entries and lowers them to the constructors above. A grid's kind is `Cartesian`; a sparse kind is reserved. Which words are admitted at which operator, which keywords each reads, and whether a factor's name is a node set or an expectation operator are judged when the entries bind, not by this grammar box.
+
 <a id="see-also"></a>
 
-## 5 Related documents
+## 6 Related documents
 
 - [FFP](../wiki/ffp.md), [functional form](../wiki/functional_form.md), and [ASDL](../wiki/asdl.md) define the programming-language terms.
 - [Semantics](./APPX-A-SEMANTICS.md) relates interpreted equations to numerical methods.

@@ -1,0 +1,48 @@
+@methods: consumption_choice
+# Deliberate refusals (aspect A24) on the owner's consumption-choice stage,
+# whose stage file is
+# applications/housing-owner/declaration/stages/consumption_choice/consumption_choice.bl.
+# No item of this file belongs to the application's methods; each is written
+# as an author rewriting stages/consumption_choice/methods.yml might write it
+# by mistake, and each comment names the rule of the union (the proposal's §4)
+# that refuses it. The settings the two grid entries read are declared with
+# their sets (writer's sheet §6), so that only the deliberate refusals are
+# reported; each grid is the typing entry of its place (D5, sheet §7).
+
+n_a : ℕ        :: ["number of points of the savings grid"]
+a_min : Xa     :: ["lower bound of the savings grid"]
+a_max : Xa     :: ["upper bound of the savings grid"]
+n_w : ℕ        :: ["number of points of the grid of cash on hand"]
+w_min : Xw     :: ["lower bound of the grid of cash on hand"]
+w_max : Xw     :: ["upper bound of the grid of cash on hand"]
+
+# Refused: the same slot twice, across a file-level line and a bracket. The
+# file-level line's path policy.method is routed by the union to the block
+# policy (rule 7), whose bracket below fills the same slot, by the relative
+# subject method, with the endogenous grid method; rule 4 refuses two entries
+# of one key with different content, naming both, and the box of §4 admits at
+# most one typing entry on the block's own method slot over both files.
+policy.method : !vfi
+
+# Refused: a subject naming another block, twice. The subjects of the last two
+# groups begin with cntn_to_dcsn, a block other than the enclosing policy, so
+# they would place the representation of the derivative of the decision value
+# and its grid from inside the policy builder (rule 7); the refined Evaluation
+# slot of D4 does not change the block the path names.
+[id=policy, method : !egm | policy.grid : !Cartesian(a_nxt=(a_min, a_max, n_a))
+    | cntn_to_dcsn.evaluate[D_{w_d}V].method : !Linear
+    | cntn_to_dcsn.evaluate[D_{w_d}V].grid : !Cartesian(w_d=(w_min, w_max, n_w))] {
+    c[>] = (β*D_{a_nxt}V[>] / (θ * (κ*H_c + ι)^((1-θ)*(1-γ))))^(1/(θ*(1-γ) - 1))  :: [id=InvEuler, !node]
+    w[>] = a_nxt + c[>]                                                             :: [id=regrid, !node]
+}
+
+# Refused twice. First, two sets on one coordinate: the partial signature
+# postpends the decision value V with the set ℝ₊, where the stage's signature
+# of cntn_to_dcsn gives it ℝ, and the value of the aggregate is negative when
+# γ > 1 (rule 4, a coordinate of one name with different content; the empty
+# domain () adds nothing). Second, a line id twice: the envelope line is
+# written under the id value, which the stage's line of the decision value
+# already carries in this block (rule 5).
+[id=cntn_to_dcsn, () -> (V : ℝ₊ @ !vlu) : !dcsn] {
+    D_{w_d}V = θ * c^(θ*(1-γ)-1) * (κ*H_d + ι)^((1-θ)*(1-γ))      :: [id=value]
+}

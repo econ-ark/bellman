@@ -32,7 +32,7 @@ The formal MDP pages state selected examples as Markov decision processes (MDPs)
 | Model | Description | Stages | Source page | Formal MDP |
 |:------|:-----------|:-------|:------------|:-----------|
 | **Consumption-Savings IID** | Single-stage consumption choice with IID income shock, solved by the endogenous grid method (EGM) | 1 | [Historical YAML](cons-iid/consumption_savings_iid.md) | [MDP](formal-mdps/cons_savings_iid_mdp.md) |
-| **Buffer Stock (Normalized)** | Carroll (2024) buffer stock model normalized by permanent income; permanent and transitory shocks with unemployment risk | 1 | [Historical YAML](buffer-stock/buffer_stock.md) | — |
+| **Buffer Stock (Normalized)** | Carroll (2024) buffer stock model normalized by permanent income; permanent and transitory shocks with unemployment risk | 1 | [Stage](buffer-stock/buffer_stock.md) | — |
 | **Housing Owner** | Two-stage discrete housing choice + continuous consumption; branching stage | 2 | [Historical YAML](housing_renting/housing_owner.md) | [housing](housing_renting/housing_choice_mdp.md), [cons](housing_renting/housing_cons_choice_mdp.md) |
 | **Retirement Choice (DCEGM)** | Branching model with discrete retirement decision and continuous consumption; EGM for discrete-continuous choice (DC-EGM) with the fast upper envelope scan (FUES) | 3 | [Application](retirement/retirement_choice.md) | — |
 | **Smooth-Ambiguity Savings** | Savings with an uncertain mean log return: risk aversion, ambiguity aversion and intertemporal substitution are separate parameters, with two nested certainty equivalents | 1 | [Stage](smooth-ambiguity/smooth_ambiguity_savings.md) | — |

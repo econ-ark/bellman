@@ -1,0 +1,37 @@
+@methods: cons
+# The methods of the consumption stage at the occurrences that methods/cons.yml
+# serves, as an addition to cons.bl: the endogenous grid method on the policy
+# builder with its savings grid and the function egm of cons_port_tool.py as its
+# handler, its three lines as cons_egm.bl writes them, the envelope line of the
+# decision value, and one linear representation of that value and of its stated
+# derivative on the grid of resources. Under D8 (decided) the three lines stand
+# in place of the maximization at the operative level, and stage.declared keeps
+# the maximization. Each grid is its own typing entry at its place (D5,
+# decided). The block policy restates the signature of the block egm of
+# cons_egm.bl, which rule 4 unions with the stage's coordinate by coordinate,
+# adding the classifiers ℝ @ !vlu to V[>] and ℝ₊₊ @ !ctrl to c.
+
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
+
+n_a : ℕ              :: ["number of points of the savings grid"]
+a_min : Xa           :: ["lower bound of the savings grid"]
+a_max : Xa           :: ["upper bound of the savings grid"]
+n_m : ℕ              :: ["number of points of the grid of resources"]
+m_min : Xm           :: ["lower bound of the grid of resources"]
+m_max : Xm           :: ["upper bound of the grid of resources"]
+
+[id=policy, method : !egm,
+    (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn
+    | handler : "cons-port:egm"
+    | grid : !Cartesian(a=(a_min, a_max, n_a, !expmult))] {    # no form in §4: handler: cons-port:egm; grid_spacing: expmult, in settings/cons_wide.yml and in no other settings file
+    c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0      :: [id=InvEuler]
+    m[>] = a + c[>]                          :: [id=grid]
+    c = c[>]                                 :: [id=identification]
+}
+
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(m=(m_min, m_max, n_m, !expmult))] {    # no form in §4: grid_spacing: expmult, in settings/cons_wide.yml and in no other settings file
+    D_{m}V = 𝑑𝑢(c)                           :: [id=envelope]
+}

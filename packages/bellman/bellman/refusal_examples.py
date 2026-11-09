@@ -18,6 +18,8 @@ from __future__ import annotations
 import dataclasses
 from pathlib import Path
 
+from bellman.refusals import RULE_B_C, RULE_E, RULE_FORM
+
 __all__ = (
     "BRANCHING",
     "CORPUS",
@@ -44,7 +46,8 @@ class Example:
     which verb refuses: `elaborate` the stage text itself; `compile_kernel` or
     `kernel` the box `target` of the built stage; `card` the card of the
     target `target` of it; `target` the reading of the methods-file target
-    `target`; `methodize` the binding of the methods entry `entry`;
+    `target`; `methodize` the binding of the methods entry `entry`, or of the
+    entries of the methods source `methods` where it gives one;
     `configure-option` the stage methodized with the methods source `methods`
     and configured with the settings source `settings`; `other-version` a box
     of a second version of the same stage; `load_recipe` a registry made of
@@ -52,8 +55,11 @@ class Example:
     with the fills `fills`, and `assemble_trellis` that registry's recipe read,
     elaborated and bound; `load_trellis` the file `file` of such a registry;
     `load_stage` the path `path`; `elaborate_stage` the value `record` itself;
-    and `elaborate_trellis` one period of the corpus stages `stages` names, by
-    key, with the connectors `connectors`. `address` is the address a refusal
+    `elaborate_trellis` one period of the corpus stages `stages` names, by
+    key, with the connectors `connectors`; and `union` the stage text with the
+    `additions`, each the origin and the text of a methods file, unioned into
+    it (specification 0.7 §4), the refusal positioned in the file `origin`
+    names. `address` is the address a refusal
     of graph construction names, the target a refusal of the identity table
     names, or the recipe address, slot, record or period a refusal of the
     factory names, and `words` the words its message must hold. `write` is
@@ -80,6 +86,7 @@ class Example:
     path: str = ""
     stages: dict = dataclasses.field(default_factory=dict)
     connectors: list = dataclasses.field(default_factory=list)
+    additions: tuple = ()
 
 
 # --- the corpus and the smallest stages the examples change ---
@@ -461,6 +468,52 @@ EXAMPLES = {
         words=("D_{q}V[>]", "'q'", "cntn", "a"),
         write="Name a state coordinate of the perch at which the value is read, `D_{a}V[>]`.",
     ),
+    # a second policy block beside `policy`, both from the continuation perch
+    # to the decision perch and both writing the control c: the block file of
+    # benhabib-2019 kept under its own id beside the stage's policy block (F17)
+    "one-builder-per-output": Example(
+        rule="one-builder-per-output",
+        text=INVERSE_EULER
+        + "[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {\n"
+        "    c = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])    :: [id=closed]\n}\n",
+        address="egm",
+        words=("block 'egm' writes c", "dcsn perch", "cntn perch", "block 'policy' already writes"),
+        write=(
+            "Write the lines of the two blocks in one block, or make the second block "
+            "write another field."
+        ),
+    ),
+    # the grid line of housing-owner's block file written on `w`, the cash on
+    # hand of another stage, where the stage's decision state is `w_d` (F39);
+    # here the decision state is m and the line names w
+    "candidate-coordinate": Example(
+        rule="candidate-coordinate",
+        text=_changed(
+            INVERSE_EULER,
+            ("    m[>] = a + c[>]        :: [id=grid]", "    w[>] = a + c[>]        :: [id=grid]"),
+        ),
+        address="policy.grid",
+        words=("writes w[>]", "'w'", "no control", "The controls are c", "states of the dcsn perch are m"),
+        write=(
+            "Name a control at the candidate points, `c[>]`, or a state of the decision "
+            "perch, the grid line `m[>] = a + c[>]`."
+        ),
+    ),
+    # the candidate c[>] of the inverse Euler line with the grid line and the
+    # identification removed, so that no line reads it (F61)
+    "candidate-read": Example(
+        rule="candidate-read",
+        text=_changed(
+            INVERSE_EULER,
+            (
+                "    m[>] = a + c[>]        :: [id=grid]\n    c = c[>]               :: [id=identification]\n",
+                "    c = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])     :: [id=closed]\n",
+            ),
+        ),
+        address="policy.InvEuler",
+        words=("the candidate c[>]", "no later line of block 'policy' reads"),
+        write="Read the candidate on a later line of the block, or remove the line.",
+    ),
     "derivative-scalar-coordinate": Example(
         rule="derivative-scalar-coordinate",
         text="@stage: t\nf(x : ℝ × ℝ) := x[1]\ndf := D_{x}(f)\n",
@@ -521,6 +574,99 @@ EXAMPLES = {
         text="@stage: t\nρ : ℝ := 2\n",
         address="2",
         words=("ρ", "carries a value", "calibration"),
+    ),
+    # a typing entry of a methods file written in a stage file elaborated alone
+    "typing-entry-unattached": Example(
+        rule="typing-entry-unattached",
+        text="@stage: t\npolicy.method : !egm\n"
+        "[id=b, (x : ℝ) : !arvl -> (y : ℝ) : !dcsn] {\n    y = x\n}\n",
+        address="2",
+        words=("`policy.method`", "methods file", "union"),
+        write=(
+            "Write the entry in a methods file, `@methods: t`, which the union attaches to "
+            "the stage; a stage file carries the model alone."
+        ),
+    ),
+    # the union of a stage file and its additions (specification 0.7 §4): the
+    # consumption stage or the branching stage with one addition, the refusal
+    # positioned in the addition
+    "declared-twice": Example(
+        rule="declared-twice",
+        corpus="cons",
+        origin="m.bl",
+        provokes="union",
+        additions=(
+            (
+                "m.bl",
+                "@methods: cons\n"
+                "[id=policy, method : !egm | policy.method : !vfi] {\n"
+                "    c[~] = c[>]    :: [id=identification]\n}\n",
+            ),
+        ),
+        address="policy.policy.method",
+        words=("`method`", "'policy'", "written twice", "`method : !egm`", "`policy.method : !vfi`"),
+        write=(
+            "Keep one entry on the component, `method : !egm` or `policy.method : !vfi`; the "
+            "two name one component of the block, by the relative and by the absolute "
+            "spelling of its path."
+        ),
+    ),
+    "label-not-in-parent": Example(
+        rule="label-not-in-parent",
+        text=BRANCHING,
+        origin="m.bl",
+        provokes="union",
+        additions=(
+            (
+                "m.bl",
+                "@methods: t\n"
+                "[id=dcsn_to_cntn] {\n"
+                "    [label=rent, () -> (a_x : ℝ₊) : !cntn] {\n"
+                "        a_x = a_d    :: [id=renting]\n    }\n}\n",
+            ),
+        ),
+        address="dcsn_to_cntn.rent",
+        words=("`label=rent`", "'dcsn_to_cntn'", "no branch", "adds no branch"),
+        write=(
+            "Write the nested block under a label the stage's block holds, `work` or `retire`; "
+            "a branch is added in the stage file, whose header declares the label set."
+        ),
+    ),
+    "type-conflict": Example(
+        rule="type-conflict",
+        corpus="cons",
+        origin="m.bl",
+        provokes="union",
+        additions=(
+            (
+                "m.bl",
+                "@methods: cons\n"
+                "[id=cntn_to_dcsn, () -> (V : ℝ @ !vlu) : !dcsn] {\n"
+                "    D_{m_d}V = 2*𝑑𝑢(c)    :: [id=envelope]\n}\n",
+            ),
+        ),
+        address="cntn_to_dcsn.out.V",
+        words=("'V'", "output side", "'cntn_to_dcsn'", "`[-inf, inf) @ !vlu`", "`ℝ @ !vlu`"),
+        write=(
+            "Restate the coordinate without a type, `() -> (V) : !dcsn`, or with the stage's, "
+            "`() -> (V : [-inf, inf) @ !vlu) : !dcsn`."
+        ),
+    ),
+    "metadata-mismatch": Example(
+        rule="metadata-mismatch",
+        corpus="cons",
+        origin="m.bl",
+        provokes="union",
+        additions=(
+            (
+                "m.bl",
+                "@methods: port\n"
+                "[id=cntn_to_dcsn] {\n    D_{m_d}V = 2*𝑑𝑢(c)    :: [id=envelope]\n}\n",
+            ),
+        ),
+        address="1",
+        words=("'port'", "'cons'", "`@methods: <stage>`"),
+        write="Name the stage the addition adds to on its first line, `@methods: cons`.",
     ),
     "multiplier-declaration": Example(
         rule="multiplier-declaration",
@@ -742,13 +888,17 @@ EXAMPLES = {
             "methods": [
                 {
                     "on": "cntn_to_dcsn.value",
-                    "method": "Cartesian",
-                    "settings": {"orders": {"m_d": "n_m"}, "bounds": {"m_d": ["m_min", "m_max"]}},
+                    "method": "!Linear",
+                    "settings": {
+                        "grid": "!Cartesian",
+                        "orders": {"m_d": "n_m"},
+                        "bounds": {"m_d": ["m_min", "m_max"]},
+                    },
                 }
             ],
         },
         settings={"settings": {"n_m": -5, "m_min": 0.1, "m_max": 10.0}},
-        words=("method !Cartesian", "option 'orders'", "positive integer", "write"),
+        words=("method !Linear", "option 'orders'", "positive integer", "write"),
     ),
     "kernel-target": Example(
         rule="kernel-target",
@@ -777,7 +927,7 @@ _TARGET_EXAMPLES = {
         address="nowhere",
         words=("names no builder of the stage", "no operator a statement of it records"),
     ),
-    "(b), (c) a node box or a line by `<block-id>.<statement-id>`": Example(
+    RULE_B_C: Example(
         rule="",
         corpus="cons",
         origin=CORPUS["cons"],
@@ -790,7 +940,7 @@ _TARGET_EXAMPLES = {
             "cntn_to_dcsn.value",
         ),
     ),
-    "(ii) a positional address `<block-id>.<n>` is not a target; the line needs an id": Example(
+    "(c.ii) a positional address `<block-id>.<n>` is not a target; the line needs an id": Example(
         rule="",
         corpus="cons",
         origin=CORPUS["cons"],
@@ -811,7 +961,7 @@ _TARGET_EXAMPLES = {
             "no statement of the stage records an occurrence",
         ),
     ),
-    "(e) one occurrence by `<block-id>.<statement-id>.<operator>`": Example(
+    RULE_E: Example(
         rule="",
         corpus="cons",
         origin=CORPUS["cons"],
@@ -820,15 +970,22 @@ _TARGET_EXAMPLES = {
         address="cntn_to_dcsn.value.E",
         words=("the output statement cntn_to_dcsn.value", "carries no operator occurrence"),
     ),
-    "(g) `evaluate`: the one authored occurrence, else the boundary "
-    "representation; two or more authored occurrences are named by their addresses": Example(
+    # `cons.bl` authors no `evaluate` occurrence, so the bare name names no
+    # place, and the refusal names the written address of the value's
+    # representation (AMD-MB-002 §4)
+    "(g) `evaluate` alone: the one authored occurrence; two or more are named by their "
+    "addresses, and a stage that authors none is refused naming "
+    "`<block-id>.evaluate.value`": Example(
         rule="",
         corpus="cons",
         origin=CORPUS["cons"],
         provokes="target",
         target="evaluate",
         address="evaluate",
-        words=("names no authored occurrence", "the implicit statement policy.cons_choice"),
+        words=(
+            "names no place, since the stage authors no `evaluate` occurrence",
+            "`on: cntn_to_dcsn.evaluate.value`",
+        ),
     ),
     "(h) one target per entry; a comma-separated entry is split by L02": Example(
         rule="",
@@ -839,7 +996,22 @@ _TARGET_EXAMPLES = {
         address="policy, cntn_to_dcsn",
         words=("lists several targets separated by commas", "an entry names one target"),
     ),
-    "a target has one, two, or three dot-separated parts": Example(
+    # the policy builder writes the policy, so its Evaluation evaluates no
+    # value (AMD-MB-002 §3)
+    "(i) the Evaluation of a builder by `<block-id>.evaluate`, `<block-id>.evaluate.value` "
+    "or `<block-id>.evaluate.marginal`": Example(
+        rule="",
+        corpus="cons",
+        origin=CORPUS["cons"],
+        provokes="target",
+        target="policy.evaluate.value",
+        address="policy.evaluate.value",
+        words=(
+            "names a value at the Evaluation of the policy builder 'policy'",
+            "`on: policy.evaluate`",
+        ),
+    ),
+    RULE_FORM: Example(
         rule="",
         corpus="cons",
         origin=CORPUS["cons"],
@@ -914,6 +1086,114 @@ _TARGET_EXAMPLES = {
             "method-attachment admits",
         ),
     ),
+    # a representation named on the policy builder is refused naming the
+    # address of the builder's Evaluation (AMD-MB-002 §4)
+    "representation-on-builder": Example(
+        rule="representation-on-builder",
+        corpus="cons",
+        origin=CORPUS["cons"],
+        provokes="methodize",
+        entry={"on": "policy", "method": "!Linear"},
+        address="policy",
+        words=(
+            "Method target 'policy' in stage 'cons'",
+            "attached to the Evaluation of a builder and not to the builder",
+            "`on: policy.evaluate`",
+        ),
+    ),
+    # a representation named on the derivative line of the decision value,
+    # `D_{m_d}V = 𝑑𝑢(c)`, is refused naming the address at which the stated
+    # derivative is represented (AMD-MB-002 §4)
+    "representation-on-derivative-line": Example(
+        rule="representation-on-derivative-line",
+        corpus="cons",
+        origin=CORPUS["cons"],
+        provokes="methodize",
+        entry={"on": "cntn_to_dcsn.marginal", "method": "!Linear"},
+        address="cntn_to_dcsn.marginal",
+        words=(
+            "Method target 'cntn_to_dcsn.marginal' in stage 'cons'",
+            "cntn_to_dcsn.marginal is a derivative line",
+            "`on: cntn_to_dcsn.evaluate.marginal`",
+        ),
+    ),
+    # a kind of grid written as a method, as the methods files wrote
+    # `!Cartesian` before AMD-MB-003, is refused naming the basis to write and
+    # the tagged setting
+    "grid-kind-as-method": Example(
+        rule="grid-kind-as-method",
+        corpus="cons",
+        origin=CORPUS["cons"],
+        provokes="methodize",
+        entry={
+            "on": "cntn_to_dcsn.evaluate.value",
+            "method": "!Cartesian",
+            "settings": {"orders": {"m_d": "n_m"}, "bounds": {"m_d": ["m_min", "m_max"]}},
+        },
+        address="cntn_to_dcsn.evaluate.value",
+        words=(
+            "Method target 'cntn_to_dcsn.evaluate.value' in stage 'cons'",
+            "!Cartesian is a kind of grid and not a method",
+            "`method: !Linear`",
+            "`grid: !Cartesian`",
+        ),
+    ),
+    # the fields of a grid written beside a basis without the setting `grid`
+    # that names its kind are refused naming the tagged form (AMD-MB-003 §3)
+    "grid-without-kind": Example(
+        rule="grid-without-kind",
+        corpus="cons",
+        origin=CORPUS["cons"],
+        provokes="methodize",
+        entry={
+            "on": "cntn_to_dcsn.evaluate.value",
+            "method": "!Linear",
+            "settings": {"orders": {"m_d": "n_m"}, "bounds": {"m_d": ["m_min", "m_max"]}},
+        },
+        address="cntn_to_dcsn.evaluate.value",
+        words=(
+            "Method target 'cntn_to_dcsn.evaluate.value' in stage 'cons'",
+            "!Linear writes `orders` and `bounds` without the setting `grid`",
+            "`grid: !Cartesian`",
+        ),
+    ),
+    # a grid written on the policy builder's Evaluation, where `!egm` stores
+    # the pairs that are the interpolant's knots, is refused with the reason;
+    # the policy block of the inverse Euler form writes the grid line, so
+    # `!egm` stands at that Evaluation with no block (AMD-MB-003 §1)
+    "grid-under-egm": Example(
+        rule="grid-under-egm",
+        text=INVERSE_EULER,
+        provokes="methodize",
+        methods={
+            "methods": [
+                {
+                    "on": "policy",
+                    "method": "!egm",
+                    "settings": {
+                        "grid": "!Cartesian",
+                        "orders": {"a": "n_a"},
+                        "bounds": {"a": ["a_min", "a_max"]},
+                    },
+                },
+                {
+                    "on": "policy.evaluate",
+                    "method": "!Linear",
+                    "settings": {
+                        "grid": "!Cartesian",
+                        "orders": {"m": "n_m"},
+                        "bounds": {"m": ["m_min", "m_max"]},
+                    },
+                },
+            ]
+        },
+        address="policy.evaluate",
+        words=(
+            "Method target 'policy.evaluate' in stage 't'",
+            "stores there, which are its knots",
+            "the entry writes no grid",
+        ),
+    ),
 }
 
 for _rule, _example in _TARGET_EXAMPLES.items():
@@ -948,6 +1228,26 @@ EXAMPLES["egm-without-a-grid-line"] = Example(
     entry={"on": "policy", "method": "!egm"},
     address="policy",
     words=("Method target 'policy' in stage 'port'", "the grid line", "writes neither"),
+)
+
+# An `evaluate` named on a line that carries none, in a builder that closes
+# with an Evaluation, as `policy.cons_choice.evaluate` was written for the
+# buffer-stock method block before AAS's ruling of 31 October 2026, is
+# refused under rule (e) naming the written address of the builder's
+# Evaluation, `policy.evaluate` (AMD-MB-002 §3).
+EXAMPLES["evaluate-on-a-line-that-carries-none"] = Example(
+    rule=RULE_E,
+    corpus="cons",
+    origin=CORPUS["cons"],
+    provokes="target",
+    target="policy.optimality.evaluate",
+    address="policy.optimality.evaluate",
+    words=(
+        "names an `evaluate` occurrence in",
+        "which carries none",
+        "the Evaluation of the builder 'policy'",
+        "`on: policy.evaluate`",
+    ),
 )
 
 # `!vfi` is a handler for the whole backward decision builder, `cntn_to_dcsn`,

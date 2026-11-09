@@ -1603,7 +1603,8 @@ def test_trellis_load_item_4_a_new_restriction_copies_nothing_and_a_save_constru
     monkeypatch.setattr(
         factory_trellis,
         "construct_stage",
-        lambda text, origin: constructions.append(origin) or construct(text, origin),
+        lambda text, origin, additions=(): constructions.append(origin)
+        or construct(text, origin, additions),
     )
     monkeypatch.setattr(
         factory_trellis, "copy_native", lambda stage: copies.append(stage.name) or copy(stage)
@@ -2787,7 +2788,8 @@ def test_a_typed_connector_constructs_no_stage_and_binds_no_occurrence_again(
     monkeypatch.setattr(
         factory_trellis,
         "construct_stage",
-        lambda text, origin: constructions.append(origin) or construct(text, origin),
+        lambda text, origin, additions=(): constructions.append(origin)
+        or construct(text, origin, additions),
     )
     given, recorded = [], trellis.specify_trellis
     monkeypatch.setattr(

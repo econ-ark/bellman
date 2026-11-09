@@ -12,12 +12,20 @@ methods:
   # implicit statement policy.cons_choice: for each income state and housing
   # point it inverts the Euler equation on a grid of savings, adds the
   # constrained segment at the lowest saving, and selects among the candidates
-  # by value with the fast upper envelope scan.
+  # by value with the fast upper envelope scan. The setting grid names the
+  # exogenous grid of savings by its kind, !Cartesian, with its order and
+  # bounds beside it; the routine of the replication code reads the order and
+  # the bounds of this grid by its own keys savings_orders and savings_bounds,
+  # and its spacing, which the setting grid does not state, by
+  # savings_spacing; these keys stand below until it reads the setting grid.
   - on: policy
     method: !egm
     block: ../../methods/keeper_cons_egm.bl
     handler: fues-durables:make_keeper_ops
     settings:
+      grid: !Cartesian
+      orders: {a_nxt_kp: n_a}
+      bounds: {a_nxt_kp: [a_min, a_max]}
       savings_orders: [n_a]
       savings_bounds: [[a_min, a_max]]
       savings_spacing: grid_phi
@@ -45,30 +53,26 @@ methods:
   # derivatives of the value the marginal block states, on the lines
   # marginal_cash and marginal_housing, are each tabulated on a grid of cash on
   # hand and housing, one table per income state, and read by linear
-  # interpolation in cash on hand; the second and third entries bind
-  # representations of the stated derivatives on the derivative lines' ids.
-  - on: cntn_to_dcsn.value
+  # interpolation in cash on hand, the basis !Linear, at the decision builder's
+  # Evaluation, on the grid that the setting grid names by its kind,
+  # !Cartesian, with its order and bounds beside it: the first entry names the
+  # value there, cntn_to_dcsn.evaluate.value, and the second the two stated
+  # derivatives, cntn_to_dcsn.evaluate.marginal.
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     handler: dcsmm:interp_as
     settings:
+      grid: !Cartesian
       orders: {w_d: n_a, h_d: n_h}
       bounds: {w_d: [a_min, a_max], h_d: [h_min, h_max]}
       extrapolate: extrap_policy
       clamp_factor: clamp_max_factor
 
-  - on: cntn_to_dcsn.marginal_cash
+  - on: cntn_to_dcsn.evaluate.marginal
     method: !Linear
     handler: dcsmm:interp_as
     settings:
-      orders: {w_d: n_a, h_d: n_h}
-      bounds: {w_d: [a_min, a_max], h_d: [h_min, h_max]}
-      extrapolate: extrap_policy
-      clamp_factor: clamp_max_factor
-
-  - on: cntn_to_dcsn.marginal_housing
-    method: !Linear
-    handler: dcsmm:interp_as
-    settings:
+      grid: !Cartesian
       orders: {w_d: n_a, h_d: n_h}
       bounds: {w_d: [a_min, a_max], h_d: [h_min, h_max]}
       extrapolate: extrap_policy

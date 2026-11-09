@@ -14,9 +14,9 @@ methods:
     method: !gauss-hermite
     handler: cons-port:gauss_hermite_reference
     settings: {n_nodes: [n_Ψ_nodes, n_θ_nodes]}
-  - on: evaluate
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
-    settings: {orders: {k: n_k}, bounds: {k: [k_min, k_max]}}
+    settings: {grid: !Cartesian, orders: {k: n_k}, bounds: {k: [k_min, k_max]}}
   - on: dcsn_to_cntn
     method: !monte-carlo
     settings: {n_paths: n_sim, seed: sim_seed}

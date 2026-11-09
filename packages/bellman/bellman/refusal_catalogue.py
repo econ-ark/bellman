@@ -196,9 +196,17 @@ def _four_parts(example, refusal):
         # `syntax` on the refusal, and they are read there
         return dict(where=where, what=written.what, why=written.why, write=written.write)
     what = (
-        "" if refusal.line is None else marked_line(text_of(example), refusal.line, refusal.column)
+        ""
+        if refusal.line is None
+        else marked_line(_text_in(example, refusal.file), refusal.line, refusal.column)
     )
     return dict(where=where, what=what, why=refusal.message, write=example.write)
+
+
+def _text_in(example, file):
+    """The text of the example's file `file`: an addition's text where an
+    addition stands at that origin, and the stage text otherwise."""
+    return next((text for origin, text in example.additions if origin == file), text_of(example))
 
 
 # --- the calls that provoke a refusal ---
@@ -263,10 +271,13 @@ def _stage(example):
 
 
 def _methodized(example):
-    """The example's stage methodized with its one methods entry. The stage
-    is elaborated anew, since `methodize` binds the stage it is called on."""
+    """The example's stage methodized with its one methods entry, or with the
+    entries of its methods source `methods` where it gives one. The stage is
+    elaborated anew, since `methodize` binds the stage it is called on."""
     stage = _fresh_stage(example)
-    return methodize(stage, {"stage": stage.name, "methods": [dict(example.entry)]})
+    entries = [dict(entry) for entry in example.methods.get("methods", ())]
+    entries = entries or [dict(example.entry)]
+    return methodize(stage, {"stage": stage.name, "methods": entries})
 
 
 def _methodized_with_block(example):
@@ -287,6 +298,21 @@ def _fresh_stage(example):
     """The stage the example's text constructs, elaborated anew for a verb
     that binds it."""
     return elaborate_text(text_of(example), example.origin)
+
+
+def _unioned(example):
+    """The example's stage text elaborated with its additions unioned into it,
+    each the origin and the text of a methods file (specification 0.7 §4);
+    the stage text itself stands in the file `t.bl`."""
+    return elaborate_stage(
+        {
+            "stage": {"text": text_of(example), "origin": "t.bl"},
+            "calibration": {},
+            "settings": {},
+            "methods": {},
+            "additions": [{"text": text, "origin": origin} for origin, text in example.additions],
+        }
+    )
 
 
 def _other_version(example):
@@ -324,6 +350,7 @@ _PROVOKERS = {
         _fresh_stage(example), example.methods
     ).configure(example.settings),
     "other-version": _other_version,
+    "union": _unioned,
 }
 
 

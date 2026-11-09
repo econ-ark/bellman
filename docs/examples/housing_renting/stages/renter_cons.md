@@ -104,8 +104,9 @@ methods:
         method: !egm
 
       - scheme: interpolation
-        method: !Cartesian
+        method: !Linear
         settings:
+          grid: !Cartesian
           orders: [n_w_rent]
           bounds: [ [w_rent_min, w_rent_max] ]
 

@@ -2705,9 +2705,7 @@ def test_task_17_one_undo_per_gesture_in_every_file_and_new_stage_saved_and_pars
 # refusal of `!monte-carlo` chosen at `arvl_to_dcsn` of `renter_cons`, whose
 # required option `n_paths` the entry does not write; and the rows of the
 # Methods tab shown, each as its target, the tags its select offers, the
-# tag it shows, whether its choice is marked refused and the choice's hover,
-# the method bound as the row prints it, and whether the row prints a
-# refusal in place of a method bound (unit L, Task 18).
+# tag it shows and the method bound as the row prints it (unit L, Task 18).
 RENTER_CONS = "declaration/stages/renter_cons/renter_cons.bl"
 RENTER_CONS_METHODS = "declaration/stages/renter_cons/methods.yml"
 TENURE_PA = "declaration/stages/tenure_pa/tenure_pa.bl"
@@ -2726,31 +2724,29 @@ METHOD_ROWS_JS = r"""
       target: row.dataset.name,
       offers: choice ? Array.from(choice.options, (option) => option.textContent) : [],
       tag: choice ? choice.value : shown.textContent.trim(),
-      marked: shown.classList.contains('bl-refusal-mark'),
-      hover: shown.getAttribute('title'),
       bound: row.querySelector('.bl-values-detail').textContent.trim(),
-      refusal: row.querySelector('.bl-values-refusal') !== null,
     };
   })
 """
 
 
-def test_task_18_the_methods_tab_offers_what_the_block_admits_and_marks_the_refused_row_alone(
+def test_task_18_the_methods_tab_offers_what_the_block_admits_and_empties_when_refused(
     browser, server_on, tmp_path
 ):
     """Task 18 (defects 8 and 9 of the UX simulation; L-D13; AMD-MI-002 §5
-    rule 5; K-I150). On a copy of the pension model the UX simulation's
-    post-doc built, at its first build of the working years, `renter_cons.bl`
-    bound as `periods[1] / renter_cons` shows in its Methods tab the five
-    entries of its methods file, each bound and none marked. The row
-    `arvl_to_dcsn`, a forward identity block, offers the tags the package
-    admits there, `admitted_methods` of `bellman.stage`, and no `!egm` and
-    no `!vfi`. `!monte-carlo`, which the block admits, chosen there is
-    written to the methods file, and the package refuses it, since the
-    entry writes no `n_paths`: the row's choice alone is then marked, the
-    package's sentence its hover and printed in no row, the four other rows
-    showing the methods their entries bind, and the sentence stands in the
-    list under the error mark. `tenure_pa.bl`, a branching stage whose
+    rule 5; K-I150), with the tab read from the methods the stage binds
+    (decision S7-W1 of specification 0.7). On a copy of the pension model
+    the UX simulation's post-doc built, at its first build of the working
+    years, `renter_cons.bl` bound as `periods[1] / renter_cons` shows in its
+    Methods tab the four methods it binds, the one representation that the
+    value's and the marginal's entries bind at its Evaluation in one row.
+    The row `arvl_to_dcsn`, a forward identity block, offers the tags the
+    package admits there, `admitted_methods` of `bellman.stage`, and no
+    `!egm` and no `!vfi`. `!monte-carlo`, which the block admits, chosen
+    there is written to the methods file, and the package refuses it, since
+    the entry writes no `n_paths`: the stage then binds no method, so that
+    the tab has no row, and the sentence stands in the list under the error
+    mark. `tenure_pa.bl`, a branching stage whose
     places `places()` refuses to list, bound as `periods[1] / tenure_pa`
     shows the four entries of its methods file, each with a choice among
     the tags the package admits at its target, and no sentence in the tab;
@@ -2768,8 +2764,7 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_marks_the_refu
     )
     bound = {
         "policy.optimality.argmax": "!root-find",
-        "cntn_to_dcsn.value": "!Linear",
-        "cntn_to_dcsn.marginal_cash": "!Linear",
+        "cntn_to_dcsn:Evaluation": "!Linear",
         "arvl_to_dcsn": "!deterministic",
         "dcsn_to_cntn": "!deterministic",
     }
@@ -2804,10 +2799,9 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_marks_the_refu
         assert {target: (row["tag"], row["bound"]) for target, row in rows.items()} == {
             target: (tag, tag) for target, tag in bound.items()
         }
-        assert not any(row["marked"] or row["refusal"] for row in rows.values())
         assert rows["arvl_to_dcsn"]["offers"] == list(forward)
 
-        # a choice the block admits and the package refuses marks its row alone
+        # a choice the block admits and the package refuses binds no method
         choice = '.bl-values-row[data-name="arvl_to_dcsn"] select.bl-values-method'
         tab.locator(choice).select_option("!monte-carlo")
         wait_until(
@@ -2817,29 +2811,9 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_marks_the_refu
             "!monte-carlo written for arvl_to_dcsn",
         )
 
-        def refused_shown() -> dict | None:
-            # the rows once the row arvl_to_dcsn is marked refused
-            found = {row["target"]: row for row in tab.evaluate(METHOD_ROWS_JS)}
-            held = found.get("arvl_to_dcsn")
-            return found if held and held["marked"] and held["tag"] == "!monte-carlo" else None
-
-        wait_until(lambda: refused_shown() is not None, 120.0, "the row arvl_to_dcsn refused")
-        rows = refused_shown()
-        refused = rows.pop("arvl_to_dcsn")
-        assert (refused["hover"], refused["bound"], refused["refusal"]) == (
-            MONTE_CARLO_REFUSED,
-            "",
-            False,
+        wait_until(
+            lambda: not tab.evaluate(METHOD_ROWS_JS), 120.0, "the tab of renter_cons emptied"
         )
-        assert refused["offers"] == list(forward)
-        assert {
-            target: (row["tag"], row["bound"], row["marked"], row["hover"], row["refusal"])
-            for target, row in rows.items()
-        } == {
-            target: (tag, tag, False, None, False)
-            for target, tag in bound.items()
-            if target != "arvl_to_dcsn"
-        }
         lines = error_lines(tab)
         # the refusal stands once, as the stage's or, once the trellis is
         # read, as the trellis's line naming the occurrence (Task 21)
@@ -2851,7 +2825,7 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_marks_the_refu
         shown(TENURE_PA, "tenure_pa", TENURE_PA_METHODS)
         wait_until(
             lambda: [row["target"] for row in tab.evaluate(METHOD_ROWS_JS)]
-            == ["policy", "cntn_to_dcsn", "dcsn_to_cntn", "arvl_to_dcsn"],
+            == ["policy", "cntn_to_dcsn.evaluate.value", "dcsn_to_cntn", "arvl_to_dcsn"],
             30.0,
             "the four rows of tenure_pa",
         )
@@ -2860,7 +2834,7 @@ def test_task_18_the_methods_tab_offers_what_the_block_admits_and_marks_the_refu
             assert row["offers"] and row["offers"] == list(
                 admitted_methods(tenure, row["target"])
             ), row
-            assert (row["bound"], row["marked"]) == (row["tag"], False), row
+            assert row["bound"] == row["tag"], row
         # the package's refusal to list its places, once under the error mark
         wait_until(
             lambda: (unlisted, None, None) in error_lines(tab),

@@ -3,7 +3,9 @@ stage: owner_housing
 # The FUES solver searches over the housing sizes at every point of the asset
 # grid, reading the owner's consumption value at the cash each size leaves by
 # linear interpolation on the cash grid, and holds the resulting decision value
-# and its derivative on the asset grid.
+# and its derivative on the asset grid. The asset grid is written by its kind,
+# the tag !Cartesian on the setting grid, with its order and bounds beside it,
+# in the settings of the two representations, whose basis is !Linear.
 methods:
   - on: policy
     method: !discrete-choice
@@ -14,15 +16,17 @@ methods:
     method: !marginals
     block: ../../methods/marginals_owner_housing.bl
 
-  - on: cntn_to_dcsn.value
+  - on: cntn_to_dcsn.evaluate.value
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [a_points]
       bounds: [[a_min, a_max]]
 
-  - on: cntn_to_dcsn.marginal
+  - on: cntn_to_dcsn.evaluate.marginal
     method: !Linear
     settings:
+      grid: !Cartesian
       orders: [a_points]
       bounds: [[a_min, a_max]]
 

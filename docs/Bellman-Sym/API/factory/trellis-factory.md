@@ -26,13 +26,14 @@ periods:
       cons:
         stage: stages/cons/cons.bl
         calibration: calibration/ρ.yml
-        settings: {n_m: 10}
+        settings: {n_m: 10, n_a: 10, a_min: 0.001, a_max: 10.0}
         methods:
           stage: cons
           methods:
             - on: policy
               method: !egm
               handler: cons-port:egm
+              settings: {grid: !Cartesian, orders: {a: n_a}, bounds: {a: [a_min, a_max]}}
     connectors: []
   - {template: period.yml, repeat: 2}
 inter_connectors:

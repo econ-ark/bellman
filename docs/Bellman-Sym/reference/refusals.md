@@ -37,7 +37,7 @@ print(refusal_of(EXAMPLES["syntax"]))
 ```
 
 ```text
-cons.bl:17:40: the file writes `]` here, and the language admits `)` or `,` at this place
+cons.bl:16:40: the file writes `]` here, and the language admits `)` or `,` at this place
     [id=dcsn_to_cntn, (m_d, c : !ctrl @ ℝ₊₊] : !dcsn -> (a : Xa) : !cntn] {
                                            ^
 a side of a block header: a side is parenthesized in general; a single coordinate may stand bare (V : !dcsn -> …) (rule syntax)
@@ -67,6 +67,10 @@ the word-types are !arvl, !cntn, !ctrl, !dcsn, !shck, !state, !vlu (rule syntax)
 
 The package refuses under three closed vocabularies. The rules of **graph construction** are claims about the authored file: that it names itself once, that every name it writes is declared where it is used, that a forward block's header lists every field its lines read and a backward block's the value fields its lines read, with the controls at which they are read. The rules of the **identity table** are the rules by which the string written after `on:` in a methods file is read: which places a target may name and how each is spelled. The rules of the **Bellman factory** are claims about a model's files and the dictionaries made from them: the recipe, its source files and its fills, the trellis file, the records, the joins of a period, and a file given by its path to `load_stage` or to a binding verb, which is read as one YAML mapping with each key written once; each refusal names the file or the address, what stands there, why it is refused and what to write.
 
+A representation method, such as `!Linear`, is attached to the [Evaluation](operations.md#evaluation) of a builder, and the methods file writes that place: `<block-id>.evaluate` for the policy builder, whose Evaluation stores the policy function, and `<block-id>.evaluate.value` or `<block-id>.evaluate.marginal` for a backward value builder, whose Evaluation stores the value function and the derivative of it that a derivative line states ([Methodization](../04-methodization.md) §2). The identity table refuses a representation named on a builder (`representation-on-builder`), one named on a derivative line (`representation-on-derivative-line`), and `evaluate` alone in a stage that authors no `evaluate` occurrence (rule (g)); each refusal names the address to write.
+
+A representation names its basis as the method, such as `!Linear`, and its grid by the setting `grid`, whose value is the grid's kind written as a tag, `grid: !Cartesian`, with the grid's fields `orders` and `bounds` beside it; the endogenous grid method names its exogenous grid of savings in the same way ([Methodization](../04-methodization.md) §3). The identity table refuses these forms under three rules: a kind of grid written as a method (`grid-kind-as-method`), the fields of a grid written without the setting `grid` that names its kind (`grid-without-kind`), and a grid written at the Evaluation of the policy builder where `!egm` stores the pairs that are the knots of the interpolant (`grid-under-egm`); each refusal names the form to write or the reason.
+
 A rule is written once, in the package, and a refusal names it. The three vocabularies are:
 
 ```python
@@ -81,6 +85,7 @@ for vocabulary, rules in (("graph construction", RULES), ("the identity table", 
 ```text
 graph construction
   syntax
+  marginal-role-retired
   stage-name
   declared-once
   defined-once
@@ -94,22 +99,29 @@ graph construction
   shock-observed
   shock-reintroduced
   forward-composite
+  one-builder-per-output
+  candidate-coordinate
+  candidate-read
   transition-without-expectation
   one-implicit-statement
   definition-order
   derivative-one-name
   derivative-scalar-coordinate
+  derivative-coordinate
   stage-boundary
   output-defined
   grid-line-consistency
   identity-collision
   readable-form
+  typing-entry-unattached
+  declared-twice
+  label-not-in-parent
+  type-conflict
+  metadata-mismatch
   multiplier-declaration
   set-mismatch
   category-codes
   value-input-role
-  marginal-role-retired
-  derivative-coordinate
   signature-complete
   header-coordinate
   input-perch-state
@@ -130,18 +142,24 @@ graph construction
   block-name-undefined
 the identity table
   (a) a builder box by its block id; `<block-id>_builder` for a transition block
-  (b), (c) a node box or a line by `<block-id>.<statement-id>`
-  (ii) a positional address `<block-id>.<n>` is not a target; the line needs an id
+  (b), (c) a node box or a line by `<block-id>.<statement-id>`, a line of a branch by `<block-id>.<label>.<statement-id>`
+  (c.ii) a positional address `<block-id>.<n>` is not a target; the line needs an id
   (d) every occurrence of an operator by its stage-wide name
-  (e) one occurrence by `<block-id>.<statement-id>.<operator>`
-  (g) `evaluate`: the one authored occurrence, else the boundary representation; two or more authored occurrences are named by their addresses
+  (e) every occurrence of an operator in one line by `<block-id>.<statement-id>.<operator>`
+  (g) `evaluate` alone: the one authored occurrence; two or more are named by their addresses, and a stage that authors none is refused naming `<block-id>.evaluate.value`
   (h) one target per entry; a comma-separated entry is split by L02
-  a target has one, two, or three dot-separated parts
+  (i) the Evaluation of a builder by `<block-id>.evaluate`, `<block-id>.evaluate.value` or `<block-id>.evaluate.marginal`
+  a target has one, two, or three dot-separated parts, or four where the second is a branch label
   a target reaches one place; two is a construction defect
   target-not-found
   target-ambiguous
   target-version
   method-attachment
+  representation-on-builder
+  representation-on-derivative-line
+  grid-kind-as-method
+  grid-without-kind
+  grid-under-egm
 the Bellman factory
   recipe-shape
   recipe-source
@@ -165,35 +183,43 @@ The table gives each rule of graph construction: **written**, the rule's name as
 | rule | written | claim | denotes | read from |
 |---|---|---|---|---|
 | <a id="syntax"></a>`syntax` | `(rule syntax)` | The file is written in the forms the grammar admits, and every !-marked word is one of the vocabulary. It is the first rule a file meets: the refusal is raised where the parser or the lowering stops, and names the forms admitted at that place. | — | `refusals.py`, `RULES`, `"syntax"` |
+| <a id="marginal-role-retired"></a>`marginal-role-retired` | `(rule marginal-role-retired)` | The roles `!mrgnvl` and `!sndmrgnvl` are retired from the language: a backward header lists value fields and controls, and a derivative of a value is the term `D_{x}V` (AMD-MB-001 §4.1). | — | `refusals.py`, `RULES`, `"marginal-role-retired"` |
 | <a id="stage-name"></a>`stage-name` | `(rule stage-name)` | The file names itself once: exactly one `@stage` line, with a name. | — | `refusals.py`, `RULES`, `"stage-name"` |
 | <a id="declared-once"></a>`declared-once` | `(rule declared-once)` | Each name, block id, statement id, and law is written once. | — | `refusals.py`, `RULES`, `"declared-once"` |
-| <a id="defined-once"></a>`defined-once` | `(rule defined-once)` | Within one block, an operative equation defines each name-sided left side once. A documentary line (`!doc`) defines none. | — | `refusals.py`, `RULES`, `"defined-once"` |
+| <a id="defined-once"></a>`defined-once` | `(rule defined-once)` | Within one block, an operative equation defines each name-sided left side once, and a derivative line states each derivative term, `D_{m}V`, once. A documentary line (`!doc`) defines and states none. | — | `refusals.py`, `RULES`, `"defined-once"` |
 | <a id="one-name-one-meaning"></a>`one-name-one-meaning` | `(rule one-name-one-meaning)` | A name is a field, a function, a named space, a shock, or a parameter — one of them — and is not the name of a numerical operator. | — | `refusals.py`, `RULES`, `"one-name-one-meaning"` |
 | <a id="parameter-or-field"></a>`parameter-or-field` | `(rule parameter-or-field)` | A top-level scalar declaration is a parameter; only a shock is both declared at the top level and listed on the side of a block. | — | `refusals.py`, `RULES`, `"parameter-or-field"` |
 | <a id="field-perch"></a>`field-perch` | `(rule field-perch)` | Every listed field has one perch, fixed by its side's perch word, its mark, or its role, and the three must agree. | — | `refusals.py`, `RULES`, `"field-perch"` |
-| <a id="name-in-scope"></a>`name-in-scope` | `(rule name-in-scope)` | Every name a statement or a definition body mentions is declared where the statement stands. | — | `refusals.py`, `RULES`, `"name-in-scope"` |
-| <a id="family-selection"></a>`family-selection` | `(rule family-selection)` | A selection takes a coordinate of a declared family by a key the family admits: a label of its finite set, a position counted from one on a fixed product, or a name declared within the finite integer or label index set of a collection declared on a set of functions. | — | `refusals.py`, `RULES`, `"family-selection"` |
+| <a id="name-in-scope"></a>`name-in-scope` | `(rule name-in-scope)` | Every name a statement or a definition body mentions is declared where the statement stands, and every set a typing names, `n_m : Foo`, is a named set the stage defines or a set of the language. | — | `refusals.py`, `RULES`, `"name-in-scope"` |
+| <a id="family-selection"></a>`family-selection` | `(rule family-selection)` | A selection takes a coordinate of a declared family by a key the family admits. | — | `refusals.py`, `RULES`, `"family-selection"` |
 | <a id="well-typed"></a>`well-typed` | `(rule well-typed)` | Every operation of a line, a function body or a declared set reads values of the kinds it takes: arithmetic, an ordered comparison and the bounds of an interval read numbers, and a label is no number; a function is applied to as many arguments as it declares, each of the kind it declares; `Inv` inverts one function; the two sides of a line are of one kind, and its left side names one field for each result of its right side. | — | `refusals.py`, `RULES`, `"well-typed"` |
 | <a id="divisor-nonzero"></a>`divisor-nonzero` | `(rule divisor-nonzero)` | A divisor the file writes as a number is not zero: a division by a written zero is defined at no point (the definedness conditions of the fold). | — | `refusals.py`, `RULES`, `"divisor-nonzero"` |
 | <a id="shock-observed"></a>`shock-observed` | `(rule shock-observed)` | A statement's perch has observed every shock the statement's right side depends on; otherwise the statement asks for an expectation. | — | `refusals.py`, `RULES`, `"shock-observed"` |
 | <a id="shock-reintroduced"></a>`shock-reintroduced` | `(rule shock-reintroduced)` | A backward function does not read a shock again beside a term whose expectation has integrated it. | — | `refusals.py`, `RULES`, `"shock-reintroduced"` |
 | <a id="forward-composite"></a>`forward-composite` | `(rule forward-composite)` | The fields a statement's right side mentions are at the left side's perch, before it, or forward of it along the stage's transitions. | — | `refusals.py`, `RULES`, `"forward-composite"` |
+| <a id="one-builder-per-output"></a>`one-builder-per-output` | `(rule one-builder-per-output)` | One block writes a field between two perches: a second block that joins the same perches and writes a field the first writes is refused naming both blocks. | — | `refusals.py`, `RULES`, `"one-builder-per-output"` |
+| <a id="candidate-coordinate"></a>`candidate-coordinate` | `(rule candidate-coordinate)` | A candidate line of a policy block, `x[>] = …`, names a control at the candidate points, `c[>]`, a state of the decision perch, the grid line `m[>] = a + c[>]`, or the value candidate an upper envelope of the block compares; any other name is refused with the coordinates in scope. | — | `refusals.py`, `RULES`, `"candidate-coordinate"` |
+| <a id="candidate-read"></a>`candidate-read` | `(rule candidate-read)` | A candidate a policy block writes is read by a later line of the block or is the grid line, whose points are the knots of the policy; a candidate nothing reads is refused naming the line. | — | `refusals.py`, `RULES`, `"candidate-read"` |
 | <a id="transition-without-expectation"></a>`transition-without-expectation` | `(rule transition-without-expectation)` | A transition block's statements define the state transition g and contain no expectation: the forward builder is the push-forward of a measure through g, and integration over a shock belongs to a value block (Operators and builders, §"Forward operators"). | — | `refusals.py`, `RULES`, `"transition-without-expectation"` |
 | <a id="one-implicit-statement"></a>`one-implicit-statement` | `(rule one-implicit-statement)` | A block has at most one implicit statement for each output field. | — | `refusals.py`, `RULES`, `"one-implicit-statement"` |
 | <a id="definition-order"></a>`definition-order` | `(rule definition-order)` | The function definitions have a dependency order, and each applies a defined function. | — | `refusals.py`, `RULES`, `"definition-order"` |
 | <a id="derivative-one-name"></a>`derivative-one-name` | `(rule derivative-one-name)` | A derivative names one formal argument, not several arguments at once. | — | `refusals.py`, `RULES`, `"derivative-one-name"` |
 | <a id="derivative-scalar-coordinate"></a>`derivative-scalar-coordinate` | `(rule derivative-scalar-coordinate)` | The one formal argument a derivative names is scalar, not product-valued. | — | `refusals.py`, `RULES`, `"derivative-scalar-coordinate"` |
+| <a id="derivative-coordinate"></a>`derivative-coordinate` | `(rule derivative-coordinate)` | A derivative of a value field, `D_{a}V[>]`, names a state coordinate of the perch at which the field is read, and not a discrete one (AMD-MB-001 §4.2); for the value of a branch, `D_{a_w}V_w[>]`, a state the branch writes. | — | `refusals.py`, `RULES`, `"derivative-coordinate"` |
 | <a id="stage-boundary"></a>`stage-boundary` | `(rule stage-boundary)` | Every field is produced and consumed: a block writes it or the stage receives it, and a block reads it or the stage delivers it. | — | `refusals.py`, `RULES`, `"stage-boundary"` |
 | <a id="output-defined"></a>`output-defined` | `(rule output-defined)` | Every required block output has an equation. | — | `refusals.py`, `RULES`, `"output-defined"` |
 | <a id="grid-line-consistency"></a>`grid-line-consistency` | `(rule grid-line-consistency)` | A grid line, a line that writes a decision state under the continuation mark (`m_d[>] = a + c[>]`), agrees with the law of motion solved for that state at the candidates: its right side and the law of motion so solved reduce to one expression, every function read as an opaque symbol. | — | `refusals.py`, `RULES`, `"grid-line-consistency"` |
 | <a id="identity-collision"></a>`identity-collision` | `(rule identity-collision)` | No authored name collides with the spelling of an identity: a name containing the colon that separates its segments, or a name equal to one of the words a reader tests for in the last segment — `result`, `declared`, `merged`. | — | `refusals.py`, `RULES`, `"identity-collision"` |
 | <a id="readable-form"></a>`readable-form` | `(rule readable-form)` | The item is a form the construction rules read. | — | `refusals.py`, `RULES`, `"readable-form"` |
+| <a id="typing-entry-unattached"></a>`typing-entry-unattached` | `(rule typing-entry-unattached)` | A typing entry or a handler binding, `policy.method : !egm`, is written in a methods file, which the union attaches to its stage and the semantics reads; a stage elaborated alone carries none. | — | `refusals.py`, `RULES`, `"typing-entry-unattached"` |
+| <a id="declared-twice"></a>`declared-twice` | `(rule declared-twice)` | Over the files of a stage, a component is typed once, whether by an absolute or a relative spelling of its path, a name is defined once, or identically in each file, and a line id names one line of a block; the union of the stage file and its additions refuses a second entry, definition or line naming both positions. | — | `refusals.py`, `RULES`, `"declared-twice"` |
+| <a id="label-not-in-parent"></a>`label-not-in-parent` | `(rule label-not-in-parent)` | A nested block of an addition merges with the branch of the same label under its parent, and a path inside a block names a line or an operator of that block: a label the parent lacks, and a first segment that names another block, are refused. | — | `refusals.py`, `RULES`, `"label-not-in-parent"` |
+| <a id="type-conflict"></a>`type-conflict` | `(rule type-conflict)` | The field names determine a signature: a coordinate an addition restates keeps the stage's typing, and a different type on it, or a different perch word on its side, is refused. | — | `refusals.py`, `RULES`, `"type-conflict"` |
+| <a id="metadata-mismatch"></a>`metadata-mismatch` | `(rule metadata-mismatch)` | An addition names the stage it adds to, `@methods: <stage>`, with the name the stage file gives itself, and a metadata line of another key agrees with the stage file's line of that key. | — | `refusals.py`, `RULES`, `"metadata-mismatch"` |
 | <a id="multiplier-declaration"></a>`multiplier-declaration` | `(rule multiplier-declaration)` | A multiplier is declared inside the block whose continuation grid it extends, once, marked `[>]`, with one declared set and one bound after ⟂ that names continuation states, multipliers of the block, parameters, numbers or `inf`. | — | `refusals.py`, `RULES`, `"multiplier-declaration"` |
 | <a id="set-mismatch"></a>`set-mismatch` | `(rule set-mismatch)` | A field produced on one declared set and consumed on another is declared with sets whose inclusion holds; otherwise the stage declares the inclusion through the control's feasible set. | — | `refusals.py`, `RULES`, `"set-mismatch"` |
 | <a id="category-codes"></a>`category-codes` | `(rule category-codes)` | A set marked `!categories` is a nonempty range of integers written as a comprehension over ℤ or ℕ, whose annotation gives each member one category name and each name one member. The marker is written only on a top-level named set, and a field declared on a set with category codes names that set at every site that names a set. | — | `refusals.py`, `RULES`, `"category-codes"` |
 | <a id="value-input-role"></a>`value-input-role` | `(rule value-input-role)` | A statement of a backward block reads values or marginal values, not both: its kernel acts on one role and its output has that role. | — | `refusals.py`, `RULES`, `"value-input-role"` |
-| <a id="marginal-role-retired"></a>`marginal-role-retired` | `(rule marginal-role-retired)` | A header lists value fields and the controls at which its lines are read, and no marginal value: a role word the language no longer holds is refused with a sentence naming the derivative term `D_{a}V[>]`, by which a line reads the derivative of a value. | — | `refusals.py`, `RULES`, `"marginal-role-retired"` |
-| <a id="derivative-coordinate"></a>`derivative-coordinate` | `(rule derivative-coordinate)` | The subscript of a derivative term names a state coordinate of the perch at which the value is read, written without its mark, and no discrete coordinate; the refusal names the perch's coordinates. | — | `refusals.py`, `RULES`, `"derivative-coordinate"` |
 | <a id="signature-complete"></a>`signature-complete` | `(rule signature-complete)` | A forward block's header lists every field its lines read that no earlier line of the block defines. A backward block's header lists the value fields its lines read and the controls at which they are read, but no state; a state of its output perch is a coordinate. A value field a backward header lists and no line of the block reads is admitted: it is left out of the block's builder and recorded as a diagnostic, `unread-input`, in place of a refusal. | — | `refusals.py`, `RULES`, `"signature-complete"` |
 | <a id="header-coordinate"></a>`header-coordinate` | `(rule header-coordinate)` | A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which its output stands is a coordinate of the output function, and a state of its input perch is reached through the law of motion. | — | `refusals.py`, `RULES`, `"header-coordinate"` |
 | <a id="input-perch-state"></a>`input-perch-state` | `(rule input-perch-state)` | A backward line reads a state of its input or a later perch only through the law of motion. A direct read is refused, including in a relation or a condition after `⟂`. A read under the expectation over the edge's shock and continuation-state indexing on a policy candidate line are admitted. | — | `refusals.py`, `RULES`, `"input-perch-state"` |
@@ -210,8 +236,8 @@ The table gives each rule of graph construction: **written**, the rule's name as
 | <a id="branch-value-position"></a>`branch-value-position` | `(rule branch-value-position)` | A continuation value stands at one position of the selection tuples, the position of the branch on whose fields it is a function. | — | `refusals.py`, `RULES`, `"branch-value-position"` |
 | <a id="branch-law"></a>`branch-law` | `(rule branch-law)` | The law of a label shock gives one probability to each label in the order of the labels, `Categorical((p₁, …, pₙ))` or `Bernoulli(p)` over two. | — | `refusals.py`, `RULES`, `"branch-law"` |
 | <a id="not-constructed"></a>`not-constructed` | `(rule not-constructed)` | The item is a form of the language the construction does not read (`NotConstructed`). | — | `refusals.py`, `RULES`, `"not-constructed"` |
-| <a id="block-header-mismatch"></a>`block-header-mismatch` | `(rule block-header-mismatch)` | A method block's header matches the builder the methods file opens with it: the block joins the builder's perches, writes the builder's outputs, and reads the builder's inputs or inputs its header declares with a set and a role. | — | `refusals.py`, `RULES`, `"block-header-mismatch"` |
-| <a id="block-name-undefined"></a>`block-name-undefined` | `(rule block-name-undefined)` | A line of a method block calls a function the stage file or the block file defines, or a primitive function of the language. | — | `refusals.py`, `RULES`, `"block-name-undefined"` |
+| <a id="block-header-mismatch"></a>`block-header-mismatch` | `(rule block-header-mismatch)` | A method block's header matches the builder the methods file opens with it: the block joins the builder's perches, writes the builder's outputs, and reads the builder's inputs or inputs its header declares with a set and a role (specification 0.6 §4.1). | — | `refusals.py`, `RULES`, `"block-header-mismatch"` |
+| <a id="block-name-undefined"></a>`block-name-undefined` | `(rule block-name-undefined)` | A line of a method block calls a function the stage file or the block file defines, or a primitive function of the language (specification 0.6 §4.1). | — | `refusals.py`, `RULES`, `"block-name-undefined"` |
 
 <!-- /reference-table -->
 
@@ -227,12 +253,20 @@ print(catalogue())
 
 ```text
 syntax  (graph construction)
-  where  cons.bl, line 17, column 40
+  where  cons.bl, line 16, column 40
   what
     [id=dcsn_to_cntn, (m_d, c : !ctrl @ ℝ₊₊] : !dcsn -> (a : Xa) : !cntn] {
                                            ^
   why    the file writes `]` here, and the language admits `)` or `,` at this place
   write  a side of a block header: a side is parenthesized in general; a single coordinate may stand bare (V : !dcsn -> …)
+
+marginal-role-retired  (graph construction)
+  where  t.bl, line 2, column 91
+  what
+    [id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c : !ctrl @ ℝ₊₊) : !cntn -> (V : ℝ @ !vlu, dV : ℝ₊₊ @ !mrgnvl) : !dcsn] {
+                                                                                              ^
+  why    the file writes `!mrgnvl` here, a role retired from the language: a backward header lists value fields and controls alone, and a derivative of a value is written as the term `D_{x}V`, with `x` a state coordinate of the value's perch, such as `D_{m}V` or `D_{a}V[>]` (AMD-MB-001 §4.1)
+  write  remove the field from the header; write the line that defined it as a derivative line, `D_{m}V = …`, and read the derivative as the term `D_{a}V[>]`
 
 stage-name  (graph construction)
   where  t.bl, line 2, column 1 (address '2')
@@ -306,9 +340,9 @@ divisor-nonzero  (graph construction)
   why    `x/0` divides by zero, which is defined at no point; a divisor the file writes as a number is not zero. Write a divisor other than zero
 
 shock-observed  (graph construction)
-  where  t.bl, line 32, column 5 (address 'dcsn_to_arvl.value')
+  where  t.bl, line 31, column 5 (address 'dcsn_to_arvl.value')
   what
-        V[<]  = V                :: [id=value]
+        V[<] = V                 :: [id=value]
         ^
   why    the line is read at the arvl perch and mentions V, a field at the dcsn perch; the edge from the arvl perch to the dcsn perch draws the shock y, so the value of V is not known at the arvl perch. Write the expectation over it, `E_{y}(…)`
 
@@ -320,11 +354,35 @@ shock-reintroduced  (graph construction)
   why    the line reads the shock y beside a term in which cntn_to_dcsn.value:Expectation:1 has already integrated y, and no other value input of that combination still depends on y; a backward function does not depend again on a shock after its expectation (AMD-SG-008 §4, rule shock-reintroduced); move the read of y inside that expectation, or integrate the combination after it
 
 forward-composite  (graph construction)
-  where  t.bl, line 38, column 5 (address 'policy.g_cntn_to_dcsn')
+  where  t.bl, line 35, column 5 (address 'policy.g_cntn_to_dcsn')
   what
-        w[>] = w              :: [id=g_cntn_to_dcsn]
+        w[>] = w                        :: [id=g_cntn_to_dcsn]
         ^
   why    the line is read at the cntn perch and mentions w, a field at the dcsn perch, which comes before it: a stage runs arrival, decision, continuation, so a line at the cntn perch is a function of the cntn state, and the file defines the cntn state from the dcsn state, not the dcsn state from the cntn state. Write the cntn-perch field the law of motion defines, or state the equation at the dcsn perch
+
+one-builder-per-output  (graph construction)
+  where  t.bl, line 22, column 1 (address 'egm')
+  what
+    [id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    ^
+  why    block 'egm' writes c at the dcsn perch from the cntn perch, which block 'policy' already writes; one builder writes a field between two perches (rule one-builder-per-output). Write the lines of the two blocks in one block, or make block 'egm' write another field
+  write  Write the lines of the two blocks in one block, or make the second block write another field.
+
+candidate-coordinate  (graph construction)
+  where  t.bl, line 19, column 5 (address 'policy.grid')
+  what
+        w[>] = a + c[>]        :: [id=grid]
+        ^
+  why    the line writes w[>], a candidate of 'w', which is no control and no state of the dcsn perch, and no upper envelope of block 'policy' compares it; a candidate line of a solution method names a control at the candidate points, a state of the decision perch, which is the grid line, or the value candidate an upper envelope reads (rule candidate-coordinate). The controls are c and the states of the dcsn perch are m
+  write  Name a control at the candidate points, `c[>]`, or a state of the decision perch, the grid line `m[>] = a + c[>]`.
+
+candidate-read  (graph construction)
+  where  t.bl, line 18, column 5 (address 'policy.InvEuler')
+  what
+        c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0    :: [id=InvEuler]
+        ^
+  why    the line writes the candidate c[>], which no later line of block 'policy' reads; a candidate is read by a later line of the block, as an identification `c = c[>]` reads it, or is the grid line, a state of the decision perch at the candidates, whose points are the knots at which the policy is stored (rule candidate-read). Read the candidate on a later line, or remove the line
+  write  Read the candidate on a later line of the block, or remove the line.
 
 transition-without-expectation  (graph construction)
   where  t.bl, line 5, column 5 (address 'step.1')
@@ -334,11 +392,11 @@ transition-without-expectation  (graph construction)
   why    the transition block 'step' integrates over a shock in statement 'step.1'; a forward builder is the push-forward of a measure through the law of motion 𝑔 and takes no expectation; write the integration in a backward block
 
 one-implicit-statement  (graph construction)
-  where  t.bl, line 9, column 5 (address 'policy.second')
+  where  t.bl, line 8, column 5 (address 'policy.first')
   what
-        c + 1 = 2*c[>] :: [id=second]
+        c + 0 = c[>]   :: [id=first]
         ^
-  why    block 'policy' has a second implicit statement for its output 'c'; the first is at t.bl:8:5 (term address 'policy.first'). A block has at most one implicit statement per output field, since two equations in one unknown state two problems
+  why    2 statements of builder 'policy' (policy.first, policy.second) state a relation in 1 unknowns (c); a system of implicit statements is constructed where its statements are exactly as many as its unknowns. Write as many equations as there are unknowns, or name the unknowns a statement determines by the solve_{…} spelling, `c = solve_{c}(…)`
 
 definition-order  (graph construction)
   where  t.bl, line 2, column 1 (address '2')
@@ -363,6 +421,14 @@ derivative-scalar-coordinate  (graph construction)
   why    the derivative D_{x}(f) names the formal argument 'x' of function 'f', which is product-valued; a derivative names one scalar formal argument
   write  Declare scalar formal arguments and write one derivative with respect to one of them.
 
+derivative-coordinate  (graph construction)
+  where  t.bl, line 7, column 5 (address 'policy.InvEuler')
+  what
+        c = 𝑑𝑢𝑖𝑛𝑣(D_{q}V[>]) :: [id=InvEuler]
+        ^
+  why    the derivative D_{q}V[>] names 'q', which is no state coordinate of the cntn perch, at which V[>] is read; a derivative of a value is taken in a state coordinate of the perch at which the value is read, written without its mark, and the coordinates of the cntn perch are a
+  write  Name a state coordinate of the perch at which the value is read, `D_{a}V[>]`.
+
 stage-boundary  (graph construction)
   where  t.bl, line 24, column 1 (address 'dcsn_to_cntn')
   what
@@ -371,18 +437,18 @@ stage-boundary  (graph construction)
   why    no block writes the field 'z' at the dcsn perch, and the stage does not receive it: the stage receives the continuation values and the arrival state, and a field at the dcsn perch in this position is neither. Write it as the output of a block, or list it where the stage receives it
 
 output-defined  (graph construction)
-  where  t.bl, line 17, column 1 (address 'dcsn_to_cntn')
+  where  t.bl, line 16, column 1 (address 'dcsn_to_cntn')
   what
     [id=dcsn_to_cntn, (m_d, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : Xa) : !cntn] {
     ^
   why    block 'dcsn_to_cntn' declares output 'cons:cntn:a', but its body supplies no defining equation
 
 grid-line-consistency  (graph construction)
-  where  cons.bl, line 34, column 5 (address 'policy.endoggrid')
+  where  t.bl, line 19, column 5 (address 'policy.grid')
   what
-        m_d[>] = a + 2*c[>]              :: [id=endoggrid]
+        m[>] = a + 2*c[>]      :: [id=grid]
         ^
-  why    the grid line m_d[>] = a + 2*c[>] disagrees with the law of motion of block 'dcsn_to_cntn': with its line a = m_d - c solved for m_d at the candidate c[>], the law of motion gives m_d[>] = a + c[>], and a + 2*c[>] does not reduce to a + c[>] by algebraic simplification; write the grid line as the law of motion solved for m_d, m_d[>] = a + c[>]
+  why    the grid line m[>] = a + 2*c[>] disagrees with the law of motion of block 'dcsn_to_cntn': with its line a = m - c solved for m at the candidate c[>], the law of motion gives m[>] = a + c[>], and a + 2*c[>] does not reduce to a + c[>] by algebraic simplification; write the grid line as the law of motion solved for m, m[>] = a + c[>]
 
 identity-collision  (graph construction)
   where  t.bl, line 2, column 1 (address 'b')
@@ -398,8 +464,48 @@ readable-form  (graph construction)
     ^
   why    the declaration of ρ carries a value; a stage file declares what a name is, not what it equals: calibration supplies the value, and the stage reads it through `.calibration`
 
+typing-entry-unattached  (graph construction)
+  where  t.bl, line 2, column 1 (address '2')
+  what
+    policy.method : !egm
+    ^
+  why    the entry of `policy.method` types a component of an operator or binds its handler; a typing entry or a handler binding is written in a methods file, which the union attaches to its stage and the semantics reads, and a stage elaborated alone carries none
+  write  Write the entry in a methods file, `@methods: t`, which the union attaches to the stage; a stage file carries the model alone.
+
+declared-twice  (graph construction)
+  where  m.bl, line 2, column 29 (address 'policy.policy.method')
+  what
+    [id=policy, method : !egm | policy.method : !vfi] {
+                                ^
+  why    the component `method` of block 'policy' is written twice with different content: `method : !egm` at m.bl:2:13 (term address 'policy.method') and `policy.method : !vfi` here; a component holds one entry over the files of a stage, so keep one of the two
+  write  Keep one entry on the component, `method : !egm` or `policy.method : !vfi`; the two name one component of the block, by the relative and by the absolute spelling of its path.
+
+label-not-in-parent  (graph construction)
+  where  m.bl, line 3, column 5 (address 'dcsn_to_cntn.rent')
+  what
+        [label=rent, () -> (a_x : ℝ₊) : !cntn] {
+        ^
+  why    the nested block `label=rent` has no branch of that label in block 'dcsn_to_cntn', whose header stands at t.bl:5:1 (term address 'dcsn_to_cntn'); a nested block of an addition merges with the branch of the same label under its parent, and the union adds no branch
+  write  Write the nested block under a label the stage's block holds, `work` or `retire`; a branch is added in the stage file, whose header declares the label set.
+
+type-conflict  (graph construction)
+  where  m.bl, line 2, column 26 (address 'cntn_to_dcsn.out.V')
+  what
+    [id=cntn_to_dcsn, () -> (V : ℝ @ !vlu) : !dcsn] {
+                             ^
+  why    the coordinate 'V' on the output side of block 'cntn_to_dcsn' is typed `[-inf, inf) @ !vlu` at t.bl:20:62 (term address 'cntn_to_dcsn.out.V') and `ℝ @ !vlu` here; the field names determine the signature and the stage's typing is kept, so write the coordinate without a type or with the stage's
+  write  Restate the coordinate without a type, `() -> (V) : !dcsn`, or with the stage's, `() -> (V : [-inf, inf) @ !vlu) : !dcsn`.
+
+metadata-mismatch  (graph construction)
+  where  m.bl, line 1, column 1 (address '1')
+  what
+    @methods: port
+    ^
+  why    the addition names the stage 'port', and the stage file names itself 'cons' at t.bl:1:1 (term address '1'); an addition's first line is `@methods: <stage>` with the name of the stage file it adds to
+  write  Name the stage the addition adds to on its first line, `@methods: cons`.
+
 multiplier-declaration  (graph construction)
-  where  cons.bl, line 33, column 5 (address 'policy.slackness')
+  where  t.bl, line 18, column 5 (address 'policy.slackness')
   what
         μ[>]   : ℝ₊ ⟂ c >= 0             :: [id=slackness]
         ^
@@ -420,27 +526,12 @@ category-codes  (graph construction)
   why    the set HouseholdStatus is marked `!categories`, and its definition and its annotation give no category map. The entry `old=2` gives a code outside HouseholdStatus, the integers from 0 to 1; give each category a code from 0 to 1. The set HouseholdStatus holds the integers from 0 to 1, and the member 1 has no category; give each member one category
 
 value-input-role  (graph construction)
-  where  t.bl, line 6, column 5 (address 'cntn_to_dcsn.value')
+  where  t.bl, line 5, column 51
   what
-        V = V[>] + dV[>] :: [id=value]
-        ^
-  why    the statement reads the value V[>] and the marginal value dV[>]; a kernel of a backward block acts on values or on marginal values and its output has one role (AMD-SG-005 §1a rule 4), so a statement mixing the two has no single kernel: write the value and the marginal value on separate statements
-
-marginal-role-retired  (graph construction)
-  where  t.bl, line 7, column 45 (address 'policy')
-  what
-    [id=policy, (V[>] : ℝ @ !vlu, dV[>] : ℝ₊₊ @ !mrgnvl) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-                                                ^
-  why    the header writes `!mrgnvl`, a role word the language no longer holds: a backward header lists value fields and the controls at which its lines are read, and a line reads the derivative of a value by the term D_{a}V[>]
-  write  Delete dV[>] from the header and write D_{a}V[>] where a line reads the derivative of V[>].
-
-derivative-coordinate  (graph construction)
-  where  t.bl, line 8, column 14 (address 'policy.InvEuler')
-  what
-        c[>] = 𝑑𝑢𝑖𝑛𝑣(D_{m_d}V[>])    :: [id=InvEuler]
-                     ^
-  why    the derivative term D_{m_d}V[>] names m_d, which is no state coordinate of the continuation perch, at which V[>] is read; the perch's coordinates are a. A derivative is taken in a state coordinate of the perch at which the value is read, written without its mark, and over no discrete coordinate
-  write  Write D_{a}V[>].
+    [id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, dV[>] : ℝ₊₊ @ !mrgnvl) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+                                                      ^
+  why    the file writes `!mrgnvl` here, a role retired from the language: a backward header lists value fields and controls alone, and a derivative of a value is written as the term `D_{x}V`, with `x` a state coordinate of the value's perch, such as `D_{m}V` or `D_{a}V[>]` (AMD-MB-001 §4.1)
+  write  remove the field from the header; write the line that defined it as a derivative line, `D_{m}V = …`, and read the derivative as the term `D_{a}V[>]`
 
 signature-complete  (graph construction)
   where  t.bl, line 6, column 5 (address 'd.1')
@@ -467,15 +558,15 @@ input-perch-state  (graph construction)
 
 kernel-form  (graph construction)
   where  address 'cntn_to_dcsn.marginal'
-  why    stage 'cons_savings_iid': the component dV (cntn_to_dcsn.marginal) of the kernel of 'cntn_to_dcsn:Aggregation' (cons_savings_iid:G:cntn_to_dcsn) contains the call 𝑑𝑢(c) of 𝑑𝑢 := D_{c}(𝑢) (cons_savings_iid:function:𝑑𝑢), which is not a closed-form function; no compile rule evaluates it: compile evaluates retained arithmetic and calls to closed-form named functions and selects no numerical method (AMD-SG-007 §3.1, rule kernel-form); define that function in closed form, or read the kernel with kernel(stage, box)
+  why    stage 'cons_savings_iid': the kernel of 'marginal:Derivative:1' (cons_savings_iid:G:cntn_to_dcsn) contains the call 𝑑𝑢(c) of 𝑑𝑢 := D_{c}(𝑢) (cons_savings_iid:function:𝑑𝑢), which is not a closed-form function; no compile rule evaluates it: compile evaluates retained arithmetic and calls to closed-form named functions and selects no numerical method (AMD-SG-007 §3.1, rule kernel-form); define that function in closed form, or read the kernel with kernel(stage, box)
 
 method-option-value  (graph construction)
   where  address 'cntn_to_dcsn:Evaluation'
-  why    stage 'cons', place cntn_to_dcsn:Evaluation, method !Cartesian, option 'orders': {'m_d': -5} does not give positive integers; configure requires the option value to have its declared type; write positive integer orders at actual coordinates
+  why    stage 'cons', place cntn_to_dcsn:Evaluation, method !Linear, option 'orders': {'m_d': -5} does not give positive integers; configure requires the option value to have its declared type; write positive integer orders at actual coordinates
 
 kernel-target  (graph construction)
   where  address 'cntn_to_dcsn'
-  why    stage 'cons': compile evaluates the explicit numerical kernels g and G, and 'cntn_to_dcsn:Evaluation' is a Evaluation box whose kernel, identity at (m_d, m_d); no policy is inserted, has no callable representation (AMD-SG-007 §3.1, rule kernel-target); inspect it with kernel(stage, box), or compile a pullback, push-forward or aggregation box
+  why    stage 'cons': compile evaluates the explicit numerical kernels g and G, and 'cntn_to_dcsn:Evaluation' is a Evaluation box whose kernel, identity at m_d; no policy is inserted, has no callable representation (AMD-SG-007 §3.1, rule kernel-target); inspect it with kernel(stage, box), or compile a pullback, push-forward or aggregation box
 
 distribution-dependency  (graph construction)
   where  t.bl, line 4, column 1 (address '4')
@@ -547,41 +638,55 @@ not-constructed  (graph construction)
     ^
   why    block 'dcsn_to_cntn' lists the controls 'c', 'd' beside its branches; this version of the package constructs a branching block whose branches state equations alone and whose label coordinate is its one control, or a shock over a finite set in a stage that chooses nothing (docs/Bellman-Sym/05-branching.md)
 
+block-header-mismatch  (graph construction)
+  where  address 'egm'
+  why    stage 'cons': the block 'egm' of egm.bl has the signature (V[>], dV[>]) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn, and the builder 'policy' it opens has the signature (V[>]) : !cntn -> (c) : !dcsn; a method block joins the builder's perches, writes the builder's outputs, and reads the builder's inputs and no other field; a derivative of a value it lists is written as a term of its lines, `D_{a}V[>]` (specification 0.6 §4.1; AMD-MB-001 §5.1); write the builder's outputs on the block's output side and its inputs on the input side
+  write  List the builder's inputs alone, write a derivative of a value as the term `D_{a}V[>]` in the lines, and write the builder's outputs on the block's output side.
+
+block-name-undefined  (graph construction)
+  where  address 'egm.InvEuler'
+  why    stage 'cons': the line egm.InvEuler of egm.bl calls '𝑑𝑢𝑖𝑛𝑣', which neither the stage file nor the block file defines; a method block reads the stage's definitions and the block file's own (specification 0.6 §4.1); define 𝑑𝑢𝑖𝑛𝑣 in the block file, or call a function the stage file defines
+  write  Define the function in the block file, `𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)`, or call a function the stage file defines.
+
 (a) a builder box by its block id; `<block-id>_builder` for a transition block  (the identity table)
   where  stage 'cons', target 'nowhere'
-  why    'nowhere' in stage 'cons' names no builder of the stage, no operator a statement of it records, and not its boundary representation. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'nowhere' in stage 'cons' names no builder of the stage and no operator a statement of it records. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
-(b), (c) a node box or a line by `<block-id>.<statement-id>`  (the identity table)
+(b), (c) a node box or a line by `<block-id>.<statement-id>`, a line of a branch by `<block-id>.<label>.<statement-id>`  (the identity table)
   where  stage 'cons', target 'cntn_to_dcsn.absent'
-  why    'cntn_to_dcsn.absent' in stage 'cons' names no line of block 'cntn_to_dcsn': no line carries the id 'absent'; the block's named lines are cntn_to_dcsn.value, cntn_to_dcsn.marginal. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'cntn_to_dcsn.absent' in stage 'cons' names no line of block 'cntn_to_dcsn': no line carries the id 'absent'; the block's named lines are cntn_to_dcsn.value, cntn_to_dcsn.marginal. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
-(ii) a positional address `<block-id>.<n>` is not a target; the line needs an id  (the identity table)
+(c.ii) a positional address `<block-id>.<n>` is not a target; the line needs an id  (the identity table)
   where  stage 'cons', target 'cntn_to_dcsn.1'
-  why    'cntn_to_dcsn.1' in stage 'cons' is a positional address; line 1 of block 'cntn_to_dcsn' is `V = 𝑢(c) + V[>]`, named 'cntn_to_dcsn.value' — name it by its id. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'cntn_to_dcsn.1' in stage 'cons' is a positional address; line 1 of block 'cntn_to_dcsn' is `V = 𝑢(c) + V[>]`, named 'cntn_to_dcsn.value' — name it by its id. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
 (d) every occurrence of an operator by its stage-wide name  (the identity table)
   where  stage 'cons', target 'E'
-  why    'E' in stage 'cons' names the expectation over the shocks; no statement of the stage records an occurrence of 'E', and an operator is a target only where a statement records it — none is derived from a method name. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'E' in stage 'cons' names the expectation over the shocks; no statement of the stage records an occurrence of 'E', and an operator is a target only where a statement records it — none is derived from a method name. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
-(e) one occurrence by `<block-id>.<statement-id>.<operator>`  (the identity table)
+(e) every occurrence of an operator in one line by `<block-id>.<statement-id>.<operator>`  (the identity table)
   where  stage 'cons', target 'cntn_to_dcsn.value.E'
-  why    'cntn_to_dcsn.value.E' in stage 'cons' names an operator in `V = 𝑢(c) + V[>]`, the output statement cntn_to_dcsn.value, which carries no operator occurrence; a method attaches to an operator occurrence, to the builder, to a node box, to an output statement with no operator occurrence (the representation of the field it defines — `on: cntn_to_dcsn.value` names this one), to one occurrence of a named line that carries it, by `<block-id>.<statement-id>.<operator>`, or to the boundary representation. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'cntn_to_dcsn.value.E' in stage 'cons' names an operator in `V = 𝑢(c) + V[>]`, the output statement cntn_to_dcsn.value, which carries no operator occurrence; a method attaches to an operator occurrence, to the builder, to a node box, to an output statement with no operator occurrence (the representation of the field it defines, written at the builder's Evaluation, `on: cntn_to_dcsn.evaluate.value`), to one occurrence of a named line that carries it, by `<block-id>.<statement-id>.<operator>`, or to the Evaluation of a builder, written `<block-id>.evaluate` for the policy builder and `<block-id>.evaluate.value` or `<block-id>.evaluate.marginal` for a backward value builder. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
-(g) `evaluate`: the one authored occurrence, else the boundary representation; two or more authored occurrences are named by their addresses  (the identity table)
+(g) `evaluate` alone: the one authored occurrence; two or more are named by their addresses, and a stage that authors none is refused naming `<block-id>.evaluate.value`  (the identity table)
   where  stage 'cons', target 'evaluate'
-  why    'evaluate' in stage 'cons' names no authored occurrence, and the stage has the implicit statement policy.cons_choice (`c = c[>]`): the representation of that policy is a method at the Evaluation of its block (`on: policy`), `!egm` among them where the block writes the grid line, and the representation of the value function at the decision perch is named by the lines of the backward builder (cntn_to_dcsn.value, cntn_to_dcsn.marginal) (the consequence for a stage with an implicit statement; D07). The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'evaluate' in stage 'cons' names no place, since the stage authors no `evaluate` occurrence, and the value the builder 'cntn_to_dcsn' writes is represented at its Evaluation, `on: cntn_to_dcsn.evaluate.value`. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
 (h) one target per entry; a comma-separated entry is split by L02  (the identity table)
   where  stage 'cons', target 'policy, cntn_to_dcsn'
-  why    'policy, cntn_to_dcsn' in stage 'cons' lists several targets separated by commas, and an entry names one target (spec 0.3c §4.3: a comma-containing string is not an operator identifier); the migration L02 splits such an entry, and each part resolves on its own. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'policy, cntn_to_dcsn' in stage 'cons' lists several targets separated by commas, and an entry names one target (spec 0.3c §4.3: a comma-containing string is not an operator identifier); the migration L02 splits such an entry, and each part resolves on its own. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
-a target has one, two, or three dot-separated parts  (the identity table)
+(i) the Evaluation of a builder by `<block-id>.evaluate`, `<block-id>.evaluate.value` or `<block-id>.evaluate.marginal`  (the identity table)
+  where  stage 'cons', target 'policy.evaluate.value'
+  why    'policy.evaluate.value' in stage 'cons' names a value at the Evaluation of the policy builder 'policy', which writes the policy and neither a value nor its derivative; its Evaluation is written `on: policy.evaluate`. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
+
+a target has one, two, or three dot-separated parts, or four where the second is a branch label  (the identity table)
   where  stage 'cons', target 'a.b.c.d'
-  why    'a.b.c.d' in stage 'cons' is not the form of a target: a block id, `<block-id>.<statement-id>`, `<block-id>.<statement-id>.<operator>`, a stage-wide operator name, or `evaluate`. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality, policy.InvEuler, policy.endoggrid, policy.cons_choice; operators: solve (policy.cons_choice.solve); `evaluate`: not a target here, since the stage has the implicit statement policy.cons_choice.
+  why    'a.b.c.d' in stage 'cons' is not the form of a target: a block id, `<block-id>.<statement-id>`, `<block-id>.<statement-id>.<operator>`, a line of a branch, `<block-id>.<label>.<statement-id>`, with its operator after it, the Evaluation of a builder, `<block-id>.evaluate`, `<block-id>.evaluate.value` or `<block-id>.evaluate.marginal`, or a stage-wide operator name. The places of stage 'cons' are — builders: arvl_to_dcsn, dcsn_to_cntn, cntn_to_dcsn, dcsn_to_arvl, policy; named lines: cntn_to_dcsn.value, cntn_to_dcsn.marginal, dcsn_to_arvl.value, policy.optimality; Evaluations of the builders: cntn_to_dcsn.evaluate.value, cntn_to_dcsn.evaluate.marginal, dcsn_to_arvl.evaluate.value, policy.evaluate; operators: argmax (policy.optimality.argmax); `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
 a target reaches one place; two is a construction defect  (the identity table)
   where  stage 'two_places', target 'arvl_to_dcsn_builder'
-  why    'arvl_to_dcsn_builder' in stage 'two_places' reaches 2 places, which is a construction defect: the builder box 'arvl_to_dcsn_builder' and the builder box 'arvl_to_dcsn' under the suffix `_builder`. The places of stage 'two_places' are — builders: arvl_to_dcsn, arvl_to_dcsn_builder; named lines: none; operators: none; `evaluate`: not a target here: no backward builder from the continuation to the decision perch writes a value field.
+  why    'arvl_to_dcsn_builder' in stage 'two_places' reaches 2 places, which is a construction defect: the builder box 'arvl_to_dcsn_builder' and the builder box 'arvl_to_dcsn' under the suffix `_builder`. The places of stage 'two_places' are — builders: arvl_to_dcsn, arvl_to_dcsn_builder; named lines: none; Evaluations of the builders: none; operators: none; `evaluate` alone: not a target here, since the stage authors no `evaluate` occurrence.
 
 target-not-found  (the identity table)
   where  stage 'cons', target 'cntn_to_dcsn:Substitution:V'
@@ -597,7 +702,27 @@ target-version  (the identity table)
 
 method-attachment  (the identity table)
   where  stage 'cons', target 'cntn_to_dcsn.value'
-  why    Method target 'cntn_to_dcsn.value' in stage 'cons': !egm does not admit target kind statement; method-attachment admits builder, operator argmax; !egm stands at the Evaluation of a block that writes the grid line, named by the block id, or on a maximization that carries its first-order condition as a property; write an on: target of one of these kinds
+  why    Method target 'cntn_to_dcsn.value' in stage 'cons': !egm does not admit target kind statement; method-attachment admits builder, operator argmax; !egm is written on the policy builder by its block id, `on: policy`, with `block:` naming a method block, or with no block where the policy block writes the grid line, or on a maximization that carries its first-order condition as a property; write an on: target of one of these kinds
+
+representation-on-builder  (the identity table)
+  where  stage 'cons', target 'policy'
+  why    Method target 'policy' in stage 'cons': !Linear is a representation, attached to the Evaluation of a builder and not to the builder; write `on: policy.evaluate`
+
+representation-on-derivative-line  (the identity table)
+  where  stage 'cons', target 'cntn_to_dcsn.marginal'
+  why    Method target 'cntn_to_dcsn.marginal' in stage 'cons': !Linear is a representation, and cntn_to_dcsn.marginal is a derivative line, which states a derivative of the value the builder writes; write `on: cntn_to_dcsn.evaluate.marginal`, the Evaluation of the builder 'cntn_to_dcsn', at which the stated derivative is represented
+
+grid-kind-as-method  (the identity table)
+  where  stage 'cons', target 'cntn_to_dcsn.evaluate.value'
+  why    Method target 'cntn_to_dcsn.evaluate.value' in stage 'cons': !Cartesian is a kind of grid and not a method; write the basis as the method, `method: !Linear` for piecewise linear interpolation or `method: !pchip` for shape-preserving cubic interpolation, and the grid as its setting, `grid: !Cartesian` under `settings` with `orders` and `bounds` beside it
+
+grid-without-kind  (the identity table)
+  where  stage 'cons', target 'cntn_to_dcsn.evaluate.value'
+  why    Method target 'cntn_to_dcsn.evaluate.value' in stage 'cons': !Linear writes `orders` and `bounds` without the setting `grid`; a grid is written by its kind, the tag on the value of `grid`, with its fields beside it: write `grid: !Cartesian` in the entry's settings beside `orders` and `bounds`
+
+grid-under-egm  (the identity table)
+  where  stage 't', target 'policy.evaluate'
+  why    Method target 'policy.evaluate' in stage 't': !Linear at the Evaluation of the policy builder interpolates the policy between the pairs of the decision state and the control that !egm computes at the points of its exogenous grid and stores there, which are its knots, so the entry writes no grid; remove `grid`, `orders` and `bounds` from its settings, the exogenous grid standing in the settings of the !egm entry
 
 recipe-shape  (the Bellman factory)
   where  registry/spec.yml, address 'stages'
@@ -660,7 +785,7 @@ record-shape  (the Bellman factory)
   what
 ['stage']
   why    missing fields ['calibration', 'methods', 'settings']; unknown fields []
-  write  a record with stage, calibration, settings and methods, and optionally label and provenance
+  write  a record with stage, calibration, settings and methods, and optionally label, provenance and additions
 
 period-join-cycle  (the Bellman factory)
   where  address 'periods[0]'

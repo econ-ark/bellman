@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import NamedTuple, Union
 
 from bellman.distributions.families import law_support
-from bellman.fold.block_lines import fields_of, parameter_sets, require_stage
+from bellman.fold.block_lines import fields_of, header_wire_sorts, parameter_sets, require_stage
 from bellman.fold.conditions import check_calibrated_distributions
 from bellman.fold.stage_fold import stage_blocks_of
 from bellman.fold.stage_names import StageNames
@@ -49,7 +49,7 @@ from bellman.stage.calibration_requirements import (
     predicate_value,
 )
 from bellman.stage.grains import construction_table, declared_table
-from bellman.stage.method_table import METHOD_TYPES, attached_bindings
+from bellman.stage.method_table import METHOD_TYPES, admitted_options, attached_bindings
 from bellman.stage.sources import load_calibration, load_methods, load_settings
 from bellman.fold.wire_terms import term_nodes
 from bellman.syntax import terms as T
@@ -57,6 +57,7 @@ from bellman.syntax.source import to_source
 from bellman.typing import sets
 from bellman.typing.sets import endpoints
 from bellman.typing.typed_expressions import predicate_text
+from bellman.syntax.vocabulary import CONTINUATION, STATE
 
 # --- the three binding verbs ---
 
@@ -420,10 +421,20 @@ def _check_bound_options(stage, values):
 
 def _check_configured_options(stage, box, method, rule, resolved):
     """The check of resolved values against the method row's closed option
-    types: each option by the check of its kind, then the coordinate keys of
-    `orders` and `bounds` against each other."""
-    coordinates = _method_coordinates(stage, box)
-    for name, option in rule.options.items():
+    types and the fields of the grid kind its setting `grid` names
+    (`admitted_options`, AMD-MB-003 §3): each option by the check of its
+    kind, then the coordinate keys of `orders` and `bounds` against each
+    other. The fields of a grid are read at the coordinates of the object at
+    the box, and those of the exogenous grid of `!egm` at the continuation
+    states."""
+    options = admitted_options(rule, method.settings)
+    grid = options.get("grid")
+    coordinates = (
+        _continuation_coordinates(stage)
+        if grid is not None and grid.kind == "grid kind on the continuation states"
+        else _method_coordinates(stage, box)
+    )
+    for name, option in options.items():
         if name not in resolved:
             continue
         if option.kind not in _OPTION_CHECKS:
@@ -607,12 +618,74 @@ def _integrated_count(stage, box):
     return len(expectations[position].subs)
 
 
-def _check_untyped(stage, box, method, name, value, coordinates):
-    """An option of the kind `untyped`, which its handler reads: no check."""
+def _check_grid(stage, box, method, name, value, coordinates):
+    """An option of the kind `grid kind`, a kind of grid written as a tag,
+    which `methodize` has checked against the table of grid kinds; the
+    grid's fields are checked by their own kinds (AMD-MB-003 §3)."""
 
 
-# the check of each kind of option a method row declares, after the checks
-# it names, as Python requires
+def _check_spacings(stage, box, method, name, value, coordinates):
+    """An option of the kind `spacing names by coordinate`: a nonempty
+    mapping from actual coordinates to the names of spacings, which the
+    handler reads."""
+    _check_keyed_by_coordinate(stage, box, method, name, value, coordinates)
+    unknown = tuple(key for key in value if key not in set(coordinates))
+    if unknown or any(not isinstance(item, str) or not item for item in value.values()):
+        reason = (
+            f"unknown coordinate {unknown[0]!r}; the actual coordinates are {tuple(coordinates)!r}"
+            if unknown
+            else f"{value!r} does not give the name of a spacing at each coordinate"
+        )
+        _refuse_option(
+            stage, box, method, name, reason, "write the name of a spacing at actual coordinates"
+        )
+
+
+def _check_node_lists(stage, box, method, name, value, coordinates):
+    """An option of the kind `increasing reals by coordinate`: a nonempty
+    mapping from actual coordinates to the points of the grid in each, each a
+    list of finite reals in increasing order, each point decidably inside the
+    declared set of its coordinate."""
+    _check_keyed_by_coordinate(stage, box, method, name, value, coordinates)
+    unknown = tuple(key for key in value if key not in set(coordinates))
+    increasing = all(
+        isinstance(points, (list, tuple))
+        and points
+        and all(_finite_real(point) for point in points)
+        and all(lower < upper for lower, upper in zip(points, points[1:]))
+        for points in value.values()
+    )
+    if unknown or not increasing:
+        reason = (
+            f"unknown coordinate {unknown[0]!r}; the actual coordinates are {tuple(coordinates)!r}"
+            if unknown
+            else f"{value!r} does not give increasing reals at each coordinate"
+        )
+        _refuse_option(
+            stage,
+            box,
+            method,
+            name,
+            reason,
+            "write the points in increasing order at actual coordinates",
+        )
+    for coordinate, points in value.items():
+        for point in points:
+            member = _point_in_declared_set(stage, point, coordinates[coordinate])
+            if member is not True:
+                word = "lies outside" if member is False else "is not decidably inside"
+                _refuse_option(
+                    stage,
+                    box,
+                    method,
+                    name,
+                    f"point {point!r} {word} the declared set of {coordinate}",
+                    "write points decidably inside the declared set",
+                )
+
+
+# the check of each kind of option a method row or a grid kind declares,
+# after the checks it names, as Python requires
 _OPTION_CHECKS = {
     "positive integer": _check_positive_integer,
     "positive real": _check_positive_real,
@@ -620,7 +693,10 @@ _OPTION_CHECKS = {
     "positive integers by coordinate": _check_orders,
     "ordered pairs by coordinate": _check_bounds,
     "positive integers by shock": _check_nodes,
-    "untyped": _check_untyped,
+    "grid kind": _check_grid,
+    "grid kind on the continuation states": _check_grid,
+    "spacing names by coordinate": _check_spacings,
+    "increasing reals by coordinate": _check_node_lists,
 }
 
 
@@ -660,10 +736,14 @@ def _resolved_option(value, values):
 
 
 def _method_row(stage, box):
-    """The retained operator row at a bound method box, where there is one."""
-
+    """The retained operator row at a bound method box, where there is one;
+    None for a box that stands in no builder, the box of a definition,
+    `cons_savings_iid:function:𝑑𝑢𝑖𝑛𝑣`, whose coordinates the definition
+    carries."""
+    block = box if isinstance(box, str) else box.block
+    if block is None:
+        return None
     try:
-        block = box if isinstance(box, str) else box.block
         rows = builder_rows_of(stage, block).closed
     except (AttributeError, KeyError, TypeError, ValueError):
         return None
@@ -685,6 +765,18 @@ def _method_coordinates(stage, box):
         identity.field: declared[identity].domain
         for identity in row.arguments
         if identity in declared
+    }
+
+
+def _continuation_coordinates(stage):
+    """The declared states of the continuation perch with their declared
+    sets, the coordinates of the exogenous grid of savings of `!egm`
+    (AMD-MB-003 §1)."""
+    declared, _ = fields_of(stage)
+    return {
+        identity.field: declared[identity].domain
+        for identity, sort in header_wire_sorts(stage).items()
+        if identity.perch == CONTINUATION and sort.role == STATE and identity in declared
     }
 
 

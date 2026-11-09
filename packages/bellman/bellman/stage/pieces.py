@@ -79,7 +79,7 @@ from bellman.display.printed_records import (
 )
 from bellman.fold.wire_terms import term_nodes
 from bellman.native.hypergraphs import BellmanHypergraph
-from bellman.native.identity import Identity, IdentityCollision
+from bellman.native.identity import IdentityCollision
 from bellman.native.labels import is_wiring
 from bellman.native.records import Definition, bound_at
 from bellman.native.versions import store, stored
@@ -135,7 +135,7 @@ from bellman.stage.grains import (
 from bellman.stage.inventory import definitions_listing
 from bellman.stage.kernels import compile_kernel, derivative_pieces, kernel
 from bellman.stage.method_blocks import declared_version
-from bellman.stage.method_table import attachment_places
+from bellman.stage.method_table import attachment_places, binding_kind
 from bellman.stage.method_targets import resolve_target
 from bellman.stage.stage_answers import (
     UNBOUND,
@@ -1351,11 +1351,12 @@ def method_bound_at(stage, bound, target):
     holds for `target`: the entry bound under that target; for the target as
     a methods file writes it, the one method bound within the place the
     target names, read through the resolution the methods file's own targets
-    go through (`resolve_target`, `attachment_places`); and for the whole name
-    of a box of the stage's graphs, the one method bound within that box
-    (`piece_and_place`). A target that names no bound method, or names several
-    different ones, is refused with the reason as a `KeyError`, which a
-    membership test reads as absence."""
+    go through (`resolve_target`, `attachment_places`), the Evaluation of a
+    builder named by its written address answering its representation alone
+    (AMD-MB-002 §3); and for the whole name of a box of the stage's graphs,
+    the one method bound within that box (`piece_and_place`). A target that
+    names no bound method, or names several different ones, is refused with
+    the reason as a `KeyError`, which a membership test reads as absence."""
     if target in bound:
         # a box's identity equals its spelling, so this reads either
         return bound[target]
@@ -1374,14 +1375,19 @@ def method_bound_at(stage, bound, target):
             f"target as a methods file writes it, not by {type(target).__name__}; {held}"
         )
     try:
-        within = _bound_within_target(stage, target)
+        within, representations = _bound_within_target(stage, target)
     except (TargetError, IdentityCollision) as refusal:
         raise KeyError(
             f"stage {stage.name!r}: {target!r} is no target a methods file writes and no box "
             f"of the stage's graphs ({refusal}); {held}"
         ) from refusal
     within = set(within)
-    found = {key: method for key, method in bound.items() if bound_at(key) in within}
+    found = {
+        key: method
+        for key, method in bound.items()
+        if bound_at(key) in within
+        and (not representations or binding_kind(method) == "representation")
+    }
     methods = list(dict.fromkeys(found.values()))
     if len(methods) == 1:
         return methods[0]
@@ -1391,33 +1397,40 @@ def method_bound_at(stage, bound, target):
             f"{len(methods)} different methods are bound, at "
             f"{', '.join(str(key) for key in found)}; read one by the target it is bound at"
         )
+    if representations:
+        raise KeyError(
+            f"stage {stage.name!r}: no representation is bound at the Evaluation {target!r}; "
+            f"{held}"
+        )
     raise KeyError(f"stage {stage.name!r}: no method is bound within {target!r}; {held}")
 
 
 def _bound_within_target(stage, target):
     """The targets a method bound within the place `target` names stands
     under: the places a methods file's target resolves to, or, for a name no
-    methods file writes, the box of the stage's graphs of that whole name. A
-    name that is neither is refused by the second resolution."""
+    methods file writes, the box of the stage's graphs of that whole name; and
+    whether the target names the Evaluation of a builder by its written
+    address, the place of a representation (AMD-MB-002 §3). A name that is
+    neither is refused by the second resolution."""
     try:
         places = attachment_places(
             stage, target, resolve_target(stage, target), False, representation=True
         )
     except (TargetError, IdentityCollision):
         piece, _ = piece_and_place(stage, target)
-        return tuple(methods_within(stage, piece)) if not isinstance(piece, Definition) else ()
-    return tuple(key for place in places for key in _bound_within_place(stage, place))
+        within = tuple(methods_within(stage, piece)) if not isinstance(piece, Definition) else ()
+        return within, False
+    within = tuple(key for place in places for key in _bound_within_place(stage, place))
+    return within, any(place.evaluates for place in places)
 
 
 def _bound_within_place(stage, place):
     """The targets a method bound at one place of a methods file stands under:
-    those within the builder a block id or a `!node` line names; the closing
-    Evaluation of the builder whose boundary representation the target names,
-    the one target `methodize` binds that representation's method at
-    (`method_table._representation_place`); those of the line a line address
-    names; and the target itself for an operator occurrence or a definition."""
-    if place.kind == "boundary":
-        return (Identity("Evaluation", address=place.block),)
+    those within the builder a block id or a `!node` line names; those of the
+    line a line address names; and the place's own box for an operator
+    occurrence, the Evaluation of a builder named by its written address, the
+    box `method_table._representation_place` binds a representation at, and
+    a definition."""
     if place.kind in ("builder", "node"):
         builder = _stored_builder(stage, place.block)
         if builder is None:
@@ -1572,7 +1585,9 @@ class Settings(_NamedRecords):
     """The version's settings, `stage.settings`: a read-only mapping from each
     setting a configuration binds, by its name, to its record, in binding
     order. `stage.settings["n_a"]` prints as one line, `n_a = 800`, with the
-    places and the methods that read the setting after it, and its `value` is
+    places and the methods that read the setting after it and, where the
+    setting is a field of a method's grid, the grid's kind (AMD-MB-003 §3),
+    and its `value` is
     the configured value, which `stage.settings.n_a` answers alone. A setting
     has no declaration in the definitions table, so each record is read from
     the configured value in `stage.bindings.settings` and the bound methods
@@ -1625,8 +1640,9 @@ class Settings(_NamedRecords):
 
     def list(self):
         """The settings as a table, one row for each method that reads a
-        setting, with `name`, `value`, `read at` and `by`; a setting no method
-        reads has one row with the last two empty.
+        setting, with `name`, `value`, `read at`, `by` and `grid`, the kind of
+        the method's grid where the setting is one of its fields; a setting no
+        method reads has one row with the last three empty.
 
         See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
         return setting_rows(self.version)

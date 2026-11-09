@@ -252,8 +252,10 @@ def test_item_3_compile_kernel_answers_the_explicit_side_of_the_inverse_euler_ro
     assert flat("𝑐≻(a) ≤ 𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻(a)) ⟂ a ≥ 0") in flat(row)
 
 
-# the cons stage's `methods.yml` entry that binds the endogenous grid method
-EGM = {"on": "policy", "method": "!egm", "handler": "cons-port:egm"}
+# the cons stage's `methods.yml` entry that binds the endogenous grid method,
+# with its exogenous grid of savings (AMD-MB-003 §1)
+EGM = {"on": "policy", "method": "!egm", "handler": "cons-port:egm",
+       "settings": {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}}
 
 
 def method_of(example):
@@ -343,7 +345,9 @@ def test_item_5_root_find_binds_at_the_argmax_row_and_vfi_on_the_backward_decisi
     # is the pair (𝑐, ℎ_choice), and `!egm` at the Evaluation
     assert bound(adjuster_cons, {"on": "policy.choice.solve", "method": "!root-find"}) == [
         ("policy.choice:Aggregation", "root-find")]
-    egm = {"on": "policy", "method": "!egm", "handler": "fues-durables:make_adjuster_ops"}
+    egm = {"on": "policy", "method": "!egm", "handler": "fues-durables:make_adjuster_ops",
+           "settings": {"grid": "!Cartesian", "orders": {"a_nxt_adj": "n_a"},
+                        "bounds": {"a_nxt_adj": ["a_min", "a_max"]}}}
     assert bound(adjuster_cons, egm) == [("policy:Evaluation", "egm")]
 
 

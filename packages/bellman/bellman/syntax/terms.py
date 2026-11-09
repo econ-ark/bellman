@@ -201,6 +201,11 @@ class Typer(entry):
     typing: object
 
 
+@dataclass(frozen=True, slots=True)
+class Tagged(entry):
+    tag: object
+
+
 class symbol:
     __slots__ = ()
 
@@ -352,6 +357,11 @@ class Key(selector):
     at: object
 
 
+@dataclass(frozen=True, slots=True)
+class Term(selector):
+    at: object
+
+
 class subscript:
     __slots__ = ()
 
@@ -409,6 +419,12 @@ class Complementary(typer):
     bound: object
 
 
+@dataclass(frozen=True, slots=True)
+class Handler(typer):
+    subject: object
+    program: object
+
+
 class subject:
     __slots__ = ()
 
@@ -419,6 +435,33 @@ class Subject(subject):
 
     def __post_init__(self):
         for slot in ("coordinates",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+@dataclass(frozen=True, slots=True)
+class Path(subject):
+    segments: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("segments",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+class segment:
+    __slots__ = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Segment(segment):
+    name: object
+    selectors: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("selectors",):
             value = getattr(self, slot)
             if type(value) is list:
                 object.__setattr__(self, slot, tuple(value))
@@ -470,6 +513,118 @@ class Infoset(classifier):
 @dataclass(frozen=True, slots=True)
 class Role(classifier):
     kind: object
+
+
+@dataclass(frozen=True, slots=True)
+class Method(classifier):
+    m: object
+
+
+@dataclass(frozen=True, slots=True)
+class Grid(classifier):
+    g: object
+
+
+class word:
+    __slots__ = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Word(word):
+    name: object
+    arguments: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("arguments",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+class keyword:
+    __slots__ = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Keyword(keyword):
+    key: object
+    value: object
+
+
+class argument:
+    __slots__ = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Name(argument):
+    name: object
+
+
+@dataclass(frozen=True, slots=True)
+class Literal(argument):
+    value: object
+
+
+@dataclass(frozen=True, slots=True)
+class Quoted(argument):
+    text: object
+
+
+@dataclass(frozen=True, slots=True)
+class Values(argument):
+    items: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("items",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+@dataclass(frozen=True, slots=True)
+class Nested(argument):
+    word: object
+
+
+class grid:
+    __slots__ = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Cartesian(grid):
+    factors: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("factors",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+class factor:
+    __slots__ = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Spaced(factor):
+    coordinate: object
+    lower: object
+    upper: object
+    count: object
+    spacing: object = None
+
+
+@dataclass(frozen=True, slots=True)
+class Listed(factor):
+    coordinate: object
+    nodes: object
+
+
+@dataclass(frozen=True, slots=True)
+class Feasible(factor):
+    coordinate: object
+    set: object
+    count: object
 
 
 class perch:

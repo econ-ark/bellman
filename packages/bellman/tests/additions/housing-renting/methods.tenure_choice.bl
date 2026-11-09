@@ -1,0 +1,52 @@
+@methods: tenure_choice
+# The methods of the tenure choice as an addition to
+# applications/housing-renting/declaration/stages/tenure_choice/tenure_choice.bl,
+# rewritten from stages/tenure_choice/methods.yml and the block file
+# methods/marginals_tenure_choice.bl: the discrete choice between owning and
+# renting on the policy builder; the expectation over the income chain by
+# !markov at the one occurrence of the operator E_y; the derivative of the
+# choice value in the assets a_d, the derivative of the branch value the choice
+# d selects, from marginals_tenure_choice.bl with its doc string; and one linear
+# representation of the decision value and of its stated derivative, for the
+# YAML's two equal entries, with its grid as an entry of its own (D5, decided;
+# writer's sheet §7).
+#
+# The policy builder and the arrival value builder gain no line, so their
+# selections are file-level lines routed by their paths (rule 7; finding F24).
+# The YAML's stage-wide entry on E_y is written at the one occurrence the stage
+# holds, by the path through the line value of dcsn_to_arvl (aspects A13 and
+# A17; finding F3). The entries on arvl_to_dcsn and on the branching
+# dcsn_to_cntn, with on alone, bind nothing and are not written (writer's sheet
+# §5); the branching block takes nothing and the union keeps it as the stage
+# file writes it (rule 3). The law y ~ MarkovChain(Π, z, y_pre) is untouched.
+#
+# The grid has one factor per coordinate of the stored value, (a_d, H_d, y_d)
+# (finding F67): the YAML's asset grid; the housing by the triple of the
+# housing sizes of owner_housing.bl; and the income y_d = y by the expectation
+# E_y, whose nodes under !markov are the states of the chain (writer's sheet
+# §7).
+#
+# The stage elaborates today and stage.places() refuses it, since its branch
+# line liquidation carries an id (writer's sheet §4.5); the checker reads the
+# places from the refusal's message.
+#
+# The three settings the file reads are declared with their sets (writer's
+# sheet §6): the bounds as points of ℝ₊, the set tenure_choice.bl gives the
+# assets a_d, and the count in ℕ; the three parameters of owner_housing.bl as
+# that stage declares them.
+
+a_points : ℕ       :: ["number of points of the asset grid"]
+a_min : ℝ₊         :: ["lower bound of the asset grid"]
+a_max : ℝ₊         :: ["upper bound of the asset grid"]
+H_min  : ℝ₊        :: ["smallest housing size"]    # no form in §4: a parameter of owner_housing.bl, declared again for the factor of H_d
+H_max  : ℝ₊₊       :: ["largest housing size"]    # no form in §4: a parameter of owner_housing.bl, declared again for the factor of H_d
+n_H    : ℕ         :: ["number of housing sizes"]    # no form in §4: a parameter of owner_housing.bl, declared again for the factor of H_d
+
+policy.method : !discrete_choice
+dcsn_to_arvl.value.E_y.method : !markov    # no form in §4: on: E_y, the stage-wide address; !markov reads the chain from the stand-in parameters Π and z, which have no values
+
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(a_d=(a_min, a_max, a_points), H_d=(H_min, H_max, n_H), y_d=E_y)] {
+    D_{a_d}V = (D_{a_o}V_o[>], (1 + r - 𝑑𝑇(a_d))*D_{w_r}V_r[>])[d]  :: [id=choice_marginal, "the derivative with respect to the assets a_d held on arrival, on the branch chosen; the owner's value already carries the derivative of the owner's budget"]
+}

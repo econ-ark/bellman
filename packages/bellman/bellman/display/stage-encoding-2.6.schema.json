@@ -1138,7 +1138,6 @@
             "records.Bindings",
             "records.BlockData",
             "records.BlockHeader",
-            "records.ValueRepresentation",
             "records.Builders",
             "records.CategoryCodes",
             "records.Composite",
@@ -2070,9 +2069,6 @@
     ],
     "records.BlockHeader": [
       "inputs"
-    ],
-    "records.ValueRepresentation": [
-      "block_id"
     ],
     "records.TitleBlock": [
       "address",
