@@ -128,8 +128,9 @@ body:has(.bellman-home) .md-top {
 }
 
 .bellman-home__hero {
+  --bellman-hero-bottom: clamp(48px, 6vw, 88px);
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  padding: clamp(48px, 7vw, 96px) var(--bellman-home-pad) clamp(48px, 6vw, 88px);
+  padding: clamp(48px, 7vw, 96px) var(--bellman-home-pad) var(--bellman-hero-bottom);
   background: var(--bl-ultramarine);
   color: #fff;
 }
@@ -139,9 +140,17 @@ body:has(.bellman-home) .md-top {
   min-width: 0;
 }
 
-.bellman-home__art--pair {
+.bellman-home__art--arrival {
   justify-content: flex-start;
   margin-left: calc(-1 * var(--bellman-home-pad) - clamp(72px, 8vw, 144px));
+}
+
+.bellman-home__art--corner {
+  grid-column: 2;
+  justify-self: end;
+  width: clamp(260px, 30vw, 480px);
+  margin-right: calc(-1 * var(--bellman-home-pad) - clamp(32px, 5vw, 80px));
+  margin-bottom: calc(-1 * var(--bellman-hero-bottom) - clamp(52px, 6vw, 96px));
 }
 
 .bellman-home__loop {
@@ -150,11 +159,6 @@ body:has(.bellman-home) .md-top {
   max-width: 560px;
   height: auto;
   overflow: visible;
-}
-
-.bellman-home__loop--pair {
-  max-width: 820px;
-  aspect-ratio: 362 / 328;
 }
 
 /* The stationary polygon keeps hover stable while the orange faces move. */
@@ -422,7 +426,11 @@ body:has(.bellman-home) .md-top {
     padding-block: 40px;
   }
 
-  .bellman-home__art--pair {
+  .bellman-home__hero {
+    --bellman-hero-bottom: 40px;
+  }
+
+  .bellman-home__art--arrival {
     margin-left: calc(-1 * var(--bellman-home-pad) - 32px);
   }
 
@@ -430,8 +438,11 @@ body:has(.bellman-home) .md-top {
     max-width: 360px;
   }
 
-  .bellman-home__loop--pair {
-    max-width: 440px;
+  .bellman-home__art--corner {
+    grid-column: 1;
+    width: clamp(220px, 52vw, 320px);
+    margin-right: calc(-1 * var(--bellman-home-pad) - 32px);
+    margin-bottom: calc(-1 * var(--bellman-hero-bottom) - 44px);
   }
 
   .bellman-home h1 {
