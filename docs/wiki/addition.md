@@ -37,6 +37,11 @@ type: concept
 n_a : ℕ              :: ["number of points of the savings grid"]
 a_min : Xa           :: ["lower bound of the savings grid"]
 a_max : Xa           :: ["upper bound of the savings grid"]
+n_k : ℕ              :: ["number of points of the asset grid"]
+k_min : Xa           :: ["lower bound of the asset grid"]
+k_max : Xa           :: ["upper bound of the asset grid"]
+n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
+n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 
 [id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
     | evaluate.method : !Linear] {
@@ -50,21 +55,21 @@ a_max : Xa           :: ["upper bound of the savings grid"]
 }
 
 [id=dcsn_to_arvl
-    | evaluate.method : !Linear(extrap=clamp)
-    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))
-    | E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)] {
+    | E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))] {
     D_{k}V[<] = E_{ψ,ξ}(R * (Γ*ψ)^(-ρ) * D_{m}V)    :: [id=marginal]
 }
 ```
 
-The file reads the buffer-stock stage, whose savings coordinate `a` is declared on the set `Xa` and whose permanent income growth factor is `Γ`. The first group of a bracket holds the block's own entries, its `id` and, where the author writes it there, the typing of the block's own method; each later group, opened by `|`, holds one typing entry, either of a component of the block itself by its absolute path, `policy.grid`, or of an [[operator]] inside the block by a path relative to the block, `evaluate.method` for the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that stores the [[builder|builder's]] result and `E_ψ_ξ.method` for the expectation of a line. A typing entry at file level carries the full path, `policy.evaluate.method : !Linear`, and the union attaches it to the node the path names. A [[handler]] is written as a binding in the same way, `policy.handler : "cons-port:egm"`, with or without a method word. The file declares each setting it reads with its domain ([[settings]]). A mark after a [[field]] names its [[perch]]: `V[>]` is the value at the continuation perch, `V[<]` at the arrival perch, and `c[~]` the consumption at the decision perch; a candidate the method computes, `c[>]`, carries the mark of the perch whose coordinate it is computed at.
+The file is the methods file of the buffer-stock stage, `applications/buffer-stock/declaration/stages/buffer_stock/methods.bl`, with its comment lines left out; the stage declares the savings `a` and the assets `k` on the set `Xa`, and its permanent income growth factor is `Γ`. The first group of a bracket holds the block's own entries, its `id` and, where the author writes it there, the typing of the block's own method; each later group, opened by `|`, holds one typing entry, either of a component of the block itself by its absolute path, `policy.grid`, or of an [[operator]] inside the block by a path relative to the block, `evaluate.method` for the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that stores the [[builder|builder's]] result and `E_ψ_ξ.method` for the expectation of a line. A typing entry at file level carries the full path, `policy.evaluate.method : !Linear`, and the union attaches it to the node the path names. A [[handler]] is written as a binding in the same way, `policy.handler : "cons-port:egm"`, with or without a method word. The file declares each setting it reads with its domain ([[settings]]). A mark after a [[field]] names its [[perch]]: `V[>]` is the value at the continuation perch, `V[<]` at the arrival perch, and `c[~]` the consumption at the decision perch; a candidate the method computes, `c[>]`, carries the mark of the perch whose coordinate it is computed at.
 
 ## 2 The rules of the union
 
 The union is defined on the syntax trees and knows no word of the vocabulary: it merges structure, and the elaborator reads the merged term afterwards as if everything had been written in the stage file.
 
 1. **Blocks by id.** A block of the addition whose `id` equals the `id` of a block of the stage merges with it; a block with an id in one file only is kept. Nested blocks, the [[branch|branches]] of a branching stage, merge by their label under their parent, and no branch is added.
-2. **Entries by key.** The header entries merge as a keyed collection: a typing by its subject, a `key=value` pair by its key, a tag by its text. A pair or a tag written in both files becomes one where the content is equal and is refused, naming both, where it differs. A component typed by both files is refused, so that each method and each grid of a block is written once.
+2. **Entries by key.** The header entries merge as a keyed collection: a typing by its subject, a `key=value` pair by its key, a tag by its text. A pair or a tag written in both files becomes one where the content is equal and is refused, naming both, where it differs. A component typed by both files is one entry where the two are equal and is refused where they differ, so that each method and each grid of a block has one value.
 3. **Signatures coordinate by coordinate.** Within a stage the field names determine the signature: a coordinate of the addition with the name of a coordinate of the stage is that coordinate, the stage's typing is kept, and a differing type is refused. A coordinate is appended by a partial signature whose arrow says the side: `() -> (h : ℝ₊ @ !ctrl) : !dcsn` appends an output, a control (the role word `!ctrl`) chosen at the decision perch (the perch word `!dcsn`), and `(z : ℝ) : !cntn -> ()` appends an input at the continuation perch. A derivative is never appended as a field: it is read by the derivative term, `D_{m}V`, and stated by a line. A side of a [[backward_builder|backward block]]'s header, the inputs before the arrow or the outputs after it, admits a value field or a control and no state, since a state of a perch is a coordinate of the functions the block writes and no input of its own.
 4. **Bodies appended.** The lines of the addition stand after the lines of the stage's block; a line id written in both files is refused.
 5. **File-level items appended.** Declarations, definitions and laws of the addition are appended; a name defined in both files with different content is refused.
@@ -73,4 +78,4 @@ The union is defined on the syntax trees and knows no word of the vocabulary: it
 
 ## 3 The two levels
 
-After the union the elaborator reads a block under the word in its method component at two levels. The **declared level**, `stage.declared`, holds the stage file's own lines. At the **operative level**, where the block's component holds a solution method and the addition supplies its **rows**, the lines by which the method computes the builder, the rows stand in place of the declared lines, so that the three lines of the endogenous grid method above stand in place of `c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])`, where `Γ_c(m)` is the feasible set of consumption at resources `m`. A derivative line stands at both levels; a solution method without rows, `!vfi`, leaves the declared lines; and where the component holds no solution method, an appended line is an authored line of the block and a second definition of a field is refused. Removing every item whose provenance is the addition returns the stage file: the erasure of the addition of [Methods](../bellman-calculus/06-Methods.md) §8.
+After the union the elaborator reads a block under the word in its method component at two levels. The **declared level**, `stage.declared`, holds the stage file's own lines. At the **operative level**, where the block's component holds a solution method and the addition supplies its **rows**, the lines by which the method computes the builder, the rows stand in place of the declared lines, so that the three lines of the endogenous grid method above stand in place of `c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])`, where `Γ_c(m)` is the feasible set of consumption at resources `m`. A derivative line written in the stage file stands at both levels, and one the addition appends stands in the operative builder alone, recorded at its Evaluation, since the declared level holds the stage file's lines alone; a solution method without rows, `!vfi`, leaves the declared lines; and where the component holds no solution method, an appended line is an authored line of the block in the operative builder and a second definition of a field is refused. Removing every item whose provenance is the addition returns the stage file: the erasure of the addition of [Methods](../bellman-calculus/06-Methods.md) §8.

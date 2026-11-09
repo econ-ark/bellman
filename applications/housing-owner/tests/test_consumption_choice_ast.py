@@ -34,12 +34,12 @@ nodes are the argmax of the declarative optimality statement and the
 two derivative terms, and the only calls are linspace and the feasible
 correspondence Γ.
 
-The derivative line of the decision value builder stands in the marginal
-block of `declaration/methods/marginals_consumption_choice.bl`, and the
-inverse Euler, endogenous grid and identification lines of the policy builder
-in the method block of `declaration/methods/consumption_choice_egm.bl`; both
-files are parsed and compared here as the stage file is (decisions MB-U44
-and MB-U45).
+The derivative line of the decision value builder, and the inverse Euler,
+endogenous grid and identification lines of the policy builder, stand in the
+methods file beside the stage file,
+`declaration/stages/consumption_choice/methods.bl`, an addition to it whose
+blocks name the two builders by their ids; the file is parsed and compared
+here as the stage file is.
 
 The policy block of this file (revised 9 Sep 2026 on AAS's answer that
 the decision states do not belong in the signature, consumption being
@@ -47,7 +47,7 @@ decision-measurable) lists the continuation value V[>]
 on an input side with the perch word `: !cntn` and produces the control
 `c` at the decision perch; its one statement is the declarative
 maximisation over the feasible set Γ(w_d), and the lines of the
-endogenous grid method stand in the method block.
+endogenous grid method stand in the block `policy` of the methods file.
 
 Runnable under pytest or directly with the repository interpreter:
 
@@ -67,25 +67,26 @@ import pytest                         # noqa: E402
 
 import stage_ast                      # noqa: E402
 from stage_ast import (               # noqa: E402
-    annotation as _ann, one_minus as _one_minus, parsed, perched as _p, run_checks, sym as _c)
+    annotation as _ann, block, one_minus as _one_minus, parsed, perched as _p, run_checks,
+    sym as _c)
 from stage_types import (             # noqa: E402
-    Add, Annotation, Arrival, Assignment, At, Block, Call, Closed,
+    Add, Annotation, Arrival, Assignment, At, Block, Call, Cartesian, Closed,
     Constant, Continuation, Control, Coordinate, CorrDef, Declaration,
-    Declare, Decision, Div, Domain, Equation, In, Infoset, Interval,
-    KeyValue, Marked, Metadata, Mul, Named, Neg, Node, Number, Open,
-    Operator, Pow, Range, Role, Shock, Signature, Space, Statement, Sub,
-    Subject, Tag, Typer, Value, Var,
+    Declare, Decision, Div, Domain, Equation, Grid, In, Infoset, Interval,
+    KeyValue, Marked, Metadata, Method, Mul, Name, Named, Neg, Node, Number,
+    Open, Operator, Path, Pow, Range, Role, Segment, Shock, Signature, Space,
+    Spaced, Statement, Sub, Subject, Tag, Typer, Value, Var, Word,
 )
 
 _SOURCE = _TESTS.parent / "declaration" / "stages" / "consumption_choice" / "consumption_choice.bl"
-_METHODS = _TESTS.parent / "declaration" / "methods"
 
 _AST = parsed(_SOURCE)
 _ITEMS = _AST.items
-# the block files of the derivative line and of the endogenous grid lines,
-# each a metadata line and one block
-_MARGINALS = parsed(_METHODS / "marginals_consumption_choice.bl")
-_EGM = parsed(_METHODS / "consumption_choice_egm.bl")
+# the methods file beside the stage file, an addition to it: a metadata line,
+# the three settings of the grid, declared with their sets, and the two blocks
+# named by the builders' ids
+_ADDITION = parsed(_SOURCE.parent / "methods.bl")
+_ADDITION_ITEMS = _ADDITION.items
 
 
 def _housing_services(stem="H_c"):
@@ -256,19 +257,13 @@ def test_block_cntn_to_dcsn_marginal_equation():
     # marginal utility of consumption, stated as the derivative of the
     # decision value in the cash on hand w_d, the envelope condition.
     # The source YAML states this functional form as the policy-block
-    # ShadowBellman line in continuation coordinates; the dynspec states
-    # it in the marginal block `dcsn_marginal` of
-    # marginals_consumption_choice.bl, which the stage's methods file binds
-    # on the decision value builder with !marginals.
-    assert _MARGINALS.items[0] == Metadata("methods", "consumption_choice")
-    (marginal,) = _MARGINALS.items[1:]
-    assert marginal.tag == _ann(
-        KeyValue("id", "dcsn_marginal"),
-        Typer(Signature(
-            Subject([Coordinate("c", None, [])]),
-            [Infoset(Continuation())],
-            Subject([Coordinate("V", None, [])]),
-            [Infoset(Decision())])))
+    # ShadowBellman line in continuation coordinates; the methods file
+    # states it in its block `cntn_to_dcsn`, which appends the line to the
+    # decision value builder's block and carries its id alone, since it adds
+    # no coordinate.
+    assert _ADDITION_ITEMS[0] == Metadata("methods", "consumption_choice")
+    marginal = block(_ADDITION_ITEMS, "cntn_to_dcsn")
+    assert marginal.tag == _ann(KeyValue("id", "cntn_to_dcsn"))
     assert marginal.body == (Statement(
         Equation(Operator("D", [Var("w_d")], [_c("V")]),
                  Mul(Mul(_c("θ"),
@@ -333,22 +328,23 @@ def test_block_policy_optimality():
         _ann(KeyValue("id", "optimality"))),)
 
 
-def test_method_block_header():
-    # [id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊ @ !ctrl) : !dcsn] —
-    # the method block of consumption_choice_egm.bl carries the policy
-    # builder's header and its id, which the methods file's !egm entry
-    # binds on the policy builder.
-    assert _EGM.items[0] == Metadata("methods", "consumption_choice")
-    (egm,) = _EGM.items[1:]
+def test_addition_policy_block_header():
+    # [id=policy, policy.method : !egm | policy.grid : !Cartesian(a_nxt=(a_min, a_max, n_a))]
+    # The block of the methods file that adds to the policy builder: its
+    # two typing entries, by the absolute path, type the builder's method
+    # component with the endogenous grid method and its grid component with
+    # one factor on the continuation savings a_nxt, the bounds and the count
+    # the declared settings by name; the block carries no signature. The
+    # file: its metadata line, the three settings and the two blocks.
+    kinds = [type(it).__name__ for it in _ADDITION_ITEMS]
+    assert kinds == ["Metadata"] + ["Declare"] * 3 + ["Block"] * 2
+    egm = block(_ADDITION_ITEMS, "policy")
     assert egm.tag == _ann(
-        KeyValue("id", "egm"),
-        Typer(Signature(
-            Subject([Coordinate("V", At(Continuation()),
-                                [Domain(Named("ℝ")), Role(Value(0))])]),
-            [Infoset(Continuation())],
-            Subject([Coordinate("c", None,
-                                [Domain(Named("ℝ₊")), Role(Control())])]),
-            [Infoset(Decision())])))
+        KeyValue("id", "policy"),
+        Typer(Declaration(Path([Segment("policy"), Segment("method")]),
+                          [Method(Word("egm"))])),
+        Typer(Declaration(Path([Segment("policy"), Segment("grid")]), [Grid(Cartesian([
+            Spaced("a_nxt", Name("a_min"), Name("a_max"), Name("n_a"))]))])))
     assert len(egm.body) == 3
 
 
@@ -361,7 +357,7 @@ def test_block_policy_inveuler():
     # reciprocal of θ*(1-γ) - 1, which is the exponent on consumption in
     # the marginal utility less one; the !node tag becomes
     # Typer(Marked(Node())).
-    assert _EGM.items[1].body[0] == Statement(
+    assert block(_ADDITION_ITEMS, "policy").body[0] == Statement(
         Equation(
             _p("c", Continuation()),
             Pow(Div(Mul(_c("β"), Operator("D", [Var("a_nxt")],
@@ -378,7 +374,7 @@ def test_block_policy_regrid():
     # w[>] = a_nxt + c[>] :: [id=regrid, !node] — the endogenous
     # cash-on-hand grid, the source's cntn_to_dcsn_transition line
     # (w_dcsn[>] there, w[>] here).
-    assert _EGM.items[1].body[1] == Statement(
+    assert block(_ADDITION_ITEMS, "policy").body[1] == Statement(
         Equation(_p("w", Continuation()),
                  Add(_c("a_nxt"), _p("c", Continuation()))),
         _ann(KeyValue("id", "regrid"), Typer(Marked(Node()))))
@@ -388,7 +384,7 @@ def test_block_policy_consumption():
     # c = c[>] :: [id=cons_choice] — the decision-perch consumption is
     # the consumed function read on the endogenous grid, the spelling of
     # the portfolio corpus (cons.bl); no evaluate call appears.
-    assert _EGM.items[1].body[2] == Statement(
+    assert block(_ADDITION_ITEMS, "policy").body[2] == Statement(
         Equation(_c("c"), _p("c", Continuation())),
         _ann(KeyValue("id", "cons_choice")))
 
@@ -408,10 +404,10 @@ def test_shock_free_translation():
     # Accordingly the abstract trees contain no Shock role (no law) and
     # no expectation operator; the Operator nodes are the argmax of the
     # declarative optimality statement in the stage file, the derivative
-    # term D_{w_d}V of the marginal block's derivative line and the
-    # derivative term D_{a_nxt}V[>] of the method block's inverse Euler
-    # line, and the only function calls are the grid constructor and the
-    # feasible correspondence Γ.
+    # term D_{a_nxt}V[>] of the inverse Euler line of the methods file's
+    # policy block and the derivative term D_{w_d}V of its derivative line,
+    # and the only function calls are the grid constructor and the feasible
+    # correspondence Γ.
     operators, shocks, call_heads = [], [], set()
 
     def hit(n):
@@ -422,7 +418,7 @@ def test_shock_free_translation():
         elif isinstance(n, Call):
             call_heads.add(n.fun)
 
-    for tree in (_AST, _MARGINALS, _EGM):
+    for tree in (_AST, _ADDITION):
         _walk(tree, hit)
     assert [op.head for op in operators] == ["argmax", "D", "D"]
     assert shocks == []

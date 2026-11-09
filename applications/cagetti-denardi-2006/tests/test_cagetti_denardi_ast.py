@@ -2,15 +2,17 @@
 Nardi (2006) example.
 
 Every expected node below is derived from the surface text of the `.bl`
-files of the model's stage folders, `declaration/stages/<key>/`, and from
-the generated term constructors
-(bellman.sym.terms), not copied from their recordings `*.ast.json` under
-`packages/bellman/tests/snapshot/corpus/cagetti-denardi-2006/`. Each
-file is parsed fresh through the Lark route (stage.lark, then the ToAst
-lowering). The tests cover the constructs this example adds to the corpus:
-the occupational branches, the repay-or-default branches with the joint
+files of the model's stage folders, `declaration/stages/<key>/`, the stage
+file `<key>.bl` and the addition `methods.bl` beside it, and from the
+generated term constructors (bellman.sym.terms), not copied from their
+recordings `*.ast.json` under
+`packages/bellman/tests/snapshot/corpus/cagetti-denardi-2006/`. Each file is
+parsed fresh through the Lark route (stage.lark, then the ToAst lowering).
+The tests cover the constructs this example adds to the corpus: the
+occupational branches, the repay-or-default branches with the joint
 maximisation and the enforcement inequality, the demographic branches keyed
-by a shock, and the Markov and invariant laws of the two abilities.
+by a shock, the Markov and invariant laws of the two abilities, and the
+additions, whose every selection is a typing line at file level.
 Runnable under pytest or directly:
 
     venv/bin/python applications/cagetti-denardi-2006/tests/test_cagetti_denardi_ast.py
@@ -26,12 +28,14 @@ import pytest
 
 from stage_ast import arvl, check, cntn, describes, parsed, run_checks, sym
 from stage_types import (
-    Add, Annotation, Assignment, At, Block, Call, Closed, Constant,
-    Continuation, Control, Coordinate, CorrDef, Decision, Domain, Equation,
-    FiniteSet, Ge, In, Inequality, Infoset, Interval, Key, KeyValue, Law,
-    Metadata, Mul, Named, Number, Open, Operator, Pow, Range, Role, Select,
-    Signature, Space, Statement, Sub, Subject, Tuple, Typer, Value, Var,
+    Add, Annotation, Assignment, At, Block, Call, Cartesian, Closed, Constant,
+    Continuation, Control, Coordinate, CorrDef, Declaration, Declare, Decision,
+    Domain, Equation, FiniteSet, Ge, Grid, In, Inequality, Infoset, Interval,
+    Key, KeyValue, Keyword, Law, Metadata, Method, Mul, Name, Named, Number,
+    Open, Operator, Pow, Range, Role, Segment, Select, Signature, Space, Spaced,
+    Statement, Sub, Subject, Tuple, Typer, Value, Var, Word,
 )
+from stage_types import Path as TermPath
 
 
 # the folder of the model's stage folders
@@ -40,6 +44,8 @@ STAGES = ("young_choice", "young_entrepreneur", "worker", "worker_ageing",
           "entrepreneur_ageing", "old_choice", "old_entrepreneur", "retiree",
           "entrepreneur_death", "retiree_death")
 ITEMS = {name: parsed(STAGE_FOLDERS / name / f"{name}.bl").items for name in STAGES}
+# the additions, one beside each stage file
+ADDITIONS = {name: parsed(STAGE_FOLDERS / name / "methods.bl").items for name in STAGES}
 
 
 def coord(stem, space=None):
@@ -58,6 +64,43 @@ def statement(lhs, rhs, ident=None):
 
 def block(tag_entries, body):
     return Block(Annotation(tag_entries), body)
+
+
+def path(*names):
+    """The path of a typing line's subject, `cntn_to_dcsn.method`."""
+    return TermPath(segments=tuple(Segment(name=name, selectors=()) for name in names))
+
+
+def selection(subject, classifier):
+    """A typing line at file level, routed by its path to the node it names."""
+    return Declare(Declaration(subject=subject, classifiers=(classifier,), value=None), None)
+
+
+def word(name, **keywords):
+    """A method word with its keyword arguments, each valued by a name."""
+    return Method(Word(name=name, arguments=tuple(
+        Keyword(key=key, value=Name(name=value)) for key, value in keywords.items())))
+
+
+def asset_grid(coordinate):
+    """A grid of one factor on the asset coordinate, the bounds and the count
+    of the settings file."""
+    return Grid(Cartesian(factors=(Spaced(coordinate=coordinate, lower=Name(name="a_min"),
+                                           upper=Name(name="a_max"), count=Name(name="n_a"),
+                                           spacing=None),)))
+
+
+def typing_lines(items):
+    """The typing lines of an addition, the Declare items whose subject is a
+    path, in order."""
+    return [item for item in items
+            if isinstance(item, Declare) and isinstance(item.declaration.subject, TermPath)]
+
+
+def declared_settings(items):
+    """The names the addition declares as settings, in order."""
+    return [item.declaration.subject.coordinates[0].stem for item in items
+            if isinstance(item, Declare) and not isinstance(item.declaration.subject, TermPath)]
 
 
 def test_file_shapes():
@@ -280,5 +323,73 @@ def test_demographic_branches_are_keyed_by_the_shock():
               f"{name}.dcsn_to_arvl.body")
 
 
+def test_additions_type_every_selection_at_file_level():
+    # No method adds a line, so each addition is the metadata line, the
+    # declarations of its settings and typing lines routed by their paths:
+    # the demographic stages take the exact sum over the new abilities, the
+    # sum over the demographic event, a histogram on the asset grid of the
+    # arrival builder and the deterministic decision builder; the choice
+    # stages the discrete maximum, the identity and the deterministic
+    # builder; the worker and the retiree value function iteration on cash
+    # on hand and a histogram on the saving.
+    for name in STAGES:
+        check(ADDITIONS[name][0], Metadata("methods", name), f"{name}/methods.bl items[0]")
+    demographic = [
+        selection(path("dcsn_to_arvl", "E_y_n_θ_n", "method"), word("exact_markov")),
+        selection(path("cntn_to_dcsn", "E_s", "method"), word("sum")),
+        selection(path("arvl_to_dcsn", "method"), word("histogram")),
+        selection(path("arvl_to_dcsn", "grid"), asset_grid("a")),
+        selection(path("dcsn_to_cntn", "method"), word("deterministic")),
+    ]
+    for name in ("worker_ageing", "entrepreneur_ageing", "entrepreneur_death", "retiree_death"):
+        assert declared_settings(ADDITIONS[name]) == ["n_a", "a_min", "a_max"], name
+        check(typing_lines(ADDITIONS[name]), demographic, f"{name}/methods.bl typing lines")
+    choice = {selection(path("policy", "method"), word("max")),
+              selection(path("arvl_to_dcsn", "method"), word("identity")),
+              selection(path("dcsn_to_cntn", "method"), word("deterministic"))}
+    for name in ("young_choice", "old_choice"):
+        assert declared_settings(ADDITIONS[name]) == [], name
+        assert set(typing_lines(ADDITIONS[name])) == choice, name
+    for name, saving in (("worker", "a_wk_wa"), ("retiree", "a_rt_rd")):
+        assert declared_settings(ADDITIONS[name]) == ["n_a", "a_min", "a_max", "tol_v"], name
+        check(typing_lines(ADDITIONS[name]), [
+            selection(path("cntn_to_dcsn", "method"), word("vfi", tol="tol_v")),
+            selection(path("cntn_to_dcsn", "grid"), asset_grid("m")),
+            selection(path("arvl_to_dcsn", "method"), word("deterministic")),
+            selection(path("dcsn_to_cntn", "method"), word("histogram")),
+            selection(path("dcsn_to_cntn", "grid"), asset_grid(saving)),
+        ], f"{name}/methods.bl typing lines")
+
+
+def test_entrepreneur_additions_declare_the_enforcement_settings_and_write_no_entry_for_them():
+    # The two entrepreneur stages are refused before any union (the
+    # branching block lists controls beside its branches). Their additions
+    # type value function iteration on a grid of assets and capital, the
+    # identity and a histogram per branch, declare the two settings of the
+    # iteration on the enforceable capital, k_max and tol_k, and write no
+    # entry for that iteration, which has no method word.
+    for name, repay, default in (("young_entrepreneur", "a_ye_ea", "a_ye_wk"),
+                                 ("old_entrepreneur", "a_oe_ed", "a_oe_rt")):
+        items = ADDITIONS[name]
+        assert declared_settings(items) == ["n_a", "a_min", "a_max", "n_k", "k_min", "k_max",
+                                            "tol_v", "tol_k"], name
+        lines = typing_lines(items)
+        subjects = [[segment.name for segment in line.declaration.subject.segments] for line in lines]
+        assert ["policy", "enforcement", "method"] not in subjects, name
+        check(lines[0], selection(path("cntn_to_dcsn", "method"), word("vfi", tol="tol_v")),
+              f"{name}/methods.bl lines[0]")
+        check(lines[1].declaration.classifiers[0],
+              Grid(Cartesian(factors=(
+                  Spaced(coordinate="a", lower=Name(name="a_min"), upper=Name(name="a_max"),
+                         count=Name(name="n_a"), spacing=None),
+                  Spaced(coordinate="k", lower=Name(name="k_min"), upper=Name(name="k_max"),
+                         count=Name(name="n_k"), spacing=None)))),
+              f"{name}/methods.bl lines[1] grid")
+        assert subjects[2:] == [["arvl_to_dcsn", "method"], ["dcsn_to_cntn", "method"],
+                                ["dcsn_to_cntn", "repay", "grid"], ["dcsn_to_cntn", "default", "grid"]], name
+        check(lines[4].declaration.classifiers[0], asset_grid(repay), f"{name} repay grid")
+        check(lines[5].declaration.classifiers[0], asset_grid(default), f"{name} default grid")
+
+
 if __name__ == "__main__":
-    sys.exit(run_checks(globals(), "on the ten stages"))
+    sys.exit(run_checks(globals(), "on the ten stages and their additions"))

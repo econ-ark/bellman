@@ -1,0 +1,15 @@
+@methods: terminal
+# The methods of the terminal stage, an addition to terminal.bl: the arrival
+# builder copies y_f_T and y_h_T to the decision states, so the measure it
+# carries is unchanged, a representation of a forward builder's measure
+# without a grid; and the two derivatives of the terminal decision value,
+# zero, the continuation value being the zero boundary data. The block keeps
+# the partial signature () : !cntn -> (V) : !dcsn, whose empty domain adds
+# nothing and whose codomain names the one output the stage declares.
+
+arvl_to_dcsn.method : !identity
+
+[id=cntn_to_dcsn, () : !cntn -> (V) : !dcsn] {
+    D_{y_f_d}V = 0                                      :: [id=marginal_financial]
+    D_{y_h_d}V = 0                                      :: [id=marginal_housing]
+}

@@ -1,0 +1,47 @@
+@methods: port
+# The methods of the portfolio stage, written as an addition to port.bl beside
+# this file: Gauss-Hermite quadrature of the joint law of the risky return Ψ
+# and the income shock θ, one node count per shock, built by the function
+# _build_joint_quadrature of cons-port; value function iteration on the
+# decision value builder, with no keyword argument and no grid entry, so that
+# its grid is the default, !Cartesian over k_d, the one state of the decision
+# perch, with no number defaulted; the linear representation of the decision
+# value on the grid of capital, its own typing entry keyed by k_d; the
+# deterministic arrival builder; and the forward law of motion drawn by Monte
+# Carlo. No line is added, so every entry is a file-level line routed to its
+# place by its path. The quadrature is written once for each block that holds
+# an occurrence of the expectation: in cntn_to_dcsn by the operator's address
+# in the block, which names the occurrences in the lines value and marginal,
+# and in policy by the path through the line foc, the one occurrence there,
+# since the line objective is marked !doc and forms no operation. The
+# representation names the value's Evaluation alone and not the stated
+# derivative D_{k_d}V, so the Evaluation is refined by its object. Every
+# setting the file reads is declared above the lines with its set, a bound as
+# a point of ℝ₊, the set port.bl declares for k_d, a count, a node count and a
+# seed in ℕ.
+#
+# The alternative of root finding on the first-order condition would be the
+# two file-level lines
+#   policy.foc.solve.method : !root_find
+#   policy.foc.solve.handler : "hark:solve_stage_rootfind"
+# in place of the line on cntn_to_dcsn.method; it is not written.
+
+n_k : ℕ            :: ["number of points of the grid of capital"]
+k_min : ℝ₊         :: ["lower bound of the grid of capital"]
+k_max : ℝ₊         :: ["upper bound of the grid of capital"]
+n_Ψ_nodes : ℕ      :: ["quadrature nodes of the risky return"]
+n_θ_nodes : ℕ      :: ["quadrature nodes of the income shock"]
+n_sim : ℕ          :: ["number of simulated paths"]
+sim_seed : ℕ       :: ["seed of the simulation's draws"]
+
+cntn_to_dcsn.E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+cntn_to_dcsn.E_Ψ_θ.handler : "cons-port:_build_joint_quadrature"
+policy.foc.E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+policy.foc.E_Ψ_θ.handler : "cons-port:_build_joint_quadrature"
+cntn_to_dcsn.method : !vfi
+cntn_to_dcsn.evaluate[V].method : !Linear
+cntn_to_dcsn.evaluate[V].grid : !Cartesian(k_d=(k_min, k_max, n_k))
+cntn_to_dcsn.evaluate[V].handler : "cons-port:_make_interp"
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)
+dcsn_to_cntn.handler : "cons-port:transition"

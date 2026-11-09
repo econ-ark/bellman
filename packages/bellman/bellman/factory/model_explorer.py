@@ -280,7 +280,7 @@ from bellman.factory.connections import (  # noqa: F401, PAIRING_RULES keeps its
     trellis_selection,
 )
 from bellman.factory.joins import forward_order, unjoined_fields
-from bellman.factory.trellis import KINDS, _written_binding
+from bellman.factory.trellis import written_bindings
 from bellman.factory.trellis_drawings import chosen_periods, join_label, period_age
 from bellman.fold.block_lines import blocks_in_file_order, header_of
 from bellman.fold.conditions import parameters_named
@@ -302,8 +302,10 @@ from bellman.stage.carriers import wire_type
 from bellman.stage.denotations import box_signature
 from bellman.stage.grains import DIRECTIONS, bound_blocks, graph_of, wire_table
 from bellman.stage.kernels import kernel
-from bellman.stage.method_blocks import declared_version
+from bellman.stage.levels import declared_version
+from bellman.syntax import terms as T
 from bellman.stage.pieces import drawing_arguments
+from bellman.stage.places import is_methodized
 from bellman.stage.stage_answers import branches, entry_perch, fields
 from bellman.syntax.source import to_source
 from bellman.syntax.vocabulary import (
@@ -655,14 +657,14 @@ def _opened_lines(stage):
 def _collection_label(stage):
     """The label of the collection: the stage's name followed by a word for
     each binding the version holds, `cons` or `cons calibrated`. The version
-    is methodized where any of its operators carries a bound method, a
-    method word and not a handler alone, read from the stage's answer
-    `stage.methods` (decision S7-W7 of specification 0.7)."""
+    is methodized where an operator's signature carries a method component,
+    a handler alone leaving it symbolic (`places.is_methodized`, decision
+    S7-W7 of specification 0.7)."""
     bound = [
         word
         for word, held in (
             ("calibrated", stage.bindings.calibration is not None),
-            ("methodized", any(method.tag for method in stage.methods.values())),
+            ("methodized", is_methodized(stage)),
             ("configured", stage.bindings.settings is not None),
         )
         if held
@@ -1649,24 +1651,26 @@ def _numbered(word, values):
     return {f"{word} {number}": value for number, value in enumerate(values, 1)}
 
 
-# The one method bound within a piece, as the view shows it.
-# `tag` is the tag as the card writes it, `!egm`, or empty for a handler alone.
-# `handler` is the handler the card's `Method` row names, or empty.
+# The components typed within a piece, as the view shows them.
+# `tag` is the method word as the card writes it, `!egm`, or empty where no
+# method component is typed.
+# `grid` is the grid component as the card writes it, or empty.
+# `handler` is the program the card's `Method` row names, or empty.
 # `options` holds the rows of the card's `Options` section, each on one line.
-# `settings` holds the settings those options name, as the version prints them.
-_BoundMethod = namedtuple("_BoundMethod", "tag handler options settings")
+# `settings` holds the settings the components name, as the version prints them.
+_BoundMethod = namedtuple("_BoundMethod", "tag grid handler options settings")
 
 
 def _bound_method(stage, handle, targets=None):
-    """The methods bound within a piece (`_the_methods`), read from the
-    piece's handle and its card, as one `_BoundMethod`: their tags joined by
-    `, `, `!marginals, !Linear` for an Evaluation that holds a marginal
-    block and a representation (SE-26), their handlers likewise, and their
-    options and settings in order; None where no method is bound. `targets`
-    restricts the bindings read to those bound at these targets, as a layer
-    reads the bindings within it that no primitive holds. A primitive's
-    rows, its label (`node_label`) and a builder's layer read a piece's
-    methods here, so the three cannot disagree."""
+    """The components typed within a piece (`_the_methods`), read from the
+    piece's handle and its card, as one `_BoundMethod`: their method words
+    joined by `, `, `!Linear, !pchip` for an Evaluation whose two stored
+    objects are represented apart (specification 0.7 D4), their grids and
+    their handlers likewise, and their options and settings in order; None
+    where nothing is typed. `targets` restricts the places read to these,
+    as a layer reads the places within it that no primitive holds. A
+    primitive's rows, its label (`node_label`) and a builder's layer read a
+    piece's methods here, so the three cannot disagree."""
     within = [target for target in handle.methods if targets is None or target in targets]
     if not within:
         return None
@@ -1684,9 +1688,12 @@ def _bound_method(stage, handle, targets=None):
         for clause in clauses
         for row in next(bound.options for bound in bindings if bound.clause is clause)
     ]
-    settings = [line for clause in clauses for line in _setting_lines(stage, clause.settings)]
+    settings = [line for clause in clauses for line in _setting_lines(stage, clause)]
     return _BoundMethod(
-        tag=", ".join(f"!{clause.tag}" for clause in clauses if clause.tag),
+        tag=", ".join(f"!{clause.method.name}" for clause in clauses if clause.method is not None),
+        grid=", ".join(
+            to_source(T.Grid(clause.grid)) for clause in clauses if clause.grid is not None
+        ),
         handler=", ".join(clause.handler for clause in clauses if clause.handler),
         options=tuple(_one_line(row) for row in options),
         settings=tuple(dict.fromkeys(settings)),
@@ -1720,47 +1727,52 @@ def _bindings(record, sections):
 
 
 def _the_methods(bound):
-    """The methods among the bindings within a piece, each a record that
-    holds `tag`, `handler` and `settings`, in the order of its card; none
-    where none is bound. Entries of one method bound at several targets the
-    piece represents are one method. A box holds one method of each kind, a
-    solution, a representation and a marginal block (specification 0.6,
-    decision SB-14, which replaced AMD-SG-006 §4, rule 9), so a piece holds
-    at most one method of each kind."""
+    """The distinct components among the method clauses within a piece,
+    each a `MethodClause` holding `method`, `grid` and `handler`, in the
+    order of its card; none where nothing is typed. Two places of the piece
+    typed alike, an operator head and its occurrences among them, are one
+    entry."""
     found = []
     for method in bound:
-        written = (method.tag, method.handler, method.settings)
-        if not any(written == (held.tag, held.handler, held.settings) for held in found):
+        written = (method.method, method.grid, method.handler)
+        if not any(written == (held.method, held.grid, held.handler) for held in found):
             found.append(method)
     return found
 
 
 def _method_attributes(method):
-    """The attributes of a piece's bound method (`_bound_method`), each one
-    line: `method`, its tag; `handler`; `option`, the rows of the card's
-    `Options`; and `setting`, the settings those options name, each
-    numbered where there are several, `option 1`, `option 2` (`_numbered`).
-    A part the method does not hold is left out, and nothing is shown where
-    no method is bound."""
+    """The attributes of the components typed within a piece
+    (`_bound_method`), each one line: `method`, the method word; `grid`;
+    `handler`; `option`, the rows of the card's `Options`; and `setting`,
+    the settings the components name, each numbered where there are several,
+    `option 1`, `option 2` (`_numbered`). A component the piece does not
+    hold is left out, and nothing is shown where nothing is typed."""
     if method is None:
         return {}
     shown = {
-        key: value for key, value in (("method", method.tag), ("handler", method.handler)) if value
+        key: value
+        for key, value in (
+            ("method", method.tag),
+            ("grid", method.grid),
+            ("handler", method.handler),
+        )
+        if value
     }
     shown.update(_numbered("option", method.options))
     shown.update(_numbered("setting", method.settings))
     return shown
 
 
-def _setting_lines(stage, settings):
-    """Each setting a method's options name (`setting_names`), in the order
-    the options name them, as the version's settings print it,
-    `stage.settings[name]`; a setting the version does not configure is
-    left out."""
+def _setting_lines(stage, clause):
+    """Each setting the components of a method clause name
+    (`setting_names`), the keyword arguments of its method word and the
+    factors of its grid, in the order they name them, as the version's
+    settings print it, `stage.settings[name]`; a setting the version does
+    not configure is left out."""
     configured = stage.settings
     return [
         str(configured[name])
-        for name in dict.fromkeys(setting_names(settings))
+        for name in dict.fromkeys([*setting_names(clause.method), *setting_names(clause.grid)])
         if name in configured
     ]
 
@@ -2292,7 +2304,7 @@ def _version_key(stage):
     package files and distributions, as they stood when it imported this
     module, were those of the process that wrote it."""
     recorded = tuple(stage.provenance.get(name) for name in ("sha256", "origin"))
-    written = tuple(repr(_written_binding(kind, getattr(stage.bindings, kind))) for kind in KINDS)
+    written = tuple(repr(held) for held in written_bindings(stage))
     return (_source_version(), *recorded, *written)
 
 

@@ -133,15 +133,19 @@ entry of every tuple is the keep alternative, in the order of the label set.
 The value line charges nothing: the two alternatives differ in what they hand
 the consumption stages, not in a cost paid here.
 
-The derivatives of the decision value are stated by the marginal block of
-`declaration/methods/marginals_tenure.bl`, which the methods file binds on the
-decision value builder with `!marginals`. Its two lines read the derivatives of
+The derivatives of the decision value are stated by the two lines the methods
+file `methods.bl`, the addition beside this file, appends to the decision value
+builder's block `cntn_to_dcsn`, whose header types the representation of the
+value on the grid of assets and housing. Its two lines read the derivatives of
 the branch values by terms such as `D_{w_kp}V_kp[>]`, and each is the envelope
 condition of the branch that is chosen, with the derivative of the branch
 transition as the factor.
 
 ```bl
-[id=dcsn_marginal, (V_kp[>], V_adj[>], d) : !cntn -> (V) : !dcsn] {
+[id=cntn_to_dcsn
+    | evaluate[V].method : !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)
+    | evaluate[V].handler : "dcsmm:interp_as_scalar"
+    | evaluate[V].grid : !Cartesian(a_d=(a_min, a_max, n_a), h_d=(h_min, h_max, n_h))] {
     D_{a_d}V = (R*D_{w_kp}V_kp[>], R*D_{w_adj}V_adj[>])[d]                          :: [id=marginal_assets]
     D_{h_d}V = ((1 - δ)*D_{h_kp}V_kp[>], R_H*(1 - δ)*D_{w_adj}V_adj[>])[d]          :: [id=marginal_housing]
 }

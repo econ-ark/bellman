@@ -48,7 +48,7 @@ In the specified construction, arithmetic expressions and local binders are pars
 
 The decision expression contains composition with the asset transition, utility, discounting and optimization. Its continuation function has a declared state domain and the regularity required by the operation. An implicit equation records a relation in its designated unknown; it defines a function only after existence and uniqueness, or an admissible selection, has been supplied. A first-order condition alone does not establish a constrained optimum.
 
-An authored equation or occurrence can supply a numerical target when that target is supported. A physical line of source does not automatically create an independently methodizable operation, and an implicit relation does not automatically insert an inversion method. [Fields, functions and types](./04-fields,%20functions%20and%20types.md) states the mathematical rules, and Bellman-SYM's rules for [methodization](../wiki/methodization.md) state the authoring rules, separately.
+An authored equation or occurrence can supply a place for a numerical method when that place is supported. A physical line of source does not automatically create an independently methodizable operation, and an implicit relation does not automatically insert an inversion method. [Fields, functions and types](./04-fields,%20functions%20and%20types.md) states the mathematical rules, and Bellman-SYM's rules for [methodization](../wiki/methodization.md) state the authoring rules, separately.
 
 <a id="why-syntax-alone-is-not-enough"></a>
 
@@ -64,9 +64,9 @@ Stoy distinguishes a program's denotation from different ways of computing it.[^
 
 ## 4. Numerical attachment
 
-A **handler** implements a numerical procedure for a supported declared target, such as expectation or an implicit relation. Its assumptions and representation requirements remain explicit: a root finder needs an appropriate equation and admissible domain; a candidate-envelope comparison needs a specified candidate family. A method name does not prove accuracy, optimality or convergence.
+A **handler** implements a numerical procedure at a supported declared place, such as an expectation or an implicit relation. Its assumptions and representation requirements remain explicit: a root finder needs an appropriate equation and admissible domain; a candidate-envelope comparison needs a specified candidate family. A method name does not prove accuracy, optimality or convergence.
 
-The remaining comparison with solver libraries must identify the mathematical operation, the authored target and the actual numerical procedure. Exact interpretation and refinement are treated in [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md); numerical error and stability require the additional conditions summarized in [Operator algebra](./APPX-F-OPERATOR-ALGEBRA.md) §6.
+The remaining comparison with solver libraries must identify the mathematical operation, the authored place and the actual numerical procedure. Exact interpretation and refinement are treated in [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md); numerical error and stability require the additional conditions summarized in [Operator algebra](./APPX-F-OPERATOR-ALGEBRA.md) §6.
 
 [^stoy]: Stoy, J. E. (1977). *Denotational Semantics: The Scott-Strachey Approach to Programming Language Theory*. MIT Press, §2.2, p. 11.
 

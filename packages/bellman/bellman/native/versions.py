@@ -171,8 +171,10 @@ class WorkingStage:
     `field_sorts` the sort of every field wire (the fields and the shocks the
     block headers list, in first-listing order) and `sorts` the sort of every
     wire, the local aliases of the builders' interiors included;
-    `parameter_sets` the declared set of every parameter as a retained term;
-    `law_terms` every law by its subjects; `data` the working annotation, of
+    `parameter_sets` the declared set of every parameter as a retained term
+    and `setting_sets` that of every setting, a top-level declaration of a
+    methods file (specification 0.7, S1); `law_terms` every law by its
+    subjects; `data` the working annotation, of
     which the constructed stage keeps only what no query answers. It is built
     once, after the typing call, and is read and not written by the fold and
     the construction of the graphs; a working stage exists only inside
@@ -189,6 +191,7 @@ class WorkingStage:
     sorts: dict
     parameter_sets: dict
     law_terms: dict
+    setting_sets: dict = dataclasses.field(default_factory=dict)
 
 
 # The two attributes holding the stored graphs: `initial`, the
@@ -245,6 +248,20 @@ def bind_in_place(stage, *, rows_changed=False, **records):
     for attribute, record in records.items():
         store(stage, attribute, record)
     stage._discard(rows_changed)
+    return stage
+
+
+def rebuild_in_place(stage, fresh, **records):
+    """`stage` itself holding the stored records of `fresh`, a version made
+    anew of the same stage from another tree, with the records given written
+    over them, the bindings and the provenance among them; every kept answer
+    is discarded, since the definitions and the graphs change. `methodize`
+    rebinds a stage occurrence this way (specification 0.7 §6)."""
+    for attribute in STORED:
+        store(stage, attribute, records.get(attribute, stored(fresh, attribute)))
+    kept = stage.__dict__.get("_kept")
+    if kept:
+        kept.clear()
     return stage
 
 

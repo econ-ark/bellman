@@ -1,0 +1,15 @@
+@methods: adjuster_cons
+# A second addition of the adjuster's consumption stage, which no recipe of the
+# application names: the nested method of the paper, value function iteration
+# on the decision value builder realized by the routine make_adjuster_vfi of
+# the replication code, which maximizes over new housing by a sectioned
+# golden-section search given the keeper's consumption policy. A recipe that
+# wants it names it after methods.bl in the stage's methods list,
+# `methods: {all: [stages/adjuster_cons/methods.bl,
+# stages/adjuster_cons/methods.adjuster_method.bl]}`, and the union then adds
+# its entry to the first file's selection and replaces none of it. The block
+# cntn_to_dcsn gains no line here, so the selection is a file-level line
+# routed by its path; an empty body is refused.
+
+cntn_to_dcsn.method : !vfi    # no form in §4: handler: fues-durables:make_adjuster_vfi, with no settings
+cntn_to_dcsn.handler : "fues-durables:make_adjuster_vfi"

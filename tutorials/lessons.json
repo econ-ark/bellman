@@ -1,7 +1,7 @@
 {
   "getting-started/01-the-stage": {
     "path": "tutorials/getting-started/01-the-stage.ipynb",
-    "sha256": "0c5fdba301fb6370bbe74304e007dce38b2b452f63a82c2daaca7a6424e4774a",
+    "sha256": "9480dddc2b5dac1f5b88c903bb8182d0661823db49ae3d29e9e6e69052641468",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -11,7 +11,7 @@
   },
   "getting-started/02-value-functions": {
     "path": "tutorials/getting-started/02-value-functions.ipynb",
-    "sha256": "45f47e987c19a74e8412107dade858dd738db05fc67fa04db0af043b767b0711",
+    "sha256": "e3839e2ea1a257c6eafa835126d0f4c55b4af25e01569b43ff4a5f1c79c68ce0",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -21,7 +21,7 @@
   },
   "getting-started/03-distributions": {
     "path": "tutorials/getting-started/03-distributions.ipynb",
-    "sha256": "cc6dffab666b9e6786006167b3ab108f0cf76b28dc30fcfa6792f19583b1e568",
+    "sha256": "1440e9a98f4fa14a903fb0dece02daaedf546da88e88c5f15cc2842809ba2e6e",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -32,54 +32,49 @@
   },
   "getting-started/04-parameters-methods-and-settings": {
     "path": "tutorials/getting-started/04-parameters-methods-and-settings.ipynb",
-    "sha256": "9658b70480862a14dd23ac81481c6591644fed93bec0aebcd6665e1e9a7dfc7c",
+    "sha256": "91830e152b539eac3d46730fe5c286015731e4217f021ed6d6d9b4bff2696fd0",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/cons-port/declaration/stages/cons/cons.bl": "34cf564877c0d7a4ecd5e15dcd55ed776ffe7f649a1cb674d378753b33cdea78",
       "applications/cons-port/declaration/calibration/portfolio.yml": "939c9c4f380a5924a22634073e6989df99df35a511a23337ca25191cedbfef4a",
-      "applications/cons-port/declaration/methods/cons.yml": "a28d16b473afc273cf9cf0e5e2c72cc5ec450f92bc790877732e97e51f4b7a4b",
-      "applications/cons-port/declaration/methods/cons_egm.bl": "c597b0d2bf2d10c16292b56a3943d3e5853143bf648979bd2a1fbadfacfdbd94",
-      "applications/cons-port/declaration/methods/cons_vfi.yml": "113c72022307b9c8ad5ab53a7de3e1eee589876c23bde536a141f97a628068a5",
+      "applications/cons-port/declaration/stages/cons/methods.bl": "34ef3c54fc4cfbc2debcab2b0fea774051079101cb01b64c3b8a30f3476ba0fe",
+      "applications/cons-port/declaration/stages/cons/methods.vfi.bl": "dddd1e3f4a1c24815b5975b48437c6f2856ba7d0f2d31e5fd45078a76c8df46d",
       "applications/cons-port/declaration/settings/cons.yml": "09dfdddc381ac63d8c0acf9f440ee0a4f127c5eaab863c6427ea9aa5c07d1f6c",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "getting-started/05-periods-and-trellises": {
     "path": "tutorials/getting-started/05-periods-and-trellises.ipynb",
-    "sha256": "ba817a40fe2e04c52c077b8f3227000a02b3c1bc4fc5576511eb92eea32a25c3",
-    "status": "failed",
-    "failures": [
-      "cell trellis-c11: tagged raises-exception but raised no error"
-    ],
+    "sha256": "8323160f8b687d808780ab29408a905542a7231a174dc385c9aa6be007a07279",
+    "status": "completed",
+    "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/cons/cons.bl": "e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667",
       "applications/portfolio-choice/declaration/stages/port/port.bl": "5a57b41870fc53e8dbaa461e5a1ec78bee04b125610b5c59d1c16ad964cc1697",
       "applications/portfolio-choice/declaration/stages/noport/noport.bl": "7f73c092983841f6f0c232da9b9f0b25f1378658733e9ca62515b5cb82359a85",
       "applications/portfolio-choice/declaration/stages/disc/disc.bl": "c5aa02e1668b37f167a19a5c12d6ebbcbc5d66e61b854e82635c07f0dc18c09c",
-      "applications/cons-port/declaration/spec.port-cons.yml": "910f708f86bc36034b02598dd8814eb225094c1c81730e6570b27ccd3462fa73",
+      "applications/cons-port/declaration/spec.port-cons.yml": "913b9599063d9f6e5dee69da5fe2dc34a5791bd6cc7d9b29977fffa7ceaed86f",
       "applications/cons-port/declaration/trellis.port-cons.yml": "b7437cc815212f0ba5728510e057caab365297ef5270486d74a880c189541c35",
       "applications/cons-port/declaration/stages/port/port.bl": "98c25a9c4d3b7c4754a908a78d8368ba0b3dc7c08b35e847498245bcd73d95c2",
       "applications/cons-port/declaration/stages/cons/cons.bl": "34cf564877c0d7a4ecd5e15dcd55ed776ffe7f649a1cb674d378753b33cdea78",
       "applications/cons-port/declaration/stages/disc/disc.bl": "c5aa02e1668b37f167a19a5c12d6ebbcbc5d66e61b854e82635c07f0dc18c09c",
       "applications/cons-port/declaration/calibration/portfolio.yml": "939c9c4f380a5924a22634073e6989df99df35a511a23337ca25191cedbfef4a",
-      "applications/cons-port/declaration/methods/port.yml": "c655f0f26a086219b0e07a04549725f4418352bf853932dce47e612292b6aa36",
-      "applications/cons-port/declaration/methods/port_foc.bl": "e497753d43bb59c0e2d09b38c91bb18a83f5b7b2cfc1f1e5899a1d28d8aa003d",
-      "applications/cons-port/declaration/methods/cons.yml": "a28d16b473afc273cf9cf0e5e2c72cc5ec450f92bc790877732e97e51f4b7a4b",
-      "applications/cons-port/declaration/methods/cons_egm.bl": "c597b0d2bf2d10c16292b56a3943d3e5853143bf648979bd2a1fbadfacfdbd94",
-      "applications/cons-port/declaration/methods/disc.yml": "7b50f837e79929164173b7c711e006df2c3cdd09543b36305c00477f59feb2b8",
-      "applications/cons-port/declaration/settings/port_wide.yml": "63f5bef3bfea47fc91b42250ec23656962d8c59852877725f7389240fd18e9db",
-      "applications/cons-port/declaration/settings/cons_wide.yml": "f87a2c6678fd512f317bda80b75b02d01e2e98988aed66f3a8d5afb62328250f",
+      "applications/cons-port/declaration/stages/port/methods.bl": "82b91a2b3e18dfdaa54f94423e85205fa8926ee7e76b10945e8fb1dac647061f",
+      "applications/cons-port/declaration/stages/cons/methods.bl": "34ef3c54fc4cfbc2debcab2b0fea774051079101cb01b64c3b8a30f3476ba0fe",
+      "applications/cons-port/declaration/stages/disc/methods.bl": "38968c7d91b974e7328be64a0edde9e649c6c6ad3e78e86cc6b94e687b39db05",
+      "applications/cons-port/declaration/settings/port_wide.yml": "42a2d818d5399113b9673f1e3fc62698d2e8188fd49494abad38a37fd601bc59",
+      "applications/cons-port/declaration/settings/cons_wide.yml": "bdaf3b6673fac56b8de384da7435acfb62390b494df89370e360e4dd6ee07116",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "models/benhabib-2019/the-factory-on-benhabib": {
     "path": "tutorials/models/benhabib-2019/the-factory-on-benhabib.ipynb",
-    "sha256": "1ac4b84eecacdb0b21d7dae6022e139699fa77d67471296a0e395286db1084ba",
+    "sha256": "f6dbfe9e02b705f3755ab5b8c6eea9edc70e949343b95a906d0db6d94ff0d25e",
     "status": "completed",
     "failures": [],
     "inputs": {
-      "applications/benhabib-2019/declaration/spec.yml": "0668e770c9150e3a74f8c19d0ed6af30d4fd05e2519f5a0d1706763869768b5e",
+      "applications/benhabib-2019/declaration/spec.yml": "0dd408c1bf92b6be261222f594f1018bc022a0191b744eb1c55ba487d6ada5fa",
       "applications/benhabib-2019/declaration/trellis.yml": "7fc868e8dff4c8dceea7ac259cb87b8bf2e7b2bfc0565ae362da760ab858f3c5",
       "applications/benhabib-2019/declaration/period.yml": "2725d1a9cfe3634c4faadff7f5d2eefb591b41846ef3158fc5a2e2dfc90c3ea1",
       "applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl": "bbaf4e3fe748d7d3930b2a56dd9cfc73acfcd60c8b3eec11ed027e7080a0560a",
@@ -92,14 +87,15 @@
       "applications/benhabib-2019/declaration/calibration/wage/bracket_4.yml": "27408d1271ef9c91719e3a4795b33a0a3bd8094f79b4c7d1d1ac84c392545890",
       "applications/benhabib-2019/declaration/calibration/wage/bracket_5.yml": "d73294cbd0707986198b00b9f7f1b438ae9f4cba8fbc928abeb8e541cf7ae804",
       "applications/benhabib-2019/declaration/calibration/wage/bracket_6.yml": "3bfe364c45099000bbd63e97a5b721e7c1600ee9c1b9b14168534e66beb5bef1",
-      "applications/benhabib-2019/declaration/stages/benhabib_bellman/methods.yml": "36761f28ddfadf187708fed24bbbfc012fd0bd149321428d9066128b054aa15c",
+      "applications/benhabib-2019/declaration/stages/benhabib_bellman/methods.bl": "06bbba1a8689a342403bd1b9d003fa97938e64b95763a9de56f1aecc982edd9a",
+      "applications/benhabib-2019/declaration/stages/bequest/methods.bl": "084aeec1ddbd83e9ab93d0e2ba724e649938d136bfbff7961ea45f2412027da0",
       "applications/benhabib-2019/declaration/settings/default.yml": "14fd75d14cbe30a87859fa65a11494b0c58aedeb2ce863cc3202767186c89f94",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "models/cons-port/01-two-stages-two-orders": {
     "path": "tutorials/models/cons-port/01-two-stages-two-orders.ipynb",
-    "sha256": "b24c0402e4d5ff5361c02faaabc61ddb2334d9319c7fef770abb0e3f8d5364cc",
+    "sha256": "754f8cf893dafabc7710c7671cb54034791d04a32542505ef3e4a7be23f09962",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -112,72 +108,59 @@
   },
   "models/cons-port/02-a-life-cycle-built-backwards": {
     "path": "tutorials/models/cons-port/02-a-life-cycle-built-backwards.ipynb",
-    "sha256": "f7da3e1481a934720f8d854f720d136ef79ed370d4b7ae77807ed9d7092dfc19",
-    "status": "failed",
-    "failures": [
-      "cell 02-c11: tagged raises-exception but raised no error"
-    ],
+    "sha256": "89eaa314284c9bb241d0efdefd347edd668a1d6c91d7985913605b5e81c4ec36",
+    "status": "completed",
+    "failures": [],
     "inputs": {
       "applications/cons-port/declaration/stages/cons/cons.bl": "34cf564877c0d7a4ecd5e15dcd55ed776ffe7f649a1cb674d378753b33cdea78",
       "applications/cons-port/declaration/stages/port/port.bl": "98c25a9c4d3b7c4754a908a78d8368ba0b3dc7c08b35e847498245bcd73d95c2",
       "applications/cons-port/declaration/stages/disc/disc.bl": "c5aa02e1668b37f167a19a5c12d6ebbcbc5d66e61b854e82635c07f0dc18c09c",
       "applications/cons-port/declaration/calibration/portfolio.yml": "939c9c4f380a5924a22634073e6989df99df35a511a23337ca25191cedbfef4a",
-      "applications/cons-port/declaration/methods/cons.yml": "a28d16b473afc273cf9cf0e5e2c72cc5ec450f92bc790877732e97e51f4b7a4b",
-      "applications/cons-port/declaration/methods/cons_egm.bl": "c597b0d2bf2d10c16292b56a3943d3e5853143bf648979bd2a1fbadfacfdbd94",
-      "applications/cons-port/declaration/methods/port.yml": "c655f0f26a086219b0e07a04549725f4418352bf853932dce47e612292b6aa36",
-      "applications/cons-port/declaration/settings/cons_wide.yml": "f87a2c6678fd512f317bda80b75b02d01e2e98988aed66f3a8d5afb62328250f",
-      "applications/cons-port/declaration/settings/port_wide.yml": "63f5bef3bfea47fc91b42250ec23656962d8c59852877725f7389240fd18e9db",
-      "applications/cons-port/declaration/spec.port-cons.yml": "910f708f86bc36034b02598dd8814eb225094c1c81730e6570b27ccd3462fa73",
+      "applications/cons-port/declaration/stages/cons/methods.bl": "34ef3c54fc4cfbc2debcab2b0fea774051079101cb01b64c3b8a30f3476ba0fe",
+      "applications/cons-port/declaration/stages/port/methods.bl": "82b91a2b3e18dfdaa54f94423e85205fa8926ee7e76b10945e8fb1dac647061f",
+      "applications/cons-port/declaration/stages/disc/methods.bl": "38968c7d91b974e7328be64a0edde9e649c6c6ad3e78e86cc6b94e687b39db05",
+      "applications/cons-port/declaration/settings/cons_wide.yml": "bdaf3b6673fac56b8de384da7435acfb62390b494df89370e360e4dd6ee07116",
+      "applications/cons-port/declaration/settings/port_wide.yml": "42a2d818d5399113b9673f1e3fc62698d2e8188fd49494abad38a37fd601bc59",
+      "applications/cons-port/declaration/spec.port-cons.yml": "913b9599063d9f6e5dee69da5fe2dc34a5791bd6cc7d9b29977fffa7ceaed86f",
       "applications/cons-port/declaration/trellis.port-cons.yml": "b7437cc815212f0ba5728510e057caab365297ef5270486d74a880c189541c35",
-      "applications/cons-port/declaration/methods/port_foc.bl": "e497753d43bb59c0e2d09b38c91bb18a83f5b7b2cfc1f1e5899a1d28d8aa003d",
-      "applications/cons-port/declaration/methods/disc.yml": "7b50f837e79929164173b7c711e006df2c3cdd09543b36305c00477f59feb2b8",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "models/cons-port/03-solving-the-two-orders": {
     "path": "tutorials/models/cons-port/03-solving-the-two-orders.ipynb",
-    "sha256": "326964345a152394a0fe5f4eb08e1c66276ba930e17dcfa4fe0a296e16163297",
-    "status": "failed",
-    "failures": [
-      "cell 03-c15: IndexError: list index out of range",
-      "cell 03-c16: IndexError: list index out of range",
-      "cell 03-c16-gap: IndexError: list index out of range",
-      "cell 03-c16-assert: NameError: name 'share_gap' is not defined",
-      "cell 03-c18-differences: IndexError: list index out of range",
-      "cell 03-c18-assert: NameError: name 'recovered' is not defined"
-    ],
+    "sha256": "565f6e844922fe41762428fc73b99a5c61b7e5fd016d501daf7be9a13c4cb1ac",
+    "status": "completed",
+    "failures": [],
     "inputs": {
       "applications/cons-port/declaration/stages/cons/cons.bl": "34cf564877c0d7a4ecd5e15dcd55ed776ffe7f649a1cb674d378753b33cdea78",
       "applications/cons-port/declaration/stages/port/port.bl": "98c25a9c4d3b7c4754a908a78d8368ba0b3dc7c08b35e847498245bcd73d95c2",
       "applications/cons-port/declaration/stages/disc/disc.bl": "c5aa02e1668b37f167a19a5c12d6ebbcbc5d66e61b854e82635c07f0dc18c09c",
-      "applications/cons-port/declaration/spec.port-cons.yml": "910f708f86bc36034b02598dd8814eb225094c1c81730e6570b27ccd3462fa73",
+      "applications/cons-port/declaration/spec.port-cons.yml": "913b9599063d9f6e5dee69da5fe2dc34a5791bd6cc7d9b29977fffa7ceaed86f",
       "applications/cons-port/declaration/trellis.port-cons.yml": "b7437cc815212f0ba5728510e057caab365297ef5270486d74a880c189541c35",
-      "applications/cons-port/declaration/spec.cons-port.yml": "709cd156da91bcf6064de17d44958fda0c67269abd65af32a7c51c647627be98",
+      "applications/cons-port/declaration/spec.cons-port.yml": "5f3b0532c050f1b2c4dd7dbe90167b94c30b77595fbb72c54f7759c199a03376",
       "applications/cons-port/declaration/trellis.cons-port.yml": "aec29ba72f04c5195e146a4d6537f40bc87798aa8814f64852fa1b552004dc30",
-      "applications/cons-port/declaration/trellis.port-cons-vfi.yml": "a5472333aa295b194c31fe8461ffd41275a9e6d4af68c890bcb679243a1dcc93",
+      "applications/cons-port/declaration/trellis.port-cons-vfi.yml": "234f16f6825f378fb0a838ca495a232ff21b9cff667ae6668309ff4c57f8d7f4",
       "applications/cons-port/declaration/calibration/portfolio.yml": "939c9c4f380a5924a22634073e6989df99df35a511a23337ca25191cedbfef4a",
-      "applications/cons-port/declaration/methods/cons.yml": "a28d16b473afc273cf9cf0e5e2c72cc5ec450f92bc790877732e97e51f4b7a4b",
-      "applications/cons-port/declaration/methods/cons_egm.bl": "c597b0d2bf2d10c16292b56a3943d3e5853143bf648979bd2a1fbadfacfdbd94",
-      "applications/cons-port/declaration/methods/port.yml": "c655f0f26a086219b0e07a04549725f4418352bf853932dce47e612292b6aa36",
-      "applications/cons-port/declaration/methods/port_foc.bl": "e497753d43bb59c0e2d09b38c91bb18a83f5b7b2cfc1f1e5899a1d28d8aa003d",
-      "applications/cons-port/declaration/methods/disc.yml": "7b50f837e79929164173b7c711e006df2c3cdd09543b36305c00477f59feb2b8",
-      "applications/cons-port/declaration/methods/cons_vfi.yml": "113c72022307b9c8ad5ab53a7de3e1eee589876c23bde536a141f97a628068a5",
-      "applications/cons-port/declaration/settings/cons_wide.yml": "f87a2c6678fd512f317bda80b75b02d01e2e98988aed66f3a8d5afb62328250f",
-      "applications/cons-port/declaration/settings/port_wide.yml": "63f5bef3bfea47fc91b42250ec23656962d8c59852877725f7389240fd18e9db",
-      "applications/cons-port/declaration/settings/cons_vfi.yml": "f49d6ac2dfc155987e84e45559f0204b520dee88d0d2ec7ef90afa2d3467f14f",
-      "applications/cons-port/code/cons_port_tool.py": "d85df733a5b7648a51c3332c4a79227f31883202a08beeb10c657e2d3751edbf",
+      "applications/cons-port/declaration/stages/cons/methods.bl": "34ef3c54fc4cfbc2debcab2b0fea774051079101cb01b64c3b8a30f3476ba0fe",
+      "applications/cons-port/declaration/stages/port/methods.bl": "82b91a2b3e18dfdaa54f94423e85205fa8926ee7e76b10945e8fb1dac647061f",
+      "applications/cons-port/declaration/stages/disc/methods.bl": "38968c7d91b974e7328be64a0edde9e649c6c6ad3e78e86cc6b94e687b39db05",
+      "applications/cons-port/declaration/stages/cons/methods.vfi.bl": "dddd1e3f4a1c24815b5975b48437c6f2856ba7d0f2d31e5fd45078a76c8df46d",
+      "applications/cons-port/declaration/settings/cons_wide.yml": "bdaf3b6673fac56b8de384da7435acfb62390b494df89370e360e4dd6ee07116",
+      "applications/cons-port/declaration/settings/port_wide.yml": "42a2d818d5399113b9673f1e3fc62698d2e8188fd49494abad38a37fd601bc59",
+      "applications/cons-port/declaration/settings/cons_vfi.yml": "a6d83aa9bb513aa582a50e8d23afd093f9c648e96fd7430195f2f9ec2c9427b8",
+      "applications/cons-port/code/cons_port_tool.py": "89609e02846cdfdbda2aecb6eb55025975352e27c60398f42fd55f86011eeb81",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "topics/branching": {
     "path": "tutorials/topics/branching.ipynb",
-    "sha256": "1487de5bc359c5a4f8ecc6fdd0a7b060856711376a4a25a4ce2210ac9062b336",
+    "sha256": "267f5a02ab98efd6649483e7e5d0f205e34c5185137c039f9838a681c28436f7",
     "status": "completed",
     "failures": [],
     "inputs": {
       "applications/durables/declaration/stages/tenure/tenure.bl": "7d2a6f77ee2efb14f66eb5bb1f47810e37e4002a859f9985d0164bde19400cee",
       "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl": "f72666d71af214eb24101fda5a2d10b07ffa3dda5e1f4f801d86ba599078bdd5",
-      "applications/durables/declaration/spec.yml": "32f50992f9209cad0f3db8eba9b649f3591a5a40db676ae550d3eef22b5a6996",
+      "applications/durables/declaration/spec.yml": "186424aef4ef7974bbfb1769978f2cfa737c8f0bd529c9f98eeb5ba43415fbd5",
       "applications/durables/declaration/trellis.yml": "ebb33530a5028b3b8bc73fe74ab92678bd6d31254da5a9f9d82700b66888f8ea",
       "applications/durables/declaration/period.yml": "1d61db882f4f806a39b6d7247bb694d50f214a1cb870c818f295d7a5616ee25d",
       "applications/durables/declaration/stages/keeper_cons/keeper_cons.bl": "ecdf5a784b807744ea757dc9940a460acf5f357121e33b648642a77a94f3f47b",
@@ -186,17 +169,17 @@
       "applications/durables/declaration/calibration/durables.yml": "77a026308bd078082e963b0d3fe6aa2cf1f79900e9c0bd5a837698f86beb000b",
       "applications/durables/declaration/calibration/wage_schedule.yml": "2df2fa204c74eca9de161c9b664a0da96bce810d24ef97dd26fe02fac47d606f",
       "applications/durables/declaration/settings/durables.yml": "e176ae673908bfc8331b68a7aa671b1f7bf15bba445ce83e61b2e7d155e62e42",
-      "applications/durables/declaration/stages/tenure/methods.yml": "4f92abfff48008be5354684c6779c24888c824af0a0d7e5ce169aac71905e25e",
-      "applications/durables/declaration/stages/keeper_cons/methods.yml": "88b9d5316f63e3e74d78cfe1a4f0b1675d42e00618b1bca383bcae121c2de9cc",
-      "applications/durables/declaration/stages/adjuster_cons/methods.yml": "e29fae10a191772ac26bf488b22fc8687bb3090fcbe9d40d5ef06f4693821cba",
-      "applications/durables/declaration/stages/bequest/methods.yml": "46eaa1f6fcb3c62750a54f554fae1e995cdfd8773f6e217ede51f8d821542af9",
-      "tutorials/topics/stages/plan_choice.bl": "eb5f7361824104aa414d359f508a53e3bddf56c1aca349d31d2eb18e728ccb49",
+      "applications/durables/declaration/stages/tenure/methods.bl": "750ebb81f76cfac2e5764d2bf72a8d4b5ccf598f9c5800b6649f9267c249a4c9",
+      "applications/durables/declaration/stages/keeper_cons/methods.bl": "e6a0c8bc77bf2fd7440c10a6a323250d1eb381a197a81f4d915fec30e14ec340",
+      "applications/durables/declaration/stages/adjuster_cons/methods.bl": "5201257dccd839cf4ad8bbe65c5c4d8ae7d4fcc54b1156e0e2aa78f29af8012a",
+      "applications/durables/declaration/stages/bequest/methods.bl": "36203593a2c6d569eff9e0412da097033c3e10b6a8a520869db7b4cb2ef1ca6d",
+      "tutorials/topics/stages/plan_choice.bl": "dd8ca8342533bca221dec86c8dce3167c47e40509b2bb7660c9cdafafffbd068",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   },
   "topics/expectations": {
     "path": "tutorials/topics/expectations.ipynb",
-    "sha256": "e44edad6ee0fff546841a9fb12e81e79090d02f1f4d9f230d9b675d0a4148d59",
+    "sha256": "8328e8cf490b97b740f830b1392a5d929d67c6edec709e2c6458f938d6bd9e66",
     "status": "completed",
     "failures": [],
     "inputs": {
@@ -207,13 +190,9 @@
   },
   "topics/kernels": {
     "path": "tutorials/topics/kernels.ipynb",
-    "sha256": "e34c63a725a141b0303346064887f252508b61774f227c9c14c966ed3cd7988a",
-    "status": "failed",
-    "failures": [
-      "cell kn-c04: ValueError: too many values to unpack (expected 2)",
-      "cell kn-c05: NameError: name 'v' is not defined",
-      "cell kn-c06: NameError: name 'v' is not defined"
-    ],
+    "sha256": "ad411461575d6169b1e0977f68f08fd454265fa320de300d3eb4a072d3548ba2",
+    "status": "completed",
+    "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/cons/cons.bl": "e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667",
       "applications/cons-port/declaration/calibration/portfolio.yml": "939c9c4f380a5924a22634073e6989df99df35a511a23337ca25191cedbfef4a",
@@ -222,15 +201,12 @@
   },
   "topics/the-native-mathematics": {
     "path": "tutorials/topics/the-native-mathematics.ipynb",
-    "sha256": "79e9a5ae3e7c7d54eaa5e085fdd040823fecabefc5e858b6a500bcd67a395f4a",
-    "status": "failed",
-    "failures": [
-      "cell nm-c02b: tagged raises-exception but raised no error",
-      "cell nm-c25a: KeyError: \"stage 'cons': 'InvEuler:Aggregation' names 0 pieces of 'policy'; they are policy:Pullback, policy.optimality:Aggregation, policy.optimality:Argmax, policy:Evaluation\"",
-      "cell nm-c25: KeyError: \"stage 'cons': 'cons_choice:Pullback' names 0 pieces of 'policy'; they are policy:Pullback, policy.optimality:Aggregation, policy.optimality:Argmax, policy:Evaluation\""
-    ],
+    "sha256": "b2d4237f34a0dd0c7dbd99af3301b8199ea29d00c6fb98d7b1d3de94af806cdd",
+    "status": "completed",
+    "failures": [],
     "inputs": {
       "applications/portfolio-choice/declaration/stages/cons/cons.bl": "e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667",
+      "applications/portfolio-choice/declaration/stages/cons/methods.bl": "0f3bd220aeaa708b1a41b65239bdb1ef05435a6d984eeeab941a5ee2140cf0f9",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }
   }

@@ -1,0 +1,10 @@
+@methods: terminal
+# The methods of the terminal stage, an addition to terminal.bl: the
+# derivatives of the terminal value in the two assets, zero, as lines of the
+# arrival value builder; the block carries no signature, since it adds no
+# coordinate. The stage takes no method: its values are closed forms.
+
+[id=dcsn_to_arvl] {
+    D_{y_f_T}V[<] = 0                                 :: [id=marginal_financial]
+    D_{y_p_T}V[<] = 0                                 :: [id=marginal_pension]
+}

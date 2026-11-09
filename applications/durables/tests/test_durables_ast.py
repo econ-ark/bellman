@@ -1,31 +1,33 @@
 """Hand-derived AST expectations for three of the four stages of the durables
-model and for the block files that hold their derivative lines and their
-endogenous grid lines; the terminal stage `bequest.bl` is compared by the
+model and for their methods files, the additions `methods.bl` beside them,
+which hold their derivative lines, their endogenous grid lines and the typing
+entries of their methods; the terminal stage `bequest.bl` is compared by the
 corpus test alone.
 
 Every expectation below is derived from the surface text of
 `declaration/stages/tenure/tenure.bl`, `declaration/stages/keeper_cons/keeper_cons.bl`
-and `declaration/stages/adjuster_cons/adjuster_cons.bl`, of the marginal blocks
-of `declaration/methods/marginals_tenure.bl`, `marginals_keeper_cons.bl` and
-`marginals_adjuster_cons.bl`, and of the method blocks of
-`declaration/methods/keeper_cons_egm.bl` and `adjuster_cons_egm.bl`, and from
-the generated term constructors (bellman.sym.terms, generated from
-dynspec_full.asdl), not copied from their recordings `*.ast.json` under
-`packages/bellman/tests/snapshot/corpus/durables/`. Each file is parsed fresh
-through the Lark route (stage.lark, then the ToAst lowering) and compared item
-by item.
+and `declaration/stages/adjuster_cons/adjuster_cons.bl`, of the methods file
+`methods.bl` in each of those folders and of the adjuster's second addition
+`methods.adjuster_method.bl`, and from the generated term constructors
+(bellman.sym.terms, generated from dynspec_full.asdl), not copied from their
+recordings `*.ast.json` under `packages/bellman/tests/snapshot/corpus/durables/`.
+Each file is parsed fresh through the Lark route (stage.lark, then the ToAst
+lowering) and compared item by item.
 
 Constructs particular to this model, asserted deliberately: the branching
 transition of `tenure.bl`, whose output side is empty and whose body is two
 labeled blocks with no shared field name; the selection of a branch value,
 and of the derivatives of the branch values, by the control, `(…, …)[d]`,
 which lowers to a Select of a Tuple by a name key; the inequality statement of
-both consumption stages' method blocks, which writes the borrowing constraint
-as a correspondence; the joint maximization of `adjuster_cons.bl`, whose left
-side is a tuple and whose two binders carry feasible sets, the second reading
-the first binder; and the joint solution statement of the adjuster's method
-block, with two unknowns and two residuals. The tuple left side constructs as
-a joint choice. All the files parse, which is what this test checks.
+both consumption stages' endogenous grid lines, which writes the borrowing
+constraint as a correspondence; the joint maximization of `adjuster_cons.bl`,
+whose left side is a tuple and whose two binders carry feasible sets, the
+second reading the first binder; the joint solution statement of the adjuster's
+addition, with two unknowns and two residuals; and the typing entries of the
+additions, a method word with its keyword arguments, a handler binding and a
+grid entry, in a block's header and at file level. The tuple left side
+constructs as a joint choice. All the files parse, which is what this test
+checks.
 
 Runnable under pytest or directly:
 
@@ -41,37 +43,36 @@ sys.path.insert(0, str(_REPO / "packages" / "bellman" / "tests" / "tools"))
 import pytest
 
 import stage_ast
-from stage_ast import arvl, check, cntn, dom, one_minus, parsed, run_checks, sym
+from stage_ast import arvl, block, check, cntn, dom, one_minus, parsed, run_checks, sym
 from stage_types import (
-    Add, Annotation, Arrival, At, Block, Call, Closed, Constant, Continuation,
-    Control, Coordinate, CorrDef, Declaration, Declare, Decision, Div, Domain,
-    Equation, FiniteSet, FuncDef, In, Inequality, Infoset, Interval, Key,
-    KeyValue, Law, Le, Metadata, Mul, Named, Neg, Number, Open, Operator, Pow,
-    Range, Role, Select, Signature, Statement, Sub, Subject, Sym, Tag, Tuple,
-    Typer, Value, Var,
+    Add, Annotation, Arrival, At, Block, Call, Cartesian, Closed, Constant,
+    Continuation, Control, Coordinate, CorrDef, Declaration, Declare, Decision,
+    Div, Domain, Equation, FiniteSet, FuncDef, Grid, Handler, In, Inequality,
+    Infoset, Interval, Key, KeyValue, Keyword, Law, Le, Metadata, Method, Mul,
+    Name, Named, Neg, Number, Open, Operator, Points, Pow, Range, Role, Segment,
+    Select, Signature, Spaced, Statement, Sub, Subject, Sym, Tag, Term, Tuple,
+    Typer, Value, Var, Word,
 )
+from stage_types import Path as TermPath
 
 STAGES = pathlib.Path(__file__).resolve().parents[1] / "declaration" / "stages"
-METHODS = pathlib.Path(__file__).resolve().parents[1] / "declaration" / "methods"
 TENURE = parsed(STAGES / "tenure" / "tenure.bl")
 KEEPER = parsed(STAGES / "keeper_cons" / "keeper_cons.bl")
 ADJUSTER = parsed(STAGES / "adjuster_cons" / "adjuster_cons.bl")
-# the block files that hold the derivative lines of the value builders and the
-# endogenous grid lines of the two policy builders, each a metadata line and
-# its blocks (decisions MB-U2 and MB-U5)
-TENURE_MARGINALS = parsed(METHODS / "marginals_tenure.bl")
-KEEPER_MARGINALS = parsed(METHODS / "marginals_keeper_cons.bl")
-KEEPER_EGM = parsed(METHODS / "keeper_cons_egm.bl")
-ADJUSTER_MARGINALS = parsed(METHODS / "marginals_adjuster_cons.bl")
-ADJUSTER_EGM = parsed(METHODS / "adjuster_cons_egm.bl")
+# the additions beside the three stage files, each a metadata line, the
+# declarations of its settings, its typing lines and its blocks, whose lines
+# the union appends to the stage's blocks of the same id
+ADDITIONS = {key: parsed(STAGES / key / "methods.bl")
+             for key in ("tenure", "keeper_cons", "adjuster_cons")}
+ADJUSTER_METHOD = parsed(STAGES / "adjuster_cons" / "methods.adjuster_method.bl")
 
 
-def block_file(items, stage):
-    """The first item of a block file, the metadata line `@methods: <stage>`,
-    and the blocks after it, each a Block."""
+def addition(stage):
+    """The items of the addition of `stage`, whose first item is the metadata
+    line `@methods: <stage>`."""
+    items = ADDITIONS[stage].items
     check(items[0], Metadata("methods", stage), "items[0]")
-    assert all(type(item).__name__ == "Block" for item in items[1:]), items
-    return items[1:]
+    return items
 
 
 # --- spellings shared by the three files -------------------------------------
@@ -102,6 +103,65 @@ def sig(source, source_types, target, target_types):
 
 def header(block_id, signature):
     return Annotation([KeyValue("id", block_id), signature])
+
+
+# --- the typing entries of an addition ----------------------------------------
+
+def path(*names, at=None):
+    """The path of a typing entry's subject, `evaluate.method`; `at` refines
+    the first segment by the object it evaluates, `evaluate[V].method`."""
+    segments = [Segment(name=name, selectors=()) for name in names]
+    if at is not None:
+        segments[0] = Segment(name=names[0], selectors=(at,))
+    return TermPath(segments=tuple(segments))
+
+
+def typed(subject, classifier):
+    """A typing entry of a header or a group, `<path> : <method or grid>`."""
+    return Typer(Declaration(subject=subject, classifiers=(classifier,), value=None))
+
+
+def bound_to(subject, program):
+    """A handler binding, `<path> : "<program>"`."""
+    return Typer(Handler(subject=subject, program=program))
+
+
+def word(name, **keywords):
+    """A method word with its keyword arguments, each valued by a name."""
+    return Method(Word(name=name, arguments=tuple(
+        Keyword(key=key, value=Name(name=value)) for key, value in keywords.items())))
+
+
+def spaced(coordinate, lower, upper, count, spacing=None):
+    """A factor of a grid, a triple of declared settings, with an optional
+    spacing word."""
+    return Spaced(coordinate=coordinate, lower=Name(name=lower), upper=Name(name=upper),
+                  count=Name(name=count),
+                  spacing=None if spacing is None else Word(name=spacing, arguments=()))
+
+
+def cartesian(*factors):
+    return Grid(Cartesian(factors=tuple(factors)))
+
+
+def selection(subject, classifier):
+    """A typing line at file level, routed by its path to the node it names."""
+    return Declare(Declaration(subject=subject, classifiers=(classifier,), value=None), None)
+
+
+def binding(subject, program):
+    """A handler binding at file level."""
+    return Declare(Handler(subject=subject, program=program), None)
+
+
+def typing_lines(items):
+    """The typing lines of an addition, the Declare items whose subject is a
+    path, in order."""
+    return [item for item in items
+            if isinstance(item, Declare) and isinstance(item.declaration.subject, TermPath)]
+
+
+LINEAR = word("Linear", extrapolate="extrap_policy", clamp_factor="clamp_max_factor")
 
 
 def scalar_declarations(items, offset, expected):
@@ -232,7 +292,7 @@ def test_tenure_branching_transition():
 def test_tenure_branch_selection():
     # Each backward line selects from a tuple by the control: the value, in
     # the stage file, and the derivatives of the decision value in a_d and
-    # h_d, in the marginal block of marginals_tenure.bl, each a selection of
+    # h_d, in the addition's block cntn_to_dcsn, each a selection of
     # derivatives of the branch values with the derivative of the branch
     # transition as the factor. Tuple positions are in label order, keep
     # first.
@@ -249,16 +309,19 @@ def test_tenure_branch_selection():
                                    Key("d"))),
                    ident("choice_value"))])
     check(TENURE.items[13], want, "items[13]")
-    # The marginal block's header is the value builder's restricted to what
-    # its lines read: the two branch values and the control, and the value.
-    (marginal,) = block_file(TENURE_MARGINALS.items, "tenure")
+    # The addition's block of the same id carries no signature: its header
+    # types the representation of the value at the Evaluation, with its
+    # handler and its grid of assets and housing, and its two lines are
+    # appended to the value builder's body by the union.
+    marginal = block(addition("tenure"), "cntn_to_dcsn")
     want = Block(
-        header("dcsn_marginal", sig(
-            [coord("V_kp", At(Continuation())), coord("V_adj", At(Continuation())),
-             coord("d")],
-            [Infoset(Continuation())],
-            [coord("V")],
-            [Infoset(Decision())])),
+        Annotation([
+            KeyValue("id", "cntn_to_dcsn"),
+            typed(path("evaluate", "method", at=Key("V")), LINEAR),
+            bound_to(path("evaluate", "handler", at=Key("V")), "dcsmm:interp_as_scalar"),
+            typed(path("evaluate", "grid", at=Key("V")),
+                  cartesian(spaced("a_d", "a_min", "a_max", "n_a"),
+                            spaced("h_d", "h_min", "h_max", "n_h")))]),
         [Statement(Equation(derivative("a_d", sym("V")),
                             Select(Tuple([Mul(sym("R"), derivative("w_kp", cntn("V_kp"))),
                                           Mul(sym("R"), derivative("w_adj", cntn("V_adj")))]),
@@ -270,7 +333,7 @@ def test_tenure_branch_selection():
                                               derivative("w_adj", cntn("V_adj")))]),
                                    Key("d"))),
                    ident("marginal_housing"))])
-    check(marginal, want, "marginals_tenure.bl items[1]")
+    check(marginal, want, "tenure/methods.bl cntn_to_dcsn")
 
 
 def test_tenure_arrival_expectation():
@@ -426,35 +489,38 @@ def test_keeper_values():
                                 Mul(sym("β"), cntn("V")))),
                    ident("value"))])
     check(KEEPER.items[12], want, "items[12]")
-    # The marginal block of marginals_keeper_cons.bl: the derivative of the
-    # decision value in cash, the marginal utility of consumption; and its
-    # derivative in housing, the housing services of the period plus the
-    # discounted derivative of the continuation value in housing. Its header
-    # joins the builder's perches as the builder writes them, with no side
-    # word on the inputs.
-    (marginal,) = block_file(KEEPER_MARGINALS.items, "keeper_cons")
+    # The addition's block of the same id: the derivative of the decision
+    # value in cash, the marginal utility of consumption; and its derivative
+    # in housing, the housing services of the period plus the discounted
+    # derivative of the continuation value in housing. Its header types one
+    # representation of the value and both derivatives, with its handler and
+    # its grid of cash on hand and housing, and carries no signature.
+    marginal = block(addition("keeper_cons"), "cntn_to_dcsn")
     want = Block(
-        header("dcsn_marginal", sig(
-            [coord("V", At(Continuation())), coord("c")],
-            [],
-            [coord("V")],
-            [Infoset(Decision())])),
+        Annotation([
+            KeyValue("id", "cntn_to_dcsn"),
+            typed(path("evaluate", "method"), LINEAR),
+            bound_to(path("evaluate", "handler"), "dcsmm:interp_as"),
+            typed(path("evaluate", "grid"),
+                  cartesian(spaced("w_d", "a_min", "a_max", "n_a"),
+                            spaced("h_d", "h_min", "h_max", "n_h")))]),
         [Statement(Equation(derivative("w_d", sym("V")), Call("𝑢_c", [sym("c")])),
                    ident("marginal_cash")),
          Statement(Equation(derivative("h_d", sym("V")),
                             Add(Call("𝑢_h", [sym("h_d")]),
                                 Mul(sym("β"), derivative("h_nxt_kp", cntn("V"))))),
                    ident("marginal_housing"))])
-    check(marginal, want, "marginals_keeper_cons.bl items[1]")
+    check(marginal, want, "keeper_cons/methods.bl cntn_to_dcsn")
 
 
 def test_keeper_policy():
     # The stage file's policy block states the maximisation alone: it binds
-    # the control on its feasible set. The method block of keeper_cons_egm.bl
-    # holds the endogenous grid method: the inverse Euler line is an
-    # inequality, which defines candidate consumption as a correspondence; the
-    # second line inverts the budget; the third identifies the control with
-    # the candidate.
+    # the control on its feasible set. The addition's block of the same id
+    # types the endogenous grid method on the builder, with the routine's
+    # keyword arguments, its handler and its grid of savings, and holds the
+    # method's lines: the inverse Euler line is an inequality, which defines
+    # candidate consumption as a correspondence; the second line inverts the
+    # budget; the third identifies the control with the candidate.
     objective = Add(Call("𝑢", [sym("c"), sym("h_d")]),
                     Mul(sym("β"), cntn("V")))
     signature = sig(
@@ -470,9 +536,21 @@ def test_keeper_policy():
                                      [objective])),
                    ident("optimality"))])
     check(KEEPER.items[13], want, "items[13]")
-    (method,) = block_file(KEEPER_EGM.items, "keeper_cons")
+    method = block(addition("keeper_cons"), "policy")
     want = Block(
-        header("egm", signature),
+        Annotation([
+            KeyValue("id", "policy"),
+            typed(path("policy", "method"), word(
+                "egm", spacing="grid_phi", savings_floor="b",
+                upper_envelope="keeper_upper_envelope", jump_threshold="m_bar",
+                lookback="fues_lb", eps_d="fues_eps_d", eps_sep="fues_eps_sep",
+                eps_fwd_back="fues_eps_fwd_back", parallel_guard="fues_parallel_guard",
+                include_intersections="keeper_include_intersections",
+                no_double_jumps="keeper_no_double_jumps",
+                single_intersection="keeper_single_intersection",
+                disable_jump_checks="keeper_disable_jump_checks")),
+            bound_to(path("policy", "handler"), "fues-durables:make_keeper_ops"),
+            typed(path("policy", "grid"), cartesian(spaced("a_nxt_kp", "a_min", "a_max", "n_a")))]),
         [Statement(Inequality(cntn("c"), Le(),
                               Call("𝑢_c_inv",
                                    [Mul(sym("β"), derivative("a_nxt_kp", cntn("V")))])),
@@ -481,7 +559,7 @@ def test_keeper_policy():
                             Add(sym("a_nxt_kp"), cntn("c"))),
                    ident("endoggrid")),
          Statement(Equation(sym("c"), cntn("c")), ident("cons_choice"))])
-    check(method, want, "keeper_cons_egm.bl items[1]")
+    check(method, want, "keeper_cons/methods.bl policy")
 
 
 # --- adjuster_cons.bl --------------------------------------------------------
@@ -567,7 +645,7 @@ def test_adjuster_transitions():
 
 def test_adjuster_values():
     # Utility is over consumption and the new house. The one derivative the
-    # marginal block of marginals_adjuster_cons.bl states is that of the
+    # addition's block cntn_to_dcsn states is that of the
     # decision value in cash on hand m, which the tenure stage reads on this
     # branch, its total wealth `w_adj` joined to `m`.
     want = Block(
@@ -582,25 +660,32 @@ def test_adjuster_values():
                                 Mul(sym("β"), cntn("V")))),
                    ident("value"))])
     check(ADJUSTER.items[14], want, "items[14]")
-    (marginal,) = block_file(ADJUSTER_MARGINALS.items, "adjuster_cons")
+    # The addition's block of the same id types the value and its stated
+    # derivative at their own Evaluations, each with the handler and the grid
+    # of total wealth, and appends the envelope line.
+    marginal = block(addition("adjuster_cons"), "cntn_to_dcsn")
+    value_at, marginal_at = Key("V"), Term(derivative("m", sym("V")))
     want = Block(
-        header("dcsn_marginal", sig(
-            [coord("c")],
-            [Infoset(Continuation())],
-            [coord("V")],
-            [Infoset(Decision())])),
+        Annotation([
+            KeyValue("id", "cntn_to_dcsn"),
+            typed(path("evaluate", "method", at=value_at), LINEAR),
+            bound_to(path("evaluate", "handler", at=value_at), "dcsmm:interp_as_3"),
+            typed(path("evaluate", "grid", at=value_at), cartesian(spaced("m", "w_min", "w_max", "n_w"))),
+            typed(path("evaluate", "method", at=marginal_at), LINEAR),
+            bound_to(path("evaluate", "handler", at=marginal_at), "dcsmm:interp_as_3"),
+            typed(path("evaluate", "grid", at=marginal_at), cartesian(spaced("m", "w_min", "w_max", "n_w")))]),
         [Statement(Equation(derivative("m", sym("V")), Call("𝑢_c", [sym("c")])),
                    ident("marginal_wealth"))])
-    check(marginal, want, "marginals_adjuster_cons.bl items[1]")
+    check(marginal, want, "adjuster_cons/methods.bl cntn_to_dcsn")
 
 
 def test_adjuster_policy():
     # The stage file's policy block states the joint maximisation alone: a
     # tuple on the left, and two binders each carrying a feasible set, the
-    # second reading the first binder. The method block of
-    # adjuster_cons_egm.bl holds the inverse Euler inequality, the inverted
-    # budget, and the two first-order conditions as one solution statement in
-    # two unknowns.
+    # second reading the first binder. The addition's block of the same id
+    # types the method, its handler and its grid by the relative subjects, and
+    # holds the inverse Euler inequality, the inverted budget, and the two
+    # first-order conditions as one solution statement in two unknowns.
     objective = Add(Call("𝑢", [sym("c"), sym("h_choice")]),
                     Mul(sym("β"), cntn("V")))
     housing_residual = Sub(
@@ -624,9 +709,24 @@ def test_adjuster_policy():
                                      [objective])),
                    ident("optimality"))])
     check(ADJUSTER.items[15], want, "items[15]")
-    (method,) = block_file(ADJUSTER_EGM.items, "adjuster_cons")
+    method = block(addition("adjuster_cons"), "policy")
     want = Block(
-        header("egm", signature),
+        Annotation([
+            KeyValue("id", "policy"),
+            typed(path("method"), word(
+                "egm", spacing="grid_phi", savings_floor="b",
+                roots_per_housing_point="egm_n", root_scan_step="root_eps",
+                upper_envelope="adj_upper_envelope", jump_threshold="m_bar",
+                lookback="fues_lb", eps_d="fues_eps_d", eps_sep="fues_eps_sep",
+                eps_fwd_back="fues_eps_fwd_back", parallel_guard="fues_parallel_guard",
+                include_intersections="adj_include_intersections",
+                no_double_jumps="adj_no_double_jumps",
+                single_intersection="adj_single_intersection",
+                disable_jump_checks="adj_disable_jump_checks",
+                correct_jumps="correct_jumps", search_sections="n_sections")),
+            bound_to(path("handler"), "fues-durables:make_adjuster_ops"),
+            typed(path("grid"), cartesian(spaced("a_nxt_adj", "a_min", "a_max", "n_a"),
+                                          spaced("h_nxt_adj", "h_min", "h_max", "n_h")))]),
         [Statement(Inequality(cntn("c"), Le(),
                               Call("𝑢_c_inv",
                                    [Mul(sym("β"), derivative("a_nxt_adj", cntn("V")))])),
@@ -641,8 +741,83 @@ def test_adjuster_policy():
                                      [Sub(sym("c"), cntn("c")),
                                       housing_residual])),
                    ident("choice"))])
-    check(method, want, "adjuster_cons_egm.bl items[1]")
+    check(method, want, "adjuster_cons/methods.bl policy")
+
+
+# --- the additions as files --------------------------------------------------
+
+def test_addition_file_shapes():
+    # Each addition is the metadata line, the declarations of its settings,
+    # then its typing lines and its blocks: tenure declares fourteen settings
+    # and writes two typing lines before its one block and four after it;
+    # the keeper declares twenty-one settings and the adjuster twenty-eight,
+    # each followed by its two blocks.
+    assert [type(item).__name__ for item in addition("tenure")] == (
+        ["Metadata"] + ["Declare"] * 16 + ["Block"] + ["Declare"] * 4)
+    assert [type(item).__name__ for item in addition("keeper_cons")] == (
+        ["Metadata"] + ["Declare"] * 21 + ["Block"] * 2)
+    assert [type(item).__name__ for item in addition("adjuster_cons")] == (
+        ["Metadata"] + ["Declare"] * 28 + ["Block"] * 2)
+    for key, items in ADDITIONS.items():
+        assert stage_ast.unlowered_parse_nodes(items) == [], key
+
+
+def test_tenure_addition_declares_its_settings():
+    # A setting is declared as a parameter is, with its set and a
+    # description: the rule at a tie in the control's own set of labels, a
+    # count in ℕ, a bound in the set of its coordinate, a flag in {0, 1} and
+    # a probability floor in the open unit interval.
+    scalar_declarations(addition("tenure"), 1, [
+        ("tie_break", FiniteSet(["keep", "adjust"]),
+         "branch chosen when the values of keeping and adjusting are equal"),
+        ("n_a", Named("ℕ"), "number of points of the asset grid"),
+        ("a_min", Named("ℝ₊"), "lower bound of the asset grid"),
+        ("a_max", Named("ℝ₊"), "upper bound of the asset grid"),
+        ("n_h", Named("ℕ"), "number of points of the housing grid"),
+        ("h_min", Named("ℝ₊₊"), "lower bound of the housing grid"),
+        ("h_max", Named("ℝ₊₊"), "upper bound of the housing grid"),
+        ("extrap_policy", Points([Number(0), Number(1)], None),
+         "zero clamps a tabulated function at the boundary, one extrapolates linearly"),
+        ("clamp_max_factor", Named("ℝ₊₊"),
+         "bound on a policy read above the grid, as a factor of the grid's upper end"),
+        ("N_wage", Named("ℕ"), "number of states of Tauchen's chain for the income state"),
+        ("tauchen_n_std", Named("ℝ₊₊"),
+         "number of unconditional standard deviations the chain spans"),
+        ("tauchen_min_prob", Interval(Range(Open(), Number(0), Number(1), Open())),
+         "floor on the transition probabilities of the chain"),
+        ("n_sim", Named("ℕ"), "number of simulated households"),
+        ("sim_seed", Named("ℕ"), "seed of the simulation"),
+    ])
+
+
+def test_tenure_addition_types_the_builders_at_file_level():
+    # The policy builder, the arrival value builder's expectation and the
+    # arrival builder gain no line, so their methods and handlers are typing
+    # lines at file level, each routed by its path: the discrete maximum with
+    # the rule at a tie, Tauchen's chain at the expectation named through the
+    # line `value`, and the Monte Carlo draw on the arrival edge.
+    check(typing_lines(addition("tenure")), [
+        selection(path("policy", "method"), word("max", tie_break="tie_break")),
+        binding(path("policy", "handler"), "fues-durables:make_tenure_ops"),
+        selection(path("dcsn_to_arvl", "value", "E_ε", "method"),
+                  word("tauchen", n_income_states="N_wage", n_std="tauchen_n_std",
+                       min_prob="tauchen_min_prob")),
+        binding(path("dcsn_to_arvl", "value", "E_ε", "handler"), "fues-durables:make_conditioners"),
+        selection(path("arvl_to_dcsn", "method"), word("monte_carlo", n_paths="n_sim", seed="sim_seed")),
+        binding(path("arvl_to_dcsn", "handler"), "fues-durables:make_tenure_forward"),
+    ], "tenure/methods.bl typing lines")
+
+
+def test_adjuster_second_addition_types_the_nested_method():
+    # The second addition of the adjuster, named by no recipe of the folder,
+    # is the metadata line and two typing lines: value function iteration on
+    # the decision value builder and the routine that realizes it.
+    check(ADJUSTER_METHOD.items[0], Metadata("methods", "adjuster_cons"), "items[0]")
+    check(ADJUSTER_METHOD.items[1:], [
+        selection(path("cntn_to_dcsn", "method"), word("vfi")),
+        binding(path("cntn_to_dcsn", "handler"), "fues-durables:make_adjuster_vfi"),
+    ], "methods.adjuster_method.bl items[1:]")
 
 
 if __name__ == "__main__":
-    sys.exit(run_checks(globals(), "on the three durables stages and their block files"))
+    sys.exit(run_checks(globals(), "on the three durables stages and their additions"))

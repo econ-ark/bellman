@@ -1,0 +1,9 @@
+@methods: disc
+# The methods of the discount stage as an addition to disc.bl: the forward
+# builder dcsn_to_cntn is deterministic, a representation of a forward
+# builder's measure without a grid. The entry of the earlier YAML file with on
+# alone, on cntn_to_dcsn, bound nothing and is written as nothing (writer's
+# sheet §5). No block gains a line, so the selection is a file-level line
+# routed by its path.
+
+dcsn_to_cntn.method : !deterministic

@@ -1,0 +1,42 @@
+!trellis
+name: retirement_choice_pension
+# periods[0] is the terminal period and periods[h] lies h periods before it,
+# fifteen periods as the pension application has. One period: the worker
+# saves, then survives to the retirement choice with probability s, then the
+# chosen branch's saving stage follows next period. The saving stages and the
+# terminal stage are the pension application's worker_saving.bl,
+# retiree_saving.bl and terminal.bl, bases that read the pension at their
+# arrival, each with the addition of its case study; the choice stage is
+# choice.bl unioned with pension_choice.bl. The worker's post-states (y_f,
+# y_p) arrive at the choice's new arrival perch (a, p), which the addition
+# adds (F43). The terminal period is written out, since its connector names
+# the terminal stage: the six continuation fields that leave the period, both
+# branches of the choice and the retiree's own post-states, go to the
+# terminal stage's arrival fields.
+periods:
+  - stages:
+      worker_saving:  {stage: ../../../../../../applications/pension-retirement/declaration/stages/worker_saving/worker_saving.bl,
+                       methods: ../../../../../../applications/pension-retirement/declaration/stages/worker_saving/methods.bl}
+      ret_choice:     {stage: stage/choice.bl, methods: [additions/pension_choice.bl]}
+      retiree_saving: {stage: ../../../../../../applications/pension-retirement/declaration/stages/retiree_saving/retiree_saving.bl,
+                       methods: ../../../../../../applications/pension-retirement/declaration/stages/retiree_saving/methods.bl}
+      terminal:       {stage: ../../../../../../applications/pension-retirement/declaration/stages/terminal/terminal.bl,
+                       methods: ../../../../../../applications/pension-retirement/declaration/stages/terminal/methods.bl}
+    connectors:
+      - {a_w: y_f_T, p_w: y_p_T, a_r: y_f_T, p_r: y_p_T, y_f_ret: y_f_T, y_p_ret: y_p_T}
+      - {y_f: a, y_p: p}
+  - stages:
+      worker_saving:  {stage: ../../../../../../applications/pension-retirement/declaration/stages/worker_saving/worker_saving.bl,
+                       methods: ../../../../../../applications/pension-retirement/declaration/stages/worker_saving/methods.bl}
+      ret_choice:     {stage: stage/choice.bl, methods: [additions/pension_choice.bl]}
+      retiree_saving: {stage: ../../../../../../applications/pension-retirement/declaration/stages/retiree_saving/retiree_saving.bl,
+                       methods: ../../../../../../applications/pension-retirement/declaration/stages/retiree_saving/methods.bl}
+    connectors:
+      - {y_f: a, y_p: p}
+    repeat: 14
+# One mapping stands for every adjacent pair: the work branch to the next
+# period's worker stage, the retire branch and the retiree's post-states to the
+# next period's retiree stage, so no path returns a retiree to work; into the
+# terminal period the mapping reaches the two saving stages alone.
+inter_connectors:
+  - {a_w: y_f_w, p_w: y_p_w, a_r: y_f_r, p_r: y_p_r, y_f_ret: y_f_r, y_p_ret: y_p_r}

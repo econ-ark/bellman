@@ -153,13 +153,13 @@ NEW_TRELLIS_EDITED = (
 NOPORT_FILES = (
     "declaration/stages/noport/noport.bl",
     "declaration/settings/noport.yml",
-    "declaration/stages/noport/methods.yml",
+    "declaration/stages/noport/methods.bl",
 )
 # the status lines of item 5's three gestures that write (brief §5; ruling
 # J-P21)
 NOPORT_NOTE = (
     "period.yml, stages: noport written, periods 0–5; "
-    "new: stages/noport/noport.bl, settings/noport.yml, stages/noport/methods.yml"
+    "new: stages/noport/noport.bl, settings/noport.yml, stages/noport/methods.bl"
 )
 YOUNG_NOTE = (
     "trellis.yml, periods: {template: period.young.yml, repeat: 1} written, periods 6; "
@@ -360,7 +360,7 @@ def test_item_1_a_drag_within_a_period_types_the_flat_connector_into_the_entry_t
     focus in the region, takes the connector out, `- {}` left, the status
     line names the removal, the trellis is drawn with the two fields
     unjoined again in every period and is not refused, the status line
-    counts the unjoined fields by the checklist's rule, `2 unjoined fields`,
+    counts the unjoined fields by the checklist's rule, `2 unjoined internal entry fields`,
     the arrival fields m of cons and k of port outside the earliest period,
     the inter-period mapping standing emptied (unit L, Task 21), and the
     open file shows the line selected; the editor's undo types the
@@ -582,7 +582,7 @@ def test_item_1_a_drag_within_a_period_types_the_flat_connector_into_the_entry_t
         assert error_lines(tab) == [] and tab.locator(".bl-view-host.bl-stale").count() == 0
         assert trellis.unjoined_count(shown) == 2
         wait_until(
-            lambda: " · 2 unjoined fields" in (trellis_settled(tab, PORT_CONS) or ""),
+            lambda: " · 2 unjoined internal entry fields" in (trellis_settled(tab, PORT_CONS) or ""),
             10.0,
             "the status line's count of unjoined fields",
         )
@@ -1160,7 +1160,7 @@ def test_item_4_two_continuation_states_show_two_unjoined_ports_each_dragged_to_
         choose_restriction(tab, "all")
         choose_view(tab, None, "forward")
         wait_until(
-            lambda: f" · {PENSION_FIELDS_UNJOINED} unjoined fields"
+            lambda: f" · {PENSION_FIELDS_UNJOINED} unjoined internal entry fields"
             in (trellis_settled(tab, RECIPE_FILE) or ""),
             60.0,
             "the whole trellis's unjoined fields",
@@ -1194,7 +1194,7 @@ def test_item_4_two_continuation_states_show_two_unjoined_ports_each_dragged_to_
             assert line_text(tab, mapping_line) == mapping
             count -= 1
             wait_until(
-                lambda count=count, ends={source, target}: f" · {count} unjoined fields"
+                lambda count=count, ends={source, target}: f" · {count} unjoined internal entry fields"
                 in (trellis_settled(tab, RECIPE_FILE) or "")
                 and not ends & set(unjoined_field_ids(tab)),
                 60.0,

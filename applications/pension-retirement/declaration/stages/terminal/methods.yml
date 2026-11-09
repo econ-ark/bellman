@@ -1,8 +1,0 @@
-stage: terminal
-
-methods:
-  # The derivatives of the terminal value, zero, are stated by the marginal
-  # block of marginals_terminal.bl on the arrival value builder.
-  - on: dcsn_to_arvl
-    method: !marginals
-    block: ../../methods/marginals_terminal.bl

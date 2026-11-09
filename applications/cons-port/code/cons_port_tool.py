@@ -1,15 +1,17 @@
-"""The numerical tool of the portfolio-consumption model, the four stage files of applications/portfolio-choice/.
+"""The numerical tool of the portfolio-consumption model, the four stage files of applications/cons-port/.
 
 This module belongs to that application and not to the package: it realizes the stage occurrences of a
 specified trellis and solves the trellis period by period. Every equation it evaluates is a kernel the package
-compiles from a stage file, taken from the record a builder's `kernels()` answers and called with the parameter
-values the record holds; the endogenous-grid operator is one call of asva's `egm` on two such records, the
-decision builder's without the piece of the stated derivative, which the tool evaluates itself, and no
-operator reads the stage once it is made. Every grid, node count and candidate count is a setting the stage occurrence
-holds or an option its methods file names; the distribution of the shocks is read from the stage's `~`
-declaration under its calibration. Among realizations it chooses only by the handler a methods file names, and it refuses
-a handler it does not realize. It replaces ffp_utils.py for the notebooks, which stays as a recorded source of
-the fixed reference.
+compiles from a stage file and the methods file added to it, taken from the record a builder's `kernels()`
+answers and called with the parameter values the record holds; the endogenous-grid operator is one call of
+asva's `egm` on two such records, the decision builder's without the piece of the stated derivative, which the
+tool evaluates itself, and no operator reads the stage once it is made. Every grid is the grid component of a
+place of the stage, `!Cartesian(a=(a_min, a_max, n_a, !expmult))`, its bounds and counts settings the stage
+occurrence holds and its spacing the word of its factor; every node count is a keyword argument of the
+quadrature's method word; the distribution of the shocks is read from the stage's `~` declaration under its
+calibration. Among realizations it chooses only by the handler a methods file names, and it refuses a handler
+it does not realize. It replaces ffp_utils.py for the notebooks, which stays as a recorded source of the fixed
+reference.
 
 `hermite_nodes` and `normal_nodes` follow `hermgauss` and `gauss_hermite_nodes` of dolo 0.4.9
 (dolo/numeric/discretization/quadrature.py, ported there from the CompEcon toolbox of Miranda and Fackler),
@@ -28,7 +30,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from bellman.period import backward_order, period_joins
-from bellman.stage.method_table import grid_kind
+from bellman.syntax import terms as T
+from bellman.syntax.source import to_source
 from bellman.trellis import inter_period_joins
 from bellman.distributions.families import numeric_value
 from bellman.distributions.edges import distribution_declarations
@@ -76,71 +79,108 @@ def expmult_grid(maximum, size, nestings=20):
     return points
 
 
+# the place of the representation of the decision value, the Evaluation of the backward decision builder
+EVALUATION = "cntn_to_dcsn.evaluate"
+# the places of a method that solves a stage's policy: a solution method on the policy builder, `!egm` or
+# `!time_iteration`, and `!vfi` on the backward decision builder
+POLICY_PLACES = ("policy", "cntn_to_dcsn")
+# the ids of the line that states the derivative of the decision value: `envelope` in the methods files of
+# applications/cons-port, `marginal` in the stage files of applications/portfolio-choice
+MARGINAL_LINES = ("envelope", "marginal")
+
+
 def method_at(stage, place):
-    """The method bound at `place` of the stage occurrence, a place as its methods table prints it."""
+    """The components bound at `place` of the stage occurrence, a place as its methods table prints it: the
+    method word with its keyword arguments, the grid and the handler."""
     held = {str(key): method for key, method in stage.methods.items()}
     if place not in held:
         raise ValueError(f"stage {stage.name!r} binds no method at {place!r}; its methods stand at {', '.join(sorted(held))}")
     return held[place]
 
 
-def representation_at(stage, place):
-    """The representation bound at `place`: the method held under the place with its kind `representation`,
-    where a method of another kind, the marginal block of `!marginals`, stands at the same place (a box holds one
-    binding of each kind, decision SD-15 of specification 0.6), and the method at `place` otherwise."""
-    for key, method in stage.methods.items():
-        if isinstance(key, tuple) and (str(key[0]), key[1]) == (place, "representation"):
-            return method
-    return method_at(stage, place)
+def expectation_place(stage):
+    """The place of the expectation of the backward decision builder, `cntn_to_dcsn.E_<shocks>`, the one
+    operator of that block whose head begins with `E_`; None where the stage binds none."""
+    found = [str(key) for key in stage.methods
+             if str(key).startswith("cntn_to_dcsn.") and str(key).rpartition(".")[2].startswith("E_")]
+    if len(found) > 1:
+        raise ValueError(f"stage {stage.name!r} binds a method at {len(found)} expectations of cntn_to_dcsn, "
+                         f"{', '.join(sorted(found))}; this tool reads one")
+    return found[0] if found else None
 
 
-def setting(stage, name):
-    """The number a setting name stands for in the stage occurrence's settings; a number stands for itself."""
-    return name if isinstance(name, (int, float)) else stage.bindings.settings[name]
+def setting(stage, argument):
+    """The number an argument of a grid factor or of a method word stands for: a literal is its own value, and
+    a name is read in the stage occurrence's settings. Any other argument, a quoted string, a tuple or a nested
+    word, is refused by name."""
+    if isinstance(argument, T.Literal):
+        return argument.value
+    if isinstance(argument, T.Name):
+        return stage.bindings.settings[argument.name]
+    written = to_source(argument) if isinstance(argument, T.argument) else repr(argument)
+    raise ValueError(f"stage {stage.name!r}: the argument {written} is no number and no setting's name; this tool "
+                     "reads a literal or the name of a setting")
 
 
-def spaced(stage, low, high, count):
-    """`count` points from `low` to `high` with the spacing the stage occurrence's setting `grid_spacing` names:
-    `even`, the default where the settings hold none, is `numpy.linspace`; `expmult`, the name the reference's
-    settings file wrote, is `low` plus the multi-exponential grid of `expmult_grid` up to `high − low`, dense
-    near `low`. Any other name is refused."""
-    spacing = stage.bindings.settings.get("grid_spacing", "even")
-    if spacing == "even":
+def keyword_arguments(method):
+    """The keyword arguments of a place's method word, `{key: argument}`, as `!gauss_hermite(n_Ψ=n_Ψ_nodes)`
+    writes them."""
+    return {keyword.key: keyword.value for keyword in method.method.arguments}
+
+
+def spaced(spacing, low, high, count):
+    """`count` points from `low` to `high` with the spacing the grid factor's word names: no word is
+    `numpy.linspace`, and `!expmult`, the word the methods files write where the fixed reference's settings
+    wrote `grid_spacing: expmult`, is `low` plus the multi-exponential grid of `expmult_grid` up to
+    `high − low`, dense near `low`. Any other word is refused."""
+    if spacing is None:
         return np.linspace(low, high, count)
-    if spacing == "expmult":
+    if spacing.name == "expmult" and not spacing.arguments:
         return low + expmult_grid(high - low, count)
-    raise ValueError(f"stage {stage.name!r}: the setting grid_spacing is {spacing!r}; this tool reads 'even' and 'expmult'")
+    raise ValueError(f"the spacing word {to_source(T.Method(spacing))} is not one this tool reads; it reads no "
+                     "word, evenly spaced points, and !expmult without arguments")
+
+
+def cartesian_points(stage, method):
+    """The points of the one-dimensional grid of a bound place, its grid component `!Cartesian(a=(a_min,
+    a_max, n_a, !expmult))`: the bounds and the count of its one spaced factor, read against the stage
+    occurrence's settings and spaced as the factor's word says (`spaced`). A place that writes no grid, a grid
+    of several factors and a factor that is no spaced triple are refused."""
+    grid = method.grid
+    if grid is None or len(grid.factors) != 1 or not isinstance(grid.factors[0], T.Spaced):
+        raise ValueError(f"stage {stage.name!r}: the method {method.word} names the grid "
+                         f"{None if grid is None else to_source(T.Grid(grid))!s}; this tool reads one spaced factor, "
+                         "`!Cartesian(a=(a_min, a_max, n_a))`")
+    factor = grid.factors[0]
+    low, high, order = (setting(stage, part) for part in (factor.lower, factor.upper, factor.count))
+    try:
+        return spaced(factor.spacing, float(low), float(high), int(order))
+    except ValueError as refusal:
+        raise ValueError(f"stage {stage.name!r}, the grid of {method.word}: {refusal}") from None
+
+
+def feasible_count(stage, method):
+    """The count of the one feasible factor of a bound place's grid, `!Cartesian(c=(Γ, n_c))`: the number
+    of candidates a search compares on the control's feasible set."""
+    grid = method.grid
+    if grid is None or len(grid.factors) != 1 or not isinstance(grid.factors[0], T.Feasible):
+        raise ValueError(f"stage {stage.name!r}: the method {method.word} names the grid "
+                         f"{None if grid is None else to_source(T.Grid(grid))!s}; this tool reads one feasible factor, "
+                         "`!Cartesian(c=(Γ, n_c))`")
+    return int(setting(stage, grid.factors[0].count))
 
 
 def evaluation_grid(stage):
     """The grid on which the stage occurrence represents its value: the grid of the representation at
-    `cntn_to_dcsn:Evaluation` (`cartesian_points`)."""
-    return cartesian_points(stage, representation_at(stage, "cntn_to_dcsn:Evaluation"))
+    `cntn_to_dcsn.evaluate` (`cartesian_points`)."""
+    return cartesian_points(stage, method_at(stage, EVALUATION))
 
 
 def savings_grid(stage):
-    """The exogenous grid of savings of the endogenous-grid method: the grid of the `!egm` entry on the policy
-    builder (`cartesian_points`), `orders: {a: n_a}` and `bounds: {a: [a_min, a_max]}` in the consumption stage's
-    methods file."""
+    """The exogenous grid of savings of the endogenous-grid method: the grid of `!egm` on the policy builder
+    (`cartesian_points`), `!Cartesian(a=(a_min, a_max, n_a, !expmult))` in the consumption stage's methods
+    file."""
     return cartesian_points(stage, method_at(stage, "policy"))
-
-
-def cartesian_points(stage, method):
-    """The points of the one-dimensional grid a bound method names by its setting `grid: !Cartesian`: the order and
-    the bounds that stand beside `grid` as settings of the entry, read against the stage occurrence's settings and
-    spaced as the setting `grid_spacing` says. A grid of another kind is refused, since the tool reads a Cartesian
-    grid alone, and so is a grid that writes `spacing` or `nodes` beside it, which the tool does not read."""
-    options = method.settings
-    if grid_kind(options.get("grid")) != "Cartesian":
-        raise ValueError(f"stage {stage.name!r}: the method !{method.tag} names the grid {options.get('grid')!r}; this "
-                         "tool reads the grid `grid: !Cartesian` with `orders` and `bounds` beside it")
-    unread = [field for field in ("spacing", "nodes") if field in options]
-    if unread:
-        raise ValueError(f"stage {stage.name!r}: the method !{method.tag} writes {' and '.join(unread)} beside its "
-                         "grid; this tool spaces the points by the setting grid_spacing and reads neither")
-    ((coordinate, order),) = options["orders"].items()
-    low, high = options["bounds"][coordinate]
-    return spaced(stage, float(setting(stage, low)), float(setting(stage, high)), int(setting(stage, order)))
 
 
 def lognormal_law(stage):
@@ -223,13 +263,18 @@ def _realized(table, handler, stage, place):
     return table[handler]
 
 
-def expectation_rule(stage, place):
-    """The nodes of the shocks, by name, and their weights: the rule the handler at `place` names, with the node
-    counts of its option `n_nodes`, on the distribution the stage declares."""
+def expectation_rule(stage):
+    """The nodes of the shocks, by name, and their weights: the rule the handler at the expectation of the
+    backward decision builder names, with the node count of each shock, the keyword argument `n_<shock>` of
+    the method word, on the distribution the stage declares."""
+    place = expectation_place(stage)
+    if place is None:
+        raise ValueError(f"stage {stage.name!r} binds no method at an expectation of cntn_to_dcsn")
     method = method_at(stage, place)
     rule = _realized(QUADRATURE, method.handler, stage, place)
     shocks, mean, covariance = lognormal_law(stage)
-    log_nodes, weights = rule(mean, covariance, [int(setting(stage, name)) for name in method.settings["n_nodes"]])
+    counts = keyword_arguments(method)
+    log_nodes, weights = rule(mean, covariance, [int(setting(stage, counts[f"n_{shock}"])) for shock in shocks])
     return {shock: np.exp(log_nodes[:, j]) for j, shock in enumerate(shocks)}, weights
 
 
@@ -305,12 +350,12 @@ def without_piece(record, key):
 def egm(stage):
     """The endogenous-grid operator of the consumption stage: one call of asva's `egm` on the kernels of the
     policy builder and of the backward decision builder, `stage.builder.policy.kernels()` and
-    `stage.dcsn.builder.bwd.kernels()`, with the savings grid and the evaluation grid the settings give. On the
-    savings grid the inverse marginal utility of the continuation's marginal value (the line InvEuler) gives
-    consumption and the line endoggrid, the line grid of a method block, the resources it was chosen at; consumption is interpolated onto the
-    evaluation grid and held in (1e-10, m_d − 1e-10); savings follow from the law of motion, held to the savings
-    grid; the value from the aggregation and the marginal value from the piece of the stated derivative. The
-    operator reads no stage."""
+    `stage.dcsn.builder.bwd.kernels()`, with the savings grid of `!egm` and the evaluation grid of the
+    representation. On the savings grid the inverse marginal utility of the continuation's marginal value (the
+    line InvEuler) gives consumption and the line grid the resources it was chosen at; consumption is
+    interpolated onto the evaluation grid and held in (1e-10, m_d − 1e-10); savings follow from the law of
+    motion, held to the savings grid; the value from the aggregation and the marginal value from the piece of
+    the stated derivative. The operator reads no stage."""
     resources = evaluation_grid(stage)
     decision = stage.dcsn.builder.bwd.kernels()
     # D4 of AMD-MB-001: the stated derivative of the value stands at the decision builder's Evaluation, and its
@@ -331,10 +376,11 @@ def egm(stage):
 
 def consumption_search(stage):
     """A grid search on the consumption stage: at each point of the evaluation grid the aggregation at the law
-    of motion over `n_c` candidates from 1e-6 to m_d − 1e-6; the first largest is chosen; the marginal value is
-    the difference quotient of the values. The aggregation's value is its first output where it also writes the
-    marginal value, and its one output where no marginal line is bound."""
-    resources, count = evaluation_grid(stage), int(stage.bindings.settings["n_c"])
+    of motion over the candidates the feasible factor of `!vfi` counts, `!Cartesian(c=(Γ, n_c))`, from 1e-6 to
+    m_d − 1e-6; the first largest is chosen; the marginal value is the difference quotient of the values. The
+    aggregation's value is its first output where it also writes the marginal value, and its one output where
+    no derivative line is stated."""
+    resources, count = evaluation_grid(stage), feasible_count(stage, method_at(stage, "cntn_to_dcsn"))
     decision = stage.dcsn.builder.bwd.kernels()
     law, aggregate = piece_function(decision, "Pullback"), piece_function(decision, "Aggregation")
     # whether the aggregation writes the marginal value beside the value, as its piece's outputs name them
@@ -355,11 +401,11 @@ def consumption_search(stage):
 
 def share_objective(stage):
     """The objective of the share choice, the line `objective` of the portfolio stage's policy block (port.bl
-    line 36), as a function of a continuation value, a point k_d of the evaluation grid and an array of shares:
+    line 25), as a function of a continuation value, a point k_d of the evaluation grid and an array of shares:
     at each share, the continuation value at the law of motion, held to the grid, integrated by the rule at
-    `cntn_to_dcsn.value:Expectation:1`. `share_search` chooses the first share at which it is largest."""
+    the expectation of `cntn_to_dcsn`. `share_search` chooses the first share at which it is largest."""
     capital = evaluation_grid(stage)
-    nodes, weights = expectation_rule(stage, "cntn_to_dcsn.value:Expectation:1")
+    nodes, weights = expectation_rule(stage)
     Ψ, θ = nodes["Ψ"], nodes["θ"]
     law = piece_function(stage.dcsn.builder.bwd.kernels(), "Pullback")
 
@@ -371,19 +417,19 @@ def share_objective(stage):
 
 def share_search(stage):
     """A grid search over the risky share: at each point k_d of the evaluation grid, the objective of
-    `share_objective` at `n_ς` shares evenly spaced on Γ_ς(k_d) = [0, 1] (port.bl line 10); the first share with
-    the largest expectation is chosen. The marginal value follows the handler of the method that solves the
-    policy, `!vfi` at `cntn_to_dcsn` or the method of a method block at `policy`: `cons-port:share_search`
-    integrates the line marginal at the chosen share, the line envelope of a marginal block,
+    `share_objective` at the shares the feasible factor of the policy builder's grid counts,
+    `!Cartesian(ς=(Γ_ς, n_ς))`, evenly spaced on Γ_ς(k_d) = [0, 1] (port.bl line 10); the first share with the
+    largest expectation is chosen. The marginal value follows the handler of the method that solves the
+    policy: `cons-port:share_search` integrates the envelope line at the chosen share,
     `cons-port:share_search_reference` takes the difference quotient of the values, as the fixed reference did."""
     capital = evaluation_grid(stage)
-    shares = np.linspace(0.0, 1.0, int(stage.bindings.settings["n_ς"]))
+    place, method = policy_method(stage)
+    shares = np.linspace(0.0, 1.0, feasible_count(stage, method))
     objective = share_objective(stage)
-    nodes, weights = expectation_rule(stage, "cntn_to_dcsn.value:Expectation:1")
+    nodes, weights = expectation_rule(stage)
     Ψ, θ = nodes["Ψ"], nodes["θ"]
     decision = stage.dcsn.builder.bwd.kernels()
     law, law_names = piece_function(decision, "Pullback"), piece_arguments(decision, "Pullback")
-    place, method = policy_method(stage)
     by_the_line = _realized({"cons-port:share_search": True, "cons-port:share_search_reference": False},
                             method.handler, stage, place)
     # D4 of AMD-MB-001: the stated derivative's kernel is the piece `<line id>:Derivative:1` of the decision
@@ -412,10 +458,10 @@ def share_search(stage):
 
 def expectation(stage):
     """A stage with an expectation and no choice (noport): at each point k_d of the evaluation grid the
-    continuation value and the line marginal are integrated at the law of motion, the resources held to the
-    continuation's grid, by the rule at `cntn_to_dcsn.value:Expectation:1`."""
+    continuation value and the envelope line are integrated at the law of motion, the resources held to the
+    continuation's grid, by the rule at the expectation of `cntn_to_dcsn`."""
     capital = evaluation_grid(stage)
-    nodes, weights = expectation_rule(stage, "cntn_to_dcsn.value:Expectation:1")
+    nodes, weights = expectation_rule(stage)
     θ = nodes["θ"]
     decision = stage.dcsn.builder.bwd.kernels()
     law, law_names = piece_function(decision, "Pullback"), piece_arguments(decision, "Pullback")
@@ -449,22 +495,14 @@ def aggregation(stage):
     return operator
 
 
-# the operator each handler at a policy block names
+# the operator each handler at a policy place names
 POLICY = {"cons-port:egm": egm, "cons-port:consumption_search": consumption_search,
           "cons-port:share_search": share_search, "cons-port:share_search_reference": share_search}
 
-# the places of a method that solves a stage's policy: `!egm` at the Evaluation of a policy block that writes the
-# grid line, `!vfi` on the backward decision builder, and the method of a method block on the policy builder
-POLICY_PLACES = ("policy:Evaluation", "cntn_to_dcsn", "policy")
-
-# the ids of the line that states the derivative of the decision value: `marginal` in the stage files of
-# applications/portfolio-choice, `envelope` in the marginal blocks of the block files of applications/cons-port
-MARGINAL_LINES = ("marginal", "envelope")
-
 
 def policy_method(stage):
-    """The place and the method of the stage occurrence's one method at a place of POLICY_PLACES, or None where
-    it binds none."""
+    """The place and the components of the stage occurrence's one method at a place of POLICY_PLACES, or None
+    where it binds none."""
     held = [(str(key), method) for key, method in stage.methods.items() if str(key) in POLICY_PLACES]
     if not held:
         return None
@@ -484,14 +522,13 @@ def marginal_key(record):
 
 def stage_operator(stage):
     """The operator of one specified stage occurrence: chosen by the handler of the method that solves its
-    policy, at a place of POLICY_PLACES; for a stage without such a method, the expectation where it takes one
-    and the aggregation otherwise."""
+    policy, at a place of POLICY_PLACES; for a stage without such a method, the expectation where it binds a
+    method at an expectation of `cntn_to_dcsn` and the aggregation otherwise."""
     found = policy_method(stage)
     if found:
         place, method = found
         return _realized(POLICY, method.handler, stage, place)(stage)
-    places = {str(key) for key in stage.methods}
-    return expectation(stage) if any(":Expectation:" in place for place in places) else aggregation(stage)
+    return expectation(stage) if expectation_place(stage) else aggregation(stage)
 
 
 def terminal_value(consumption, grid):

@@ -172,6 +172,7 @@ class Prepared(NamedTuple):
     record: dict | None
     refusals: tuple = ()
     differences: dict = {}
+    texts: dict | None = None
 
 
 class Work(NamedTuple):
@@ -422,14 +423,40 @@ def _missing(folder: model.Folder, syntactic: dict) -> list[dict]:
     return missing
 
 
+def _history_key(entries: list[dict]) -> list[list]:
+    return [
+        [entry["number"], entry["kind"], entry.get("replies_to"), _sha256(entry["text"])]
+        for entry in entries
+    ]
+
+
+def reviewed_entries(folder: model.Folder, session: Session) -> list[dict]:
+    held = read_session(session, folder)
+    entries = held.get("entries") if held is not None else None
+    if not isinstance(entries, list) or any(
+        not isinstance(entry, dict)
+        or type(entry.get("number")) is not int
+        or not isinstance(entry.get("kind"), str)
+        or not isinstance(entry.get("text"), str)
+        for entry in entries
+    ):
+        raise ValueError("Matsya's session history is unavailable. Check the connection and try again.")
+    if [entry["number"] for entry in entries] != sorted({entry["number"] for entry in entries}):
+        raise ValueError("Matsya's session entries are out of order. Review the session again.")
+    return entries
+
+
 def prepare(
     folder: model.Folder,
-    source: recipe.Source,
+    source: recipe.Source | None,
     target: str,
     session: Session,
     reviewed_through: int,
     buffers: dict | None = None,
     choice: str | None = None,
+    *,
+    history: list[dict] | None = None,
+    prompt: str | None = None,
 ) -> Prepared:
     """The prepared inputs of a job from `source` at `target` in `session`,
     whose entries the user reviewed through entry `reviewed_through`,
@@ -450,99 +477,134 @@ def prepare(
     whose files hold an addition (`model.is_addition_file`) prepares
     nothing and answers one sentence that names them (`ADDITION_UNSENT`),
     whatever the buffers hold, since the service reads no addition yet."""
-    rule = model.FACTORY_FOLDER
-    displayed, differences = {}, {}
-    for path, held in (buffers or {}).items():
-        on_disk = model.read_file(folder, path).text
-        if held.text != on_disk:
-            displayed[str((folder.root / path).resolve())] = held.text
-            differences[path] = "".join(
-                difflib.unified_diff(
-                    on_disk.splitlines(keepends=True),
-                    held.text.splitlines(keepends=True),
-                    fromfile=f"{path} (disk)",
-                    tofile=f"{path} (editor)",
+    files, texts, rewritten, missing = [], {}, [], []
+    differences = {}
+    if source is not None:
+        rule = model.FACTORY_FOLDER
+        displayed, differences = {}, {}
+        for path, held in (buffers or {}).items():
+            on_disk = model.read_file(folder, path).text
+            if held.text != on_disk:
+                displayed[str((folder.root / path).resolve())] = held.text
+                differences[path] = "".join(
+                    difflib.unified_diff(
+                        on_disk.splitlines(keepends=True),
+                        held.text.splitlines(keepends=True),
+                        fromfile=f"{path} (disk)",
+                        tofile=f"{path} (editor)",
+                    )
                 )
-            )
-    try:
-        syntactic, paths = required_files(folder, source, displayed)
-        missing = _missing(folder, syntactic)
-    except recipe._REFUSALS as error:
-        subject = str((folder.root / source.path).resolve())
-        return Prepared(None, None, (model.refusal_of(error, source.path, subject).message,))
-    additions = [recipe.relative(folder, path) for path in paths if model.is_addition_file(path)]
-    if additions:
-        return Prepared(None, None, (ADDITION_UNSENT.format(", ".join(additions)),))
-    named = {recipe.relative(folder, path) for path in paths}
-    differences = {path: text for path, text in differences.items() if path in named}
-    if differences and choice not in CHOICES:
-        sentences = tuple(
-            f"{path} has unsaved changes; save it, send the saved version or send the "
-            "displayed text"
-            for path in differences
-        )
-        return Prepared(None, None, sentences, differences)
-    taken = displayed if differences and choice in (SAVE, DISPLAYED_TEXT) else {}
-    if differences and choice == SAVED_VERSION:
         try:
-            syntactic, paths = required_files(folder, source, {})
+            syntactic, paths = required_files(folder, source, displayed)
             missing = _missing(folder, syntactic)
         except recipe._REFUSALS as error:
             subject = str((folder.root / source.path).resolve())
-            return Prepared(None, None, (model.refusal_of(error, source.path, subject).message,))
-    recipe_path = _within(source.path) if source.kind == "recipe" else None
-    trellis_path = _within(recipe.relative(folder, syntactic["provenance"]["trellis"]["path"]))
-    files, texts, rewritten = [], {}, []
-    refusals = _ambiguous(syntactic)
-    for path in paths:
-        relpath = recipe.relative(folder, path)
-        within = _within(relpath)
-        if within is None:
-            refusals.append(
-                f"{relpath} lies outside the folder's {rule}/, and the service reads every file "
-                "from that folder"
+            return Prepared(None, None, (model.sentence(model.diagnostic_of(error, "read", subject)),))
+        additions = [recipe.relative(folder, path) for path in paths if model.is_addition_file(path)]
+        if additions:
+            return Prepared(None, None, (ADDITION_UNSENT.format(", ".join(additions)),))
+        named = {recipe.relative(folder, path) for path in paths}
+        differences = {path: text for path, text in differences.items() if path in named}
+        if differences and choice not in CHOICES:
+            sentences = tuple(
+                f"{path} has unsaved changes; save it, send the saved version or send the "
+                "displayed text"
+                for path in differences
             )
-            continue
-        name = _service_name(within, recipe_path, trellis_path)
-        if name is None:
-            refusals.append(
-                f"the service reads no file named {within}, so {relpath} cannot be sent"
-            )
-            continue
-        held = taken.get(str(path))
-        text = held if held is not None else model.read_file(folder, relpath).text
-        files.append({"path": relpath, "name": name, "sha256": _sha256(text),
-                      "text": "disk" if held is None else "buffer"})
-        if name == RECIPE_NAME:
-            written = entry_value(text, "trellis")
-            if written != TRELLIS_NAME:
-                text = replace_entry(text, "trellis", TRELLIS_NAME)
-                rewritten.append({"path": relpath, "entry": "trellis", "written": written,
-                                  "sent": TRELLIS_NAME})
-        texts[name] = text
-    if refusals:
-        return Prepared(None, None, tuple(refusals), differences)
-    if choice == SAVE:
-        for path in differences:
-            saved = model.save_file(folder, path, buffers[path].text, buffers[path].digest)
-            if not saved.saved:
-                refusal = f"{path} was not saved: {saved.reason}"
-                return Prepared(None, None, (refusal,), differences)
+            return Prepared(None, None, sentences, differences)
+        taken = displayed if differences and choice in (SAVE, DISPLAYED_TEXT) else {}
+        if differences and choice == SAVED_VERSION:
+            try:
+                syntactic, paths = required_files(folder, source, {})
+                missing = _missing(folder, syntactic)
+            except recipe._REFUSALS as error:
+                subject = str((folder.root / source.path).resolve())
+                refused = model.diagnostic_of(error, "read", subject)
+                return Prepared(None, None, (model.sentence(refused),))
+        recipe_path = _within(source.path) if source.kind == "recipe" else None
+        trellis_path = _within(recipe.relative(folder, syntactic["provenance"]["trellis"]["path"]))
+        captured = {}
+        refusals = _ambiguous(syntactic)
+        for path in paths:
+            relpath = recipe.relative(folder, path)
+            within = _within(relpath)
+            if within is None:
+                refusals.append(
+                    f"{relpath} lies outside the folder's {rule}/, and the service reads every file "
+                    "from that folder"
+                )
+                continue
+            name = _service_name(within, recipe_path, trellis_path)
+            if name is None:
+                refusals.append(
+                    f"the service reads no file named {within}, so {relpath} cannot be sent"
+                )
+                continue
+            held = taken.get(str(path))
+            text = held if held is not None else model.read_file(folder, relpath).text
+            captured[str(path)] = text
+            files.append({"path": relpath, "name": name, "sha256": _sha256(text),
+                          "text": "disk" if held is None else "buffer"})
+            if name == RECIPE_NAME:
+                written = entry_value(text, "trellis")
+                if written != TRELLIS_NAME:
+                    text = replace_entry(text, "trellis", TRELLIS_NAME)
+                    rewritten.append({"path": relpath, "entry": "trellis", "written": written,
+                                      "sent": TRELLIS_NAME})
+            texts[name] = text
+            files[-1]["sent_sha256"] = _sha256(text)
+        if refusals:
+            return Prepared(None, None, tuple(refusals), differences)
+        try:
+            _, verified = required_files(folder, source, captured)
+        except recipe._REFUSALS as error:
+            return Prepared(None, None, (str(error),), differences)
+        if set(verified) != set(paths):
+            return Prepared(None, None, ("The declaration changed during preparation. Review it again.",))
+        if choice == SAVE:
+            for path in differences:
+                saved = model.save_file(folder, path, buffers[path].text, buffers[path].digest)
+                if not saved.saved:
+                    refusal = f"{path} was not saved: {saved.reason}"
+                    return Prepared(None, None, (refusal,), differences)
+    if history is not None:
+        prompt = (prompt or "").strip()
+        if not prompt:
+            return Prepared(None, None, ("Write a description or build request first.",))
     economics = folder.root / "economics.md"
-    description = (
-        {"path": "economics.md", "sha256": hashlib.sha256(economics.read_bytes()).hexdigest()}
-        if economics.is_file() and not economics.is_symlink()
-        else None
-    )
+    description = None
+    if economics.is_file() and not economics.is_symlink():
+        contents = economics.read_bytes()
+        description = {"path": "economics.md", "sha256": hashlib.sha256(contents).hexdigest()}
+        if history is not None:
+            local_text = contents.decode("utf-8").strip()
+            description_text = f"Current model description (economics.md):\n{local_text}"
+            separator = "\n\nBuild request:\n"
+            prior = next(
+                (entry["text"].partition(separator)[0] for entry in reversed(history)
+                 if entry["kind"] == "user"
+                 and entry["text"].startswith("Current model description (economics.md):\n")),
+                None,
+            )
+            if local_text and prior != description_text and (
+                prior is not None or not any(
+                    entry["kind"] in ("user", "paper") and entry["text"].strip() == local_text
+                    for entry in history
+                )
+            ):
+                prompt = f"{description_text}{separator}{prompt}"
+    if history is not None:
+        reviewed_through = (history[-1]["number"] if history else 0) + 1
     identifier = uuid.uuid4().hex
     inputs = f"{PREPARED_FOLDER}/{identifier}.inputs.json"
     client_inputs = {
         "session": session.id,
         "reviewed_through": reviewed_through,
         "target": target,
-        "starting_declaration": texts,
-        "paths": {entry["name"]: entry["path"] for entry in files},
     }
+    if texts:
+        client_inputs["starting_declaration"] = texts
+        client_inputs["paths"] = {entry["name"]: entry["path"] for entry in files}
     saved = model.save_file(folder, inputs, _json(client_inputs), None)
     if not saved.saved:
         return Prepared(None, None, (f"{inputs} was not written: {saved.reason}",), differences)
@@ -553,7 +615,7 @@ def prepare(
         "service": session.service,
         "reviewed_through": reviewed_through,
         "target": target,
-        "source": {"kind": source.kind, "path": source.path},
+        "source": {"kind": source.kind, "path": source.path} if source else None,
         "description": description,
         "choice": choice if differences else None,
         "files": files,
@@ -562,24 +624,33 @@ def prepare(
         "inputs": inputs,
         "inputs_sha256": saved.digest,
     }
+    if history is not None:
+        association = project(folder)
+        if association is None or association["session"] != session.id:
+            return Prepared(None, None, ("The Matsya session changed during preparation.",))
+        record.update(
+            history=_history_key(history), prompt=prompt, entry_delivery=uuid.uuid4().hex,
+            job_delivery=uuid.uuid4().hex, server=association["server"],
+        )
     path = f"{PREPARED_FOLDER}/{identifier}.json"
     saved = model.save_file(folder, path, _json(record), None)
     if not saved.saved:
         return Prepared(None, None, (f"{path} was not written: {saved.reason}",), differences)
-    return Prepared(path, record, (), differences)
+    return Prepared(path, record, (), differences, texts)
 
 
 # --- the requests and their recovery ---
 
 
-def _arguments(folder: model.Folder, record: dict) -> list[str]:
-    """The client's command line for the request `record` of the folder."""
-    if record["kind"] == "job":
-        prepared = json.loads((folder.root / record["prepared"]).read_text(encoding="utf-8"))
-        return ["job", "submit-prepared", str(folder.root / prepared["inputs"]),
-                "--delivery-id", record["delivery"], "--json"]
-    return ["ask", record["session"], "--no-wait", "--delivery-id", record["delivery"], "--json",
-            "--", record["question"]]
+class ReviewRequired(ValueError):
+    """The reviewed inputs or session have changed."""
+
+
+def _captured_inputs(folder: model.Folder, prepared: dict) -> bytes:
+    data = (folder.root / prepared["inputs"]).read_bytes()
+    if hashlib.sha256(data).hexdigest() != prepared["inputs_sha256"]:
+        raise ReviewRequired("The prepared inputs changed. Prepare and review the build again.")
+    return data
 
 
 def _write(folder: model.Folder, path: str, record: dict, expected: str | None) -> str:
@@ -597,7 +668,24 @@ def _send(folder: model.Folder, record: dict, path: str, digest: str | None) -> 
     """Runs the client for the request, its record standing on disk with
     `digest`, and replaces the record with the identifier the client
     printed, its exit status and its warning, whatever that status."""
-    ran = matsya_client.run(_arguments(folder, record))
+    if record["service"] != matsya_client.service_identity():
+        raise ValueError("The Matsya connection changed before the request was sent.")
+    if record["kind"] == "job":
+        prepared = json.loads((folder.root / record["prepared"]).read_text(encoding="utf-8"))
+        data = _captured_inputs(folder, prepared)
+        if record.get("inputs_sha256", prepared["inputs_sha256"]) != prepared["inputs_sha256"]:
+            raise ReviewRequired("The prepared inputs changed. Prepare and review the build again.")
+        with tempfile.TemporaryDirectory() as holder:
+            snapshot = Path(holder) / "prepared-inputs.json"
+            snapshot.write_bytes(data)
+            ran = matsya_client.run(
+                ["job", "submit-prepared", str(snapshot), "--delivery-id", record["delivery"], "--json"]
+            )
+    else:
+        ran = matsya_client.run(
+            ["ask", record["session"], "--no-wait", "--delivery-id", record["delivery"],
+             "--json", "--", record["question"]]
+        )
     # `job submit-prepared` answers the job under `job`, `ask --no-wait`
     # the turn itself
     work = ran.answer.get("job") if record["kind"] == "job" and ran.answer else ran.answer
@@ -613,9 +701,11 @@ def _send(folder: model.Folder, record: dict, path: str, digest: str | None) -> 
     return Work(path, answered)
 
 
-def _request(folder: model.Folder, session: Session, kind: str, **fields) -> Work:
+def _request(
+    folder: model.Folder, session: Session, kind: str, *, delivery: str | None = None, **fields
+) -> Work:
     """A new request of `kind`, its record written before the client runs."""
-    delivery = uuid.uuid4().hex
+    delivery = delivery or uuid.uuid4().hex
     record = {
         "format": FORMAT,
         "kind": kind,
@@ -636,50 +726,104 @@ def _request(folder: model.Folder, session: Session, kind: str, **fields) -> Wor
     return _send(folder, record, path, digest)
 
 
-def submit(folder: model.Folder, prepared: str, session: Session) -> Work:
-    """Submits the job of the prepared record at `prepared`, its path from
-    the folder, by `job submit-prepared` on its prepared-inputs file, which
-    the client sends as it stands. A record of another session or service
-    than `session` is refused with a ValueError before anything is
-    written."""
-    held = json.loads((folder.root / prepared).read_text(encoding="utf-8"))
+def submit(
+    folder: model.Folder, prepared: str, session: Session, reviewed: dict | None = None
+) -> Work:
+    """Send the reviewed inputs and, for a build from the panel, append its
+    reviewed text with a separate delivery identifier."""
+    document = model.read_file(folder, prepared)
+    held = json.loads(document.text)
     if (held["session"], held["service"]) != tuple(session):
-        raise ValueError(
-            f"{prepared} was prepared for session {held['session']}, not for the selected "
-            f"session {session.id} on its service"
-        )
-    return _request(folder, session, "job", prepared=prepared)
+        raise ValueError(f"{prepared} was prepared for session {held['session']}, not this connection.")
+    if session.service != matsya_client.service_identity():
+        raise ReviewRequired("The Matsya connection changed. Prepare the build again.")
+    if reviewed is not None and held != reviewed:
+        raise ReviewRequired("The build review changed on disk. Prepare the build again.")
+    _captured_inputs(folder, held)
+    if "history" not in held:
+        return _request(folder, session, "job", prepared=prepared, inputs_sha256=held["inputs_sha256"])
+    association = project(folder)
+    if association != {"session": session.id, "server": held["server"]} or not session_current(
+        folder, session
+    ):
+        raise ReviewRequired("The Matsya connection changed. Prepare the build again.")
+
+    job_delivery = held["job_delivery"]
+    job_path = f"{REQUESTS_FOLDER}/{job_delivery}.json"
+    if (folder.root / job_path).is_file():
+        record = json.loads(model.read_file(folder, job_path).text)
+        if (record["kind"], record["session"], record["service"], record["prepared"],
+            record["delivery"]) != ("job", *session, prepared, job_delivery):
+            raise ReviewRequired("The job request record changed. Prepare the build again.")
+        return Work(job_path, record) if record["accepted"] else retry(folder, record)
+
+    before = held["history"]
+    number = held["reviewed_through"]
+    expected = [*before, [number, "user", None, _sha256(held["prompt"])]]
+    entry_delivery = held["entry_delivery"]
+    entry_path = folder.root / REQUESTS_FOLDER / f"{entry_delivery}.json"
+    current = _history_key(reviewed_entries(folder, session))
+    if current != before and not (entry_path.is_file() and current == expected):
+        raise ReviewRequired("The session changed since preparation. Review a new build.")
+
+    entry = add_entry(
+        folder, session, held["prompt"], delivery=entry_delivery, prepared=prepared,
+        prepared_digest=document.digest
+    )
+    if entry.record["accepted"] is None:
+        return entry
+    if entry.record["accepted"] != str(number) or _history_key(
+        reviewed_entries(folder, session)
+    ) != expected:
+        raise ReviewRequired("The session changed before submission. Review a new build.")
+    return _request(
+        folder, session, "job", delivery=job_delivery, prepared=prepared,
+        inputs_sha256=held["inputs_sha256"],
+    )
 
 
-def add_entry(folder: model.Folder, session: Session, text: str) -> Work:
-    """Appends `text` to `session` as the user's entry, by the client's
-    `session add` with a delivery identifier, the first step of a build
-    (design pass 16 §5, decision SG4-7), so that the job a later submission
-    starts reads it. The record, of the kind `entry`, is written before the
-    client runs, as a turn's is, with the text as its `question`; the
-    client reads the text from a file in a temporary folder outside the
-    model folder, removed once the client has run. The record's `accepted`
-    is the entry's number, as text, once the client printed one."""
-    delivery = uuid.uuid4().hex
-    record = {
-        "format": FORMAT,
-        "kind": "entry",
-        "delivery": delivery,
-        "session": session.id,
-        "service": session.service,
-        "prepared": None,
-        "question": text,
-        "accepted": None,
-        "exit_code": None,
-        "warning": "",
-        "sent_at": _now(),
-        "answered_at": None,
-    }
+def add_entry(
+    folder: model.Folder, session: Session, text: str, *,
+    delivery: str | None = None, prepared: str | None = None,
+    prepared_digest: str | None = None,
+) -> Work:
+    """Append the user's entry. Replay a previously recorded delivery with
+    the same text and destination if the acknowledgement was lost."""
+    delivery = delivery or uuid.uuid4().hex
     path = f"{REQUESTS_FOLDER}/{delivery}.json"
-    digest = _write(folder, path, record, None)
+    if not (folder.root / path).is_file():
+        record = {
+            "format": FORMAT,
+            "kind": "entry",
+            "delivery": delivery,
+            "session": session.id,
+            "service": session.service,
+            "prepared": prepared,
+            "prepared_digest": prepared_digest,
+            "question": text,
+            "accepted": None,
+            "exit_code": None,
+            "warning": "",
+            "sent_at": _now(),
+            "answered_at": None,
+        }
+        digest = _write(folder, path, record, None)
+    else:
+        saved = model.read_file(folder, path)
+        record = json.loads(saved.text)
+        if (record["kind"], record["session"], record["service"], record["question"],
+            record["delivery"], record.get("prepared"), record.get("prepared_digest")) != (
+                "entry", *session, text, delivery, prepared, prepared_digest
+            ):
+            raise ReviewRequired("The saved build request changed. Prepare the build again.")
+        if record["accepted"] is not None:
+            return Work(path, record)
+        digest = saved.digest
+    if session.service != matsya_client.service_identity():
+        raise ValueError("The Matsya connection changed before the request was sent.")
     with tempfile.TemporaryDirectory() as holder:
         held = Path(holder) / "entry.txt"
-        held.write_text(text, encoding="utf-8")
+        held.write_bytes(text.encode("utf-8"))
         ran = matsya_client.run(
             ["session", "add", session.id, str(held), "--kind", "user",
              "--delivery-id", delivery, "--json"]
@@ -697,10 +841,53 @@ def add_entry(folder: model.Folder, session: Session, text: str) -> Work:
     return Work(path, answered)
 
 
+def pending_builds(folder: model.Folder, session: Session, entries: list[dict]):
+    """Read reviews with an unfinished delivery. Never send a request on reopen."""
+    requests = {record["delivery"]: record for record in records(folder, session)}
+    for entry in requests.values():
+        prepared = entry.get("prepared")
+        if not prepared or entry["kind"] != "entry":
+            continue
+        try:
+            document = model.read_file(folder, prepared)
+            if document.digest != entry.get("prepared_digest"):
+                continue
+            held = json.loads(document.text)
+            if (
+                held["entry_delivery"] != entry["delivery"]
+                or held["prompt"] != entry["question"]
+                or (held["session"], held["service"]) != tuple(session)
+                or held["server"] != project(folder)["server"]
+            ):
+                continue
+            job = requests.get(held["job_delivery"])
+            if job is not None and job["accepted"] is not None:
+                continue
+            files = json.loads(_captured_inputs(folder, held)).get("starting_declaration", {})
+            history = entries[:len(held["history"])]
+            # Display earlier text only when it matches the original review.
+            if _history_key(history) != held["history"]:
+                history = []
+        except (KeyError, OSError, TypeError, ValueError):
+            continue
+        yield Prepared(prepared, held, texts=files), history
+
+
 def start_turn(folder: model.Folder, session: Session, question: str) -> Work:
     """Starts a turn of `question` in `session` without waiting for its
     answer, by the client's start of a turn with a delivery identifier."""
     return _request(folder, session, "turn", question=question)
+
+
+def record_started_job(folder: model.Folder, turn: Work, job_id: str) -> None:
+    """Record the job on its accepted turn without creating a second request."""
+    try:
+        saved = model.read_file(folder, turn.path)
+        current = json.loads(saved.text)
+    except (OSError, ValueError):
+        return
+    if current == turn.record:
+        model.save_file(folder, turn.path, _json({**current, "started_job": job_id}), saved.digest)
 
 
 def follow(record: dict) -> dict | None:
@@ -757,6 +944,8 @@ def retry(folder: model.Folder, record: dict) -> Work:
     the work twice."""
     if record["kind"] not in ("turn", "job") or record["accepted"] is not None:
         raise ValueError(f"request {record['delivery']} is no turn whose answer was lost")
+    if record["service"] != matsya_client.service_identity():
+        raise ValueError("The Matsya connection changed before the request was retried.")
     path = f"{REQUESTS_FOLDER}/{record['delivery']}.json"
     digest = model.read_file(folder, path).digest
     return _send(folder, record, path, digest)
@@ -794,6 +983,53 @@ def connected_session(folder: model.Folder) -> Session | None:
     the column discusses jobs in; None where the folder is not connected."""
     held = project(folder)
     return Session(held["session"], matsya_client.service_identity()) if held else None
+
+
+def session_current(folder: model.Folder, session: Session) -> bool:
+    """Whether the saved project and current client still name this session."""
+    held = project(folder)
+    url = matsya_client.service_url()
+    identity = matsya_client.service_identity()
+    return (
+        held is not None
+        and held["session"] == session.id
+        and identity is not None
+        and identity == session.service
+        and (url is None or held["server"] == url)
+    )
+
+
+def read_session(session: Session, folder: model.Folder | None = None) -> dict | None:
+    """Read the current service's session without writing local history."""
+    if session.service is None or session.service != matsya_client.service_identity():
+        return None
+    if folder is not None and not session_current(folder, session):
+        return None
+    if folder is not None and matsya_client.service_url() is None:
+        # The client checks its built-in URL against the project's saved URL.
+        found = matsya_client.run(["project", "status", "--json"], cwd=folder.root)
+        held = found.answer.get("session") if found.answer else None
+    else:
+        found = matsya_client.run(["session", "show", session.id, "--json"])
+        held = found.answer
+    if found.code != 0 or not isinstance(held, dict) or held.get("id") != session.id:
+        return None
+    if folder is not None and not session_current(folder, session):
+        return None
+    return held
+
+
+def read_turn(session: Session, turn_id: str) -> dict | None:
+    """Read an accepted turn that belongs to this project session."""
+    answer = follow({
+        "kind": "turn",
+        "accepted": turn_id,
+        "session": session.id,
+        "service": session.service,
+    })
+    if answer is not None and answer.get("id") == turn_id and answer.get("session") == session.id:
+        return answer
+    return None
 
 
 def connect(folder: model.Folder) -> tuple[dict | None, str | None]:
@@ -874,6 +1110,12 @@ def membership(session: Session, job_id: str, action: str) -> Membership:
             f"is not {action}",
         )
     return Membership(ran.answer, None)
+
+
+def read_job(session: Session, job_id: str) -> dict | None:
+    """Read the current state of a job belonging to this session."""
+    answer = membership(session, job_id, "read").job
+    return answer if answer is not None and answer.get("id") == job_id else None
 
 
 def discuss(session: Session, job_id: str) -> Membership:

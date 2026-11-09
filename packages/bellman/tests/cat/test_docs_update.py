@@ -34,8 +34,7 @@ lesson.
 
 The card rule of item 1 and the strict build of item 3 carry the mark
 `sweep`, since the first prints every card of each stage a page shows and the
-second builds the whole site; a run given no marker expression leaves them
-out, and `-m sweep` runs them.
+second builds the whole site. Both run by default; `-m sweep` selects them.
 """
 from __future__ import annotations
 
@@ -53,6 +52,7 @@ from conftest import ROOT, stage_from_text
 from sheets_parse import sheets_of
 
 from bellman.stage import ElaboratedStage
+from bellman.native.hypergraphs import copy_native
 
 # --- item 1: the places the sweep reads ---
 
@@ -122,13 +122,13 @@ HEAVY = re.compile(r"━+")
 # a calibration, methods or settings file, as a page or a lesson names it by
 # its path from the repository root
 BINDING_SOURCE = re.compile(
-    r"(?<![\w./-])((?:applications|tutorials)/[\w./-]+\.ya?ml)(?![\w/-])"
+    r"(?<![\w./-])((?:applications|tutorials|declaration)/[\w./-]+\.(?:ya?ml|bl))(?![\w/-])"
 )
 # a key at the top level of such a file, with the value written beside it
 TOP_KEY = re.compile(r"^([A-Za-z_]\w*)[ \t]*:[ \t]*(\S*)", re.MULTILINE)
 # the binding verbs in their order, each with the top-level key of the
 # files it reads
-VERBS = (("calibrate", "calibration"), ("methodize", "methods"), ("configure", "settings"))
+VERBS = (("methodize", "methods"), ("calibrate", "calibration"), ("configure", "settings"))
 
 # --- item 4: the terminology table and the reading of a wiki page ---
 
@@ -314,16 +314,27 @@ def stage_files():
     return found
 
 
-def binding_sources(texts):
+def binding_sources(texts, document):
     """The calibration, methods and settings files a page or a lesson names,
     by the top-level key each file writes (`calibration`, `methods`,
     `settings`), each with the stage a methods file names under `stage`."""
-    named = sorted({match.group(1) for _, text in texts
-                    for match in BINDING_SOURCE.finditer(text)
-                    if (ROOT / match.group(1)).is_file()})
+    named = set()
+    for _, text in texts:
+        for match in BINDING_SOURCE.finditer(text):
+            path = match.group(1)
+            if path.startswith("declaration/") and document.startswith("applications/"):
+                path = "/".join(document.split("/")[:2]) + "/" + path
+            if (ROOT / path).is_file():
+                named.add(path)
     found = {key: [] for _, key in VERBS}
-    for path in named:
-        keys = dict(TOP_KEY.findall((ROOT / path).read_text(encoding="utf-8")))
+    for path in sorted(named):
+        text = (ROOT / path).read_text(encoding="utf-8")
+        if path.endswith(".bl"):
+            header = re.search(r"^@methods:\s*(\w+)\s*$", text, re.MULTILINE)
+            if header:
+                found["methods"].append((path, header.group(1)))
+            continue
+        keys = dict(TOP_KEY.findall(text))
         for key in found:
             if key in keys:
                 found[key].append((path, keys.get("stage")))
@@ -332,7 +343,7 @@ def binding_sources(texts):
 
 def bindings_of(stage_name, sources):
     """The bindings the verbs make in their order from the named files: a
-    calibration file, then a methods file naming the stage, then a settings
+    methods file naming the stage, then a calibration file, then a settings
     file, which binds only after methods; each a tuple of (verb, file), the
     empty tuple, the symbolic version, first."""
     calibrations = [None] + [path for path, _ in sources["calibration"]]
@@ -341,7 +352,7 @@ def bindings_of(stage_name, sources):
     for calibration in calibrations:
         for method in methods:
             for setting in [None] + (settings if method else []):
-                chosen = zip([verb for verb, _ in VERBS], (calibration, method, setting))
+                chosen = zip([verb for verb, _ in VERBS], (method, calibration, setting))
                 yield tuple((verb, path) for verb, path in chosen if path is not None)
 
 
@@ -392,7 +403,7 @@ def test_item_1_every_card_shown_on_a_page_or_in_a_lesson_is_one_the_package_pri
         """Every sheet that the version of `stage` which `binding` makes
         prints; none where a verb refuses the binding."""
         if (key, binding) not in printed:
-            version = stage
+            version = copy_native(stage) if binding else stage
             try:
                 for verb, path in binding:
                     version = getattr(version, verb)(path)
@@ -424,7 +435,7 @@ def test_item_1_every_card_shown_on_a_page_or_in_a_lesson_is_one_the_package_pri
             continue
         texts = list(texts_of(name))
         blocks = [(place, title, card) for place, text in texts for title, card in cards_in(text)]
-        sources = binding_sources(texts) if blocks else None
+        sources = binding_sources(texts, name) if blocks else None
         for place, title, card in blocks:
             shown += 1
             stage_name = (title.split() + [""])[1]

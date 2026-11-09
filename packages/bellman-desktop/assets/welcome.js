@@ -1,6 +1,23 @@
 "use strict";
 
+let previousAction;
+
 window.bellmanWelcome = {
+  setOpenStatus(message, busy) {
+    const status = document.getElementById("open-status");
+    const actions = document.querySelectorAll("[data-open-action]");
+    if (busy && document.activeElement.matches("[data-open-action]")) {
+      previousAction = document.activeElement;
+    }
+    status.textContent = message;
+    for (const action of actions) action.disabled = busy;
+    if (!busy && previousAction) {
+      if (previousAction.isConnected && document.activeElement === document.body) {
+        previousAction.focus({ preventScroll: true });
+      }
+      previousAction = undefined;
+    }
+  },
   setNativeState({ recentProjects, shortcutModifier }) {
     const mac = shortcutModifier === "⌘";
     document.querySelector('[data-shortcut="project"]').textContent = mac ? "⌘O" : "Ctrl+O";

@@ -114,11 +114,8 @@ def service_identity() -> str | None:
     return digest.hexdigest()
 
 
-def service_address() -> str | None:
-    """The service's address the client's settings name, without its
-    scheme: the variable BELLMAN_MATSYA_SERVER where it is set, else the key
-    `server` of the client's configuration file; None where neither names
-    one, the client then using its own default, which it does not report."""
+def service_url() -> str | None:
+    """The configured service URL, or None for the built-in address."""
     named = os.environ.get("BELLMAN_MATSYA_SERVER", "").strip()
     if not named:
         config_path = Path.home() / ".config" / "bellman-matsya" / "config.toml"
@@ -132,7 +129,13 @@ def service_address() -> str | None:
         named = server.strip() if isinstance(server, str) else ""
     if not named:
         return None
-    return named.rstrip("/").split("://", 1)[-1]
+    return named.rstrip("/")
+
+
+def service_address() -> str | None:
+    """The configured service address without the scheme."""
+    url = service_url()
+    return url.split("://", 1)[-1] if url else None
 
 
 def _saved_session(path: Path, name: str, identity: str) -> str | None:
@@ -165,12 +168,15 @@ def _remember_session(path: Path, name: str, identity: str, session_id: str) -> 
         temporary.unlink(missing_ok=True)
 
 
-def _completed(words: list[str], arguments: list[str]) -> subprocess.CompletedProcess:
+def _completed(
+    words: list[str], arguments: list[str], cwd: Path | None = None
+) -> subprocess.CompletedProcess:
     """Runs the client command `words` with `arguments`, in UTF-8, with no
     standard input and within ANSWER_SECONDS, its two outputs captured."""
     return subprocess.run(
         [*words, *arguments],
         stdin=subprocess.DEVNULL,
+        cwd=cwd,
         capture_output=True,
         env={**os.environ, "PYTHONIOENCODING": "utf-8"},
         timeout=ANSWER_SECONDS,
@@ -318,7 +324,7 @@ class Run(NamedTuple):
     warning: str
 
 
-def run(arguments: list[str]) -> Run:
+def run(arguments: list[str], *, cwd: Path | None = None) -> Run:
     """Runs the configured client with `arguments`, in UTF-8 and within
     ANSWER_SECONDS, and answers what it printed whatever its exit status;
     a command that cannot be run is answered by the sentence `ask` gives."""
@@ -330,7 +336,10 @@ def run(arguments: list[str]) -> Run:
     if not words:
         return Run(None, None, NO_CLIENT.format(name=" or ".join(COMMANDS)))
     try:
-        finished = _completed(words, arguments)
+        if cwd is None:
+            finished = _completed(words, arguments)
+        else:
+            finished = _completed(words, arguments, cwd)
     except OSError:
         name = f"in {COMMAND_VARIABLE}" if from_variable else words[0]
         return Run(None, None, NO_CLIENT.format(name=name))

@@ -1,20 +1,20 @@
 # The recipe of the housing model with adjustment frictions (Dobrescu and
 # Shanker 2024, Application 2): the trellis file and each stage's file, by
 # their paths from this folder, and for each stage and each kind the ordered
-# sources; `$fill` and the three methods slots are bound by keyword of
-# `load_recipe`. The application writes no settings file, so no settings list
-# is written. Each stage's methods file binds the marginal blocks that state
-# the derivatives of its values, and each methods list holds it and the stage's
-# own methods slot, `$house_choice_method`, `$keeper_method` or
-# `$adjuster_method`, so that a method choice, when one is given, reaches
-# one stage.
+# sources; `$fill` is bound by keyword of `load_recipe`. Each stage's methods
+# file is the addition beside its stage file, stages/<key>/methods.bl, which
+# writes the derivative lines of its values, the method that solves each
+# saving stage's Euler relations with its decision grid, and the
+# representations of the values; a change of selection would be another
+# addition named in its place. The three stages of the period read the
+# settings of their grids from settings/<key>.yml.
 # The terminal stage declares no parameter and reads no setting; its methods
-# file binds the marginal block of its two derivatives. It is active in the
-# terminal period alone, `periods: [0, 0]`, and trellis.yml writes it into
-# that period's own entry.
+# file writes its two zero derivatives. It is active in the terminal period
+# alone, `periods: [0, 0]`, and trellis.yml writes it into that period's own
+# entry.
 trellis: trellis.yml
 stages:
-  house_choice:    {stage: stages/house_choice/house_choice.bl,       calibration: {all: [calibration/housing_frictions, $fill]}, methods: {all: [stages/house_choice/methods, $house_choice_method]}}
-  keeper_saving:   {stage: stages/keeper_saving/keeper_saving.bl,     calibration: {all: [calibration/housing_frictions, $fill]}, methods: {all: [stages/keeper_saving/methods, $keeper_method]}}
-  adjuster_saving: {stage: stages/adjuster_saving/adjuster_saving.bl, calibration: {all: [calibration/housing_frictions, $fill]}, methods: {all: [stages/adjuster_saving/methods, $adjuster_method]}}
-  terminal:        {stage: stages/terminal/terminal.bl,               methods: {all: [stages/terminal/methods]}, periods: [0, 0]}
+  house_choice:    {stage: stages/house_choice/house_choice.bl,       calibration: {all: [calibration/housing_frictions, $fill]}, settings: {all: [settings/house_choice]},    methods: {all: [stages/house_choice/methods.bl]}}
+  keeper_saving:   {stage: stages/keeper_saving/keeper_saving.bl,     calibration: {all: [calibration/housing_frictions, $fill]}, settings: {all: [settings/keeper_saving]},   methods: {all: [stages/keeper_saving/methods.bl]}}
+  adjuster_saving: {stage: stages/adjuster_saving/adjuster_saving.bl, calibration: {all: [calibration/housing_frictions, $fill]}, settings: {all: [settings/adjuster_saving]}, methods: {all: [stages/adjuster_saving/methods.bl]}}
+  terminal:        {stage: stages/terminal/terminal.bl,               methods: {all: [stages/terminal/methods.bl]}, periods: [0, 0]}

@@ -1,8 +1,0 @@
-@methods: keeper_cons
-# The marginal block of the keeper's decision value builder, which states the
-# derivatives of the decision value in cash on hand and in housing.
-
-[id=dcsn_marginal, (V[>], c) -> (V) : !dcsn] {
-    D_{w_d}V = 𝑢_c(c)                                  :: [id=marginal_cash]
-    D_{h_d}V = 𝑢_h(h_d) + β*D_{h_nxt_kp}V[>]           :: [id=marginal_housing]
-}

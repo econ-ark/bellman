@@ -26,9 +26,9 @@ import numpy
 
 from bellman.distributions.edges import DistributionDeclaration, JointDistribution
 from bellman.distributions.families import (
+    declaration_text,
     MeanAndCovariance,
     drop_zeros_and_ones,
-    family_name,
     names_text,
     normal_mean_and_covariance,
     number_matrix,
@@ -120,29 +120,37 @@ def select_conditional(edge, integrated, given, occurrence, refuse) -> Condition
         refuse(
             "distribution-edge",
             occurrence,
-            f"the expectation {occurrence} integrates {names_text(stranger)}, which is not drawn "
-            f"on the edge of {edge.block!r} whose law of motion this block substitutes; its "
-            f"shocks are {names_text(edge.shocks) or 'none'} (AMD-SG-009 §2, rule "
-            f"distribution-edge); integrate a shock in the backward block "
+            f"{expectation_words(occurrence, _ordered(edge, S))} integrates "
+            f"{names_text(stranger)}, which is not drawn on the edge of {edge.block!r} whose "
+            f"law of motion this block substitutes; the shocks of that edge are "
+            f"{names_text(edge.shocks) or 'none'}; integrate a shock in the backward block "
             f"of the edge it is drawn on",
+            write=(
+                f"Integrate {names_text(stranger)} in the backward block of the edge that "
+                f"draws {'it' if len(stranger) == 1 else 'them'}"
+            ),
         )
 
     def unsupported(reason):
         declarations = "; ".join(
-            f"{owner.identity} at {owner.address}" for owner in edge.declarations
+            f"{declaration_text(owner)} at {owner.address}" for owner in edge.declarations
         )
         refuse(
             "conditional-not-declared",
             occurrence,
-            f"the expectation {occurrence} needs the distribution of "
+            f"{expectation_words(occurrence, _ordered(edge, S))} needs the distribution of "
             f"{names_text(_ordered(edge, S))} given "
             f"{names_text(_ordered(edge, C)) + ' and ' if C else ''}the source coordinates "
             f"({base}), and {reason}; the declarations of the edge of {edge.block!r} are "
             f"{declarations}. The construction selects declared conditionals, their products in "
             f"dependency order, and marginals and conditionals of a joint normal declaration; it "
-            f"derives no posterior (AMD-SG-009 §§4–5, rule conditional-not-declared). Integrate "
-            f"in the order of the declarations, parents last; an order that changes a nonlinear "
-            f"aggregation is a different specification, not a repair",
+            f"derives no posterior. Integrate in the order of the declarations, parents last; an "
+            f"order that changes a nonlinear aggregation is a different specification, not a "
+            f"repair",
+            write=(
+                "Integrate in the order of the declarations, parents last; an order that "
+                "changes a nonlinear aggregation is a different specification, not a repair"
+            ),
         )
 
     kept, leaves = _leaf_declarations(edge.declarations, S | C)
@@ -192,26 +200,25 @@ def _factor_of(owner, S, C, unsupported) -> Factor:
     outside = [p for p in owner.parents if p not in S | C]
     if outside:
         unsupported(
-            f"the declaration {owner.identity} of {names_text(owner.subjects)} is conditional on "
-            f"{names_text(outside)}, which is neither integrated nor conditioned on here, so the "
+            f"{declaration_text(owner)} is conditional on {names_text(outside)}, which is "
+            f"neither integrated nor conditioned on here, so the "
             f"distribution would integrate a parent out of its child"
         )
     if rest and normal_mean_and_covariance(owner) is None:
         unsupported(
-            f"the declaration {owner.identity} is a joint {family_name(owner)} distribution of "
-            f"{names_text(owner.subjects)}, whose marginal in "
+            f"{declaration_text(owner)} is a joint distribution, whose marginal in "
             f"{names_text(part_S + part_C)} is not derived"
         )
     parents_in_S = [p for p in owner.parents if p in S]
     if part_S and part_C:
         if normal_mean_and_covariance(owner) is None:
             unsupported(
-                f"the conditional of {names_text(part_S)} given {names_text(part_C)} within the "
-                f"{family_name(owner)} declaration {owner.identity} is not derived"
+                f"the conditional of {names_text(part_S)} given {names_text(part_C)} within "
+                f"{declaration_text(owner)} is not derived"
             )
         if parents_in_S:
             unsupported(
-                f"the declaration {owner.identity} is conditional on the integrated shock "
+                f"{declaration_text(owner)} is conditional on the integrated shock "
                 f"{names_text(parents_in_S)}, so the distribution given "
                 f"{names_text(part_C)} is a posterior"
             )
@@ -228,8 +235,9 @@ def _factor_of(owner, S, C, unsupported) -> Factor:
         )
     if parents_in_S:
         unsupported(
-            f"the conditioning shock {names_text(part_C)} is declared by {owner.identity} "
-            f"conditional on the integrated shock {names_text(parents_in_S)}, so the distribution "
+            f"the conditioning shock {names_text(part_C)} is declared by "
+            f"{declaration_text(owner)} conditional on the integrated shock "
+            f"{names_text(parents_in_S)}, so the distribution "
             f"of {names_text(parents_in_S)} given {names_text(part_C)} is a posterior"
         )
     return Factor(owner=owner, form=CONDITIONING, integrated=(), given=part_C, marginalized=rest)
@@ -261,20 +269,33 @@ def check_conditioning_covariance(selection, values, occurrence, refuse) -> bool
             continue
         lowest = smallest_eigenvalue(matrix)
         if lowest <= tolerance(entry for row in matrix for entry in row):
+            jointly = ", ".join(factor.integrated + factor.given)
             refuse(
                 "conditional-not-declared",
                 occurrence,
-                f"the expectation {occurrence} needs the distribution of "
-                f"{names_text(factor.integrated)} given {names_text(factor.given)} from the "
-                f"normal declaration {factor.owner.identity}, whose conditioning covariance Σ_CC "
-                f"= {_matrix_text(block)} = {_matrix_text(matrix, spell=_number_text)} is "
-                f"singular (smallest eigenvalue "
-                f"{lowest!r}); the normal conditional requires Σ_CC positive definite, and no "
-                f"pseudoinverse is taken (AMD-SG-009 §4, rule conditional-not-declared); "
-                f"condition on shocks whose covariance block is positive definite, "
-                f"or integrate them jointly",
+                f"{expectation_words(occurrence, factor.integrated)} needs the distribution of "
+                f"{names_text(factor.integrated)} given {names_text(factor.given)} from "
+                f"{declaration_text(factor.owner)}, whose covariance block of "
+                f"{names_text(factor.given)}, which is {_matrix_text(block)}, is singular "
+                f"(smallest eigenvalue {lowest!r}); the conditional of a joint normal declaration "
+                f"requires a positive definite block for the shocks conditioned on, and no "
+                f"pseudoinverse is taken; condition on shocks whose covariance block is positive "
+                f"definite, or integrate them jointly, `E_{{{jointly}}}(…)`",
+                write=(
+                    f"Condition on shocks whose covariance block is positive definite, or "
+                    f"integrate {jointly} jointly, `E_{{{jointly}}}(…)`"
+                ),
             )
     return decided
+
+
+def expectation_words(occurrence, integrated):
+    """The words naming one expectation in a message: the shocks it integrates
+    and the line it stands on, read from the occurrence's identity, or the
+    occurrence as given where it carries no line."""
+    line = getattr(occurrence, "address", None)
+    over = f"the expectation over {names_text(integrated)}"
+    return f"{over} on line {line}" if line is not None else f"{over} at {occurrence}"
 
 
 # --- the printed conditional ---

@@ -330,7 +330,7 @@ This is the operator-level reading of EGM: the handler may expose the post-decis
 
 ## 11. Numerical decomposition
 
-An EGM recipe needs the relevant transition and marginal information. It may obtain these from a builder or from supported named intermediate targets, and may perform interpolation, envelope comparisons, and evaluation internally. *(Placeholder.)* This is the partial-decomposition setting: the builder may remain opaque except for the named intermediate nodes a handler needs. The explanation of supported intermediate targets remains unfinished; Bellman-SYM's Appendix D defines current source marks and numerical attachment boundaries.
+An EGM recipe needs the relevant transition and marginal information. It may obtain these from a builder or from supported named intermediate places, and may perform interpolation, envelope comparisons, and evaluation internally. *(Placeholder.)* This is the partial-decomposition setting: the builder may remain opaque except for the named intermediate nodes a handler needs. The explanation of supported intermediate places remains unfinished; Bellman-SYM's Appendix D defines current source marks and numerical attachment boundaries.
 
 ## 12. Correspondence with Sargent–Stachurski
 

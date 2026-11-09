@@ -239,7 +239,7 @@ applications/cons-port/reference/legacy/syntax/
 └── settings.yaml             # Grid configuration
 ```
 
-Today the language reads the application's recipes, trellis files, calibration, settings, methods and block files under `applications/cons-port/declaration/`, and its `.bl` stage files under `applications/cons-port/declaration/stages/`.
+Today the language reads the application's recipes, trellis files, calibration and settings files under `applications/cons-port/declaration/`, and its `.bl` stage files under `applications/cons-port/declaration/stages/`, each with its methods files beside it, `methods.bl` and the replacing selections `methods.<variant>.bl`, which are additions to the stage file.
 
 ## Related Documentation
 

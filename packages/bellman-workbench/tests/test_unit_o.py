@@ -25,47 +25,22 @@ from workbench_support import (
 # The bequest's calibration as the durables recipe writes it, and as the
 # test's copy writes it, with one source, so that the bequest's row holds
 # one line in every column.
-BEQUEST_TWO_SOURCES = "calibration: {all: [calibration/durables, $fill]}, periods: [0, 0]}"
-BEQUEST_ONE_SOURCE = "calibration: {all: [calibration/durables]}, periods: [0, 0]}"
+BEQUEST_TWO_SOURCES = "calibration: {all: [calibration/durables, $fill]}, methods:"
+BEQUEST_ONE_SOURCE = "calibration: {all: [calibration/durables]}, methods:"
 
 # The rows of the copy's recipe as the Recipe tab prints them at rest
 # (design pass 11 §2; K-D30), by the stage's key: the text of each line,
 # its parts joined by a space, the Stage cell's key, alone since each stage
 # file of the durables recipe is `<key>.bl` (design pass 13 §3; C10), then
 # each kind's entries in the file's order, `—` for a kind the recipe
-# writes no list of, then the periods, `All` where the recipe writes none.
+# writes no list of, then the periods, `All` where the recipe writes none;
+# a methods list names the stage's addition, `methods.bl` (decision S7-W2).
 REST_TEXTS = {
-    "tenure": [
-        "tenure",
-        "durables",
-        "$fill",
-        "durables",
-        "$fill",
-        "methods",
-        "$tenure_method",
-        "All",
-    ],
-    "keeper_cons": [
-        "keeper_cons",
-        "durables",
-        "$fill",
-        "durables",
-        "$fill",
-        "methods",
-        "$keeper_method",
-        "All",
-    ],
-    "adjuster_cons": [
-        "adjuster_cons",
-        "durables",
-        "$fill",
-        "durables",
-        "$fill",
-        "methods",
-        "$adjuster_method",
-        "All",
-    ],
-    "bequest": ["bequest", "durables", "—", "—", "0–0"],
+    **{
+        key: [key, "durables", "$fill", "durables", "$fill", "methods.bl", "All"]
+        for key in ("tenure", "keeper_cons", "adjuster_cons")
+    },
+    "bequest": ["bequest", "durables", "—", "methods.bl", "0–0"],
 }
 # The stage file of adjuster_cons as the recipe writes it, the hover of its
 # key, the row printing no file's name where it is `<key>.bl` (C10).
@@ -281,7 +256,9 @@ def test_the_recipe_tab_s_rows_are_text_at_rest_and_one_row_opens_to_its_control
         open_recipe_row(tab, "keeper_cons")
         assert expanded(tab) == ["keeper_cons"]
         opened = recipe_rows_at_rest(tab)
-        assert opened["keeper_cons"]["selects"] == 7, opened
+        # the stage file, two calibration entries, two settings entries and
+        # the addition, the methods list holding no slot (decision S7-F3)
+        assert opened["keeper_cons"]["selects"] == 6, opened
         assert [opened[key]["selects"] for key in ("tenure", "adjuster_cons", "bequest")] == [
             0,
             0,

@@ -1,0 +1,85 @@
+@methods: renter_cons
+# The renter's consumption method uses the endogenous grid method on savings,
+# an upper envelope over the candidates, and linear interpolation of the
+# decision value and its marginal value on cash. Housing and income
+# coordinates use the default grid factors.
+# The fues_ settings preserve the FUES options, and the tax_ settings
+# preserve the candidate-segment options at tax thresholds. Settings values
+# are in declaration/settings/housing-renting.yml.
+
+a_nxt_points : ℕ          :: ["number of points of the savings grid"]
+a_nxt_min : ℝ₊            :: ["lower bound of the savings grid"]
+a_nxt_max : ℝ₊            :: ["upper bound of the savings grid"]
+w_points : ℕ              :: ["number of points of the cash grid"]
+w_min : ℝ₊₊               :: ["lower bound of the cash grid"]
+w_max : ℝ₊₊               :: ["upper bound of the cash grid"]
+upper_envelope : {FUES, DCEGM, CONSAV}    :: ["the routine that removes the candidates below the upper envelope"]
+c_max : ℝ₊₊               :: ["largest candidate consumption kept at the borrowing limit"]
+n_constraint_points : ℕ        :: ["candidate points on the segment at the borrowing limit"]
+n_constraint_points_nxt : ℕ    :: ["candidate points on a segment where the policy jumps"]
+fues_m_bar : ℝ₊    :: ["jump-detection threshold"]
+fues_lb : ℕ    :: ["number of grid positions searched backward and forward"]
+fues_include_intersections : {true, false}    :: ["whether to add intersection points at retained jumps"]
+fues_return_intersections_separately : {true, false}    :: ["whether to return intersection points separately"]
+fues_single_intersection : {true, false}    :: ["whether to create only one point per crossing"]
+fues_endog_mbar : {true, false}    :: ["whether to derive the jump threshold from the local policy derivative"]
+fues_padding_mbar : ℝ₊    :: ["amount added to the local derivative threshold"]
+fues_no_double_jumps : {true, false}    :: ["replication setting no_double_jumps for FUES"]
+fues_disable_jump_checks : {true, false}    :: ["whether to override jump validity checks"]
+fues_use_post_state_jump_test : {true, false}    :: ["replication setting use_post_state_jump_test for FUES"]
+fues_left_turn_no_jump_strict : {true, false}    :: ["replication setting left_turn_no_jump_strict for FUES"]
+fues_post_clean_double_jumps : {true, false}    :: ["replication setting post_clean_double_jumps for FUES"]
+fues_detect_decreasing_policy : {true, false}    :: ["replication setting detect_decreasing_policy for FUES"]
+fues_post_clean_passes : ℕ    :: ["replication setting post_clean_passes for FUES"]
+fues_jump_check_tol : ℝ₊    :: ["replication setting jump_check_tol for FUES"]
+fues_correct_jumps : {true, false}    :: ["replication setting correct_jumps for FUES"]
+fues_min_segment_length : ℕ    :: ["replication setting min_segment_length for FUES"]
+fues_eps_d : ℝ₊    :: ["minimum grid-point separation"]
+fues_eps_sep : ℝ₊    :: ["minimum separation for intersection points"]
+fues_eps_fwd_back : ℝ₊    :: ["maximum distance for backward and forward searches"]
+fues_parallel_guard : ℝ₊    :: ["threshold for treating segment slopes as parallel"]
+tax_enabled : {true, false}    :: ["whether to add candidate segments at tax thresholds"]
+tax_c_lb_pct : [0,1]    :: ["lower segment width as a share of candidate consumption"]
+tax_c_ub_pct : [0,1]    :: ["upper segment width as a share of candidate consumption"]
+tax_n_points_per_node : ℕ    :: ["number of candidate points per tax threshold"]
+
+[id=policy, method : !egm(upper_envelope=upper_envelope,
+        c_max=c_max,
+        n_constraint_points=n_constraint_points,
+        n_constraint_points_nxt=n_constraint_points_nxt,
+        fues_m_bar=fues_m_bar,
+        fues_lb=fues_lb,
+        fues_include_intersections=fues_include_intersections,
+        fues_return_intersections_separately=fues_return_intersections_separately,
+        fues_single_intersection=fues_single_intersection,
+        fues_endog_mbar=fues_endog_mbar,
+        fues_padding_mbar=fues_padding_mbar,
+        fues_no_double_jumps=fues_no_double_jumps,
+        fues_disable_jump_checks=fues_disable_jump_checks,
+        fues_use_post_state_jump_test=fues_use_post_state_jump_test,
+        fues_left_turn_no_jump_strict=fues_left_turn_no_jump_strict,
+        fues_post_clean_double_jumps=fues_post_clean_double_jumps,
+        fues_detect_decreasing_policy=fues_detect_decreasing_policy,
+        fues_post_clean_passes=fues_post_clean_passes,
+        fues_jump_check_tol=fues_jump_check_tol,
+        fues_correct_jumps=fues_correct_jumps,
+        fues_min_segment_length=fues_min_segment_length,
+        fues_eps_d=fues_eps_d,
+        fues_eps_sep=fues_eps_sep,
+        fues_eps_fwd_back=fues_eps_fwd_back,
+        fues_parallel_guard=fues_parallel_guard,
+        tax_enabled=tax_enabled,
+        tax_c_lb_pct=tax_c_lb_pct,
+        tax_c_ub_pct=tax_c_ub_pct,
+        tax_n_points_per_node=tax_n_points_per_node)
+    | grid : !Cartesian(a_nxt_r=(a_nxt_min, a_nxt_max, a_nxt_points))] {
+    c[>]   <= 𝑑𝑢𝑖𝑛𝑣(β*D_{a_nxt_r}V[>])    :: [id=InvEuler]
+    w_d[>] = a_nxt_r + c[>]               :: [id=endoggrid]
+    c      = c[>]                         :: [id=cons_choice]
+}
+
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(w_d=(w_min, w_max, w_points))] {
+    D_{w_d}V = 𝑑𝑢(c)                      :: [id=marginal]
+}

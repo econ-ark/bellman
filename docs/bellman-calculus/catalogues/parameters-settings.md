@@ -27,11 +27,11 @@ A **parameter** is an input on which the mathematical problem depends. A **setti
 | Role | What the value determines | Source |
 |---|---|---|
 | Parameter | A reward, transition, conditional law, constraint or economic domain. | Typed declarations in `.bl`, with values supplied through calibration bindings. |
-| Setting | A numerical grid, quadrature size, stopping tolerance or other method input. | Supporting settings/methods YAML, in the forms Bellman-SYM's Methodization page gives. |
+| Setting | A numerical grid, quadrature size, stopping tolerance or other method input. | Declared with its set in the methods file and valued in the settings file, in the forms Bellman-SYM's Methodization page gives. |
 
 A constant has a declared type and admissible value domain. That type may include a real interval, integers, vectors, matrices or a finite set of symbols. A domain does not by itself determine a unique source type name or a declared subsort relation; [Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) distinguishes those choices. A parameter supplied to an occurrence is held fixed in that occurrence's equations, even when other occurrences use different values.
 
-Supporting YAML supplies calibration, methods and settings through occurrence bindings. The stage equations themselves are `.bl`. The specified construction of Bellman-SYM's Appendix C retains interpreted equations and definitions; a completed numerical solution additionally needs admissible inputs and supported methods.
+The calibration and settings files and the methods file supply calibration, methods and settings through occurrence bindings. The stage equations themselves are `.bl`. The specified construction of Bellman-SYM's Appendix C retains interpreted equations and definitions; a completed numerical solution additionally needs admissible inputs and supported methods.
 
 > [!note] Classifying an input
 > Ask whether the input changes the declared economic problem or how that fixed problem is approximated. Finer discretization does not automatically remove every setting's effect: convergence requires a suitable method and refinement sequence. An economic parameter may also be irrelevant to a particular outcome, so sensitivity alone is not the classification test.

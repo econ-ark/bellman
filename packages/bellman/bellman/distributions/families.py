@@ -157,7 +157,7 @@ def _check_scalar_law(owner, values, refuse, named=None, *, indexed=False, dimen
         )
     if fun == LOGNORMAL:
         return len(owner.term.args) != 2 or _check_lognormal(owner, values, refuse, named=named)
-    named = named or _declaration_text(owner)
+    named = named or declaration_text(owner)
     if fun == UNIFORM:
         return _check_uniform(owner, values, refuse, named)
     if fun == TRUNCATED_NORMAL:
@@ -264,10 +264,10 @@ def check_argument_count(owner, refuse) -> None:
         refuse(
             "readable-form",
             owner.address,
-            f"the {term.fun} declaration {owner.identity} of {names_text(owner.subjects)} writes "
-            f"{to_source(term)}, a call of {_counted(len(term.args))}; `{term.fun}` takes "
-            f"{declared.in_words()}, {declared.named} (AMD-SG-009 §1; AMD-SG-017 §5.2, rule "
-            f"readable-form); write the call with the arguments the family takes",
+            f"{declaration_text(owner)} writes {to_source(term)}, a call of "
+            f"{_counted(len(term.args))}; `{term.fun}` takes {declared.in_words()}, "
+            f"{declared.named}; write the call with the arguments the family takes",
+            write=f"Write the call of `{term.fun}` with {declared.in_words()}, {declared.named}",
         )
 
 
@@ -317,9 +317,8 @@ def check_weights(owner, values, refuse, dimension=None) -> bool:
             refuse(
                 "distribution-domain",
                 owner.address,
-                f"{_declaration_text(owner)} has the probability {to_source(probability)} = "
-                f"{number!r}, which is not a probability; `Bernoulli(p)` takes p in [0, 1] "
-                f"(AMD-SG-010 §3, rule distribution-domain)",
+                f"{declaration_text(owner)} has the probability {to_source(probability)} = "
+                f"{number!r}, which is not a probability; `Bernoulli(p)` takes p in [0, 1]",
             )
         return True
     if weight_matrix_text(owner) is not None:
@@ -334,28 +333,29 @@ def check_weights(owner, values, refuse, dimension=None) -> bool:
                 refuse(
                     "distribution-domain",
                     owner.address,
-                    f"the row at {key} of {matrix}, the matrix {_declaration_text(owner)} selects "
+                    f"the row at {key} of {matrix}, the matrix {declaration_text(owner)} selects "
                     f"from, has {len(row)} entries where the subject's set has {dimension} "
-                    f"members at the values (rule distribution-domain); write one probability "
+                    f"members at the values; write one probability "
                     f"per member",
+                    write=f"Write {dimension} probabilities in the row at {key}, one per member",
                 )
             outside = [number for number in row if not 0.0 <= number <= 1.0]
             if outside:
                 refuse(
                     "distribution-domain",
                     owner.address,
-                    f"the row at {key} of {matrix}, the matrix {_declaration_text(owner)} selects "
+                    f"the row at {key} of {matrix}, the matrix {declaration_text(owner)} selects "
                     f"from, has the entry {outside[0]!r}, which is not a probability; each entry "
-                    f"lies in [0, 1] (AMD-SG-010 §3, rule distribution-domain)",
+                    f"lies in [0, 1]",
                 )
             total = math.fsum(row)
             if abs(total - 1.0) > tolerance([total]):
                 refuse(
                     "distribution-domain",
                     owner.address,
-                    f"the row at {key} of {matrix}, the matrix {_declaration_text(owner)} selects "
-                    f"from, sums to {total!r}, not to one (AMD-SG-010 §3, rule "
-                    f"distribution-domain); write rows that sum to one",
+                    f"the row at {key} of {matrix}, the matrix {declaration_text(owner)} selects "
+                    f"from, sums to {total!r}, not to one; write rows that sum to one",
+                    write=f"Write the row at {key} with entries that sum to one",
                 )
         return True
     for weights in weights_of(owner):
@@ -368,9 +368,10 @@ def check_weights(owner, values, refuse, dimension=None) -> bool:
             refuse(
                 "distribution-domain",
                 owner.address,
-                f"{_declaration_text(owner)} writes {len(weights)} weights, {written}, where the "
-                f"subject's set has {dimension} members at the values (rule distribution-domain); "
+                f"{declaration_text(owner)} writes {len(weights)} weights, {written}, where the "
+                f"subject's set has {dimension} members at the values; "
                 f"write one weight per member",
+                write=f"Write {dimension} weights, one per member",
             )
         outside = [
             (term, number) for term, number in zip(weights, numbers) if not 0.0 <= number <= 1.0
@@ -380,18 +381,20 @@ def check_weights(owner, values, refuse, dimension=None) -> bool:
             refuse(
                 "distribution-domain",
                 owner.address,
-                f"{_declaration_text(owner)} has the weight {to_source(term)} = {number!r}, which "
+                f"{declaration_text(owner)} has the weight {_value_text(term, number)}, which "
                 f"is not a probability; each weight of {written} lies in [0, 1] and they sum to "
-                f"one (AMD-SG-010 §3, rule distribution-domain); "
+                f"one; "
                 f"write weights in the unit interval",
+                write=_value_action(term, "a weight", "lies in the unit interval"),
             )
         total = math.fsum(numbers)
         if abs(total - 1.0) > tolerance([total]):
             refuse(
                 "distribution-domain",
                 owner.address,
-                f"the weights {written} of {_declaration_text(owner)} sum to {total!r}, not to "
-                f"one (AMD-SG-010 §3, rule distribution-domain); write weights that sum to one",
+                f"the weights {written} of {declaration_text(owner)} sum to {total!r}, not to "
+                f"one; write weights that sum to one",
+                write="Write weights that sum to one",
             )
     return decided
 
@@ -451,21 +454,24 @@ def weights_condition(owner) -> str:
     if probability is not None:
         complement = T.Sub(T.Number(1), probability)
         return (
-            f"{_declaration_text(owner)} gives its subject the value 1 with probability "
+            f"{declaration_identity_text(owner)} gives its subject the value 1 with probability "
             f"{to_source(probability)} and the value 0 with probability {to_source(complement)}, "
             f"both in its declared set, and {to_source(probability)} lies in [0, 1]"
         )
     written_matrix = weight_matrix_text(owner)
     if written_matrix is not None:
         return (
-            f"each row of {written_matrix}, the matrix {_declaration_text(owner)} selects from, "
-            f"lies in [0, 1] and sums to one"
+            f"each row of {written_matrix}, the matrix {declaration_identity_text(owner)} selects "
+            f"from, lies in [0, 1] and sums to one"
         )
     lists = weights_of(owner)
     written = "; ".join(
         "(" + ", ".join(to_source(term) for term in weights) + ")" for weights in lists
     )
-    return f"the weights {written} of {_declaration_text(owner)} each lie in [0, 1] and sum to one"
+    return (
+        f"the weights {written} of {declaration_identity_text(owner)} each lie in [0, 1] and sum "
+        f"to one"
+    )
 
 
 def weights_of(owner):
@@ -553,15 +559,14 @@ def _check_normal(owner, values, refuse, *, indexed=False, dimension=None, named
     term = owner.term
     parts = normal_mean_and_covariance(owner, indexed=indexed)
     if parts is None:
-        declaration = f"the normal declaration {owner.identity} of {names_text(owner.subjects)}"
+        declaration = declaration_text(owner)
         refuse(
             "distribution-domain",
             owner.address,
             f"{named or declaration} writes N({', '.join(to_source(a) for a in term.args)}), "
             f"whose mean and covariance do not have the dimension {len(owner.subjects)} of its "
             f"subject; `N(μ, v)` of one shock takes a mean and a variance, "
-            f"`N((μ₁, …), ((Σ₁₁, …), …))` of a tuple a mean tuple and a covariance matrix "
-            f"(AMD-SG-009 §1, rule distribution-domain)",
+            f"`N((μ₁, …), ((Σ₁₁, …), …))` of a tuple a mean tuple and a covariance matrix",
         )
     covariance = parts.covariance
     if isinstance(parts, NamedMeanAndCovariance):
@@ -575,11 +580,15 @@ def _check_normal(owner, values, refuse, *, indexed=False, dimension=None, named
             refuse(
                 "distribution-domain",
                 owner.address,
-                f"{named or f'the indexed normal declaration {owner.identity}'} names "
+                f"{named or declaration_text(owner)} names "
                 f"{mean_name} as its mean vector and {covariance_name} as its covariance "
                 f"matrix, but their "
-                f"calibration values do not have those shapes (rule distribution-domain); "
+                f"calibration values do not have those shapes; "
                 f"write one mean entry and one covariance row per component",
+                write=(
+                    f"Write one mean entry in {mean_name} and one covariance row in "
+                    f"{covariance_name} per component"
+                ),
             )
         rows = [[_number_of(entry) for entry in row] for row in matrix]
         means = [_number_of(entry) for entry in mean]
@@ -592,28 +601,33 @@ def _check_normal(owner, values, refuse, *, indexed=False, dimension=None, named
             refuse(
                 "distribution-domain",
                 owner.address,
-                f"the mean {mean_name} of {named or f'the normal declaration {owner.identity}'} "
+                f"the mean {mean_name} of {named or declaration_text(owner)} "
                 f"has {len(means)} entries and the covariance {covariance_name} {len(rows)} "
                 f"rows of {', '.join(str(len(row)) for row in rows)} entries, where "
                 f"{names_text(owner.subjects)} has "
                 f"{dimension if dimension is not None else 'one component per member'}"
-                f"{' components at the values' if dimension is not None else ''} "
-                f"(rule distribution-domain); write one mean entry and one covariance row per "
-                f"component",
+                f"{' components at the values' if dimension is not None else ''}; write one "
+                f"mean entry and one covariance row per component",
+                write=(
+                    f"Write one mean entry in {mean_name} and one covariance row in "
+                    f"{covariance_name} per component"
+                ),
             )
         matrix = rows
     else:
         if indexed and dimension is not None and len(covariance) != dimension:
-            declaration = (
-                f"the normal declaration {owner.identity} of {names_text(owner.subjects)}"
-            )
+            declaration = declaration_text(owner)
             refuse(
                 "distribution-domain",
                 owner.address,
                 f"{named or declaration} is written for {len(covariance)} component"
                 f"{'s' if len(covariance) != 1 else ''}, where {names_text(owner.subjects)} has "
-                f"{dimension} components at the values (rule distribution-domain); write the law "
+                f"{dimension} components at the values; write the law "
                 f"with one mean entry and one covariance row per component",
+                write=(
+                    f"Write the law with one mean entry and one covariance row for each of the "
+                    f"{dimension} components"
+                ),
             )
         matrix = number_matrix(covariance, values)
         if matrix is None:
@@ -630,21 +644,26 @@ def _check_normal(owner, values, refuse, *, indexed=False, dimension=None, named
         refuse(
             "distribution-domain",
             owner.address,
-            f"{named or f'the normal declaration {owner.identity}'} has the variance "
-            f"{to_source(covariance[0][0])} = {matrix[0][0]!r}, which is negative; `N(μ, v)` "
-            f"takes the variance v ≥ 0 (AMD-SG-009 §§1, 4, rule distribution-domain); "
+            f"{named or declaration_text(owner)} has the variance "
+            f"{_value_text(covariance[0][0], matrix[0][0])}, which is negative; `N(μ, v)` "
+            f"takes the variance v ≥ 0; "
             f"write a nonnegative variance",
+            write=_value_action(covariance[0][0], "a variance", "is nonnegative"),
         )
     if asymmetric:
         i, j = asymmetric[0]
         refuse(
             "distribution-domain",
             owner.address,
-            f"the covariance of {named or f'the normal declaration {owner.identity}'} is not "
+            f"the covariance of {named or declaration_text(owner)} is not "
             f"symmetric: entry ({i + 1}, {j + 1}) is {matrix[i][j]!r} and entry "
-            f"({j + 1}, {i + 1}) is {matrix[j][i]!r} (AMD-SG-009 §4, rule distribution-domain); "
+            f"({j + 1}, {i + 1}) is {matrix[j][i]!r}; "
             f"write a "
             f"symmetric covariance matrix",
+            write=(
+                f"Write a symmetric covariance matrix, whose entries ({i + 1}, {j + 1}) and "
+                f"({j + 1}, {i + 1}) are equal"
+            ),
         )
     if n > 1:
         lowest = smallest_eigenvalue(matrix)
@@ -654,10 +673,10 @@ def _check_normal(owner, values, refuse, *, indexed=False, dimension=None, named
                 owner.address,
                 f"the covariance "
                 f"{to_source(T.Tuple(tuple(T.Tuple(tuple(row)) for row in covariance)))} of "
-                f"{named or f'the normal declaration {owner.identity}'} is not positive "
-                f"semidefinite: its smallest eigenvalue is {lowest!r} (AMD-SG-009 §4, rule "
-                f"distribution-domain); write a "
-                f"symmetric positive semidefinite covariance matrix",
+                f"{named or declaration_text(owner)} is not positive semidefinite: its "
+                f"smallest eigenvalue is {lowest!r}; write a symmetric positive semidefinite "
+                f"covariance matrix",
+                write="Write a symmetric positive semidefinite covariance matrix",
             )
     return True
 
@@ -668,7 +687,7 @@ def _check_lognormal(owner, values, refuse, named=None) -> bool:
     declaration, or the mixture's component, in the message. Returns whether
     it was decided."""
     term = owner.term
-    named = named or f"the lognormal declaration {owner.identity}"
+    named = named or declaration_text(owner)
     deviation = numeric_value(term.args[1], values)
     if deviation is None:
         return False
@@ -678,7 +697,7 @@ def _check_lognormal(owner, values, refuse, named=None) -> bool:
             owner.address,
             f"{named} has the standard deviation of the "
             f"logarithm {to_source(term.args[1])} = {deviation!r}, which is negative; "
-            f"`LogNormal(μ, σ)` takes σ ≥ 0 (AMD-SG-009 §1, rule distribution-domain)",
+            f"`LogNormal(μ, σ)` takes σ ≥ 0",
         )
     return True
 
@@ -725,7 +744,7 @@ def _check_uniform(owner, values, refuse, named) -> bool:
             owner.address,
             f"{named} has the endpoints a = {_value_text(owner.term.args[0], lower)} and "
             f"b = {_value_text(owner.term.args[1], upper)}, which are not in order; "
-            f"`Uniform(a, b)` takes a < b (rule distribution-domain)",
+            f"`Uniform(a, b)` takes a < b",
         )
     return True
 
@@ -744,7 +763,7 @@ def _check_truncated_normal(owner, values, refuse, named) -> bool:
             owner.address,
             f"{named} has the standard deviation σ = "
             f"{_value_text(owner.term.args[1], deviation)}, which is not positive; "
-            f"`TruncatedNormal(μ, σ, l, u)` takes σ > 0 (rule distribution-domain)",
+            f"`TruncatedNormal(μ, σ, l, u)` takes σ > 0",
         )
     lower = _real_argument(owner, 2, values, refuse, named, endpoint=True)
     upper = _real_argument(owner, 3, values, refuse, named, endpoint=True)
@@ -754,7 +773,7 @@ def _check_truncated_normal(owner, values, refuse, named) -> bool:
             owner.address,
             f"{named} has the truncation endpoints l = {_value_text(owner.term.args[2], lower)} "
             f"and u = {_value_text(owner.term.args[3], upper)}, which are not in order; "
-            f"`TruncatedNormal(μ, σ, l, u)` takes l < u (rule distribution-domain)",
+            f"`TruncatedNormal(μ, σ, l, u)` takes l < u",
         )
     return None not in (mean, deviation, lower, upper)
 
@@ -774,7 +793,7 @@ def _check_truncated_lognormal(owner, values, refuse, named) -> bool:
             owner.address,
             f"{named} has the standard deviation of the logarithm σ = "
             f"{_value_text(owner.term.args[1], deviation)}, which is not positive; "
-            f"`TruncatedLogNormal(μ, σ, l, u)` takes σ > 0 (rule distribution-domain)",
+            f"`TruncatedLogNormal(μ, σ, l, u)` takes σ > 0",
         )
     lower = _real_argument(owner, 2, values, refuse, named, endpoint=True)
     upper = _real_argument(owner, 3, values, refuse, named, endpoint=True)
@@ -784,7 +803,7 @@ def _check_truncated_lognormal(owner, values, refuse, named) -> bool:
             owner.address,
             f"{named} has the lower endpoint l = {_value_text(owner.term.args[2], lower)}, "
             f"which is negative; `TruncatedLogNormal(μ, σ, l, u)` takes 0 ≤ l < u, the draw "
-            f"being positive, with 0 for no lower bound (rule distribution-domain)",
+            f"being positive, with 0 for no lower bound",
         )
     if lower is not None and upper is not None and not lower < upper:
         refuse(
@@ -792,7 +811,7 @@ def _check_truncated_lognormal(owner, values, refuse, named) -> bool:
             owner.address,
             f"{named} has the truncation endpoints l = {_value_text(owner.term.args[2], lower)} "
             f"and u = {_value_text(owner.term.args[3], upper)}, which are not in order; "
-            f"`TruncatedLogNormal(μ, σ, l, u)` takes l < u (rule distribution-domain)",
+            f"`TruncatedLogNormal(μ, σ, l, u)` takes l < u",
         )
     return None not in (mean, deviation, lower, upper)
 
@@ -827,7 +846,7 @@ def _check_extreme_value(owner, values, refuse, named) -> bool:
             "distribution-domain",
             owner.address,
             f"{named} has the scale s = {_value_text(owner.term.args[1], scale)}, which is not "
-            f"positive; `TypeIExtremeValue(μ, s)` takes s > 0 (rule distribution-domain)",
+            f"positive; `TypeIExtremeValue(μ, s)` takes s > 0",
         )
     return location is not None and scale is not None
 
@@ -859,13 +878,12 @@ def _real_argument(owner, position, values, refuse, named, *, endpoint=False):
             "distribution-domain",
             owner.address,
             f"{named} writes {words} {letter} as {to_source(term)}, which is not a real number; "
-            f"`{form}` takes real arguments (rule distribution-domain)",
+            f"`{form}` takes real arguments",
         )
         return None
     names = _names_read(term)
     if names is None:
         return None
-    names = names - {"inf", "∞"}
     if any(name not in values for name in names):
         return None
     for name in sorted(names):
@@ -874,8 +892,7 @@ def _real_argument(owner, position, values, refuse, named, *, endpoint=False):
                 "distribution-domain",
                 owner.address,
                 f"{named} has {words} {letter} = {to_source(term)}, where {name} = "
-                f"{values[name]!r}, which is not a real number; `{form}` takes real arguments "
-                f"(rule distribution-domain)",
+                f"{values[name]!r}, which is not a real number; `{form}` takes real arguments",
             )
             return None
     number = numeric_value(term, values)
@@ -885,7 +902,7 @@ def _real_argument(owner, position, values, refuse, named, *, endpoint=False):
             owner.address,
             f"{named} has {words} {letter} = {to_source(term)}, which has no number: a "
             f"division by zero, a power with no real value or a power beyond the "
-            f"floating-point range; `{form}` takes real arguments (rule distribution-domain)",
+            f"floating-point range; `{form}` takes real arguments",
         )
         return None
     if math.isnan(number):
@@ -893,7 +910,7 @@ def _real_argument(owner, position, values, refuse, named, *, endpoint=False):
             "distribution-domain",
             owner.address,
             f"{named} has {words} {letter} = {to_source(term)}, which is not a number; "
-            f"`{form}` takes real arguments (rule distribution-domain)",
+            f"`{form}` takes real arguments",
         )
         return None
     if math.isinf(number) and not endpoint:
@@ -901,10 +918,28 @@ def _real_argument(owner, position, values, refuse, named, *, endpoint=False):
             "distribution-domain",
             owner.address,
             f"{named} has {words} {letter} = {_value_text(term, number)}, which is not finite; "
-            f"`{form}` takes a finite {letter} (rule distribution-domain)",
+            f"`{form}` takes a finite {letter}",
         )
         return None
     return number
+
+
+def _value_action(term, noun, held):
+    """The action of a condition that the number of `term` fails, `noun`
+    what the term is, `a weight`, and `held` the condition in words, `lies
+    in the unit interval`. A term written as a number is replaced in the
+    declaration, `Write a weight that lies in the unit interval in place of
+    1.5`; a term that reads parameters is given a value in the calibration
+    file, `Give π a value in the calibration file at which 1 - π lies in the
+    unit interval`, so that the term as written tells the two files apart."""
+    names = sorted(_names_read(term) or ())
+    written = to_source(term)
+    if not names:
+        return f"Write {noun} that {held} in place of {written}"
+    return (
+        f"Give {' and '.join(names)} {'a value' if len(names) == 1 else 'values'} in the "
+        f"calibration file at which {'it' if written in names else written} {held}"
+    )
 
 
 def _value_text(term, number):
@@ -923,19 +958,20 @@ def _written_form(family):
     return f"{family}({', '.join(letter for letter, _ in _PARAMETERS[family])})"
 
 
-def _scalar_laws(owner):
+def _scalar_laws(owner, text=None):
     """The calls of a family in `SCALAR_FAMILIES` a declaration writes, each
     as a declaration of its own with the words naming it in a message: the
     declaration itself with None where its term is such a call, the
     declaration's words then standing, and each such component of a mixture
-    with the words `the <family> component of the <family> declaration …`."""
+    with the words `the <family> component of the <family> declaration …`,
+    the declaration named by `text`, `declaration_text` where none is given."""
     for call in _family_calls(owner.term):
         if call.fun not in SCALAR_FAMILIES:
             continue
         if call is owner.term:
             yield owner, None
         else:
-            yield replace(owner, term=call), _component_text(owner, call)
+            yield replace(owner, term=call), _component_text(owner, call, text or declaration_text)
 
 
 def check_real_parameter_shapes(owner, non_real, refuse) -> None:
@@ -951,14 +987,14 @@ def check_real_parameter_shapes(owner, non_real, refuse) -> None:
         family = law.term.fun
         if family not in REAL_PARAMETER_FAMILIES:
             continue
-        named = named or _declaration_text(owner)
+        named = named or declaration_text(owner)
         if len(owner.subjects) != 1:
             refuse(
                 "distribution-domain",
                 owner.address,
                 f"{named} has the subjects {names_text(owner.subjects)}; "
                 f"`{_written_form(family)}` is the law of one real subject, or of each component "
-                f"of a collection (rule distribution-domain)",
+                f"of a collection",
             )
         for argument, (letter, words) in zip(law.term.args, _PARAMETERS[family]):
             for name in sorted(_names_read(argument) or ()):
@@ -969,8 +1005,7 @@ def check_real_parameter_shapes(owner, non_real, refuse) -> None:
                         owner.address,
                         f"{named} has {words} {letter} = {to_source(argument)}, which reads the "
                         f"parameter {name}, declared on {to_source(declared)}, {kind}; "
-                        f"`{_written_form(family)}` takes real numbers "
-                        f"(rule distribution-domain)",
+                        f"`{_written_form(family)}` takes real numbers",
                     )
 
 
@@ -996,7 +1031,7 @@ def parameter_condition(owner) -> str | None:
     a < b, with a = a_y and b = b_y, both finite. None where every such law's
     arguments are numbers, or the declaration writes none."""
     clauses = []
-    for law, named in _scalar_laws(owner):
+    for law, named in _scalar_laws(owner, declaration_identity_text):
         call = law.term
         if call.fun not in REAL_PARAMETER_FAMILIES:
             continue
@@ -1007,8 +1042,8 @@ def parameter_condition(owner) -> str | None:
             for argument, (letter, _) in zip(call.args, _PARAMETERS[call.fun])
         ]
         clauses.append(
-            f"the parameters of {named or _declaration_text(owner)} lie in the family's domain: "
-            + _DOMAIN_CONDITIONS[call.fun].format(*written)
+            f"the parameters of {named or declaration_identity_text(owner)} lie in the "
+            f"family's domain: " + _DOMAIN_CONDITIONS[call.fun].format(*written)
         )
     return "; ".join(clauses) or None
 
@@ -1137,6 +1172,8 @@ def _names_read(term):
     if isinstance(term, T.Number):
         return frozenset()
     if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
+        if term.symbol.name in ("inf", "∞"):
+            return frozenset()  # infinity, a number to `numeric_value`, is no name read
         return frozenset((term.symbol.name,)) if isinstance(term.symbol.name, str) else None
     if isinstance(term, T.Neg):
         return _names_read(term.operand)
@@ -1251,16 +1288,28 @@ def family_name(owner):
     return owner.term.fun if isinstance(owner.term, T.Call) else "declared"
 
 
-def _declaration_text(owner):
-    """The words naming a declaration in a message: its family, identity and
-    subjects."""
+def declaration_text(owner):
+    """The words naming a declaration in a refusal: its family, the normal
+    family by the word `normal`, and the declaration as the file writes it,
+    `the normal declaration `y ~ N(0, 1)``."""
+    family = family_name(owner)
+    return (
+        f"the {'normal' if family == NORMAL else family} declaration "
+        f"`{names_text(owner.subjects)} ~ {to_source(owner.term)}`"
+    )
+
+
+def declaration_identity_text(owner):
+    """The words naming a declaration in the sentence of an obligation: its
+    family, its identity and its subjects, `the N declaration t:distribution:y
+    of y`, the form the recordings of the corpus hold."""
     return f"the {family_name(owner)} declaration {owner.identity} of {names_text(owner.subjects)}"
 
 
-def _component_text(owner, component):
+def _component_text(owner, component, text=declaration_text):
     """The words naming a component of a mixture declaration in a message:
-    the component's family and the declaration's words."""
-    return f"the {component.fun} component of {_declaration_text(owner)}"
+    the component's family and the declaration's words, by `text`."""
+    return f"the {component.fun} component of {text(owner)}"
 
 
 def _counted(number):

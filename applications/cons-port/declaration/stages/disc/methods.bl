@@ -1,0 +1,7 @@
+@methods: disc
+# The methods of the discount stage: its two forward builders are
+# deterministic, a representation of a forward builder's measure without a
+# grid. Its two value builders bind nothing.
+
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !deterministic

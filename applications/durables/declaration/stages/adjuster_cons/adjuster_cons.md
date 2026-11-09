@@ -10,11 +10,11 @@ topic: [applications]
 > `adjuster_cons.bl` is the problem of a household that has just sold its house:
 > it chooses consumption and a new housing stock out of total wealth, and
 > carries savings and that stock into the next period. The stage file states
-> the two choices together as one maximization; the method block of
-> `declaration/methods/adjuster_cons_egm.bl` solves for them as one solution
-> statement with two unknowns, and the marginal block of
-> `declaration/methods/marginals_adjuster_cons.bl` states the derivative of the
-> value; the elaboration is quoted at the end of this page. The economic
+> the two choices together as one maximization; the methods file `methods.bl`
+> beside it, an addition to the stage, writes the lines of the endogenous grid
+> method, which solve for them as one solution statement with two unknowns, and
+> the derivative line of the value; the elaboration is quoted at the end of
+> this page. The economic
 > environment and the composition of the stages are in `economics.md`.
 
 > [!note]
@@ -101,13 +101,20 @@ stage reads on the adjust branch.
 ```
 
 The derivative of the decision value with respect to wealth, which is the one
-derivative the tenure stage reads on this branch, is stated by the marginal
-block of `declaration/methods/marginals_adjuster_cons.bl`, which the methods file
-binds on the decision value builder with `!marginals`. The line is the envelope
-condition at the chosen consumption.
+derivative the tenure stage reads on this branch, is stated by the line the
+methods file appends to the decision value builder's block `cntn_to_dcsn`,
+whose header types the representations of the decision value and of this
+derivative on the grid of total wealth. The line is the envelope condition at
+the chosen consumption.
 
 ```bl
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+[id=cntn_to_dcsn
+    | evaluate[V].method : !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)
+    | evaluate[V].handler : "dcsmm:interp_as_3"
+    | evaluate[V].grid : !Cartesian(m=(w_min, w_max, n_w))
+    | evaluate[D_{m}V].method : !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)
+    | evaluate[D_{m}V].handler : "dcsmm:interp_as_3"
+    | evaluate[D_{m}V].grid : !Cartesian(m=(w_min, w_max, n_w))] {
     D_{m}V = 𝑢_c(c)                                    :: [id=marginal_wealth]
 }
 ```
@@ -131,12 +138,26 @@ set. The two controls are bound in the order in which the feasible sets are
 read, the set of the new stock reading the consumption bound before it, and the
 tuple on the left lists them in that same order.
 
-The method block `egm` of `declaration/methods/adjuster_cons_egm.bl`, which the
-methods file binds on the policy builder with `!egm`, holds the endogenous grid
-method of Box 2 of the paper, written on the continuation state.
+The block `policy` of the methods file, whose header types the policy builder's
+method, its handler and its grid, holds the endogenous grid method of Box 2 of
+the paper, written on the continuation state; the union appends its three lines
+to the stage's policy block, and with `!egm` in the method component they stand
+in place of the maximization at the operative level while `stage.declared` keeps
+it.
 
 ```bl
-[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl, h_choice : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, method : !egm(spacing=grid_phi, savings_floor=b,
+        roots_per_housing_point=egm_n, root_scan_step=root_eps,
+        upper_envelope=adj_upper_envelope, jump_threshold=m_bar,
+        lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep,
+        eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard,
+        include_intersections=adj_include_intersections,
+        no_double_jumps=adj_no_double_jumps,
+        single_intersection=adj_single_intersection,
+        disable_jump_checks=adj_disable_jump_checks,
+        correct_jumps=correct_jumps, search_sections=n_sections)
+    | handler : "fues-durables:make_adjuster_ops"
+    | grid : !Cartesian(a_nxt_adj=(a_min, a_max, n_a), h_nxt_adj=(h_min, h_max, n_h))] {
     c[>]          <= 𝑢_c_inv(β*D_{a_nxt_adj}V[>])                                              :: [id=InvEuler]
     m[>]          = a_nxt_adj + c[>] + (1 + τ)*h_nxt_adj                                       :: [id=endoggrid]
     (c, h_choice) = solve_{c, h_choice}(c - c[>], (1 + τ)*𝑢_c(c) - 𝑢_h(h_choice) - β*D_{h_nxt_adj}V[>])   :: [id=choice]
@@ -147,9 +168,9 @@ The first line inverts the Euler equation for assets, reading the derivative of
 the continuation value in savings by the term `D_{a_nxt_adj}V[>]`: as an
 inequality it defines candidate consumption as a single value wherever saving is
 positive and a segment at zero saving, so the borrowing constraint stays in the
-method block. The second recovers the total wealth at which a candidate is
-optimal by inverting the budget. The third is the pair of first-order
-conditions in the two unknowns: the first residual identifies
+lines of the addition's block `policy`. The second recovers the total wealth at
+which a candidate is optimal by inverting the budget. The third is the pair of
+first-order conditions in the two unknowns: the first residual identifies
 consumption with the candidate, which read through the budget is the asset Euler
 equation; the second is the housing condition, which equates the marginal cost of
 a unit of housing, `(1 + τ)` times the marginal utility of consumption, to its
@@ -162,9 +183,9 @@ that satisfy them both. That is why they are written as one solution statement
 with two unknowns.
 
 Where the paper's method fixes a grid of new housing and finds the roots in
-savings along it, that is a realisation of this system: the exogenous grid and
-the search for roots are settings of the method in
-`declaration/stages/adjuster_cons/methods.yml`.
+savings along it, that is a realization of this system: the exogenous grid is
+the grid entry of the method and the search for roots its keyword arguments, in
+`declaration/stages/adjuster_cons/methods.bl`.
 The candidates it produces are several at one wealth, because the policy is not
 monotone, and the upper envelope that selects among them is a step of the
 method; no line of the stage authors it.
@@ -177,20 +198,21 @@ applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl: Elabora
 
 The joint maximisation `policy.optimality` states the problem, and the policy
 builder the stage file declares is formed from it: a Pullback, an Aggregation,
-the Argmax over the two feasible sets, and the Evaluation. With
-`declaration/calibration/durables.yml`, `declaration/stages/adjuster_cons/methods.yml`
-and `declaration/settings/durables.yml` attached, the method block opens the
-policy builder: its joint `solve` statement `policy.choice` is read as one
-Aggregation whose rule is the residual system with the two unknowns `c` and
-`h_choice`, and the marginal block's derivative line stands at the Evaluation of
-the decision value builder, beside the value's representation. The stage
-reaches the specified version:
+the Argmax over the two feasible sets, and the Evaluation. Read with its
+addition `declaration/stages/adjuster_cons/methods.bl`, and with
+`declaration/calibration/durables.yml` and `declaration/settings/durables.yml`
+bound, the three lines of the addition's `policy` block open the policy builder:
+its joint `solve` statement `policy.choice` is read as one Aggregation whose rule
+is the residual system with the two unknowns `c` and `h_choice`, and the
+derivative line stands at the Evaluation of the decision value builder, beside
+the value's representation. The stage reaches the specified version, and
+`stage.methods` prints the components its places carry:
 
 ```text
 ElaboratedStage('adjuster_cons', specified)
-policy                    !egm   block ../../methods/adjuster_cons_egm.bl
-cntn_to_dcsn:Evaluation   !marginals   block ../../methods/marginals_adjuster_cons.bl
-cntn_to_dcsn:Evaluation   !Linear
+cntn_to_dcsn.evaluate[V]        !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(m=(w_min, w_max, n_w))   "dcsmm:interp_as_3"
+cntn_to_dcsn.evaluate[D_{m}V]   !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(m=(w_min, w_max, n_w))   "dcsmm:interp_as_3"
+policy                          !egm(spacing=grid_phi, savings_floor=b, roots_per_housing_point=egm_n, root_scan_step=root_eps, upper_envelope=adj_upper_envelope, jump_threshold=m_bar, lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep, eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard, include_intersections=adj_include_intersections, no_double_jumps=adj_no_double_jumps, single_intersection=adj_single_intersection, disable_jump_checks=adj_disable_jump_checks, correct_jumps=correct_jumps, search_sections=n_sections)   !Cartesian(a_nxt_adj=(a_min, a_max, n_a), h_nxt_adj=(h_min, h_max, n_h))   "fues-durables:make_adjuster_ops"
 ```
 
 The stage parses, and its parsed tree is recorded in

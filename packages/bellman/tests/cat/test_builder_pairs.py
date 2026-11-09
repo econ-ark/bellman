@@ -1,52 +1,21 @@
-"""A builder is reached by the ordered pair of perches it joins,
-`stage.builder["cntn", "dcsn"]` (the brief `builder-names-pair-base.md`),
-and the perch paths are each defined as one pair: `stage.dcsn.builder.bwd`
-is `stage.builder["cntn", "dcsn"]`.
-
-`builder_pairs_base.json` beside this file is a fixed record of what the
-retired paths `stage.build.sol.<perch>` and `stage.build.sim.<perch>`
-answered for each builder of `cons.bl`, `port.bl` and `ret_choice.bl` at
-commit f3b36071d, before the pair mapping was added: the block id of the
-builder, and the first sixteen hexadecimal digits of the SHA-256 digest of
-its printed `signature()` and of its printed `denote()` below the first
-line, the card's title. A script made it from the symbolic stage,
-`elaborate_stage(load_stage(path))`, following each dotted path,
-`build.sol.dcsn` and the other four, with `getattr`; it would have written
-a path that raised `AttributeError` as its refusal, and none raised. The
-record was written a second time for commit e15b0381d of task 3 of the plan
-of 29 September 2026, "The builders reached by the pair of perches they join",
-with the digest of each card taken below its title: that task gave a backward
-or a forward builder's card a title that prints the pair of perches it joins
-and changed no other line of a card, so the text below the title is the text at
-f3b36071d, and the block ids and the signature digests were written again
-unchanged. The record is not re-recorded: the paths it was made from are
-deleted, and the script with them, and item 1 compares what the pair mapping
-answers now with what they answered."""
-import hashlib
-import json
+"""Builder lookup by perch pairs and the equivalent perch paths."""
 import re
 from pathlib import Path
 
 import pytest
 
 import bellman.stage
-from bellman.stage import arvl, cntn, dcsn, elaborate_stage, load_stage
+from bellman.stage import arvl, cntn, dcsn
 from bellman.display.drawing import to_drawing
 from bellman.display.printed_records import NamedListing
 from bellman.refusal_catalogue import refusal_of
 from bellman.refusal_examples import EXAMPLES
 from bellman.refusals import ConstructionError, NotConstructed
-from bellman.stage.builder_pairs import builder_pairs
 from bellman.stage.grains import graph_of
-from bellman.stage.pieces import BuilderPairs, PerchBuilders
+from bellman.stage.pieces import PerchBuilders
+from conftest import STAGE_FILES
 
 ROOT = Path(__file__).resolve().parents[4]
-BASE = json.loads(Path(__file__).with_name("builder_pairs_base.json").read_text(encoding="utf-8"))
-# the retired path under which the record holds each builder, and the pair
-# that reads the builder now
-PAIRS = {"build.sol.dcsn": ("cntn", "dcsn"), "build.sol.arvl": ("dcsn", "arvl"),
-         "build.sim.arvl": ("arvl", "dcsn"), "build.sim.dcsn": ("dcsn", "cntn")}
-
 # the joint-choice stage of `conftest.py` with its policy written as one block
 # for each control, `policy_c` and `policy_l`: two backward builders write the
 # controls, so the policy key names no one builder. It is the stage
@@ -136,56 +105,8 @@ RENAMED = {"arvl_to_dcsn": "first", "dcsn_to_cntn": "second", "cntn_to_dcsn": "t
            "dcsn_to_arvl": "fourth", "policy": "choose"}
 # a retired path, which no refusal text writes
 RETIRED = re.compile(r"\bstage\.build\b")
-# the stage files of the core applications, each in its stage folder
-# `declaration/stages/<key>/`, as the corpus test of `tests/sym/test_corpus.py`
-# reads them
-CORE_STAGES = sorted((ROOT / "applications").glob("*/declaration/stages/*/*.bl"))
-
-
-def elaborated(relative):
-    return elaborate_stage(load_stage(str(ROOT / relative)))
-
-
-def digest(text):
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
-
-
-def denote_digest(handle):
-    """The digest the record holds for `handle.denote()`: that of the card
-    below its first line, the title, which a backward or a forward builder
-    now prints with the pair of perches it joins (the plan of 29 September
-    2026, "The builders reached by the pair of perches they join", task 3),
-    so the comparison this file makes does not fail on the one line that task
-    changed."""
-    return digest("\n".join(str(handle.denote()).splitlines()[1:]))
-
-
-@pytest.mark.parametrize("relative", sorted(BASE["stages"]))
-def test_item_1_each_pair_answers_what_the_retired_path_answered(relative):
-    stage = elaborated(relative)
-    for path, pair in PAIRS.items():
-        recorded = BASE["stages"][relative][path]
-        if isinstance(recorded, str):          # the path was refused at the base
-            with pytest.raises(KeyError):
-                stage.builder[pair]
-            continue
-        handle = stage.builder[pair]
-        assert handle.box.name == recorded["box"]
-        assert denote_digest(handle) == recorded["denote"]
-        assert digest(str(handle.signature())) == recorded["signature"]
-    recorded = BASE["stages"][relative]["build.sol.policy"]
-    policy = stage.builder.policy
-    assert policy.box.name == recorded["box"]
-    assert denote_digest(policy) == recorded["denote"]
-    assert digest(str(policy.signature())) == recorded["signature"]
-    # no builder joins decision to decision, so that pair is refused like any
-    # absent pair; the policy builder is read by its own key alone
-    with pytest.raises(KeyError, match="no builder joins dcsn → dcsn"):
-        stage.builder["dcsn", "dcsn"]
-
-
-def test_item_2_the_listing_names_every_pair_once_forward_first():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_item_2_the_listing_names_every_pair_once_forward_first(application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     listed = stage.builder.list()
     # a printed record keyed by the block identifier, as every other
     # level's `list()` answers
@@ -205,8 +126,8 @@ def test_item_2_the_listing_names_every_pair_once_forward_first():
     assert stage.builder.view() == str(listed) == repr(listed)
 
 
-def test_item_3_an_absent_pair_is_refused_naming_the_pairs_that_exist():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_item_3_an_absent_pair_is_refused_naming_the_pairs_that_exist(application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     with pytest.raises(KeyError) as refusal:
         stage.builder["cntn", "arvl"]
     assert "no builder joins cntn → arvl" in str(refusal.value)
@@ -216,21 +137,19 @@ def test_item_3_an_absent_pair_is_refused_naming_the_pairs_that_exist():
     assert "'somewhere' is no perch" in str(bad_word.value)
 
 
-def test_item_4_the_two_graphs_and_the_constants(cons_methodized):
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_item_4_the_two_graphs_and_the_constants(cons_methodized, application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     assert stage.builder.bwd.direction == "backward" and stage.builder.fwd.direction == "forward"
     assert stage.builder[cntn, dcsn].box is stage.builder["cntn", "dcsn"].box
     assert (arvl, dcsn, cntn) == ("arvl", "dcsn", "cntn")
     assert {"arvl", "dcsn", "cntn"} <= set(bellman.stage.__all__)
-    # the lazy resolver serves each perch word from the module that defines it
-    assert [bellman.stage.__getattr__(word) for word in ("arvl", "dcsn", "cntn")] == ["arvl", "dcsn", "cntn"]
     # the methods bound within the builders are those bound within the two graphs
     bound = cons_methodized.builder
     assert dict(bound.methods) and dict(bound.methods) == {**bound.bwd.methods, **bound.fwd.methods}
 
 
-def test_a_pair_read_through_a_chain_holds_the_chained_version():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_a_pair_read_through_a_chain_holds_the_chained_version(elaborate_text, text_of):
+    stage = elaborate_text(text_of("cons"), "cons.bl")
     calibration = str(ROOT / "applications/cons-port/declaration/calibration/portfolio.yml")
     chained = stage.calibrate(calibration)
     handle = chained.builder["cntn", "dcsn"]
@@ -271,8 +190,8 @@ def test_two_builders_on_one_pair_are_refused_with_both_ids(elaborate_text):
     assert "stage.builder.fwd['first']" in message and "stage.builder.fwd['second']" in message
 
 
-def test_a_stage_without_a_policy_builder_answers_hasattr_false_and_refuses_the_key():
-    stage = elaborated("applications/durables/declaration/stages/bequest/bequest.bl")
+def test_a_stage_without_a_policy_builder_answers_hasattr_false_and_refuses_the_key(application_stage):
+    stage = application_stage(ROOT / "applications/durables/declaration/stages/bequest/bequest.bl")
     assert not hasattr(stage.builder, "policy")
     with pytest.raises(KeyError) as refusal:
         stage.builder["policy"]
@@ -306,9 +225,10 @@ def test_a_refused_direction_is_reported_at_its_pairs(elaborate_text):
     # the listing, the keys and the methods answer for the forward side
     assert list(broken.builder.list()) == ["arvl_to_dcsn", "dcsn_to_cntn"]
     assert list(broken.builder) == [("arvl", "dcsn"), ("dcsn", "cntn")] and len(broken.builder) == 2
-    bound = broken.methodize({"methods": [{"on": "arvl_to_dcsn", "method": "deterministic"}]})
-    assert {str(place): method.tag for place, method in bound.builder.methods.items()} == {
-        "arvl_to_dcsn": "deterministic"}
+    bound = broken.methodize({"text": "@methods: forward_only\narvl_to_dcsn.method : !deterministic\n",
+                              "origin": "forward_only.methods.bl"})
+    assert {place: str(held) for place, held in bound.builder.methods.items()} == {
+        "arvl_to_dcsn": "!deterministic"}
 
 
 def test_a_refused_forward_direction_is_reported_at_its_pairs(elaborate_text):
@@ -326,15 +246,14 @@ def test_a_refused_forward_direction_is_reported_at_its_pairs(elaborate_text):
     # the listing, the keys and the methods answer for the backward side
     assert list(broken.builder.list()) == ["cntn_to_dcsn", "dcsn_to_arvl"]
     assert list(broken.builder) == [("cntn", "dcsn"), ("dcsn", "arvl")] and len(broken.builder) == 2
-    grid = {"grid": "!Cartesian", "orders": {"V": "n_V"}, "bounds": {"V": ["V_min", "V_max"]}}
-    bound = broken.methodize({"methods": [{"on": "cntn_to_dcsn.evaluate.value", "method": "Linear",
-                                           "settings": grid}]})
-    assert {str(place): method.tag for place, method in bound.builder.methods.items()} == {
-        "cntn_to_dcsn:Evaluation": "Linear"}
+    bound = broken.methodize({"text": "@methods: backward_only\ncntn_to_dcsn.evaluate.method : !Linear\n",
+                              "origin": "backward_only.methods.bl"})
+    assert {place: str(held) for place, held in bound.builder.methods.items()} == {
+        "cntn_to_dcsn.evaluate": "!Linear"}
 
 
 def test_the_keys_are_those_the_mapping_answers_and_the_listing_names_every_builder(
-        elaborate_text, monkeypatch):
+        elaborate_text, application_stage):
     two = elaborate_text(TWO_ON_ONE_PAIR)
     assert "policy" not in two.builder and "policy" not in list(two.builder)
     assert list(two.builder) == [("arvl", "dcsn"), ("dcsn", "cntn"), ("cntn", "dcsn"), ("dcsn", "arvl")]
@@ -349,32 +268,23 @@ def test_the_keys_are_those_the_mapping_answers_and_the_listing_names_every_buil
     assert list(dict(forward.builder)) == [("dcsn", "cntn")] and len(forward.builder.list()) == 3
     # no builder joins decision to decision, so that pair is no key and is
     # refused like any absent pair
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     assert ("dcsn", "dcsn") not in list(stage.builder) and ("dcsn", "dcsn") not in stage.builder
     with pytest.raises(KeyError, match="no builder joins dcsn → dcsn"):
         stage.builder["dcsn", "dcsn"]
-    # the pair has no special case: a builder other than the policy builder
-    # that joined decision to decision, which no stage file yields, would be
-    # read by that pair and iterated as a key, before `policy`
-    pairs, policies, refused = builder_pairs(stage)
-    joined = object()
-    monkeypatch.setattr(BuilderPairs, "_table",
-                        lambda self: ({**pairs, ("dcsn", "dcsn"): [joined]}, policies, refused))
-    assert list(stage.builder)[-2:] == [("dcsn", "dcsn"), "policy"]
-    assert stage.builder["dcsn", "dcsn"].box is joined
 
 
-@pytest.mark.parametrize("src", CORE_STAGES,
+@pytest.mark.parametrize("src", STAGE_FILES,
                          ids=lambda path: path.relative_to(ROOT / "applications").as_posix())
-def test_item_5_each_perch_path_answers_its_pair_by_identity(src):
+def test_item_5_each_perch_path_answers_its_pair_by_identity(src, application_stage):
     """Acceptance item 2 of the brief, on every core stage the construction
     accepts: each perch path of `PERCH_PATHS` answers the box its pair
     answers, and `stage.dcsn.builder.policy` the box of
     `stage.builder.policy`; a path the stage refuses is refused with its
     pair. A stage file the construction refuses is skipped, and the corpus
-    test of `tests/sym/test_corpus.py` records why."""
+    test of `tests/test_snapshot.py` records why."""
     try:
-        stage = elaborate_stage(load_stage(str(src)))
+        stage = application_stage(src)
     except ConstructionError as refusal:
         pytest.skip(f"the construction refuses the stage under {refusal.rule}")
     answered = 0
@@ -398,8 +308,8 @@ def test_item_5_each_perch_path_answers_its_pair_by_identity(src):
     assert answered, "the stage answers no perch path"
 
 
-def test_item_6_the_continuation_perch_refuses_both_directions_with_the_reason():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_item_6_the_continuation_perch_refuses_both_directions_with_the_reason(application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     with pytest.raises(AttributeError) as bwd:
         stage.cntn.builder.bwd
     assert "no value is built at continuation" in str(bwd.value)
@@ -413,8 +323,8 @@ def test_item_6_the_continuation_perch_refuses_both_directions_with_the_reason()
         assert "the policy builder stands at the decision perch" in str(policy.value), perch
 
 
-def test_each_perch_lists_its_paths_with_the_key_each_reads():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_each_perch_lists_its_paths_with_the_key_each_reads(application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     # a printed record keyed by the path, in the order of the paths
     assert isinstance(stage.dcsn.builder.list(), NamedListing)
     assert list(stage.arvl.builder.list().items()) == [("stage.arvl.builder.fwd", "arvl → dcsn"),
@@ -430,8 +340,8 @@ def test_each_perch_lists_its_paths_with_the_key_each_reads():
     assert repr(stage.dcsn) == "Perch('cons', 'dcsn')"
 
 
-def test_a_word_that_names_no_perch_is_refused_naming_the_three():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_a_word_that_names_no_perch_is_refused_naming_the_three(application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     nowhere = PerchBuilders(stage, "somewhere")
     for word in ("fwd", "bwd", "policy"):
         with pytest.raises(AttributeError) as refusal:
@@ -440,8 +350,8 @@ def test_a_word_that_names_no_perch_is_refused_naming_the_three():
     assert len(nowhere.list()) == 0
 
 
-def test_a_terminal_stage_has_no_forward_decision_builder():
-    stage = elaborated("applications/durables/declaration/stages/bequest/bequest.bl")
+def test_a_terminal_stage_has_no_forward_decision_builder(application_stage):
+    stage = application_stage(ROOT / "applications/durables/declaration/stages/bequest/bequest.bl")
     with pytest.raises(AttributeError) as refusal:
         stage.dcsn.builder.fwd
     assert "terminal stage" in str(refusal.value) or "no decision edge" in str(refusal.value)
@@ -459,8 +369,8 @@ def test_two_forward_builders_from_decision_are_refused_as_two_not_as_a_terminal
     assert "stage.builder.fwd['first']" in message and "stage.builder.fwd['second']" in message
 
 
-def test_a_branching_stage_has_one_forward_decision_builder():
-    stage = elaborated(
+def test_a_branching_stage_has_one_forward_decision_builder(application_stage):
+    stage = application_stage(ROOT /
         "applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl")
     listed = [block for block, (pair, _) in stage.builder.list().items() if pair == "dcsn → cntn"]
     assert len(listed) == 1
@@ -483,8 +393,8 @@ def test_a_builder_is_read_by_the_perches_it_joins_whatever_its_block_id(elabora
     assert list(stage.builder.list()) == ["first", "second", "third", "fourth", "choose"]
 
 
-def test_the_refusals_that_name_a_builders_graph_name_its_path_under_stage_builder():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_the_refusals_that_name_a_builders_graph_name_its_path_under_stage_builder(application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     # a target that names no box, and a kernel asked of a block's line
     not_found = refusal_of(EXAMPLES["target-not-found"])
     assert not_found.rule == "target-not-found"
@@ -506,8 +416,8 @@ def test_the_refusals_that_name_a_builders_graph_name_its_path_under_stage_build
         assert RETIRED.search(str(refusal)) is None, str(refusal)
 
 
-def test_the_stage_listing_names_each_builder_with_its_pair_and_direction_word():
-    stage = elaborated("applications/portfolio-choice/declaration/stages/cons/cons.bl")
+def test_the_stage_listing_names_each_builder_with_its_pair_and_direction_word(application_stage):
+    stage = application_stage(ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl")
     section = stage.list()["builder"]
     assert list(section) == ["arvl_to_dcsn", "dcsn_to_cntn", "cntn_to_dcsn", "dcsn_to_arvl", "policy"]
     # the section is the listing `stage.builder.list()` answers

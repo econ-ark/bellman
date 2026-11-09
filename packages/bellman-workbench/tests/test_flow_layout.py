@@ -49,7 +49,7 @@ from workbench_support import (
 )
 from workbench_support import DURABLES as DURABLES_MODEL
 
-from bellman_workbench import model
+from bellman_workbench import model, recipe, trellis
 
 ROOT = Path(__file__).resolve().parents[3]
 LAYOUT = ROOT / "packages/bellman-workbench/js/flow/src/flow-layout.js"
@@ -470,6 +470,318 @@ def _in_the_gap(places: dict, earlier: str, later: str, route=None) -> None:
         assert control["ay"] > max(point["y"] for point in route)
 
 
+JOIN_GEOMETRY_SCRIPT = """
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import vm from "node:vm";
+
+const ELK = createRequire(import.meta.url)(%(elk)s);
+const context = {};
+context.self = context;
+vm.runInNewContext(readFileSync(%(script)s, "utf8"), context);
+const L = context.BellmanFlowLayout;
+const graph = JSON.parse(readFileSync(0, "utf8"));
+const elk = new ELK();
+const measure = (text) => Array.from(text || "").length * 7;
+const results = [];
+for (const [depth, closeWriter] of [[2, false], [3, false], [3, true]]) {
+  const m = L.model(graph);
+  const open = new Set(Object.keys(m.layers).filter((ns) => ns.split("/").length <= depth
+    && (!closeWriter || ns.split("/")[0] !== "periods[1]")));
+  for (const direction of ["RIGHT", "DOWN"]) {
+    const options = { direction, order: ["tenure", "keeper_cons", "adjuster_cons", "bequest"] };
+    let built = L.build(m, open, options, measure);
+    let answer = await elk.layout(structuredClone(built.elk));
+    const widths = L.columnWidths(built, answer);
+    if (widths) {
+      built = L.build(m, open, { ...options, widths }, measure);
+      answer = await elk.layout(structuredClone(built.elk));
+    }
+    answer = await L.arrange(built, answer, elk);
+    L.settle(built, answer);
+    const r = L.read(built, answer);
+    const from = "periods[1]", to = "periods[0]";
+    const writer = r.place[from + L.LAYER_ENDING], reader = r.place[to + L.LAYER_ENDING];
+    const down = direction === "DOWN";
+    const byId = Object.fromEntries(built.wires.map((w) => [w.id, w]));
+    results.push({
+      name: [graph.id, depth, closeWriter, direction],
+      axis: down ? "y" : "x",
+      gap: down ? [writer.ay + writer.height, reader.ay] : [writer.ax + writer.width, reader.ax],
+      joins: built.bundles.filter((u) => u.from === from && u.to === to).map((u) => ({
+        reader: u.reader,
+        input: u.into,
+        count: u.count,
+        shared: r.bundles[u.id].points,
+        legs: u.wires.map((id) => {
+          const w = byId[id];
+          const box = r.place[w.target];
+          const port = built.boxes[w.target].geom.ins.find((p) => p.handle === w.targetHandle);
+          return { writer: w.from, points: r.parts[id][0],
+                   socket: { x: box.ax + port.x, y: box.ay + port.y } };
+        }),
+      })),
+    });
+  }
+}
+console.log(JSON.stringify(results));
+"""
+
+
+def test_durables_writers_join_once_in_the_gap_and_share_the_route_to_each_input(node):
+    folder = model.open_folder(DURABLES_MODEL)
+    source = recipe.Source("recipe", "declaration/spec.yml")
+    restriction = trellis.parse_restriction("periods 0–2")
+    shown = trellis.show_trellis(folder, source, restriction).shown
+    forward = next(graph for graph in shown.collection["graphs"] if graph["id"] == "forward")
+    script = JOIN_GEOMETRY_SCRIPT % {"script": json.dumps(str(LAYOUT)), "elk": json.dumps(str(ELK))}
+    for result in node_output(node, script, forward):
+        axis = result["axis"]
+        near, far = result["gap"]
+        joins = result["joins"]
+        assert len(joins) == 1, result
+        assert len({(join["reader"], join["input"]) for join in joins}) == len(joins), result
+        for join in joins:
+            shared = join["shared"]
+            assert len(shared) >= 2 and near < shared[0][axis] < far, result
+            assert join["count"] == 6, result
+            legs = join["legs"]
+            assert len(legs) == 2, result
+            assert {leg["writer"].split("/")[1] for leg in legs} == {"keeper_cons", "adjuster_cons"}, result
+            for leg in legs:
+                points = leg["points"]
+                assert len(points) >= 2 and points[-1] == shared[0], result
+                assert all(p[axis] < far for p in points), result
+                assert shared[-1] == leg["socket"], result
+                route = points + shared[1:]
+                assert all(
+                    (abs(a["x"] - b["x"]) < 0.01) != (abs(a["y"] - b["y"]) < 0.01)
+                    for a, b in zip(route, route[1:])
+                ), result
+
+
+WIRE_OVERLAP_SCRIPT = """
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import vm from "node:vm";
+
+const ELK = createRequire(import.meta.url)(%(elk)s);
+const context = {};
+context.self = context;
+vm.runInNewContext(readFileSync(%(script)s, "utf8"), context);
+const L = context.BellmanFlowLayout;
+const cases = JSON.parse(readFileSync(0, "utf8"));
+const elk = new ELK();
+const measure = (text) => Array.from(text || "").length * 7;
+const results = [];
+for (const spec of cases) {
+  let built, answer;
+  if (spec.graph) {
+    const m = L.model(spec.graph);
+    const open = new Set(Object.keys(m.layers).filter((ns) => ns.split("/").length <= spec.depth));
+    const options = { direction: spec.direction, order: spec.order };
+    built = L.build(m, open, options, measure);
+    answer = await elk.layout(structuredClone(built.elk));
+    const widths = L.columnWidths(built, answer);
+    if (widths) {
+      built = L.build(m, open, { ...options, widths }, measure);
+      answer = await elk.layout(structuredClone(built.elk));
+    }
+    answer = await L.arrange(built, answer, elk);
+    L.settle(built, answer);
+  } else {
+    const wires = Object.keys(spec.paths).map((id) => ({ id, pieces: [id] }));
+    built = { elk: {}, boxes: {}, wires, bundles: [], samePeriod: spec.groups };
+    if (spec.initial) {
+      built.initialRoutes = wires.map((w) => {
+        Object.assign(w, { initialStart: 0, initialEnd: 1 });
+        return { id: 'route:' + w.id, wires: [w.id], count: 1, route: { source: w.id } };
+      });
+    }
+    const edges = Object.entries(spec.paths).map(([id, path]) => {
+      const points = path.map(([x, y]) => ({x, y}));
+      return {id, sections: [{startPoint: points[0], bendPoints: points.slice(1, -1), endPoint: points.at(-1)}]};
+    });
+    answer = {edges};
+  }
+  const r = L.read(built, answer);
+  const wires = built.wires.filter((w) => !spec.reader || w.to.startsWith(spec.reader));
+  const ids = new Set(wires.map((w) => w.id));
+  results.push({
+    wires: wires.map((w) => ({ id: w.id, from: w.from, into: w.into, pieces: w.pieces,
+      route: r.routes[w.id], paint: r.paint?.[w.id] ?? r.parts[w.id] ?? [r.routes[w.id]] })),
+    shared: (r.sharedRuns || []).filter((run) => run.members.some((id) => ids.has(id))),
+    bundles: built.bundles.filter((u) => r.bundles[u.id] && u.wires.some((id) => ids.has(id)))
+      .map((u) => ({ members: u.wires, points: r.bundles[u.id].points })),
+    initial: {
+      routes: (r.initialRoutes || []).map((u) => ({ id: u.id, source: u.route.source,
+        paths: [u.points, ...u.wires.flatMap((id) => r.parts[id])],
+        paint: (r.paint[u.id] ?? [u.points]).concat(u.wires.flatMap((id) => r.paint[id] ?? r.parts[id])) })),
+      shared: r.initialSharedRuns || [],
+    },
+  });
+}
+console.log(JSON.stringify(results));
+"""
+
+
+def _wire_overlaps(node, cases):
+    script = WIRE_OVERLAP_SCRIPT % {"script": json.dumps(str(LAYOUT)), "elk": json.dumps(str(ELK))}
+    return node_output(node, script, cases)
+
+
+def _covered_intervals(paths, *, once=False):
+    """The union of intervals along each line of the routes, with no repeated stroke if asked."""
+    spans = {}
+    for points in paths:
+        for p, q in zip(points, points[1:]):
+            x, y = round(p["x"], 3), round(p["y"], 3)
+            u, v = round(q["x"], 3), round(q["y"], 3)
+            assert (x == u) != (y == v), (p, q)
+            line, span = (("y", y), (x, u)) if y == v else (("x", x), (y, v))
+            spans.setdefault(line, []).append(sorted(span))
+    covered = {}
+    for line, segments in spans.items():
+        runs = []
+        for lo, hi in sorted(segments):
+            if runs and lo <= runs[-1][1]:
+                assert not once or lo == runs[-1][1], (line, segments)
+                runs[-1][1] = max(runs[-1][1], hi)
+            else:
+                runs.append([lo, hi])
+        covered[line] = runs
+    return covered
+
+
+def _assert_paint_preserves_routes(result):
+    common = result["shared"] + result["bundles"]
+    painted = [path for wire in result["wires"] for path in wire["paint"]]
+    painted.extend(run["points"] for run in common)
+    assert _covered_intervals(painted, once=True) == _covered_intervals(
+        [wire["route"] for wire in result["wires"]]
+    )
+    for wire in result["wires"]:
+        paths = wire["paint"] + [run["points"] for run in common if wire["id"] in run["members"]]
+        assert _covered_intervals(paths, once=True) == _covered_intervals([wire["route"]])
+
+
+def _assert_initial_paint_preserves_routes(initial):
+    routes, shared = initial["routes"], initial["shared"]
+    painted = [path for route in routes for path in route["paint"]]
+    painted.extend(run["points"] for run in shared)
+    assert _covered_intervals(painted, once=True) == _covered_intervals(
+        [path for route in routes for path in route["paths"]]
+    )
+    for route in routes:
+        pieces = route["paint"] + [run["points"] for run in shared if route["id"] in run["routes"]]
+        assert _covered_intervals(pieces, once=True) == _covered_intervals(route["paths"])
+
+
+def test_forward_initial_draws_overlapping_route_segments_once(node):
+    folder = model.open_folder(DURABLES_MODEL)
+    source = recipe.Source("recipe", "declaration/spec.yml")
+    restriction = trellis.parse_restriction("periods 0–2")
+    shown = trellis.show_trellis(folder, source, restriction, initial=True).shown
+    graph = next(graph for graph in shown.collection["graphs"] if graph["id"] == "forward initial diagram")
+    cases = [
+        {"graph": graph, "direction": direction, "depth": depth,
+         "order": ["tenure", "keeper_cons", "adjuster_cons", "bequest"]}
+        for depth in (0, 1, 2, 3) for direction in ("RIGHT", "DOWN")
+    ]
+    for result in _wire_overlaps(node, cases):
+        _assert_initial_paint_preserves_routes(result["initial"])
+
+
+def test_forward_initial_shared_run_names_only_its_participating_routes(node):
+    paths = {"a": [[0, 0], [10, 0]], "b": [[5, 0], [20, 0]], "c": [[8, 0], [25, 0]]}
+    (result,) = _wire_overlaps(node, [{"paths": paths, "initial": True}])
+    initial = result["initial"]
+    _assert_initial_paint_preserves_routes(initial)
+    assert [(run["points"][0]["x"], run["points"][-1]["x"], set(run["routes"])) for run in initial["shared"]] == [
+        (5, 8, {"route:a", "route:b"}),
+        (8, 10, {"route:a", "route:b", "route:c"}),
+        (10, 20, {"route:b", "route:c"}),
+    ]
+
+
+def test_bequest_writers_share_one_receiving_entrance_and_painted_tail(node):
+    folder = model.open_folder(DURABLES_MODEL)
+    source = recipe.Source("recipe", "declaration/spec.yml")
+    restriction = trellis.parse_restriction("periods 0–2")
+    shown = trellis.show_trellis(folder, source, restriction).shown
+    graph = next(graph for graph in shown.collection["graphs"] if graph["id"] == "forward")
+    cases = [
+        {"graph": graph, "direction": direction, "depth": depth,
+         "order": ["tenure", "keeper_cons", "adjuster_cons", "bequest"],
+         "reader": "periods[0]/bequest/arvl_to_dcsn:Pushforward"}
+        for depth in (2, 3) for direction in ("RIGHT", "DOWN")
+    ]
+    for case, result in zip(cases, _wire_overlaps(node, cases), strict=True):
+        wires = result["wires"]
+        assert {wire["from"].split("/")[1] for wire in wires} == {"adjuster_cons", "keeper_cons"}
+        assert len(wires) == 2 and not result["bundles"], result
+        if case["depth"] == 3:
+            entrances = [
+                [piece for piece in wire["pieces"]
+                 if piece.startswith("periods[0]/bequest___group___::hin::")]
+                for wire in wires
+            ]
+            assert entrances[0] and entrances[0] == entrances[1], entrances
+        (tail,) = [run for run in result["shared"] if run["terminal"]]
+        assert set(tail["members"]) == {wire["id"] for wire in wires}
+        assert all(wire["route"][-1] in (tail["points"][0], tail["points"][-1]) for wire in wires)
+        _assert_paint_preserves_routes(result)
+
+
+def test_three_writers_share_only_their_own_runs_before_the_period_mapping(node):
+    writers = [f"periods[1]/source_{i}/push/g" for i in range(3)]
+    reader = "periods[0]/reader/pull/g"
+    graph = {
+        "id": "forward",
+        "groupNodeConfigs": PERIODS["groupNodeConfigs"],
+        "nodes": [
+            *[_node(writer, outputs=("out",)) for writer in writers],
+            _node(reader, reads=[(writer, "out") for writer in writers]),
+        ],
+    }
+    cases = [
+        {"graph": graph, "direction": direction, "depth": 1,
+         "order": ["source_0", "source_1", "source_2", "reader"], "reader": reader}
+        for direction in ("RIGHT", "DOWN")
+    ]
+    for result in _wire_overlaps(node, cases):
+        wires = result["wires"]
+        assert len(wires) == 3
+        ids = {wire["id"] for wire in wires}
+        (mapping,) = result["bundles"]
+        assert set(mapping["members"]) == ids
+        assert all(wire["route"][-1] == mapping["points"][-1] for wire in wires)
+        assert result["shared"]
+        assert all(len(run["members"]) == 2 and set(run["members"]) < ids
+                   and not run["terminal"] for run in result["shared"])
+        _assert_paint_preserves_routes(result)
+
+
+def test_shared_paths_can_cover_a_whole_wire_and_ignore_point_contacts(node):
+    paths = {
+        "a": [[0, 0], [10, 0]],
+        "b": [[0, 0], [10, 0]],
+        "separate input": [[0, 0], [10, 0]],
+        "touch from left": [[0, 20], [10, 20], [10, 25], [20, 25]],
+        "touch from below": [[0, 30], [20, 30], [20, 25]],
+    }
+    groups = [["a", "b"], ["touch from left", "touch from below"]]
+    (result,) = _wire_overlaps(node, [{"paths": paths, "groups": groups}])
+    (shared,) = result["shared"]
+    assert set(shared["members"]) == {"a", "b"} and shared["terminal"]
+    assert {wire["id"] for wire in result["wires"] if not wire["paint"]} == {"a", "b"}
+    unaffected = [wire for wire in result["wires"] if wire["id"] not in shared["members"]]
+    assert all(wire["paint"] == [wire["route"]] for wire in unaffected)
+    # The coincident path into a different input still represents its own wire.
+    result["wires"] = [wire for wire in result["wires"] if wire["id"] != "separate input"]
+    _assert_paint_preserves_routes(result)
+
+
 def test_the_wires_of_an_adjacent_pair_share_one_piece_and_the_control_stands_under_it(node):
     """Two or more wires from occurrences of one period to one reading port
     in the next are a bundle: each leaves the writing period at a border
@@ -595,6 +907,10 @@ def _port(port_id: str, label: str, unjoined: bool = False) -> dict:
     """A port of the graph JSON with the label `label`, marked `unjoined`
     where `unjoined` holds, as the exporter marks a field no join reaches."""
     attrs = [{"key": "label", "value": label}]
+    parts = port_id.rsplit("/", 1)[-1].split(":")
+    if len(parts) == 4 and parts[0] in ("joined", "unjoined"):
+        attrs.extend({"key": key, "value": value} for key, value in
+                     (("role", "state"), ("perch", parts[2]), ("field", parts[3])))
     if unjoined:
         attrs.append({"key": "unjoined", "value": "true"})
     return {"id": port_id, "attrs": attrs}
@@ -2305,9 +2621,8 @@ def test_two_markers_laid_out_downward_stand_their_widest_label_and_8_px_apart(n
 # continuation and decision fields and writes its arrival fields; two join
 # wires run from the arrival value fields of `S` of periods[1] to the
 # continuation value fields of `T` of periods[0], each carrying the route's
-# record of two pairs, as the builders graph's edges do. FORWARD_INITIAL is
-# the same diagram as the forward one, whose two join wires carry state
-# fields and no value role.
+# record of two pairs, as the builders graph's edges do. FORWARD_INITIAL
+# draws the two state-field pairs of that route in the forward direction.
 INITIAL_ROUTE = {
     "branch": None, "source": "periods[0]/T", "destination": "periods[1]/S",
     "source_fields": ["a_nxt", "h_nxt"], "destination_fields": ["a", "h"],
@@ -2319,21 +2634,20 @@ INITIAL_ROUTE = {
 
 def _initial_field(node_id: str, namespace: str, label: str, role: str, reads=(), writes=()) -> dict:
     """A field box of INITIAL_DIAGRAM in the perch layer `namespace`: its set
-    ℝ, a reading port for each (writer, port, join) of `reads`, the edge
-    carrying INITIAL_ROUTE where `join` holds, and a writing port for each
-    port of `writes`, every port carrying `role`."""
+    ℝ, a reading port for each (writer, output, input, route) of `reads`,
+    and a writing port for each port of `writes`, every port carrying `role`."""
     def port(name: str) -> dict:
         return {"id": name, "attrs": [{"key": "label", "value": label}, {"key": "role", "value": role}]}
 
     return {
         "id": node_id, "label": label, "namespace": namespace,
         "attrs": [{"key": "kind", "value": "field"}, {"key": "set", "value": "ℝ"}],
-        "inputsMetadata": [port(name) for _, name, _ in reads],
+        "inputsMetadata": [port(into) for _, _, into, _ in reads],
         "outputsMetadata": [port(name) for name in writes],
         "incomingEdges": [
-            {"sourceNodeId": writer, "sourceNodeOutputId": name, "targetNodeInputId": name,
-             **({"attrs": [{"key": "route", "value": INITIAL_ROUTE}]} if join else {})}
-            for writer, name, join in reads
+            {"sourceNodeId": writer, "sourceNodeOutputId": out, "targetNodeInputId": into,
+             **({"attrs": [{"key": "route", "value": route}]} if route else {})}
+            for writer, out, into, route in reads
         ],
     }
 
@@ -2366,40 +2680,48 @@ INITIAL_DIAGRAM = {
                        reads=(("periods[1]/S/S:cntn:V", "S:cntn:V", "value"), ("periods[1]/S/S:dcsn:c", "S:dcsn:c", "control")),
                        writes=(("S:arvl:V", "value"), ("S:arvl:dV", "value"))),
         _initial_field("periods[1]/S/S:arvl:V", "periods[1]/S/arvl", "𝑉≺", "value",
-                       reads=(("periods[1]/S/blk", "S:arvl:V", False),), writes=("S:arvl:V",)),
+                       reads=(("periods[1]/S/blk", "S:arvl:V", "S:arvl:V", None),), writes=("S:arvl:V",)),
         _initial_field("periods[1]/S/S:arvl:dV", "periods[1]/S/arvl", "𝑑𝑉≺", "value",
-                       reads=(("periods[1]/S/blk", "S:arvl:dV", False),), writes=("S:arvl:dV",)),
+                       reads=(("periods[1]/S/blk", "S:arvl:dV", "S:arvl:dV", None),), writes=("S:arvl:dV",)),
         _initial_field("periods[0]/T/T:cntn:V", "periods[0]/T/cntn", "𝑉≻", "value",
-                       reads=(("periods[1]/S/S:arvl:V", "S:arvl:V", True),), writes=("T:cntn:V",)),
+                       reads=(("periods[1]/S/S:arvl:V", "S:arvl:V", "S:arvl:V", INITIAL_ROUTE),), writes=("T:cntn:V",)),
         _initial_field("periods[0]/T/T:cntn:dV", "periods[0]/T/cntn", "𝑑𝑉≻", "value",
-                       reads=(("periods[1]/S/S:arvl:dV", "S:arvl:dV", True),), writes=("T:cntn:dV",)),
+                       reads=(("periods[1]/S/S:arvl:dV", "S:arvl:dV", "S:arvl:dV", INITIAL_ROUTE),), writes=("T:cntn:dV",)),
         _initial_field("periods[0]/T/T:dcsn:c", "periods[0]/T/dcsn", "c", "control", writes=("T:dcsn:c",)),
         _initial_block("periods[0]/T/blk", "periods[0]/T",
                        reads=(("periods[0]/T/T:cntn:V", "T:cntn:V", "value"), ("periods[0]/T/T:cntn:dV", "T:cntn:dV", "value"),
                               ("periods[0]/T/T:dcsn:c", "T:dcsn:c", "control")),
                        writes=(("T:arvl:V", "value"),)),
         _initial_field("periods[0]/T/T:arvl:V", "periods[0]/T/arvl", "𝑉≺", "value",
-                       reads=(("periods[0]/T/blk", "T:arvl:V", False),), writes=("T:arvl:V",)),
+                       reads=(("periods[0]/T/blk", "T:arvl:V", "T:arvl:V", None),), writes=("T:arvl:V",)),
     ],
 }
 
 
 
-def _as_state(node: dict) -> dict:
-    """The node `node` of INITIAL_DIAGRAM with every port's role `state`, a
-    field of the forward diagram, which no bundle of values holds."""
-    def ports(given: list) -> list:
-        return [{**port, "attrs": [{"key": "role", "value": "state"} if a["key"] == "role" else a for a in port["attrs"]]}
-                for port in given]
-
-    return {**node, "inputsMetadata": ports(node["inputsMetadata"]), "outputsMetadata": ports(node["outputsMetadata"])}
-
-
-FORWARD_INITIAL = {**INITIAL_DIAGRAM, "id": "forward initial diagram",
-                   "nodes": [_as_state(node) for node in INITIAL_DIAGRAM["nodes"]]}
+FORWARD_FIELD_PAIRS = [
+    (f"periods[0]/T/T:cntn:{field}_nxt", f"periods[1]/S/S:arvl:{field}")
+    for field in ("a", "h")
+]
+FORWARD_INITIAL = {
+    **INITIAL_DIAGRAM,
+    "id": "forward initial diagram",
+    "nodes": [
+        node
+        for field, (source, target) in zip(("a", "h"), FORWARD_FIELD_PAIRS, strict=True)
+        for node in (
+            _initial_field(source, "periods[0]/T/cntn", f"{field}_nxt", "state", writes=(source,)),
+            _initial_field(target, "periods[1]/S/arvl", field, "state",
+                           reads=((source, source, target, INITIAL_ROUTE),), writes=(target,)),
+        )
+    ] + [
+        _initial_block("periods[1]/S/blk", "periods[1]/S",
+                       reads=tuple((target, target, "state") for _, target in FORWARD_FIELD_PAIRS)),
+    ],
+}
 
 # the Node module: builds the graph JSON read on standard input with the
-# layers it names open, laid out downward, lays it out with ELK and reads
+# layers it names open, lays it out with ELK and reads
 # ELK's answer; prints the occurrences drawn compact, each box with its
 # type, whether it is open and the segments of its strip, and each wire's
 # boxes, whether it is a cable, its count and the outputs its bundle
@@ -2416,7 +2738,7 @@ vm.runInNewContext(readFileSync(%(script)s, "utf8"), context);
 const L = context.BellmanFlowLayout;
 const given = JSON.parse(readFileSync(0, "utf8"));
 const m = L.model(given.graph);
-const built = L.build(m, new Set(given.open), { direction: "DOWN" }, (text) => Array.from(text || "").length * 7);
+const built = L.build(m, new Set(given.open), { direction: given.direction || "DOWN" }, (text) => Array.from(text || "").length * 7);
 const read = L.read(built, await new ELK().layout(JSON.parse(JSON.stringify(built.elk))));
 const boxes = {};
 for (const [id, box] of Object.entries(built.boxes)) {
@@ -2426,8 +2748,11 @@ for (const [id, box] of Object.entries(built.boxes)) {
 console.log(JSON.stringify({
   compact: Array.from(built.compact),
   boxes,
-  wires: built.wires.map((w) => ({ source: w.source, target: w.target, cable: !!w.cable, count: w.count,
-                                   handle: w.sourceHandle, members: w.pairBundle ? w.pairBundle.members.map((member) => member.out) : null })),
+  wires: built.wires.map((w) => ({ id: w.id, source: w.source, target: w.target, cable: !!w.cable, count: w.count,
+                                   handle: w.sourceHandle, members: w.pairBundle ? w.pairBundle.members.map((member) => member.out) : null,
+                                   from: w.from, out: w.out, to: w.to, into: w.into, initialRoute: w.initialRoute || null,
+                                   points: read.routes[w.id], parts: read.parts[w.id] || [] })),
+  initialRoutes: read.initialRoutes || [],
 }));
 """
 
@@ -2467,10 +2792,78 @@ def test_a_trellis_initial_diagram_draws_a_card_with_no_strip_and_one_cable_betw
     # every wire counts the wires drawn as its line, one: a join wire's route of two pairs gives it no count of
     # two, which a measure wire of the builders graph takes from its route (design pass 14 §7, rule 5)
     assert {w["count"] for w in every["wires"]} == {1}, every["wires"]
-    # the forward diagram, whose join wires carry state fields: between two cards of two periods, two cables of
-    # one wire each, counting one, not the route's two pairs
-    forward = node_output(node, script, {"graph": FORWARD_INITIAL, "open": ["periods[0]", "periods[1]"]})
-    assert forward["compact"] == []
-    assert [(w["source"], w["target"], w["cable"], w["count"], w["members"]) for w in forward["wires"]] == [
-        ("periods[1]/S___group___", "periods[0]/T___group___", True, 1, None)
-    ] * 2, forward["wires"]
+
+
+def test_forward_initial_route_groups_the_field_pairs_in_both_canvas_orientations(node):
+    """A route across two periods has one cable, with individual connections at open fields."""
+    script = INITIAL_SCRIPT % {"script": json.dumps(str(LAYOUT)), "elk": json.dumps(str(ELK))}
+    periods = ["periods[0]", "periods[1]"]
+    writer = ["periods[0]/T", "periods[0]/T/cntn"]
+    reader = ["periods[1]/S", "periods[1]/S/arvl"]
+    writer_card, reader_card = "periods[0]/T___group___", "periods[1]/S___group___"
+    for direction in ("DOWN", "RIGHT"):
+        for writer_open, reader_open in ((False, False), (True, False), (False, True), (True, True)):
+            opened = periods + (writer if writer_open else []) + (reader if reader_open else [])
+            answer = node_output(node, script, {"graph": FORWARD_INITIAL, "open": opened, "direction": direction})
+            assert len(answer["initialRoutes"]) == 1, answer["initialRoutes"]
+            cable = answer["initialRoutes"][0]
+            assert cable["route"] == INITIAL_ROUTE and cable["count"] == 2
+            assert len(cable["points"]) >= 2
+            joined = [w for w in answer["wires"] if w["initialRoute"] == cable["id"]]
+            assert set(cable["wires"]) == {w["id"] for w in joined}
+            if not writer_open and not reader_open:
+                assert [(w["source"], w["target"], w["parts"]) for w in joined] == [(writer_card, reader_card, [])]
+                continue
+            assert {(w["source"], w["out"], w["target"], w["into"]) for w in joined} == {
+                (source if writer_open else writer_card, source, target if reader_open else reader_card, target)
+                for source, target in FORWARD_FIELD_PAIRS
+            }
+            for wire in joined:
+                parts = wire["parts"]
+                assert len(parts) == sum((writer_open, reader_open))
+                assert all(len(part) >= 2 for part in parts)
+                if writer_open:
+                    assert parts[0][0] == wire["points"][0]
+                if reader_open:
+                    assert parts[-1][-1] == wire["points"][-1]
+            local_writers = {w["source"] for w in answer["wires"] if w["initialRoute"] is None}
+            assert local_writers == ({target for _, target in FORWARD_FIELD_PAIRS} if reader_open else set())
+
+
+def test_forward_operator_keeps_a_native_measure_from_a_stage_named_joined(node):
+    occurrence = "periods[0]/cons"
+    inputs, operator, outputs = _occurrence(0, "μ≻(a)")
+    measure = _port(f"{occurrence}/joined:measure:arvl", "μ≺(m)")
+    measure["attrs"].append({"key": "role", "value": "measure"})
+    inputs["outputsMetadata"] = [measure]
+    operator["inputsMetadata"] = [measure]
+    operator["incomingEdges"] = [{"sourceNodeId": inputs["id"], "sourceNodeOutputId": measure["id"],
+                                  "targetNodeInputId": measure["id"]}]
+    graph = {**FRAMES, "id": "forward", "nodes": [inputs, operator, outputs]}
+    script = INITIAL_SCRIPT % {"script": json.dumps(str(LAYOUT)), "elk": json.dumps(str(ELK))}
+    answer = node_output(node, script, {"graph": graph, "open": ["periods[0]", occurrence, f"{occurrence}/push"]})
+    assert answer["boxes"][inputs["id"]]["placed"]
+    assert outputs["id"] not in answer["boxes"]
+    (wire,) = answer["wires"]
+    assert (wire["source"], wire["out"], wire["target"], wire["into"]) == (
+        inputs["id"], measure["id"], operator["id"], measure["id"],
+    )
+
+
+def test_durables_forward_initial_draws_separate_routes_to_the_same_stage(node):
+    folder = model.open_folder(DURABLES_MODEL)
+    source = recipe.Source("recipe", "declaration/spec.yml")
+    restriction = trellis.parse_restriction("periods 0–2")
+    shown = trellis.show_trellis(folder, source, restriction, initial=True).shown
+    graph = next(graph for graph in shown.collection["graphs"] if graph["id"] == "forward initial diagram")
+    script = INITIAL_SCRIPT % {"script": json.dumps(str(LAYOUT)), "elk": json.dumps(str(ELK))}
+    answer = node_output(node, script, {"graph": graph, "open": ["periods[0]", "periods[1]", "periods[2]"]})
+    for destination, writing_period in (("periods[0]/tenure", 1), ("periods[0]/bequest", 0)):
+        cables = [cable for cable in answer["initialRoutes"] if cable["route"]["destination"] == destination]
+        assert {(cable["route"]["source"], cable["count"]) for cable in cables} == {
+            (f"periods[{writing_period}]/keeper_cons", 3),
+            (f"periods[{writing_period}]/adjuster_cons", 3),
+        }
+        first, second = cables
+        assert first["points"] != second["points"]
+        assert set(first["wires"]).isdisjoint(second["wires"])

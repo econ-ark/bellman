@@ -1,21 +1,19 @@
 # The recipe of the pension model of Dobrescu et al. (2023), a second route of
-# this folder: the trellis file and each stage's file,
-# by their paths from this folder, and for each stage and each kind the
-# ordered sources; `$fill` and the three methods slots are bound by keyword of
-# `load_recipe`. Each stage has its own methods slot, `$tenure_method`,
-# `$keeper_method` and `$adjuster_method`, so that a method choice reaches one
-# stage. The bequest is active in the terminal period alone,
-# `periods: [0, 0]`. The income level Y and the retirement income y_R of tenure
-# vary with age and are written per period by wage_schedule.py after every
-# load_recipe, since a recipe holds the values common to every period.
+# this folder, at its first construction: the trellis file and each stage's
+# file, by their paths from this folder, and for each stage its calibration and
+# settings as slots bound by keyword of `load_recipe`; no stage names an
+# addition yet, so its methods list is empty. The income level Y and the
+# retirement income y_R of tenure vary with age and are written per period by
+# wage_schedule.py after every load_recipe, since a recipe holds the values
+# common to every period.
 trellis: trellis.pensions.yml
 stages:
-  shocks: {stage: stages/shocks/shocks.bl, calibration: {all: [$shocks_calibration]}, settings: {all: [$shocks_settings]}, methods: {all: [$shocks_methods]}}
-  survival: {stage: stages/survival/survival.bl, calibration: {all: [$survival_calibration]}, settings: {all: [$survival_settings]}, methods: {all: [$survival_methods]}}
-  tenure_pa: {stage: stages/tenure_pa/tenure_pa.bl, calibration: {all: [$tenure_pa_calibration]}, settings: {all: [$tenure_pa_settings]}, methods: {all: [$tenure_pa_methods]}}
-  renter_cons: {stage: stages/renter_cons/renter_cons.bl, calibration: {all: [$renter_cons_calibration]}, settings: {all: [$renter_cons_settings]}, methods: {all: [$renter_cons_methods]}}
-  keeper_cons_pa: {stage: stages/keeper_cons_pa/keeper_cons_pa.bl, calibration: {all: [$keeper_cons_pa_calibration]}, settings: {all: [$keeper_cons_pa_settings]}, methods: {all: [$keeper_cons_pa_methods]}}
-  adjuster_cons_pa: {stage: stages/adjuster_cons_pa/adjuster_cons_pa.bl, calibration: {all: [$adjuster_cons_pa_calibration]}, settings: {all: [$adjuster_cons_pa_settings]}, methods: {all: [$adjuster_cons_pa_methods]}}
-  bequest_pa: {stage: stages/bequest_pa/bequest_pa.bl, calibration: {all: [$bequest_pa_calibration]}, settings: {all: [$bequest_pa_settings]}, methods: {all: [$bequest_pa_methods]}}
+  shocks: {stage: stages/shocks/shocks.bl, calibration: {all: [$shocks_calibration]}, settings: {all: [$shocks_settings]}, methods: {all: []}}
+  survival: {stage: stages/survival/survival.bl, calibration: {all: [$survival_calibration]}, settings: {all: [$survival_settings]}, methods: {all: []}}
+  tenure_pa: {stage: stages/tenure_pa/tenure_pa.bl, calibration: {all: [$tenure_pa_calibration]}, settings: {all: [$tenure_pa_settings]}, methods: {all: []}}
+  renter_cons: {stage: stages/renter_cons/renter_cons.bl, calibration: {all: [$renter_cons_calibration]}, settings: {all: [$renter_cons_settings]}, methods: {all: []}}
+  keeper_cons_pa: {stage: stages/keeper_cons_pa/keeper_cons_pa.bl, calibration: {all: [$keeper_cons_pa_calibration]}, settings: {all: [$keeper_cons_pa_settings]}, methods: {all: []}}
+  adjuster_cons_pa: {stage: stages/adjuster_cons_pa/adjuster_cons_pa.bl, calibration: {all: [$adjuster_cons_pa_calibration]}, settings: {all: [$adjuster_cons_pa_settings]}, methods: {all: []}}
+  bequest_pa: {stage: stages/bequest_pa/bequest_pa.bl, calibration: {all: [$bequest_pa_calibration]}, settings: {all: [$bequest_pa_settings]}, methods: {all: []}}
 registry:
   calibration: [calibration/wage_schedule]

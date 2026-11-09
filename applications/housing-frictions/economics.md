@@ -41,9 +41,13 @@ $\partial_{y_h} V^{\succ}$ is the shadow value of housing (30): on the choice
 stage, the keeper's marginal value of housing,
 $u_h(h) + \beta\, \partial_{y_h} V^{\succ}$, or the adjuster's marginal value
 of resources, the house being sold at its value. The derivative lines of the
-value builders, the envelope conditions among them, stand in the marginal
-blocks of `declaration/methods/marginals_<stage>.bl`, which each stage's
-methods file binds with `!marginals`.
+value builders, the envelope conditions among them, are the lines each
+stage's methods file, `declaration/stages/<stage>/methods.bl`, an addition
+to the stage file, adds to those builders; the same file names the method
+that solves the saving stage's Euler relations, `!time_iteration`, with the
+decision grid on which they are solved, and the representations of the
+values, whose settings `declaration/settings/<stage>.yml` values as
+placeholders until AAS supplies them.
 
 ## The period and the trellis
 
@@ -64,7 +68,7 @@ decision to continuation, so that block alone declares its states. One inter-per
 mapping carries both saving stages' post-states to next period's
 `house_choice`. Neither the application nor §6.2 states a terminal value:
 the terminal stage's continuation value is the zero boundary data and its
-two derivatives are zero, as the marginal block of
-`declaration/methods/marginals_terminal.bl` states. AAS to confirm. The
+two derivatives are zero, as its methods file,
+`declaration/stages/terminal/methods.bl`, states. AAS to confirm. The
 earnings level `W` is 1.0 in every period until the paper's age profile is
 supplied.

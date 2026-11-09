@@ -58,11 +58,11 @@ entered at its decision perch.
 | Stage | File | What happens in it |
 |---|---|---|
 | `benhabib_bellman` (stage name `bellman`) | `declaration/stages/benhabib_bellman/benhabib_bellman.bl` | The household enters the stage with wealth `m` at the decision perch, chooses `c` in `[0, m]` and continues with `a = R_vec[r_type]*(m - c) + wage_fn[tau]`. |
-| `bequest` | `declaration/stages/bequest/bequest.bl` | Only in the terminal period. The stage arrives with `a_pre`, the wealth left after the last decision, and writes `V = (A/β)*a^(1-μ)/(1-μ) + V[>]`; the marginal block of `declaration/methods/marginals_bequest.bl` states its derivative, `D_{a}V = (A/β)*a^(-μ)`. It makes no choice. |
+| `bequest` | `declaration/stages/bequest/bequest.bl` | Only in the terminal period. The stage arrives with `a_pre`, the wealth left after the last decision, and writes `V = (A/β)*a^(1-μ)/(1-μ) + V[>]`; its methods file, `declaration/stages/bequest/methods.bl`, states its derivative, `D_{a}V = (A/β)*a^(-μ)`, as a line of the same block. It makes no choice. |
 
 In the equation above, $a$ is the stage's `m`, and $a'$ is its `a`.
 
-The bequest's value line and the derivative line of its marginal block are
+The bequest's value line and the derivative line of its methods file are
 the legacy's terminal block, `V_terminal` and `dV_terminal`, written in the
 stage's names, with `V[>]` added to the value
 as in the durables bequest. The weight $A/\beta$ makes the stage of age 60,
@@ -171,35 +171,41 @@ Table 4 is a transition matrix.
 
 ## Numerical methods
 
-`declaration/stages/benhabib_bellman/methods.yml` holds one entry of the legacy's
-`bellman_methods.yml`, `!egm` at `policy`, with
-the legacy's handler. The handler is a placeholder, `dolo:egm_backward`; no
-callable realizes the tag yet. The `!egm`
-entry opens the policy builder with the method block of
-`declaration/methods/benhabib_bellman_egm.bl`, which writes the inverse Euler
-line, the endogenous grid and `c = c[>]`, while the stage file states the
-maximization; a `!marginals` entry binds the derivative line
-`D_{m}V = c^(-σ)`, the marginal block of
-`declaration/methods/marginals_benhabib_bellman.bl`, on `cntn_to_dcsn`. Five
-parts of the legacy file are not copied:
+The methods of a stage stand in a methods file beside its stage file, a `.bl`
+file that opens with `@methods:` and is read with the stage file as an addition
+to it: a block of the methods file names a block of the stage by its id and
+adds its entries and its lines to that block, and a file-level entry names its
+place by a path. `declaration/stages/benhabib_bellman/methods.bl` holds one
+entry of the legacy's `bellman_methods.yml`, `!egm` on the policy builder, with
+the legacy's handler, `"dolo:egm_backward"`, a placeholder that no callable
+realizes yet, and with the grid of savings `!Cartesian(a=(a_min, a_max, n_a))`,
+whose three settings the file declares with their sets. Its block `policy`
+writes the inverse Euler line, the endogenous grid and `c = c[>]`, which stand
+in place of the stage file's maximization at the operative level while the
+declared level keeps the maximization, and its block `cntn_to_dcsn` appends the
+derivative line `D_{m}V = c^(-σ)`. Three parts of the legacy file are not
+written:
 
 - the `upper_env` entry (`!FUES`), because the stage has no upper-envelope
   operator for it to attach to;
-- `grid: endogenous`, because the present reader takes `grid` for the name of
-  a setting;
-- the `!analytic-inverse` entry at `policy.InvEuler`, because `configure` stops
-  with an error at a method bound at a node;
-- the `evaluate` entry, `!Linear` on the line `c = c[>]`; the interpolation of
-  the policy is a representation written at the policy builder's Evaluation,
-  `policy.evaluate`, and the application binds none there;
+- `grid: endogenous`, because the endogenous grid is what the method computes
+  and no entry names it;
 - the `!Identity` entry at `dcsn_to_arvl`, because the stage has no arrival
   perch and so no builder from the decision perch to it.
 
-`declaration/settings/default.yml` holds
-the legacy's six values. No method entry names a setting, so no setting is read
-at a place. The bequest's methods file, `declaration/stages/bequest/methods.yml`,
-binds the marginal block of `declaration/methods/marginals_bequest.bl`, whose
-derivative the endogenous grid step of age 60 reads; the bequest has no
+The legacy's two other entries, `!Linear` on the line `c = c[>]`, the
+representation of the policy at the policy builder's Evaluation,
+`policy.evaluate`, and `!analytic-inverse` at the node `policy.InvEuler`, stand
+in a second methods file of the stage,
+`declaration/stages/benhabib_bellman/methods.bellman_method.bl`, which the
+recipe does not name; an author who names it after the first in the stage's
+methods list binds both.
+
+`declaration/settings/default.yml` holds the legacy's six values. The three
+the grid names, `n_a`, `a_min` and `a_max`, are read at `policy`; `grid_phi`,
+`tol` and `max_iter` are read at no place. The bequest's methods file,
+`declaration/stages/bequest/methods.bl`, states the derivative of the bequest's
+value, which the endogenous grid step of age 60 reads; the bequest has no
 settings list.
 
 ## What differs from the legacy registry
@@ -217,8 +223,8 @@ which moved out of the repository and is kept privately by AAS.
 - Names follow the stage files: `beta`, `sigma` and `mu` become β, σ and μ.
   The net rates `r_vec`, keyed 1 to 5, become the gross list `R_vec`, and the
   deciles keyed 1 to 10 become list positions.
-- The slot `$draw` becomes `$fill`, which the settings list now names as well,
-  and the stage has its own methods slot, `$bellman_method`.
+- The slot `$draw` becomes `$fill`, which the settings list now names as well;
+  a methods list names the stage's methods files and no slot.
 - `settings/pretty_plot`, named by the legacy recipe, is dropped: the legacy
   folder does not hold it.
 - The stage key is the file name, `benhabib_bellman`. The stage's own name is

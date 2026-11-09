@@ -18,7 +18,6 @@ from __future__ import annotations
 import hashlib
 
 from workbench_support import (
-    ATTRIBUTE_ROWS_JS,
     CONS,
     CONS_ID,
     DEMO_FILES,
@@ -78,7 +77,7 @@ def test_item_1_new_trellis_writes_the_folder_and_offers_the_first_commit(
     repository's folder typed as the parent folder, the note names it and
     no new repository, and `write the folder`
     writes the files of §4, opens the new folder with its recipe in the
-    editor, holds the keywords of its nine slots in its Recipe tab (unit
+    editor, holds the keywords of its six slots in its Recipe tab (unit
     M, Task 10) and counts none of them in the checklist, on the
     status line or in the tree, since a slot is a parameter of the load
     and no lack (unit K, K-D28 and K-D29), and opens the commit form with
@@ -112,9 +111,11 @@ def test_item_1_new_trellis_writes_the_folder_and_offers_the_first_commit(
             p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()
         )
         assert tuple(written) == DEMO_FILES
-        wait_until(lambda: len(slot_keywords(tab)) == 9, 10.0, "the nine slots' keywords")
+        wait_until(lambda: len(slot_keywords(tab)) == 6, 10.0, "the six slots' keywords")
         assert slot_keywords(tab) == [
-            creation.slot_name(key, kind) for key, _ in DEMO_STAGES for kind in creation.KINDS
+            creation.slot_name(key, kind)
+            for key, _ in DEMO_STAGES
+            for kind in creation.SLOT_KINDS
         ]
         assert checklist_count(tab) == 0 and tab.locator(".bl-checklist-entry").count() == 0
         assert "to fill" not in status_text(tab)
@@ -166,7 +167,7 @@ def test_new_trellis_lists_each_template_on_one_line_and_asks_each_stage_s_perio
         assert tab.locator(f"{port} .bl-template-model").text_content() == "portfolio-choice"
         hover = tab.locator(f"{port} .bl-template-button").get_attribute("title")
         assert hover.endswith(
-            "brings calibration/portfolio.yml, settings/port_wide.yml, methods/port.yml"
+            "brings calibration/portfolio.yml, settings/port_wide.yml, stages/port/methods.bl"
         )
         assert hover.startswith(templates[PORT_ID].model)
         terminal_hover = tab.locator(f"{terminal} .bl-template-button").get_attribute("title")
@@ -207,7 +208,7 @@ def test_item_2_add_stage_and_add_period_from_the_page(browser, server_on, repos
     shows, and types its edits into the buffers of the recipe, the period
     file and answers.yml, which the tree marks `unsaved` and the disk does
     not yet hold; once they are saved, the line `slots` under the recipe's
-    blocks lists twelve keywords (K-D29). Enter on the
+    blocks lists eight keywords (K-D29). Enter on the
     `+ period` control at the earliest end opens `add period`, which with
     noport, cons and disc writes period.young.yml, which the tree shows, and
     types its edits into the buffers of the trellis file and answers.yml;
@@ -229,7 +230,7 @@ def test_item_2_add_stage_and_add_period_from_the_page(browser, server_on, repos
         for path in (
             "declaration/stages/noport/noport.bl",
             "declaration/settings/noport.yml",
-            "declaration/stages/noport/methods.yml",
+            "declaration/stages/noport/methods.bl",
         ):
             reveal_in_tree(tab, path, timeout=15_000)
         edited = ["answers.yml", "declaration/period.yml", "declaration/spec.yml"]
@@ -237,7 +238,7 @@ def test_item_2_add_stage_and_add_period_from_the_page(browser, server_on, repos
         assert "  noport: " not in recipe.read_text(encoding="utf-8")
         assert save_unsaved_files(tab) == edited
         assert "  noport: " in recipe.read_text(encoding="utf-8")
-        wait_until(lambda: len(slot_keywords(tab)) == 12, 10.0, "the twelve slots' keywords")
+        wait_until(lambda: len(slot_keywords(tab)) == 8, 10.0, "the eight slots' keywords")
         wait_until(lambda: add_period_controls(tab) == control_targets(6), 60.0, "the controls")
         drop_by_keyboard(tab, None, "earliest end")
         tab.wait_for_selector('.bl-form[data-form="add period"]', timeout=30_000)
@@ -271,14 +272,13 @@ def test_add_stage_from_a_folder_refuses_a_held_key_and_copies_under_another(
     from a folder, its field on the folder that holds the model folder. The
     portfolio model's `disc/` written in the field, then its entry
     `disc.bl` clicked in the chooser, prints disc's row, whose hover says it
-    brings `methods.yml`, under the key `disc`, which the folder holds: `add
+    brings `methods.bl`, under the key `disc`, which the folder holds: `add
     the stage` is refused in the form with the creation unit's sentence and
     writes nothing. With the key `discount` typed in its place, the stage
-    file and its methods file are written under
-    `declaration/stages/discount/`, each naming the key, the recipe, the
-    period file and answers.yml are left unsaved, and answers.yml, once
-    saved, records the path of `disc.bl` as given and the SHA-256 of the
-    two files."""
+    file and its addition are written under `declaration/stages/discount/`,
+    each naming the key, the recipe, the period file and answers.yml are
+    left unsaved, and answers.yml, once saved, records the path of `disc.bl`
+    as given and the SHA-256 of the two files."""
     work, _ = repository
     created = creation.create_trellis(work, "lifecycle-demo", list(DEMO_STAGES), "demo_period", 6)
     before = file_bytes(created.folder)
@@ -300,7 +300,7 @@ def test_add_stage_from_a_folder_refuses_a_held_key_and_copies_under_another(
         row = f'.bl-form .bl-template[data-template="{stage_file}"]'
         tab.wait_for_selector(row, timeout=30_000)
         hover = tab.locator(f"{row} .bl-template-button").get_attribute("title")
-        assert hover.endswith(" · brings methods.yml")
+        assert hover.endswith(" · brings methods.bl")
         key = ".bl-form .bl-create-key input"
         assert tab.locator(key).input_value() == "disc"
         tab.click(".bl-form .bl-add-submit")
@@ -311,16 +311,16 @@ def test_add_stage_from_a_folder_refuses_a_held_key_and_copies_under_another(
         tab.fill(key, "discount")
         tab.click(".bl-form .bl-add-submit")
         stage = "declaration/stages/discount/discount.bl"
-        methods = "declaration/stages/discount/methods.yml"
+        methods = "declaration/stages/discount/methods.bl"
         reveal_in_tree(tab, stage, timeout=30_000)
         assert tab.locator(".bl-form").count() == 0
         assert (created.folder / stage).read_text(encoding="utf-8") == stage_file.read_text(
             encoding="utf-8"
         ).replace("@stage: disc\n", "@stage: discount\n", 1)
         assert (created.folder / methods).read_text(encoding="utf-8") == (
-            (DISC_FOLDER / "methods.yml")
+            (DISC_FOLDER / "methods.bl")
             .read_text(encoding="utf-8")
-            .replace("stage: disc\n", "stage: discount\n", 1)
+            .replace("@methods: disc\n", "@methods: discount\n", 1)
         )
         edited = ["answers.yml", "declaration/period.yml", "declaration/spec.yml"]
         wait_until(lambda: unsaved_in_tree(tab) == edited, 10.0, "the three files unsaved")
@@ -330,7 +330,7 @@ def test_add_stage_from_a_folder_refuses_a_held_key_and_copies_under_another(
             "origin": str(stage_file),
             "sha256": {
                 name: hashlib.sha256((DISC_FOLDER / name).read_bytes()).hexdigest()
-                for name in ("disc.bl", "methods.yml")
+                for name in ("disc.bl", "methods.bl")
             },
         }
     finally:
@@ -346,7 +346,7 @@ def test_new_stage_from_the_page_refuses_a_held_key_and_adds_the_stage_to_the_re
     recipe and answers.yml; with the key cons, whose stage folder exists,
     it is refused in the form and writes nothing; with the key buyer it
     writes the empty stage file, which the tree shows and the editor opens,
-    and writes the stage's row into the recipe and its three slots into
+    and writes the stage's row into the recipe and its two slots into
     answers.yml on disk with it, no file then unsaved (unit L, Task 17;
     defect 22 of the UX simulation)."""
     work, _ = repository
@@ -356,7 +356,7 @@ def test_new_stage_from_the_page_refuses_a_held_key_and_adds_the_stage_to_the_re
     context, tab = new_tab(browser)
     try:
         open_trellis(tab, server_on(created.folder), RECIPE_FILE)
-        wait_until(lambda: len(slot_keywords(tab)) == 9, 10.0, "the nine slots' keywords")
+        wait_until(lambda: len(slot_keywords(tab)) == 6, 10.0, "the six slots' keywords")
         tab.click(".bl-new-stage")
         tab.wait_for_selector('.bl-form[data-form="new stage"]', timeout=10_000)
         assert tab.locator(".bl-form-note").text_content() == (
@@ -380,7 +380,7 @@ def test_new_stage_from_the_page_refuses_a_held_key_and_adds_the_stage_to_the_re
         }
         row = f"  buyer: {creation.recipe_row('buyer')}\n"
         assert after["declaration/spec.yml"].decode("utf-8").endswith(row)
-        slots = [f"    - {creation.slot_name('buyer', kind)}\n" for kind in creation.KINDS]
+        slots = [f"    - {creation.slot_name('buyer', kind)}\n" for kind in creation.SLOT_KINDS]
         assert all(slot in after["answers.yml"].decode("utf-8") for slot in slots)
         assert sorted(set(after) - set(before)) == [stage]
         assert after[stage].decode("utf-8") == creation.empty_stage_text("buyer")
@@ -471,12 +471,14 @@ def test_item_3_a_push_that_would_prompt_shows_gits_sentence(browser, server_on,
 
 def test_a_slot_filled_in_the_recipe_binds_the_stage_shown(browser, server_on, repository):
     """Through the page over a folder new trellis wrote: cons.bl is shown
-    symbolic while no file is written in place of its slots; once its three
-    slots are replaced by files in the recipe, by typing in the editor and
-    saving, the line `slots` lists six keywords, and cons.bl, opened
-    again, is bound by the recipe, `!egm` on its Evaluation, since the page
-    watches the recipe with the sources it names (spec 0.3 §2.2 rule 1,
-    C-R11)."""
+    bound by its addition alone, which the recipe's row names, while no
+    file is written in place of its slots; once its two slots are replaced
+    by files in the recipe, by typing in the editor and saving, the line
+    `slots` lists four keywords, and cons.bl, opened again, is bound by
+    the recipe's calibration as well, since the page watches the recipe
+    with the sources it names (spec 0.3 §2.2 rule 1, C-R11); with the
+    operative builders shown, `!egm` stands on its policy builder, since
+    the declared builders print no method row (decision S7-U7)."""
     work, _ = repository
     created = creation.create_trellis(work, "lifecycle-demo", list(DEMO_STAGES), "demo_period", 6)
     context, tab = new_tab(browser)
@@ -484,23 +486,28 @@ def test_a_slot_filled_in_the_recipe_binds_the_stage_shown(browser, server_on, r
         open_workbench(tab, server_on(created.folder))
         open_tree_file(tab, CONS)
         wait_until(lambda: status_settled_on(tab, CONS), 60.0, f"the loop of {CONS}")
-        assert " · symbolic · " in status_text(tab)
+        shown = status_text(tab)
+        assert " · bound · " in shown and " · methods " in shown, shown
+        assert " · calibration " not in shown, shown
         open_tree_file(tab, "declaration/spec.yml")
-        for kind in creation.KINDS:
+        for kind in creation.SLOT_KINDS:
             slot = creation.slot_name("cons", kind)
             replace_in_editor(tab, f"[${slot}]", f"[{DEMO_FILLS[slot]}]")
         tab.click(".bl-save")
-        wait_until(lambda: len(slot_keywords(tab)) == 6, 10.0, "six slots' keywords left")
+        wait_until(lambda: len(slot_keywords(tab)) == 4, 10.0, "four slots' keywords left")
         open_tree_file(tab, CONS)
-        wait_until(lambda: " · bound · " in status_text(tab), 30.0, "cons.bl bound by the recipe")
+        wait_until(
+            lambda: " · calibration " in status_text(tab), 30.0, "cons.bl bound by the recipe"
+        )
         # a selection made while the view lays out a new graph is lost, so
         # the node is selected once the status line has settled
         wait_until(lambda: status_settled_on(tab, CONS), 30.0, "the bound graph drawn")
-        select_node(tab, "policy:Evaluation", "backward")
+        tab.click(".bl-layers-button")
+        select_node(tab, "policy___group___", "backward")
         wait_until(
-            lambda: ["method", "!egm"] in tab.evaluate(ATTRIBUTE_ROWS_JS),
+            lambda: "!egm" in tab.locator(".bl-panel").text_content(),
             10.0,
-            "!egm on the Evaluation",
+            "!egm on the policy builder",
         )
     finally:
         context.close()
@@ -527,6 +534,13 @@ def test_new_variant_writes_three_files_beside_the_recipe_and_nothing_else(
         tab.click(".bl-new-variant")
         tab.wait_for_selector('.bl-form[data-form="new variant"]', timeout=30_000)
         tab.fill(".bl-variant-name input", "two-stages")
+        tab.locator(".bl-variant-bindings vscode-single-select").click()
+        tab.get_by_role("option", name="Share binding files", exact=True).click()
+        wait_until(
+            lambda: "Shares calibration, settings and method assignments." in tab.locator(".bl-form").inner_text(),
+            10.0,
+            "the scope of shared bindings",
+        )
         tab.click(".bl-variant-submit")
         for path in VARIANT_FILES:
             tab.wait_for_selector(f'.bl-tree-file[data-path="{path}"]', timeout=15_000)
@@ -547,3 +561,81 @@ def test_new_variant_writes_three_files_beside_the_recipe_and_nothing_else(
     after = file_bytes(scratch_pension)
     assert sorted(set(after) - set(before)) == sorted(VARIANT_FILES)
     assert {path: after[path] for path in before} == before
+
+
+def test_independent_variant_edits_its_own_calibration_and_writes_its_notebook(
+    browser, server_on, scratch_folder
+):
+    variant = "declaration/spec.high-curvature.yml"
+    original = scratch_folder / "declaration/calibration/portfolio.yml"
+    baseline = original.read_bytes()
+    context, tab = new_tab(browser)
+    try:
+        open_workbench(tab, server_on(scratch_folder))
+        tab.click(".bl-notebook")
+        base_notebook = scratch_folder / "notebooks/portfolio-choice.ipynb"
+        wait_until(base_notebook.is_file, 30.0, "the baseline notebook")
+        notebook_bytes = base_notebook.read_bytes()
+        tab.click(".bl-new-variant")
+        tab.wait_for_selector('.bl-form[data-form="new variant"]')
+        assert "Copies calibration, settings and method assignments." in tab.locator(".bl-form").inner_text()
+        tab.fill(".bl-variant-name input", "high-curvature")
+        tab.click(".bl-variant-submit")
+        tab.wait_for_selector(f'.bl-tree-file.bl-open[data-path="{variant}"]')
+        assert (scratch_folder / variant).is_file()
+        tab.click(".bl-notebook")
+        variant_notebook = scratch_folder / "notebooks/portfolio-choice.spec.high-curvature.yml.ipynb"
+        wait_until(variant_notebook.is_file, 30.0, "the variant notebook")
+        assert f"../{variant}" in variant_notebook.read_text()
+        assert base_notebook.read_bytes() == notebook_bytes
+
+        def curvature():
+            open_tree_file(tab, CONS)
+            wait_until(lambda: status_settled_on(tab, CONS), 60.0, "the consumption stage")
+            tab.click('.bl-class-tab[data-tab="Parameters"]')
+            return tab.locator('.bl-values-row[data-name="ρ"] .bl-values-value')
+
+        rho = curvature()
+        copied = scratch_folder / "declaration/calibration/portfolio.high-curvature_calibration.yml"
+        assert "writes declaration/calibration/portfolio.high-curvature_calibration.yml" == (
+            tab.locator(".bl-values-file").inner_text()
+        )
+        rho.fill("8.0")
+        rho.press("Enter")
+        wait_until(lambda: "ρ: 8.0" in copied.read_text(), 30.0, "the variant calibration")
+        assert original.read_bytes() == baseline
+        tab.click('.bl-class-tab[data-tab="Settings"]')
+        grid = tab.locator('.bl-values-row[data-name="n_a"] .bl-values-value')
+        grid.fill("900")
+        grid.press("Enter")
+        copied_settings = scratch_folder / "declaration/settings/cons.high-curvature_settings.yml"
+        wait_until(lambda: "n_a: 900" in copied_settings.read_text(), 30.0, "the variant grid size")
+        assert "n_a: 800" in (scratch_folder / "declaration/settings/cons.yml").read_text()
+
+        tab.reload()
+        tab.wait_for_selector(".bl-new-variant")
+        assert curvature().input_value() == "6.0"
+        open_tree_file(tab, variant)
+        assert curvature().input_value() == "8.0"
+        tab.click(".bl-new-variant")
+        assert "of spec.high-curvature.yml" in tab.locator(".bl-form").inner_text()
+    finally:
+        context.close()
+
+
+def test_variant_reads_the_latest_editor_text_before_copying(browser, server_on, scratch_folder):
+    before = file_bytes(scratch_folder)
+    context, tab = new_tab(browser)
+    try:
+        open_trellis(tab, server_on(scratch_folder), RECIPE_FILE, minimum=10)
+        tab.locator(".cm-content").click()
+        tab.keyboard.press("ControlOrMeta+End")
+        tab.keyboard.insert_text("\n# Recently typed.\n")
+        tab.click(".bl-new-variant")
+        tab.fill(".bl-variant-name input", "fast")
+        tab.click(".bl-variant-submit")
+        tab.get_by_text(f"{RECIPE_FILE} holds unsaved text", exact=True).wait_for()
+        assert file_bytes(scratch_folder) == before
+        assert "# Recently typed." in tab.locator(".cm-content").inner_text()
+    finally:
+        context.close()

@@ -129,9 +129,9 @@ Arithmetic and the applications of declared functions also remain, within
 the equations that a block or a statement marked `!node` carries. Being
 mathematically represented does not make
 every operation
-a separately supported method target: a **method target** is a computation
-or output representation for which the methods interface defines an
-address and an admissible numerical attachment (§6).
+a separate place: a **place** is an operator at which a methods file can
+type a method, which the stage lists with its path and its kind
+([Methodization](../04-methodization.md) §2; §6).
 
 These three levels occur within both the field diagram and the functional
 diagram, and replace neither. Both sides of an implicit equation and the
@@ -299,12 +299,12 @@ attachment. Renaming identifiers consistently in the stage and its methods
 file preserves the equations and the intended attachments. Identifiers
 must be unambiguous in their enclosing scope.
 
-An address used for inspection is not necessarily a valid method target.
-An unmarked scalar alias can remain identifiable without defining a
-separate numerical task. An authored node, a supported operator occurrence,
-and a declared output representation are different possible targets.
-Attaching a method requires both a supported target and a method suitable
-for its mathematical operation.
+An address used for inspection is not necessarily a place. An unmarked
+scalar alias can remain identifiable without defining a separate numerical
+task. An authored node, an operator occurrence and the Evaluation of a
+builder are places of different kinds, and typing a method requires a place
+of a kind the method admits and a method suitable for its mathematical
+operation ([Method types](../reference/methods.md)).
 
 The address `<block-id>.<statement-id>.<operator>` must identify the
 intended occurrence. If a statement contains two indistinguishable
@@ -317,10 +317,10 @@ quadrature rule approximates an integral; a root finder approximates a
 solution of the stated relation. Neither supplies a missing shock law,
 constraint, or optimality condition. A numerical grid is part of a chosen
 representation, whereas the field's domain belongs to the model: the
-methods file names the grid by the setting `grid`, whose value is the
-grid's kind written as a tag, `grid: !Cartesian`, with the grid's fields,
-`orders` and `bounds`, beside it, and the method by its basis, such as
-`!Linear` (see [Methodization](../04-methodization.md) §3).
+methods file writes the grid by its own entry at the place,
+`cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))`, one
+factor for each coordinate, and the method by its basis, such as `!Linear`
+(see [Methodization](../04-methodization.md) §3.2).
 
 **The name `evaluate`.** An authored `evaluate(knots, values, x)` denotes
 evaluation of a stated representation, with coordinates first and values
@@ -332,18 +332,17 @@ since the first argument holds the knots; `evaluate` alone names the one
 authored occurrence of a stage and is refused where the stage authors
 none or several. A methods file also writes `evaluate` after a block id
 for the [Evaluation](../reference/operations.md#evaluation) that closes
-the builder, the place of a declared output representation, and says what
-that Evaluation evaluates:
-`<block-id>.evaluate` for the policy function of the policy builder,
-`<block-id>.evaluate.value` for the value function of a backward value
-builder, and `<block-id>.evaluate.marginal` for the derivative of that
-value a derivative line states. That address names an operation every
-such builder closes with; it does not assert that an `evaluate`
-expression was written in the stage, and it creates none. A form that
-names what its builder does not write, `policy.evaluate.value` or
-`.evaluate.marginal` where no derivative line stands, is refused, and so
-is a representation named on the builder itself or on a derivative line.
-See [Methodization](../04-methodization.md) for the attachment syntax.
+the builder, the place of a declared output representation, and may say
+which stored object it types: `policy.evaluate` for the policy function
+of the policy builder, `cntn_to_dcsn.evaluate` for everything the
+Evaluation of a backward value builder stores, the value function and the
+derivative of it that a derivative line states, or `cntn_to_dcsn.evaluate[V]`
+and `cntn_to_dcsn.evaluate[D_{m_d}V]` for each of them apart, with a grid
+of its own. That place names an operation every such builder closes with;
+it does not assert that an `evaluate` expression was written in the stage,
+and it creates none. A representation typed on the builder itself is
+refused under `method-admission`. See [Methodization](../04-methodization.md)
+§2 for the written form.
 
 ## 7 Policy relations and numerical decomposition
 
@@ -365,8 +364,8 @@ inverse marginal-utility function. Its continuation value, and so the
 derivative `D_{a}V[>]` that the candidate line reads, is already
 discounted; no discount factor should be inserted into this fragment.
 Appendix C §4.2 derives its functions and §4.5 states sufficient
-conditions and a constrained extension; the file
-`applications/portfolio-choice/declaration/stages/cons/cons.bl` writes the candidate line as the
+conditions and a constrained extension; the methods file
+`applications/portfolio-choice/declaration/stages/cons/methods.bl`, beside `cons.bl`, writes the candidate line as the
 inequality `c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0`, whose clause states the
 borrowing constraint (Appendix C §4.5).
 
@@ -390,7 +389,7 @@ determine under Appendix C R10's consistency, single-valuedness, coverage,
 and measurability conditions. When the final line is omitted, no line
 states the policy and the block is refused under the rule `output-defined`
 (Appendix C R1 and §4.6); an implementation does not invent a missing final
-equation or a method target from the names of the lines.
+equation or a place from the names of the lines.
 
 Choosing a numerical method does not add `evaluate`, `upper_env`, or
 `!node` statements to the model. If a method internally interpolates or

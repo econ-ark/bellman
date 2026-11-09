@@ -1,32 +1,41 @@
-"""The readers of the sources a stage is bound from, and the one reader of a
-YAML file.
+"""The readers of the calibration and the settings a stage is bound from, and
+the one reader of a YAML file.
 
-`load_calibration`, `load_settings` and `load_methods` read a calibration,
-settings or methods source, a mapping or the path of a YAML file, into what a
-binding verb binds: the parameter values, the numerical settings, or the
-ordered authored method records with each method tag and its payload kept. A
-source given by its path is read by `read_yaml_mapping`, the one reader of a
-YAML file of the binding verbs and of the Bellman factory: it keeps every tag,
-refuses a key written twice, which YAML reads silently as its last value, and
-refuses every file it cannot read as one mapping, as a `FactoryError` under the
-rule its caller names; the three readers name `readable-file`. The binding
-verbs, which accept a source by its path, are defined
-in `bellman.stage.binding_verbs`.
+`load_calibration` and `load_settings` read a calibration or a settings
+source, a mapping or the path of a YAML file, into what a binding verb binds:
+the parameter values or the numerical settings. A methods source is no YAML
+source: the methods of a stage are `.bl` additions, read by
+`bellman.stage.levels.read_addition` (specification 0.7 §4). A source given by
+its path is read by `read_yaml_mapping`, the one reader of a YAML file of the
+binding verbs and of the Bellman factory: it keeps every tag, refuses a key
+written twice, which YAML reads silently as its last value, at the second key
+with the first as a related location, and refuses every file it cannot read
+as one mapping, as a `FactoryError` under the rule its caller names; the two
+readers name `readable-file`. `key_marks` is the one reader of the node marks
+of a YAML file, from which a refusal of a key is positioned, and
+`settings_key_positions` reads from it the position of each setting's key in
+the settings files a stage is configured from (Model Interface 0.9 §4,
+decision 7). The binding verbs, which accept a source by its path, are
+defined in `bellman.stage.binding_verbs`.
 """
 
 from __future__ import annotations
 
-import copy
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Union
 
 import yaml
 
-from bellman.refusals import FactoryError
-from bellman.stage.method_table import METHOD_TYPES
+from bellman.refusals import FactoryError, Location
 
-__all__ = ["load_calibration", "load_settings", "load_methods", "read_yaml_mapping"]
+__all__ = [
+    "key_marks",
+    "load_calibration",
+    "load_settings",
+    "read_yaml_mapping",
+    "settings_key_positions",
+]
 
 
 # --- the readers of a source ---
@@ -93,110 +102,6 @@ def _load_source(source: Union[str, Path, dict]) -> dict:
     return read_yaml_mapping(source, rule="readable-file", address=None)
 
 
-def load_methods(source: Union[str, Path, dict]) -> dict:
-    """The authored method records of a methods source, a mapping or the
-    path of a YAML file, in the order written, each tag and its payload
-    kept."""
-    if isinstance(source, Mapping):
-        return _checked_methods(source)
-
-    data = read_yaml_mapping(Path(source), rule="readable-file", address=None)
-    return _checked_methods(data, source=str(source))
-
-
-def _checked_methods(data: Any, source: Optional[str] = None) -> dict:
-    """The authored entries of a methods source, checked, as independent
-    records in source order."""
-    where = source or "in-memory methods"
-    if not isinstance(data, Mapping):
-        raise TypeError(f"{where}: methodization source must be a mapping")
-    if any(key in data for key in ("scheme", "schemes")):
-        raise ValueError(f"{where}: scheme/schemes source records are not supported")
-    methods = data.get("methods", [])
-    if not isinstance(methods, list):
-        raise TypeError(f"{where}: methods must be a list of authored records")
-    result = {
-        copy.deepcopy(key): _copy_authored(value)
-        for key, value in data.items()
-        if key != "methods"
-    }
-    result["methods"] = []
-    targets = set()
-    for index, item in enumerate(methods):
-        location = f"{where}: methods entry {index + 1}"
-        if not isinstance(item, Mapping):
-            raise TypeError(f"{location} must be a mapping")
-        entry = {}
-        for key, value in item.items():
-            key = "on" if key is True else key
-            if key in entry:
-                raise ValueError(f"{location}: Duplicate entry key {key!r}")
-            entry[key] = _copy_authored(value)
-        if any(key in entry for key in ("scheme", "schemes")):
-            raise ValueError(f"{location}: scheme/schemes records are not supported")
-        target = entry.get("on")
-        if not isinstance(target, str) or not target.strip() or "," in target:
-            raise ValueError(f"{location}: on must name one nonempty target without commas")
-        key = entry_key(entry)
-        if key in targets:
-            raise ValueError(f"{location}: Duplicate methodization target {target!r}")
-        targets.add(key)
-        if "method" in entry:
-            method = entry["method"]
-            name = method.get("__yaml_tag__") if isinstance(method, Mapping) else method
-            if not isinstance(name, str) or not name.strip():
-                raise ValueError(f"{location}: method must be a nonempty string or tagged mapping")
-        if "settings" in entry and not isinstance(entry["settings"], Mapping):
-            raise TypeError(f"{location}: settings must be a mapping")
-        # `block` is the path of a block file, relative to the methods file
-        # (specification 0.6 §4)
-        for key in ("handler", "block"):
-            if key in entry and (not isinstance(entry[key], str) or not entry[key].strip()):
-                raise ValueError(f"{location}: {key} must be a nonempty string")
-        result["methods"].append(entry)
-    return result
-
-
-# the spellings of the method `!marginals` in an entry of a methods source, a
-# string or the tag of a tagged mapping
-_MARGINALS = ("!marginals", "marginals")
-
-
-def entry_key(entry):
-    """The key that tells the entries of a methods source apart: the target
-    the entry's `on` names and the kind of its method, a solution method, a
-    representation or a marginal block, the `kind` of the method's row in the
-    method table, `solution` where the row names none or the entry names a
-    handler alone. One entry of each kind may stand on one target in one
-    source, as the binding rule admits, since each kind has its own place:
-    `!vfi` on `cntn_to_dcsn` stands on the builder and `!marginals` on
-    `cntn_to_dcsn` adds its lines at the builder's Evaluation, while a
-    representation names that Evaluation itself, `cntn_to_dcsn.evaluate.value`,
-    a target of its own (decision MB-U4, extended on 31 October 2026, MB-U53;
-    AMD-MB-002)."""
-    method = entry.get("method")
-    name = method.get("__yaml_tag__") if isinstance(method, Mapping) else method
-    tag = name[1:] if isinstance(name, str) and name.startswith("!") else name
-    rule = METHOD_TYPES.get(tag) if isinstance(tag, str) else None
-    kind = (rule.kind if rule is not None else None) or "solution"
-    return entry["on"], kind
-
-
-def _copy_authored(value, active=frozenset()):
-    """A copy of nested source containers, read-only mappings included."""
-    if isinstance(value, (Mapping, list, tuple)):
-        if id(value) in active:
-            raise ValueError("method records cannot contain recursive containers")
-        active = active | {id(value)}
-        if isinstance(value, Mapping):
-            return {
-                copy.deepcopy(key): _copy_authored(item, active) for key, item in value.items()
-            }
-        items = [_copy_authored(item, active) for item in value]
-        return tuple(items) if isinstance(value, tuple) else items
-    return copy.deepcopy(value)
-
-
 # --- the one reader of a YAML file ---
 
 
@@ -225,13 +130,24 @@ def read_yaml_mapping(path, *, rule, address, text=None):
         ) from None
     except DuplicateKey as error:
         raise FactoryError(
-            f"the key {error.key!r} is written twice in "
-            f"{path}, the second time at line {error.line}",
+            f"the key {error.key!r} is written twice in {Path(path).name}, at line "
+            f"{error.first_line} and again at line {error.line}",
             rule=rule,
             file=str(path),
             address=address,
             written=f"{error.key!r} at line {error.line}",
-            write="each key once",
+            write=f"one `{error.key}:` entry",
+            line=error.line,
+            column=error.column,
+            related=(
+                Location(
+                    "original declaration",
+                    file=str(path),
+                    line=error.first_line,
+                    column=error.first_column,
+                    address=str(error.key),
+                ),
+            ),
         ) from None
     except OSError as error:
         raise FactoryError(
@@ -263,13 +179,72 @@ def read_yaml_mapping(path, *, rule, address, text=None):
     return {key: value for key, value in raw.items() if key != "__yaml_tag__"}
 
 
-class DuplicateKey(ValueError):
-    """A mapping key written twice in a YAML document: `key`, and `line`, the
-    line of the second writing, which `read_yaml_mapping` refuses as a
-    `FactoryError`."""
+def key_marks(path, *, text=None):
+    """The position of every key and every sequence item of the YAML file at
+    `path`, or of `text` read in its place, by its path in the document: a
+    mapping from the tuple of the keys and sequence indices that lead to it
+    to `(line, column)`, counted from one, read from the node marks of the
+    composed document; the first mark where a key stands twice. Empty where
+    the file is missing or the text does not compose, since the reader of
+    the file refuses it."""
+    try:
+        if text is None:
+            with open(path, encoding="utf-8") as stream:
+                root = yaml.compose(stream, Loader=TagPreservingLoader)
+        else:
+            root = yaml.compose(text, Loader=TagPreservingLoader)
+    except (OSError, yaml.YAMLError):
+        return {}
+    found = {}
+    pending = [((), root)]
+    while pending:
+        prefix, node = pending.pop()
+        if isinstance(node, yaml.MappingNode):
+            for key_node, value_node in node.value:
+                key = key_node.value if isinstance(key_node, yaml.ScalarNode) else None
+                found.setdefault(
+                    prefix + (key,), (key_node.start_mark.line + 1, key_node.start_mark.column + 1)
+                )
+                pending.append((prefix + (key,), value_node))
+        elif isinstance(node, yaml.SequenceNode):
+            for index, item in enumerate(node.value):
+                found[prefix + (index,)] = (item.start_mark.line + 1, item.start_mark.column + 1)
+                pending.append((prefix + (index,), item))
+    return found
 
-    def __init__(self, key, line):
-        self.key, self.line = key, line
+
+def settings_key_positions(paths):
+    """The position of each setting's key in the settings files `paths`, read
+    in order, a later file's key replacing an earlier file's as a later value
+    replaces an earlier one: a mapping from the setting's name to `(file,
+    line, column)`, read from the node marks of each file (`key_marks`) at
+    the level `load_settings` reads the settings from, `settings` in the
+    nested form, `calibration` then `settings` in the split form of a
+    calibration file, and the top level in the flat form."""
+    found = {}
+    for path in paths:
+        marks = key_marks(path)
+        level = (
+            ("settings",)
+            if ("settings",) in marks
+            else ("calibration", "settings")
+            if ("calibration", "settings") in marks
+            else ()
+        )
+        for key_path, (line, column) in marks.items():
+            if len(key_path) == len(level) + 1 and key_path[:-1] == level:
+                found[key_path[-1]] = (str(path), line, column)
+    return found
+
+
+class DuplicateKey(ValueError):
+    """A mapping key written twice in a YAML document: `key`; `line` and
+    `column` of the second writing; `first_line` and `first_column` of the
+    first; which `read_yaml_mapping` refuses as a `FactoryError`."""
+
+    def __init__(self, key, line, column, first_line, first_column):
+        self.key, self.line, self.column = key, line, column
+        self.first_line, self.first_column = first_line, first_column
         super().__init__(f"the key {key!r} is written twice, the second time at line {line}")
 
 
@@ -307,18 +282,19 @@ class TagPreservingLoader(yaml.SafeLoader):
         """A YAML mapping, its keys `on` and `off` read as those words; a key
         written twice is refused as `DuplicateKey`, and a key that is no
         scalar as a `ValueError`."""
-        keys = set()
+        first = {}
         for key_node, _ in node.value:
             if key_node.tag == "tag:yaml.org,2002:merge":
                 continue
             key = self._mapping_key(key_node, deep)
+            mark = (key_node.start_mark.line + 1, key_node.start_mark.column + 1)
             try:
-                duplicate = key in keys
-                keys.add(key)
+                duplicate = key in first
             except TypeError as error:
                 raise ValueError("a mapping key must be a scalar value") from error
             if duplicate:
-                raise DuplicateKey(key, key_node.start_mark.line + 1)
+                raise DuplicateKey(key, *mark, *first[key])
+            first[key] = mark
         self.flatten_mapping(node)
         result = {}
         for key_node, value_node in node.value:

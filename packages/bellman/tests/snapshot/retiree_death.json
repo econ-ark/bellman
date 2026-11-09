@@ -1806,7 +1806,7 @@
    "column": 1,
    "file": "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl",
    "line": 17,
-   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared (opaque:external:Invariant:result); under the rule not-constructed the forward measure is extended only by the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli; write the declaration with one of those families, or read the backward builders graph, which does not use it",
+   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared; the forward measure is constructed only for the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli",
    "rule": "not-constructed"
   }
  },
@@ -1816,7 +1816,7 @@
    "column": 1,
    "file": "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl",
    "line": 17,
-   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared (opaque:external:Invariant:result); under the rule not-constructed the forward measure is extended only by the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli; write the declaration with one of those families, or read the backward builders graph, which does not use it",
+   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared; the forward measure is constructed only for the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli",
    "rule": "not-constructed"
   }
  },
@@ -1826,7 +1826,7 @@
    "column": 1,
    "file": "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl",
    "line": 17,
-   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared (opaque:external:Invariant:result); under the rule not-constructed the forward measure is extended only by the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli; write the declaration with one of those families, or read the backward builders graph, which does not use it",
+   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared; the forward measure is constructed only for the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli",
    "rule": "not-constructed"
   }
  },
@@ -1836,7 +1836,7 @@
    "column": 1,
    "file": "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl",
    "line": 17,
-   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared (opaque:external:Invariant:result); under the rule not-constructed the forward measure is extended only by the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli; write the declaration with one of those families, or read the backward builders graph, which does not use it",
+   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared; the forward measure is constructed only for the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli",
    "rule": "not-constructed"
   }
  },
@@ -1846,7 +1846,7 @@
    "column": 1,
    "file": "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl",
    "line": 17,
-   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared (opaque:external:Invariant:result); under the rule not-constructed the forward measure is extended only by the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli; write the declaration with one of those families, or read the backward builders graph, which does not use it",
+   "message": "the forward measures are not constructed: the distribution of y_n is written with the family 'Invariant', whose result set is not declared; the forward measure is constructed only for the families N, LogNormal, Uniform, TruncatedNormal, TruncatedLogNormal, TypeIExtremeValue, DiscreteMarkov, MarkovChain, Mixture, Categorical, Bernoulli",
    "rule": "not-constructed"
   }
  },
@@ -3063,7 +3063,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'retiree_death': the box 'Spider(1, 2, retiree_death:dcsn:a)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'retiree_death': the box 'Spider(1, 2, retiree_death:dcsn:a)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "retiree_death:dcsn:a"
       ],
@@ -3075,7 +3075,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'retiree_death': the box 'Spider(1, 0, retiree_death:shck:s)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'retiree_death': the box 'Spider(1, 0, retiree_death:shck:s)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "retiree_death:shck:s"
       ],

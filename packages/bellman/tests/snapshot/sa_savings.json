@@ -4321,7 +4321,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'sa_savings': the box 'Spider(0, 1, sa_savings:dcsn:m_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'sa_savings': the box 'Spider(0, 1, sa_savings:dcsn:m_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "dcsn",
       "name": "Spider(0, 1, sa_savings:dcsn:m_d)",
@@ -4330,7 +4330,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'sa_savings': the box 'Swap(sa_savings:dcsn:m_d, sa_savings:cntn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'sa_savings': the box 'Swap(sa_savings:dcsn:m_d, sa_savings:cntn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "sa_savings:dcsn:m_d",
        "sa_savings:cntn:V"

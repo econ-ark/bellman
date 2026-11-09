@@ -1,0 +1,21 @@
+@methods: cons
+# The methods of the consumption stage at the occurrences of
+# trellis.port-cons-vfi.yml, whose settings file settings/cons_vfi.yml values a
+# multi-exponential grid of resources: value function iteration on the decision
+# value builder, realized by the function consumption_search of
+# code/cons_port_tool.py, which compares n_c candidate levels of consumption on
+# the feasible set at each point of the grid of resources; and the linear
+# representation of the decision value on that grid. No line is added, so no
+# block is written: each selection is a file-level line routed by its path.
+# methods.vfi_reference.bl writes the same methods on an evenly spaced grid.
+
+n_m : ℕ              :: ["number of points of the grid of resources"]
+m_min : Xm           :: ["lower bound of the grid of resources"]
+m_max : Xm           :: ["upper bound of the grid of resources"]
+n_c : ℕ              :: ["number of candidate levels of consumption"]
+
+cntn_to_dcsn.method : !vfi
+cntn_to_dcsn.handler : "cons-port:consumption_search"
+cntn_to_dcsn.grid : !Cartesian(c=(Γ, n_c))
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(m=(m_min, m_max, n_m, !expmult))

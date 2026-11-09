@@ -27,12 +27,10 @@ from bellman.display.printed_records import (
     Obligations,
 )
 from bellman.fold.block_lines import doc_lines, header_wire_sorts, require_stage
-from bellman.fold.stage_names import lines_of
 from bellman.graphs.builders_graphs import interior_at
 from bellman.native.hypergraphs import Block, Builder, freeze_native
 from bellman.native.identity import OPERATOR_KINDS, Identity, box_identity
 from bellman.native.labels import (
-    box_label,
     function_name,
     function_wire_name,
     is_wiring,
@@ -40,7 +38,7 @@ from bellman.native.labels import (
     wire_spelling,
 )
 from bellman.native.provenance import source_file
-from bellman.native.records import Definition, Refusal, bound_at
+from bellman.native.records import Definition, Refusal
 from bellman.native.versions import kept_answer
 from bellman.refusals import (
     TARGET_AMBIGUOUS,
@@ -57,6 +55,7 @@ from bellman.stage.grains import (
     block_id_of,
     chain_order,
     construction_table,
+    declared_definitions,
     grain_token,
     graph_of,
     is_primitive_operator,
@@ -65,7 +64,7 @@ from bellman.stage.grains import (
     stored_graph,
     wire_table,
 )
-from bellman.stage.method_targets import block_box
+from bellman.stage.places import block_box, components_by_place, inventory
 from bellman.syntax.vocabulary import PERCH_MARK
 
 # --- the conditions a piece owns ---
@@ -209,170 +208,103 @@ def _sibling_rows(stage, box):
     )
 
 
-# --- the bindings within a piece ---
+# --- the components within a piece ---
 
 
 def methods_within(stage, piece):
-    """Every binding within one piece (AMD-SG-021 §2.3), as the
-    `Methods` record; empty before `methodize`. It is what `methods` answers at
-    every level and what the `method` clause of a card prints.
+    """Every component typed within one piece (AMD-SG-021 §2.3), as the
+    `Methods` record, a read-only mapping from the place to its
+    `Components`; empty where nothing is typed there. It is what `methods`
+    answers at every level and what the `method` clause of a card prints.
 
-    At a primitive operator: the entry bound at the box and the entries bound
-    at the authored lines it represents, a box merged across lines answering
-    with what its member lines bound (AMD-SG-011 §3). At a builder or a
-    sub-builder: the entries bound at it, at the boxes inside it and at the
-    lines of the block of its name, so that `cntn_to_dcsn.methods` answers the
-    grids two of its lines carry. At a block: the entries bound at it and at
-    its lines. At a graph: those within its boxes, `piece` being the boxes of
-    the graph and not one box."""
-    bound = stage.bindings.methods
-    if bound is None:
-        return Methods({})
+    At a builder or a block: the places of its block, the builder itself,
+    its lines and their operators, the Evaluations of its nodes and of the
+    builder with the objects stored there. At a sub-builder or a branch: the
+    places under its address. At a primitive operator: the places the box
+    realizes, a box merged across lines answering for the occurrences of
+    its member lines (AMD-SG-011 §3). At a statement box: the line and the
+    places under its address. At a graph: those within its boxes, `piece`
+    being the boxes of the graph and not one box."""
     boxes = (piece,) if isinstance(piece, Box) else tuple(piece)
-    names, lines, kinds = set(), set(), set()
+    found = {}
     for box in boxes:
-        names |= _names_bound_within(stage, box)
-        held = set(merged_lines(stage, box)) if is_primitive_operator(box) else set()
-        if held:
-            lines |= held
-            kinds.add(box_identity(box).kind)
-    return methods_bound_within(
-        stage,
-        {
-            bound_at(key)
-            for key in bound
-            if bound_at(key) in names
-            or any(names_merged_line(bound_at(key), lines, kind) for kind in kinds)
-        },
+        for place, held in _places_within(stage, box):
+            found.setdefault(place.address, held)
+    return Methods(found)
+
+
+def _places_within(stage, box):
+    """The places within one box with their components, in the order of
+    the inventory."""
+    pairs = _typed_places(stage)
+    if isinstance(box, Bubble):
+        name = box.name
+        if "." in name:
+            # a sub-builder or a branch, whose places stand under its address
+            return tuple(
+                (place, held)
+                for place, held in pairs
+                if place.address == name or place.address.startswith((name + ".", name + "["))
+            )
+        return tuple((place, held) for place, held in pairs if place.block == name)
+    if is_primitive_operator(box):
+        identity = box_identity(box)
+        lines = set(merged_lines(stage, box))
+        return tuple(
+            (place, held)
+            for place, held in pairs
+            if any(
+                key == identity
+                or (
+                    isinstance(key, Identity)
+                    and key.kind == identity.kind
+                    and key.address in lines
+                )
+                for key, _ in place.keys
+            )
+        )
+    name = box.name
+    return tuple(
+        (place, held)
+        for place, held in pairs
+        if place.address == name or place.address.startswith((name + ".", name + "["))
     )
 
 
-def _names_bound_within(stage, box):
-    """The names a binding within one box can stand under: the box itself and
-    every box, line and sub-builder inside it, together with the lines of the
-    block a builder is built from and the authored lines a primitive
-    operator represents."""
-    if isinstance(box, Bubble):
-        names = set(names_within(box))
-        if is_block(box):
-            for address in _line_names_of(box):
-                if address in stage.definitions:
-                    names.update(methods_of_line(stage, stage.definitions[address]))
-        block = _block_realised_by(stage, box)
-        return names | _line_names_of(block) if block is not None else names
-    if is_primitive_operator(box):
-        return {box.name} | {record.address for record in _represented_lines(stage, box)}
-    if box.name in stage.definitions and stage.definitions[box.name].kind == "line":
-        return {box.name} | set(methods_of_line(stage, stage.definitions[box.name]))
-    return {box.name}
-
-
-def names_within(box):
-    """The name of a bubble and of every box, line and sub-builder inside it,
-    at any depth. `.methods` is filtered by these names (AMD-SG-010 §4): a
-    block and the builder of the same name
-    hold different boxes and so answer with different entries."""
-    found = {box.name}
-    for held in boxes_inside(box):
-        found |= names_within(held) if isinstance(held, Bubble) else {held.name}
-    return found
-
-
-def _line_names_of(block):
-    """The names of the line boxes of a block: the boxes inside it with no
-    interior, at any depth. A sub-block is a bubble and stands here for its own
-    lines alone, and the block's own name is no line of it."""
-    found = set()
-    for box in block.arg.boxes:
-        if is_wiring(box):
-            continue
-        found |= _line_names_of(box) if isinstance(box, Bubble) else {box.name}
-    return found
-
-
-def _block_realised_by(stage, bubble):
-    """The block or sub-block of an initial diagram that a builder or a
-    sub-builder is built from: the bubble of its name among the version's
-    stored initial diagrams, read before any grain is derived. A block id is
-    unique across the two directions (AMD-SG-010 §4), so the direction need not
-    be named; a block itself answers None, holding its own lines."""
-    if is_block(bubble):
-        return None
-    for direction in DIRECTIONS:
-        graph = stored_graph(stage, "initial", direction)
-        found = None if graph is None else _bubble_named(graph.boxes, bubble.name)
-        if found is not None:
-            return found
-    return None
-
-
-def _bubble_named(boxes, name):
-    """The bubble of that name among these boxes or inside one of them."""
-    for box in boxes:
-        if not isinstance(box, Bubble):
-            continue
-        if box.name == name:
-            return box
-        found = _bubble_named(box.arg.boxes, name)
-        if found is not None:
-            return found
-    return None
-
-
-def _represented_lines(stage, box):
-    """The authored lines a primitive operator represents, as records: those
-    the field `origins` of its `kernel()` holds, and where an origin is a law
-    of motion or a value aggregator, the lines its own equations name, which on
-    a merged aggregation are the lines the file wrote. Every line is reached
-    through the records the box refers to; no address is read for its parts."""
-    table = stage.definitions
-    found, seen = [], set()
-
-    def keep(record):
-        if record.kind == "line" and record.identity not in seen:
-            seen.add(record.identity)
-            found.append(record)
-
-    for record in origins(stage, box):
-        if record.kind == "line":
-            keep(record)
-            continue
-        for address in record.equations:
-            if isinstance(address, str) and address in table:
-                keep(table[address])
-    return tuple(found)
+def _typed_places(stage):
+    """Each place of the stage at which a component is typed, with its
+    `Components`, in the order of the inventory."""
+    by_place = components_by_place(stage)
+    return tuple(
+        (place, by_place[place.address]) for place in inventory(stage) if place.address in by_place
+    )
 
 
 def methods_bound_within(stage, names):
-    """The entries of the version's `bindings.methods` bound at one of
-    `names`, in binding order, as the `Methods` record, a read-only mapping
-    that prints one line per entry (AMD-SG-020 §3.4); empty before
-    `methodize`. Each handle's `methods` passes through this function."""
-    bound = stage.bindings.methods
-    if bound is None:
-        return Methods({})
-    return Methods({key: method for key, method in bound.items() if bound_at(key) in names})
+    """The places realized by one of the boxes `names`, builder names, row
+    identities and definition identities, with their components, as the
+    `Methods` record (AMD-SG-020 §3.4); empty where nothing is typed there."""
+    wanted = set(names)
+    return Methods(
+        {
+            place.address: held
+            for place, held in _typed_places(stage)
+            if any(key in wanted for key, _ in place.keys)
+        }
+    )
 
 
 def methods_of_line(stage, definition):
-    """Methods attached to a line or to the Evaluation of its named output."""
-    names = {definition.address}
-    if not stage.bindings.methods:
-        return methods_bound_within(stage, names)
-    for direction in DIRECTIONS:
-        graph = stored_graph(stage, "initial", direction)
-        block = None if graph is None else _bubble_named(graph.boxes, definition.identity.block)
-        if block is None:
-            continue
-        for _, line in lines_of(stage, block):
-            if line.address == definition.address and line.role in ("output", "node"):
-                address = line.address if line.role == "node" else block.name
-                names.add(Identity("Evaluation", address=address))
-        break
-    return methods_bound_within(stage, names)
-
-
-# --- the row a box was made from ---
+    """The components typed at a line, at its operators and, for a `!node`
+    line, at its Evaluation."""
+    address = definition.address
+    return Methods(
+        {
+            place.address: held
+            for place, held in _typed_places(stage)
+            if place.address == address or place.address.startswith((address + ".", address + "["))
+        }
+    )
 
 
 def row_of(stage, box):
@@ -448,7 +380,7 @@ def builder_rows_of(stage, block):
     """The `BuilderRows` of one builder, read from the table the stage folds
     again once per version (`grains.construction_table`). A name that is no
     block of the stage is refused, as `block_box` refuses it."""
-    block_box(stage, block, block)
+    block_box(stage, block)
     table = construction_table(stage)
     return BuilderRows(table.by_builder(block), table.by_builder(block, grain="node"))
 
@@ -550,9 +482,9 @@ def piece_and_place(stage, target, primitive=False):
                 candidates=(target.identity,),
                 message=f"stage {stage.name!r}: the definition record {target.identity!r} passed "
                 "is not the record this version holds; a query reads the records of the version "
-                "it is asked of, and versions share no object (AMD-SG-007 §2, rule "
-                "target-version); ask the version that holds the "
-                f"record, or pass the identity {target.identity!r}",
+                "it is asked of, and versions share no object",
+                write="Ask the version that holds the record, or pass the identity "
+                f"{target.identity!r}",
             )
         return target, None
     if isinstance(target, Box):
@@ -566,8 +498,8 @@ def piece_and_place(stage, target, primitive=False):
             candidates=(target.name,),
             message=f"stage {stage.name!r}: the box {target.name!r} passed is no box of a graph "
             "of this version; a query reads the boxes of the version it is asked of, and versions "
-            "share no object (AMD-SG-007 §2, rule target-version); ask the version "
-            "whose view holds the box, or pass a box of this version's view",
+            "share no object",
+            write="Ask the version whose view holds the box, or pass a box of this version's view",
         )
     if not isinstance(target, str) or not target:
         raise TypeError(
@@ -600,8 +532,8 @@ def piece_and_place(stage, target, primitive=False):
             candidates=names,
             message=f"stage {stage.name!r}: {target!r} names no box of the version's views and no "
             "record of its definitions table; a printed view, a kernel and a compiled kernel read "
-            "an actual box or definition (AMD-SG-007 §2, rule target-not-found); write a box "
-            "name that stage.builder.bwd.primitives.list() or "
+            "an actual box or definition",
+            write="Write a box name that stage.builder.bwd.primitives.list() or "
             "stage.builder.fwd.primitives.list() shows, or an identity of stage.definitions",
         )
     if len(choices) > 1:
@@ -611,10 +543,10 @@ def piece_and_place(stage, target, primitive=False):
             stage=stage.name,
             rule=TARGET_AMBIGUOUS,
             candidates=tuple(listed),
-            message=f"stage {stage.name!r}: {target!r} names {len(choices)} different targets — "
+            message=f"stage {stage.name!r}: {target!r} names {len(choices)} different targets: "
             f"{' | '.join(listed)}; one name selects one target only when the boxes it names are "
-            "equal (AMD-SG-007 §2, rule target-ambiguous); pass "
-            "the box itself from the view and grain you mean",
+            "equal",
+            write="Pass the box itself from the view and grain you mean",
         )
     choice, entries = choices[0]
     return choice, (entries[0] if entries else None)
@@ -633,10 +565,11 @@ def operator_target(stage, box, verb):
         )
         raise construction_error(
             f"stage {stage.name!r}: {verb} reads the kernel of a primitive operator box, and "
-            f"{what} applies none of its own (AMD-SG-007 §3.1, rule kernel-target); a builder, a "
-            "sub-builder, a source line and a definition are read with view(stage, target); "
-            "pass a box that stage.builder.bwd.primitives.list() or "
-            "stage.builder.fwd.primitives.list() names",
+            f"{what} applies none of its own",
+            write="Pass a box that stage.builder.bwd.primitives.list() or "
+            "stage.builder.fwd.primitives.list() names; read a builder, a sub-builder "
+            "or a source line with its denote() method, and a definition with "
+            "stage.definitions.denote(identity)",
             stage=stage.name,
             address=target.address if isinstance(target, Definition) else target.name,
             span=None,
@@ -989,7 +922,8 @@ def _block_listing(stage, block):
     numbered: a block's card has no `operations` block."""
     wireless = lines_with_no_wire(stage, block)
     written = {
-        definition.address: place for place, definition in enumerate(stage.definitions.values())
+        definition.address: place
+        for place, definition in enumerate(declared_definitions(stage).values())
     }
     pending = [
         (written.get(definition.address, len(written)), key, definition)
@@ -1035,12 +969,15 @@ def lines_with_no_wire(stage, box):
     piece, so the construction puts it in no graph, while the block's card and
     the builder's card print it (AMD-SG-021 §4.5; AMD-SG-015 §5 item 7;
     AMD-SG-034 §3 `declared`). The mapping is in file order and is empty for a
-    sub-builder and for a block every line of which is a box."""
+    sub-builder and for a block every line of which is a box. A block's lines
+    are those of the table the initial diagrams are built from
+    (`grains.declared_definitions`): a solution method's rows stand in the
+    operative table and in no block of an initial diagram."""
     if is_block(box):
         named = {held.name for held in boxes_inside(box)}
         lines = tuple(
             definition
-            for definition in stage.definitions.values()
+            for definition in declared_definitions(stage).values()
             if definition.kind == "line"
             and definition.address not in named
             and definition.address.split(".", 1)[0] == box.name

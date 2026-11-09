@@ -2,10 +2,11 @@
 """Structural verification of the AST for benhabib_bellman.bl (spec 0.3c, B01).
 
 Each expectation below is derived by hand from the surface text of the
-stage file in its colon-and-tilde spelling, and of the two block files that
-hold its derivative line and its endogenous grid lines under
-`declaration/methods/` (`marginals_benhabib_bellman.bl`,
-`benhabib_bellman_egm.bl`), read against the merged ASDL
+stage file in its colon-and-tilde spelling, and of the methods file beside
+it, `declaration/stages/benhabib_bellman/methods.bl`, an addition to the
+stage file whose block `policy` holds the lines of the endogenous grid
+method and whose block `cntn_to_dcsn` holds the derivative line, read
+against the merged ASDL
 listing (packages/bellman/bellman/sym/grammars/dynspec_full.asdl) and the
 generated term constructors (bellman.sym.terms), not copied from its recording
 packages/bellman/tests/snapshot/corpus/benhabib-2019/benhabib_bellman.bl.ast.json.
@@ -26,8 +27,9 @@ family selections `wage_fn[tau]` and `R_vec[r_type]` become
 Select(Sym(Constant(family)), Key(index)); the policy block's input side
 carries the perch word `: !cntn` and its output is `(c : !ctrl) : !dcsn`
 (the B01 alignment of 8 Sep 2026); the policy block states the
-maximization alone; and the method block of the policy builder closes with
-the endogenous-grid reading `c = c[>]` of the portfolio corpus.
+maximization alone; and the block `policy` of the methods file types the
+builder with `!egm`, its grid and its handler and closes with the
+endogenous-grid reading `c = c[>]` of the portfolio corpus.
 
 Deliberate conventions asserted here, not incidental output: a bare
 declaration line becomes Declare(Declaration(...)); `!vlu` becomes
@@ -58,22 +60,24 @@ import pytest                         # noqa: E402
 import stage_ast                      # noqa: E402
 from stage_ast import annotation as _ann, block, parsed, perched as _p, run_checks, sym as _c  # noqa: E402
 from stage_types import (             # noqa: E402
-    Add, Assignment, At, Constant, Continuation,
+    Add, Assignment, At, Cartesian, Constant, Continuation,
     Control, Coordinate, Declaration, Declare, Decision, Div, Domain,
-    Equation, FiniteSet, Infoset, Interval, Key, KeyValue, Law, Marked,
-    Metadata, Mul, Named, Neg, Node, Number, Open, Operator, Pow, Product,
-    Range, Role, Select, Signature, Space, Statement, Sub, Subject, Sym,
-    Typer, Value, Var,
+    Equation, FiniteSet, Grid, Handler, Infoset, Interval, Key, KeyValue,
+    Law, Marked, Metadata, Method, Mul, Name, Named, Neg, Node, Number,
+    Open, Operator, Path, Pow, Product, Range, Role, Segment, Select,
+    Signature, Space, Spaced, Statement, Sub, Subject, Sym, Typer, Value,
+    Var, Word,
 )
 
 _SOURCE = _TESTS.parent / "declaration" / "stages" / "benhabib_bellman" / "benhabib_bellman.bl"
 _AST = parsed(_SOURCE)
 _ITEMS = _AST.items
-# the block files: the marginal block of the decision value builder and the
-# method block of the policy builder
-_METHODS = _TESTS.parent / "declaration" / "methods"
-_MARGINALS = parsed(_METHODS / "marginals_benhabib_bellman.bl").items
-_EGM = block(parsed(_METHODS / "benhabib_bellman_egm.bl").items, "egm")
+# the methods file beside the stage file, an addition to it: its block `policy`
+# holds the lines of the endogenous grid method and its block `cntn_to_dcsn`
+# the derivative line of the decision value
+_ADDITION = parsed(_SOURCE.parent / "methods.bl").items
+_MARGINAL = block(_ADDITION, "cntn_to_dcsn")
+_EGM = block(_ADDITION, "policy")
 
 
 def _sel(family, index):
@@ -220,9 +224,9 @@ def test_block_cntn_to_dcsn_value_equation():
 def test_block_cntn_to_dcsn_marginal_equation():
     # D_{m}V = c^(-σ) — the derivative of the decision value in its state
     # m, an operator term on the left side; the parenthesised exponent is
-    # Neg(σ). The line stands in the marginal block of the decision value
-    # builder.
-    assert block(_MARGINALS, "dcsn_marginal").body[0] == Statement(
+    # Neg(σ). The line stands in the block `cntn_to_dcsn` of the methods
+    # file.
+    assert _MARGINAL.body[0] == Statement(
         Equation(Operator("D", [Var("m")], [_c("V")]), Pow(_c("c"), Neg(_c("σ")))),
         _ann(KeyValue("id", "marginal")))
 
@@ -253,8 +257,8 @@ def test_block_policy_inveuler():
     # Mul(Mul(β, R_vec[r_type]), D_{a}V[>]), the derivative of the
     # continuation value in the saving a; unary minus in the grammar takes
     # a whole product, so the exponent is Neg(Div(1, σ)); the !node tag
-    # becomes Typer(Marked(Node())). The line stands first in the method
-    # block of the policy builder.
+    # becomes Typer(Marked(Node())). The line stands first in the block
+    # `policy` of the methods file.
     assert _EGM.body[0] == Statement(
         Equation(_p("c", Continuation()),
                  Pow(Mul(Mul(_c("β"), _GROSS_R),
@@ -282,12 +286,44 @@ def test_block_policy_consumption():
     # c = c[>] :: [id=cons_choice] — the decision-perch consumption is
     # the consumed function read on the endogenous grid, the spelling of
     # the portfolio corpus (cons.bl); no evaluate call appears. It closes
-    # the method block, third of its three lines; the stage file's policy
-    # block holds the maximization alone.
+    # the block `policy` of the methods file, third of its three lines; the
+    # stage file's policy block holds the maximization alone.
     assert _EGM.body[2] == Statement(
         Equation(_c("c"), _p("c", Continuation())),
         _ann(KeyValue("id", "cons_choice")))
     assert len(_EGM.body) == 3 and len(_ITEMS[15].body) == 1
+
+
+def test_addition_item_census():
+    # The methods file: its metadata line `@methods: bellman`, the three
+    # settings the grid reads, declared with their sets, and two blocks, the
+    # policy block and the decision value block, each named by the id of the
+    # stage block it adds to.
+    kinds = [type(it).__name__ for it in _ADDITION]
+    assert kinds == ["Metadata"] + ["Declare"] * 3 + ["Block"] * 2
+    assert _ADDITION[0] == Metadata("methods", "bellman")
+    assert [it.declaration.subject.coordinates[0].stem for it in _ADDITION[1:4]] == [
+        "n_a", "a_min", "a_max"]
+    assert [it.declaration.classifiers for it in _ADDITION[1:4]] == [
+        (Domain(Named("ℕ")),), (Domain(Named("Xa")),), (Domain(Named("Xa")),)]
+
+
+def test_addition_policy_header():
+    # [id=policy, method : !egm | handler : "dolo:egm_backward"
+    #     | grid : !Cartesian(a=(a_min, a_max, n_a))]
+    # The bracket holds three typing entries, each a Typer: the block's own
+    # method component by the relative path `method`, the handler binding as
+    # a quoted program, and the grid component, a Cartesian grid with one
+    # factor on the continuation state a, its bounds and its count the
+    # declared settings by name. The block carries no signature, since it
+    # adds no coordinate, and the decision value block carries its id alone.
+    assert _EGM.tag == _ann(
+        KeyValue("id", "policy"),
+        Typer(Declaration(Path([Segment("method")]), [Method(Word("egm"))])),
+        Typer(Handler(Path([Segment("handler")]), "dolo:egm_backward")),
+        Typer(Declaration(Path([Segment("grid")]), [Grid(Cartesian([
+            Spaced("a", Name("a_min"), Name("a_max"), Name("n_a"))]))])))
+    assert _MARGINAL.tag == _ann(KeyValue("id", "cntn_to_dcsn"))
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ type: reference
 
 > [!info]- Relationship with other documents
 > **Builds on** — [Functions](./functions.md) describes the model functions used by these operators.
-> **Used by** — [Operations](../../Bellman-Sym/reference/operations.md) and [Shock distributions](../../Bellman-Sym/reference/laws.md), the reference catalogues of the language, whose rows link to what they denote here; [Field equations](../../Bellman-Sym/03-field-equations.md) and [Methodization](../../Bellman-Sym/04-methodization.md) give the block and method-target forms, and Bellman-SYM's [Appendix D](../../Bellman-Sym/appendices/15-appendix-d-node-tag-and-field-indexing.md) defines the supported method targets that §8 names.
+> **Used by** — [Operations](../../Bellman-Sym/reference/operations.md) and [Shock distributions](../../Bellman-Sym/reference/laws.md), the reference catalogues of the language, whose rows link to what they denote here; [Field equations](../../Bellman-Sym/03-field-equations.md) and [Methodization](../../Bellman-Sym/04-methodization.md) give the block forms and the places of methods, and Bellman-SYM's [Appendix D](../../Bellman-Sym/appendices/15-appendix-d-node-tag-and-field-indexing.md) defines the supported places that §8 names.
 > **Formal account** — [Operator algebra](../APPX-F-OPERATOR-ALGEBRA.md) qualifies composition, copying and numerical approximation.
 > **See also** — [Methods](../06-Methods.md) discusses numerical procedures.
 
@@ -60,7 +60,7 @@ A nonidentity state transformation must be authored explicitly; a connector rena
 | $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$ | $\mathsf V_\succ\to\mathsf V_\prec$ | optimizing stage evaluation |
 | $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$ | $\mathsf V_\succ\to\mathsf V_\prec$ | fixed-policy stage evaluation |
 
-These are mathematical names, not prescribed YAML stage keys. Stage equations are `.bl`; current block and method-target forms belong to Bellman-SYM's pages on field equations and methodization.
+These are mathematical names, not prescribed YAML stage keys. Stage equations are `.bl`; current block and method-place forms belong to Bellman-SYM's pages on field equations and methodization.
 
 <a id="forward-builders-measure-side"></a>
 
@@ -186,7 +186,7 @@ Envelope selection belongs to a numerical method and is not an operation a stage
 
 ## 8. Authored computation boundaries
 
-Stage equations and definitions are authored in `.bl`. Block identifiers are addresses, not reserved formula names such as `InvEuler` or `MarginalBellman`. A marked `!node` retains an authored computation boundary; operation occurrences and dependencies can remain inside an unmarked equation. An implicit statement remains a relation until its selection conditions are met. The supported method targets are defined by Bellman-SYM's Appendix D, rather than inferred from this mathematical inventory.
+Stage equations and definitions are authored in `.bl`. Block identifiers are addresses, not reserved formula names such as `InvEuler` or `MarginalBellman`. A marked `!node` retains an authored computation boundary; operation occurrences and dependencies can remain inside an unmarked equation. An implicit statement remains a relation until its selection conditions are met. The supported method places are defined by Bellman-SYM's Appendix D, rather than inferred from this mathematical inventory.
 
 ## 9. Related documents
 

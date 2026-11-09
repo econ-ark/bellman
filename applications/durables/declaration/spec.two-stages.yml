@@ -1,11 +1,12 @@
 # The recipe of the route without the tenure stage: the same stage files and
 # sources as spec.yml without the tenure stage, read against the
-# trellis file trellis.two-stages.yml; the bequest's one methods file binds
-# the marginal blocks of its derivatives.
+# trellis file trellis.two-stages.yml; each stage's methods list names the
+# addition `methods.bl` beside its stage file, the bequest's writing the
+# derivative lines of its two value builders.
 trellis: trellis.two-stages.yml
 stages:
-  keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods, $keeper_method]}}
-  adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods, $adjuster_method]}}
-  bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods]}, periods: [0, 0]}
+  keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods.bl]}}
+  adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods.bl]}}
+  bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
 registry:
   calibration: [calibration/wage_schedule]

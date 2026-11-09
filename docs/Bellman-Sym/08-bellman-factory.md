@@ -38,15 +38,15 @@ topic: [factory]
 > | **Symbolic** | Said of a stage occurrence, or a trellis, that holds no binding ([wiki](../wiki/symbolic_stage.md)). |
 > | **Specified** | Said of a stage occurrence that holds its calibration, its methods and its settings, bound in that order, or of a trellis whose every stage occurrence does ([wiki](../wiki/specified_stage.md)). |
 > | **Binding** | One of the three mappings once a stage holds it: its [calibration](../wiki/calibration.md), its [methods](../wiki/methodization.md) or its [settings](../wiki/settings.md); the verb that writes it, with its mapping held fixed, is a **binding map** from stage versions to stage versions ([Appendix G](../bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING.md) §7). |
-> | **Trellis verbs** | `calibrate_trellis`, `methodize_trellis` and `configure_trellis`, which apply the stage's own verbs to every stage occurrence of a trellis. |
+> | **Trellis verbs** | `calibrate_trellis`, `methodize_trellis` and `configure_trellis`, which bind every stage occurrence of a trellis with the mapping of their kind its record holds; `methodize_trellis` binds nothing and copies, since a record's methods files are read with the stage text when the occurrence is constructed (§6). |
 > | **Accrete** | To append one period, the one earlier in time, with the inter-period connector that joins it to the period appended before it; the horizon is the number of periods built ([Trellises](07-trellis.md) §6; [wiki](../wiki/accretion-modules.md)). |
 > | **Registry** | The folder the recipe stands in, from which every path the recipe writes is read, and nothing else ([wiki](../wiki/spec_factory.md)). |
 > | **Recipe** | The file `spec.yml` naming the trellis file, each stage's file and, for each stage and each kind, an ordered source list ([wiki](../wiki/spec_factory.md)). |
-> | **Source** | A file of assignments of one kind: values to parameters, values to settings, or methods attached to targets; under the `registry` block, assignments to registry-level names that no stage declares ([wiki](../wiki/spec_factory.md)). |
+> | **Source** | A file of assignments of one kind: values to parameters, values to settings, or a methods file, a `.bl` addition unioned with its stage file ([wiki](../wiki/methodization.md)); under the `registry` block, assignments to names no stage declares. |
 > | **Source list** | The ordered list a recipe names for one stage, one period and one kind, slots included ([wiki](../wiki/spec_factory.md)). |
 > | **Slot** | A `$name` in a source list, bound by the keyword of `load_recipe` of the same name ([wiki](../wiki/spec_factory.md)). |
 > | **Fill** | The dictionary bound to a slot ([wiki](../wiki/spec_factory.md)). |
-> | **Method choice** | A methods mapping bound to a methods slot ([wiki](../wiki/spec_factory.md)). |
+> | **Replacing selection** | A methods file named in a stage's methods list in place of another, as the cons-port application names `stages/cons/methods.vfi.bl` in place of `stages/cons/methods.bl`, so that one stage file takes different methods at different occurrences; a second file named after the first adds to its selection instead. |
 > | **Sweep** | A family of fills, one expression over them ([wiki](../wiki/spec_factory.md)). |
 > | **Join** | A selected continuation-to-arrival state-field pair between stage occurrences; an authored connector has precedence, and an unclaimed equal-name pair is inferred only when it is the unique compatible choice in a consistent selection ([Periods](06-period.md) §3). |
 
@@ -56,7 +56,7 @@ The listings on this page use the durables model of Dobrescu and Shanker (2026),
 
 The factory works on two dictionaries of one shape and on one stage class, and it introduces nothing else.
 
-The **syntactic trellis** is the model as written. It is the dictionary `{"periods": [...], "inter_connectors": [...]}`, whose `periods` list holds one dictionary per period, `{"stages": {key: record}, "connectors": [...]}`, and whose `inter_connectors` list holds the connectors that join adjacent periods. At each stage key stands a **record**: the stage's source, its text and its origin, together with the three mappings the stage is to be bound with, held as data. The **calibration** gives a value to each parameter the stage declares, the **settings** give the numerical options that the methods read, and the **methods** name the numerical method attached at each target of the stage, a place in the stage's equations that receives a method ([Methodization](04-methodization.md)); a **binding** is one of these mappings once a stage holds it. The record also carries a provenance naming the files each mapping came from. Every adjustment to a model is made in this dictionary before anything is constructed: a fill of parameter values, a value that differs by period, a method choice.
+The **syntactic trellis** is the model as written. It is the dictionary `{"periods": [...], "inter_connectors": [...]}`, whose `periods` list holds one dictionary per period, `{"stages": {key: record}, "connectors": [...]}`, and whose `inter_connectors` list holds the connectors that join adjacent periods. At each stage key stands a **record**: the stage's source, its text and its origin, together with the three mappings the stage is to be bound with, held as data. The **calibration** gives a value to each parameter the stage declares, the **settings** give the numerical options that the methods read, and the **methods** are the stage's methods files, the `.bl` additions whose typing entries give each operator of the stage its method, its grid and its handler and whose lines the elaborator reads as the stage file's own ([Methodization](04-methodization.md)), held as their texts and read with the stage text when the occurrence is constructed, so that the fields and builders an addition adds are the occurrence's own; a **binding** is one of these once a stage holds it, the calibration and the settings written by the verbs and the methods read at the construction. The record also carries a provenance naming the files each mapping came from. Every adjustment to a model is made in this dictionary before anything is constructed: a fill of parameter values, a value that differs by period, a replacing selection.
 
 ```text
 {"periods": [{"stages": {key: record, ...}, "connectors": [...]}, ...],
@@ -69,7 +69,7 @@ The **elaborated trellis** is the same dictionary with an `ElaboratedStage` at e
 
 ## 2 The calls
 
-The factory has five verbs, each with one meaning. To *load* is to read files and return a record or the syntactic trellis. To *elaborate* is to turn a record's source into an `ElaboratedStage` with its [semgraph](../wiki/semgraph.md), the semantic graph that holds its equations: `elaborate_trellis` makes no binding, and `elaborate_stage` binds the sources a record supplies unless it is given `bind=False` ([The stage](API/stage/01-the-stage.md) §1). To *bind* is to `calibrate_trellis`, `methodize_trellis` or `configure_trellis`, the three **trellis verbs**: each reads the mapping of its kind from the syntactic trellis it is given and returns a new version. To *accrete* is to append one period. To *assemble* is to run the whole route, from the files with `assemble_trellis` or from a syntactic trellis with `specify_trellis`. Two further calls make drawings, and one counts what a verb changed.
+The factory has five verbs, each with one meaning. To *load* is to read files and return a record or the syntactic trellis. To *elaborate* is to turn a record's source into an `ElaboratedStage` with its [semgraph](../wiki/semgraph.md), the semantic graph that holds its equations: `elaborate_trellis` makes no binding, and `elaborate_stage` binds the sources a record supplies unless it is given `bind=False` ([The stage](API/stage/01-the-stage.md) §1). To *bind* is to `calibrate_trellis`, `methodize_trellis` or `configure_trellis`, the three **trellis verbs**: each reads the mapping of its kind from the syntactic trellis it is given and returns a new version, `methodize_trellis` binding nothing, since the methods files are read at the construction, and copying each stage occurrence whose record names the files it was constructed with (§6). To *accrete* is to append one period. To *assemble* is to run the whole route, from the files with `assemble_trellis` or from a syntactic trellis with `specify_trellis`. Two further calls make drawings, and one counts what a verb changed.
 
 | Call | Returns | What it reads and does |
 |---|---|---|
@@ -77,8 +77,8 @@ The factory has five verbs, each with one meaning. To *load* is to read files an
 | `bellman.trellis.load_trellis(file)` | the syntactic trellis | reads one trellis file whose `periods` list writes each period out, its stages with their three mappings inline or as paths to files, or gives `{template: <period file>, repeat: n}` for a run of equal periods, and whose `inter_connectors` holds one connector per adjacent pair or one connector standing for every pair; reads each stage file for its text and digest ([Trellises](07-trellis.md) §3) |
 | `bellman.trellis.load_recipe(directory, recipe, **fills)` | the syntactic trellis | reads the recipe, the trellis file and the stage files at the paths it writes, the period templates and every source file the recipe names, each once; expands each `{template, repeat}` entry and repeats a single inter-period connector for each adjacent pair; puts each fill in its slot; merges each source list; writes one record per stage and period with its provenance (§3) |
 | `bellman.stage.elaborate_stage(record, bind=True)` | an `ElaboratedStage`, symbolic where the record supplies no source | constructs the record's text at its origin, binds the calibration, the methods and the settings the record supplies, in that order, unless given `bind=False`, and reads no file; given a path string, or a dictionary that is not a record, refuses under `record-shape` and says to write `elaborate_stage(load_stage(path))` |
-| `bellman.trellis.elaborate_trellis(syntactic, previous=None)` | the elaborated trellis, symbolic | constructs each distinct stage text once and places a full copy at each of its positions; copies a position that already holds a stage; given `previous`, copies from it every position whose record has the same digest and constructs the others, which is how a changed stage file alone is constructed again (§6); derives the joins and the order of each period (§7); binds nothing |
-| `bellman.trellis.calibrate_trellis(elaborated, syntactic)`, `bellman.trellis.methodize_trellis(elaborated, syntactic)`, `bellman.trellis.configure_trellis(elaborated, syntactic)` | a new elaborated trellis | each reads its own kind at each key of the syntactic trellis, `syntactic["periods"][h]["stages"][key]["calibration"]` for `calibrate_trellis`, and binds the stage occurrence at the same key where the mapping differs from what it holds: for calibration in a value at a name the stage declares, the one value the period supplies standing for a parameter two of its stages declare ([The trellis factory](API/factory/trellis-factory.md) §4), for settings in any value, for methods in the digest of the mapping; a stage occurrence whose mapping is unchanged is copied (§6), as is one at a key where the syntactic trellis itself holds a stage object, a period built by hand |
+| `bellman.trellis.elaborate_trellis(syntactic, previous=None)` | the elaborated trellis, each occurrence holding the methods files its record names and no value | constructs each distinct stage text, with the methods files its record names, once and places a full copy at each of its positions; copies a position that already holds a stage; given `previous`, copies from it every position whose record has the same digest and constructs the others, which is how a changed stage file alone is constructed again (§6); derives the joins and the order of each period (§7); binds nothing |
+| `bellman.trellis.calibrate_trellis(elaborated, syntactic)`, `bellman.trellis.methodize_trellis(elaborated, syntactic)`, `bellman.trellis.configure_trellis(elaborated, syntactic)` | a new elaborated trellis | each reads its own kind at each key of the syntactic trellis, `syntactic["periods"][h]["stages"][key]["calibration"]` for `calibrate_trellis`, and binds the stage occurrence at the same key where the mapping differs from what it holds: for calibration in a value at a name the stage declares, the one value the period supplies standing for a parameter two of its stages declare ([The trellis factory](API/factory/trellis-factory.md) §4), for settings in any value; `methodize_trellis` binds nothing, the methods files of a record being read with the stage text when the occurrence is constructed, and copies each stage occurrence whose record names the files it was constructed with, refusing one whose record names others under `record-shape`, the change being a construction made by `elaborate_trellis(syntactic, elaborated)` (§6); a stage occurrence whose mapping is unchanged is copied (§6), as is one at a key where the syntactic trellis itself holds a stage object, a period built by hand |
 | `bellman.trellis.accrete(trellis, period, inter_connector=None)` | the trellis with the period appended | appends a period dictionary at the end of `periods`, the period earlier in time, and writes the inter-period connector that joins it to the period appended before it at `inter_connectors[len(periods) - 2]`; the terminal period, appended first, takes no connector; rewrites no existing record; the period may hold records, stage objects or both; when every stage of the period is an `ElaboratedStage`, derives the period's joins and checks the connector against the fields of the two periods it joins ([Trellises](07-trellis.md) §6) |
 | `bellman.trellis.specify_trellis(syntactic, previous=None, kinds=KINDS)` | the specified trellis | returns the trellis that `elaborate_trellis(syntactic, previous)` and the trellis verbs of `kinds` make, `kinds` naming any of `"calibration"`, `"methods"` and `"settings"`, the three kinds of `KINDS`, all three by default, the verbs applied in the order calibrate, methodize, configure whatever order `kinds` writes; constructs each distinct stage text once, or takes its stage occurrences from `previous` as `elaborate_trellis` does, and copies each stage occurrence once, where that route copies it once more for each verb; refuses what that route refuses, a refusal of a binding naming the stage occurrence and the kind in its notes, `Stage occurrence: <address>` and `Binding kind: <kind>` |
 | `bellman.trellis.assemble_trellis(directory, recipe, **fills)` | the specified trellis | is `specify_trellis(load_recipe(directory, recipe, **fills))`, which returns the trellis that `load_recipe`, `elaborate_trellis`, `calibrate_trellis`, `methodize_trellis` and `configure_trellis` make, in that order, copying each stage occurrence once |
@@ -86,19 +86,18 @@ The factory has five verbs, each with one meaning. To *load* is to read files an
 | `bellman.trellis.diagram_trellis(trellis, periods=None)` | a drawing | shows the periods of an elaborated trellis, all of them or those whose indices `periods` lists, each as `diagram_period` shows it, and every inter-period connector between two of those periods as wires from the continuation fields that leave `periods[h + 1]` to the arrival fields of `periods[h]`, labeled with its index and its field pairs (§7); stores nothing |
 | `bellman.trellis.changed_positions(before, after)` | the list of positions `(h, key)` | the positions whose stage occurrence in `after` is a new version of the one in `before`, read from the provenance of the two trellises; its length is the count of what a verb bound, a copy of a binding among them, since it is a new version of its position (§6) |
 
-The stage's own verbs are unchanged: `stage.calibrate(values or path)`, `stage.methodize(methods or path)` and `stage.configure(settings or path)` each add their binding to the one stage they are called on and return it ([The binding verbs](API/stage/09-binding-verbs.md)), and the trellis verbs apply them once for each distinct stage occurrence and mapping, copying the result to the other positions of that pair (§6).
+The stage's own verbs are unchanged: `stage.calibrate(values or path)`, `stage.methodize(addition or list of additions)` and `stage.configure(settings or path)` each add their binding to the one stage they are called on and return it ([The binding verbs](API/stage/09-binding-verbs.md)), and `calibrate_trellis` and `configure_trellis` apply theirs once for each distinct stage occurrence and mapping, copying the result to the other positions of that pair (§6).
 
 ## 3 The registry and the recipe
 
-The **registry** is the folder the recipe stands in, and nothing else: every path the recipe writes is read from it. In a model folder the registry is the subfolder `declaration/`, which holds every file the language reads ([Model directory layout](reference/model-directory-layout.md)). The durables registry holds the recipe, the trellis file and the period template at its top, with the three files of a second route beside them (§3.6); the calibration and settings files under `calibration/` and `settings/`; under `stages/` one folder for each stage, holding its stage file and, where the stage has them, its methods file `methods.yml` and its note; and under `methods/` the block files the methods files name, which hold the endogenous grid lines of the two consumption stages and the derivative lines of the value builders. A file is read whether it is spelled `.yml` or `.yaml`, and a calibration, settings or methods file is told apart by its top key, not by its extension.
+The **registry** is the folder the recipe stands in, and nothing else: every path the recipe writes is read from it. In a model folder the registry is the subfolder `declaration/`, which holds every file the language reads ([Model directory layout](reference/model-directory-layout.md)). The durables registry holds the recipe, the trellis file and the period template at its top, with the three files of a second route beside them (§3.6); the calibration and settings files under `calibration/` and `settings/`; under `stages/` one folder for each stage, eight in all, of which the tree below shows the four of the stages the recipe names, the other four, `disc`, `port`, `Port2` and `retiree_saving`, holding stages that no recipe or trellis file of the folder names; a folder of the tree holds the stage file, its methods file `methods.bl`, the addition beside the stage file whose entries type the stage's methods and whose lines bring the endogenous grid lines of the two consumption stages and the derivative lines of the value builders ([Methodization](04-methodization.md)), and, where the stage has one, its note; the adjuster's folder holds a second addition, `methods.adjuster_method.bl`, which no recipe of the folder names (§5). A calibration or settings file is read whether it is spelled `.yml` or `.yaml`, and the two are told apart by their top keys, not by their extensions; a methods file is a `.bl` file.
 
 ```text
 applications/durables/declaration/
-  stages/          tenure/         tenure.bl  methods.yml  tenure.md
-                   keeper_cons/    keeper_cons.bl  methods.yml  keeper_cons.md
-                   adjuster_cons/  adjuster_cons.bl  methods.yml  adjuster_cons.md
-                   bequest/        bequest.bl  methods.yml
-  methods/         keeper_cons_egm.bl  adjuster_cons_egm.bl  marginals_<stage>.bl, one for each stage that states a derivative
+  stages/          tenure/         tenure.bl  methods.bl  tenure.md
+                   keeper_cons/    keeper_cons.bl  methods.bl  keeper_cons.md
+                   adjuster_cons/  adjuster_cons.bl  methods.bl  methods.adjuster_method.bl  adjuster_cons.md
+                   bequest/        bequest.bl  methods.bl
   calibration/     durables.yml (the parameters the stages declare)  wage_schedule.yml (the schedule and the ages)
   settings/        durables.yml
   period.yml       the three stages of a period before the terminal one and the connector that joins tenure's branches to the decision states of the consumption stages; the order is derived from the fields, not from the list
@@ -110,7 +109,7 @@ applications/durables/declaration/
 
 ### 3.1 What a recipe is and what it binds
 
-A **recipe** names every file a model is read from, and it binds nothing itself. At its top, `trellis:` names the trellis file, whose periods list the stage keys of the model ([Trellises](07-trellis.md) §§1, 3). Under `stages:`, one entry per stage key names the stage's file under `stage:` and, for each of the three kinds of binding, an ordered **source list** of the files whose values the stage receives, with **slots** among them, the entries written `$fill` and `$tenure_method` below, for values supplied at the call (§3.3). Every path is written from the recipe's own folder: `trellis: trellis.yml`, `stage: stages/tenure/tenure.bl`, and in a source list `calibration/durables`, a source file named without its extension. `trellis:` and `stage:` are both required, so that nothing is read in place of a path the recipe does not write; a recipe without `trellis:` is refused with the sentence "the recipe names no trellis file; write `trellis: trellis.yml`, the path from this folder", an entry without `stage:` with "the entry `stages.tenure` names no stage file; write `stage: stages/tenure/tenure.bl`, the path from this folder", both under the rule `recipe-shape`, and a `stage:` that names no `.bl` file is refused as `load_stage` refuses it ([Refusals](reference/refusals.md)). A source name written absolute or with `..` is refused under `recipe-source`. The recipe of the durables model, printed from the registry's file with its comment lines left out:
+A **recipe** names every file a model is read from, and it binds nothing itself. At its top, `trellis:` names the trellis file, whose periods list the stage keys of the model ([Trellises](07-trellis.md) §§1, 3). Under `stages:`, one entry per stage key names the stage's file under `stage:` and, for each of the three kinds of binding, an ordered **source list** of the files whose values the stage receives, with **slots** among them, the entries written `$fill` below, for values supplied at the call (§3.3); a methods list names the stage's methods files, the additions beside its stage file, and takes no slot. Every path is written from the recipe's own folder: `trellis: trellis.yml`, `stage: stages/tenure/tenure.bl`, and in a source list `calibration/durables`, a source file named without its extension. `trellis:` and `stage:` are both required, so that nothing is read in place of a path the recipe does not write; a recipe without `trellis:` is refused with the sentence "the recipe names no trellis file; write `trellis: trellis.yml`, the path from this folder", an entry without `stage:` with "the entry `stages.tenure` names no stage file; write `stage: stages/tenure/tenure.bl`, the path from this folder", both under the rule `recipe-shape`, and a `stage:` that names no `.bl` file is refused as `load_stage` refuses it ([Refusals](reference/refusals.md)). A source name written absolute or with `..` is refused under `recipe-source`. The recipe of the durables model, printed from the registry's file with its comment lines left out:
 
 ```python
 from pathlib import Path
@@ -118,7 +117,7 @@ from pathlib import Path
 from bellman.refusals import FactoryError
 from bellman.stage import load_stage
 from bellman.trellis import (assemble_trellis, calibrate_trellis, changed_positions, configure_trellis,
-                             elaborate_trellis, load_recipe, methodize_trellis)
+                             elaborate_trellis, load_recipe, methodize_trellis, specify_trellis)
 
 registry = "applications/durables/declaration"
 
@@ -133,10 +132,10 @@ print(without_comments(f"{registry}/spec.yml"), end="")
 ```text
 trellis: trellis.yml
 stages:
-  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods, $tenure_method]}}
-  keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods, $keeper_method]}}
-  adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods, $adjuster_method]}}
-  bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods]}, periods: [0, 0]}
+  tenure:        {stage: stages/tenure/tenure.bl,               calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/tenure/methods.bl]}}
+  keeper_cons:   {stage: stages/keeper_cons/keeper_cons.bl,     calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/keeper_cons/methods.bl]}}
+  adjuster_cons: {stage: stages/adjuster_cons/adjuster_cons.bl, calibration: {all: [calibration/durables, $fill]}, settings: {all: [settings/durables, $fill]}, methods: {all: [stages/adjuster_cons/methods.bl]}}
+  bequest:       {stage: stages/bequest/bequest.bl,             calibration: {all: [calibration/durables, $fill]}, methods: {all: [stages/bequest/methods.bl]}, periods: [0, 0]}
 registry:
   calibration: [calibration/wage_schedule]
 ```
@@ -145,15 +144,15 @@ What the recipe determines is the three mappings of every stage occurrence. `bel
 
 ### 3.2 The source lists and the merge
 
-A **source** is a file of assignments of one kind: `calibration:` values to parameters, `settings:` values to numerical settings, or `methods:` a list of entries, each attaching a method to the target its `on` key names. For one stage, one kind and one period, the sources that apply are read in the order the list writes them and merged into one mapping, and where two sources assign the same name the later one stands. The merge is key by key: a mapping is merged into a mapping recursively, so that a later source changes the keys it names and keeps the rest; a methods list is merged entry by entry, matched by `on`, an entry of `!marginals` matched only by another of `!marginals`, since a marginal block and another method may stand on one builder, a later entry changing the keys of the matched entry and keeping its others, an unmatched entry appended, and where an entry of either list carries no `on`, the later list replacing the earlier whole, since nothing can be matched; any other value, a number, a string or an ordinary list, is replaced by the later one. A source file may name a `parent:` source it extends, which is read first and merged beneath it in the same way, a chain of at most ten files that may not return to itself; the keys `parent`, `description`, `version` and `__comment__` are about the file and assign nothing. Each file is read once per call, and a file whose top key is of another kind than the list it stands in is refused under `recipe-source`. [Recipe functions](API/factory/spec-factory.md) §2 tabulates the rules.
+A **source** is a file of assignments of one kind: `calibration:` values to parameters, `settings:` values to numerical settings, or a methods file, a `.bl` addition whose typing entries and lines the elaborator reads as the stage file's own ([Methodization](04-methodization.md)). For one stage, one kind and one period, the calibration or settings sources that apply are read in the order the list writes them and merged into one mapping, and where two sources assign the same name the later one stands. The merge is key by key: a mapping is merged into a mapping recursively, so that a later source changes the keys it names and keeps the rest; any other value, a number, a string or a list, is replaced by the later one. A calibration or settings file may name a `parent:` source it extends, which is read first and merged beneath it in the same way, a chain of at most ten files that may not return to itself; the keys `parent`, `description`, `version` and `__comment__` are about the file and assign nothing. A methods list is not merged: its files are named with their extension, `stages/cons/methods.bl`, and unioned with the stage file in the order the list writes them, a component typed by two of them refused, so that the whole list is the stage occurrence's selection. Each file is read once per call, and a file whose top key is of another kind than the list it stands in, or a YAML file in a methods list, is refused under `recipe-source`. [Recipe functions](API/factory/spec-factory.md) §2 tabulates the rules.
 
 The durables lists are short, each a file followed by a slot, so the merge is seen best in the provenance a record carries: under `provenance["source_lists"]`, for each kind, the ordered sources that produced its mapping, each file with its path and digest and each slot with its name, whether a fill was bound to it and the fill's names the stage took (§5). A longer list is read the same way: `calibration: {all: [calibration/main, calibration/fine, $fill]}` gives every value of `main`, then the values of `fine` where it assigns a name `main` also assigns, then the fill's.
 
 ### 3.3 Slots and fills
 
-A **slot** is a `$name` in a source list, a place for values supplied at the call. It is bound by the keyword of `load_recipe` or `assemble_trellis` that spells the same name without the `$`: `fill=` binds `$fill`, `adjuster_method=` binds `$adjuster_method`. The names are the author's and mean nothing by themselves; a slot name is a Python identifier, since a keyword binds it; a keyword that names no slot of the recipe is refused under `recipe-slot-unknown` with the slots the recipe declares. A slot's position in its list is its precedence, so that `$fill` written after `calibration/durables` stands over the file's values, and a slot bound by no keyword contributes nothing. The same slot may stand in the lists of several stages and kinds, as `$fill` stands in the calibration and the settings lists of all four durables stages, and one fill is then read wherever the slot stands.
+A **slot** is a `$name` in a source list, a place for values supplied at the call. It is bound by the keyword of `load_recipe` or `assemble_trellis` that spells the same name without the `$`: `fill=` binds `$fill`. The names are the author's and mean nothing by themselves; a slot name is a Python identifier, since a keyword binds it; a keyword that names no slot of the recipe is refused under `recipe-slot-unknown` with the slots the recipe declares. A slot's position in its list is its precedence, so that `$fill` written after `calibration/durables` stands over the file's values, and a slot bound by no keyword contributes nothing. The same slot may stand in the lists of several stages and kinds, as `$fill` stands in the calibration and the settings lists of all four durables stages, and one fill is then read wherever the slot stands.
 
-A **fill** is the dictionary bound to a slot, and it takes one of three shapes. A fill keyed by kind, `fill={"calibration": {"β": 0.93}, "settings": {"n_a": 500}}`, is split, each list taking the part of its kind. A flat fill, `fill={"β": 0.93}`, is read against the declarations of the stages whose lists name the slot: a name a receiving stage declares as a parameter goes to the calibration lists, a name a receiving stage's settings files or methods files use goes to the settings lists, and a flat fill that names both parameters and settings is refused under `fill-mixes-kinds`, since one flat mapping cannot say which name is which. A **method choice** is a methods mapping bound to a methods slot, `adjuster_method={"methods": [{"on": "cntn_to_dcsn", "method": "!vfi", ...}]}`, merged into the methods list by `on`, an entry of `!marginals` matched only by another of `!marginals`, so that it states the keys in which the chosen method differs from the file's entry and keeps the rest; each durables stage has a methods slot of its own, `$tenure_method`, `$keeper_method` and `$adjuster_method`, because one slot named by the methods lists of two stages would attach one stage's [handler](../wiki/handler.md), the numerical routine named for a method, to the other. A fill that is no mapping is refused under `slot-value-not-a-mapping`, and a fill key that no receiving stage declares and no `registry` block admits (§3.5) under `fill-names-nothing`, the refusal naming the receiving stages with the names they declare and what may be written (§5).
+A **fill** is the dictionary bound to a slot, and it takes one of two shapes. A fill keyed by kind, `fill={"calibration": {"β": 0.93}, "settings": {"n_a": 500}}`, is split, each list taking the part of its kind. A flat fill, `fill={"β": 0.93}`, is read against the declarations of the stages whose lists name the slot: a name a receiving stage declares as a parameter goes to the calibration lists, a name a receiving stage's settings files or methods files declare goes to the settings lists, and a flat fill that names both parameters and settings is refused under `fill-mixes-kinds`, since one flat mapping cannot say which name is which. A methods list takes no slot and a fill no methods part: a change of methods is a change of the files a stage's methods list names, in a second recipe beside the first (§3.6), since the files a stage occurrence takes are written in the recipe and nowhere else. A file named in place of the first is a **replacing selection**, and a file named after the first adds its entries to the first file's selection (§5). A fill that is no mapping is refused under `slot-value-not-a-mapping`, a fill with a methods part and a fill key that no receiving stage declares and no `registry` block admits (§3.5) under `fill-names-nothing`, the refusal naming the receiving stages with the names they declare and what may be written (§5).
 
 A fill given to `load_recipe` produces a fresh syntactic trellis from the registry with the fill in its slot; nothing is constructed. The record's provenance marks the slot's entry bound and lists the fill's names the stage took, and the trellis verbs then bind the stage occurrences whose mapping changed and copy the rest (§5). A **sweep** is a family of fills, one expression over them, `[bellman.trellis.calibrate_trellis(model, bellman.trellis.load_recipe(registry, "spec.yml", fill={"β": beta})) for beta in betas]`; an estimation is the same expression inside its criterion function (§6.1).
 
@@ -186,7 +185,7 @@ At `periods[1]` to `periods[6]`, ages 60 to 55, the record's calibration holds t
 
 A stage **active in some periods only** writes `periods: [lo, hi]` on its entry, the bounds counted the same way, and the stage is then absent from the records of every other period, even where the template lists it. The benhabib template lists both stages in every one of its thirty-seven periods, and the recipe places the bequest in `periods[0]` alone and the decision stage in `periods[1]` to `periods[36]`; a stage restricted to periods that no template holds is refused under `recipe-template-agreement`. A range list changes what a stage receives at some periods, and `periods:` changes where the stage occurs; the interval stands in the record's provenance under `active`.
 
-**The bequest is a stage.** The file `bequest.bl` declares its parameters, arrives at the savings, the housing and the income state that the consumption stages continue to, under names of its own, `a_bq`, `h_bq` and `z_bq`, so that no arrival field of the terminal period is declared by two stages, values the wealth left behind, and reads a continuation value `V[>]` whose value is zero, the boundary data of the terminal period; its methods file, `stages/bequest/methods.yml`, binds the marginal blocks that state the derivatives of its value, which the consumption stages' method blocks read. There is no separate terminal object of any kind: the bequest stands last in the terminal period, is active there alone through `periods: [0, 0]`, and receives a fill of θ as any stage receives a fill of a parameter it declares.
+**The bequest is a stage.** The file `bequest.bl` declares its parameters, arrives at the savings, the housing and the income state that the consumption stages continue to, under names of its own, `a_bq`, `h_bq` and `z_bq`, so that no arrival field of the terminal period is declared by two stages, values the wealth left behind, and reads a continuation value `V[>]` whose value is zero, the boundary data of the terminal period; its methods file, `stages/bequest/methods.bl`, adds the derivative lines of its value to its value builders' blocks, which the consumption stages' endogenous grid lines read. There is no separate terminal object of any kind: the bequest stands last in the terminal period, is active there alone through `periods: [0, 0]`, and receives a fill of θ as any stage receives a fill of a parameter it declares.
 
 A value that varies with every period, such as the wage schedule's income level `Y` and retirement income `y_R` of the tenure stage, has no key of the recipe and no class: the application writes each period's values into the syntactic trellis before the trellis verbs bind, from the names the `registry` block carries (§3.5), or calibrates each period with its own values as it accretes.
 
@@ -285,7 +284,7 @@ True
 
 ## 5 What each call prints
 
-The names `registry`, `recipe`, `syntactic`, `three`, `elaborated` and `model` are those of §§3 and 4. The record of the adjuster at the terminal period holds the stage's origin, its three merged mappings and its provenance. The settings mapping has thirty-nine entries, of which six are printed. The record's own `methods` mapping holds the entries of the methods file as data, a method tag kept as `{'__yaml_tag__': <tag>, 'value': ''}`; the methods are printed here as the methodized stage prints them, by place and tag:
+The names `registry`, `recipe`, `syntactic`, `three`, `elaborated` and `model` are those of §§3 and 4. The record of the adjuster at the terminal period holds the stage's origin, its three merged mappings and its provenance. The settings mapping has thirty-nine entries, of which six are printed. The record's own `methods` list holds the additions the recipe names, each as its text with its origin, since the elaborator reads them with the stage text; the methods are printed here as the methodized stage prints them, by place, with the word, the grid and the handler typed there:
 
 ```python
 record = syntactic["periods"][0]["stages"]["adjuster_cons"]
@@ -293,6 +292,7 @@ print(record["stage"]["origin"])
 print("calibration:", record["calibration"])
 print("settings:", dict(list(record["settings"].items())[:6]), "... of", len(record["settings"]))
 print("provenance:", {key: value for key, value in record["provenance"].items() if key != "source_lists"})
+print("additions:", [(addition["origin"], addition["text"].splitlines()[0]) for addition in record["methods"]])
 print("methods:")
 print(model["periods"][0]["stages"]["adjuster_cons"].methods)
 ```
@@ -302,10 +302,11 @@ applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl
 calibration: {'R': 1.045, 'R_H': 1.0, 'β': 0.945, 'α': 0.7, 'γ_c': 3.5, 'γ_h': 1.5, 'κ': 0.06, 'δ': 0.0, 'τ': 0.12, 'ρ_z': 0.82, 'σ_z': 0.11, 'θ': 1.3498, 'K': 1.3}
 settings: {'n_a': 300, 'a_min': 0.01, 'a_max': 7.5, 'grid_phi': 1.01, 'b': 0.01, 'n_h': 300} ... of 39
 provenance: {'origin': 'applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl', 'sha256': '3c216eb3cb57c0d6187d4e2a820822bed94eb34b748490e813179cd7de87885b'}
+additions: [('applications/durables/declaration/stages/adjuster_cons/methods.bl', '@methods: adjuster_cons')]
 methods:
-policy                    !egm   block ../../methods/adjuster_cons_egm.bl
-cntn_to_dcsn:Evaluation   !marginals   block ../../methods/marginals_adjuster_cons.bl
-cntn_to_dcsn:Evaluation   !Linear
+cntn_to_dcsn.evaluate[V]        !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(m=(w_min, w_max, n_w))   "dcsmm:interp_as_3"
+cntn_to_dcsn.evaluate[D_{m}V]   !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(m=(w_min, w_max, n_w))   "dcsmm:interp_as_3"
+policy                          !egm(spacing=grid_phi, savings_floor=b, roots_per_housing_point=egm_n, root_scan_step=root_eps, upper_envelope=adj_upper_envelope, jump_threshold=m_bar, lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep, eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard, include_intersections=adj_include_intersections, no_double_jumps=adj_no_double_jumps, single_intersection=adj_single_intersection, disable_jump_checks=adj_disable_jump_checks, correct_jumps=correct_jumps, search_sections=n_sections)   !Cartesian(a_nxt_adj=(a_min, a_max, n_a), h_nxt_adj=(h_min, h_max, n_h))   "fues-durables:make_adjuster_ops"
 ```
 
 The record's `provenance["source_lists"]` holds, for each kind, the ordered sources that produced its mapping: each file with its path and digest, and each slot with its name, whether a fill was bound to it, and the fill's names that the stage declares, here none since no fill was given. The registry-level names stand under the trellis's `registry` key:
@@ -322,10 +323,9 @@ pprint(syntactic["registry"])
                   'sha256': '77a026308bd078082e963b0d3fe6aa2cf1f79900e9c0bd5a837698f86beb000b',
                   'source': 'calibration/durables'},
                  {'bound': False, 'names': [], 'slot': 'fill'}],
- 'methods': [{'path': 'applications/durables/declaration/stages/adjuster_cons/methods.yml',
-              'sha256': '9ae11b17042a256ad850f680bcc9ad324c8190718bad8fb40a6df153dd82fca6',
-              'source': 'stages/adjuster_cons/methods'},
-             {'bound': False, 'names': [], 'slot': 'adjuster_method'}],
+ 'methods': [{'path': 'applications/durables/declaration/stages/adjuster_cons/methods.bl',
+              'sha256': '5201257dccd839cf4ad8bbe65c5c4d8ae7d4fcc54b1156e0e2aa78f29af8012a',
+              'source': 'stages/adjuster_cons/methods.bl'}],
  'settings': [{'path': 'applications/durables/declaration/settings/durables.yml',
                'sha256': 'e176ae673908bfc8331b68a7aa671b1f7bf15bba445ce83e61b2e7d155e62e42',
                'source': 'settings/durables'},
@@ -346,7 +346,7 @@ pprint(syntactic["registry"])
                                        4.76e-05]}}
 ```
 
-A symbolic stage occurrence declares its parameters and holds no value for them. The `set` column of `par` is filled from the declarations and the `value` column reads `unbound`:
+An elaborated stage occurrence holds the methods its record names, since the methods files are read with the stage text, and it declares its parameters and holds no value for them. The `set` column of `par` is filled from the declarations and the `value` column reads `unbound`:
 
 ```python
 adjuster = elaborated["periods"][0]["stages"]["adjuster_cons"]
@@ -355,7 +355,7 @@ print(adjuster.par)
 ```
 
 ```text
-ElaboratedStage('adjuster_cons', symbolic)
+ElaboratedStage('adjuster_cons', methods)
 name  set       value    describes
 β     (0, 1)    unbound  discount factor
 α     (0, 1)    unbound  weight of consumption in utility
@@ -365,7 +365,7 @@ name  set       value    describes
 τ     ℝ₊₊       unbound  cost of adjusting housing, per unit of housing bought
 ```
 
-Each trellis verb takes the elaborated trellis and the syntactic trellis and returns a new elaborated trellis. `changed_positions(before, after)` lists the positions whose stage occurrence is a new version, a copy of a binding among them (§6); the others were copied unchanged. On a fresh elaboration no position holds a binding, so each verb binds all seven stage occurrences of the three periods, and a verb applied again with the same mappings binds none:
+Each trellis verb takes the elaborated trellis and the syntactic trellis and returns a new elaborated trellis. `changed_positions(before, after)` lists the positions whose stage occurrence is a new version, a copy of a binding among them (§6); the others were copied unchanged. On a fresh elaboration no position holds a value, so `calibrate_trellis` and `configure_trellis` each bind all seven stage occurrences of the three periods; `methodize_trellis` binds none, since every occurrence already holds the methods files its record names, and a verb applied again with the same mappings binds none:
 
 ```python
 def bound_and_copied(before, after):
@@ -383,8 +383,8 @@ print("calibrate_trellis again:", bound_and_copied(specified, calibrate_trellis(
 ```
 
 ```text
-calibrate_trellis: bound 7, copied 0; the adjuster is now ElaboratedStage('adjuster_cons', calibrated)
-methodize_trellis: bound 7, copied 0; the adjuster is now ElaboratedStage('adjuster_cons', methodized)
+calibrate_trellis: bound 7, copied 0; the adjuster is now ElaboratedStage('adjuster_cons', methodized)
+methodize_trellis: bound 0, copied 7; the adjuster is now ElaboratedStage('adjuster_cons', methodized)
 configure_trellis: bound 7, copied 0; the adjuster is now ElaboratedStage('adjuster_cons', specified)
 calibrate_trellis again: bound 0, copied 7
 ```
@@ -409,9 +409,9 @@ name  set       value  describes
 κ     ℝ₊₊       0.06   housing services per unit of the housing stock
 τ     ℝ₊₊       0.12   cost of adjusting housing, per unit of housing bought
 
-policy                    !egm   block ../../methods/adjuster_cons_egm.bl
-cntn_to_dcsn:Evaluation   !marginals   block ../../methods/marginals_adjuster_cons.bl
-cntn_to_dcsn:Evaluation   !Linear
+cntn_to_dcsn.evaluate[V]        !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(m=(w_min, w_max, n_w))   "dcsmm:interp_as_3"
+cntn_to_dcsn.evaluate[D_{m}V]   !Linear(extrapolate=extrap_policy, clamp_factor=clamp_max_factor)   !Cartesian(m=(w_min, w_max, n_w))   "dcsmm:interp_as_3"
+policy                          !egm(spacing=grid_phi, savings_floor=b, roots_per_housing_point=egm_n, root_scan_step=root_eps, upper_envelope=adj_upper_envelope, jump_threshold=m_bar, lookback=fues_lb, eps_d=fues_eps_d, eps_sep=fues_eps_sep, eps_fwd_back=fues_eps_fwd_back, parallel_guard=fues_parallel_guard, include_intersections=adj_include_intersections, no_double_jumps=adj_no_double_jumps, single_intersection=adj_single_intersection, disable_jump_checks=adj_disable_jump_checks, correct_jumps=correct_jumps, search_sections=n_sections)   !Cartesian(a_nxt_adj=(a_min, a_max, n_a), h_nxt_adj=(h_min, h_max, n_h))   "fues-durables:make_adjuster_ops"
 
 name  set       value   describes
 θ     ℝ₊₊       1.3498  weight of the bequest in utility
@@ -449,31 +449,27 @@ after the fill:  β 0.93   n_a 500
  {'bound': True, 'names': ('β',), 'slot': 'fill'}]
 ```
 
-A **method choice** is a methods mapping bound to a stage's methods slot. This one, bound to `$adjuster_method`, puts the method tag [`!vfi`](reference/methods.md#vfi) with another handler on the adjuster's backward decision builder `cntn_to_dcsn`, beside the endogenous grid entry the file writes on its policy builder and the `!marginals` entry the file writes on the same backward decision builder, which the merge keeps, since an entry of `!marginals` is matched by another of `!marginals` alone, and leaves the keeper's entry as the file writes it; on all fifty-one periods it makes the adjuster's fifty-one stage occurrences anew and copies the fifty-two others. A version holds one methods binding, so `methodize_trellis` makes anew each stage occurrence whose methods changed, the adjuster's three, from a fresh elaboration of its record, calibrated with the values it holds, methodized with the new mapping and configured with the settings it holds, and copies the four others:
+A change of methods names other files in a stage's methods list (§3.3). The adjuster's folder holds a second addition, `methods.adjuster_method.bl`, the nested method of the paper: value function iteration, [`!vfi`](reference/methods.md#vfi), with the routine of the replication code as its handler, on the adjuster's backward decision builder `cntn_to_dcsn`. Named after `methods.bl` in the adjuster's methods list, it adds that entry to the first file's selection and replaces none of it. The methods files of a record are read with the stage text when the occurrence is constructed, so the change is a change of construction: `elaborate_trellis(chosen, model)` constructs the adjuster's stage occurrences anew, every period's, and takes the keeper's and the bequest's from the trellis given, and the verbs then bind the values and the settings the records hold; `methodize_trellis` on a trellis whose records name other methods files than its occurrences were constructed with refuses them under `record-shape`, since no verb binds a selection. A second recipe would write `methods: {all: [stages/adjuster_cons/methods.bl, stages/adjuster_cons/methods.adjuster_method.bl]}` in the adjuster's entry; the registry holds none, so the listing makes the same change in the syntactic trellis, where every adjustment is made (§1), by giving the adjuster's record the second addition at each period:
 
 ```python
-choice = {"methods": [{"on": "cntn_to_dcsn", "method": "!vfi", "handler": "fues-durables:make_adjuster_vfi"}]}
-chosen = latest(load_recipe(registry, recipe, adjuster_method=choice), 3)
-switched = methodize_trellis(model, chosen)
-print("methodize_trellis:", bound_and_copied(model, switched))
-print()
-print(switched["periods"][0]["stages"]["adjuster_cons"].methods)
-print()
-print(switched["periods"][0]["stages"]["keeper_cons"].methods)
+from pathlib import Path
+
+second = f"{registry}/stages/adjuster_cons/methods.adjuster_method.bl"
+chosen = latest(load_recipe(registry, recipe), 3)
+for period in chosen["periods"]:
+    period["stages"]["adjuster_cons"]["methods"].append(
+        {"text": Path(second).read_text(encoding="utf-8"), "origin": second})
+switched = specify_trellis(chosen, model)
+print(changed_positions(model, switched))
+print(switched["periods"][0]["stages"]["adjuster_cons"].methods["cntn_to_dcsn"])
 ```
 
 ```text
-methodize_trellis: bound 3, copied 4
-
-policy                    !egm   block ../../methods/adjuster_cons_egm.bl
-cntn_to_dcsn:Evaluation   !marginals   block ../../methods/marginals_adjuster_cons.bl
-cntn_to_dcsn:Evaluation   !Linear
-cntn_to_dcsn              !vfi
-
-policy                    !egm   block ../../methods/keeper_cons_egm.bl
-cntn_to_dcsn:Evaluation   !marginals   block ../../methods/marginals_keeper_cons.bl
-cntn_to_dcsn:Evaluation   !Linear
+[(0, 'adjuster_cons'), (1, 'adjuster_cons'), (2, 'adjuster_cons')]
+!vfi   "fues-durables:make_adjuster_vfi"
 ```
+
+`changed_positions(model, switched)` names the adjuster's positions and no other, and the adjuster's decision builder now carries `!vfi` with its handler beside the endogenous grid method on its policy builder.
 
 A fill key that no receiving stage declares and no `registry` block admits is refused under the rule `fill-names-nothing`. The refusal names the slot, the key, the receiving stages with the names they declare, and what may be written; here `beta` is written for β. This listing prints the rule alone, so its result remains short:
 
@@ -509,11 +505,11 @@ for beta in (0.93, 0.945, 0.96):
 |---|---|---|
 | a calibration file, or a fill of parameters | by `calibrate_trellis`: the stage occurrences whose calibration in the syntactic trellis changed in a name they declare, and, in the same period, the stage occurrences that declare a changed name too, since the stages of a period share the parameters they declare under one name | the graphs; their methods and settings; every earlier version, and whatever was compiled from it |
 | a settings file, or a fill of settings | by `configure_trellis`: the stage occurrences whose settings changed | the graphs; their calibration and methods |
-| a methods file, or a method choice | by `methodize_trellis`: the stage occurrences whose methods changed, made anew from a fresh elaboration of their record, calibrated with the values they hold, methodized with the new mapping and configured with the settings they hold, since a version holds one methods binding | every other stage occurrence |
+| a methods file, or the selection a methods list names | by `elaborate_trellis(syntactic, elaborated)` and the verbs after it, or by `specify_trellis(syntactic, elaborated)`: the stage occurrences whose methods files changed, constructed anew with their stage text, since the additions are read with it, then calibrated and configured with the values and settings their records hold; `methodize_trellis` binds nothing | every other stage occurrence, copied from `elaborated` |
 | a stage file | by `elaborate_trellis(syntactic, elaborated)`: the stage occurrences of that file, the digest in the record detecting the change | every other stage occurrence, copied from `elaborated` |
 | the period template or the trellis file | by `load_recipe`: the shape of the trellis and the positions | the stage occurrences whose record is unchanged |
 
-A fill given to `load_recipe` produces a fresh syntactic trellis from the registry, so values the application wrote into the records period by period are written again by its function after every `load_recipe`, before the trellis verbs bind; such a function appends to the record's source list an entry naming its file, the names it wrote and its argument, so that a record's provenance names every writer. Only a changed stage file is constructed again: `elaborate_trellis` given the earlier elaborated trellis as its second argument copies every position whose record kept its digest and constructs the others. As `elaborate_trellis` constructs each distinct stage text once (§2), a verb binds each distinct input once, except a changed method choice, which `methodize_trellis` remakes at each position from its record. Where several positions hold versions of one stage file with the same bindings and recorded sources and the syntactic trellis gives them the same mapping, each mapping written with its keys in the same order, since a version prints them in that order, as it gives `keeper_cons` one calibration at every age, the verb binds the first and places at each of the others a copy that records its own position and parent and equals the version the verb would bind there alone; such a copy is a new version of its position, so `changed_positions` names it among the positions bound. Every stage occurrence is its own object; two stage occurrences with equal mappings have equal bindings and graphs and are distinct objects. Within a period, stages that declare the same parameter name share the meaning and value of that parameter, while their fields remain local. A verb binds a stage occurrence to the version it is given, never to the version of an earlier fill in a chain, and the earlier trellis is untouched. Binding changes no graph: the semgraphs of a bound version equal those of the symbolic one, and a verb writes to the bindings alone. What a change does to a numerical representation belongs to realization and is not decided here.
+A fill given to `load_recipe` produces a fresh syntactic trellis from the registry, so values the application wrote into the records period by period are written again by its function after every `load_recipe`, before the trellis verbs bind; such a function appends to the record's source list an entry naming its file, the names it wrote and its argument, so that a record's provenance names every writer. Only a changed stage file is constructed again: `elaborate_trellis` given the earlier elaborated trellis as its second argument copies every position whose record kept its digest and constructs the others. As `elaborate_trellis` constructs each distinct stage text once (§2), a verb binds each distinct input once; a changed selection of methods is another construction, which `elaborate_trellis(syntactic, elaborated)` makes at each position of the record (the table above). Where several positions hold versions of one stage file with the same bindings and recorded sources and the syntactic trellis gives them the same mapping, each mapping written with its keys in the same order, since a version prints them in that order, as it gives `keeper_cons` one calibration at every age, the verb binds the first and places at each of the others a copy that records its own position and parent and equals the version the verb would bind there alone; such a copy is a new version of its position, so `changed_positions` names it among the positions bound. Every stage occurrence is its own object; two stage occurrences with equal mappings have equal bindings and graphs and are distinct objects. Within a period, stages that declare the same parameter name share the meaning and value of that parameter, while their fields remain local. A verb binds a stage occurrence to the version it is given, never to the version of an earlier fill in a chain, and the earlier trellis is untouched. Binding changes no graph: the semgraphs of a bound version equal those of the symbolic one, and a verb writes to the bindings alone. What a change does to a numerical representation belongs to realization and is not decided here.
 
 ### 6.1 Many draws on many cores
 

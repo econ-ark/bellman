@@ -1,0 +1,17 @@
+@methods: tenure_pa
+# The comparison of the three branch values, renting, adjusting and keeping;
+# the branch values are read by linear interpolation on the grid of cash on
+# hand the grid entry names; forward, the policy splits the households among
+# the three branches by Monte Carlo.
+
+n_w : ℕ              :: ["number of points of the grid of cash on hand"]
+w_min : ℝ₊           :: ["lower bound of the grid of cash on hand"]
+w_max : ℝ₊           :: ["upper bound of the grid of cash on hand"]
+n_paths : ℕ          :: ["number of simulated households"]
+seed : ℕ             :: ["seed of the simulation"]
+
+policy.method : !max
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(w_d=(w_min, w_max, n_w))
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_paths, seed=seed)
+arvl_to_dcsn.method : !deterministic

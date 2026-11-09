@@ -19,15 +19,13 @@
 # Euler equation reads across the connector, is represented (F47, F49); its
 # grid is its own typing entry, one factor per coordinate of the arrival perch
 # keyed by name (D5, AAS, 4 November 2026; sheet §7). The settings this file
-# reads are declared with their domains (sheet §6); s, θ, K and ρ stand in the
-# calibration file.
+# reads are declared with their domains (sheet §6). The parameters s, θ, K and
+# ρ stand in the stage file of this copy, since a declaration of an addition
+# is a setting (decision S7-C8) and ρ is the parameter the saving stages of
+# the period declare (unit U4, 5 November 2026; the case study's file declares
+# the four here).
 
 Xp := ℝ₊
-
-s : (0,1]            :: ["probability of surviving to the retirement decision"]
-θ : ℝ₊₊              :: ["weight of the bequest in utility"]
-K : ℝ₊₊              :: ["shift of the bequest utility"]
-ρ : (1, inf)         :: ["curvature of the bequest utility, the period's coefficient of relative risk aversion that the saving stages declare"]
 
 n_a : ℕ              :: ["number of points of the asset grid"]
 a_min : ℝ₊           :: ["lower bound of the asset grid"]

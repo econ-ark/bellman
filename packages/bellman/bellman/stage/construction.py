@@ -96,7 +96,7 @@ from bellman.native.records import (
     with_identity,
 )
 from bellman.native.versions import WorkingStage
-from bellman.refusals import ConstructionError, construction_error
+from bellman.refusals import ConstructionError, construction_error, location
 from bellman.stage.term_operations import relation_of
 from bellman.syntax import terms
 from bellman.syntax.lower import item_addresses, span_at
@@ -150,8 +150,8 @@ def stage_fields(term, spans):
     """The fields of the `ElaboratedStage` of the stage that `term`
     describes, by their names, which `elaborated.make_stage` constructs the
     stage from; this module does not import the stage's class, so that the
-    reading of a method block (`method_blocks.read_block`) constructs its
-    stage by this function without a cycle of imports.
+    construction at two levels (`levels.construct`) builds the stage of a
+    tree with its additions by this function without a cycle of imports.
 
     `term` is a `bellman.syntax.terms.FILE`; `spans` is its source-span table
     (a Mapping from term address to `SourceSpan`) for a fresh parse, or None
@@ -241,6 +241,11 @@ def stage_fields(term, spans):
             for param, declaration in declarations.scalars.items()
             if param in declarations.parameters()
         },
+        setting_sets={
+            name: declaration.domain_term
+            for name, declaration in declarations.scalars.items()
+            if name in declarations.settings()
+        },
         law_terms={
             subjects: next(body for body, at in declarations.law_terms if at == law.address)
             for subjects, law in declarations.laws.items()
@@ -301,6 +306,10 @@ def stage_name(term, items, spans) -> str:
             address=last,
             span=span_of(last, spans),
             rule="stage-name",
+            related=tuple(
+                location("original declaration", address=address, span=span_of(address, spans))
+                for address, _ in stage_lines[:-1]
+            ),
         )
     ((address, line),) = stage_lines
     if not isinstance(line.value, str) or not line.value:
@@ -423,7 +432,7 @@ def _statement_records(block_id, declarations):
         # represents it (AMD-SG-017 §§1, 5.6)
         lhs, lhs_type = (left_fields[0], left_types[0]) if left_fields else (None, None)
         marks, tags = annotation_entries(item.annot, address, declarations)
-        role = _line_role(marks, tags, left_types, declarations, address)
+        role = _line_role(marks, tags, left_types, declarations, address, core)
         held = role == DOC or address in properties
         operators = (
             ()
@@ -443,7 +452,7 @@ def _statement_records(block_id, declarations):
         ):
             if lhs_type in implicit_seen:
                 _refuse_second_implicit(
-                    declarations, block_id, address, lhs, implicit_seen[lhs_type]
+                    declarations, block_id, address, lhs, equation, implicit_seen[lhs_type]
                 )
             implicit_seen[lhs_type] = address
             if not candidate:
@@ -491,18 +500,20 @@ def _statement_records(block_id, declarations):
     return block_level, nodes
 
 
-def _line_role(marks, tags, left_types, declarations, address):
+def _line_role(marks, tags, left_types, declarations, address, core):
     """The role of one line of a block: a node when it carries `!node`, which
     requires a nonempty explicit id; documentation when it carries `!doc`; a
     output statement when its left side names an output field; an alias
-    otherwise."""
+    otherwise. `core` is the line's term, which the refusal of a node without
+    an id prints as the file writes it."""
     if NODE in marks:
         if not any(tag.startswith("id=") and tag[3:].strip() for tag in tags):
             raise declarations.error(
                 "declared-once",
                 address,
-                "an authored node requires a nonempty explicit id; write an id before the mark, "
-                "`:: [id=<name>, !node]`",
+                f"the line `{to_source(core)}` is marked `!node` and carries no id; an "
+                f"authored node is named by an id written before the mark",
+                write="Write an id before the mark, `:: [id=<name>, !node]`",
             )
         return NODE
     if DOC in marks:
@@ -562,22 +573,34 @@ def _property_lines(block_id, declarations) -> dict:
                 f"realizes; write the id of such a line before the dot, or give this line a "
                 f"plain id without a dot"
             ),
+            write=(
+                f"Write the id of an operative line of a policy block before the dot of "
+                f"{str(written)!r}, or give this line a plain id without a dot"
+            ),
         )
     return properties
 
 
-def _refuse_second_implicit(declarations, block_id, address, lhs, first):
-    """The refusal of a second implicit statement for one output of a block,
-    naming the first."""
+def _refuse_second_implicit(declarations, block_id, address, lhs, equation, first):
+    """The refusal of a second implicit statement, `equation`, for one output
+    of a block, naming the first, the line at the address `first`."""
+    earlier = next(
+        relation_of(item.core) for _, held, item in declarations.bodies[block_id] if held == first
+    )
     raise declarations.error(
         "one-implicit-statement",
         address,
         (
-            f"block {block_id!r} has a second implicit statement for "
-            f"its output {lhs.stem!r}; the first is at "
-            f"{declarations.where(first)}. A block "
-            f"has at most one implicit statement per output field, "
-            f"since two equations in one unknown state two problems"
+            f"block {block_id!r} writes a second implicit statement for its output "
+            f"{lhs.stem!r}, `{to_source(equation)}`; the first is `{to_source(earlier)}` at "
+            f"{declarations.where(first)}. A block holds at most one implicit statement for "
+            f"each output, since two equations in one unknown state two problems; keep one of "
+            f"the two"
+        ),
+        related=(declarations.location(first),),
+        write=(
+            f"Keep one of the two implicit statements for {lhs.stem}, `{to_source(earlier)}` "
+            f"or `{to_source(equation)}`"
         ),
     )
 
@@ -896,19 +919,37 @@ def _check_block_outputs(declarations):
             if output.wire_type in read.supplied:
                 continue
             stem = output.stem
+            control = declarations.field_roles[stem] == CONTROL
             instead = (
-                f"; a policy block defines its policy by a line with {stem} on its left side, "
+                f"a policy block defines its policy by a line with {stem} on its left side, "
                 f"the maximization `{stem} = argmax_{{…}}(…)`, a solve, or, where its lines "
                 f"write the candidate at the continuation perch, the identification "
                 f"`{stem} = {stem}[>]`"
-                if declarations.field_roles[stem] == CONTROL
-                else ""
+                if control
+                else f"write a line that defines it, `{output.text} = …`, or, if the block is "
+                f"not meant to write {output.text}, remove it from the output side"
             )
+            # the listing of the output in the header, the second place the
+            # sentence names, at the address the span table gives a listing
+            # of the output side, `<block>.out.<field as written>`
             raise declarations.error(
                 "output-defined",
                 block_address,
-                f"block {block_id!r} declares output {output.wire_type!r}, "
-                f"but its body supplies no defining equation{instead}",
+                f"the header of block {block_id!r} lists {output.text} on its output side, "
+                f"and no line of the block defines {output.text}; {instead}",
+                related=(
+                    declarations.location(f"{output.address}.out.{output.text}", "listed output"),
+                ),
+                write=(
+                    f"Write a line that defines {stem}: the maximization "
+                    f"`{stem} = argmax_{{…}}(…)`, a solve, or, where the lines of the block "
+                    f"write the candidate at the continuation perch, the identification "
+                    f"`{stem} = {stem}[>]`"
+                    if control
+                    else f"Write a line that defines {output.text}, `{output.text} = …`, or, if "
+                    f"block {block_id!r} is not meant to write {output.text}, remove it from "
+                    f"the output side"
+                ),
             )
 
 
@@ -1025,6 +1066,10 @@ def _refuse_circular_outputs(declarations, dependencies):
                 f"the ordinary output assignments depend circularly on one "
                 f"another: {' -> '.join(addresses)}; supply a defining "
                 f"input relation or an explicit equation in declared unknowns",
+                write=(
+                    "Supply a defining input relation or an explicit equation in declared "
+                    "unknowns"
+                ),
             )
         if identity in complete or identity not in dependencies:
             return
@@ -1106,18 +1151,18 @@ def _check_grid_lines(declarations):
             comparison = ranges.compare_terms(written, solved.term)
             if comparison is None or comparison.equal:
                 continue
-            raise declarations.error(
-                "grid-line-consistency",
-                address,
-                _grid_line_refusal(relation, coordinate, law_block, law, solved, comparison),
+            message, write = _grid_line_refusal(
+                relation, coordinate, law_block, law, solved, comparison
             )
+            raise declarations.error("grid-line-consistency", address, message, write=write)
 
 
 def _grid_line_refusal(relation, coordinate, law_block, law, solved, comparison):
-    """The message refusing a grid line: the line as written, the lines of
-    the law of motion that were solved and for which names, the law of motion
-    solved for the decision state at the candidates, and why the two
-    disagree."""
+    """The message refusing a grid line, and the action: the line as written,
+    the lines of the law of motion that were solved and for which names, the
+    law of motion solved for the decision state at the candidates, and why
+    the two disagree; the action writes the grid line as the law of motion
+    solved."""
     rights = dict(law)
     lines = _listed([f"{output} = {to_source(rights[output])}" for output, _ in solved.lines])
     names = _listed([name for _, name in solved.lines])
@@ -1136,12 +1181,13 @@ def _grid_line_refusal(relation, coordinate, law_block, law, solved, comparison)
     else:
         reason = f"{written} does not reduce to {law_side} by algebraic simplification"
     solution = f"{coordinate}[>] = {law_side}"
-    return (
+    message = (
         f"the grid line {to_source(relation)} disagrees with the law of motion of block "
         f"{law_block!r}: with {steps}{at}, the law of motion gives {solution}, and "
         f"{reason}; write the grid line as the law of motion solved for {coordinate}, "
         f"{solution}"
     )
+    return message, f"Write the grid line as the law of motion solved for {coordinate}, `{solution}`"
 
 
 def _listed(items):
@@ -1280,7 +1326,8 @@ def _fold_stage(*, working, term, spans):
 
     A refusal of the fold is positioned at the line it names, or at the
     top-level item whose file position a definition record gave it as its
-    address (AMD-SG-017 §4)."""
+    address (AMD-SG-017 §4), and keeps its related locations and its
+    action."""
     try:
         return fold_stage_file(term, working, spans)
     except ConstructionError as error:
@@ -1294,6 +1341,8 @@ def _fold_stage(*, working, term, spans):
             span=span,
             rule=error.rule,
             error_class=type(error),
+            related=error.related,
+            write=error.write,
         ) from None
 
 

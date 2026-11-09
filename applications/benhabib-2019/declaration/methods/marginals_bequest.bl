@@ -1,7 +1,0 @@
-@methods: bequest
-# The derivative of the warm-glow bequest in wealth, stated in closed form as
-# the marginal block of the decision value builder (AMD-MB-001 §4.3).
-
-[id=dcsn_marginal, () -> (V) : !dcsn] {
-    D_{a}V = (A/β)*a^(-μ)                    :: [id=marginal]
-}

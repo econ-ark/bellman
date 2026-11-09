@@ -2,31 +2,34 @@
  {
   "study": "benhabib-2019",
   "additions": [
-   "packages/bellman/tests/additions/benhabib-2019/methods.bellman.bl",
-   "packages/bellman/tests/additions/benhabib-2019/methods.bellman.bellman_method.bl"
+   "applications/benhabib-2019/declaration/stages/benhabib_bellman/methods.bl",
+   "applications/benhabib-2019/declaration/stages/benhabib_bellman/methods.bellman_method.bl"
   ],
   "stage": "applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl",
-  "places": 15,
+  "places": 24,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
    "cntn_to_dcsn.marginal",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
+   "policy.InvEuler.evaluate",
    "policy.cons_choice",
-   "policy.inv_g_dcsn_to_cntn"
+   "policy.inv_g_dcsn_to_cntn",
+   "policy.inv_g_dcsn_to_cntn.evaluate"
   ],
   "from_message": false
  },
  {
   "study": "benhabib-2019",
   "additions": [
-   "packages/bellman/tests/additions/benhabib-2019/methods.bequest.bl"
+   "applications/benhabib-2019/declaration/stages/bequest/methods.bl"
   ],
   "stage": "applications/benhabib-2019/declaration/stages/bequest/bequest.bl",
-  "places": 10,
+  "places": 12,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{a}V]",
    "cntn_to_dcsn.marginal"
   ],
   "from_message": false
@@ -34,18 +37,20 @@
  {
   "study": "buffer-stock",
   "additions": [
-   "packages/bellman/tests/additions/buffer-stock/methods.bl"
+   "applications/buffer-stock/declaration/stages/buffer_stock/methods.bl"
   ],
   "stage": "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
-  "places": 29,
+  "places": 39,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
    "cntn_to_dcsn.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{k}V[<]]",
    "dcsn_to_arvl.marginal",
    "dcsn_to_arvl.marginal.D",
    "dcsn_to_arvl.marginal.E_ψ_ξ",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -56,94 +61,95 @@
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.entrepreneur_ageing.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/entrepreneur_ageing/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/entrepreneur_ageing/entrepreneur_ageing.bl",
-  "places": 12,
+  "places": 16,
   "created": [],
   "from_message": false
  },
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.entrepreneur_death.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/entrepreneur_death/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/entrepreneur_death/entrepreneur_death.bl",
-  "places": 12,
+  "places": 16,
   "created": [],
   "from_message": false
  },
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.old_choice.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/old_choice/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/old_choice/old_choice.bl",
-  "places": 13,
+  "places": 17,
   "created": [],
   "from_message": false
  },
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.retiree.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/retiree/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/retiree/retiree.bl",
-  "places": 17,
+  "places": 21,
   "created": [],
   "from_message": false
  },
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.retiree_death.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/retiree_death/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/retiree_death/retiree_death.bl",
-  "places": 12,
+  "places": 16,
   "created": [],
   "from_message": false
  },
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.worker.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/worker/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/worker/worker.bl",
-  "places": 17,
+  "places": 21,
   "created": [],
   "from_message": false
  },
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.worker_ageing.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/worker_ageing/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/worker_ageing/worker_ageing.bl",
-  "places": 12,
+  "places": 16,
   "created": [],
   "from_message": false
  },
  {
   "study": "cagetti-denardi-2006",
   "additions": [
-   "packages/bellman/tests/additions/cagetti-denardi-2006/methods.young_choice.bl"
+   "applications/cagetti-denardi-2006/declaration/stages/young_choice/methods.bl"
   ],
   "stage": "applications/cagetti-denardi-2006/declaration/stages/young_choice/young_choice.bl",
-  "places": 13,
+  "places": 17,
   "created": [],
   "from_message": false
  },
  {
   "study": "cons-port",
   "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.cons.bl"
+   "applications/cons-port/declaration/stages/cons/methods.bl"
   ],
   "stage": "applications/cons-port/declaration/stages/cons/cons.bl",
-  "places": 16,
+  "places": 23,
   "created": [
    "D",
    "cntn_to_dcsn.envelope",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.grid",
@@ -156,9 +162,19 @@
  {
   "study": "cons-port",
   "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.cons.vfi.bl"
+   "applications/cons-port/declaration/stages/cons/methods.vfi.bl"
   ],
   "stage": "applications/cons-port/declaration/stages/cons/cons.bl",
+  "places": 13,
+  "created": [],
+  "from_message": false
+ },
+ {
+  "study": "cons-port",
+  "additions": [
+   "applications/cons-port/declaration/stages/disc/methods.bl"
+  ],
+  "stage": "applications/cons-port/declaration/stages/disc/disc.bl",
   "places": 10,
   "created": [],
   "from_message": false
@@ -166,46 +182,40 @@
  {
   "study": "cons-port",
   "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.disc.bl"
-  ],
-  "stage": "applications/cons-port/declaration/stages/disc/disc.bl",
-  "places": 8,
-  "created": [],
-  "from_message": false
- },
- {
-  "study": "cons-port",
-  "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.noport.bl"
+   "applications/cons-port/declaration/stages/noport/methods.bl"
   ],
   "stage": "applications/cons-port/declaration/stages/noport/noport.bl",
-  "places": 11,
+  "places": 14,
   "created": [
    "D",
+   "cntn_to_dcsn.D",
    "cntn_to_dcsn.envelope",
    "cntn_to_dcsn.envelope.D",
    "cntn_to_dcsn.envelope.E_θ",
-   "cntn_to_dcsn.evaluate.marginal"
+   "cntn_to_dcsn.evaluate[D_{k}V]"
   ],
   "from_message": false
  },
  {
   "study": "cons-port",
   "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.port.bl"
+   "applications/cons-port/declaration/stages/port/methods.bl"
   ],
   "stage": "applications/cons-port/declaration/stages/port/port.bl",
-  "places": 19,
+  "places": 31,
   "created": [
    "D",
+   "cntn_to_dcsn.D",
    "cntn_to_dcsn.envelope",
    "cntn_to_dcsn.envelope.D",
    "cntn_to_dcsn.envelope.E_Ψ_θ",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{k}V]",
+   "policy.D",
    "policy.euler",
    "policy.euler.D",
    "policy.euler.E_Ψ_θ",
    "policy.euler.solve",
+   "policy.solve",
    "solve"
   ],
   "from_message": false
@@ -213,20 +223,23 @@
  {
   "study": "cons-port",
   "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.port.reference.bl"
+   "applications/cons-port/declaration/stages/port/methods.reference.bl"
   ],
   "stage": "applications/cons-port/declaration/stages/port/port.bl",
-  "places": 19,
+  "places": 31,
   "created": [
    "D",
+   "cntn_to_dcsn.D",
    "cntn_to_dcsn.envelope",
    "cntn_to_dcsn.envelope.D",
    "cntn_to_dcsn.envelope.E_Ψ_θ",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{k}V]",
+   "policy.D",
    "policy.euler",
    "policy.euler.D",
    "policy.euler.E_Ψ_θ",
    "policy.euler.solve",
+   "policy.solve",
    "solve"
   ],
   "from_message": false
@@ -234,16 +247,18 @@
  {
   "study": "cons-port",
   "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.port.without_marginals.bl"
+   "applications/cons-port/declaration/stages/port/methods.without_marginals.bl"
   ],
   "stage": "applications/cons-port/declaration/stages/port/port.bl",
-  "places": 15,
+  "places": 26,
   "created": [
    "D",
+   "policy.D",
    "policy.euler",
    "policy.euler.D",
    "policy.euler.E_Ψ_θ",
    "policy.euler.solve",
+   "policy.solve",
    "solve"
   ],
   "from_message": false
@@ -251,15 +266,16 @@
  {
   "study": "cons-port",
   "additions": [
-   "packages/bellman/tests/additions/cons-port/methods.cons.bl",
-   "packages/bellman/tests/additions/cons-port/methods.cons.vfi.bl"
+   "applications/cons-port/declaration/stages/cons/methods.bl",
+   "applications/cons-port/declaration/stages/cons/methods.vfi.bl"
   ],
   "stage": "applications/cons-port/declaration/stages/cons/cons.bl",
-  "places": 16,
+  "places": 23,
   "created": [
    "D",
    "cntn_to_dcsn.envelope",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.grid",
@@ -272,18 +288,20 @@
  {
   "study": "consumption-savings-iid",
   "additions": [
-   "packages/bellman/tests/additions/consumption-savings-iid/methods.bl"
+   "applications/consumption-savings-iid/declaration/stages/cons_savings_iid/methods.bl"
   ],
   "stage": "applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl",
-  "places": 28,
+  "places": 38,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{w}V]",
    "cntn_to_dcsn.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{b}V[<]]",
    "dcsn_to_arvl.marginal",
    "dcsn_to_arvl.marginal.D",
    "dcsn_to_arvl.marginal.E_y",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -298,15 +316,17 @@
    "packages/bellman/tests/additions/consumption-savings-iid/methods.additions.bl"
   ],
   "stage": "applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl",
-  "places": 28,
+  "places": 38,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{w}V]",
    "cntn_to_dcsn.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{b}V[<]]",
    "dcsn_to_arvl.marginal",
    "dcsn_to_arvl.marginal.D",
    "dcsn_to_arvl.marginal.E_y",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -317,20 +337,22 @@
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.adjuster_cons.bl"
+   "applications/durables/declaration/stages/adjuster_cons/methods.bl"
   ],
   "stage": "applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl",
-  "places": 25,
+  "places": 34,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
    "cntn_to_dcsn.marginal_wealth",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.choice",
    "policy.choice.D",
    "policy.choice.solve",
    "policy.endoggrid",
+   "policy.solve",
    "solve"
   ],
   "from_message": false
@@ -338,31 +360,33 @@
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.adjuster_cons.adjuster_method.bl"
+   "applications/durables/declaration/stages/adjuster_cons/methods.adjuster_method.bl"
   ],
   "stage": "applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl",
-  "places": 18,
+  "places": 22,
   "created": [],
   "from_message": false
  },
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.adjuster_cons.bl",
-   "packages/bellman/tests/additions/durables/methods.adjuster_cons.adjuster_method.bl"
+   "applications/durables/declaration/stages/adjuster_cons/methods.bl",
+   "applications/durables/declaration/stages/adjuster_cons/methods.adjuster_method.bl"
   ],
   "stage": "applications/durables/declaration/stages/adjuster_cons/adjuster_cons.bl",
-  "places": 25,
+  "places": 34,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
    "cntn_to_dcsn.marginal_wealth",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.choice",
    "policy.choice.D",
    "policy.choice.solve",
    "policy.endoggrid",
+   "policy.solve",
    "solve"
   ],
   "from_message": false
@@ -370,15 +394,17 @@
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.bequest.bl"
+   "applications/durables/declaration/stages/bequest/methods.bl"
   ],
   "stage": "applications/durables/declaration/stages/bequest/bequest.bl",
-  "places": 16,
+  "places": 20,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{x}V]",
    "cntn_to_dcsn.marginal_wealth",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{a_bq}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{h_bq}V[<]]",
    "dcsn_to_arvl.marginal_assets",
    "dcsn_to_arvl.marginal_assets.D",
    "dcsn_to_arvl.marginal_housing",
@@ -389,26 +415,29 @@
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.disc.bl"
+   "applications/durables/declaration/stages/disc/methods.bl"
   ],
   "stage": "applications/durables/declaration/stages/disc/disc.bl",
-  "places": 4,
+  "places": 5,
   "created": [],
   "from_message": false
  },
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.keeper_cons.bl"
+   "applications/durables/declaration/stages/keeper_cons/methods.bl"
   ],
   "stage": "applications/durables/declaration/stages/keeper_cons/keeper_cons.bl",
-  "places": 23,
+  "places": 32,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{h_d}V]",
+   "cntn_to_dcsn.evaluate[D_{w_d}V]",
    "cntn_to_dcsn.marginal_cash",
    "cntn_to_dcsn.marginal_housing",
    "cntn_to_dcsn.marginal_housing.D",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -419,44 +448,48 @@
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.port.bl"
+   "applications/durables/declaration/stages/port/methods.bl"
   ],
   "stage": "applications/durables/declaration/stages/port/port.bl",
-  "places": 20,
-  "created": [
-   "cntn_to_dcsn.evaluate.marginal",
-   "cntn_to_dcsn.marginal",
-   "cntn_to_dcsn.marginal.D",
-   "cntn_to_dcsn.marginal.E_Ψ_θ"
-  ],
-  "from_message": false
- },
- {
-  "study": "durables",
-  "additions": [
-   "packages/bellman/tests/additions/durables/methods.Port2.bl"
-  ],
-  "stage": "applications/durables/declaration/stages/Port2/Port2.bl",
-  "places": 20,
-  "created": [
-   "cntn_to_dcsn.evaluate.marginal",
-   "cntn_to_dcsn.marginal",
-   "cntn_to_dcsn.marginal.D",
-   "cntn_to_dcsn.marginal.E_Ψ_θ"
-  ],
-  "from_message": false
- },
- {
-  "study": "durables",
-  "additions": [
-   "packages/bellman/tests/additions/durables/methods.retiree_saving.bl"
-  ],
-  "stage": "applications/durables/declaration/stages/retiree_saving/retiree_saving.bl",
   "places": 27,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{k_d}V]",
    "cntn_to_dcsn.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "cntn_to_dcsn.marginal.D",
+   "cntn_to_dcsn.marginal.E_Ψ_θ"
+  ],
+  "from_message": false
+ },
+ {
+  "study": "durables",
+  "additions": [
+   "applications/durables/declaration/stages/Port2/methods.bl"
+  ],
+  "stage": "applications/durables/declaration/stages/Port2/Port2.bl",
+  "places": 27,
+  "created": [
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{k_d}V]",
+   "cntn_to_dcsn.marginal",
+   "cntn_to_dcsn.marginal.D",
+   "cntn_to_dcsn.marginal.E_Ψ_θ"
+  ],
+  "from_message": false
+ },
+ {
+  "study": "durables",
+  "additions": [
+   "applications/durables/declaration/stages/retiree_saving/methods.bl"
+  ],
+  "stage": "applications/durables/declaration/stages/retiree_saving/retiree_saving.bl",
+  "places": 33,
+  "created": [
+   "cntn_to_dcsn.evaluate[D_{m_r}V]",
+   "cntn_to_dcsn.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{y_f_r}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{y_p_r}V[<]]",
    "dcsn_to_arvl.marginal_financial",
    "dcsn_to_arvl.marginal_financial.D",
    "dcsn_to_arvl.marginal_pension",
@@ -467,29 +500,31 @@
  {
   "study": "durables",
   "additions": [
-   "packages/bellman/tests/additions/durables/methods.tenure.bl"
+   "applications/durables/declaration/stages/tenure/methods.bl"
   ],
   "stage": "applications/durables/declaration/stages/tenure/tenure.bl",
-  "places": 25,
+  "places": 33,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{a_d}V]",
+   "cntn_to_dcsn.evaluate[D_{h_d}V]",
    "cntn_to_dcsn.marginal_assets",
    "cntn_to_dcsn.marginal_assets.D",
    "cntn_to_dcsn.marginal_housing",
    "cntn_to_dcsn.marginal_housing.D"
   ],
-  "from_message": true
+  "from_message": false
  },
  {
   "study": "epstein-zin-savings",
   "additions": [
-   "packages/bellman/tests/additions/epstein-zin-savings/methods.bl"
+   "applications/epstein-zin-savings/declaration/stages/ez_savings/methods.bl"
   ],
   "stage": "applications/epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl",
-  "places": 16,
+  "places": 21,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m_d}V]",
    "cntn_to_dcsn.marginal"
   ],
   "from_message": false
@@ -497,12 +532,12 @@
  {
   "study": "housing-frictions",
   "additions": [
-   "packages/bellman/tests/additions/housing-frictions/methods.adjuster_saving.bl"
+   "applications/housing-frictions/declaration/stages/adjuster_saving/methods.bl"
   ],
   "stage": "applications/housing-frictions/declaration/stages/adjuster_saving/adjuster_saving.bl",
-  "places": 21,
+  "places": 25,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
    "cntn_to_dcsn.marginal_resources"
   ],
   "from_message": false
@@ -510,18 +545,22 @@
  {
   "study": "housing-frictions",
   "additions": [
-   "packages/bellman/tests/additions/housing-frictions/methods.house_choice.bl"
+   "applications/housing-frictions/declaration/stages/house_choice/methods.bl"
   ],
   "stage": "applications/housing-frictions/declaration/stages/house_choice/house_choice.bl",
-  "places": 33,
+  "places": 42,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{m_f}V]",
+   "cntn_to_dcsn.evaluate[D_{m_h}V]",
    "cntn_to_dcsn.marginal_financial",
    "cntn_to_dcsn.marginal_financial.D",
    "cntn_to_dcsn.marginal_housing",
    "cntn_to_dcsn.marginal_housing.D",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{y_f}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{y_h}V[<]]",
    "dcsn_to_arvl.marginal_financial",
    "dcsn_to_arvl.marginal_financial.D",
    "dcsn_to_arvl.marginal_financial.E_η",
@@ -529,17 +568,19 @@
    "dcsn_to_arvl.marginal_housing.D",
    "dcsn_to_arvl.marginal_housing.E_η"
   ],
-  "from_message": true
+  "from_message": false
  },
  {
   "study": "housing-frictions",
   "additions": [
-   "packages/bellman/tests/additions/housing-frictions/methods.keeper_saving.bl"
+   "applications/housing-frictions/declaration/stages/keeper_saving/methods.bl"
   ],
   "stage": "applications/housing-frictions/declaration/stages/keeper_saving/keeper_saving.bl",
-  "places": 20,
+  "places": 25,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{h_d}V]",
+   "cntn_to_dcsn.evaluate[D_{m_d}V]",
    "cntn_to_dcsn.marginal_cash",
    "cntn_to_dcsn.marginal_housing",
    "cntn_to_dcsn.marginal_housing.D"
@@ -549,12 +590,13 @@
  {
   "study": "housing-frictions",
   "additions": [
-   "packages/bellman/tests/additions/housing-frictions/methods.terminal.bl"
+   "applications/housing-frictions/declaration/stages/terminal/methods.bl"
   ],
   "stage": "applications/housing-frictions/declaration/stages/terminal/terminal.bl",
-  "places": 12,
+  "places": 15,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{y_f_d}V]",
+   "cntn_to_dcsn.evaluate[D_{y_h_d}V]",
    "cntn_to_dcsn.marginal_financial",
    "cntn_to_dcsn.marginal_housing"
   ],
@@ -563,14 +605,15 @@
  {
   "study": "housing-renting",
   "additions": [
-   "packages/bellman/tests/additions/housing-renting/methods.owner_cons.bl"
+   "applications/housing-renting/declaration/stages/owner_cons/methods.bl"
   ],
   "stage": "applications/housing-renting/declaration/stages/owner_cons/owner_cons.bl",
-  "places": 18,
+  "places": 25,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{w_d}V]",
    "cntn_to_dcsn.marginal",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -581,12 +624,12 @@
  {
   "study": "housing-renting",
   "additions": [
-   "packages/bellman/tests/additions/housing-renting/methods.owner_cons.vfi.bl"
+   "applications/housing-renting/declaration/stages/owner_cons/methods.vfi.bl"
   ],
   "stage": "applications/housing-renting/declaration/stages/owner_cons/owner_cons.bl",
-  "places": 16,
+  "places": 19,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{w_d}V]",
    "cntn_to_dcsn.marginal"
   ],
   "from_message": false
@@ -594,14 +637,15 @@
  {
   "study": "housing-renting",
   "additions": [
-   "packages/bellman/tests/additions/housing-renting/methods.renter_cons.bl"
+   "applications/housing-renting/declaration/stages/renter_cons/methods.bl"
   ],
   "stage": "applications/housing-renting/declaration/stages/renter_cons/renter_cons.bl",
-  "places": 19,
+  "places": 26,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{w_d}V]",
    "cntn_to_dcsn.marginal",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -612,51 +656,57 @@
  {
   "study": "housing-renting",
   "additions": [
-   "packages/bellman/tests/additions/housing-renting/methods.tenure_choice.bl"
+   "applications/housing-renting/declaration/stages/tenure_choice/methods.bl"
   ],
   "stage": "applications/housing-renting/declaration/stages/tenure_choice/tenure_choice.bl",
-  "places": 20,
+  "places": 28,
   "created": [
    "D",
+   "cntn_to_dcsn.D",
    "cntn_to_dcsn.choice_marginal",
    "cntn_to_dcsn.choice_marginal.D",
-   "cntn_to_dcsn.evaluate.marginal"
+   "cntn_to_dcsn.evaluate[D_{a_d}V]"
   ],
-  "from_message": true
+  "from_message": false
  },
  {
   "study": "pension-retirement",
   "additions": [
-   "packages/bellman/tests/additions/pension-retirement/methods.retire_choice.bl"
+   "applications/pension-retirement/declaration/stages/retire_choice/methods.bl"
   ],
   "stage": "applications/pension-retirement/declaration/stages/retire_choice/retire_choice.bl",
-  "places": 19,
+  "places": 24,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{y_f_d}V]",
+   "cntn_to_dcsn.evaluate[D_{y_p_d}V]",
    "cntn_to_dcsn.marginal_financial",
    "cntn_to_dcsn.marginal_financial.D",
    "cntn_to_dcsn.marginal_pension",
    "cntn_to_dcsn.marginal_pension.D"
   ],
-  "from_message": true
+  "from_message": false
  },
  {
   "study": "pension-retirement",
   "additions": [
-   "packages/bellman/tests/additions/pension-retirement/methods.retiree_saving.bl"
+   "applications/pension-retirement/declaration/stages/retiree_saving/methods.bl"
   ],
   "stage": "applications/pension-retirement/declaration/stages/retiree_saving/retiree_saving.bl",
-  "places": 26,
+  "places": 36,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m_r}V]",
    "cntn_to_dcsn.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{y_f_r}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{y_p_r}V[<]]",
    "dcsn_to_arvl.marginal_financial",
    "dcsn_to_arvl.marginal_financial.D",
    "dcsn_to_arvl.marginal_pension",
    "dcsn_to_arvl.marginal_pension.D",
+   "policy.D",
    "policy.euler_financial",
    "policy.euler_financial.D"
   ],
@@ -665,12 +715,13 @@
  {
   "study": "pension-retirement",
   "additions": [
-   "packages/bellman/tests/additions/pension-retirement/methods.terminal.bl"
+   "applications/pension-retirement/declaration/stages/terminal/methods.bl"
   ],
   "stage": "applications/pension-retirement/declaration/stages/terminal/terminal.bl",
-  "places": 12,
+  "places": 15,
   "created": [
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.evaluate[D_{y_f_T}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{y_p_T}V[<]]",
    "dcsn_to_arvl.marginal_financial",
    "dcsn_to_arvl.marginal_pension"
   ],
@@ -679,23 +730,28 @@
  {
   "study": "pension-retirement",
   "additions": [
-   "packages/bellman/tests/additions/pension-retirement/methods.worker_saving.bl"
+   "applications/pension-retirement/declaration/stages/worker_saving/methods.bl"
   ],
   "stage": "applications/pension-retirement/declaration/stages/worker_saving/worker_saving.bl",
-  "places": 39,
+  "places": 53,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{m_f}V]",
+   "cntn_to_dcsn.evaluate[D_{m_p}V]",
    "cntn_to_dcsn.marginal_financial",
    "cntn_to_dcsn.marginal_pension",
    "cntn_to_dcsn.marginal_pension.D",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{y_f_w}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{y_p_w}V[<]]",
    "dcsn_to_arvl.marginal_financial",
    "dcsn_to_arvl.marginal_financial.D",
    "dcsn_to_arvl.marginal_financial.E_w",
    "dcsn_to_arvl.marginal_pension",
    "dcsn_to_arvl.marginal_pension.D",
    "dcsn_to_arvl.marginal_pension.E_w",
+   "policy.D",
    "policy.euler_financial",
    "policy.euler_financial.D",
    "policy.euler_pension",
@@ -706,12 +762,13 @@
  {
   "study": "portfolio-choice",
   "additions": [
-   "packages/bellman/tests/additions/portfolio-choice/methods.cons.bl"
+   "applications/portfolio-choice/declaration/stages/cons/methods.bl"
   ],
   "stage": "applications/portfolio-choice/declaration/stages/cons/cons.bl",
-  "places": 21,
+  "places": 29,
   "created": [
    "D",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.grid",
@@ -723,42 +780,42 @@
  {
   "study": "portfolio-choice",
   "additions": [
-   "packages/bellman/tests/additions/portfolio-choice/methods.disc.bl"
+   "applications/portfolio-choice/declaration/stages/disc/methods.bl"
   ],
   "stage": "applications/portfolio-choice/declaration/stages/disc/disc.bl",
-  "places": 8,
+  "places": 10,
   "created": [],
   "from_message": false
  },
  {
   "study": "portfolio-choice",
   "additions": [
-   "packages/bellman/tests/additions/portfolio-choice/methods.noport.bl"
+   "applications/portfolio-choice/declaration/stages/noport/methods.bl"
   ],
   "stage": "applications/portfolio-choice/declaration/stages/noport/noport.bl",
-  "places": 15,
+  "places": 19,
   "created": [],
   "from_message": false
  },
  {
   "study": "portfolio-choice",
   "additions": [
-   "packages/bellman/tests/additions/portfolio-choice/methods.port.bl"
+   "applications/portfolio-choice/declaration/stages/port/methods.bl"
   ],
   "stage": "applications/portfolio-choice/declaration/stages/port/port.bl",
-  "places": 24,
+  "places": 32,
   "created": [],
   "from_message": false
  },
  {
   "study": "retirement-choice",
   "additions": [
-   "packages/bellman/tests/additions/retirement-choice/methods.bequest.bl"
+   "applications/retirement-choice/declaration/stages/bequest/methods.bl"
   ],
   "stage": "applications/retirement-choice/declaration/stages/bequest/bequest.bl",
-  "places": 10,
+  "places": 12,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{x}V]",
    "cntn_to_dcsn.marginal_wealth"
   ],
   "from_message": false
@@ -766,32 +823,35 @@
  {
   "study": "retirement-choice",
   "additions": [
-   "packages/bellman/tests/additions/retirement-choice/methods.ret_choice.bl"
+   "applications/retirement-choice/declaration/stages/ret_choice/methods.bl"
   ],
   "stage": "applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl",
-  "places": 18,
+  "places": 23,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{a_d}V]",
    "cntn_to_dcsn.marginal",
    "cntn_to_dcsn.marginal.D"
   ],
-  "from_message": true
+  "from_message": false
  },
  {
   "study": "retirement-choice",
   "additions": [
-   "packages/bellman/tests/additions/retirement-choice/methods.retiree_cons.bl"
+   "applications/retirement-choice/declaration/stages/retiree_cons/methods.bl"
   ],
   "stage": "applications/retirement-choice/declaration/stages/retiree_cons/retiree_cons.bl",
-  "places": 26,
+  "places": 35,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{w_ret}V]",
    "cntn_to_dcsn.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{a_ret}V[<]]",
    "dcsn_to_arvl.marginal",
    "dcsn_to_arvl.marginal.D",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -802,23 +862,26 @@
  {
   "study": "retirement-choice",
   "additions": [
-   "packages/bellman/tests/additions/retirement-choice/methods.worker_cons.bl"
+   "applications/retirement-choice/declaration/stages/worker_cons/methods.bl"
   ],
   "stage": "applications/retirement-choice/declaration/stages/worker_cons/worker_cons.bl",
-  "places": 29,
+  "places": 39,
   "created": [
    "D",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{w}V]",
    "cntn_to_dcsn.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{a_w}V[<]]",
    "dcsn_to_arvl.marginal",
    "dcsn_to_arvl.marginal.D",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cand_value",
    "policy.endoggrid",
    "policy.envelope",
    "policy.envelope.upper_env",
+   "policy.upper_env",
    "upper_env"
   ],
   "from_message": false
@@ -826,12 +889,12 @@
  {
   "study": "smooth-ambiguity-savings",
   "additions": [
-   "packages/bellman/tests/additions/smooth-ambiguity-savings/methods.bl"
+   "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/methods.bl"
   ],
   "stage": "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl",
-  "places": 21,
+  "places": 30,
   "created": [
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m_d}V]",
    "cntn_to_dcsn.marginal"
   ],
   "from_message": false
@@ -843,15 +906,19 @@
    "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/additions/egm.bl"
   ],
   "stage": "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/stage/buffer_stock.bl",
-  "places": 36,
+  "places": 49,
   "created": [
    "D",
    "arvl_to_dcsn.pension_balance",
+   "cntn_to_dcsn.D",
    "cntn_to_dcsn.envelope_pension",
    "cntn_to_dcsn.envelope_pension.D",
    "cntn_to_dcsn.envelope_resources",
-   "cntn_to_dcsn.evaluate.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
+   "cntn_to_dcsn.evaluate[D_{p_d}V]",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{k}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{p}V[<]]",
    "dcsn_to_arvl.marginal_assets",
    "dcsn_to_arvl.marginal_assets.D",
    "dcsn_to_arvl.marginal_assets.E_ψ_ξ",
@@ -859,6 +926,7 @@
    "dcsn_to_arvl.marginal_pension.D",
    "dcsn_to_arvl.marginal_pension.E_ψ_ξ",
    "dcsn_to_cntn.pension_carried",
+   "policy.D",
    "policy.InvEuler",
    "policy.InvEuler.D",
    "policy.cons_choice",
@@ -873,15 +941,19 @@
    "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/additions/vfi.bl"
   ],
   "stage": "packages/bellman/tests/additions/new-applications/A-buffer-stock-pension/stage/buffer_stock.bl",
-  "places": 35,
+  "places": 44,
   "created": [
    "D",
    "arvl_to_dcsn.pension_balance",
+   "cntn_to_dcsn.D",
    "cntn_to_dcsn.envelope_pension",
    "cntn_to_dcsn.envelope_pension.D",
    "cntn_to_dcsn.envelope_resources",
-   "cntn_to_dcsn.evaluate.marginal",
-   "dcsn_to_arvl.evaluate.marginal",
+   "cntn_to_dcsn.evaluate[D_{m}V]",
+   "cntn_to_dcsn.evaluate[D_{p_d}V]",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate[D_{k}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{p}V[<]]",
    "dcsn_to_arvl.marginal_assets",
    "dcsn_to_arvl.marginal_assets.D",
    "dcsn_to_arvl.marginal_assets.E_ψ_ξ",
@@ -898,28 +970,35 @@
    "packages/bellman/tests/additions/new-applications/B-retirement-choice-pension/additions/pension_choice.bl"
   ],
   "stage": "packages/bellman/tests/additions/new-applications/B-retirement-choice-pension/stage/choice.bl",
-  "places": 28,
+  "places": 38,
   "created": [
    "D",
    "arvl_to_dcsn",
    "arvl_to_dcsn.assets",
    "arvl_to_dcsn.pension",
-   "cntn_to_dcsn.evaluate.marginal",
+   "cntn_to_dcsn.D",
+   "cntn_to_dcsn.evaluate[D_{a_d}V]",
+   "cntn_to_dcsn.evaluate[D_{p_d}V]",
    "cntn_to_dcsn.marginal_assets",
    "cntn_to_dcsn.marginal_assets.D",
    "cntn_to_dcsn.marginal_pension",
    "cntn_to_dcsn.marginal_pension.D",
    "dcsn_to_arvl",
-   "dcsn_to_arvl.evaluate.marginal",
-   "dcsn_to_arvl.evaluate.value",
+   "dcsn_to_arvl.D",
+   "dcsn_to_arvl.evaluate",
+   "dcsn_to_arvl.evaluate[D_{a}V[<]]",
+   "dcsn_to_arvl.evaluate[D_{p}V[<]]",
+   "dcsn_to_arvl.evaluate[V[<]]",
    "dcsn_to_arvl.marginal_assets",
    "dcsn_to_arvl.marginal_assets.D",
    "dcsn_to_arvl.marginal_pension",
    "dcsn_to_arvl.marginal_pension.D",
    "dcsn_to_arvl.survival_value",
    "dcsn_to_cntn.retire.pension_if_retiring",
-   "dcsn_to_cntn.work.pension_if_working"
+   "dcsn_to_cntn.work.pension_if_working",
+   "𝑏",
+   "𝑑𝑏"
   ],
-  "from_message": true
+  "from_message": false
  }
 ]

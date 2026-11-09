@@ -17,7 +17,6 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from bellman.display import sheets
-from bellman.native.records import bound_at
 from bellman.refusals import Diagnostic
 from bellman.syntax import terms as T
 from bellman.syntax.layout import LABEL_COLUMN
@@ -131,27 +130,16 @@ class Diagnostics(_PrintedMapping):
 
 
 class Methods(_PrintedMapping):
-    """The read-only mapping from targets to bound method records, empty
-    before methodization. Each printed entry names the target and its method;
-    a piece answers only the bindings within it.
+    """The read-only mapping from places to the components typed at them,
+    empty where no signature carries a component. Each printed entry names
+    the place and its components, the method word with its arguments, the
+    grid and the handler; a piece answers only the places within it.
 
     See `docs/Bellman-Sym/API/stage/07-methods.md` §2."""
 
     def _lines(self):
-        width = max(len(str(bound_at(name))) for name in self._entries) + 3
-        return _method_entries(self._entries, width)
-
-
-def _method_entries(bound, width):
-    """One line per entry: the address it is bound at and the method bound
-    there, or the words for an entry that names a handler and no method, and
-    the block file the entry names where it names one."""
-    return [
-        f"{bound_at(name)!s:<{width}}"
-        + (f"!{method.tag}" if method.tag else "handler only")
-        + (f"   block {method.block}" if method.block else "")
-        for name, method in bound.items()
-    ]
+        width = max(len(str(place)) for place in self._entries) + 3
+        return [f"{place!s:<{width}}{held}" for place, held in self._entries.items()]
 
 
 # --- the tables, the listings and the conditions ---
@@ -336,24 +324,53 @@ SIDE_WORDS = {"in": "in", "out": "out"}
 
 
 class Signature(tuple):
-    """The typed inputs and outputs of a piece, as two tuples of wires.
-    Each wire unpacks as identity and type. The display writes value bundles
-    as bundles and omits empty parts. A decision builder's signature is that
-    of its operator at a policy; its free policy is typed at the policy
-    builder's output. The same record is returned at each level.
+    """The immutable typed inputs and outputs of a piece, as two tuples of
+    wires, with the components typed at the piece after them, `components`,
+    the pairs of a place's address and its `Components`. Each wire unpacks as
+    identity and type. The display writes value bundles as bundles, omits
+    empty parts, and after the field component prints each method, grid and
+    handler on a line of its own,
+    with the object it is typed for where the place names one,
+    `method   !Linear  [V[<]]`. A decision builder's signature is that of its
+    operator at a policy; its free policy is typed at the policy builder's
+    output. The same record is returned at each level. Equality and hashing
+    compare the typed components as well as the wires; unpacking returns the
+    two wire tuples alone.
 
     See `docs/Bellman-Sym/API/stage/04-builder.md` §1."""
 
-    def __new__(cls, inputs=(), outputs=()):
+    def __new__(cls, inputs=(), outputs=(), components=()):
         made = super().__new__(cls, (tuple(inputs), tuple(outputs)))
+        object.__setattr__(made, "components", tuple(components))
         return made
+
+    def __setattr__(self, name, value):
+        raise AttributeError("a signature answer is immutable")
+
+    def __delattr__(self, name):
+        raise AttributeError("a signature answer is immutable")
+
+    def __eq__(self, other):
+        if isinstance(other, Signature):
+            return tuple.__eq__(self, other) and self.components == other.components
+        return False if isinstance(other, tuple) else NotImplemented
+
+    def __ne__(self, other):
+        equal = self.__eq__(other)
+        return NotImplemented if equal is NotImplemented else not equal
+
+    def __hash__(self):
+        return hash((tuple(self), self.components))
 
     inputs = property(lambda self: self[0])
     outputs = property(lambda self: self[1])
     # each printed line as its word and its typed wire, so that a sheet setting
     # the signature in two columns takes the two parts rather than cutting the
     # line at its first space
-    entries = property(lambda self: tuple(_wire_entries(self.inputs, self.outputs)))
+    entries = property(
+        lambda self: tuple(_wire_entries(self.inputs, self.outputs))
+        + tuple(component_entries(self.components))
+    )
 
     def __str__(self):
         return "\n".join(signature_lines(self.entries))
@@ -371,6 +388,24 @@ def _wire_entries(inputs, outputs):
         for group in wires_by_value_bundle(wires)
         for line in _bundle_lines(group)
     ]
+
+
+def component_entries(components):
+    """The printed entries of the components typed at a piece, after its
+    wires: for each place, as `(address, Components)` pairs, its method, its
+    grid and its handler where typed, each as the word of the component and
+    its text, the object the place names after it in brackets where the
+    place is one object of an Evaluation, `dcsn_to_arvl.evaluate[V[<]]`."""
+    entries = []
+    for address, held in components:
+        suffix = "  " + address[address.index("[") :] if "[" in address else ""
+        if held.method is not None:
+            entries.append(("method", sheets.SetsLine(to_source(T.Method(held.method)) + suffix)))
+        if held.grid is not None:
+            entries.append(("grid", sheets.SetsLine(to_source(T.Grid(held.grid)) + suffix)))
+        if held.handler is not None:
+            entries.append(("handler", sheets.SetsLine(f'"{held.handler}"' + suffix)))
+    return entries
 
 
 def _bundle_lines(group):

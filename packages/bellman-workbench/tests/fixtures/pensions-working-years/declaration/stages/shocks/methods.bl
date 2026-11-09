@@ -1,0 +1,18 @@
+@methods: shocks
+# Numerical choices for shocks.bl. The one expectation integrates the five
+# draws of the period by Gauss-Hermite quadrature with the node counts
+# declared here: the paper takes a five-state chain for the wage (Kopecky
+# and Suen 2010), two points for the return shock and three for the price
+# shock (Appendix D.1). Forward, the households are drawn by Monte Carlo.
+
+n_u_nodes : ℕ        :: ["quadrature nodes of the wage innovation"]
+n_ε_d_nodes : ℕ      :: ["quadrature nodes of the pension-return shock"]
+n_ε_h_nodes : ℕ      :: ["quadrature nodes of the housing-return shock"]
+n_α_nodes : ℕ        :: ["points of the housing taste"]
+n_β_nodes : ℕ        :: ["points of the discount factor"]
+n_paths : ℕ          :: ["number of simulated households"]
+seed : ℕ             :: ["seed of the simulation"]
+
+dcsn_to_arvl.E_u_ε_d_ε_h_α_β.method : !gauss_hermite(n_u=n_u_nodes, n_ε_d=n_ε_d_nodes, n_ε_h=n_ε_h_nodes, n_α=n_α_nodes, n_β=n_β_nodes)
+arvl_to_dcsn.method : !monte_carlo(n_paths=n_paths, seed=seed)
+dcsn_to_cntn.method : !deterministic

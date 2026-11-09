@@ -18,7 +18,7 @@ readers of `test_continuous_distributions.py`.
 Not checked here: the comparator's quadrature of the family, which
 `packages/meaning-map-training/tests/test_stage_compare.py` compares; the
 documents; and the corpus stages' recordings, whose one named difference,
-the renamed condition, `test_snapshot.py` and `sym/test_corpus.py` compare.
+the renamed condition, `test_snapshot.py` and `test_snapshot.py` compare.
 """
 
 import json

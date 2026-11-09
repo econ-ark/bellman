@@ -1,0 +1,12 @@
+# The numerical settings of the adjuster's saving stage: the grid of total
+# resources m on which time iteration solves the two Euler relations and the
+# decision value and its derivative are represented, as
+# stages/adjuster_saving/methods.bl declares it. The values are placeholders
+# inside the declared sets, written so that the stage configures; the paper
+# states no grid, and AAS has not yet supplied one. They are those of
+# settings/keeper_saving.yml, since a setting two stages of a period declare is
+# one setting of the period.
+settings:
+  n_m: 50
+  m_min: 0.1
+  m_max: 50.0

@@ -6,6 +6,7 @@ settings:
   a_min: 0.0      # lowest point of the asset grid, the borrowing limit a' >= 0 of equation (6)
   a_max: null     # highest point, "chosen so that it is not binding for the household's saving decisions"
   n_k: null       # number of points of the capital grid of the entrepreneurs
+  k_min: 0.0      # lowest point of the capital grid, the number 0 the earlier YAML methods files wrote; declared by the two entrepreneur additions
   k_max: null     # the maximum investment level, the first value of the bound k̂(x) on enforceable capital
   tol_v: null     # convergence criterion of value function iteration
   tol_k: null     # criterion for the bound k̂(x) not changing across iterations

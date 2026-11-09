@@ -2,12 +2,21 @@
 union of a stage file and its additions: one test for each of the five
 acceptance items of §U2 of the implementation specification, named
 `test_item_<n>_<claim>`. The corpus is the sixteen pre-implementation case
-studies of the specification, whose addition and refusal files stand under
-`tests/additions/` with the stage files of the two new applications;
-`tests/additions/expected.json` records, for each run the checker of the
-case studies made, the stage file, the addition files, the count of places
-the elaborated union gives and the names the addition created, read from the
-check report of the case study.
+studies of the specification: the additions of the fourteen that are
+applications stand beside their stage files under `applications/`, and
+`tests/additions/` holds each study's refusals file, the stage files and
+additions of the two new applications, and the two files of
+consumption-savings-iid whose union the application holds as its one
+addition; `tests/additions/expected.json` records, for each run the checker
+of the case studies made, the stage file, the addition files, the count of
+places the elaborated union gives and the names the addition created. The
+record was first read from the check reports of the case studies, recorded
+again from the package's listing on 5 November 2026, after unit U3b changed
+the places by design (the places per stored object of an Evaluation, the
+operator heads at block level, the Evaluation of a node line) and let
+`places()` answer on every stage, and again on 7 November 2026 from the
+applications' own files, once unit U6 had moved the additions beside the
+stage files (`implementation/tools/case_study_places.py`).
 """
 
 from __future__ import annotations
@@ -18,7 +27,6 @@ from pathlib import Path
 import pytest
 from conftest import ROOT
 
-from bellman.fold.block_lines import symbol_groups
 from bellman.refusals import ConstructionError
 from bellman.stage import elaborate_stage, load_stage
 from bellman.syntax.lower import parse_with_spans
@@ -29,19 +37,15 @@ RUNS = json.loads((ADDITIONS / "expected.json").read_text(encoding="utf-8"))
 
 
 def run_id(run):
-    return f"{run['study']}: {' + '.join(Path(a).name for a in run['additions'])}"
+    """The id of a recorded run: the case study, the stage's key and the
+    additions in the order read."""
+    additions = " + ".join(Path(addition).name for addition in run["additions"])
+    return f"{run['study']}: {Path(run['stage']).stem}: {additions}"
 
 
-def places_of(stage, from_message=False):
-    """The addresses `stage.places()` lists. For a run whose check report
-    counted the places of a refusal's message, on a branching stage whose
-    branch lines carry ids, where `places()` was refused before unit U3c, the
-    addresses without the definitions, which the message did not list."""
-    addresses = [row["address"] for row in stage.places()]
-    if not from_message:
-        return addresses
-    functions = set(symbol_groups(stage).get("functions", ()))
-    return [address for address in addresses if address not in functions]
+def places_of(stage):
+    """The addresses `stage.places()` lists."""
+    return [row["address"] for row in stage.places()]
 
 
 def application_stage(stage):
@@ -50,28 +54,16 @@ def application_stage(stage):
     return ROOT / "applications" / application / "declaration/stages" / key / name
 
 
-def stage_and_alone(run):
-    """The elaborated union of a recorded run and its stage file alone."""
-    stage = ROOT / run["stage"]
-    additions = [ROOT / addition for addition in run["additions"]]
-    return elaborate_stage(load_stage(stage, additions)), elaborate_stage(load_stage(stage))
-
-
 # --- the acceptance items ---
 
 
-@pytest.mark.parametrize("run", RUNS, ids=run_id)
-def test_item_1_every_case_study_union_elaborates_to_the_places_its_check_records(run):
-    stage, alone = stage_and_alone(run)
-    found = places_of(stage, run["from_message"])
-    before = places_of(alone, run["from_message"])
-    assert sorted(set(found) - set(before)) == sorted(run["created"])
-    if run["from_message"]:
-        # the check report counted the places of the refusal's message, which
-        # lists no definition; the count it gives is the stage's plus the
-        # addition's, so the difference is what is compared
-        assert len(found) - len(before) == len(run["created"])
-    else:
+def test_item_1_every_case_study_union_elaborates_to_the_places_its_check_records(case_study_union):
+    for run in RUNS:
+        source = ROOT / run["stage"]
+        stage = case_study_union(source, tuple(ROOT / name for name in run["additions"]))
+        alone = case_study_union(source)
+        found, before = places_of(stage), places_of(alone)
+        assert sorted(set(found) - set(before)) == sorted(run["created"])
         assert len(found) == run["places"]
 
 
@@ -172,17 +164,17 @@ A24 = [
 ]
 
 
-@pytest.mark.parametrize("case", A24, ids=lambda case: case[0])
-def test_item_2_the_refusals_of_the_sheet_fire_with_the_rule_name_and_both_positions(case):
-    study, stage, rule, words, other = case
-    with pytest.raises(ConstructionError) as refused:
-        elaborate_stage(load_stage(application_stage(stage), [ADDITIONS / study / "refusals.bl"]))
-    error = refused.value
-    assert error.rule == rule
-    assert Path(error.file).name == "refusals.bl" and error.line is not None
-    assert all(word in error.message for word in words), (words, error.message)
-    # the sentence names the earlier item's position, in its file
-    assert f"{other}:" in error.message
+def test_item_2_the_refusals_of_the_sheet_fire_with_the_rule_name_and_both_positions():
+    for case in A24:
+        study, stage, rule, words, other = case
+        with pytest.raises(ConstructionError) as refused:
+            elaborate_stage(load_stage(application_stage(stage), [ADDITIONS / study / "refusals.bl"]))
+        error = refused.value
+        assert error.rule == rule
+        assert Path(error.file).name == "refusals.bl" and error.line is not None
+        assert all(word in error.message for word in words), (words, error.message)
+        # the sentence names the earlier item's position, in its file
+        assert f"{other}:" in error.message
 
 
 # the runs whose declared level is compared with the stage alone: one stage
@@ -193,29 +185,31 @@ DECLARED = [
     for run in RUNS
     if run_id(run)
     in (
-        "buffer-stock: methods.bl",
-        "consumption-savings-iid: methods.bl + methods.additions.bl",
-        "durables: methods.tenure.bl",
-        "B-retirement-choice-pension: pension_choice.bl",
-        "cons-port: methods.cons.vfi.bl",
-        "pension-retirement: methods.worker_saving.bl",
+        "buffer-stock: buffer_stock: methods.bl",
+        "consumption-savings-iid: cons_savings_iid: methods.bl + methods.additions.bl",
+        "durables: tenure: methods.bl",
+        "B-retirement-choice-pension: choice: pension_choice.bl",
+        "cons-port: cons: methods.vfi.bl",
+        "pension-retirement: worker_saving: methods.bl",
     )
 ]
 
 
-@pytest.mark.parametrize("run", DECLARED, ids=run_id)
-def test_item_3_the_declared_level_of_a_unioned_stage_is_the_stage_file_elaborated_alone(run):
-    stage, alone = stage_and_alone(run)
-    assert str(stage.declared.list()) == str(alone.builder.list())
-    for direction in ("bwd", "fwd"):
-        assert str(getattr(stage.declared, direction).signature()) == str(
-            getattr(alone.builder, direction).signature()
-        )
-        assert str(getattr(stage.declared, direction).denote()) == str(
-            getattr(alone.builder, direction).denote()
-        )
-    assert str(stage.declared.policy.denote()) == str(alone.builder.policy.denote())
-    assert "additions" in stage.provenance and "additions" not in alone.provenance
+def test_item_3_the_declared_level_of_a_unioned_stage_is_the_stage_file_elaborated_alone(case_study_union):
+    for run in DECLARED:
+        source = ROOT / run["stage"]
+        stage = case_study_union(source, tuple(ROOT / name for name in run["additions"]))
+        alone = case_study_union(source)
+        assert str(stage.declared.list()) == str(alone.builder.list())
+        for direction in ("bwd", "fwd"):
+            assert str(getattr(stage.declared, direction).signature()) == str(
+                getattr(alone.builder, direction).signature()
+            )
+            assert str(getattr(stage.declared, direction).denote()) == str(
+                getattr(alone.builder, direction).denote()
+            )
+        assert str(stage.declared.policy.denote()) == str(alone.builder.policy.denote())
+        assert "additions" in stage.provenance and "additions" not in alone.provenance
 
 
 def test_item_4_two_additions_in_order_equal_one_file_and_a_component_typed_by_both_is_refused():
@@ -269,11 +263,9 @@ def test_item_4_two_additions_in_order_equal_one_file_and_a_component_typed_by_b
     assert "`policy.method : !vfi`" in error.message
 
 
-def test_item_5_application_b_merges_nested_blocks_by_label_and_keeps_two_added_builders_whole():
+def test_item_5_application_b_merges_nested_blocks_by_label_and_keeps_two_added_builders_whole(case_study_union):
     folder = ADDITIONS / "new-applications/B-retirement-choice-pension"
-    stage = elaborate_stage(
-        load_stage(folder / "stage/choice.bl", [folder / "additions/pension_choice.bl"])
-    )
+    stage = case_study_union(folder / "stage/choice.bl", (folder / "additions/pension_choice.bl",))
     found = places_of(stage)
     # the lines postpended inside the branches, under the stage's labels
     assert {

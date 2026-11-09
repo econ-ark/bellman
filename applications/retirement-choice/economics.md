@@ -192,14 +192,13 @@ nineteen inter-period mappings; `elaborate_trellis` places the 61 stage
 occurrences and `calibrate_trellis` calibrates all of them. The stage order
 of a period is the choice stage, then the retiree's and the worker's
 consumption stages, and in the terminal period the bequest.
-`methodize_trellis` binds each stage's methods file at every occurrence of
-the stage, and `configure_trellis` its settings. The stage files state the
-model alone: the derivatives of the values stand in one block file of
-marginal blocks for each stage, `declaration/methods/marginals_<stage>.bl`,
-and the steps of the endogenous grid method in a method block for each
-consumption stage, `declaration/methods/worker_cons_egm.bl` and
-`declaration/methods/retiree_cons_egm.bl`, which the stages' methods files
-bind.
+`elaborate_trellis` reads each stage's methods file,
+`declaration/stages/<stage>/methods.bl`, with its stage file at every
+occurrence, as an addition to it, and `configure_trellis` binds its settings.
+The stage files state the model alone: the derivative lines of the values and,
+for the two consumption stages, the steps of the endogenous grid method stand
+in the methods files, each line appended to the block of the stage it belongs
+to, and the method words, grids and handlers at the places they type.
 
 ## What the stage files do not state
 

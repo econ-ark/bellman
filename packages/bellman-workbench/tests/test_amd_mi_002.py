@@ -9,7 +9,6 @@ import re
 import sys
 import time
 
-import pytest
 from workbench_support import (
     BEQUEST,
     BUTTON_SHOWN_JS,
@@ -68,7 +67,6 @@ from workbench_support import (
     wait_until,
 )
 
-from bellman.refusals import TargetError
 from bellman.stage import admitted_methods, elaborate_text
 from bellman_workbench import model, recipe, trellis
 
@@ -530,7 +528,11 @@ def test_item_3_a_stage_from_the_tree_offers_its_positions_its_uses_and_the_reci
     its occurrence line saying that the recipe holds no occurrence of it,
     the version word `symbolic`, with one link, to `declaration/spec.yml`.
     The link makes `spec.yml` the tab's recipe and binds the file as
-    `periods[0] / tenure`, the version word `bound`, under `durables ›
+    `periods[0] / tenure`, the version word `partially bound`, since the
+    occurrence's record carries no value of tenure's `Y`, which the
+    registry's `wage_schedule.py` writes per period after `load_recipe`,
+    so the calibration verb fails and the status says so (the Workbench
+    interface review of 4 November 2026, item 3), under `durables ›
     spec.yml › tenure › periods[0]`, the stage's view kept; Alt+←
     returns to `durables › tenure.bl`."""
     open_trellis(page, server_on(durables_folder), RECIPE_FILE, minimum=10, timeout=240_000)
@@ -690,7 +692,7 @@ def test_item_3_a_stage_from_the_tree_offers_its_positions_its_uses_and_the_reci
         "the stage bound through spec.yml",
         60.0,
     )
-    stage(TENURE, "periods[0] / tenure", "durables › spec.yml › tenure › periods[0]", "bound")
+    stage(TENURE, "periods[0] / tenure", "durables › spec.yml › tenure › periods[0]", "partially bound")
     press_outside_fields(page, "Alt+ArrowLeft")
     stage(TENURE, holds_none, "durables › tenure.bl", "symbolic")
 
@@ -721,41 +723,37 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     that does not read, since the YAML scanner that finds the anchors and
     the aliases stops where the brackets nest deeper than the reader can
     follow. The
-    Settings tab lists the 39 settings of `declaration/settings/durables.yml`,
-    each with its kind and its value as the file writes it, `fues_eps_d` a
-    real written `1.0e-05`, and `400` typed for `n_a`, an integer, lands at
+    Settings tab lists the settings of `declaration/settings/durables.yml`,
+    each with the set its declaration in the addition names and its value as
+    the file writes it, `fues_eps_d`, which no addition declares, written
+    `1.0e-05`, and `400` typed for `n_a`, declared in ℕ, lands at
     line 13 of that file; a text nested deeper than the reader can follow,
     typed within quotes for the text setting `keeper_upper_envelope`, reads
     as a string and is written at line 37 in double quotes, since its plain
-    form does not read. The Methods tab lists the five methods the stage
-    binds (`stage.methods`; decision S7-W1 of specification 0.7), and offers
-    at each that an entry of `stages/tenure/methods.yml` binds the tags the
-    package admits at the entry's target, although `places()` refuses to
-    list the places of the branching stage, the tab saying no sentence and
-    `recipe.places_refusal` answering the package's sentence (unit L, Task
-    18); the block binding `!marginals`, which the entry on the decision
-    builder binds at its Evaluation beside `!Linear`, is named by that place
-    and offers none.
-    At `periods[3]/keeper_cons` the Methods tab shows the one `!Linear` that
-    the entries of the value and of its marginal bind at the decision
-    builder's Evaluation, named by that place and offering no tag;
-    `write_method` replaces the `!Linear` of `cntn_to_dcsn.evaluate.value`
-    at line 62 of `stages/keeper_cons/methods.yml` by `!pchip`, and an
-    alias typed as the tag is refused. No other byte of the copy changes,
-    and the tabs read again show each value written; the stage then binds
-    no method, since `methodize` refuses two methods at the one box that
-    the target and `cntn_to_dcsn.evaluate.marginal` reach, and the Methods
-    tab has no row.
+    form does not read. The Methods tab lists the four places the stage's
+    addition types (`stage.methods`; decision S7-W1 of specification 0.7),
+    each with the line of its entry in `stages/tenure/methods.bl`, and
+    offers at each the words the package admits at the place, the branching
+    stage's places listed as any stage's (unit L, Task 18).
+    At `periods[3]/keeper_cons` the Methods tab shows the `!Linear` its
+    addition types at the decision builder's Evaluation, with its line;
+    `write_method` replaces that word in the block's header at line 60 of
+    `stages/keeper_cons/methods.bl` by `!pchip`, the keyword arguments
+    kept, and an alias typed as the word is refused as no word of the
+    method table. No other byte of the copy changes, and the tabs read
+    again show each value written, the keeper's Evaluation bound by
+    `!pchip`; the text written for `keeper_upper_envelope`, outside the set
+    the keeper's addition declares, is refused at that binding under
+    `setting-outside-set` (decision S7-S1).
 
     In the page, on the copy as the fixture made it (the brief's rule 7;
     the amendment's §5 rules 1 and 6), `tenure.bl` opened from the tree and
     bound as `periods[3]/tenure` on the occurrence line shows the panel's
     four tabs in its bar, Fields first and shown. Parameters names the
     calibration file it writes and shows `R` `1.045`, linked to line 11 of
-    that file, and `Y` `unvalued`; Settings shows `n_a`, an integer, `300`;
-    Methods shows its five rows, four with a choice of method, and no
-    sentence, the package's refusal to list the stage's places standing
-    once in the list under the error mark (unit L, Task 18). `1.05` typed
+    that file, and `Y` `unvalued`; Settings shows `n_a`, in ℕ, `300`;
+    Methods shows its four rows, each with a choice of method, and no
+    sentence. `1.05` typed
     for `R`, with Enter, changes line 11 of the calibration file alone, and
     the tree marks the file changed; `[1, 2` typed for `y_R`, which does not
     read as YAML, is refused, the row's input marked and the sentence
@@ -779,8 +777,8 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     folder = model.open_folder(scratch_durables)
     calibration = "declaration/calibration/durables.yml"
     settings = "declaration/settings/durables.yml"
-    tenure_methods = "declaration/stages/tenure/methods.yml"
-    keeper_methods = "declaration/stages/keeper_cons/methods.yml"
+    tenure_methods = "declaration/stages/tenure/methods.bl"
+    keeper_methods = "declaration/stages/keeper_cons/methods.bl"
     before = {
         path: (scratch_durables / path).read_bytes()
         for path in (calibration, settings, keeper_methods)
@@ -864,15 +862,24 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     assert (refused.saved, refused.reason) == (False, f"{bracketed} does not read as YAML")
     assert (scratch_durables / calibration).read_text(encoding="utf-8") == written.text
 
-    tab = recipe.settings_tab(folder, tenure.record, "tenure")
-    assert (tab.file, tab.sentence, len(tab.rows)) == (settings, None, 39)
-    assert tab.rows[0] == recipe.SettingRow(
-        "n_a", "integer", "300", recipe.Place(settings, "settings.n_a", 13)
+    tab = recipe.settings_tab(folder, tenure.stage, tenure.record, "tenure")
+    assert (tab.file, tab.sentence) == (settings, None)
+    # the settings the addition declares come first, in its order, each with
+    # its declared set (decision S7-W4), the tie's branch before the grids;
+    # the names the file values that no addition declares follow, with no set
+    assert tab.rows[:2] == (
+        recipe.ValueRow(
+            "tie_break",
+            "{keep, adjust}",
+            "adjust",
+            recipe.Place(settings, "settings.tie_break", 76),
+        ),
+        recipe.ValueRow("n_a", "ℕ", "300", recipe.Place(settings, "settings.n_a", 13)),
     )
     # a row shows a value as the file writes it, which reads back as that value
     eps_d = next(row for row in tab.rows if row.name == "fues_eps_d")
-    assert eps_d == recipe.SettingRow(
-        "fues_eps_d", "real", "1.0e-05", recipe.Place(settings, "settings.fues_eps_d", 41)
+    assert eps_d == recipe.ValueRow(
+        "fues_eps_d", "", "1.0e-05", recipe.Place(settings, "settings.fues_eps_d", 41)
     )
     written = recipe.write_value(folder, tenure.record, "tenure", "settings", "n_a", "300", "400")
     assert written.saved
@@ -898,53 +905,49 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     methods = recipe.methods_tab(folder, tenure.stage, tenure.record, "tenure")
     assert (methods.file, methods.sentence) == (tenure_methods, None)
     assert [(row.target, row.tag, row.bound, row.place) for row in methods.rows] == [
-        ("E_ε", "!tauchen", "!tauchen", recipe.Place(tenure_methods, "methods[3].method", 47)),
-        ("cntn_to_dcsn:Evaluation", "!marginals", "!marginals", None),
-        ("policy", "!max", "!max", recipe.Place(tenure_methods, "methods[0].method", 13)),
-        (
-            "cntn_to_dcsn.evaluate.value",
-            "!Linear",
-            "!Linear",
-            recipe.Place(tenure_methods, "methods[2].method", 32),
-        ),
         (
             "arvl_to_dcsn",
-            "!monte-carlo",
-            "!monte-carlo",
-            recipe.Place(tenure_methods, "methods[4].method", 57),
+            "!monte_carlo",
+            "!monte_carlo",
+            recipe.Place(tenure_methods, "arvl_to_dcsn.method", 47),
         ),
+        (
+            "cntn_to_dcsn.evaluate[V]",
+            "!Linear",
+            "!Linear",
+            recipe.Place(tenure_methods, "cntn_to_dcsn.evaluate[V].method", 38),
+        ),
+        (
+            "dcsn_to_arvl.value.E_ε",
+            "!tauchen",
+            "!tauchen",
+            recipe.Place(tenure_methods, "dcsn_to_arvl.value.E_ε.method", 45),
+        ),
+        ("policy", "!max", "!max", recipe.Place(tenure_methods, "policy.method", 34)),
     ]
-    # each row offers the tags the package admits at its target, although
-    # `places()` refuses to list the places of the branching stage (unit L,
-    # Task 18; the issue `places-refuses-the-branching-tenure-stage.md`)
-    unlisted = "'dcsn_to_cntn.keep.cash_on_hand' in stage 'tenure' names no line"
-    with pytest.raises(TargetError, match=re.escape(unlisted)) as raised:
-        tenure.stage.places()
-    # the sentence the page lists under the error mark
-    refused_places = str(raised.value)
-    assert recipe.places_refusal(tenure.stage) == refused_places
+    # each row offers the words the package admits at its place, the
+    # branching stage's places listed as any stage's (unit L, Task 18)
+    assert recipe.places_refusal(tenure.stage) is None
     for row in methods.rows:
-        offered = admitted_methods(tenure.stage, row.target) if row.place else ()
-        assert row.choices == offered
+        assert row.choices == admitted_methods(tenure.stage, row.target)
 
     keeper = bound(KEEPER_CONS, "keeper_cons")
     methods = recipe.methods_tab(folder, keeper.stage, keeper.record, "keeper_cons")
     assert (methods.file, methods.sentence) == (keeper_methods, None)
-    assert recipe.MethodRow(
-        "cntn_to_dcsn:Evaluation", "!Linear", "!Linear", (), None
-    ) in methods.rows
+    evaluate = recipe.Place(keeper_methods, "cntn_to_dcsn.evaluate.method", 60)
+    assert [(row.target, row.tag, row.place) for row in methods.rows] == [
+        ("cntn_to_dcsn.evaluate", "!Linear", evaluate),
+        ("policy", "!egm", recipe.Place(keeper_methods, "policy.method", 44)),
+    ]
     refused = recipe.write_method(
-        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.evaluate.value", "!Linear", "*pchip"
+        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.evaluate", "!Linear", "*pchip"
     )
-    assert (refused.saved, refused.reason) == (
-        False,
-        "*pchip writes an alias, which a typed value may not",
-    )
+    assert (refused.saved, refused.reason) == (False, "*pchip is no word of the method table")
     written = recipe.write_method(
-        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.evaluate.value", "!Linear", "!pchip"
+        folder, keeper.record, "keeper_cons", "cntn_to_dcsn.evaluate", "!Linear", "!pchip"
     )
     assert written.saved
-    lines[keeper_methods][61] = "    method: !pchip"
+    lines[keeper_methods][59] = lines[keeper_methods][59].replace("!Linear(", "!pchip(", 1)
     assert written.text == "\n".join(lines[keeper_methods])
 
     # no other file of the copy changed, and no file was added
@@ -963,15 +966,16 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
         "R": ("1.05", recipe.Place(calibration, "calibration.R", 11)),
         "Y": ("1.0", recipe.Place(calibration, "calibration.Y", 39)),
     }
-    assert recipe.settings_tab(folder, tenure.record, "tenure").rows[0].value == "400"
+    settings_rows = recipe.settings_tab(folder, tenure.stage, tenure.record, "tenure").rows
+    assert settings_rows[1].value == "400"
     keeper = bound(KEEPER_CONS, "keeper_cons")
     rows = recipe.methods_tab(folder, keeper.stage, keeper.record, "keeper_cons").rows
-    # `cntn_to_dcsn.evaluate.value` and `cntn_to_dcsn.evaluate.marginal`
-    # reach one box, which holds one method, so that `methodize` now refuses
-    # the stage (AMD-SG-006 §4, rule 9) and the stage binds no method
-    assert rows == ()
-    conflict = "'cntn_to_dcsn.evaluate.value' and 'cntn_to_dcsn.evaluate.marginal' conflict"
-    assert any(conflict in note for note in keeper.notes)
+    assert [(row.target, row.tag) for row in rows][0] == ("cntn_to_dcsn.evaluate", "!pchip")
+    # the text written for `keeper_upper_envelope` lies outside the set the
+    # keeper's addition declares, so the package refuses it at this binding
+    # (decision S7-S1)
+    (note,) = keeper.notes
+    assert "setting-outside-set" in note and "keeper_upper_envelope" in note
 
     # the copy as the fixture made it, for the steps that follow
     for path, data in before.items():
@@ -1022,20 +1026,13 @@ def test_item_4_the_bellmantype_tabs_show_and_write_the_values_and_methods_of_th
     chosen("Settings")
     assert page.locator(".bl-values-file").text_content() == f"writes {settings}"
     assert value("n_a") == "300"
-    kind = page.locator('.bl-values-row[data-name="n_a"] .bl-values-detail')
-    assert kind.text_content() == "integer"
+    declared = page.locator('.bl-values-row[data-name="n_a"] .bl-values-detail')
+    assert declared.text_content() == "ℕ"
     chosen("Methods")
     assert page.locator(".bl-values-file").text_content() == f"writes {tenure_methods}"
     assert page.locator(".bl-values-sentence").count() == 0
-    assert page.locator(".bl-values-row").count() == 5
+    assert page.locator(".bl-values-row").count() == 4
     assert page.locator(".bl-values-method").count() == 4
-    # the package's refusal to list the places, once under the error mark
-    wait_until(
-        lambda: (refused_places, None, None) in error_lines(page),
-        30.0,
-        "the refusal of tenure's places under the error mark",
-    )
-    assert error_lines(page).count((refused_places, None, None)) == 1
 
     chosen("Parameters")
     cell = page.locator('.bl-values-row[data-name="R"] .bl-values-value')
@@ -1188,7 +1185,7 @@ def test_item_5_the_add_buttons_read_plus_and_the_handle_resizes_the_panes(
         shown = variants.nth(number).evaluate(BUTTON_SHOWN_JS)
         assert (shown["text"], shown["title"], shown["label"]) == (
             "",
-            "Write a variant of the recipe beside it",
+            "Write a variant of spec.yml",
             "New variant",
         )
         assert variants.nth(number).get_attribute("icon") == "versions"
@@ -1248,7 +1245,7 @@ def test_item_5_the_add_buttons_read_plus_and_the_handle_resizes_the_panes(
     page.click(f'.bl-tree-file[data-path="{CONS}"]')
     wait_until(lambda: status_settled_on(page, CONS), 60, "cons.bl after the reload")
     view = page.locator(".bl-view")
-    page.set_viewport_size({**VIEWPORT, "width": 1000})
+    page.set_viewport_size({**VIEWPORT, "width": 1056})
     wait_until(
         lambda: abs(view.bounding_box()["width"] - least) < 0.5, 10, "the view at its least width"
     )

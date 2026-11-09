@@ -31,7 +31,8 @@ compatibility of each pair and selects the unique admissible ones,
 certifies the complete routes and checks the cycles (`_check_periods`,
 through `joins.checked_selection`), refusing an entry of no admitted shape
 and retaining connection conflicts on the draft; reconcile the
-values the records supply (`period_calibrations`); bind every occurrence's
+values the records supply for the shared parameters and settings
+(`period_calibrations`, `period_settings`); bind every occurrence's
 calibration, then its methods, then its settings (`_bound_in_order`);
 accrete (`_accreted`); and select again under the bound values
 (`_rechecked`), the one reading at which a comparison reads a value, so
@@ -52,17 +53,22 @@ one loop applies it, `_bound_in_order`, every position under one kind before
 the next, in the order calibrate, methodize, configure; `_bind` and
 `specify_trellis` both bind through that loop. The body applies the stage
 verb with the mapping the syntactic trellis holds at the position, the
-calibration with the period's values for the shared parameters, once for
-each distinct version and mapping, and places the result, with the
-provenance of its own position, at the other positions of that version and
-mapping; a changed method choice is the exception, which `_remethodized`
-remakes at each position from its record. Before it applies the verb for a
-new version and mapping, it gives a version it makes of that version the
-answers an earlier one holding the very same records kept, so that the answers the graphs of one
-construction determine are computed once and not once for each mapping.
-`changed_positions` lists the positions a verb bound, a copy of a binding
-among them, since it is a new version of its position. Neither dictionary
-holds a graph; the joins of a period are read from its stages by
+calibration and the settings with the period's values for the shared
+parameters and settings, once for each distinct version and mapping, and
+places the result, with the provenance of its own position, at the other
+positions of that version and mapping. The methods of an occurrence are the
+additions its record names, unioned with the stage text when the occurrence
+is constructed (`_constructed`), since the connectors of a trellis read the
+unioned stage (specification 0.7, F42 and F43): the methods verb finds every
+occurrence holding its record's additions and binds nothing, and a record
+whose additions changed is another construction, which `elaborate_trellis`
+and `respecify_trellis` make anew. Before the body applies a verb for a new
+version and mapping, it gives a version it makes of that version the answers
+an earlier one holding the very same records kept, so that the answers the
+graphs of one construction determine are computed once and not once for
+each mapping. `changed_positions` lists the positions a verb bound, a copy
+of a binding among them, since it is a new version of its position. Neither
+dictionary holds a graph; the joins of a period are read from its stages by
 `bellman.factory.joins`.
 """
 
@@ -73,10 +79,19 @@ from collections.abc import Mapping
 from copy import deepcopy
 from typing import NamedTuple
 
-from bellman.factory.elaboration import construct_stage, stage_occurrence, stage_text_of
+from bellman.factory.elaboration import (
+    construct_stage,
+    settings_files,
+    stage_occurrence,
+    stage_text_of,
+)
 from bellman.factory.joins import checked_selection
 from bellman.factory.loading import KINDS, SOURCE_READERS, plain_python
-from bellman.factory.period_parameters import period_calibrations, shared_parameters
+from bellman.factory.period_parameters import (
+    period_calibrations,
+    period_settings,
+    shared_parameters,
+)
 from bellman.factory.recipe import load_recipe
 from bellman.fold.block_lines import parameter_sets
 from bellman.native.frozen import freeze
@@ -84,9 +99,10 @@ from bellman.native.hypergraphs import copy_native
 from bellman.native.provenance import binding_provenance, grammar_versions, source_description
 from bellman.native.versions import carry_answers, replace_stage, same_records
 from bellman.refusals import FactoryError
-from bellman.stage.binding_verbs import calibrated_version, configured_version, methodized_version
+from bellman.stage.binding_verbs import calibrated_version, configured_version
 from bellman.stage.elaborated import ElaboratedStage
-from bellman.stage.sources import load_calibration, load_methods, load_settings
+from bellman.stage.levels import addition_records, holds_additions, load_additions
+from bellman.stage.sources import load_calibration, load_settings
 
 __all__ = [
     "TrellisPosition",
@@ -131,11 +147,13 @@ def specify_trellis(syntactic, previous=None, kinds=KINDS):
     before anything is bound, so that a trellis `elaborate_trellis` refuses
     is refused alike, the declarations of the parameters the stages of a
     period share among what is checked. The values the records supply for
-    those parameters are then reconciled (`period_calibrations`), and each
+    those parameters, and for the settings the stages share, are then
+    reconciled (`period_calibrations`, `period_settings`), and each
     occurrence is bound by `_bound_in_order` with the record the syntactic
-    trellis holds at its position, its calibration with the period's value
-    for each shared parameter, every position under one kind before the
-    next, so that a refusal is the one the verbs raise, naming the position
+    trellis holds at its position, its calibration and its settings with
+    the period's value for each shared parameter and setting, every
+    position under one kind before the next, so that a refusal is the one
+    the verbs raise, naming the position
     and the kind. Each occurrence is copied when its period is appended
     (`_accreted`), the copy recording its position, and the connections are
     then selected again under the bound values (`_rechecked`). The order,
@@ -146,8 +164,8 @@ def specify_trellis(syntactic, previous=None, kinds=KINDS):
     inventory, texts = _sorted_positions(found, previous)
     by_period = _placed(inventory, _constructed(texts), grammar_versions() if texts else None)
     _check_periods(syntactic, by_period, mappings)
-    calibrations = _period_calibrations(order, found, by_period, _trellis_file(syntactic))
-    _bound_in_order(order, found, by_period, calibrations)
+    supplied = _period_values(order, found, by_period, _trellis_file(syntactic))
+    _bound_in_order(order, found, by_period, supplied)
     specified = _accreted(syntactic, by_period, mappings)
     _rechecked(specified, _trellis_file(syntactic))
     # a trellis verb writes `periods` after the other keys of the trellis
@@ -171,15 +189,16 @@ def respecify_trellis(specified, before, syntactic, kinds=KINDS):
     `specify_trellis` constructs, binds and copies it. A record holds the
     text of its stage, its three mappings and the digest of each file read
     for them, and the binding of a position reads nothing else but the
-    values the other records of its period supply for the parameters its
-    stage shares with theirs: a position whose record
+    values the other records of its period supply for the parameters and
+    the settings its stage shares with theirs: a position whose record
     is unchanged but whose period now supplies another value for a
-    parameter its stage declares is constructed, bound and copied anew as
-    well, so that a kept occurrence is the one `specify_trellis` would bind
-    there and a change of one stage's sources binds the occurrences of
-    that stage and of the stages that share a changed parameter with it in
-    the same period. A position whose record is a stage object is kept
-    only where `before` holds the same object there. Every other entry of
+    parameter or a setting its stage declares is constructed, bound and
+    copied anew as well, so that a kept occurrence is the one
+    `specify_trellis` would bind there and a change of one stage's sources
+    binds the occurrences of that stage and of the stages that share a
+    changed parameter or setting with it in the same period. A position
+    whose record is a stage object is kept only where `before` holds the
+    same object there. Every other entry of
     the result is copied from `syntactic`, as `specify_trellis` copies it.
     The
     connections of every period are selected, and each inter-period mapping
@@ -217,17 +236,18 @@ def respecify_trellis(specified, before, syntactic, kinds=KINDS):
         stage = placed.get(place.h, {}).get(place.key, kept[place.h, place.key])
         by_period.setdefault(place.h, {})[place.key] = stage
     _check_periods(syntactic, by_period, mappings)
-    calibrations = _period_calibrations(order, found, by_period, _trellis_file(syntactic))
-    # a kept position whose period now supplies another calibration than
-    # the occurrence holds, a shared parameter's value changed in another
-    # stage's record, is constructed, bound and copied anew too, its text
-    # constructed once where a renewed position constructed it already
+    supplied = _period_values(order, found, by_period, _trellis_file(syntactic))
+    # a kept position whose period now supplies another calibration, or
+    # other settings, than the occurrence holds, a shared parameter's or
+    # setting's value changed in another stage's record, is constructed,
+    # bound and copied anew too, its text constructed once where a renewed
+    # position constructed it already
     renewed_at = {(place.h, place.key) for place in renewed}
     changed = [
         place
         for place in found
         if (place.h, place.key) not in renewed_at
-        and _calibration_changed(kept[place.h, place.key], calibrations.get((place.h, place.key)))
+        and _supplied_changed(kept[place.h, place.key], supplied, (place.h, place.key))
     ]
     if changed:
         more_inventory, more_texts = _sorted_positions(changed, None)
@@ -239,7 +259,7 @@ def respecify_trellis(specified, before, syntactic, kinds=KINDS):
             by_period[h].update(stages)
         renewed_at |= {(place.h, place.key) for place in changed}
         renewed = [place for place in found if (place.h, place.key) in renewed_at]
-    _bound_in_order(order, renewed, by_period, calibrations)
+    _bound_in_order(order, renewed, by_period, supplied)
     bound = {(place.h, place.key) for place in renewed}
     periods = []
     for h, period in enumerate(syntactic["periods"]):
@@ -325,20 +345,23 @@ def _record_digest(record):
 
 def _check_kept_kinds(kept, found, renewed, order):
     """Refuses under `record-shape` a kept position whose record is a mapping
-    and whose occurrence is no stage, or holds a binding of a kind not in
-    `order`, or none of a kind in it, since `specify_trellis` binds such a
-    position under the kinds of `order` alone."""
+    and whose occurrence is no stage, or holds a calibration or a settings
+    binding of a kind not in `order`, or none of such a kind in it, since
+    `specify_trellis` binds such a position under the kinds of `order` alone.
+    The methods of an occurrence are its construction's and no binding, so
+    the kind `methods` is not compared."""
     renewed_at = {(place.h, place.key) for place in renewed}
+    valued = tuple(kind for kind in order if kind in _VERBS)
     for place in found:
         if (place.h, place.key) in renewed_at or isinstance(place.stage, ElaboratedStage):
             continue
         stage = kept[place.h, place.key]
         held = (
-            tuple(kind for kind in _ORDER if getattr(stage.bindings, kind) is not None)
+            tuple(kind for kind in _VERBS if getattr(stage.bindings, kind) is not None)
             if isinstance(stage, ElaboratedStage)
             else None
         )
-        if held != order:
+        if held != valued:
             raise FactoryError(
                 f"{place.address} of the trellis given is not bound under the kinds "
                 f"{', '.join(order) or 'none'} alone",
@@ -358,24 +381,28 @@ def _at_position(stage, h, key):
 
 
 def elaborate_trellis(syntactic, previous=None):
-    """The elaborated trellis, symbolic, of a syntactic trellis. Each distinct
-    stage text is constructed once for each origin, and a full copy of its
+    """The elaborated trellis of a syntactic trellis, no calibration and no
+    settings bound. Each distinct stage text, with the additions its record
+    names unioned into it, is constructed once for each origin and each
+    selection of additions (specification 0.7, D3), and a full copy of its
     stage is placed at each of its positions, its position in its provenance,
-    so that no two positions share an object. A position that already holds a
-    stage is copied, the copy at its new position. With `previous`, a
-    position whose record's digest and origin equal those of the stage
-    `previous` holds at the same position is copied from it, so that a changed
-    stage file alone is constructed again. Every other key of the argument is
-    copied by `deepcopy`. The periods are checked as `specify_trellis`
-    checks them (`_check_periods`): each period's shape, the declarations
-    of the parameters its stages share, and the one selection of the
-    connections over every period, which refuses an entry of no admitted
-    shape and leaves semantic connection diagnostics on the draft; a
-    refusal names the trellis file where the argument's provenance holds
-    its path. The result is then built period by period (`_accreted`).
-    Nothing is bound. The list `inter_connectors` holds one mapping per
-    adjacent pair, as `read_trellis_file` writes it; another length is
-    refused."""
+    so that no two positions share an object; the connectors therefore read
+    the unioned stage, so that an addition which adds a coordinate or an
+    arrival builder changes what a connector joins (F42, F43). A position
+    that already holds a stage is copied, the copy at its new position. With
+    `previous`, a position whose record's text and additions, by their
+    digests and origins, are those of the stage `previous` holds at the same
+    position is copied from it, so that a changed stage file or selection
+    alone is constructed again. Every other key of the argument is copied by
+    `deepcopy`. The periods are checked as `specify_trellis` checks them
+    (`_check_periods`): each period's shape, the declarations of the
+    parameters its stages share, and the one selection of the connections
+    over every period, which refuses an entry of no admitted shape and
+    leaves semantic connection diagnostics on the draft; a refusal names the
+    trellis file where the argument's provenance holds its path. The result
+    is then built period by period (`_accreted`). The list
+    `inter_connectors` holds one mapping per adjacent pair, as
+    `read_trellis_file` writes it; another length is refused."""
     found = positions(syntactic)
     mappings = _inter_period_mappings(syntactic)
     inventory, texts = _sorted_positions(found, previous)
@@ -541,10 +568,10 @@ def _unchanged_stage_at(previous, h, key, source):
 def _construction_of(stage):
     """What the construction of a stage version depended on, as its provenance
     records it: the digest and the origin of its text and those of each
-    addition, comparable with `StageText.construction`."""
+    addition read into it, comparable with `StageText.construction`."""
     provenance = stage.provenance
     return (provenance.get("sha256"), provenance.get("origin")) + tuple(
-        (addition["sha256"], addition["origin"]) for addition in provenance.get("additions", ())
+        (addition["sha256"], addition["path"]) for addition in provenance.get("additions", ())
     )
 
 
@@ -736,25 +763,31 @@ def calibrate_trellis(elaborated, syntactic):
 
 
 def methodize_trellis(elaborated, syntactic):
-    """A new elaborated trellis, each stage occurrence methodized with the
-    `methods` mapping at its key where it holds none; made anew from its record
-    where it holds methods of another digest, since a version holds one
-    methods binding; copied where the digests agree."""
+    """A new elaborated trellis, each stage occurrence holding the additions
+    its record names under `methods`, which were read with its text when it
+    was constructed (`elaborate_trellis`), so that the verb binds nothing and
+    copies each position once; a record whose additions differ from those
+    the occurrence holds is refused under `record-shape`, since a changed
+    selection is constructed again by `elaborate_trellis(syntactic,
+    elaborated)` before it is bound."""
     return _bind(elaborated, syntactic, ("methods",))
 
 
 def configure_trellis(elaborated, syntactic):
     """A new elaborated trellis, each stage occurrence configured with the
-    `settings` mapping at its key where it differs from the settings it holds,
-    and copied otherwise; defined on methodized stage occurrences."""
+    `settings` mapping at its key, the one value its period supplies
+    standing for each setting its stage shares with another stage of the
+    period (`period_settings`), where that mapping differs from the settings
+    it holds, and copied otherwise."""
     return _bind(elaborated, syntactic, ("settings",))
 
 
-# the inner form of the stage verb that binds each kind of binding source,
-# which copies nothing; its caller copies the version once
+# the inner form of the stage verb that binds each kind of binding source a
+# verb binds at the trellis, which copies nothing; its caller copies the
+# version once. The methods of an occurrence are read at its construction.
+# The settings bind with the record's settings files (`_bound_once`).
 _VERBS = {
     "calibration": calibrated_version,
-    "methods": methodized_version,
     "settings": configured_version,
 }
 
@@ -796,8 +829,8 @@ def _bind(elaborated, syntactic, kinds=KINDS):
     for h, key, _, stage, _ in found:
         by_period.setdefault(h, {})[key] = stage
     places = [(h, key, address, record) for h, key, address, _, record in found]
-    calibrations = _period_calibrations(order, places, by_period, _trellis_file(syntactic))
-    _bound_in_order(order, places, by_period, calibrations)
+    supplied = _period_values(order, places, by_period, _trellis_file(syntactic))
+    _bound_in_order(order, places, by_period, supplied)
     bound = {
         **_copy_without(elaborated, "periods"),
         "periods": [
@@ -813,32 +846,44 @@ def _bind(elaborated, syntactic, kinds=KINDS):
     return bound
 
 
-def _period_calibrations(order, found, by_period, file):
-    """The calibration mapping to bind at each position of `found`, as
-    `period_calibrations` answers it for the stage occurrences `by_period`
-    holds, where `order` binds the calibration; nothing otherwise."""
-    if "calibration" not in order:
-        return {}
-    return period_calibrations(
-        [(h, key, address, record) for h, key, address, record in found], by_period, file
+# the kinds whose mappings a period supplies, each by the function that
+# answers them
+_PERIOD_SUPPLIES = (("calibration", period_calibrations), ("settings", period_settings))
+
+
+def _period_values(order, found, by_period, file):
+    """The mapping to bind at each position of `found`, by kind, for the
+    calibration and for the settings, as `period_calibrations` and
+    `period_settings` answer them for the stage occurrences `by_period`
+    holds, each where `order` binds its kind and nothing otherwise; the
+    methods are each record's own."""
+    places = [(h, key, address, record) for h, key, address, record in found]
+    return {
+        kind: supply(places, by_period, file) if kind in order else {}
+        for kind, supply in _PERIOD_SUPPLIES
+    }
+
+
+def _supplied_changed(stage, supplied, position):
+    """Whether a mapping the period supplies for the kept `position`, its
+    calibration or its settings in `supplied`, differs from the one its
+    occurrence `stage` holds: a mapping that `already_bound` finds unbound;
+    None, a stage object's position, differs from nothing."""
+    return any(
+        mapping is not None and not already_bound(stage, kind, mapping)
+        for kind, mappings in supplied.items()
+        for mapping in (mappings.get(position),)
     )
 
 
-def _calibration_changed(stage, mapping):
-    """Whether `mapping`, the calibration a period supplies for a kept
-    position, differs from the one its occurrence `stage` holds: a mapping
-    that `already_bound` finds unbound; None, a stage object's position,
-    differs from nothing."""
-    return mapping is not None and not already_bound(stage, "calibration", mapping)
-
-
-def _bound_in_order(order, found, by_period, calibrations):
+def _bound_in_order(order, found, by_period, supplied):
     """`by_period`, the stage occurrences by period and key, with each kind of
     `order` bound in turn at every position of `found`, `(h, key, address,
     record)`, the record read from the syntactic trellis, the calibration
-    with the mapping `calibrations` holds for the position, the record's
-    own with the period's values for the parameters the stage shares
-    (`period_calibrations`): the version `by_period` holds at a position is
+    and the settings with the mapping `supplied` holds for the position
+    under their kind, the record's own with the period's values for the
+    parameters and the settings the stage shares (`period_calibrations`,
+    `period_settings`): the version `by_period` holds at a position is
     replaced by the one `_bound_occurrence` answers. Every position is bound
     under one kind before the next, so that a refusal is the one the trellis
     verbs, applied one after the other, raise. No version is copied; the
@@ -847,8 +892,8 @@ def _bound_in_order(order, found, by_period, calibrations):
         bound = {}
         for h, key, address, record in found:
             mapping = (
-                calibrations[h, key]
-                if kind == "calibration"
+                supplied[kind][h, key]
+                if kind in supplied
                 else None
                 if isinstance(record, ElaboratedStage)
                 else record[kind]
@@ -863,21 +908,19 @@ def _bound_occurrence(kind, stage, record, mapping, address, bound):
     """The version of `stage`, the stage occurrence at `address`, that binds
     `mapping`, the mapping of `kind` its record holds, before its copy:
     `stage` itself where `mapping` is None, as at a position whose `record`
-    is a stage object, which has no mapping to bind, or where
-    `stage` holds that binding already (`already_bound`); the version
-    `_remethodized` binds, replacing the methods, where `stage` holds
-    methods and is given others; and otherwise the version `_bound_once`
-    binds, which carries, under `provenance["source_lists"]`, the record's
-    list for the kind bound, the fill it holds marked bound, beside the
-    elaboration's lists for the other kinds. `bound` holds the versions the
-    stage verb of `kind` bound, by `_pair`. A refusal gains the note naming
-    the position and the note naming the kind."""
+    is a stage object, which has no mapping to bind, where `stage` holds
+    that binding already (`already_bound`), or under the kind `methods`,
+    whose additions the occurrence was constructed with; and otherwise the
+    version `_bound_once` binds, which carries, under
+    `provenance["source_lists"]`, the record's list for the kind bound, the
+    fill it holds marked bound, beside the elaboration's lists for the other
+    kinds. `bound` holds the versions the stage verb of `kind` bound, by
+    `_pair`. A refusal gains the note naming the position and the note
+    naming the kind."""
     try:
-        if mapping is None or already_bound(stage, kind, mapping):
+        if kind not in _VERBS or mapping is None or already_bound(stage, kind, mapping):
             return stage
-        if kind == "methods" and stage.bindings.methods is not None:
-            return _remethodized(stage, record)
-        return _with_source_list(_bound_once(kind, stage, mapping, bound), record, kind)
+        return _with_source_list(_bound_once(kind, stage, mapping, bound, record), record, kind)
     except Exception as error:
         error.add_note(f"Stage occurrence: {address}")
         error.add_note(f"Binding kind: {kind}")
@@ -890,9 +933,10 @@ def _stages_with_records(elaborated, syntactic):
     order of the keys of a period carries no meaning: refused under
     `trellis-file-shape` where the two hold different positions, under
     `record-shape` where a position of the first holds a record, a position of
-    the second holds neither a record nor a stage, a record's mapping of one
-    kind is no mapping, or a record's text differs from the held version's,
-    which `elaborate_trellis(syntactic, elaborated)` constructs again."""
+    the second holds neither a record nor a stage, a record's calibration or
+    settings is no mapping, or a record's text or additions differ from the
+    held version's, which `elaborate_trellis(syntactic, elaborated)`
+    constructs again."""
     left, right = positions(elaborated), positions(syntactic)
     held = {(position.h, position.key) for position in left}
     given = {(position.h, position.key) for position in right}
@@ -928,7 +972,7 @@ def _stages_with_records(elaborated, syntactic):
                 written=type(record).__name__,
                 write="the syntactic trellis, whose record at each key holds the three mappings",
             )
-        for kind_name in KINDS:
+        for kind_name in _VERBS:
             if not isinstance(record[kind_name], Mapping):
                 raise FactoryError(
                     f"{address}.{kind_name} of the second argument is a "
@@ -958,8 +1002,16 @@ def already_bound(stage, kind, mapping):
     at each parameter the stage declares (0 and 0.0 equal, and the tuple a
     stage holds for a list-valued parameter equal to the list of the same
     entries), its settings by the equality of the loaded mapping, a numpy
-    scalar converted first, its methods by the digest of the normalized
-    mapping against the digest its provenance records under `sources`."""
+    scalar converted first, and its methods by the additions the source
+    names, each by its path and the digest of its text, against those its
+    provenance records under `additions`, read with its text or by
+    `methodize`."""
+    if kind == "methods":
+        named = addition_records(load_additions(mapping))
+        read = stage.provenance.get("additions", ())
+        return [(held["path"], held["sha256"]) for held in named] == [
+            (held["path"], held["sha256"]) for held in read
+        ]
     held = getattr(stage.bindings, kind)
     if held is None:
         return False
@@ -969,30 +1021,10 @@ def already_bound(stage, kind, mapping):
         return set(held) == set(given) and all(
             bool(plain_python(held[name]) == given[name]) for name in given
         )
-    if kind == "settings":
-        return plain_python(held) == plain_python(load_settings(mapping))
-    recorded = stage.provenance["sources"].get("methods")
-    return (
-        recorded is not None
-        and recorded["sha256"] == source_description(load_methods(mapping))["sha256"]
-    )
+    return plain_python(held) == plain_python(load_settings(mapping))
 
 
-def _remethodized(stage, record):
-    """The occurrence `stage` given the changed method choice its record
-    holds: a version holding the occurrence's records, whose methods, and the
-    blocks they opened, the record's methods replace as a whole
-    (`methodized_version` with `replace_all`), and whose settings, where it
-    holds any, are bound again for the new methods, each by the inner form of
-    its stage verb on that version. The occurrence itself is left as it was,
-    and the caller copies each position once, after every kind is bound."""
-    version = methodized_version(replace_stage(stage), record["methods"], replace_all=True)
-    if stage.bindings.settings is not None:
-        version = configured_version(version, dict(stage.bindings.settings))
-    return version
-
-
-def _bound_once(kind, stage, mapping, bound):
+def _bound_once(kind, stage, mapping, bound, record):
     """The version the stage verb of `kind` binds of `stage` with `mapping`,
     before its copy, the verb's inner form applied once for each key of
     `_pair`: at the first position of a key the inner form's version, kept in
@@ -1004,16 +1036,17 @@ def _bound_once(kind, stage, mapping, bound):
     the inner form is applied to that version: the occurrences of one stage
     text hold its construction's records, so the answers its graphs
     determine are computed once for the text and not once for each key.
-    `stage` itself keeps its own answers. The caller copies the version
-    once."""
+    `stage` itself keeps its own answers. `record`, the occurrence's record,
+    supplies the settings files `configured_version` reads for the related
+    locations of a refused setting (`settings_files`), as `elaborate_stage`
+    and `bind_stage` pass them; the calibration takes none. The caller
+    copies the version once."""
     loaded = SOURCE_READERS[kind](mapping)
     pair = _pair(stage, loaded)
     if pair in bound:
         first = bound[pair]
-        return replace_stage(
-            first,
-            provenance=binding_provenance(stage, first.provenance["operation"], mapping, loaded),
-        )
+        provenance = binding_provenance(stage, first.provenance["operation"], mapping, loaded)
+        return replace_stage(first, provenance=provenance)
     earlier = next((version for version in bound.values() if same_records(version, stage)), None)
     # the inner form binds in place a version this call makes, which holds
     # the records of `stage`, since `stage` can be an object of the caller's
@@ -1021,7 +1054,11 @@ def _bound_once(kind, stage, mapping, bound):
     stage = replace_stage(stage)
     if earlier is not None:
         carry_answers(earlier, stage)
-    bound[pair] = _VERBS[kind](stage, mapping)
+    # the settings bind with the record's settings files, so that a setting
+    # refused outside its set carries its key's position in its file and an
+    # unvalued setting its files
+    options = {"files": settings_files(record)} if kind == "settings" else {}
+    bound[pair] = _VERBS[kind](stage, mapping, **options)
     return bound[pair]
 
 
@@ -1030,33 +1067,33 @@ def _pair(stage, loaded):
     which `_bound_once` applies the verb once: the version's text by its
     digest and origin, the package and grammar that constructed it and the
     sources of its three mappings, as its provenance records them; and its
-    three bindings and the loaded mapping as `repr` writes them, which keeps
-    the order of each mapping's keys and the type of each value. A `Method`
-    record of the methods binding is written as its box, method, handler and
-    settings, since the record's own `repr` sorts its settings and so would
-    give one key to two versions whose methods differ only in the order of a
-    method's settings. Two versions of one key hold the same graphs and
+    three bindings and the loaded mapping as `repr` writes them
+    (`written_bindings`), which keeps the order of each mapping's keys and
+    the type of each value. Two versions of one key hold the same graphs and
     bindings written alike, so the verb makes of both the same version,
-    written alike, apart from its provenance; a version prints each binding,
-    a method's settings included, in the order its keys are written."""
+    written alike, apart from its provenance; a version prints each binding
+    in the order its keys are written."""
     recorded = {
         name: stage.provenance.get(name) for name in ("sha256", "origin", "versions", "sources")
     }
-    written = [_written_binding(kind, getattr(stage.bindings, kind)) for kind in KINDS] + [
-        plain_python(loaded)
-    ]
+    written = written_bindings(stage) + [plain_python(loaded)]
     return source_description(recorded)["sha256"], repr(written)
 
 
-def _written_binding(kind, binding):
-    """The binding of `kind` as `plain_python` writes it; a methods binding as
-    a list holding, for each entry in its order, the box, the method, the
-    handler and the settings, the settings in the order they are written."""
-    if kind != "methods" or binding is None:
-        return plain_python(binding)
+def written_bindings(stage):
+    """The three bindings of a version as `plain_python` writes them, in
+    the order of `KINDS`: its calibration, its settings, and for its methods
+    the additions read into it, with its text or by `methodize`, each by its
+    path and the digest of its text, or None where none was read."""
+    additions = (
+        [(held["path"], held["sha256"]) for held in stage.provenance["additions"]]
+        if holds_additions(stage)
+        else None
+    )
     return [
-        (box, entry.tag, entry.handler, plain_python(entry.settings))
-        for box, entry in binding.items()
+        plain_python(stage.bindings.calibration),
+        plain_python(stage.bindings.settings),
+        additions,
     ]
 
 

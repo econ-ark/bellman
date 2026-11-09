@@ -20,13 +20,12 @@ from bellman.stage import elaborate_stage, load_stage
 from bellman.trellis import (
     accrete,
     changed_positions,
-    configure_trellis,
     inter_period_joins,
     load_trellis,
-    methodize_trellis,
+    specify_trellis,
 )
 from .conftest import (ARCHIVE_SHA256, BACKWARD, CONFIGURATIONS, DECLARATION, EVIDENCE, LEGACY_SOURCES, REFERENCE, STAGES,
-                       CONSUMPTION, consumption_stage, stage_file,
+                       consumption_stage, stage_file,
                        TERMINAL, specified, tool)
 
 
@@ -91,8 +90,9 @@ def test_item_2_the_reference_structure_is_reproduced(reference_runs, manifest, 
             for sentinel in (tool.LOW, tool.HIGH):
                 np.testing.assert_array_equal(actual[key] == sentinel, legacy == sentinel, err_msg=key)
             np.testing.assert_array_equal(np.isfinite(actual[key]), np.isfinite(legacy), err_msg=key)
-    # the six expressions of the reference are kernels of cons.bl, equal at a hundred points: each the function of
-    # a piece of the builders' kernels, called with its arguments and then the parameter values the record holds
+    # the six expressions of the reference are kernels of cons.bl with its methods file, equal at a hundred points:
+    # each the function of a piece of the builders' kernels, called with the arguments it names and then the
+    # parameter values the record holds
     cons = runs["beginning_egm"][0]["periods"][0]["stages"]["cons"]
     c, a = np.linspace(0.05, 5.0, 100), np.linspace(0.01, 20.0, 100)
     m_d, dv = np.linspace(0.1, 30.0, 100), np.linspace(0.02, 3.0, 100)
@@ -100,20 +100,18 @@ def test_item_2_the_reference_structure_is_reproduced(reference_runs, manifest, 
     names = {"rho": manifest["calibration_as_loaded"]["ρ"], "c": c, "a": a, "m_d": m_d, "V_cont": continuation,
              "dV_cont": lambda x: np.interp(x, a, dv)}
     legacy = {role: eval(text, {"__builtins__": {}}, names) for role, text in manifest["expressions"].items()}
-    pieces = {(record.builder, piece.key): piece
-              for record in (cons.dcsn.builder.bwd.kernels(), cons.builder.policy.kernels()) for piece in record.pieces}
-
-    def kernel(builder, key, *arguments):
-        piece = pieces[builder, key]
-        return piece.function(*arguments, *piece.parameter_values)
-
-    value, marginal = kernel("cntn_to_dcsn", "Aggregation", continuation(kernel("cntn_to_dcsn", "Pullback", m_d, c)), m_d, c)
-    kernels = {"vfi_maximand": value, "marginal_bellman": marginal,
-               "dcsn_to_cntn_transition": kernel("cntn_to_dcsn", "Pullback", m_d, c),
-               "utility": kernel("cntn_to_dcsn", "Aggregation", np.zeros_like(c), m_d, c)[0],
-               "inv_euler": kernel("policy", "InvEuler:Aggregation", dv, a),
-               # the grid line is `grid` in the demonstration's block file, `endoggrid` in the earlier stage file (SD-33)
-               "cntn_to_dcsn_transition": kernel("policy", "grid:Aggregation", c, a)}
+    decision, policy = cons.dcsn.builder.bwd.kernels(), cons.builder.policy.kernels()
+    continued = continuation(tool.by_name(decision, "Pullback", {"m": m_d, "c": c}))
+    at_decision = {"V≻": continued, "m": m_d, "c": c}
+    kernels = {"vfi_maximand": tool.by_name(decision, "Aggregation", at_decision),
+               # the envelope line of the methods file, the piece of the stated derivative (D4 of AMD-MB-001)
+               "marginal_bellman": tool.by_name(decision, tool.marginal_key(decision), at_decision),
+               "dcsn_to_cntn_transition": tool.by_name(decision, "Pullback", {"m": m_d, "c": c}),
+               "utility": tool.by_name(decision, "Aggregation", {"V≻": np.zeros_like(c), "m": m_d, "c": c}),
+               "inv_euler": tool.by_name(policy, "InvEuler:Aggregation",
+                                         {"V≻": continuation(a), "a": a, "D_{a}(V≻)": dv}),
+               # the grid line is `grid` in the methods file, `endoggrid` in the earlier stage file (SD-33)
+               "cntn_to_dcsn_transition": tool.by_name(policy, "grid:Aggregation", {"c≻": c, "a": a})}
     for role, computed in kernels.items():
         np.testing.assert_array_equal(computed, legacy[role], err_msg=role)
 
@@ -217,7 +215,7 @@ def test_item_4_the_reference_quadrature_adds_the_mean_of_the_logarithms_twice(r
     runs, _ = reference_runs
     port = runs["beginning_egm"][0]["periods"][0]["stages"]["port"]
     noport = runs["cons_only"][0]["periods"][0]["stages"]["noport"]
-    assert tool.method_at(port, "cntn_to_dcsn.value:Expectation:1").handler == "cons-port:gauss_hermite_reference"
+    assert tool.method_at(port, "cntn_to_dcsn.E_Ψ_θ").handler == "cons-port:gauss_hermite_reference"
     shocks, mean, covariance = tool.lognormal_law(port)
     assert shocks == ("Ψ", "θ")
     declared, weights = tool.normal_nodes(mean, covariance, [7, 7])
@@ -235,9 +233,9 @@ def test_item_4_the_reference_quadrature_adds_the_mean_of_the_logarithms_twice(r
 def test_item_5_a_trellis_accreted_by_hand_equals_the_trellis_its_recipe_writes():
     stage = {name: elaborate_stage(load_stage(str(stage_file(name))))
              .calibrate(str(DECLARATION / "calibration" / "portfolio.yml")) for name in ("port", "cons", "disc")}
-    stage["port"] = stage["port"].methodize(str(DECLARATION / "methods" / "port.yml")).configure(str(DECLARATION / "settings" / "port_wide.yml"))
-    stage["cons"] = stage["cons"].methodize(str(DECLARATION / "methods" / "cons.yml")).configure(str(DECLARATION / "settings" / "cons_wide.yml"))
-    stage["disc"] = stage["disc"].methodize(str(DECLARATION / "methods" / "disc.yml")).configure({})
+    stage["port"] = stage["port"].methodize(str(STAGES / "port" / "methods.bl")).configure(str(DECLARATION / "settings" / "port_wide.yml"))
+    stage["cons"] = stage["cons"].methodize(str(STAGES / "cons" / "methods.bl")).configure(str(DECLARATION / "settings" / "cons_wide.yml"))
+    stage["disc"] = stage["disc"].methodize(str(STAGES / "disc" / "methods.bl")).configure({})
     period = {"stages": stage, "connectors": [{"w": "m"}]}
     by_hand = accrete({"periods": [], "inter_connectors": []}, period)
     for _ in range(5):
@@ -256,15 +254,20 @@ def test_item_5_a_trellis_accreted_by_hand_equals_the_trellis_its_recipe_writes(
 
 # the review focus
 
-def test_an_unknown_handler_is_refused_with_the_handlers_the_tool_realizes(ending):
-    # the method opens the policy builder with the block file beside the methods file, which the stage file needs
-    # since AAS's instruction of 21 October 2026 (SD-33); `ending` holds the representation and the marginal block
-    block = str(DECLARATION / "methods" / "cons_egm.bl")
-    # the exogenous grid of savings the method requires, as methods/cons.yml writes it (AMD-MB-003)
-    savings = {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}
-    cons = consumption_stage().methodize({"methods": [{"on": "policy", "method": "!egm", "block": block, "handler": "cons-port:unknown",
-                                                       "settings": savings}]}
-                            ).configure(str(DECLARATION / "settings" / "cons.yml"))
+def addition_text(name, old, new):
+    """The text of the consumption stage's methods file `name` with `old` replaced by `new`, as a `{text, origin}`
+    mapping the verb `methodize` reads, for a test that binds a methods file the folder does not hold."""
+    path = STAGES / "cons" / name
+    text = path.read_text(encoding="utf-8")
+    assert text.count(old) >= 1
+    return {"text": text.replace(old, new), "origin": str(path)}
+
+
+def test_an_unknown_handler_is_refused_with_the_handlers_the_tool_realizes():
+    # the methods file of the consumption stage with its handler renamed: the method opens the policy builder
+    # with the methods file's lines, which the stage file needs since AAS's instruction of 21 October 2026 (SD-33)
+    cons = consumption_stage().methodize(addition_text("methods.bl", '"cons-port:egm"', '"cons-port:unknown"')
+                                         ).configure(str(DECLARATION / "settings" / "cons.yml"))
     with pytest.raises(ValueError) as refused:
         tool.stage_operator(cons)
     assert "'cons-port:unknown'" in str(refused.value) and "cons-port:egm" in str(refused.value)
@@ -277,8 +280,10 @@ def test_in_cons_then_port_the_discount_stage_scales_the_portfolio_value_by_beta
 
 
 def test_a_method_choice_on_consumption_rebinds_the_six_consumption_occurrences(orders):
+    # a change of selection is another addition named in the trellis file, so the consumption occurrences are
+    # constructed again from their record, and the portfolio and discount occurrences are those of the recipe
     choice = load_trellis(str(DECLARATION / "trellis.port-cons-vfi.yml"))
-    switched = configure_trellis(methodize_trellis(orders["port-cons"], choice), choice)
+    switched = specify_trellis(choice, orders["port-cons"])
     assert sorted(changed_positions(orders["port-cons"], switched)) == [(h, "cons") for h in range(6)]
     assert "!vfi" in str(switched["periods"][0]["stages"]["cons"].methods)
     assert "!egm" in str(orders["port-cons"]["periods"][0]["stages"]["cons"].methods)
@@ -300,10 +305,10 @@ def test_the_endogenous_grid_operator_is_built_from_the_records_under_a_new_cali
     (1e-10, m_d − 1e-10); the saving the law of motion gives, held to the savings grid; the value and the marginal
     value of the aggregation."""
     ρ = 3.0
-    settings = {"n_m": 150, "m_min": 0.05, "m_max": 20.0, "n_a": 300, "a_min": 1.0e-6, "a_max": 40.0,
-                "grid_spacing": "expmult"}
-    # a stage of its own, since a binding binds the stage it is called on (SB-10)
-    stage = consumption_stage().calibrate({"ρ": ρ}).methodize(str(DECLARATION / "methods" / "cons.yml")).configure(settings)
+    settings = {"n_m": 150, "m_min": 0.05, "m_max": 20.0, "n_a": 300, "a_min": 1.0e-6, "a_max": 40.0}
+    # a stage of its own, since a binding binds the stage it is called on (SB-10); the methods file's grids are
+    # multi-exponential, the word !expmult of their factors
+    stage = consumption_stage().calibrate({"ρ": ρ}).methodize(str(STAGES / "cons" / "methods.bl")).configure(settings)
     operator = tool.egm(stage)
     # the operator's saved form names neither the class of the stage nor the module that defines it
     saved = cloudpickle.dumps(operator)
@@ -329,28 +334,29 @@ def test_the_endogenous_grid_operator_is_built_from_the_records_under_a_new_cali
     np.testing.assert_allclose(solved.dvalues, expression("marginal_bellman", c=c), rtol=1e-12, atol=0)
 
 
-def test_the_setting_grid_spacing_gives_the_even_and_the_multi_exponential_grid(ending):
-    # the setting absent or `even`: numpy.linspace from the lower bound to the upper, bit for bit
-    # a stage of its own, since a binding binds the stage it is called on (SB-10)
-    methodized = consumption_stage().methodize(str(DECLARATION / "methods" / "cons.yml"))
+def test_the_spacing_word_of_a_grid_factor_gives_the_even_and_the_multi_exponential_grid():
     settings = {"n_m": 500, "m_min": 0.01, "m_max": 2000.0, "n_a": 400, "a_min": 1.0e-6, "a_max": 100.0}
-    for source in (settings, {**settings, "grid_spacing": "even"}):
-        stage = methodized.configure(source)
-        np.testing.assert_array_equal(tool.evaluation_grid(stage), np.linspace(0.01, 2000.0, 500))
-        np.testing.assert_array_equal(tool.savings_grid(stage), np.linspace(1.0e-6, 100.0, 400))
-    # `expmult`: the count asked, strictly increasing from just above the lower bound to the upper bound, the
-    # multi-exponential grid of the tool shifted by the lower bound, and dense near it: the first spacing is
-    # less than a thousandth of the last, and more than half of the points lie in the lowest tenth of the range
-    stage = methodized.configure({**settings, "grid_spacing": "expmult"})
+    # no spacing word, the grids of methods.reference.bl: numpy.linspace from the lower bound to the upper, bit
+    # for bit; a stage of its own, since a binding binds the stage it is called on (SB-10)
+    stage = consumption_stage().methodize(str(STAGES / "cons" / "methods.reference.bl")).configure(settings)
+    np.testing.assert_array_equal(tool.evaluation_grid(stage), np.linspace(0.01, 2000.0, 500))
+    np.testing.assert_array_equal(tool.savings_grid(stage), np.linspace(1.0e-6, 100.0, 400))
+    # `!expmult`, the grids of methods.bl: the count asked, strictly increasing from just above the lower bound to
+    # the upper bound, the multi-exponential grid of the tool shifted by the lower bound, and dense near it: the
+    # first spacing is less than a thousandth of the last, and more than half of the points lie in the lowest
+    # tenth of the range
+    stage = consumption_stage().methodize(str(STAGES / "cons" / "methods.bl")).configure(settings)
     for grid, (low, high, count) in ((tool.evaluation_grid(stage), (0.01, 2000.0, 500)),
                                      (tool.savings_grid(stage), (1.0e-6, 100.0, 400))):
         assert len(grid) == count and low < grid[0] and np.isclose(grid[-1], high, rtol=1e-12, atol=0)
         assert np.all(np.diff(grid) > 0) and np.diff(grid)[0] < np.diff(grid)[-1] / 1000
         assert (grid <= low + (high - low) / 10).sum() > count / 2
         np.testing.assert_array_equal(grid, low + tool.expmult_grid(high - low, count))
+    # a spacing word the tool does not read is refused with the words it reads
+    stage = consumption_stage().methodize(addition_text("methods.bl", "!expmult", "!geometric")).configure(settings)
     with pytest.raises(ValueError) as refused:
-        tool.evaluation_grid(methodized.configure({**settings, "grid_spacing": "log"}))
-    assert "'log'" in str(refused.value) and "'even'" in str(refused.value) and "'expmult'" in str(refused.value)
+        tool.evaluation_grid(stage)
+    assert "!geometric" in str(refused.value) and "!expmult" in str(refused.value)
 
 
 def test_solve_period_gives_the_same_values_whatever_the_list_order(reference_runs):

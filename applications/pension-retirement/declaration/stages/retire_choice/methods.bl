@@ -1,0 +1,11 @@
+@methods: retire_choice
+# The methods of the choice between work and retirement, an addition to
+# retire_choice.bl: the derivatives of the choice value in the two assets,
+# those of the branch value the choice d selects, as lines of the decision
+# value builder. The policy builder, whose discrete argmax over {work, retire}
+# the stage file writes, and the branching decision builder take no method.
+
+[id=cntn_to_dcsn] {
+    D_{y_f_d}V = (D_{y_f_wk}V_wk[>], D_{y_f_rt}V_rt[>])[d]  :: [id=marginal_financial]
+    D_{y_p_d}V = (D_{y_p_wk}V_wk[>], D_{y_p_rt}V_rt[>])[d]  :: [id=marginal_pension]
+}

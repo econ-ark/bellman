@@ -1,0 +1,17 @@
+@methods: cons
+# Value function iteration on the decision value builder of the portfolio
+# model's consumption stage, a replacing selection of the lifecycle registry
+# beside methods.bl: the search compares n_c candidate levels of consumption
+# on the feasible set at each point of the grid of resources, on which the
+# decision value is represented linearly. No line is added, so each selection
+# is a file-level line routed by its path.
+
+n_m : ℕ        :: ["number of points of the grid of resources"]
+m_min : Xm     :: ["lower bound of the grid of resources"]
+m_max : Xm     :: ["upper bound of the grid of resources"]
+n_c : ℕ        :: ["number of candidate levels of consumption"]
+
+cntn_to_dcsn.method : !vfi
+cntn_to_dcsn.grid : !Cartesian(c=(Γ, n_c))
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))

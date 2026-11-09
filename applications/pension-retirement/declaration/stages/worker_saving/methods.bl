@@ -1,0 +1,43 @@
+@methods: worker_saving
+# The methods of the worker's saving stage, an addition to worker_saving.bl:
+# time iteration on the policy builder, with the two first-order conditions
+# of the worker's problem as its lines, the Euler equation in financial assets
+# and the Euler equation in pension assets, each a relation with its
+# complementarity clause (Dobrescu and Shanker 2024, equations 16 to 20); the
+# envelope line and the pension line of the decision value; and the two
+# derivative lines of the arrival value, which keep the factors 1 + r_f and
+# 1 + r_p of the laws of motion. The two relations stand in place of the
+# maximization at the operative level, and stage.declared keeps the
+# maximization. No representation is bound, and the expectation E_w takes no
+# method.
+#
+# The policy builder's grid is its own typing entry: the decision grid on
+# which the two relations are solved, one factor per state coordinate of the
+# decision perch, m_f, m_p and w_d. The nine settings it reads are declared
+# below with their sets and valued in settings/worker_saving.yml.
+
+n_m_f : ℕ            :: ["number of points of the grid of financial resources"]
+m_f_min : ℝ₊₊        :: ["lower bound of the grid of financial resources"]
+m_f_max : ℝ₊₊        :: ["upper bound of the grid of financial resources"]
+n_m_p : ℕ            :: ["number of points of the grid of pension assets"]
+m_p_min : Xp         :: ["lower bound of the grid of pension assets"]
+m_p_max : Xp         :: ["upper bound of the grid of pension assets"]
+n_w_d : ℕ            :: ["number of points of the grid of earnings"]
+w_d_min : ℝ₊₊        :: ["lower bound of the grid of earnings"]
+w_d_max : ℝ₊₊        :: ["upper bound of the grid of earnings"]
+
+[id=policy, policy.method : !time_iteration
+    | policy.grid : !Cartesian(m_f=(m_f_min, m_f_max, n_m_f), m_p=(m_p_min, m_p_max, n_m_p), w_d=(w_d_min, w_d_max, n_w_d))] {
+    𝑑𝑢(c) = β*D_{y_f}V[>] ⟂ m_f - c - c_p >= 0                  :: [id=euler_financial]
+    𝑑𝑢(c) = β*(1 + 𝑑𝜒(c_p))*D_{y_p}V[>] ⟂ 0 <= c_p <= w_d        :: [id=euler_pension]
+}
+
+[id=cntn_to_dcsn] {
+    D_{m_f}V = 𝑑𝑢(c)                            :: [id=marginal_financial]
+    D_{m_p}V = β*D_{y_p}V[>]                    :: [id=marginal_pension]
+}
+
+[id=dcsn_to_arvl] {
+    D_{y_f_w}V[<] = E_{w}((1 + r_f)*D_{m_f}V)   :: [id=marginal_financial]
+    D_{y_p_w}V[<] = E_{w}((1 + r_p)*D_{m_p}V)   :: [id=marginal_pension]
+}

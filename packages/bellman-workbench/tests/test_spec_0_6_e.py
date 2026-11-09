@@ -1,20 +1,23 @@
-"""The acceptance file of units E2 to E4 of the build of specification 0.6: the layers button, which switches the
-builders the graph and Details show between the declared builders, `stage.declared`, and the operative builders,
-`stage.builder` (specification 0.6 §9; design pass 15, the development repository's record of 21 October 2026, the
-build of unit E2 and the controller's judgment). One test for each test
-of the record's build section, on the consumption stage of the demonstration's folder,
-`applications/cons-port/`, whose methods file opens the policy builder with the block file
-`cons_egm.bl` and binds the marginal blocks of its two value builders, and one test of its portfolio stage, whose
-block file `port_foc.bl` opens its policy builder. The test of the row `Requires` reads a copy of the folder whose
-methods file leaves out the decision builder's marginal block (SE-28). The rulings the build took are the
-rows SE of the development repository's decisions file `SE-E2-to-E4.md`. When the environment
-variable `BELLMAN_WORKBENCH_FRAMES` names a folder, the page tests write their frames there."""
+"""The acceptance file of units E2 to E4 of the build of specification 0.6: the
+layers button, which switches the builders the graph and Details show between
+the declared builders, `stage.declared`, and the operative builders,
+`stage.builder` (specification 0.6 §9; design pass 15, the development
+repository's record of 21 October 2026, the build of unit E2 and the
+controller's judgment). One test for each test of the record's build section,
+on the consumption stage of the demonstration's folder,
+`applications/cons-port/`, whose addition `stages/cons/methods.bl` opens the
+policy builder with the lines of the endogenous grid method and adds the
+derivative line of its decision value builder, and one test of its portfolio
+stage, whose addition opens its policy builder with the share's first-order
+condition. The rulings the build took are the rows SE of the development
+repository's decisions file `SE-E2-to-E4.md`. When the environment variable
+`BELLMAN_WORKBENCH_FRAMES` names a folder, the page tests write their frames
+there."""
 
 from __future__ import annotations
 
 import dataclasses
 import os
-import shutil
 from pathlib import Path
 
 from workbench_support import (
@@ -28,7 +31,6 @@ from workbench_support import (
     choose_view,
     flow_handle,
     graph_named,
-    init_repository,
     new_tab,
     open_workbench,
     panel_head,
@@ -53,7 +55,7 @@ OPERATIVE_POLICY = [
 ]
 ARGMAX = "policy.optimality:Argmax"
 # the portfolio stage's policy builder at the two levels: the argmax's operations, and the rows of the block of the
-# share's first-order condition, `port_foc.bl`
+# share's first-order condition its addition writes
 PORT_DECLARED_POLICY = ["policy:Pullback", "policy.objective:Expectation:1", "policy.objective:Argmax", "policy:Evaluation"]
 PORT_OPERATIVE_POLICY = [
     "policy:Pullback",
@@ -163,11 +165,14 @@ def select_layer(tab) -> None:
 
 
 def test_item_1_the_page_opens_on_the_consumption_stage_with_the_button_off(browser, server_on, demonstration_folder):
-    """E2 item 1 and E4 (R7, R10; SE-2, SE-3, SE-6, SE-15). The page over the demonstration's folder opens on the
-    consumption stage with the button `Operative builders` off, at the canvas's foot after `Perch overlays`: the
-    Codicon `layers-dot`, the hover `Show operative builders`, its inner button a switch that is not checked. The
-    graph holds the declared policy builder, the argmax's four operations, and Details of its layer prints the bound
-    method's line as the row `method`."""
+    """E2 item 1 and E4 (R7, R10; SE-2, SE-3, SE-6, SE-15). The page over the
+    demonstration's folder opens on the consumption stage with the button
+    `Operative builders` off, at the canvas's foot after `Perch overlays`: the
+    Codicon `layers-dot`, the hover `Show operative builders`, its inner button
+    a switch that is not checked. The graph holds the declared policy builder,
+    the argmax's four operations, and Details of its layer prints no row
+    `method`, since the declared level is the stage file elaborated alone
+    (specification 0.7, the implementation specification §U2)."""
     context, tab = new_tab(browser)
     try:
         open_demonstration(tab, server_on(demonstration_folder))
@@ -183,11 +188,9 @@ def test_item_1_the_page_opens_on_the_consumption_stage_with_the_button_off(brow
         assert layer_nodes(tab) == DECLARED_POLICY
         select_layer(tab)
         rows = dict(tab.evaluate(ROWS_JS))
-        assert rows["method"].startswith("!egm") and "block " in rows["method"], rows
-        assert rows["method"].endswith("cons_egm.bl"), rows
+        assert "method" not in rows, rows
         labels = [label for label, _ in tab.evaluate(BLOCKS_JS)]
         assert labels == ["Signature"], labels
-        tab.locator('.bl-panel .bl-attribute[data-key="method"]').scroll_into_view_if_needed()
         frame(tab, "1600-consumption-button-off")
     finally:
         context.close()
@@ -196,15 +199,20 @@ def test_item_1_the_page_opens_on_the_consumption_stage_with_the_button_off(brow
 def test_item_2_a_click_turns_the_button_on_and_space_turns_it_off_with_the_focus_kept(
     browser, server_on, demonstration_folder
 ):
-    """E2 item 2 (SE-4, SE-9; the judgment's first and third rulings). A click turns the button on: the Codicon
-    `layers-active`, the hover `Show declared builders`, the switch checked and the 2-px accent line at its foot.
-    The policy layer then holds the block's rows and Inputs carries 𝑉≻ alone, the one value the header lists, whose
-    derivative the block reads as the term `D_{a}V[>]` (AMD-MB-001 §4.2). Details of the layer prints the signature
-    and, after it, `Declared` with the stage file's line, `Conditions` with `egm-eligibility` and `Method` with the
-    block file, and no row `method`; the accessibility tree reads `switch "Operative builders" [checked]`. Tab from
-    `Perch overlays` reaches the button, and Space turns it off, the focus kept on it. The line into the opened
-    builder is the one wire its header lists, 𝑉≻, its title naming it (AMD-MB-001 §5.4, which retired the bundle of
-    the judgment's first ruling with the marginal wires)."""
+    """E2 item 2 (SE-4, SE-9; the judgment's first and third rulings). A click
+    turns the button on: the Codicon `layers-active`, the hover `Show declared
+    builders`, the switch checked and the 2-px accent line at its foot. The
+    policy layer then holds the block's rows and Inputs carries 𝑉≻ alone, the
+    one value the header lists, whose derivative the block reads as the term
+    `D_{a}V[>]` (AMD-MB-001 §4.2). Details of the layer prints the signature
+    and, after it, `Declared` with the stage file's line, `Conditions` with
+    `egm-eligibility` and `Method` with the method word, the grid and the
+    handler the addition types, and no row `method`; the accessibility tree
+    reads `switch "Operative builders" [checked]`. Tab from `Perch overlays`
+    reaches the button, and Space turns it off, the focus kept on it. The line
+    into the opened builder is the one wire its header lists, 𝑉≻, its title
+    naming it (AMD-MB-001 §5.4, which retired the bundle of the judgment's
+    first ruling with the marginal wires)."""
     context, tab = new_tab(browser)
     try:
         open_demonstration(tab, server_on(demonstration_folder))
@@ -231,7 +239,8 @@ def test_item_2_a_click_turns_the_button_on_and_space_turns_it_off_with_the_focu
         assert "𝑉≻" in blocks["Signature"] and "𝑑𝑉≻" not in blocks["Signature"], blocks
         assert blocks["Declared"].strip() == DECLARED_LINE, blocks
         assert "egm-eligibility" in blocks["Conditions"], blocks
-        assert blocks["Method"].startswith("!egm") and "cons_egm.bl" in blocks["Method"], blocks
+        method = blocks["Method"]
+        assert method.startswith("!egm") and '"cons-port:egm"' in method, blocks
         assert "method" not in dict(tab.evaluate(ROWS_JS))
         tab.locator(".bl-panel .bl-block-label", has_text="Declared").scroll_into_view_if_needed()
         # the frame after Details has drawn the opened builder's blocks
@@ -256,10 +265,12 @@ def test_item_2_a_click_turns_the_button_on_and_space_turns_it_off_with_the_focu
 def test_the_portfolio_stage_opens_its_policy_builder_with_the_block_of_the_first_order_condition(
     browser, server_on, demonstration_folder
 ):
-    """E3, the portfolio stage on (SE-25). The page opens the portfolio stage of the demonstration with the button off,
-    the policy layer holding the argmax's operations; the button acts there, and on, the layer holds the rows of
-    `port_foc.bl`, and Details of the layer prints `Declared` with the stage file's argmax and the section `Method`
-    with the block file."""
+    """E3, the portfolio stage on (SE-25). The page opens the portfolio stage
+    of the demonstration with the button off, the policy layer holding the
+    argmax's operations; the button acts there, and on, the layer holds the
+    rows of the share's first-order condition its addition writes, and Details
+    of the layer prints `Declared` with the stage file's argmax and a section
+    `Method` with the method word and the handler the addition types."""
     context, tab = new_tab(browser)
     try:
         open_demonstration(tab, server_on(demonstration_folder), DEMONSTRATION_PORT)
@@ -277,7 +288,12 @@ def test_the_portfolio_stage_opens_its_policy_builder_with_the_block_of_the_firs
         wait_until(lambda: "Declared" in [label for label, _ in tab.evaluate(BLOCKS_JS)], 10.0, "Declared")
         blocks = tab.evaluate(BLOCKS_JS)
         assert [label for label, _ in blocks][:2] == ["Signature", "Declared"], blocks
-        assert any(label == "Method" and "block port_foc.bl" in text for label, text in blocks), blocks
+        assert any(
+            label == "Method"
+            and text.startswith("!time_iteration")
+            and '"cons-port:share_search"' in text
+            for label, text in blocks
+        ), blocks
         tab.locator(".bl-panel .bl-block-label", has_text="Declared").scroll_into_view_if_needed()
         # the frame after Details has drawn the opened builder's blocks
         tab.wait_for_timeout(500)
@@ -380,12 +396,13 @@ def test_item_5_the_button_stands_at_the_canvas_s_foot_and_the_bar_keeps_its_row
 
 def test_item_6_the_exporter_answers_the_declared_builders_under_the_keyword_declared(demonstration_folder):
     """E2 item 6 (SE-8, SE-19, SE-26). For a stage with nothing bound, `to_model_explorer(stage, declared=True)` equals
-    `to_model_explorer(stage)`; for the consumption stage bound as the demonstration's recipe binds it, the
-    declared collection holds the argmax's operations in the policy builder's layer, whose row `method` prints the
-    bound method's line, and keeps the stage's label; the operative collection holds the block's rows, the reading
-    port of its first operation naming no unread input, since the one input the header lists, `𝑉≻`, is read by the
-    block's derivative term `D_{a}V[>]` (AMD-MB-001 §4.2), and the decision builder's Evaluation names both methods
-    it holds, `!marginals` and `!Linear`."""
+    `to_model_explorer(stage)`; for the consumption stage bound as the demonstration's recipe binds it by the
+    addition beside it, the declared collection holds the argmax's operations in the policy builder's layer, the
+    stage file elaborated alone, so no row `method` (specification 0.7, the implementation specification §U2), and
+    keeps the stage's label; the operative collection holds the addition's lines, the layer's rows naming the method
+    word, the grid and the handler the addition types, the reading port of its first operation naming no unread
+    input, since the one input the header lists, `𝑉≻`, is read by the derivative term `D_{a}V[>]` (AMD-MB-001
+    §4.2), and the decision builder's Evaluation names the one method typed there, `!Linear`."""
     text = (demonstration_folder / DEMONSTRATION_CONS).read_text(encoding="utf-8")
     unbound = elaborate_text(text, str(demonstration_folder / DEMONSTRATION_CONS))
     assert dataclasses.asdict(to_model_explorer(unbound, declared=True)) == dataclasses.asdict(
@@ -405,15 +422,15 @@ def test_item_6_the_exporter_answers_the_declared_builders_under_the_keyword_dec
 
     nodes, rows = policy(declared)
     assert nodes == DECLARED_POLICY
-    assert rows["method"] == "!egm   cons-port:egm   block cons_egm.bl", rows
+    assert "method" not in rows, rows
     nodes, rows = policy(operative)
     assert nodes == OPERATIVE_POLICY
     assert (rows["method"], rows["handler"]) == ("!egm", "cons-port:egm"), rows
-    # the decision builder's Evaluation holds a marginal block and a representation, one method of each kind
-    # (SB-14), both of which its node names (SE-26)
+    assert rows["grid"].startswith("!Cartesian(a=("), rows
+    # the decision builder's Evaluation holds the one representation its entry types (D4), which its node names
     evaluation = node_named(graph_named(operative, "backward"), "cntn_to_dcsn:Evaluation")
-    assert {item["key"]: item["value"] for item in evaluation["attrs"]}["method"] == "!marginals, !Linear"
-    assert evaluation["label"].endswith(" · !marginals, !Linear"), evaluation["label"]
+    assert {item["key"]: item["value"] for item in evaluation["attrs"]}["method"] == "!Linear"
+    assert evaluation["label"].endswith(" · !Linear"), evaluation["label"]
     # the one input the block's header lists is read by the derivative term, so no reading port of the opened
     # builder's first operation names an unread input (AMD-MB-001 §4.2)
     graph = graph_named(operative, "backward")
@@ -428,20 +445,18 @@ def test_item_6_the_exporter_answers_the_declared_builders_under_the_keyword_dec
 
 def test_the_two_levels_are_one_where_no_bound_method_block_opens_a_builder():
     """The declared and the operative builders are two levels only where a
-    bound method block opens a builder (specification 0.6 §7; SE-5). The
-    durables model's `disc`, bound with its methods file, binds
-    `!deterministic` and no block, so its levels are one and the page shows
-    its operative builders; the demonstration's consumption stage, whose
-    methods file binds the block file `cons_egm.bl`, has two (SE-37). The
-    durables model's consumption stages bind block files since their
-    endogenous grid lines and derivative lines moved to them (decision
-    MB-U16)."""
+    solution method's lines open a builder (specification 0.6 §7; SE-5;
+    specification 0.7 D8). The durables model's `disc`, with its addition
+    read, carries `!deterministic` and no line, so its levels are one and
+    the page shows its operative builders; the demonstration's consumption
+    stage, whose addition writes the endogenous grid method's lines in the
+    block `policy`, has two (SE-37)."""
     disc = DURABLES / "declaration/stages/disc/disc.bl"
     stage = elaborate_text(disc.read_text(encoding="utf-8"), str(disc))
-    assert not model.two_levels(stage.methodize(str(disc.parent / "methods.yml")))
+    assert not model.two_levels(stage.methodize(str(disc.parent / "methods.bl")))
     cons = DEMONSTRATION / DEMONSTRATION_CONS
     stage = elaborate_text(cons.read_text(encoding="utf-8"), str(cons))
-    assert model.two_levels(stage.methodize(str(DEMONSTRATION / "declaration/methods/cons.yml")))
+    assert model.two_levels(stage.methodize(str(cons.parent / "methods.bl")))
 
 
 def test_the_layers_button_is_a_toggle_of_the_page_and_off_at_the_start():

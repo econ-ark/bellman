@@ -606,7 +606,6 @@ import functools
 import hashlib
 import importlib.metadata
 import itertools
-import logging
 import os
 import posixpath
 import re
@@ -631,6 +630,7 @@ from bellman.stage import (
     node_place,
     source_spans,
 )
+from bellman.factory.file_entries import entry_path
 from bellman.syntax.vocabulary import ARRIVAL, CONTINUATION, DECISION, PERCH_SIGN, PERCH_WORD
 from bellman_workbench import (
     creation,
@@ -662,13 +662,6 @@ for folder in (PUBLIC_FOLDER, BRAND_FOLDER):
 # the model folder of the process, read once at import: the folder a new
 # tab shows (C-R7)
 FOLDER = model.open_folder(os.environ.get("BELLMAN_WORKBENCH_FOLDER") or os.getcwd())
-
-# The page's log, the server's standard error where nothing else configures
-# it: an exception the package raises where a refusal was due is written
-# there with its traceback, in the words of `model.EXCEPTION_LOGGED`, so that
-# it can be filed against the package (unit L, Task 21; defect 18 of the UX
-# simulation).
-LOG = logging.getLogger(__name__)
 
 # the tests' hook: the text whose presence in the buffer delays the loop
 DELAY_MARKER = os.environ.get("BELLMAN_WORKBENCH_DELAY_MARKER")
@@ -765,6 +758,12 @@ TERMS = {
     "settings": "the sources that give a stage occurrence's grid sizes and tolerances",
     "symbolic": "as the stage file alone defines it, with nothing bound",
     "bound": "with the calibration, methods or settings the recipe names applied",
+    "partially bound": "some calibration, methods or settings applied while others were refused",
+    "bindings refused": "the package refused the assignments and applied none",
+    "unjoined internal entry fields": (
+        "distinct state fields with no incoming connection after the first period, "
+        "at arrival or at decision where a stage has no arrival perch"
+    ),
     "loop": "the seconds the last reading took, from the text to the view",
     "kind": "the kind of the box's operator, or block or field in an initial diagram",
     "kernel": (
@@ -902,7 +901,8 @@ class Shown:
     counts, the seconds the loop took, the digest of the text, the notes of
     the bindings that did not apply, the occurrence the stage is bound as
     (None where no source binds the file), the version (`symbolic` or
-    `bound`), the digests of the inputs by name (`model.input_digests`),
+    `bound`, `partially bound` or `bindings refused`), the digests of the
+    inputs by name (`model.input_digests`),
     and the digest of each binding source's file by its path, which the
     watcher compares; `position`, the occurrence `(h, key)` the stage is
     bound as, and `record`, its record, both None where no source binds
@@ -919,9 +919,10 @@ class Shown:
     (`recipe.Found`; ruling R51); and `declared`, the collection of the
     declared builders where a bound method block opens a builder
     (`model.two_levels`), None where the two levels are one object, which
-    the layers button switches to and from (specification 0.6 §9). Its
-    property `places_refusal` is the package's refusal to list the places
-    of the stage, read once."""
+    the layers button switches to and from (specification 0.6 §9); and
+    `failures`, the `model.Diagnostic` of each verb the package refused in
+    the binding (`recipe.Bound.failures`). Its property `places_refusal` is
+    the package's refusal to list the places of the stage, read once."""
 
     path: str
     text: str
@@ -946,6 +947,7 @@ class Shown:
     made: float = dataclasses.field(default_factory=time.monotonic)
     refusal: model.Diagnostic | None = None
     declared: dict | None = None
+    failures: tuple[model.Diagnostic, ...] = ()
 
     @functools.cached_property
     def places_refusal(self) -> str | None:
@@ -963,10 +965,11 @@ class Outcome:
     revision; the state of the loop (`model.loop_state`, None for a file
     that is no stage); the counts of the object; the seconds; the digests
     of the inputs by name; the version, `symbolic` or `bound`, None where
-    no stage exists; the diagnostics with a position for the editor; the
-    refusals for the panel, each a record with the message, the rule, the
-    address, the position and, for a refused builders graph, its
-    direction; whether the view is stale; a note for a file opened as text;
+    no stage exists; the refusals, the `model.Diagnostic` of each refusal
+    of the text, of each builders graph the construction refused and of an
+    exception the package raised, which the editor, the list under the
+    error mark and Details all read; whether the view is stale; a note for
+    a file opened as text;
     the block spans of this revision's text, None when the parser refuses
     it or the file is no stage; and `made`, the moment the loop answered
     (`time.monotonic`), the moment of its refusals in the list under the
@@ -979,7 +982,6 @@ class Outcome:
     seconds: float
     digests: dict
     version: str | None
-    diagnostics: list
     refusals: list
     stale: bool
     note: str | None
@@ -1030,6 +1032,7 @@ graph = solara.reactive("backward")
 selected = solara.reactive(None)
 select_request = solara.reactive(None)
 goto_request = solara.reactive(None)
+work_area_request = solara.reactive(None)
 save_request = solara.reactive(0)
 # True while the next save is the overwrite chosen after a changed file
 overwrite_pending = solara.reactive(False)
@@ -1136,6 +1139,7 @@ tab_folder = solara.reactive(FOLDER)
 # sentence of the form's last refusal
 form_open = solara.reactive(None)
 form_error = solara.reactive("")
+variant_pending = solara.reactive(None)
 # the answer of the form "new trellis" that its last refusal concerns, the
 # `field` of a `creation.AnswerRefusal`, `parent` for a parent that is no
 # full path, None for a refusal that concerns no one answer, under which
@@ -1610,6 +1614,11 @@ def choose_stage() -> None:
     _record(left)
 
 
+def _show_work_area(pane: str) -> None:
+    """Asks a narrow window to show the named pane."""
+    work_area_request.value = {"pane": pane, "n": _counter(work_area_request.value)}
+
+
 def open_from_tree(path: str) -> None:
     """A click on a file of the tree (specification §2.1): a recipe, a
     trellis file, or the trellis file a recipe reads shows the trellis and
@@ -1621,6 +1630,7 @@ def open_from_tree(path: str) -> None:
     other file opens as text with the view unchanged. The place left is
     recorded (rule 4)."""
     left = _place()
+    _show_work_area("file")
     found = recipe.source_of(tab_folder.value, path, sources.value)
     if found is not None:
         show_source(found)
@@ -1639,6 +1649,7 @@ def show_recipe(found: recipe.Source) -> None:
     recorded (rule 4)."""
     left = _place()
     show_source(found)
+    _show_work_area("view")
     _record(left)
 
 
@@ -1650,6 +1661,7 @@ def show_period(found: recipe.Source, position) -> None:
     the view (`_ask`). The place left is recorded (rule 4)."""
     left = _place()
     show_source(found)
+    _show_work_area("view")
     _draw_position(position)
     selected.value = {"nodeId": f"periods[{position[0]}]{LAYER_ID_ENDING}", "graphId": graph.value}
     _record(left)
@@ -2018,70 +2030,39 @@ def _close(path: str) -> None:
 # --- the loop ---
 
 
-def _diagnostic_record(diagnostic: model.Diagnostic) -> dict:
-    """The record the editor's setDiagnostics takes for one refusal, its
-    message the hover of the refusal's underline, with its paths printed
-    from the folder as the list under the error mark prints it
-    (`folder_relative`; K-D11)."""
+def editor_record(diagnostic: model.Diagnostic) -> dict:
+    """The record the editor's setDiagnostics takes for one diagnostic
+    with a position: its range; its sentence, the hover of the underline,
+    the message and the action as the list under the error mark prints
+    them (`model.sentence`), with its paths printed from the folder
+    (`folder_relative`; K-D11); its severity, `warning` for a refusal held
+    for one builders graph, since the file may be correct under the rule
+    `not-constructed`, and `error` otherwise; and its rule, which the hover
+    names after the sentence."""
     return {
         "line": diagnostic.line,
         "column": diagnostic.column,
         "end_line": diagnostic.end_line,
         "end_column": diagnostic.end_column,
-        "message": folder_relative(diagnostic.message),
-        "severity": "error",
-    }
-
-
-def _refusal_record(diagnostic: model.Diagnostic) -> dict:
-    """The record the panel shows for one refusal of the text."""
-    return {
-        "message": diagnostic.message,
+        "message": folder_relative(model.sentence(diagnostic)),
+        "severity": "warning" if diagnostic.kind == "held" else "error",
         "rule": diagnostic.rule,
-        "address": diagnostic.address,
-        "line": diagnostic.line,
-        "column": diagnostic.column,
-        "advice": diagnostic.advice,
-        "direction": None,
+        "revision": diagnostic.revision,
     }
 
 
-def _refusal_sentence(refusal: dict) -> str:
-    """The sentence of one refusal record of the loop as the list under the
-    error mark prints it (`standing_refusals`): its message, then on a line
-    of its own the words it says to write, where it gives them."""
-    advice = refusal.get("advice")
-    return f"{refusal['message']}\n{advice}" if advice else refusal["message"]
-
-
-def _direction_records(direction: str, refusal: dict) -> tuple[dict, dict | None]:
-    """The panel's record and the editor's diagnostic of the refused
-    builders graph of `direction` (`model.refused_directions`); the
-    diagnostic is None where the refusal names no line, and carries the
-    severity `warning`, since the file may be correct under the rule
-    `not-constructed`, and its message has its paths printed from the
-    folder (`folder_relative`; K-D11). The panel's record keeps the
-    package's message, which `standing_refusals` compares."""
-    record = {
-        "message": refusal["message"],
-        "rule": refusal["rule"],
-        "address": refusal["address"],
-        "line": refusal["line"],
-        "column": refusal["column"],
-        "advice": None,
-        "direction": direction,
-    }
-    if refusal["line"] is None:
-        return record, None
-    diagnostic = {
-        "line": refusal["line"],
-        "column": refusal["column"],
-        "end_line": refusal["end_line"],
-        "end_column": refusal["end_column"],
-        "message": folder_relative(refusal["message"]),
-        "severity": "warning",
-    }
-    return record, diagnostic
+def _in_context(diagnostic: model.Diagnostic, found: recipe.Found, digest: str) -> model.Diagnostic:
+    """The record `diagnostic` with the context the loop knows: the key of
+    the stage where a source binds the file, the source, the view `stage`,
+    every occurrence of the file in the source and `digest`, that of the
+    text checked."""
+    return diagnostic._replace(
+        stage=found.position[1] if found.position is not None else None,
+        source=found.source.path if found.source is not None else None,
+        view="stage",
+        occurrences=found.positions,
+        revision=digest,
+    )
 
 
 def _spans_or_none(text: str, origin: str) -> dict | None:
@@ -2107,75 +2088,76 @@ def _source_digests(paths: list) -> dict:
 
 def elaborate(path: str, text: str, revision: int) -> tuple[Outcome, Shown | None]:
     """The outcome of elaborating the buffer `text` of the file `path`, and
-    the new `Shown` when it elaborated: `model.elaborate_buffer` with the
-    origin the occurrence's record writes (`recipe.find_occurrence`: the
-    occurrence the head names where it is one of the file's, else the
-    file's first), then the bindings of that occurrence
-    (`recipe.bind_occurrence`), the collection, the counts, the refused
-    directions, the layers, the block spans, the digests of the inputs, and
-    the file's positions in each source of the folder, the tab's recipe
-    first (`recipe.uses_of`). Every source is read through the mapping of
-    the tab's unsaved texts (`unsaved_texts`; spec 0.4 §3.1). The seconds
-    are those of the whole loop. An exception the package raises where a
-    refusal was due is the outcome's one refusal, under the rule
-    `package-exception`, at the line of the address its message names
-    (`model.exception_diagnostic`), and is written with its traceback to the
-    page's log (`LOG`; unit L, Task 21; defect 18 of the UX simulation)."""
+    the new `Shown` when it elaborated, by five operations in turn: `read`,
+    the occurrence the head names in the tab's source where it is one of
+    the file's, else the file's first, with the origin its record writes
+    (`recipe.find_occurrence`), and the revision of the file a refusal of
+    that reading names (`_found_as_read`); `parse`, the block spans of the
+    text, None where the parser refuses it, so that the block links follow
+    the edits since the last elaborated revision; `elaborate`,
+    `model.elaborate_buffer` with that origin; `bind`, the bindings of that
+    occurrence (`recipe.bind_occurrence`); and `draw`, what the view, the
+    panel and the watcher read of the bound stage (`_drawn`). Every source
+    is read through the mapping of the tab's unsaved texts
+    (`unsaved_texts`; spec 0.4 §3.1). The seconds are those of the whole
+    loop. Each refusal is the one record (`model.Diagnostic`) in the loop's
+    context (`_in_context`). An exception the package raises where a
+    refusal was due, in any of the five, is the outcome's one refusal, an
+    internal failure under the operation that raised it (`_stopped`)."""
     started = time.perf_counter()
     texts = trellis.texts_of(unsaved_texts())
-    found = recipe.find_occurrence(tab_folder.value, source.value, path, head.value, texts)
-    origin = found.origin
+    found, spans, operation = None, None, "read"
     try:
-        elaboration = model.elaborate_buffer(text, origin, revision)
+        found = recipe.find_occurrence(tab_folder.value, source.value, path, head.value, texts)
+        found = _found_as_read(found, texts)
+        operation = "parse"
+        spans = _spans_or_none(text, found.origin)
+        operation = "elaborate"
+        elaboration = model.elaborate_buffer(text, found.origin, revision)
+        if elaboration.stage is None:
+            refusals = [_in_context(d, found, elaboration.digest) for d in elaboration.diagnostics]
+            seconds = time.perf_counter() - started
+            return (
+                Outcome(path, revision, model.loop_state(elaboration), elaboration.counts, seconds,
+                        {"text": elaboration.digest}, None, refusals, True, None, spans),
+                None,
+            )
+        operation = "bind"
+        bound = recipe.bind_occurrence(elaboration.stage, found)
+        operation = "draw"
+        return _drawn(path, text, revision, started, texts, found, elaboration, bound, spans)
     except Exception as error:  # the package raised something other than a refusal
-        LOG.error(model.EXCEPTION_LOGGED, path, exc_info=error)
-        spans = _spans_or_none(text, origin)
-        # the exception under its rule, at the line its message names, which
-        # the editor marks as it marks a refusal (unit L, Task 21)
-        refused = model.exception_diagnostic(error, path, spans)
-        return (
-            Outcome(
-                path,
-                revision,
-                "parsed, refused" if spans is not None else "not parsed",
-                {},
-                time.perf_counter() - started,
-                {"text": _digest(text)},
-                None,
-                [_diagnostic_record(refused)] if refused.line is not None else [],
-                [_refusal_record(refused)],
-                True,
-                None,
-                spans,
-            ),
-            None,
-        )
-    if elaboration.stage is None:
-        # the spans of the refused text, so that the block links follow
-        # the edits since the last elaborated revision; None when the
-        # parser refuses the text
-        spans = _spans_or_none(text, origin)
-        diagnostics = [
-            _diagnostic_record(d) for d in elaboration.diagnostics if d.line is not None
-        ]
-        return (
-            Outcome(
-                path,
-                revision,
-                model.loop_state(elaboration),
-                elaboration.counts,
-                time.perf_counter() - started,
-                {"text": elaboration.digest},
-                None,
-                diagnostics,
-                [_refusal_record(d) for d in elaboration.diagnostics],
-                True,
-                None,
-                spans,
-            ),
-            None,
-        )
-    bound = recipe.bind_occurrence(elaboration.stage, found)
+        return _stopped(path, text, revision, started, found, spans, error, operation), None
+
+
+def _found_as_read(found: recipe.Found, texts: dict) -> recipe.Found:
+    """`found` with the refusal of its source's reading, where it holds
+    one, carrying the revision of the file the refusal names as the reading
+    read it (`trellis.digest_as_read`), so that the trellis's record of the
+    same refusal stands with it as one problem (Model Interface 0.9 §4)."""
+    if found.refusal is None:
+        return found
+    revision = trellis.digest_as_read(tab_folder.value, found.source, found.refusal.file, texts)
+    return found._replace(refusal=found.refusal._replace(revision=revision))
+
+
+def _drawn(
+    path: str,
+    text: str,
+    revision: int,
+    started: float,
+    texts: dict,
+    found: recipe.Found,
+    elaboration: model.Elaboration,
+    bound: recipe.Bound,
+    spans: dict | None,
+) -> tuple[Outcome, Shown]:
+    """The outcome of the loop for the buffer `text` of `path` whose
+    elaboration `elaboration` constructed a stage, bound as `bound`, and
+    the new `Shown`: the collection, the counts, the refused directions,
+    the layers, the digests of the inputs, the digests of the files the
+    watcher compares, and the file's positions in each source of the
+    folder, the tab's recipe first (`recipe.uses_of`)."""
     stage = bound.stage
     collection = model.collection(stage)
     declared = model.collection(stage, operative=False) if model.two_levels(stage) else None
@@ -2186,25 +2168,29 @@ def elaborate(path: str, text: str, revision: int) -> tuple[Outcome, Shown | Non
         entry["id"]: list(layers_to_open(collection, entry["id"], LAYER_DEPTH))
         for entry in collection["graphs"]
     }
-    spans = source_spans(text, origin)
     digests = model.input_digests(stage, text)
     # the watcher compares the source, the trellis file it reads and the
     # binding sources of the occurrence's record (`recipe.watched_files`),
     # so that a slot filled in a recipe binds the shown stage anew
     # (specification §2.2 rule 1)
     source_digests = _source_digests(recipe.watched_files(tab_folder.value, found, texts))
+    failures = []
+    for failure in bound.failures:
+        file = str((tab_folder.value.root / (failure.file or found.source.path)).resolve())
+        checked = (
+            elaboration.digest if file == str((tab_folder.value.root / path).resolve())
+            else source_digests.get(file)
+        )
+        failures.append(failure._replace(file=file, revision=checked))
     # where the file is used, the source it is bound through first, so that
     # the panel lists the tab's recipe first (AMD-MI-002 §3 rule 6)
     others = [each for each in sources.value if each != found.source]
     ordered = [found.source, *others] if found.source is not None else others
     uses = tuple(recipe.uses_of(tab_folder.value, ordered, path, texts))
     version = "bound" if set(digests) - {"text"} else "symbolic"
-    refusals, diagnostics = [], []
-    for direction, refusal in refused.items():
-        record, diagnostic = _direction_records(direction, refusal)
-        refusals.append(record)
-        if diagnostic is not None:
-            diagnostics.append(diagnostic)
+    if bound.failures:
+        version = "partially bound" if version == "bound" else "bindings refused"
+    refusals = [_in_context(held, found, elaboration.digest) for held in refused.values()]
     seconds = time.perf_counter() - started
     new_shown = Shown(
         path=path,
@@ -2229,6 +2215,7 @@ def elaborate(path: str, text: str, revision: int) -> tuple[Outcome, Shown | Non
         uses=uses,
         refusal=found.refusal,
         declared=declared,
+        failures=tuple(failures),
     )
     result = Outcome(
         path,
@@ -2238,13 +2225,46 @@ def elaborate(path: str, text: str, revision: int) -> tuple[Outcome, Shown | Non
         seconds,
         digests,
         version,
-        diagnostics,
         refusals,
         False,
         None,
         spans,
     )
     return result, new_shown
+
+
+def _stopped(
+    path: str,
+    text: str,
+    revision: int,
+    started: float,
+    found: recipe.Found | None,
+    spans: dict | None,
+    error: Exception,
+    operation: str,
+) -> Outcome:
+    """The outcome of a loop that `error` stopped during `operation`, one
+    of its five: its one refusal is the record of `error`
+    (`model.diagnostic_of`), in the loop's context where the source was
+    read (`_in_context`). Every exception of the five operations is
+    converted: a refusal of the package's classes keeps its rule and its
+    position, and an exception of any other class is the internal failure
+    the conversion writes to the page's log under an entry the record
+    names, with no position, so that the editor marks nothing. The outcome
+    gives no stage, so the view keeps the drawing of the earlier text. The
+    state is `parsed, refused` where the loop read the text's block spans,
+    and `not parsed` where it stopped before them or in them."""
+    digest = _digest(text)
+    failure = model.diagnostic_of(error, operation, path)
+    if found is not None:
+        failure = _in_context(failure, found, digest)
+    else:
+        failure = failure._replace(view="stage", revision=digest)
+    state = "parsed, refused" if spans is not None else "not parsed"
+    seconds = time.perf_counter() - started
+    return Outcome(
+        path, revision, state, {}, seconds, {"text": digest}, None, [failure], True, None, spans
+    )
 
 
 def _delay_for_the_tests(text: str) -> None:
@@ -2315,7 +2335,6 @@ def run_loop() -> Outcome | None:
             {"text": _digest(held["text"])},
             None,
             [],
-            [],
             False,
             f"{path} opened as text",
         )
@@ -2358,11 +2377,13 @@ def run_trellis(
     reading keeps the last trellis, dimmed; a restriction the package
     refuses is drawn as the one it accepted last for the source, or as the
     whole trellis. The package raising something other than a refusal is
-    shown as a refusal of the reading, in the source's file under the rule
-    `package-exception` (`model.exception_diagnostic`) and written with its
-    traceback to the page's log (`LOG`; unit L, Task 21), with the digests
-    of the files `trellis.files_before_reading` names, taken once it has
-    raised. Once
+    shown as the internal failure of the reading, in the source's file,
+    which the conversion writes to the page's log under an entry the record
+    names (`model.diagnostic_of`), with the digests of the files
+    `trellis.files_before_reading` names, taken once it has raised. The
+    outcome records the values it was read under (`read_under`), by which
+    the list under the error mark marks its diagnostics stale while a
+    reading under newer values runs. Once
     the outcome is recorded, and outside the lock, the binding of a
     reading that was not refused and was given no trellis of the same
     source is kept on disk for a later start of the Workbench
@@ -2394,13 +2415,10 @@ def run_trellis(
             tab_folder.value, chosen, asked, held, unsaved, initial=graph.value in INITIAL_IDS.values()
         )
     except Exception as error:  # the package raised something other than a refusal
-        LOG.error(model.EXCEPTION_LOGGED, chosen.path, exc_info=error)
         named = trellis.files_before_reading(tab_folder.value, chosen, held)
         # the source, the first file named, compared with its buffer
         taken = (str(named[0]),)
-        # the exception under its rule, in the source's file, whose text has
-        # no span table (unit L, Task 21)
-        refusal = model.exception_diagnostic(error, taken[0])
+        refusal = model.diagnostic_of(error, "read", taken[0])
         outcome = trellis.TrellisOutcome(
             None,
             refusal,
@@ -2409,7 +2427,7 @@ def run_trellis(
             trellis.file_digests(named, _texts_within(unsaved, taken)),
             takeable=taken,
         )
-    outcome = outcome._replace(made=time.monotonic())
+    outcome = outcome._replace(made=time.monotonic(), read_under=(rebuilt, inputs))
     with LOOP_LOCK:
         standing = (source.value, restriction.value, trellis_rebuild.value, unsaved_inputs())
         if standing != (chosen, asked, rebuilt, inputs):
@@ -2608,6 +2626,12 @@ def on_change(data: dict) -> None:
         if current:
             _close(data["path"])
     continue_gesture("change")
+    pending = variant_pending.value
+    if pending is not None and data.get("flush") == pending[0]:
+        variant_pending.value = None
+        if current and form_open.value == "new variant":
+            _, name, copy_bindings, from_recipe = pending
+            submit_new_variant(name, copy_bindings=copy_bindings, from_recipe=from_recipe)
 
 
 def on_save(data: dict) -> None:
@@ -2628,8 +2652,14 @@ def on_save(data: dict) -> None:
     path = data["path"]
     refusal = model.read_only(tab_folder.value, path)
     if refusal is not None:
+        diagnostic = model.Diagnostic(
+            path, None, None, None, None, refusal, None, None,
+            "Adopt the returned files into the model before saving changes.",
+            kind="application", operation="save",
+        )
         gesture_refusal.value = {
-            "sentence": refusal, "file": path, "line": None, "made": time.monotonic()
+            "sentence": model.sentence(diagnostic), "file": path, "line": None,
+            "made": time.monotonic(), "diagnostic": diagnostic,
         }
         return
     held = buffers.value[path]
@@ -2639,7 +2669,22 @@ def on_save(data: dict) -> None:
     else:
         expected = held["digest"]
     overwrite_pending.value = False
-    result = model.save_file(tab_folder.value, path, text, expected)
+    try:
+        result = model.save_file(tab_folder.value, path, text, expected)
+    except OSError as error:
+        on_change(data)
+        diagnostic = model.Diagnostic(
+            path, None, None, None, None,
+            f"{path} could not be saved: {error.strerror or error}", None, None,
+            "Check the folder's write permission and available disk space, then choose Save again. "
+            "The edited text remains in this tab.",
+            kind="application", operation="save",
+        )
+        gesture_refusal.value = {
+            "sentence": model.sentence(diagnostic), "file": path, "line": None,
+            "made": time.monotonic(), "diagnostic": diagnostic,
+        }
+        return
     digest = result.digest if result.saved else held["digest"]
     with LOOP_LOCK:
         held = buffers.value[path]
@@ -2651,6 +2696,10 @@ def on_save(data: dict) -> None:
             compare_open.value = False
             conflict.value = None
             gesture_note.value = None
+            failed = gesture_refusal.value
+            if failed is not None and failed.get("diagnostic") is not None:
+                if failed["diagnostic"].operation == "save" and failed.get("file") == path:
+                    gesture_refusal.value = None
         else:
             conflict.value = {
                 "reason": result.reason,
@@ -2658,8 +2707,17 @@ def on_save(data: dict) -> None:
                 "disk_digest": result.digest,
                 "buffer_text": text,
                 "made": time.monotonic(),
+                "diagnostic": model.Diagnostic(
+                    path, None, None, None, None, result.reason, None, None,
+                    "Compare the file on disk with your edited text before choosing which to keep.",
+                    kind="application", operation="save",
+                ),
             }
     if result.saved:
+        refused = value_note.value
+        if result.digest != expected and refused is not None:
+            if refused["tab"] == "Methods" and refused["file"] == path:
+                value_note.value = None
         note = _delete_on_save()
         if note is not None:
             gesture_note.value = {"sentence": note, "made": time.monotonic()}
@@ -2758,6 +2816,7 @@ def open_at(path: str, line: int, column: int = 1, end: tuple[int, int] | None =
     (`_switch_to`). Opening another file records the place left (AMD-MI-002
     §3 rule 4); a move within the open file records nothing."""
     left = _place()
+    _show_work_area("file")
     _open_at(path, line, column, end)
     _record(left)
 
@@ -2795,7 +2854,15 @@ def on_desktop_open(data: dict | None) -> None:
         open_at(request["file"], request["line"])
     except (OSError, ValueError) as error:
         desktop_pending.value = None
-        desktop_refusal.value = {"sentence": str(error), "made": time.monotonic()}
+        diagnostic = model.Diagnostic(
+            None, None, None, None, None, f"Opening the desktop link failed: {error}", None, None,
+            "Check the requested model folder and file, then open the link again.",
+            kind="application", operation="open desktop link",
+        )
+        desktop_refusal.value = {
+            "sentence": model.sentence(diagnostic), "made": time.monotonic(),
+            "diagnostic": diagnostic,
+        }
         if open_path.value is None:
             open_first()
 
@@ -2836,9 +2903,14 @@ def apply_desktop_request() -> None:
                     "n": _counter(select_request.value),
                 }
                 return
+        diagnostic = model.Diagnostic(
+            None, None, None, None, None,
+            f"Opening the requested box failed: the box does not exist: {request['box']}", None, None,
+            "Choose a box in the current graph.", kind="application", operation="open desktop box",
+        )
         desktop_refusal.value = {
-            "sentence": f"The requested box does not exist: {request['box']}",
-            "made": time.monotonic(),
+            "sentence": model.sentence(diagnostic), "made": time.monotonic(),
+            "diagnostic": diagnostic,
         }
 
 
@@ -2850,7 +2922,15 @@ def open_external_editor(path: str, line: int) -> None:
         )
         desktop_refusal.value = None
     except (OSError, ValueError) as error:
-        desktop_refusal.value = {"sentence": str(error), "made": time.monotonic()}
+        diagnostic = model.Diagnostic(
+            None, None, None, None, None, f"Opening the external editor failed: {error}", None, None,
+            "Check the configured external editor command, then open the source again.",
+            kind="application", operation="open external editor",
+        )
+        desktop_refusal.value = {
+            "sentence": model.sentence(diagnostic), "made": time.monotonic(),
+            "diagnostic": diagnostic,
+        }
 
 
 def set_head(position) -> None:
@@ -2878,6 +2958,7 @@ def open_occurrence(position, block: str | None = None) -> None:
     left = _place()
     set_head(position)
     path = trellis.occurrence_file(tab_folder.value, held, position)
+    _show_work_area("file")
     show_stage()
     line = None
     if block:
@@ -3220,7 +3301,15 @@ def on_opened(data: dict) -> None:
 
 def on_refused(data: dict) -> None:
     """The region's exact refusal stands until a successful layout (G-D9)."""
-    layout_refusal.value = {"sentence": data["sentence"], "made": time.monotonic()}
+    diagnostic = model.Diagnostic(
+        None, None, None, None, None, data["sentence"], None, None,
+        "Choose another graph or direction to request a new layout.",
+        kind="application", operation="layout",
+    )
+    layout_refusal.value = {
+        "sentence": model.sentence(diagnostic), "made": time.monotonic(),
+        "diagnostic": diagnostic,
+    }
     drawing.value = False
 
 
@@ -3557,6 +3646,7 @@ def open_form(kind: str, fill: dict | None = None) -> None:
     (`form_fill`; spec 0.4 §§3.5, 3.6)."""
     form_error.value = ""
     form_fill.value = fill
+    variant_pending.value = None
     form_open.value = kind
 
 
@@ -3566,6 +3656,7 @@ def close_form() -> None:
     form_open.value = None
     form_error.value = ""
     form_fill.value = None
+    variant_pending.value = None
 
 
 def open_commit(message: str = "") -> None:
@@ -3647,6 +3738,11 @@ def git_task(kind: str, message: str = "", paths: tuple = ()) -> model.GitResult
         "sentence": sentence,
         "refused": not result.ok,
         "made": time.monotonic(),
+        "diagnostic": None if result.ok else model.Diagnostic(
+            None, None, None, None, None, f"Git {kind} failed: {sentence}", None, None,
+            "Review Git's message and correct the reported problem before trying again.",
+            kind="application", operation=f"git {kind}",
+        ),
     }
     if kind == "commit" and form_open.value == "commit":
         if result.ok:
@@ -3801,25 +3897,25 @@ def run_paper() -> None:
         }
 
 
+def available_notebook() -> str | None:
+    """The selected source's notebook path while no file occupies it."""
+    chosen = source.value
+    if chosen is None:
+        return None
+    root = tab_folder.value.root
+    path = creation.notebook_file(root, chosen.path, chosen.kind)
+    return None if os.path.lexists(root / path) else path
+
+
 def run_notebook() -> None:
-    """Writes `notebooks/<folder>.ipynb` for the source of a trellis the
-    tab shows or last showed, `source` (`creation.write_notebook`; spec 0.4
-    §5.9; brief rule 7; R-D41), then reads the folder again, so that the
-    tree lists the file and the button is omitted; it opens nothing and
-    runs nothing. The answer is recorded in `git_answer` under the command
-    `notebook`, as `run_paper` records its own (R-D42):
-    `notebooks/<name>.ipynb written`, which the status line's note prints;
-    or, where the operating system refuses the write, its sentence with
-    nothing added, which stands in the list under the error mark
-    (AMD-MI-002 §6a rule 1). Where the file exists already, nothing is
-    written or recorded."""
+    """Writes a handover notebook for the selected source without running it."""
     chosen = source.value
     if chosen is None:
         return
     answer = None
     try:
         written = creation.write_notebook(tab_folder.value.root, chosen.path, chosen.kind)
-    except OSError as error:
+    except (OSError, ValueError) as error:
         answer = (str(error), True)
     else:
         if written is not None:
@@ -3868,6 +3964,7 @@ def open_model(path) -> None:
     sources of the trellis are read from the new one. The caller refuses
     first while a buffer holds unsaved text, which this would discard."""
     with LOOP_LOCK:
+        variant_pending.value = None
         tab_folder.value = model.open_folder(path)
         open_path.value = None
         buffers.value = {}
@@ -3934,10 +4031,10 @@ def submit_new_trellis(
     the stage keys `terminal` standing in the terminal period alone (unit
     K, Task 12), opens it in the tab (`open_model`) and opens its recipe as
     a click on it in the tree does (`open_from_tree`): the new folder's
-    trellis in the view and the recipe's text in the editor (specification
-    §3.1, §4); and offers the first commit: the commit form opens with the
-    new folder's files and a message, and nothing is committed until
-    `commit` is pressed (specification §4, C-R1). Refused, with the
+    trellis in the view and the recipe's text in the editor. For a model
+    with templates, the commit form offers the first commit. An empty
+    model opens directly on the recipe so the author can write a stage.
+    Refused, with the
     sentence in the form and nothing written, while a buffer holds unsaved
     text, for a parent that is not a full path, or where the creation
     refuses the answers, the answer the refusal concerns recorded
@@ -3969,8 +4066,10 @@ def submit_new_trellis(
         return
     open_model(created.folder)
     open_from_tree(creation.factory_path(creation.RECIPE))
-    templated = " from templates of the application corpus" if stages else ""
-    open_commit(f"New trellis {created.folder.name}{templated}")
+    if stages:
+        open_commit(f"New trellis {created.folder.name} from templates of the application corpus")
+    else:
+        close_form()
 
 
 def open_model_above(path: str) -> None:
@@ -4028,8 +4127,8 @@ def _recipe_shown() -> str | None:
 
 
 def _form_recipe() -> str:
-    """The recipe the forms "add stage", "add period" and "new stage" edit:
-    the recipe the tab shows (`_recipe_shown`), and the folder's recipe
+    """The recipe the model forms use: the recipe the tab shows
+    (`_recipe_shown`), and the folder's recipe
     `declaration/spec.yml` where the tab shows none."""
     return _recipe_shown() or creation.RECIPE
 
@@ -4066,7 +4165,7 @@ def submit_add_stage(template, key: str, period_file: str, entry: str = "") -> N
     _submit_form(write)
 
 
-def submit_new_stage(key: str) -> None:
+def submit_new_stage(key: str, period_file: str | None = None) -> None:
     """The button of the form "new stage" (unit K's decision K-D7): a
     gesture of the kind `form` whose writer is `creation.new_stage` with
     the recipe the form edits (`_form_recipe`), so that the stage's row
@@ -4075,8 +4174,9 @@ def submit_new_stage(key: str) -> None:
     them (spec 0.4 §3.5); the empty stage file is written to disk once
     those edits are applied, the edited files are then written to disk too,
     so that the stage file and its row are saved in one change, the author
-    having asked for the file (unit L, Task 17; defect 22 of the UX
-    simulation), and the editor then opens the stage file. Refused while a
+    having asked for the file. If the author chooses `period_file`, the
+    same change adds the stage to its stages list. The editor then opens
+    the stage file. Refused while a
     file the form edits holds unsaved text, which the save would write with
     the row (`_unsaved_sentence`). A refusal stands in the form, and nothing
     is written."""
@@ -4084,7 +4184,8 @@ def submit_new_stage(key: str) -> None:
     root, recipe_name, typed = folder.root, _form_recipe(), key.strip()
 
     def write(texts):
-        added = creation.new_stage(root, typed, recipe=recipe_name, texts=texts)
+        added = creation.new_stage(root, typed, recipe=recipe_name, texts=texts,
+                                   period_file=period_file)
         refusal = _unsaved_sentence([recipe.relative(folder, path) for path in added.edits])
         if refusal is not None:
             raise ValueError(refusal)
@@ -4119,41 +4220,43 @@ def submit_add_period(label: str, keys, at: int | None = None) -> None:
     _submit_form(write)
 
 
-def submit_new_variant(name: str) -> None:
-    """Writes the variant of the form "new variant" beside the folder's
-    recipe, `declaration/spec.yml` (`creation.create_variant`), closes the
-    form, reads the tree and the folder's sources again, and opens the
-    variant's recipe as a click on it in the tree does (`open_from_tree`):
-    the variant's trellis in the view, the recipe list showing the variant
-    beside the first (specification §4, new variant), and the recipe's text
-    in the editor. Refused, with the sentence in the form and nothing written,
-    while a buffer of a file the variant copies holds unsaved text
-    (`creation.variant_sources`), since the variant copies the files as
-    they stand on disk, where the creation refuses, or in a saved copy of a
-    job's returned files (`model.read_only`; amendment 06 §2 item 21)."""
+def _variant_recipe() -> str:
+    """The selected recipe if it still exists, otherwise the main recipe."""
+    current = _form_recipe()
+    root = tab_folder.value.root
+    return current if (root / creation.factory_path(current)).is_file() else creation.RECIPE
+
+
+def request_new_variant(name: str, copy_bindings: bool, from_recipe: str) -> None:
+    """Reads the live editor document before copying files from disk."""
+    if open_path.value is None:
+        submit_new_variant(name, copy_bindings=copy_bindings, from_recipe=from_recipe)
+    elif variant_pending.value is None:
+        request = flush_request.value + 1
+        variant_pending.value = (request, name, copy_bindings, from_recipe)
+        flush_request.value = request
+
+
+def submit_new_variant(
+    name: str, *, copy_bindings: bool = False, from_recipe: str | None = None
+) -> None:
+    """Copies the recipe named in the form and opens the variant."""
     root = tab_folder.value.root
     refusal = model.read_only(tab_folder.value)
     if refusal is not None:
         form_error.value = refusal
         return
     try:
-        copied = creation.variant_sources(root, creation.RECIPE)
-    except (ValueError, OSError) as error:
-        form_error.value = str(error)
-        return
-    refusal = _unsaved_sentence(copied)
-    if refusal is not None:
-        form_error.value = refusal
-        return
-    try:
-        written = creation.create_variant(root, name.strip(), creation.RECIPE)
+        written = creation.create_variant(
+            root, name.strip(), from_recipe or _variant_recipe(),
+            copy_bindings=copy_bindings, dirty_paths=_dirty_paths(),
+        )
     except (ValueError, OSError) as error:
         form_error.value = str(error)
         return
     close_form()
     refresh_folder()
     open_from_tree(written[0])
-
 
 # --- the gestures of the trellis graph (unit J) ---
 
@@ -4236,8 +4339,12 @@ def _gesture_place() -> tuple[str, int] | None:
     otherwise. A refusal of the trellis's reading then stands at that line,
     whatever entry the package's address names, since spec 0.4 §3.1 links a
     refused drag to the typed line and places the button `take the line
-    out` there (J-I53); once a reading of the gesture's text stood, a later
-    refusal is that of another edit, and stands at the package's place."""
+    out` there (J-I53); once a reading of the gesture's text stood and drew
+    the trellis, a later refusal is that of another edit, and stands at
+    the package's place. A reading of the gesture's text that the package
+    refused to draw, as under a cycle the gesture closed, keeps the place,
+    so that the refusal of the drawing stands at the typed line with the
+    button (Model Interface 0.9 §3)."""
     made = gesture_made.value
     if made is None:
         return None
@@ -4245,52 +4352,84 @@ def _gesture_place() -> tuple[str, int] | None:
     if held is None or held["text"] != made["after"]:
         return None
     drawn = trellis_shown.value
-    if drawn is not None and drawn.files.get(_resolved(made["path"])) == _digest(made["after"]):
+    if (
+        drawn is not None
+        and drawn.view_refusal is None
+        and drawn.files.get(_resolved(made["path"])) == _digest(made["after"])
+    ):
         return None
     return made["path"], trellis.typed_line(made["before"], made["after"])
 
 
 def trellis_diagnostics(path: str | None) -> list[dict]:
-    """The refusal of the trellis's reading as the editor's diagnostics of
-    the file `path`, relative to the folder (spec 0.4 §3.1, §3.3; brief rule
-    8; ruling J-P15): where the last outcome of the trellis holds a refusal
-    whose place is `path` with a line, one record of `_diagnostic_record`'s
-    form, the package's sentence with nothing added, that underlines the
-    text of that line as the file's buffer holds it; empty otherwise. The
-    place is the line the last gesture typed while its file's buffer holds
-    the text the gesture made (`_gesture_place`), and the place of the
-    package's address otherwise (`_trellis_refusal_place`). At a gesture's
-    line the record carries the action `take the line out`: the one
-    replacement that restores the text before the gesture
-    (`trellis.restoring_edit`) and the text the gesture made as the
-    document the editor must hold for the replacement to apply, each with
-    the line ends the editor's document has (J-D19). At the next change
-    event of another text the record returns to the package's place and the
-    action is withdrawn."""
-    outcome = trellis_outcome.value
-    if path is None or outcome is None or outcome.refusal is None:
+    """The trellis's diagnostics as the editor's diagnostics of the file
+    `path`, relative to the folder (spec 0.4 §3.1, §3.3; brief rule 8;
+    ruling J-P15; Model Interface 0.9 §3): the refusal of the trellis's
+    reading, or, where the reading answered a trellis the package refused
+    to draw, the refusal of the drawing, where its place is `path` with a
+    line, one record of `editor_record`'s form, the package's sentence
+    with nothing added, that underlines the text of that line as the
+    file's buffer holds it; and the entries an authored cycle of the
+    connections lists (`_connection_rows`), each underlined at its line
+    where it stands in `path`. The refusal's place is the line the last
+    gesture typed while its file's buffer holds the text the gesture made
+    (`_gesture_place`), and the place of the package's address otherwise
+    (`_trellis_refusal_place`). At a gesture's line the record carries the
+    action `take the line out`: the one replacement that restores the text
+    before the gesture (`trellis.restoring_edit`) and the text the gesture
+    made as the document the editor must hold for the replacement to
+    apply, each with the line ends the editor's document has (J-D19), so
+    that the undo restores the preceding text and, once the trellis is read
+    again, the preceding drawing. At the next change event of another text
+    the record returns to the package's place and the action is
+    withdrawn."""
+    outcome, held = trellis_outcome.value, trellis_shown.value
+    if path is None or outcome is None:
         return []
+    text = buffers.value.get(path, {}).get("text")
+    checked = outcome.files.get(_resolved(path))
+    if text is not None and checked != _digest(text):
+        return []
+    drawn = held is not None and outcome.shown is held
+    refusal = outcome.refusal
+    if refusal is None and drawn:
+        refusal = held.view_refusal
+    records = []
     typed = _gesture_place()
-    file, line = typed or _trellis_refusal_place(outcome.refusal)
-    if file != path or line is None:
-        return []
-    held = buffers.value.get(path)
-    text = held["text"] if held is not None else ""
-    column, end_column = _line_extent(text, line)
-    refusal = outcome.refusal._replace(
-        file=path, line=line, column=column, end_line=line, end_column=end_column
-    )
-    record = _diagnostic_record(refusal)
-    if typed is not None:
-        made = gesture_made.value
-        # the editor's document holds "\n" where the file holds "\r\n"
-        before, after = (made[key].replace("\r\n", "\n") for key in ("before", "after"))
-        record["action"] = {
-            "name": TAKE_THE_LINE_OUT,
-            "edits": [trellis.restoring_edit(before, after)],
-            "expected": after,
-        }
-    return [record]
+    if refusal is not None:
+        file, line = typed or _trellis_refusal_place(refusal)
+        if file == path and line is not None:
+            text = buffers.value.get(path, {}).get("text", "")
+            column, end_column = _line_extent(text, line)
+            placed = refusal._replace(
+                file=path, line=line, column=column, end_line=line, end_column=end_column
+            )
+            record = editor_record(placed)
+            if typed is not None:
+                made = gesture_made.value
+                # the editor's document holds "\n" where the file holds "\r\n"
+                before, after = (made[key].replace("\r\n", "\n") for key in ("before", "after"))
+                record["action"] = {
+                    "name": TAKE_THE_LINE_OUT,
+                    "edits": [trellis.restoring_edit(before, after)],
+                    "expected": after,
+                }
+            records.append(record)
+    if drawn and trellis.has_occurrences(held):
+        report = trellis.connection_report(held.trellis, selection=held.selection)
+        for row in _connection_rows(held, trellis.texts_of(unsaved_texts()), report):
+            if row.rule != "authored-cycle":
+                continue
+            for file, line in row.places:
+                if file != path or line is None:
+                    continue
+                text = buffers.value.get(path, {}).get("text", "")
+                column, end_column = _line_extent(text, line)
+                placed = row.diagnostic._replace(
+                    file=path, line=line, column=column, end_line=line, end_column=end_column
+                )
+                records.append(editor_record(placed))
+    return records
 
 
 # The editor's answer to the last change of its property `edit` (spec 0.4
@@ -4352,7 +4491,8 @@ def use_gesture_properties(in_trellis: bool, held) -> tuple:
     # reveals its route in Details and no gesture acts there (design pass 10
     # §§6 and 8; unit N, Task 7)
     direction = (graph.value if in_trellis and held is not None and held.view_refusal is None
-                 and graph.value in ("forward", "backward") else None)
+                 and trellis.has_occurrences(held) and graph.value in ("forward", "backward")
+                 else None)
     forward = direction == "forward"
     texts = trellis.texts_of(unsaved_texts()) if direction is not None else None
     standing = _refused_standing() if forward and texts is not None else None
@@ -5006,6 +5146,21 @@ def apply_edits(edits: dict, read: dict, new_files=()) -> str | None:
     return None
 
 
+def _apply_gesture_edits(held: dict, gesture, edits: dict, new_files) -> str | None:
+    """Checks the disk copies before creating a stage and saving its edits."""
+    if held.get("saves") and new_files:
+        folder = tab_folder.value
+        for path in gesture.edits:
+            name = recipe.relative(folder, path)
+            try:
+                current = model.read_file(folder, name)
+            except (OSError, UnicodeError):
+                return name
+            if current.text != gesture.read[path]:
+                return name
+    return apply_edits(edits, gesture.read, new_files)
+
+
 def _new_folders(root: Path, new_files) -> list[Path]:
     """The folders under the model folder `root` that hold a new file of
     `new_files`, pairs (its path relative to the folder, its text), and do
@@ -5055,7 +5210,7 @@ def _write_new_files(folder: model.Folder, new_files) -> str | None:
     return None
 
 
-def _gesture_written(held: dict, gesture) -> str | None:
+def _gesture_written(held: dict, gesture) -> tuple[tuple[str, str], ...]:
     """Step 7 of the gesture `held` that wrote: the status line's note
     (`gesture_note`); for a gesture of the graph that edits one file and
     writes no new file, a connector's line, or a key appended to a period's
@@ -5073,12 +5228,10 @@ def _gesture_written(held: dict, gesture) -> str | None:
     undo history then holds no step of it, so that Mod-z in that file once
     it opens takes the gesture back (`on_gesture_undo`; unit N, Task 5);
     for a gesture that `saves`, each file it edited written to disk
-    (`_save_written`); and no gesture waiting. Answers the sentence of a
-    file the gesture saves that could not be written, which the form then
-    shows in place of the note, and None otherwise (unit L's final
-    judgment, §6 item 6). Called with LOOP_LOCK held."""
-    refusal = _save_written(gesture) if held.get("saves") else None
-    if refusal is None:
+    (`_save_written`); and no gesture waiting. Answers the paths and reasons
+    of files left unsaved. Called with LOOP_LOCK held."""
+    failures = _save_written(gesture) if held.get("saves") else ()
+    if not failures:
         gesture_note.value = {"sentence": gesture.note, "made": time.monotonic()}
     single = len(gesture.edits) == 1 and not gesture.new_files and not gesture.deleted
     if held["kind"] not in WRITERS and single:
@@ -5107,10 +5260,10 @@ def _gesture_written(held: dict, gesture) -> str | None:
         gesture_steps.value = (*gesture_steps.value, step)[-GESTURE_STEPS:]
         _mark_deleted(step["deleted"], step["key"], True)
     gesturing.value = None
-    return refusal
+    return failures
 
 
-def _save_written(gesture) -> str | None:
+def _save_written(gesture) -> tuple[tuple[str, str], ...]:
     """With LOOP_LOCK held by its caller, once the gesture `gesture` wrote:
     each file it edited written to disk with the text the gesture made
     (`model.save_file`), where the file on disk is the one its buffer was
@@ -5119,38 +5272,38 @@ def _save_written(gesture) -> str | None:
     the stage file it writes (unit L, Task 17; defect 22 of the UX
     simulation), its writer refusing a file that held unsaved text. A file
     changed on disk meanwhile is not written, and its buffer stays
-    unsaved; the answer is then the sentence `<file>: the file changed on
-    disk` of the first such file, `model.save_file`'s reason, and None
-    where every file was written (unit L's final judgment, §6 item 6)."""
+    unsaved. The result names each unsaved file and its reason."""
     folder = tab_folder.value
     taken = dict(buffers.value)
-    refusal = None
+    failures = []
     for path, text in gesture.edits.items():
         name = recipe.relative(folder, path)
         held = taken.get(name)
         if held is None:
             continue
-        result = model.save_file(folder, name, text, held["digest"])
+        taken[name] = {**held, "text": text, "revision": held["revision"] + (held["text"] != text)}
+        try:
+            result = model.save_file(folder, name, text, held["digest"])
+        except (OSError, UnicodeError) as error:
+            failures.append((name, str(error)))
+            continue
         if result.saved:
-            revision = held["revision"] + (held["text"] != text)
-            taken[name] = {**held, "text": text, "revision": revision, "digest": result.digest}
-        elif refusal is None:
-            refusal = f"{name}: {result.reason}"
+            taken[name]["digest"] = result.digest
+        else:
+            failures.append((name, result.reason or "the file could not be saved"))
     buffers.value = taken
-    return refusal
+    return tuple(failures)
 
 
 def _after_written(
-    kind: str, gesture, opens: str | None = None, refusal: str | None = None
+    kind: str, gesture, opens: str | None = None, failures: tuple[tuple[str, str], ...] = ()
 ) -> None:
     """After the gesture `gesture` of the kind `kind` wrote, with LOOP_LOCK
-    released: a form's gesture closes its form, unless a file it saves
-    could not be written, `refusal`, the sentence that then stands in the
-    form, which stays open and opens no file (`_save_written`; unit L's
-    final judgment, §6 item 6); a form's gesture or a gesture that wrote new
-    files has the folder read again (`refresh_folder`), so that the tree
-    shows the new files and marks the edited ones unsaved; where the gesture
-    added a period between two periods, the text its writer answered for
+    released: a form's gesture closes its form and opens the first file
+    whose automatic save failed, when there is one. A form or a gesture
+    that wrote new files has the folder read again (`refresh_folder`), so
+    that the tree shows the new files and marks the edited ones unsaved;
+    where the gesture added a period, the text its writer answered for
     the restriction's input, `periods 2–4` or the empty text, is written
     there and applied (spec 0.4 §3.6, decision 28; `apply_restriction`),
     since the indices a restriction names have moved; a gesture of the graph
@@ -5167,9 +5320,7 @@ def _after_written(
     form = kind == "form"
     if kind == "recipe" and open_path.value is not None:
         flush_request.value = flush_request.value + 1
-    if form and refusal is not None:
-        _refuse_form(refusal)
-    elif form:
+    if form:
         close_form()
     if form or gesture.new_files:
         refresh_folder()
@@ -5177,7 +5328,14 @@ def _after_written(
         apply_restriction(gesture.restriction)
     if kind not in WRITERS:
         _show_written(gesture)
-    if opens is not None and refusal is None:
+    if failures:
+        open_from_tree(failures[0][0])
+        reasons = "; ".join(f"{name}: {reason}" for name, reason in failures)
+        gesture_note.value = {
+            "sentence": f"Stage created. Edits remain unsaved. {opens}. {reasons}",
+            "made": time.monotonic(),
+        }
+    elif opens is not None:
         open_from_tree(opens)
 
 
@@ -5247,9 +5405,8 @@ def _refuse_writer(held: dict, sentence: str) -> None:
 def _refuse_form(sentence: str) -> None:
     """Ends the form's gesture that waits with `sentence`, which stands in
     the form (`form_error`), a form's own refusal standing there and nowhere
-    else (A2-D13); nothing is written, apart from what a form that saves
-    wrote before a file it saves was found changed on disk (`_save_written`),
-    and the form stays open, the refusal counted (`form_refusals`; AAS,
+    else (A2-D13); nothing is written and the form stays open,
+    the refusal counted (`form_refusals`; AAS,
     L-D5)."""
     form_error.value = sentence
     form_refusals.value += 1
@@ -5353,11 +5510,11 @@ def _ask_editor(held: dict) -> None:
         ):
             after = functools.partial(_refuse_gesture, *_old_graph(shown, held), None)
         elif open_path.value is None:
-            failed = apply_edits(gesture.edits, gesture.read, gesture.new_files)
+            failed = _apply_gesture_edits(held, gesture, gesture.edits, gesture.new_files)
             if failed is None:
-                refusal = _gesture_written(held, gesture)
+                failures = _gesture_written(held, gesture)
                 after = functools.partial(
-                    _after_written, held["kind"], gesture, held.get("opens"), refusal
+                    _after_written, held["kind"], gesture, held.get("opens"), failures
                 )
             else:
                 after = functools.partial(_not_written, held, gesture, failed)
@@ -5476,11 +5633,11 @@ def _take_answer(held: dict, applied: bool) -> None:
         else:
             failed = None
             if closed or new_files:
-                failed = apply_edits(closed, gesture.read, new_files)
+                failed = _apply_gesture_edits(held, gesture, closed, new_files)
             if failed is None:
-                refusal = _gesture_written(held, gesture)
+                failures = _gesture_written(held, gesture)
                 after = functools.partial(
-                    _after_written, held["kind"], gesture, held.get("opens"), refusal
+                    _after_written, held["kind"], gesture, held.get("opens"), failures
                 )
             else:
                 after = functools.partial(_not_written, held, gesture, failed)
@@ -5528,7 +5685,7 @@ def _take_confirmation(held: dict, applied: bool) -> None:
                 "files": [name for name, _ in gesture.new_files],
                 "folders": _new_folders(folder.root, gesture.new_files),
             }
-            failed = apply_edits(closed, gesture.read, gesture.new_files)
+            failed = _apply_gesture_edits(held, gesture, closed, gesture.new_files)
             if failed is not None:
                 after = functools.partial(_not_written, held, gesture, failed)
             else:
@@ -5822,7 +5979,8 @@ def GestureNote():
     with rv.Html(tag="span", class_="bl-status-gesture"):
         if note is not None:
             status_dot()
-            rv.Html(tag="span", class_="bl-gesture-note", children=[note["sentence"]])
+            rv.Html(tag="span", class_="bl-gesture-note",
+                    attributes={"title": note["sentence"]}, children=[note["sentence"]])
 
 
 # --- what stands refused (AMD-MI-002 §6a rule 1, A2-D13) ---
@@ -5845,7 +6003,18 @@ class Refusal:
     the rule the package names where the line is one of its diagnostics, a
     connection's rule for a connection to check and `unread-input` for a
     backward header that lists a value input no line of its block reads
-    (`UNREAD_INPUT_RULE`), None otherwise."""
+    (`UNREAD_INPUT_RULE`), None otherwise. `category` names the part of
+    the model check summarized on the Problems button. `diagnostic` is the
+    one record the line reads (`model.Diagnostic`), None for a sentence of
+    the Workbench's own; `occurrences`, each `(h, key)` the problem
+    affects, and `(h, None)` for a period a finding of the connections
+    concerns; `related`, each related location of the record, the package's
+    `Location` with its file relative to the folder; `stale`, whether a
+    newer revision of the text has been given to the check that made the
+    record and the check has not answered; and `checked`, `disk` where the
+    check read the file on disk while its buffer holds unsaved edits, so
+    that the line names no range in the changed text (Model Interface 0.9
+    §4)."""
 
     sentence: str
     file: str | None
@@ -5855,6 +6024,12 @@ class Refusal:
     severity: str = "error"
     places: tuple = ()
     rule: str | None = None
+    category: str | None = None
+    diagnostic: model.Diagnostic | None = None
+    occurrences: tuple = ()
+    related: tuple = ()
+    stale: bool = False
+    checked: str | None = None
 
 
 def folder_relative(sentence: str | None) -> str | None:
@@ -5959,40 +6134,253 @@ CONNECTION_REVIEW_RULES = frozenset((
 UNREAD_INPUT_RULE = "unread-input"
 
 
+def _category(diagnostic: model.Diagnostic) -> str:
+    """The part of the model check a record belongs to, which the Problems
+    button summarizes: `connection` for a finding of the connections or a
+    refusal of the trellis's drawing, and for the two refusals of the
+    reading that concern a connector, `connector-names-no-field` and
+    `period-join-cycle`; `binding` for a verb refused and for a binding the
+    package stopped (`bind`); `declaration` otherwise, the loop's drawing
+    of a stage among them."""
+    if diagnostic.operation == "connect":
+        return "connection"
+    if diagnostic.operation == "draw" and diagnostic.view == "trellis":
+        return "connection"
+    if diagnostic.rule in ("connector-names-no-field", "period-join-cycle"):
+        return "connection"
+    if diagnostic.operation == "bind" or diagnostic.operation in recipe.KIND_OF_VERB:
+        return "binding"
+    return "declaration"
+
+
+def _within_folder(file: str) -> str:
+    """The path `file` that a record names, relative to the folder: an
+    absolute path as it stands, a relative one read from the folder."""
+    folder = tab_folder.value
+    return recipe.relative(folder, folder.root / file)
+
+
+def _related_places(diagnostic: model.Diagnostic) -> tuple:
+    """Each related location of the record, the package's `Location`, its
+    file relative to the folder where it names one."""
+    return tuple(
+        held._replace(file=_within_folder(held.file)) if held.file else held
+        for held in diagnostic.related
+    )
+
+
+def _row(
+    diagnostic: model.Diagnostic, file: str | None, line: int | None, made: float,
+    *, checked_files: dict | None = None, **fields
+) -> Refusal:
+    """One line of the list for the record `diagnostic` at the place
+    `file` and `line`, the file relative to the folder: its sentence
+    (`model.sentence`), its rule, its category (`_category`), its related
+    places (`_related_places`) and its occurrences; `fields` set the
+    rest."""
+    related = _related_places(diagnostic)
+    if fields.get("stale"):
+        line = None
+        if "places" in fields:
+            fields["places"] = tuple(
+                (path, None if path == file else at) for path, at in fields["places"]
+            )
+    checked_files = dict(checked_files or {})
+    if diagnostic.file and diagnostic.revision is not None:
+        checked_files.setdefault(_resolved(diagnostic.file), diagnostic.revision)
+
+    def changed(path):
+        checked = checked_files.get(_resolved(path)) if path else None
+        if checked is None:
+            return True
+        held = buffers.value.get(path)
+        if held is not None:
+            return checked != _digest(held["text"])
+        return _source_digests([_resolved(path)]).get(_resolved(path)) != checked
+
+    related = tuple(
+        place._replace(line=None, column=None, end_line=None, end_column=None)
+        if changed(place.file) else place
+        for place in related
+    )
+    return Refusal(
+        model.sentence(diagnostic),
+        file,
+        line,
+        made,
+        rule=diagnostic.rule,
+        category=_category(diagnostic),
+        diagnostic=diagnostic,
+        occurrences=diagnostic.occurrences,
+        related=related,
+        **fields,
+    )
+
+
+def _read_on_disk(file: str | None, outcome) -> bool:
+    """Whether the trellis's reading `outcome` read the file `file`,
+    relative to the folder, on disk while its buffer holds unsaved edits:
+    the buffer differs from the file (`_dirty_paths`) and the file is none
+    the reading takes from a buffer (`TrellisOutcome.takeable`), a stage
+    file or a binding source file."""
+    if file is None or file not in _dirty_paths():
+        return False
+    return _resolved(file) not in (outcome.takeable if outcome is not None else ())
+
+
+def _trellis_row(
+    diagnostic: model.Diagnostic, file: str | None, line: int | None, made: float, **fields
+) -> Refusal:
+    """One line of the list for a record of the trellis's reading, drawing
+    or binding (`_row`), in the view `trellis` of the source shown, its
+    revision the digest of its file as the reading read it
+    (`TrellisOutcome.files`); stale while a reading under newer values runs
+    (`TrellisOutcome.read_under`); and, where the reading read the file on
+    disk while its buffer holds unsaved edits (`_read_on_disk`), `checked`
+    `disk` and no line, in the first place as in every place."""
+    outcome = trellis_outcome.value
+    chosen = source.value
+    revision = None
+    if outcome is not None and diagnostic.file:
+        revision = outcome.files.get(str((tab_folder.value.root / diagnostic.file).resolve()))
+    diagnostic = diagnostic._replace(
+        view="trellis", source=chosen.path if chosen is not None else None, revision=revision
+    )
+    stale = (
+        outcome is not None
+        and outcome.read_under is not None
+        and (trellis_rebuild.value, unsaved_inputs()) != outcome.read_under
+    )
+    places = tuple(
+        (place[0], None if _read_on_disk(place[0], outcome) else place[1])
+        for place in fields.pop("places", ())
+    )
+    if _read_on_disk(file, outcome):
+        return _row(diagnostic, file, None, made, stale=stale, checked="disk", places=places,
+                    checked_files=outcome.files if outcome is not None else None, **fields)
+    return _row(diagnostic, file, line, made, stale=stale, places=places,
+                checked_files=outcome.files if outcome is not None else None, **fields)
+
+
+def _periods_named(address: str) -> tuple:
+    """The periods an address of the connections names, each as the
+    occurrence `(h, None)` of a period alone: `periods[h]…` the period `h`,
+    and `inter_connectors[h]` the periods `h` and `h + 1`, read by the
+    package's `entry_path`; none for an address of neither form."""
+    path = entry_path(address)
+    if len(path) < 2 or not isinstance(path[1], int):
+        return ()
+    if path[0] == "periods":
+        return ((path[1], None),)
+    if path[0] == "inter_connectors":
+        return ((path[1], None), (path[1] + 1, None))
+    return ()
+
+
+def _connection_rows(held, texts, report) -> list[Refusal]:
+    """The lines of the findings of `report`, the connection report of the
+    trellis shown `held` (`trellis.connection_report`), one line per
+    problem, each the record of the package's diagnostic under the
+    operation `connect` (`model.diagnostic_of`), with every place its
+    authored entries resolve to (`trellis.written_spans`, the files read
+    through `texts`), the severity `warning` for a rule of
+    `CONNECTION_REVIEW_RULES` and `error` otherwise. A finding that rests
+    on another finding (`depends_on`), as a route beside an authored
+    cycle, is left out where the finding it rests on is listed and rests
+    on none, since its input is one the earlier check rejected (Model
+    Interface 0.9 §4). The package records a finding once per expanded
+    period, its address and its sentence naming the period, so a finding
+    is identified by its rule, the places its entries resolve to and the
+    address of the finding it rests on, and not by its own address or its
+    sentence: a finding joins the first line of that identity whose
+    occurrences do not yet include its period (`_periods_named`), so that
+    one cycle authored in a template repeated over n periods is one line
+    linking the template's entries and listing the n periods, while the
+    two findings one entry gives in one period, one for each endpoint,
+    stay two lines."""
+    origins = [
+        [f"{address}[{key!r}]" if key is not None else address
+         for address, key, value in diagnostic.source_entries] or [diagnostic.address]
+        for diagnostic in report.diagnostics
+    ]
+    addresses = tuple(dict.fromkeys(address for group in origins for address in group))
+    spans = trellis.written_spans(report.file, addresses, texts) if report.file else ()
+    locations = {
+        address: (recipe.relative(tab_folder.value, place[0]), place[1].line)
+        for address, place in zip(addresses, spans) if place is not None
+    }
+    rejected = {found.address for found in report.diagnostics if found.depends_on is None}
+    rows, identities = [], []
+    for diagnostic, addresses in zip(report.diagnostics, origins):
+        if diagnostic.depends_on in rejected:
+            continue
+        places = tuple(dict.fromkeys(locations[address] for address in addresses
+                                     if address in locations))
+        periods = _periods_named(diagnostic.address)
+        identity = (diagnostic.rule, places, diagnostic.depends_on)
+        joined = next(
+            (n for n, (held_identity, row) in enumerate(zip(identities, rows))
+             if held_identity == identity and not set(periods) & set(row.occurrences)),
+            None,
+        )
+        if joined is not None:
+            rows[joined] = dataclasses.replace(
+                rows[joined], occurrences=(*rows[joined].occurrences, *periods)
+            )
+            continue
+        place = places[0] if places else (None, None)
+        severity = "warning" if diagnostic.rule in CONNECTION_REVIEW_RULES else "error"
+        found = model.diagnostic_of(diagnostic, "connect", report.file)._replace(
+            occurrences=periods
+        )
+        rows.append(_trellis_row(found, *place, held.made, severity=severity, places=places))
+        identities.append(identity)
+    return rows
+
+
 def standing_refusals() -> list[Refusal]:
     """What stands refused or undone in the tab, newest first (AMD-MI-002
     §6a rule 1, A2-D13; ruling R46), each line read from the state that
-    holds it: the loop's refusals (`results`) of the open text and of the
-    text of the stage shown where that stage is another file's, as while a
-    file that is no stage is open as text and the view and the panel keep
-    the last stage elaborated, each file read once and each refusal with
-    its file, its line and the words the package says to write where it
-    gives them; the refused builders graphs of the stage shown, read from
-    that stage (`model.refused_directions`), where the outcome of its file
-    did not make it, as after the loop refused an edit of its text while
-    the view still draws it, each with its file and its line; the trellis's
-    refusal of its reading (`trellis_outcome`), with its place, the line
-    the last gesture typed while its text stands (`_gesture_place`), else
-    the place of the package's address (`_trellis_refusal_place`); the
-    Workbench's sentence of the last gesture of the trellis graph that
-    wrote nothing (`gesture_refusal`), with its file and line; the
-    sentence of each graph of the trellis shown that the package refused
-    to draw (`trellis_shown`) and the notes of that trellis's binding, each
-    the sentence of a verb the package refused (`trellis.binding_notes`),
-    where the last reading answered that trellis, since the trellis a
-    refused reading leaves drawn is an earlier reading's; the region's
-    layout or file-loading refusal (`layout_refusal`, G-D9), with no file
-    or line; the notes of the binding of the stage shown, each the sentence
-    of a verb the package refused or the note of a source that does not
-    read, at the place of its refusal (`_trellis_refusal_place`; ruling
-    R51), while the files its binding read stand as it read them
-    (`_bound_as_read`), the note of a model's `declaration/` opened by
+    holds it, and the line of a record from that record alone (`_row`): the
+    loop's refusals (`results`) of the open text and of the text of the
+    stage shown where that stage is another file's, as while a file that
+    is no stage is open as text and the view and the panel keep the last
+    stage elaborated, each file read once, each refusal with its file and
+    its line, and marked stale while the buffer stands at a newer revision
+    than the one the outcome answers; the refused builders graphs of the
+    stage shown, read from that stage (`model.refused_directions`), where
+    the outcome of its file did not make it, as after the loop refused an
+    edit of its text while the view still draws it; the value inputs a
+    backward header of the stage shown lists and no line of the block
+    reads, which the package keeps as diagnostics (AAS, 17 October 2026),
+    each a line to review at the header's line; the trellis's refusal of
+    its reading (`trellis_outcome`), with its place, the line the last
+    gesture typed while its text stands (`_gesture_place`), else the place
+    of the package's address (`_trellis_refusal_place`); the Workbench's
+    sentence of the last gesture of the trellis graph that wrote nothing
+    (`gesture_refusal`), with its file and line; where the last reading
+    answered the trellis shown, the refusal of its drawing at the gesture's
+    place or the package's, the sentence of each graph the package refused
+    to draw, the bindings the package refused (`trellis.refused_bindings`),
+    each with the places of its sources and the related locations of its
+    record, and the findings of the connections (`_connection_rows`), with
+    the candidates a rejected entry names and the open continuation fields
+    of the branches; a line of the trellis is stale while a reading under
+    newer values runs, and names no line of a file the reading read on
+    disk while its buffer holds unsaved edits (`_trellis_row`); the
+    region's layout or file-loading refusal (`layout_refusal`, G-D9), with
+    no file or line; of the binding of the stage shown, while the files
+    its binding read stand as it read them (`_bound_as_read`), the refusal
+    of its source's reading at its place (ruling R51), each verb refused
+    at the place its record names, else at its source's entry, with the
+    places of its sources (`trellis.failure_places`), and the Workbench's
+    own notes, the note of a model's `declaration/` opened by
     itself with the model folder its button opens
     (`recipe.model_of_declaration`; unit L, Task 28, AAS, L-D23); the
-    package's refusal to list the places of the
-    stage shown (`Shown.places_refusal`), with no file or line (unit L,
-    Task 18); the classification table's refusal of a change and the value
-    tabs' refusal of a write, while each stands (`_standing_table_note`,
+    package's refusal to list the places of the stage shown
+    (`Shown.places_refusal`), with no file or line (unit L, Task 18); the
+    classification table's refusal of a change and the value tabs' refusal
+    of a write, while each stands (`_standing_table_note`,
     `_standing_value_note`), and the refusal of a change of the Recipe tab
     (`choice_refusal`); the refusal of the restriction
     (`_restriction_refused`); the refused answer to the last command of
@@ -6001,8 +6389,10 @@ def standing_refusals() -> list[Refusal]:
     of the last reading alone, the rule of unit K's Task 13 (usability
     walkthrough §4 item 15) applied to every source of a line; a verb no
     record binds is no refusal and gives no line (K-D29). Then one line per
-    refusal (`_one_line_per_refusal`; unit L, Task 21; defect 17 of the UX
-    simulation). Lines made at one moment keep this order."""
+    problem (`_grouped`): the lines whose records identify one problem,
+    as the loop's refusal of a text and the trellis's reading of the same
+    text, stand as one line listing every occurrence (Model Interface 0.9
+    §4). Lines made at one moment keep this order."""
     found = []
     current = shown.value
     # the open file, then the stage shown's file where it is another; a
@@ -6012,18 +6402,18 @@ def standing_refusals() -> list[Refusal]:
         result = _result_of(path)
         if result is None:
             continue
-        for refusal in result.refusals:
-            found.append(
-                Refusal(_refusal_sentence(refusal), result.path, refusal["line"], result.made)
-            )
+        held = buffers.value.get(path)
+        stale = held is not None and held["revision"] != result.revision
+        for diagnostic in result.refusals:
+            found.append(_row(diagnostic, result.path, diagnostic.line, result.made, stale=stale))
     # The stage shown's refused graphs where the outcome of its file did not
     # make it: the panel of a refusing node of the stage drawn prints its
     # rows alone.
     entry = results.value.get(current.path) if current is not None else None
     if current is not None and (entry is None or entry["shown"] is not current):
         for refusal in model.refused_directions(current.stage).values():
-            place = (current.path, refusal["line"])
-            found.append(Refusal(refusal["message"], *place, current.made))
+            held_refusal = refusal._replace(view="stage", revision=current.digest)
+            found.append(_row(held_refusal, current.path, refusal.line, current.made))
     # The value inputs a backward header of the stage shown lists and no line
     # of the block reads, which the package keeps as diagnostics and not as
     # refusals (AAS, 17 October 2026): one line to review each, with the
@@ -6031,24 +6421,28 @@ def standing_refusals() -> list[Refusal]:
     if current is not None:
         for diagnostic in current.stage.diagnostics()["unread_inputs"]:
             span = current.spans.get(diagnostic.address) if current.spans else None
-            found.append(Refusal(diagnostic.message, current.path,
-                                 span.line if span is not None else None, current.made,
-                                 severity="warning", rule=diagnostic.rule))
+            unread = model.diagnostic_of(diagnostic, "elaborate", current.path)._replace(
+                view="stage", stage=current.stage.name, revision=current.digest
+            )
+            found.append(_row(unread, current.path, span.line if span is not None else None,
+                              current.made, severity="warning"))
     outcome, held = trellis_outcome.value, trellis_shown.value
     if outcome is not None and outcome.refusal is not None:
         file, line = _gesture_place() or _trellis_refusal_place(outcome.refusal)
-        found.append(Refusal(outcome.refusal.message, file, line, outcome.made))
+        found.append(_trellis_row(outcome.refusal, file, line, outcome.made))
     refused_gesture = gesture_refusal.value
     if refused_gesture is not None:
         place = (refused_gesture["file"], refused_gesture["line"])
-        found.append(Refusal(refused_gesture["sentence"], *place, refused_gesture["made"]))
+        found.append(Refusal(refused_gesture["sentence"], *place, refused_gesture["made"],
+                             diagnostic=refused_gesture.get("diagnostic")))
     # the refused graphs and the binding's notes of the trellis the last
     # reading answered; the trellis a refused reading leaves drawn is an
     # earlier reading's
-    if held is not None and outcome is not None and outcome.shown is held:
+    if (held is not None and outcome is not None and outcome.shown is held
+            and trellis.has_occurrences(held)):
         if held.view_refusal is not None:
-            file, line = _trellis_refusal_place(held.view_refusal)
-            found.append(Refusal(held.view_refusal.message, file, line, held.made))
+            file, line = _gesture_place() or _trellis_refusal_place(held.view_refusal)
+            found.append(_trellis_row(held.view_refusal, file, line, held.made))
         for drawn in held.collection["graphs"]:
             nodes = drawn["nodes"]
             # a graph the package refused to draw holds one node, which
@@ -6063,60 +6457,75 @@ def standing_refusals() -> list[Refusal]:
                                                  **trellis._selection(held.restriction))
                 severity = "warning" if unpaired else "error"
                 found.append(Refusal(_attribute(nodes[0], "refusal"), None, None,
-                                     held.made, severity=severity))
+                                     held.made, severity=severity,
+                                     category="connection" if unpaired else "declaration"))
         texts = trellis.texts_of(unsaved_texts())
         for binding in trellis.refused_bindings(tab_folder.value, held, texts):
-            found.append(Refusal(binding["sentence"], binding["file"], binding["line"],
-                                 held.made, places=binding["places"]))
+            found.append(_trellis_row(binding["diagnostic"], binding["file"], binding["line"],
+                                      held.made, places=binding["places"]))
         report = trellis.connection_report(held.trellis, selection=held.selection)
-        origins = [
-            [f"{address}[{key!r}]" if key is not None else address
-             for address, key, value in diagnostic.source_entries] or [diagnostic.address]
-            for diagnostic in report.diagnostics
-        ]
-        addresses = tuple(dict.fromkeys(address for group in origins for address in group))
-        spans = trellis.written_spans(report.file, addresses, texts) if report.file else ()
-        locations = {
-            address: (recipe.relative(tab_folder.value, place[0]), place[1].line)
-            for address, place in zip(addresses, spans) if place is not None
-        }
-        for diagnostic, addresses in zip(report.diagnostics, origins):
-            places = tuple(dict.fromkeys(locations[address] for address in addresses
-                                         if address in locations))
-            place = places[0] if places else (None, None)
-            severity = "warning" if diagnostic.rule in CONNECTION_REVIEW_RULES else "error"
-            found.append(Refusal(diagnostic.message, *place, held.made,
-                                 severity=severity, places=places, rule=diagnostic.rule))
+        found.extend(_connection_rows(held, texts, report))
         missing = set(report.unjoined["internal"]["reading"])
         rejected = [item for item in report.rejected
                     if (item.reading.h, item.reading.key, item.reading.field) in missing]
-        locations = trellis.field_places(tab_folder.value, held,
-                                        [use for item in rejected for use in (item.writing, item.reading)],
-                                        texts)
+        open_outputs = set(report.unjoined["internal"]["writing"])
+        branches = {}
+        for use in report.selection.uses:
+            if use.branch is not None and (use.h, use.key, use.field) in open_outputs:
+                branches.setdefault((use.key, use.branch, use.field), []).append(use)
+        uses = [use for item in rejected for use in (item.writing, item.reading)]
+        uses.extend(use for occurrences in branches.values() for use in occurrences)
+        locations = trellis.field_places(tab_folder.value, held, uses, texts)
         for item in rejected:
             places = tuple(dict.fromkeys(locations[use] for use in (item.writing, item.reading)))
             found.append(Refusal(item.message, *places[0], held.made,
-                                 severity="warning", places=places))
+                                 severity="warning", places=places, category="connection"))
+        for (key, branch, field), occurrences in branches.items():
+            places = tuple(dict.fromkeys(locations[use] for use in occurrences))
+            periods = trellis._runs(use.h for use in occurrences)
+            period_word = "period" if len(occurrences) == 1 else "periods"
+            message = (f"{key}, branch {branch}: no connection from continuation field "
+                       f"{field} at {period_word} {periods}.")
+            found.append(Refusal(message, *places[0], held.made, severity="warning",
+                                 places=places, category="connection"))
     refused_desktop = desktop_refusal.value
     if refused_desktop is not None:
-        found.append(Refusal(refused_desktop["sentence"], None, None, refused_desktop["made"]))
+        found.append(Refusal(refused_desktop["sentence"], None, None, refused_desktop["made"],
+                             diagnostic=refused_desktop.get("diagnostic")))
     layout = layout_refusal.value
     if layout is not None:
-        found.append(Refusal(layout["sentence"], None, None, layout["made"]))
+        found.append(Refusal(layout["sentence"], None, None, layout["made"],
+                             diagnostic=layout.get("diagnostic")))
     if current is not None and _bound_as_read(current):
-        # the one note of a source that does not read, at its refusal's place
-        refused = current.refusal
-        place = _trellis_refusal_place(refused) if refused is not None else (None, None)
-        # the note of a model's declaration/ opened by itself carries the
-        # model folder above, which its line's button opens (unit L, Task 28)
-        above = recipe.model_of_declaration(tab_folder.value)
-        offered = None if above is None else recipe.declaration_note(above)
-        found += [
-            Refusal(note, *place, current.made, str(above) if note == offered else None)
-            for note in current.notes
-        ]
+        texts = trellis.texts_of(unsaved_texts())
+        # the refusal of the source's reading, at its place (ruling R51),
+        # observed from the stage shown
+        if current.refusal is not None:
+            file, line = _trellis_refusal_place(current.refusal)
+            observed = current.refusal._replace(view="stage")
+            found.append(_row(observed, file, line, current.made,
+                              checked_files=current.source_digests))
+        for failure in current.failures:
+            places = trellis.binding_places(tab_folder.value, current.source,
+                                            recipe.KIND_OF_VERB[failure.operation],
+                                            current.position, current.record, texts)
+            observed = failure._replace(view="stage", source=current.source.path)
+            place, places = trellis.failure_places(tab_folder.value, failure, places)
+            found.append(_row(observed, *place, current.made, places=places,
+                              checked_files={**current.source_digests,
+                                             _resolved(current.path): current.digest}))
+        # the Workbench's own notes, which stand where no record stands: the
+        # note of a model's declaration/ opened by itself carries the model
+        # folder above, which its line's button opens (unit L, Task 28)
+        if current.refusal is None and not current.failures:
+            above = recipe.model_of_declaration(tab_folder.value)
+            offered = None if above is None else recipe.declaration_note(above)
+            for note in current.notes:
+                found.append(Refusal(note, None, None, current.made,
+                                     str(above) if note == offered else None))
     if current is not None and current.places_refusal is not None:
-        found.append(Refusal(current.places_refusal, None, None, current.made))
+        found.append(Refusal(current.places_refusal, None, None, current.made,
+                             category="inspection"))
     own = _own_shown()
     note = _standing_table_note(own)
     if note is not None and note["refused"]:
@@ -6133,62 +6542,81 @@ def standing_refusals() -> list[Refusal]:
         found.append(Refusal(restricted["sentence"], None, None, restricted["made"]))
     answer = git_answer.value
     if answer is not None and answer["refused"] and answer["sentence"]:
-        found.append(Refusal(answer["sentence"], None, None, answer["made"]))
+        diagnostic = answer.get("diagnostic")
+        found.append(Refusal(model.sentence(diagnostic) if diagnostic is not None else answer["sentence"],
+                             None, None, answer["made"], diagnostic=diagnostic))
     met = conflict.value
     if met is not None:
-        found.append(Refusal(met["reason"], open_path.value, None, met["made"]))
+        diagnostic = met.get("diagnostic")
+        found.append(Refusal(model.sentence(diagnostic) if diagnostic is not None else met["reason"],
+                             open_path.value, None, met["made"], diagnostic=diagnostic))
     # each sentence with its paths from the folder, the sentence otherwise
     # as its source wrote it (K-D11)
     found = [
         dataclasses.replace(refusal, sentence=folder_relative(refusal.sentence))
         for refusal in found
     ]
-    return sorted(_one_line_per_refusal(found), key=lambda refusal: refusal.made, reverse=True)
+    return sorted(_grouped(found), key=lambda refusal: refusal.made, reverse=True)
 
 
-def _one_line_per_refusal(found: list[Refusal]) -> list[Refusal]:
-    """The lines `found`, in their order, one line per refusal (unit L,
-    Task 21; defects 17 and 18 of the UX simulation): lines whose sentences
-    are equal once the line naming the stage occurrence refused is taken
-    out (`trellis.without_occurrence`) give one refusal where they name the
-    same file or one of them names none, as a refusal of a
-    binding that the stage shown's binding gives without that line and the
-    trellis's binding with it, an exception that the loop meets in the
-    open text and the trellis's reading meets in the same stage file, or
-    the refusal of a recipe that the trellis's reading and the stage
-    shown's source both give; lines in the same words that name two files
-    stand as two, so that each file's link stands (unit L's final
-    judgment, §6 item 8). The refusal stands once, as the line that names
-    the occurrence where one does, else as a line that names a file, else
-    as the first of them; no sentence is composed."""
-    kept = []
+def _problem(refusal: Refusal):
+    """What identifies the problem a line reports, by which the lines of
+    one problem are grouped (Model Interface 0.9 §4): the record's kind,
+    operation and rule, the line's file with the position at which the
+    record begins and its address, the explanation and the action, the
+    related locations, the direction and the checked revision; an addition's
+    positioned refusal has the same identity during methodize and elaborate.
+    None for a line of no record, which stands alone. The end of the range is left
+    out, since the loop ends a syntax refusal where the refused text ends
+    and a reading of the trellis keeps the parser's end, and the two
+    records of one text are one problem. The findings of the connections,
+    which the package records once per expanded period, reach it grouped
+    (`_connection_rows`), one line per problem, so that the address and
+    the sentence of such a record, each naming the period, separate no two
+    lines of one problem."""
+    held = refusal.diagnostic
+    if held is None:
+        return None
+    # An addition's construction check is the same check when methodize
+    # elaborates its union and when a trellis elaborates the union directly.
+    operation = (
+        "elaborate" if held.operation == "methodize" and held.rule and held.line is not None
+        else held.operation
+    )
+    return (held.kind, operation, held.rule, refusal.file, held.line, held.column,
+            held.address, held.message, held.write, held.related, held.direction, held.revision)
+
+
+def _grouped(found: list[Refusal]) -> list[Refusal]:
+    """The lines `found`, in their order, one line per problem: lines whose
+    records identify one problem (`_problem`), as the loop's refusal of a
+    text and the trellis's reading of the same text, stand as the first of
+    them, listing every occurrence and every place of them, stale where
+    one is, and checked on disk, with no line, where one was; lines of
+    distinct problems, and lines of no record, stand each as they are."""
+    kept, at = [], {}
     for refusal in found:
-        key = trellis.without_occurrence(refusal.sentence)
-        at = next(
-            (
-                n
-                for n, standing in enumerate(kept)
-                if trellis.without_occurrence(standing.sentence) == key
-                and (standing.file == refusal.file or None in (standing.file, refusal.file))
-            ),
-            None,
-        )
-        if at is None:
+        key = _problem(refusal)
+        if key is None or key not in at:
+            if key is not None:
+                at[key] = len(kept)
             kept.append(refusal)
-        else:
-            previous = kept[at]
-            chosen = refusal if _line_rank(refusal) > _line_rank(previous) else previous
-            places = tuple(dict.fromkeys((*previous.places, *refusal.places)))
-            kept[at] = dataclasses.replace(chosen, places=places)
+            continue
+        standing = kept[at[key]]
+        checked = standing.checked or refusal.checked
+        places = tuple(dict.fromkeys((*standing.places, *refusal.places)))
+        kept[at[key]] = dataclasses.replace(
+            standing,
+            # a problem one check read on disk while the buffer holds edits
+            # names no line of the changed text
+            line=None if checked else standing.line,
+            occurrences=tuple(dict.fromkeys((*standing.occurrences, *refusal.occurrences))),
+            places=tuple((file, None) for file, _ in places) if checked else places,
+            stale=standing.stale or refusal.stale,
+            checked=checked,
+            made=max(standing.made, refusal.made),
+        )
     return kept
-
-
-def _line_rank(refusal: Refusal) -> tuple[bool, bool]:
-    """The order in which one of several lines of one refusal stands
-    (`_one_line_per_refusal`): a line naming the stage occurrence before one
-    that does not, then a line naming a file before one that names none."""
-    named = trellis.without_occurrence(refusal.sentence) != refusal.sentence
-    return named, refusal.file is not None
 
 
 def toggle_errors() -> None:
@@ -6320,11 +6748,11 @@ def goto_commands() -> list[dict]:
     if not MATSYA_OFF:
         words.append("fold Matsya")
     words.append("high contrast")
-    if source.value is not None and not (root / creation.notebook_file(root)).exists():
+    if available_notebook():
         words.append("notebook")
     if not git_task.pending:
         words.append("new trellis")
-    if (root / creation.factory_path(creation.RECIPE)).is_file():
+    if (root / creation.factory_path(_variant_recipe())).is_file():
         words.append("new variant")
     if creation.can_add(root):
         words += ["add stage", "add period"]
@@ -6402,11 +6830,14 @@ def on_goto_chosen(data: dict) -> None:
     if kind != "box" and data.get("previewed"):
         _restore_goto_selection(data)
     if kind in ("line", "text") and data.get("line"):
+        _show_work_area("file")
         goto_line(int(data["line"]), int(data.get("column") or 1))
     elif kind == "block" and data.get("block"):
+        _show_work_area("file")
         goto_block(data["block"])
     elif kind == "box" and data.get("node") and data.get("graph") in (None, graph.value):
         select_node(data["node"], graph.value)
+        _show_work_area("view")
         if data.get("block"):
             goto_block(data["block"])
     elif kind == "command":
@@ -6435,7 +6866,7 @@ def Editor(
     path: str = None,
     text: str = "",
     revision: int = 0,
-    diagnostics: list = [],
+    diagnostics: dict = None,
     goto: dict = None,
     save_request: int = 0,
     flush_request: int = 0,
@@ -6497,6 +6928,8 @@ def CopyButton(text: str = "", label: str = "Copy", title: str = "", button_clas
 @solara.component_vue("window.vue")
 def Window(
     folder: str = "",
+    open_path: str | None = None,
+    work_area_request: dict | None = None,
     fold_request: dict | None = None,
     event_back=None,
     event_forward=None,
@@ -7058,6 +7491,34 @@ def MainBar(current: Shown | None):
 
 
 @solara.component
+def CompactSwitch():
+    """Selects a work area when the window cannot show the columns together."""
+    panes = [("folder", "Files"), ("file", "Source"), ("view", "Graph")]
+    if not MATSYA_OFF:
+        panes.append(("matsya", "Matsya"))
+    with rv.Html(
+        tag="nav", class_="bl-compact-switch", attributes={"aria-label": "Workbench panels"}
+    ):
+        for pane, label in panes:
+            rv.Html(
+                tag="button",
+                attributes={
+                    "type": "button", "data-pane": pane,
+                    "aria-pressed": "true" if pane == "file" else "false",
+                },
+                children=[label],
+            ).key(pane)
+        rv.Html(
+            tag="button",
+            attributes={
+                "type": "button", "data-show-problems": "",
+                "aria-label": "Show problems",
+            },
+            children=["Problems"],
+        )
+
+
+@solara.component
 def ToolbarButton(
     control: str,
     label: str,
@@ -7187,10 +7648,21 @@ def ErrorMark():
     review = [item for item in standing if item.severity != "error"]
     headers = [item for item in review if item.rule == UNREAD_INPUT_RULE]
     connections = [item for item in review if item.rule != UNREAD_INPUT_RULE]
+    categories = {item.category for item in errors}
+    labels = [
+        label for category, label in (
+            ("declaration", "Declaration error"),
+            ("binding", "Binding error"),
+            ("connection", "Connection error"),
+            ("inspection", "Method inspection error"),
+        ) if category in categories
+    ]
+    if "connection" not in categories and (connections or any(item.kind == "unjoined" for item in items)):
+        labels.append("Review connections")
     count = len(standing) + len(items)
     opened = errors_open.value
     with rv.Html(tag="span", class_="bl-errors"):
-        ErrorButton(count, opened, len(errors))
+        ErrorButton(count, opened, len(errors), ", ".join(labels))
         with rv.Html(tag="div", class_="bl-error-list" + ("" if opened else " bl-hidden"),
                      attributes={"id": "bl-problems-list", "aria-label": "Problems"}):
             if not count:
@@ -7203,7 +7675,8 @@ def ErrorMark():
                         with rv.Html(tag="ul"):
                             for number, refusal in enumerate(records):
                                 ErrorLine(refusal).key(f"{label} {number} {refusal.sentence}")
-            for kind, label in (("unjoined", "Unjoined fields"), ("check", "Entries to check")):
+            for kind, label in (("unjoined", "Unjoined internal entry fields"),
+                                ("check", "Entries to check")):
                 records = [item for item in items if item.kind == kind]
                 if records:
                     with rv.Html(tag="section", class_=f"bl-problem-group bl-problem-{kind}",
@@ -7218,7 +7691,7 @@ def ErrorMark():
 
 
 @solara.component
-def ErrorButton(count: int, opened: bool, errors: int | None = None):
+def ErrorButton(count: int, opened: bool, errors: int | None = None, summary: str = ""):
     """A native button whose accessible name gives both kinds of count:
     the Codicon `error` while an error stands, or nothing is reported, and
     `warning` while only checks to review stand, the icon and the count in
@@ -7226,6 +7699,8 @@ def ErrorButton(count: int, opened: bool, errors: int | None = None):
     errors = count if errors is None else errors
     glyph = "checks mark" if count and not errors else "error mark"
     children = [icons.codicon(icons.CODICONS[glyph], "bl-error-icon")]
+    if summary:
+        children.append(rv.Html(tag="span", class_="bl-error-status", children=[summary]))
     if count:
         children.append(rv.Html(tag="span", class_="bl-error-count", children=[str(count)]))
     classes = "bl-error-mark" + (" bl-has-errors" if errors else "")
@@ -7233,25 +7708,170 @@ def ErrorButton(count: int, opened: bool, errors: int | None = None):
     label = "Problems: none reported" if not count else f"Problems: {errors} error" + ("" if errors == 1 else "s") + f", {count-errors} to review"
     item = rv.Html(tag="button", class_=classes, attributes={
         "type": "button", "title": label, "aria-label": label,
+        **({"aria-description": summary} if summary else {}),
         "aria-expanded": "true" if opened else "false", "aria-controls": "bl-problems-list",
     }, children=children)
     rv.use_event(item, "click", lambda *_: toggle_errors())
     return item
 
 
+def problem_text(refusal: Refusal) -> str:
+    """The text the button `Copy` of a line copies (Model Interface 0.9
+    §4): the rule, the installed versions of bellman and bellman-workbench
+    (`model.package_versions`), the sentence, then each place relative to
+    the model folder, each related location with its role, and the
+    occurrences; no file's contents and no absolute path."""
+    versions = ", ".join(f"{name} {version}" for name, version in model.package_versions().items())
+    lines = [f"rule: {refusal.rule or 'none'}", versions, refusal.sentence]
+    for file, line in refusal.places or ((refusal.file, refusal.line),):
+        if file is not None:
+            lines.append(f"at: {file}:{line}" if line is not None else f"at: {file}")
+    for held in refusal.related:
+        if held.file is not None:
+            place = f"{held.file}:{held.line}" if held.line is not None else held.file
+            lines.append(f"{held.role}: {place}")
+    if refusal.occurrences:
+        lines.append(f"occurrences: {_occurrence_words(refusal.occurrences)}")
+    return "\n".join(lines)
+
+
+def _occurrence_words(occurrences) -> str:
+    """The occurrences `occurrences`, each `(h, key)`, as a line of the
+    list prints them: each stage's key with the periods that hold it,
+    `cons at periods 0–2; disc at period 0`, the keys in the order they
+    first appear, and the periods alone, `periods 0–1`, for the
+    occurrences `(h, None)` of a finding of the connections."""
+    periods = {}
+    for h, key in occurrences:
+        periods.setdefault(key, []).append(h)
+    words = []
+    for key, held in periods.items():
+        when = f"{'period' if len(held) == 1 else 'periods'} {trellis._runs(sorted(held))}"
+        words.append(when if key is None else f"{key} at {when}")
+    return "; ".join(words)
+
+
+def _record_range(refusal: Refusal, file: str, line: int) -> tuple[int, tuple | None]:
+    """The column and the end at which a source link of the line `refusal`
+    opens `file` at `line`: the record's own range where the place is the
+    record's position, so that the link selects the text the check names,
+    and the line's first column with no end otherwise."""
+    held = refusal.diagnostic
+    if held is None or held.file is None or held.line != line or _within_folder(held.file) != file:
+        return 1, None
+    end = (held.end_line, held.end_column) if held.end_line is not None else None
+    return held.column or 1, end
+
+
+@solara.component
+def RuleLink(rule: str, found: model.RuleEntry | None):
+    """The rule of a line in text (Model Interface 0.9 §6 item 4): where the
+    catalogue of the imported Bellman answers the rule's entry, `found`
+    (`model.rule_entry`), `a.bl-error-rule`, the identifier linking to the
+    rule's entry on the published Refusals page of that version; otherwise,
+    for a check's rule that no vocabulary holds or under a Bellman whose
+    catalogue answers no entry or fails, `span.bl-error-rule` with the
+    identifier alone."""
+    if found is None:
+        return rv.Html(tag="span", class_="bl-error-rule", children=[rule])
+    return rv.Html(
+        tag="a",
+        class_="bl-error-rule",
+        attributes={
+            "href": found.address,
+            "target": "_blank",
+            "rel": "noopener",
+            "title": "Refusals page",
+        },
+        children=[rule],
+    )
+
+
 @solara.component
 def ErrorLine(refusal: Refusal):
-    """The unchanged diagnostic sentence, followed by its source controls."""
+    """One line of the list under the error mark, `li.bl-error-line`: the
+    package's sentence, unchanged; a source button per place
+    (`ErrorPlace`), at the record's range where the place is the record's
+    position (`_record_range`), the file alone where the place names no
+    line; a button per related location of the record, named by its role;
+    then the facts of the record in text, `span.bl-error-facts`, one after
+    another with ` · ` between them: the severity
+    (`span.bl-error-severity`); for an internal failure the operation that
+    stopped and the identifier of the log entry that holds its traceback;
+    the rule (`RuleLink`); the occurrences the problem affects
+    (`_occurrence_words`); `stale` while a newer revision is being checked;
+    `checked on disk` where the check read the saved file while the buffer
+    holds edits; and then the button `Copy`, which copies the problem
+    (`problem_text`). Under the facts, where the catalogue of the imported
+    Bellman answers the rule's entry (`model.rule_entry`),
+    `details.bl-rule-entry`, whose summary `entry` opens that entry, read
+    from the installed package with no connection; wherever no entry can be
+    answered, the identifier stands alone and no entry is shown. The note
+    of a model's `declaration/` opened by itself carries its button
+    (`OpenModelButton`). The line takes the focus from the keyboard, and
+    Enter on the line itself opens its first place, as a click on that
+    place's button does."""
     children = [rv.Html(tag="span", class_="bl-error-sentence", children=[refusal.sentence])]
-    places = refusal.places or ((refusal.file, refusal.line),)
+    places = [place for place in refusal.places or ((refusal.file, refusal.line),) if place[0]]
     for file, line in places:
-        if file is not None and line is not None:
-            children.append(ErrorPlace(file, line))
-        elif file is not None:
-            children.append(rv.Html(tag="span", class_="bl-error-file", children=[file]))
+        column, end = _record_range(refusal, file, line) if line is not None else (1, None)
+        children.append(ErrorPlace(file, line, column=column, end=end))
+    for held in refusal.related:
+        if held.file is not None:
+            end = (held.end_line, held.end_column) if held.end_line is not None else None
+            children.append(ErrorPlace(held.file, held.line, held.role, held.column or 1, end))
+    facts = [rv.Html(tag="span", class_="bl-error-severity", children=[refusal.severity])]
+    record = refusal.diagnostic
+    if record is not None and record.kind == "internal":
+        facts.append(rv.Html(tag="span", class_="bl-error-operation",
+                             children=[f"{record.operation} stopped"]))
+        if record.entry:
+            facts.append(rv.Html(tag="span", class_="bl-error-entry",
+                                 children=[f"logged as {record.entry}"]))
+    found = model.rule_entry(refusal.rule) if refusal.rule else None
+    if refusal.rule:
+        facts.append(RuleLink(refusal.rule, found))
+    if refusal.occurrences:
+        facts.append(rv.Html(tag="span", class_="bl-error-occurrences",
+                             children=[_occurrence_words(refusal.occurrences)]))
+    if refusal.stale:
+        facts.append(rv.Html(tag="span", class_="bl-error-stale", children=["stale"]))
+    if refusal.checked == "disk":
+        facts.append(rv.Html(tag="span", class_="bl-error-checked", children=["checked on disk"]))
+    separated = [piece for fact in facts for piece in (" · ", fact)][1:]
+    copy = CopyButton(text=problem_text(refusal), label="Copy", title="Copy the problem",
+                      button_class="bl-error-copy")
+    children.append(rv.Html(tag="span", class_="bl-error-facts", children=[*separated, " ", copy]))
+    if found is not None:
+        # the catalogue's entry of the rule, under the facts, read from the
+        # installed package with no connection
+        children.append(
+            rv.Html(
+                tag="details",
+                class_="bl-rule-entry",
+                children=[
+                    rv.Html(tag="summary", children=["entry"]),
+                    rv.Html(tag="pre", children=[found.text]),
+                ],
+            )
+        )
     if refusal.opens is not None:
         children.append(OpenModelButton(refusal.opens))
-    return rv.Html(tag="li", class_="bl-error-line", attributes={"data-severity": refusal.severity}, children=children)
+    item = rv.Html(
+        tag="li",
+        class_="bl-error-line",
+        attributes={"data-severity": refusal.severity, "tabindex": "0"},
+        children=children,
+    )
+
+    def open_first(*_):
+        if places:
+            file, line = places[0]
+            column, end = _record_range(refusal, file, line) if line is not None else (1, None)
+            _open_place(file, line, column, end)
+
+    rv.use_event(item, "keyup.enter.self", open_first)
+    return item
 
 
 @solara.component
@@ -7273,23 +7893,48 @@ def OpenModelButton(path: str):
 
 
 @solara.component
-def ErrorPlace(path: str, line: int):
-    """The source button of a line of the list under the error mark, `<file>:<line>`,
-    carrying `data-path` and `data-line`; a click opens the file at that
-    line and records the place left (`open_at`)."""
+def ErrorPlace(
+    path: str,
+    line: int | None,
+    role: str | None = None,
+    column: int = 1,
+    end: tuple | None = None,
+):
+    """The source button of a line of the list under the error mark,
+    `<file>:<line>`, `button.bl-error-place` carrying `data-path` and
+    `data-line`; a click opens the file at `line` and `column`, the text up
+    to `end` selected where it is given, and records the place left
+    (`open_at`). Without a line, `button.bl-error-file` with the file
+    alone, which opens the file with no range selected (`open_file`), as
+    for a file the check read on disk while its buffer holds edits. With
+    `role`, the button is that of a related location of the record,
+    `bl-error-related`, and names the role before the place."""
+    if line is None:
+        classes, place, hover = "bl-error-file", path, f"open {path}"
+        attributes = {"type": "button", "data-path": path, "title": hover}
+    else:
+        classes = "bl-error-place" + (" bl-error-related" if role else "")
+        place, hover = f"{path}:{line}", f"open {path} at line {line}"
+        attributes = {"type": "button", "data-path": path, "data-line": str(line), "title": hover}
     item = rv.Html(
         tag="button",
-        class_="bl-error-place",
-        attributes={
-            "type": "button",
-            "data-path": path,
-            "data-line": str(line),
-            "title": f"open {path} at line {line}",
-        },
-        children=[f"{path}:{line}"],
+        class_=classes,
+        attributes=attributes,
+        children=[f"{role}: {place}" if role else place],
     )
-    rv.use_event(item, "click", lambda *_: open_at(path, line))
+    rv.use_event(item, "click", lambda *_: _open_place(path, line, column, end))
     return item
+
+
+def _open_place(path: str, line: int | None, column: int = 1, end: tuple | None = None) -> None:
+    """Opens the file `path` of a line of the list under the error mark: at
+    `line` and `column`, the text up to `end` selected where it is given
+    (`open_at`), and with no range selected where the place names no line
+    (`open_file`)."""
+    if line is None:
+        open_file(path)
+    else:
+        open_at(path, line, column, end)
 
 
 # the place before each separator of a name of the tree, `_`, `.`, `-` or a
@@ -7339,7 +7984,7 @@ def Twistie(folded: bool | None):
 
 
 @solara.component
-def FileRow(entry: dict, is_open: bool, is_dirty: bool, deleted: bool = False):
+def FileRow(entry: dict, is_open: bool, is_dirty: bool, level: int, deleted: bool = False):
     """One file of the tree, a row of 24 px, `.bl-row` (design pass 8 §§5.2
     and 6): the empty twistie (`Twistie`), its name in Label, cut at its end
     after a whole word where the row is too narrow (`name_box`), and git's
@@ -7369,7 +8014,14 @@ def FileRow(entry: dict, is_open: bool, is_dirty: bool, deleted: bool = False):
     row = rv.Html(
         tag="div",
         class_=classes,
-        attributes={"data-path": entry["path"], "title": title},
+        attributes={
+            "data-path": entry["path"],
+            "title": title,
+            "role": "treeitem",
+            "aria-level": str(level),
+            "tabindex": "-1",
+            **({"aria-current": "page"} if is_open else {}),
+        },
         children=children,
     )
     rv.use_event(row, "click", lambda *_: open_from_tree(entry["path"]))
@@ -7377,7 +8029,7 @@ def FileRow(entry: dict, is_open: bool, is_dirty: bool, deleted: bool = False):
 
 
 @solara.component
-def FolderRow(entry: dict, closed: bool, deleted: bool = False):
+def FolderRow(entry: dict, closed: bool, level: int, deleted: bool = False):
     """One folder of the tree, a row of 24 px, `.bl-row` (design pass 8
     §§5.2 and 6): its twistie, the Codicon `chevron-right` while closed and
     `chevron-down` while open (`Twistie`), then its name in Label, with no
@@ -7395,7 +8047,14 @@ def FolderRow(entry: dict, closed: bool, deleted: bool = False):
         class_="bl-row bl-folder-row"
         + (" bl-closed" if closed else "")
         + (" bl-deleting" if deleted else ""),
-        attributes={"data-path": entry["path"], "title": entry["path"] + "/"},
+        attributes={
+            "data-path": entry["path"],
+            "title": entry["path"] + "/",
+            "role": "treeitem",
+            "aria-level": str(level),
+            "aria-expanded": "false" if closed else "true",
+            "tabindex": "-1",
+        },
         children=children,
     )
     rv.use_event(row, "click", lambda *_: toggle_folder(entry["path"]))
@@ -7451,7 +8110,9 @@ def Tree(
     `removable`, which no file of the folder names, or of `deleted`, listed
     to delete on save, stands in `div.bl-tree-entry` beside the control that
     marks it or withdraws its mark (`RemoveControl`; unit L, Task 25)."""
-    with rv.Html(tag="div", class_="bl-tree-level", style_=f"--bl-tree-depth: {depth}"):
+    with rv.Html(tag="div", class_="bl-tree-level", style_=f"--bl-tree-depth: {depth}",
+                 attributes={"role": "presentation"}):
+        level = depth + 1
         for entry in entries:
             path = entry["path"]
             listed = path in deleted
@@ -7461,10 +8122,10 @@ def Tree(
                 with rv.Html(tag="div", class_="bl-tree-folder").key(path):
                     if controlled:
                         with rv.Html(tag="div", class_="bl-tree-entry"):
-                            FolderRow(entry, is_closed, listed)
+                            FolderRow(entry, is_closed, level, listed)
                             RemoveControl(path, listed)
                     else:
-                        FolderRow(entry, is_closed)
+                        FolderRow(entry, is_closed, level)
                     if not is_closed:
                         with rv.Html(tag="div", class_="bl-tree-children"):
                             Tree(
@@ -7480,10 +8141,10 @@ def Tree(
                 is_open = path == open_relpath
                 if controlled:
                     with rv.Html(tag="div", class_="bl-tree-entry").key(path):
-                        FileRow(entry, is_open, path in dirty, listed)
+                        FileRow(entry, is_open, path in dirty, level, listed)
                         RemoveControl(path, listed)
                 else:
-                    FileRow(entry, is_open, path in dirty).key(path)
+                    FileRow(entry, is_open, path in dirty, level).key(path)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -7540,7 +8201,7 @@ def lacking_items(entries, outcome, held, folder, texts=None) -> list[Lack]:
             items.append(Lack("refused", label, found["file"], found["line"], 1, place, sentence))
         for found in trellis.missing_joins(folder, held, texts):
             key, field, periods = found["key"], found["field"], found["periods"]
-            sentence = f"no join reaches the arrival field {field} of {key} at periods {periods}"
+            sentence = f"no join reaches the entry field {field} of {key} at periods {periods}"
             label = f"{key} · {field} unjoined"
             place = f"{found['file']}:{found['line']}"
             items.append(Lack("unjoined", label, found["file"], found["line"], 1, place, sentence))
@@ -7605,7 +8266,7 @@ def FolderActions():
     # the folder is read again, as after `notebook` writes its file (R-D41)
     tree.value
     root = tab_folder.value.root
-    notebook = creation.notebook_file(root)
+    notebook = available_notebook()
     with rv.Html(tag="span", class_="bl-head-actions bl-folder-bar"):
         # while git runs, the hover names what the button waits for (§5.5)
         ToolbarButton(
@@ -7616,11 +8277,11 @@ def FolderActions():
             "bl-new-trellis",
             disabled=git_task.pending,
         )
-        if (root / creation.factory_path(creation.RECIPE)).is_file():
+        if (root / creation.factory_path(_variant_recipe())).is_file():
             ToolbarButton(
                 "new variant",
                 "New variant",
-                "Write a variant of the recipe beside it",
+                f"Write a variant of {_variant_recipe()}",
                 lambda: open_form("new variant"),
                 "bl-new-variant",
             )
@@ -7632,11 +8293,11 @@ def FolderActions():
                 lambda: open_form("new stage"),
                 "bl-new-stage",
             )
-        if source.value is not None and not (root / notebook).exists():
+        if notebook:
             ToolbarButton(
                 "notebook",
                 "Notebook",
-                f"Write {notebook}",
+                f"Write {notebook} for {source.value.path}",
                 run_notebook,
                 "bl-notebook",
             )
@@ -7748,6 +8409,11 @@ def HolderItem(found: recipe.Source):
     return item
 
 
+@solara.component_vue("file-tree.vue")
+def FileTreeKeyboard():
+    """The Files tree's keyboard events and tab stop."""
+
+
 @solara.component
 def FolderRegion(dirty: set):
     """The folder column (design pass 8 §6): the handle on its right edge;
@@ -7797,14 +8463,15 @@ def FolderRegion(dirty: set):
             [tree.value, naming],
         )
         deleted = frozenset(path for path, _ in deleting.value)
-        with rv.Html(tag="div", class_="bl-tree"):
+        with rv.Html(tag="div", class_="bl-tree", attributes={"role": "tree", "aria-label": "Files"}):
             rv.Html(
                 tag="div",
                 class_="bl-row bl-tree-root",
-                attributes={"title": str(tab_folder.value.root)},
+                attributes={"title": str(tab_folder.value.root), "aria-hidden": "true"},
                 children=[name],
             )
             Tree(tree.value, open_path.value, dirty, open_folders.value, removable, deleted)
+            FileTreeKeyboard().key(str(tab_folder.value.root))
 
 
 @solara.component_vue("field.vue")
@@ -8755,6 +9422,9 @@ def RecipeRegion():
         if held is None or chosen is None:
             rv.Html(tag="p", class_="bl-class-empty", children=[NOT_READ])
         else:
+            if not trellis.has_occurrences(held) and not _trellis_stale():
+                with rv.Html(tag="div", class_="bl-empty-trellis"):
+                    TextButton("Write first stage", lambda: open_form("new stage"), icon="new stage")
             RecipeTable(rows, written, offered_by, trellis_offered, listed, opened)
             # the add row at the panel's foot, under the table, whose rows
             # scroll between their heads and it (design pass 13 §4; D15)
@@ -8798,7 +9468,14 @@ def FileRegion(result: Outcome | None, held: dict | None, dirty: set):
     last outcome stand on the rows they name (unit R, R-D57; amendment 02
     rulings 7 to 10)."""
     path = open_path.value
-    diagnostics = result.diagnostics if result is not None and result.path == path else []
+    # the records with a position, read from the one list of refusals; an
+    # internal failure has none and marks nothing
+    diagnostics = (
+        [editor_record(held) for held in result.refusals if held.line is not None]
+        if result is not None and result.path == path
+        and held is not None and result.revision == held["revision"]
+        else []
+    )
     diagnostics = [*diagnostics, *trellis_diagnostics(path)]
     text = held["text"] if held is not None and _is_stage(path) else None
     parsed = solara.use_memo(
@@ -8853,12 +9530,25 @@ def FileRegion(result: Outcome | None, held: dict | None, dirty: set):
                     class_="bl-no-stage",
                     children=["No stage file."],
                 )
+                if not sources.value:
+                    TextButton(
+                        "New trellis",
+                        lambda: open_form("new trellis"),
+                        "bl-start-model",
+                        waits=GIT_RUNNING if git_task.pending else None,
+                        icon="new trellis",
+                    )
             else:
                 Editor(
                     path=path,
                     text=held["document"] if held is not None else "",
                     revision=held["document_revision"] if held is not None else 0,
-                    diagnostics=diagnostics,
+                    diagnostics={
+                        "path": path,
+                        "document_revision": held["document_revision"] if held is not None else 0,
+                        "text": held["text"].replace("\r\n", "\n") if held is not None else "",
+                        "items": diagnostics,
+                    },
                     goto=goto_request.value,
                     save_request=save_request.value,
                     flush_request=flush_request.value,
@@ -8890,7 +9580,7 @@ def FileRegion(result: Outcome | None, held: dict | None, dirty: set):
                 path,
                 here and parses,
                 parsed if parses else (kept[1] if kept is not None and kept[0] == path else None),
-                tuple(folder_relative(_refusal_sentence(refusal)) for refusal in refusals),
+                tuple(refusals),
             )
         elif shows_recipe(path):
             # the recipe the trellis is read under: the panel on its Recipe
@@ -9006,7 +9696,7 @@ class ParsedText:
     """The parse of the buffer of a stage file, which the Fields tab's
     tables read (unit R, R-D57): `text`; `spans`, its span table, the
     package's `source_spans`, None where the package refuses the text; and
-    `sentence`, the sentence of that refusal (`model.refusal_of`), None
+    `sentence`, the sentence of that refusal (`model.sentence`), None
     where the text parses. Two parses are one where they are one object,
     so that a component's memory of a parse compares no tables."""
 
@@ -9020,7 +9710,7 @@ def parse_text(path: str, text: str) -> ParsedText:
     try:
         return ParsedText(text, source_spans(text, path))
     except ValueError as refusal:
-        return ParsedText(text, None, model.refusal_of(refusal, path).message)
+        return ParsedText(text, None, model.sentence(model.diagnostic_of(refusal, "parse", path)))
 
 
 def _classification_of(current: Shown | None, parsed: ParsedText | None = None) -> tuple:
@@ -9268,7 +9958,7 @@ def value_tab(
     if name == "Parameters":
         return recipe.parameters_tab(folder, current.stage, current.record, key)
     if name == "Settings":
-        return recipe.settings_tab(folder, current.record, key)
+        return recipe.settings_tab(folder, current.stage, current.record, key)
     return recipe.methods_tab(folder, current.stage, current.record, key)
 
 
@@ -9282,21 +9972,22 @@ def _naming_note(notes, name: str) -> str | None:
     return folder_relative(next((note for note in notes if named in note), None))
 
 
-def _tab_rows(tab: recipe.Tab, queued: tuple = (), notes: tuple = ()) -> list[dict]:
-    """The rows of a value tab as values.vue takes them: `name`, the
-    parameter, the setting or the place of a bound method; `detail`, the
-    parameter's set, the setting's kind or the method the stage binds there;
-    `value`, the value as the file writes it or the method's tag, the empty
-    text where none is shown, and for a row of which `queued`, values typed
-    in the tab and not yet written, holds a value, the text last typed
-    (unit L, Task 16); `choices`, the tags the package admits at the
-    place (`recipe.MethodRow`; unit L, Task 18); `note`, for a parameter,
-    the sentence of `notes`, the notes of the binding of the stage shown,
-    that names it (`_naming_note`), the package's refusal of its value,
-    which the row's input then shows (unit L, Task 16), with its paths
-    printed from the folder (`folder_relative`; K-D11), None for any other
-    row; and `file` and `line`, where the value or the method is written,
-    None where no file writes it."""
+def _tab_rows(tab: recipe.Tab, name: str, queued: tuple = (), notes: tuple = ()) -> list[dict]:
+    """The rows of the value tab `name`, Parameters, Settings or Methods, as
+    values.vue takes them: `name`, the parameter, the setting or the place
+    at which a component is typed; `detail`, the set the parameter or the
+    setting is declared in (decision S7-W4 of specification 0.7) or what is
+    bound at the place; `value`, the value as the file writes it or the
+    method word, the empty text where none is shown, and for a row of which
+    `queued`, values typed in the tab and not yet written, holds a value,
+    the text last typed (unit L, Task 16); `choices`, the method words the
+    package admits at the place (`recipe.MethodRow`; unit L, Task 18);
+    `note`, for a row of Parameters, the sentence of `notes`, the notes of
+    the binding of the stage shown, that names it (`_naming_note`), the
+    package's refusal of its value, which the row's input then shows (unit
+    L, Task 16), with its paths printed from the folder (`folder_relative`;
+    K-D11), None for any other row; and `file` and `line`, where the value
+    is written or the place typed, None where no file writes it."""
     typed = {entry["name"]: entry["typed"] for entry in queued}
     rows = []
     for row in tab.rows:
@@ -9314,13 +10005,12 @@ def _tab_rows(tab: recipe.Tab, queued: tuple = (), notes: tuple = ()) -> list[di
                 "note": None,
             }
         else:
-            parameter = isinstance(row, recipe.ParameterRow)
             shown_row = {
                 "name": row.name,
-                "detail": row.domain if parameter else row.kind,
+                "detail": row.domain,
                 "value": typed.get(row.name, row.value or ""),
                 "choices": [],
-                "note": _naming_note(notes, row.name) if parameter else None,
+                "note": _naming_note(notes, row.name) if name == "Parameters" else None,
             }
         rows.append({**shown_row, **where})
     return rows
@@ -9475,11 +10165,12 @@ def on_value_write(data: dict) -> None:
 
 
 def on_method_choice(data: dict) -> None:
-    """A method chosen in a row of the Methods tab among the methods the
-    package admits at its target (AMD-MI-002 §5 rules 5 and 6; unit L,
-    Task 18): its tag written by `recipe.write_method` in the entry of the
-    last methods file the recipe names for the occurrence that names the
-    target (`_panel_write`), after which the tab reads its files again
+    """A method chosen in a row of the Methods tab among the words the
+    package admits at its place (AMD-MI-002 §5 rules 5 and 6; unit L, Task
+    18; decision S7-W3 of specification 0.7): its word written by
+    `recipe.write_method` into the addition of the occurrence's list that
+    types the place, or appended to the last addition where none does
+    (`_panel_write`), after which the tab reads its files again
     (`value_writes`) and the steps after a write are taken (`_after_write`),
     after which the loop binds the stage again. A choice asked while no
     stage of the open file is shown is dropped."""
@@ -9581,9 +10272,11 @@ def BellmanTypeRegion(
     and otherwise from `current` (`_classification_of`), which write the
     block headers of the text; a row's field links to its box where
     `current` holds the field, and is text otherwise; the row of each field
-    that a sentence of `refused`, the refusals of the open file, names
-    (`model.named_rows`) is marked, the sentence its hover (unit R, R-D57;
-    amendment 02 rulings 7 and 8). Parameters, Settings and Methods show the
+    whose listing holds a position that a record of `refused`, the
+    refusals of the open file, names, its own or a related location's
+    (`_refused_places`, `model.named_rows`), is marked, the record's
+    sentence its hover (unit R, R-D57; amendment 02 rulings 7 and 8).
+    Parameters, Settings and Methods show the
     values and the methods of `current` at the occurrence it is bound as,
     read through the tab's recipe (`value_tab`), each naming the file it
     writes, and write a value or a method to the file the recipe names (§5
@@ -9659,7 +10352,7 @@ def BellmanTypeRegion(
         elif values is not None:
             ValueTabs(
                 tab=chosen,
-                rows=_tab_rows(values, queued, notes),
+                rows=_tab_rows(values, chosen, queued, notes),
                 file=values.file,
                 sentence=folder_relative(values.sentence),
                 refused=refused_row,
@@ -9683,8 +10376,27 @@ def BellmanTypeRegion(
                 selected=_selected_field(),
                 event_change=on_table_change,
                 event_select_field=on_select_field,
-                named=model.named_rows(groups, refused),
+                named=model.named_rows(groups, _refused_places(refused, path)),
             )
+
+
+def _refused_places(refusals, path: str) -> tuple:
+    """The positions of the file `path` that the records `refusals` name,
+    each `(line, column, sentence)`: the position of a record and of each
+    of its related locations whose file, read relative to the folder where
+    one is open, is `path`, with the record's sentence as the list prints
+    it, which the marked row's hover shows."""
+    folder = tab_folder.value
+    places = []
+    for record in refusals:
+        sentence = folder_relative(model.sentence(record))
+        for held in (record, *record.related):
+            if held.line is None or held.file is None:
+                continue
+            file = held.file if folder is None else _within_folder(held.file)
+            if file == path:
+                places.append((held.line, held.column or 1, sentence))
+    return tuple(places)
 
 
 # --- the panel ---
@@ -9818,7 +10530,8 @@ def details_context(collection: dict | None, selection: dict | None) -> str:
         node = next((entry for entry in nodes if entry["id"] == node_id), None)
         if node is None:
             return ""
-        name = (node.get("label") or node_id).split("\n")[0]
+        display = model.forward_boundary_display(node) if graph_id == "forward" else None
+        name = display[0] if display else (node.get("label") or node_id).split("\n")[0]
         position = node.get("namespace", "")
     return f"{name} · {position}" if position else name
 
@@ -10006,27 +10719,51 @@ def Panel(result: Outcome | None, current: Shown | None, legend: solara.Element 
                 LegendDetails(legend)
 
 
-@solara.component
-def RefusalBox(path: str, refusal: dict):
-    """The mark of one refusal in the panel: its head, `refused at
-    <file>:<line>:<column> · rule <rule>`, with the address and the refused
-    direction where the refusal has them, in a box drawn in the refusal's
-    color; its message, and the words the package says to write, stand in
-    the list under the error mark (AMD-MI-002 §6a rule 1)."""
+def _refusal_head(path: str, refusal: model.Diagnostic) -> list:
+    """The head of a record's box in Details, which the stage view's box
+    (`RefusalBox`) and the trellis view's (`TrellisRefusal`) both print,
+    `path` the record's file as the box names it, relative to the folder:
+    for a refusal, `refused at <file>:<line>:<column> · rule <rule>`, the
+    address after the position where the record names one that is no
+    position, `refused in <file>` where it names no line, and the refused
+    direction, `· forward builders graph`, where the record has one; for
+    an internal failure, an exception of no refusal class, which has no
+    rule and no position, the operation that stopped and the identifier of
+    the log entry that holds its traceback, as its line in the list prints
+    them, `elaborate stopped in <file> · logged as exception 3`."""
+    if refusal.kind == "internal":
+        stopped = f"{refusal.operation} stopped"
+        head = [f"{stopped} in {path}" if path else stopped]
+        if refusal.entry:
+            head.append(f" · logged as {refusal.entry}")
+        return head
     places = []
-    if refusal["line"] is not None:
-        places.append(f"{path}:{refusal['line']}:{refusal['column']}")
-    if refusal["address"] and not _is_position(refusal["address"], refusal["line"]):
-        places.append(refusal["address"])
-    where = f" at {', '.join(places)}" if places else f" in {path}"
-    rule = _rule_word(refusal["rule"])
+    if refusal.line is not None and path:
+        places.append(f"{path}:{refusal.line}:{refusal.column}")
+    if refusal.address and not _is_position(refusal.address, refusal.line):
+        places.append(refusal.address)
+    if places:
+        where = f" at {', '.join(places)}"
+    else:
+        where = f" in {path}" if path else ""
+    rule = _rule_word(refusal.rule)
     head = [Term("refused"), where]
     if rule:
         head.extend([" · ", Term("rule"), " ", Term(rule) if rule in TERMS else rule])
-    if refusal["direction"]:
-        head.extend([" · ", Term(refusal["direction"]), " builders graph"])
+    if refusal.direction:
+        head.extend([" · ", Term(refusal.direction), " builders graph"])
+    return head
+
+
+@solara.component
+def RefusalBox(path: str, refusal: model.Diagnostic):
+    """The mark of one refusal of the stage view in Details, read from the
+    one record: its head (`_refusal_head`), in a box drawn in the
+    refusal's color; its message, and the words the package says to
+    write, stand in the list under the error mark (AMD-MI-002 §6a rule
+    1)."""
     with rv.Html(tag="div", class_="bl-refusal bl-code-small"):
-        rv.Html(tag="div", class_="bl-refusal-rule", children=head)
+        rv.Html(tag="div", class_="bl-refusal-rule", children=_refusal_head(path, refusal))
 
 
 @solara.component
@@ -10644,7 +11381,12 @@ def PieceView(piece: model.Piece, head: BoxHead | None = None, path: str | None 
         BoxDetails(piece, head, path)
         return
     if kind == "boundary":
-        PanelHead(Term("Inputs" if piece.node_id == "GraphInputs" else "Outputs"), piece.direction)
+        if piece.boundary_display:
+            label, description = piece.boundary_display
+            PanelHead(label, piece.direction)
+            rv.Html(tag="p", children=[description])
+        else:
+            PanelHead(Term("Inputs" if piece.node_id == "GraphInputs" else "Outputs"), piece.direction)
     elif kind == "layer":
         namespace = piece.node_id[: -len(LAYER_ID_ENDING)]
         # a layer of an initial diagram is a perch (design pass 14 §7, rule 6)
@@ -10820,6 +11562,7 @@ def LineLink(
 
     def follow(*_):
         if path is None:
+            _show_work_area("file")
             goto_line(line, 1)
         else:
             open_at(path, line)
@@ -10950,7 +11693,7 @@ def trellis_status_parts(outcome, held) -> tuple[list, list]:
     `for renter_cons`, where the reading bound those stages' occurrences
     and kept the others (`TrellisShown.alone`; unit L, Task 20). The rest:
     the periods and the occurrences;
-    the unjoined fields of the forward graph, `3 unjoined fields`
+    the unjoined internal entry fields, `3 unjoined internal entry fields`
     (`trellis.unjoined_count`; amendment 02, recommendation 17), counted by
     the rule by which the checklist lists them, so that the two give one
     number while the last reading answered `held` (unit L, Task 21; defect
@@ -10972,6 +11715,10 @@ def trellis_status_parts(outcome, held) -> tuple[list, list]:
         line += [(" · ", None), ("unsaved", "unsaved")]
     if refused:
         line += [(" · ", None), ("refused", "refused")]
+    if not trellis.has_occurrences(held):
+        if not refused:
+            line += [(" · ", None), ("No stages to check yet", None)]
+        return line, []
     words = [BOUND_WORDS[verb] for verb in held.binding.bound]
     line += [(" · ", None), (", ".join(words), "bound") if words else ("symbolic", "symbolic")]
     counts = held.counts
@@ -10990,7 +11737,8 @@ def trellis_status_parts(outcome, held) -> tuple[list, list]:
     # 17; J-D39), which a removal leaves and a drag joins, by the checklist's
     # rule (K-I180; unit L, Task 21)
     unjoined = trellis.unjoined_count(held)
-    rest += [(f" · {unjoined} unjoined field" + ("" if unjoined == 1 else "s"), None)]
+    noun = "unjoined internal entry field" + ("" if unjoined == 1 else "s")
+    rest += [(f" · {unjoined} ", None), (noun, "unjoined internal entry fields")]
     if held.changed:
         rest += [(f" · {len(held.changed)} occurrences elaborated or bound again", None)]
     return line, rest
@@ -11210,22 +11958,18 @@ def ViewRestriction():
 
 @solara.component
 def TrellisRefusal(refusal: model.Diagnostic):
-    """The mark of the trellis's refused reading: `refused`, the file and
-    the address or the position it names and its rule, in a box drawn in
-    the refusal's color, and, where the place stands at a line of a file
-    of the model (`_trellis_refusal_place`), the button `Open at the
-    address`, which opens the file there (specification §2.2 rule 2,
-    D11), a text button (design pass 8 §§5.3 and 6); its sentence stands
-    in the list under the error mark (AMD-MI-002 §6a rule 1)."""
+    """The mark of the trellis's refused reading, of its refused drawing or
+    of an internal failure of its reading in Details, read from the one
+    record: its head (`_refusal_head`), the file relative to the folder,
+    in a box drawn in the refusal's color, and, where the place stands at
+    a line of a file of the model (`_trellis_refusal_place`), the button
+    `Open at the address`, which opens the file there (specification §2.2
+    rule 2, D11), a text button (design pass 8 §§5.3 and 6); its sentence
+    stands in the list under the error mark (AMD-MI-002 §6a rule 1)."""
     path, line = _trellis_refusal_place(refusal)
     name = recipe.relative(tab_folder.value, refusal.file) if refusal.file else ""
-    where = ", ".join(part for part in (name, refusal.address or "") if part)
-    head_parts = [Term("refused"), f" in {where}" if where else ""]
-    rule = _rule_word(refusal.rule)
-    if rule:
-        head_parts += [" · ", Term("rule"), f" {rule}"]
     with rv.Html(tag="div", class_="bl-refusal bl-trellis-refusal bl-code-small"):
-        rv.Html(tag="div", class_="bl-refusal-rule", children=head_parts)
+        rv.Html(tag="div", class_="bl-refusal-rule", children=_refusal_head(name, refusal))
         if line is not None:
             TextButton(
                 "Open at the address",
@@ -11361,7 +12105,12 @@ def TrellisSubject(subject, links: list):
         # a boundary marker of the trellis, which stands in no occurrence,
         # is headed by its label, `starting data μ≺` (design pass 10 §6)
         label = subject.rows.get("label") if not subject.occurrence else None
-        PanelHead(label or Term("Inputs" if kind == "inputs" else "Outputs"), subject.graph)
+        if subject.boundary_display:
+            label, description = subject.boundary_display
+            PanelHead(label, subject.graph)
+            rv.Html(tag="p", children=[description])
+        else:
+            PanelHead(label or Term("Inputs" if kind == "inputs" else "Outputs"), subject.graph)
         with rv.Html(tag="div", class_="bl-attributes"):
             PortRows(subject.ports, BOUNDARY_SIDES)
     else:
@@ -12148,6 +12897,9 @@ def ViewRegion(result: Outcome | None, current: Shown | None):
         layers = current.layers if current is not None else {}
         stale = bool(result is not None and result.stale)
         scope = f"stage {current.path}" if current is not None else "stage"
+    canvas_collection = solara.use_memo(
+        lambda: model.forward_display_collection(collection), [collection]
+    )
     overlays = solara.use_memo(
         lambda: model.edge_overlays(current.stage)
         if current is not None and overlays_on.value and not in_trellis
@@ -12207,7 +12959,7 @@ def ViewRegion(result: Outcome | None, current: Shown | None):
         # left (design pass 8 §§6 and 8, item 10)
         with rv.Html(tag="div", class_="bl-canvas"):
             Graph(
-                collection=collection,
+                collection=canvas_collection,
                 overlays_request=overlays,
                 layers=layers,
                 graph=graph.value,
@@ -12413,6 +13165,8 @@ def status_summary(result: Outcome | None, current: Shown | None, place: tuple |
             Term("refused", f"{len(result.refusals)} refused", "bl-status-refused"),
             status_dot(),
         ]
+    if result.version in ("partially bound", "bindings refused"):
+        loop += [Term(result.version), status_dot()]
     loop += [rv.Html(tag="span", class_="bl-status-indent", children=[f"indent {INDENT}"])]
     if _is_stage(result.path):
         loop += [
@@ -13276,7 +14030,8 @@ def folder_entries(typed: str) -> list[tuple[str, str]]:
         return entries
     entries += [(f"{child.name}/", str(child)) for child in children if child.is_dir()]
     entries += [
-        (child.name, str(child)) for child in children if child.is_file() and child.suffix == ".bl"
+        (child.name, str(child)) for child in children
+        if child.is_file() and child.suffix == ".bl" and not model.is_addition_file(child)
     ]
     return entries
 
@@ -13565,26 +14320,25 @@ def AddPeriodForm():
 
 @solara.component
 def NewVariantForm():
-    """The one-line form "new variant" (specification §4, new variant; AAS,
-    L-D14; design pass 4 §3, 440 px; design pass 8 §6): its head, the
-    Codicon `versions`, `New variant` and the context `of spec.yml`, the recipe
-    it copies, with its
-    note, which files the variant writes and where, beside the folder's
-    recipe `declaration/spec.yml`, and, where that recipe holds a
-    `registry` block, a second line naming the registry the copy keeps,
-    `copies the registry of spec.yml: calibration/wage_schedule`
-    (`creation.registry_sources`), since the periods' ages the trellis graph
-    prints are read from it (unit L, Task 13; defect 19 of the UX
-    simulation); the variant's name, a plain word, with the refusal under
-    it."""
+    """The recipe, name and ownership of binding files for a new variant."""
     name = solara.use_reactive("")
-    folder = creation.FACTORY_FOLDER
-    recipe_name = creation.RECIPE
+    share, copy = "Share binding files", "Copy binding files for this variant"
+    mode = solara.use_reactive(copy)
+    copy_bindings = mode.value == copy
+    recipe_name = _variant_recipe()
     root = tab_folder.value.root
-    registry = solara.use_memo(lambda: creation.registry_sources(root, recipe_name), [root])
-    lines = [f"writes spec.<name>.yml, trellis.<name>.yml and period.<name>.yml in {folder}/"]
+    registry = solara.use_memo(
+        lambda: creation.registry_sources(root, recipe_name), [root, recipe_name]
+    )
+    lines = [
+        f"writes spec.<name>.yml, trellis.<name>.yml and period.<name>.yml in {creation.FACTORY_FOLDER}/",
+        "Copies calibration, settings and method assignments."
+        if copy_bindings else "Shares calibration, settings and method assignments.",
+        "Stage declarations are shared in both modes. Slots keep their names.",
+    ]
     if registry:
-        lines.append(f"copies the registry of {recipe_name}: {', '.join(registry)}")
+        ownership = "Copies" if copy_bindings else "Shares"
+        lines.append(f"{ownership} registry sources: {', '.join(registry)}")
     FormHead("new variant", "New variant", f"of {recipe_name}", note=tuple(lines))
     Field(
         value=name.value,
@@ -13593,31 +14347,43 @@ def NewVariantForm():
         autofocus=True,
         event_entered=name.set,
     )
+    Field(
+        kind="select",
+        value=mode.value,
+        options=[share, copy],
+        label="Binding files",
+        classes="bl-variant-bindings",
+        event_entered=mode.set,
+    )
     if form_error.value:
         FormRefusal(form_error.value)
     FormFoot(
         "Write the variant",
         ["bl-variant-submit"],
         None if name.value.strip() else "type a name",
-        lambda: submit_new_variant(name.value),
+        lambda: request_new_variant(name.value, copy_bindings, recipe_name),
     )
-
 
 @solara.component
 def NewStageForm():
-    """The one-line form "new stage" (unit K's decision K-D7; AAS, L-D14;
-    design pass 4 §3, 440 px; design pass 8 §6): its head, the Codicon
-    `new-file` and `New stage`,
-    with its note, every file the form writes, by its path from the model
-    folder: the stage file `declaration/stages/<key>/<key>.bl`, and the
-    stage added to the recipe the form edits (`_form_recipe`) and, where the
-    folder holds it, to answers.yml; the stage's key, with the refusal under
-    it."""
+    """Write an authored stage with optional placement in a period file."""
     key = solara.use_reactive("")
-    root = tab_folder.value.root
-    edited = [creation.factory_path(_form_recipe())]
+    root, recipe_name = tab_folder.value.root, _form_recipe()
+    periods = creation.period_files(
+        root, recipe_name, trellis.texts_of(unsaved_texts()), inherit_stages=True
+    )
+    held = trellis_shown.value
+    unplaced = "Choose later"
+    first_period = (
+        periods[0] if len(periods) == 1 and held is not None
+        and not trellis.has_occurrences(held) and not _trellis_stale() else unplaced
+    )
+    placement = solara.use_reactive(first_period)
+    edited = [creation.factory_path(recipe_name)]
     if (root / creation.ANSWERS).is_file():
         edited.append(creation.ANSWERS)
+    if placement.value in periods:
+        edited.append(creation.factory_path(placement.value))
     FormHead(
         "new stage",
         "New stage",
@@ -13635,11 +14401,29 @@ def NewStageForm():
     )
     if form_error.value:
         FormRefusal(form_error.value)
+    if periods:
+        Field(
+            kind="select",
+            value=placement.value,
+            options=[unplaced, *periods],
+            label="Place in period file",
+            classes="bl-new-stage-period",
+            event_entered=placement.set,
+        )
+    rv.Html(
+        tag="p",
+        class_="bl-stage-placement",
+        children=[
+            "To place the stage later, add its key to a period’s stages list."
+            if periods else
+            "No period takes its stages list from a period file. Add the key in the trellis file."
+        ],
+    )
     FormFoot(
         "Write the stage",
         ["bl-new-stage-submit"],
         None if key.value.strip() else "type a key",
-        lambda: submit_new_stage(key.value),
+        lambda: submit_new_stage(key.value, placement.value if placement.value in periods else None),
     )
 
 
@@ -13811,6 +14595,7 @@ def Page():
         )
         # the main bar first of the regions, so that Tab reaches it first
         MainBar(current)
+        CompactSwitch()
         # the palette after the main bar, which holds its button, so that
         # Tab from its last result goes on to the folder
         Goto(
@@ -13843,6 +14628,8 @@ def Page():
         Forms()
         Window(
             folder=str(tab_folder.value.root),
+            open_path=path,
+            work_area_request=work_area_request.value,
             fold_request=fold_request.value,
             event_back=go_back,
             event_forward=go_forward,

@@ -9,10 +9,10 @@ topic: [applications]
 > [!summary]
 > This page explains `retiree_cons.bl`, the retiree's consumption stage of
 > the retirement model. The code blocks quote the working copy,
-> `declaration/stages/retiree_cons/retiree_cons.bl`, and the two block files
-> that hold its derivative lines and its endogenous grid method,
-> `declaration/methods/marginals_retiree_cons.bl` and
-> `declaration/methods/retiree_cons_egm.bl`; when those files change, these
+> `declaration/stages/retiree_cons/retiree_cons.bl`, and the methods file
+> beside it, `declaration/stages/retiree_cons/methods.bl`, which holds its
+> derivative lines, its endogenous grid method and the representation of its
+> arrival value; when those files change, these
 > excerpts and their explanations must change with them. `economics.md` states the whole
 > model; `worker_cons.md` explains the worker's consumption stage, whose
 > blocks this one follows, and `ret_choice.md` the discrete choice.
@@ -96,22 +96,25 @@ lines:
 ```
 
 and the derivative lines, the same envelope condition and the same
-chain-rule factor in the derivative of the arrival value, stand in the two
-marginal blocks of `declaration/methods/marginals_retiree_cons.bl`, which
-the methods file binds on the two value blocks with `!marginals`:
+chain-rule factor in the derivative of the arrival value, stand in the
+methods file `declaration/stages/retiree_cons/methods.bl`, an addition to
+the stage file: a `.bl` file that opens with `@methods:`, read with the
+stage file, whose blocks name blocks of the stage by their ids and add their
+entries and their lines to them. Its blocks `cntn_to_dcsn` and
+`dcsn_to_arvl` each append one derivative line, and the second also carries,
+in its bracket, the representation of the arrival value and of its stated
+derivative on the asset grid, one entry for each stored object: the method
+`!Linear`, the grid `!Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret))` and
+the handler, the routine outside the language that executes the method:
 
 ```bl
-@methods: retiree_cons
-# The derivatives of the retiree's two values, each stated by the marginal
-# block of the value builder that writes the value. The decision value's line
-# is the envelope condition; the arrival value's line keeps the factor R of the
-# law w_ret = R*a_ret, which is not the identity.
-
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+[id=cntn_to_dcsn] {
     D_{w_ret}V = 𝑑𝑢(c)              :: [id=marginal]
 }
 
-[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+[id=dcsn_to_arvl
+    | evaluate[V[<]].method : !Linear | evaluate[V[<]].grid : !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret)) | evaluate[V[<]].handler : "dcsmm:interp_as_3"
+    | evaluate[D_{a_ret}V[<]].method : !Linear | evaluate[D_{a_ret}V[<]].grid : !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret)) | evaluate[D_{a_ret}V[<]].handler : "dcsmm:interp_as_3"] {
     D_{a_ret}V[<] = R*D_{w_ret}V    :: [id=marginal]
 }
 ```
@@ -130,16 +133,18 @@ value; the composed Euler equation is the same.
 
 The policy block's one statement is the definition of the control, the
 maximizer over the feasible set. The endogenous grid method that computes
-it is the method block `egm` of `declaration/methods/retiree_cons_egm.bl`,
-which the methods file binds on the policy builder:
+it is written in the block `policy` of the methods file, whose bracket types
+the builder with `!egm`, its grid on the savings `b_ret` and its handler,
+and whose three lines stand in place of the maximization at the operative
+level while the declared level keeps the maximization; the three settings
+the grid reads are declared above it with their sets:
 
 ```bl
-@methods: retiree_cons
-# The endogenous grid method as the method block of the retiree's policy
-# builder, whose stage file states the maximization alone. The candidate line
-# reads the derivative of the continuation value by the term D_{b_ret}V[>].
+n_a_ret : ℕ          :: ["number of points of the retiree's asset grid"]
+a_ret_min : Xa       :: ["lower bound of the retiree's asset grid"]
+a_ret_max : Xa       :: ["upper bound of the retiree's asset grid"]
 
-[id=egm, (V[>] : [-inf, inf) @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn, "method = egm! will look for policy[>] and x[>] grid and invert it. Important here that the grids contain all constrained sections"] {
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(b_ret=(a_ret_min, a_ret_max, n_a_ret)) | policy.handler : "asva:make_egm_1d"] {
     c[>]     <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b_ret}V[>])                :: [id=InvEuler, "Implies a correspondence: where equality holds, c[>] takes on a single value, where inequality holds, it is multiple values"]
     w_ret[>] = b_ret + c[>]                          :: [id=endoggrid]
     c        = c[>]                                  :: [id=cons_choice]
@@ -150,28 +155,27 @@ Its first two statements are the endogenous grid method's candidate and
 its cash-on-hand coordinate, and the last identifies the control with the
 candidate at its own saving, an implicit equation in consumption through
 the budget identity `b_ret = w_ret - c`. The candidate line reads the
-derivative of the continuation value by the term `D_{b_ret}V[>]`, and the
-header lists the continuation value and the control alone.
+derivative of the continuation value by the term `D_{b_ret}V[>]`; the block
+carries no signature, since it adds no coordinate to the stage's.
 
 The retiree's continuation value is concave, so the coordinates do not
 fold back, the candidates define one consumption at each cash on hand,
 and no envelope operation is needed. This is the only difference from the
 worker's method block.
 
-The two quoted strings are notes retained with the lines they describe:
-the first, on the method block's header, records what an endogenous-grid
-method reads from the block, the second the reading of the inequality as a
-correspondence, single-valued where the Euler equation holds with equality
-and a segment where the borrowing constraint binds.
+The quoted string on the line `InvEuler` is a note retained with the line
+it describes, the reading of the inequality as a correspondence,
+single-valued where the Euler equation holds with equality and a segment
+where the borrowing constraint binds.
 
 ## Numerical method
 
-`declaration/stages/retiree_cons/methods.yml` attaches the endogenous grid method
-to the policy block with the method block of `retiree_cons_egm.bl`, whose
-lines then form the policy builder's operations; the two marginal blocks
-of `marginals_retiree_cons.bl` to the two value blocks with `!marginals`;
-and a tabulation on the retiree's asset grid to the arrival value and to
-the stated derivative of the arrival value.
+The methods file `declaration/stages/retiree_cons/methods.bl` types the
+policy builder with the endogenous grid method, whose lines form the policy
+builder's operations, with its grid of savings and its handler; appends the
+two derivative lines to the two value blocks; and represents the arrival
+value and its stated derivative on the retiree's asset grid by linear
+interpolation, one entry for each.
 
 ## Elaboration
 

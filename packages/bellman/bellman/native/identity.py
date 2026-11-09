@@ -44,12 +44,14 @@ STAGE_KINDS = (
     "alias",  # <stage>:alias:<address>:<field>
     "set",  # <stage>:set:<name>
     "parameter",  # <stage>:parameter:<name>
+    "setting",  # <stage>:setting:<name>, a numerical setting a methods file declares
     "multiplier",  # <stage>:multiplier:<name>
     "distribution",  # <stage>:distribution:<subjects>
     "correspondence",  # <stage>:correspondence:<name>
     "g",  # <stage>:g:<block>
     "G",  # <stage>:G:<block>
     "law",  # <stage>:law:<address>
+    "typing",  # <stage>:typing:<place>:<component>, a typing entry at a place
     "unplaced",  # <stage>:<name>, a name the stage declares at no perch
 )
 
@@ -311,7 +313,7 @@ class Identity:
             # an anonymous set of the typing pass, named by the address and
             # the position of the text at which it is written
             return (self.stage, "set", self.address, self.mark)
-        if kind in ("set", "parameter", "multiplier", "correspondence"):
+        if kind in ("set", "parameter", "setting", "multiplier", "correspondence"):
             return (self.stage, kind, self.field)
         if kind == "primitive":
             return ("primitive",) + ((mark,) if mark else ()) + (self.field,)
@@ -321,6 +323,10 @@ class Identity:
             return (self.stage, "distribution", _joined(self.subjects))
         if kind in ("g", "G", "law"):
             return (self.stage, kind, self.address)
+        if kind == "typing":
+            # a typing entry, by the place it types and the component, `method`,
+            # `grid` or `handler` (specification 0.7 §4)
+            return (self.stage, kind, self.address, self.field)
         if kind == "external":
             return ("external", self.field) + ((mark,) if mark else ())
         if kind in ("block", "line"):

@@ -30,9 +30,10 @@ to be written.
   `(V[>] : ℝ @ !vlu) : !cntn -> (H_choice : XH @ !ctrl) : !dcsn`.
 - The derivatives of the decision value in cash on hand and of the arrival
   value in assets, the second with the factor `R` of the law
-  `w = R*b + z_vals[y]`, are stated by the two marginal blocks of
-  `declaration/methods/marginals_housing_choice.bl`, which the stage's
-  methods file binds on the two value builders with `!marginals`.
+  `w = R*b + z_vals[y]`, are stated by the two lines that the stage's
+  methods file, `declaration/stages/housing_choice/methods.bl`, appends to
+  the two value builders' blocks; the file types no method, since the
+  earlier form bound none on this stage.
 - The income family `z_vals[y]` is still refused by the family-selection
   rule: the source supplies 49 income states from files, a count that
   comes from a discretisation, so the literal-member spelling chosen for

@@ -24,7 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import NamedTuple
 
-from bellman.distributions.families import names_text
+from bellman.distributions.families import declaration_text, names_text
 from bellman.native.identity import Identity, piece_identity
 from bellman.syntax.source import to_source
 
@@ -84,9 +84,11 @@ def drawn_edges(definitions, is_shock, listed_shocks, refuse) -> DrawnEdges:
     declaration names is drawn on one edge by one rule. `definitions` is the
     definitions table, `is_shock(name)` decides whether an argument of a
     declaration is a shock, `listed_shocks` holds (builder, listed shock names)
-    pairs in file order, and `refuse(rule, address, message)` raises the
-    refusal of a cycle, a parent without a declaration, or two builders
-    claiming one shock."""
+    pairs in file order, and `refuse(rule, address, message, related=(),
+    write=None)` raises the refusal of a cycle, a parent without a
+    declaration, or two builders claiming one shock, `related` pairing a role
+    with the address of each second item the sentence names and `write` the
+    action."""
     owners = distribution_declarations(definitions, is_shock)
     ordered = dependency_order(owners, refuse)
     return DrawnEdges(
@@ -122,7 +124,9 @@ def dependency_order(owners, refuse) -> tuple:
     """The owners with every parent's owner before its child, declaration order
     breaking ties. A declaration that reads one of its own subject components,
     a cycle of declarations and a parent shock no declaration owns are refused
-    through `refuse(rule, address, message)`."""
+    through `refuse(rule, address, message, related=(), write=None)`; a cycle names the
+    other declarations of the cycle as related items under the role
+    `dependency`."""
     owner_of = _owners_by_shock(owners)
     for owner in owners:
         own = [parent for parent in owner.parents if parent in owner.subjects]
@@ -130,12 +134,15 @@ def dependency_order(owners, refuse) -> tuple:
             refuse(
                 "distribution-dependency",
                 owner.address,
-                f"the distribution of {names_text(owner.subjects)} reads its own subject "
-                f"component {names_text(own)} as an argument; a declaration is a conditional "
+                f"{declaration_text(owner)} reads its own subject component "
+                f"{names_text(own)} as an argument; a declaration is a conditional "
                 f"distribution of its subject given its other arguments, so the dependency "
-                f"between declarations is acyclic (AMD-SG-009 §2, rule distribution-dependency); "
-                f"declare that component's distribution separately, or write the joint "
-                f"distribution without it as an argument",
+                f"between declarations is acyclic; declare that component's distribution "
+                f"separately, or write the joint distribution without it as an argument",
+                write=(
+                    f"Declare the distribution of {names_text(own)} separately, or write the "
+                    f"joint distribution without {names_text(own)} as an argument"
+                ),
             )
         for parent in owner.parents:
             if parent not in owner_of:
@@ -144,7 +151,8 @@ def dependency_order(owners, refuse) -> tuple:
                     owner.address,
                     f"the distribution of {names_text(owner.subjects)} reads the shock {parent}, "
                     f"which no distribution declaration owns; every shock has exactly one "
-                    f"declared distribution (AMD-SG-009 §2); declare `{parent} ~ …`",
+                    f"declared distribution",
+                    write=f"Declare `{parent} ~ …`",
                 )
     ordered, placed, remaining = [], set(), list(owners)
     while remaining:
@@ -155,17 +163,24 @@ def dependency_order(owners, refuse) -> tuple:
         ]
         if not ready:
             cycle = ", ".join(
-                f"{owner.identity} (at {owner.address}) reads {names_text(owner.parents)}"
+                f"`{names_text(owner.subjects)} ~ {to_source(owner.term)}` reads "
+                f"{names_text(owner.parents)}"
                 for owner in remaining
             )
+            jointly = ", ".join(name for owner in remaining for name in owner.subjects)
             refuse(
                 "distribution-dependency",
                 remaining[0].address,
                 f"the distribution declarations form a cycle: {cycle}; the joint distribution of "
-                f"an edge is the product of declared conditional distributions in a dependency "
-                f"order, which a cycle does not have (AMD-SG-009 §§2–3, rule "
-                f"distribution-dependency); remove one of the shock arguments, or write the "
-                f"dependent shocks as one joint declaration",
+                f"an edge is the product of the declared conditional distributions in a "
+                f"dependency order, which a cycle does not have; remove one of the shock "
+                f"arguments, or declare the dependent shocks jointly, such as "
+                f"`({jointly}) ~ N(…)`",
+                related=tuple(("dependency", owner.address) for owner in remaining[1:]),
+                write=(
+                    f"Remove one of the shock arguments, or declare {jointly} jointly, such as "
+                    f"`({jointly}) ~ N(…)`"
+                ),
             )
         ordered.append(ready[0])
         placed.add(ready[0].identity)
@@ -184,6 +199,11 @@ def shock_builders(owners, listed_shocks, refuse) -> dict:
     two edges."""
     owner_of = _owners_by_shock(owners)
     edge, reason = {}, {}
+    listed_shocks = list(listed_shocks)
+    # the shocks a forward block's header lists, which a move from one block
+    # to another can carry; a shock drawn on an edge through its declaration
+    # alone stands on no header
+    on_a_header = {shock for _, listed in listed_shocks for shock in listed}
     for block, listed in listed_shocks:
         for shock in listed:
             if shock in edge and edge[shock] != block:
@@ -191,10 +211,16 @@ def shock_builders(owners, listed_shocks, refuse) -> dict:
                 refuse(
                     "distribution-edge",
                     owner.address if owner else block,
-                    f"the shock {shock} is listed by the forward builders {edge[shock]!r} and "
-                    f"{block!r}; a shock is drawn on one edge, the edge of the one forward "
-                    f"builder whose signature lists it (AMD-SG-009 §2, rule distribution-edge); "
-                    f"list it on one forward builder",
+                    f"the shock {shock} is listed on the headers of the forward blocks "
+                    f"{edge[shock]!r} and {block!r}; a shock is drawn on one edge, the edge of "
+                    f"the one forward block whose header lists it; remove {shock} from the "
+                    f"header and from the lines of one of the two blocks, which changes the law "
+                    f"of motion of that block",
+                    write=(
+                        f"Remove {shock} from the header and from the lines of block "
+                        f"{edge[shock]!r} or of block {block!r}, which changes the law of motion "
+                        f"of that block"
+                    ),
                 )
             edge.setdefault(shock, block)
             reason.setdefault(shock, f"listed by {block!r}")
@@ -212,14 +238,31 @@ def shock_builders(owners, listed_shocks, refuse) -> dict:
             )
             if other in edge:
                 if edge[other] != edge[shock]:
+                    # the moves that pass: a shock is moved from the header
+                    # and the lines of the block that lists it, so a shock no
+                    # header lists is offered no move
+                    moves = ", or ".join(
+                        f"{moved} from the header and the lines of block {edge[moved]!r} "
+                        f"to those of block {edge[kept]!r}"
+                        for moved, kept in ((other, shock), (shock, other))
+                        if moved in on_a_header
+                    )
                     refuse(
                         "distribution-edge",
                         owner.address,
                         f"the shock {other} is drawn on the edge of {edge[other]!r} "
-                        f"({reason[other]}) and is also {why} ({owner.identity}), whose shock "
+                        f"({reason[other]}) and is also {why}, whose shock "
                         f"{shock} is drawn on the edge of {edge[shock]!r} ({reason[shock]}); "
-                        f"connected declarations are drawn on one edge (AMD-SG-009 §2, rule "
-                        f"distribution-edge); list the connected shocks on one forward builder",
+                        f"connected declarations are drawn on one edge; list the connected "
+                        f"shocks on one forward block, by moving the listing and the reads "
+                        f"of one of them to the header and the lines of the other's block, "
+                        f"which changes the law of motion of each of the two blocks",
+                        write=(
+                            f"Move {moves}, which changes the law of motion of each of the two "
+                            f"blocks"
+                            if moves
+                            else None
+                        ),
                     )
                 continue
             edge[other] = edge[shock]

@@ -126,10 +126,11 @@ def test_a_buffer_is_bound_as_the_occurrence_wanted_with_the_origin_its_record_w
     as the occurrence the head names, `periods[1] / disc` at β = 0.96 and
     `periods[0] / disc` at the terminal period's β = 0.9, elaborated with the
     origin `load_recipe` writes; an occurrence of another file is not taken,
-    the file's first being bound; the consumption stage's methods slot,
-    which no keyword binds, is skipped with no note, a verb skipped being no
-    refusal (unit L, Task 21; K-D29), and its settings are refused with one
-    note."""
+    the file's first being bound; the discount stage's settings slot, which
+    no keyword binds, is skipped with no note, a verb skipped being no
+    refusal (unit L, Task 21; K-D29); the consumption stage is bound by its
+    calibration, its settings and its addition with no note, and the files
+    watched with the recipe and its trellis file are those three."""
     folder = model.open_folder(lifecycle_folder)
     found = recipe.find_occurrence(folder, RECIPE, DISC, (1, "disc"))
     assert found.position == (1, "disc") and found.origin == str(folder.root / DISC)
@@ -142,13 +143,13 @@ def test_a_buffer_is_bound_as_the_occurrence_wanted_with_the_origin_its_record_w
     cons = recipe.find_occurrence(folder, RECIPE, CONS)
     text = Path(cons.origin).read_text(encoding="utf-8")
     bound = recipe.bind_occurrence(elaborate_text(text, cons.origin), cons)
-    (note,) = bound.notes
-    assert note.startswith("stage 'cons': no methods are bound")
+    assert bound.notes == []
     assert [recipe.relative(folder, path) for path in recipe.watched_files(folder, cons)] == [
         "declaration/spec.yml",
         "declaration/trellis.yml",
         "declaration/calibration/portfolio.yml",
         "declaration/settings/cons.yml",
+        "declaration/stages/cons/methods.bl",
     ]
 
 
@@ -167,6 +168,7 @@ def test_a_file_no_source_holds_and_a_folder_without_a_source(model_folder, pens
         None,
         [f"declaration/spec.yml holds no occurrence of {absent}"],
         None,
+        (),
     )
     alone = recipe.find_occurrence(model.open_folder(model_folder), None, CONS)
     assert alone == recipe.Found(None, None, None, CONS, [])
@@ -195,16 +197,14 @@ def test_a_folder_whose_recipe_stands_at_its_top_offers_no_source_and_says_why(
     written = (copy / "spec.yml").read_text(encoding="utf-8")
     for held in sorted((copy / "stages").iterdir()):
         (held / f"{held.name}.bl").rename(copy / "stages" / f"{held.name}.bl")
-        # each stage's methods file stands beside its stage file, as
-        # `stages/<key>_methods.yml`, its block paths read from that folder
-        # (decision MB-V38)
-        methods = (held / "methods.yml").read_text(encoding="utf-8")
-        (copy / "stages" / f"{held.name}_methods.yml").write_text(
-            methods.replace("block: ../../methods/", "block: ../methods/"), encoding="utf-8"
-        )
+        # each stage's addition stands beside its stage file, as
+        # `stages/<key>_methods.bl` (decision MB-V38; specification 0.7)
+        (held / "methods.bl").rename(copy / "stages" / f"{held.name}_methods.bl")
         shutil.rmtree(held)
         written = written.replace(f"stages/{held.name}/{held.name}.bl", f"stages/{held.name}.bl")
-        written = written.replace(f"stages/{held.name}/methods", f"stages/{held.name}_methods")
+        written = written.replace(
+            f"stages/{held.name}/methods.bl", f"stages/{held.name}_methods.bl"
+        )
     (copy / "spec.yml").write_text(written, encoding="utf-8")
     assert len(load_recipe(copy, "spec.yml")["periods"]) == 15
     folder = model.open_folder(copy)
@@ -297,30 +297,31 @@ def test_the_workbench_binds_a_stage_of_a_new_folder_as_its_recipes_occurrence(r
     assert recipe.record_files(found.record) == [
         declaration / "calibration/portfolio.yml",
         declaration / "settings/cons_wide.yml",
-        declaration / "stages/cons/methods.yml",
+        declaration / "stages/cons/methods.bl",
     ]
     assert [recipe.relative(folder, path) for path in recipe.watched_files(folder, found)] == [
         "declaration/spec.yml",
         "declaration/trellis.yml",
         "declaration/calibration/portfolio.yml",
         "declaration/settings/cons_wide.yml",
-        "declaration/stages/cons/methods.yml",
+        "declaration/stages/cons/methods.bl",
     ]
 
 
-def test_the_pension_stage_file_is_bound_as_its_first_occurrence_with_two_verbs_skipped(
+def test_the_pension_stage_file_is_bound_as_its_first_occurrence_with_the_calibration_skipped(
     pension_folder, tmp_path
 ):
     """On the pension registry, whose recipe binds the worker's calibration
-    through a slot that no keyword binds, its methods through its methods
-    file and a slot, and names no settings,
+    through a slot that no keyword binds, its methods through its addition
+    and its settings through `settings/worker_saving.yml`,
     `declaration/stages/worker_saving/worker_saving.bl` is bound as
     `periods[0] / worker_saving`, elaborated with the origin `load_recipe`
-    writes: the stage is answered methodized by its methods file and neither
-    calibrated nor configured, with no note, since a verb skipped is no
-    refusal (unit L, Task 21; K-D29), and the files watched are the recipe,
-    its trellis file and the methods file, the one binding source file the
-    recipe names for the stage (decision MB-V38). On a copy whose trellis
+    writes: the stage is answered methodized by its addition and configured
+    by its settings file and not calibrated, with no note, since a verb
+    skipped is no refusal (unit L, Task 21; K-D29), and the files watched
+    are the recipe, its trellis file, the settings file and the addition,
+    the binding source files the recipe names for the stage (decision
+    S7-W2). On a copy whose trellis
     file is `declaration/pension.yml`, which the recipe names under its key
     `trellis:`, the file is bound as the same occurrence and `pension.yml` is
     watched in place of `trellis.yml`."""
@@ -341,12 +342,13 @@ def test_the_pension_stage_file_is_bound_as_its_first_occurrence_with_two_verbs_
         bound = recipe.bind_occurrence(stage, found)
         assert bound.occurrence == "periods[0] / worker_saving"
         assert bound.stage is not stage and bound.stage.bindings.calibration is None
-        assert bound.stage.bindings.settings is None and bound.stage.methods
+        assert bound.stage.bindings.settings is not None and bound.stage.methods
         assert bound.notes == []
         assert recipe.watched_files(folder, found) == [
             root.resolve() / "declaration/spec.yml",
             root.resolve() / "declaration" / trellis_name,
-            root.resolve() / "declaration/stages/worker_saving/methods.yml",
+            root.resolve() / "declaration/settings/worker_saving.yml",
+            root.resolve() / "declaration/stages/worker_saving/methods.bl",
         ]
 
 
@@ -402,7 +404,7 @@ def test_a_recipe_that_names_no_trellis_file_is_refused_and_none_is_assumed(
     assert found.notes == [
         "the recipe names no trellis file\n`trellis: trellis.yml`, the path from this folder"
     ]
-    assert found.notes == [outcome.refusal.message]
+    assert found.notes == [model.sentence(outcome.refusal)]
     watched = recipe.watched_files(folder, found)
     assert [recipe.relative(folder, path) for path in watched] == ["declaration/spec.yml"]
     assert recipe.source_of(folder, "declaration/trellis.yml") is None
@@ -411,8 +413,9 @@ def test_a_recipe_that_names_no_trellis_file_is_refused_and_none_is_assumed(
 
 def test_the_recipe_as_a_table_at_the_heads_period(lifecycle_folder):
     """The lifecycle recipe as a table (specification §3.2): one row per stage
-    in the file's order; the consumption stage's methods cell holds the slot
-    `$cons_method`; the discount stage's calibration holds, at the
+    in the file's order; the consumption stage's methods cell holds its
+    addition, `stages/cons/methods.bl`, and the discount stage's settings
+    cell the slot `$disc_settings`; the discount stage's calibration holds, at the
     terminal period, the `all` source and the range `0-0`'s, and at
     `periods[1]` the `all` source alone, its opened lists both, each entry at
     its address in the recipe."""
@@ -424,9 +427,13 @@ def test_the_recipe_as_a_table_at_the_heads_period(lifecycle_folder):
         ("cons", True),
         ("disc", True),
     ]
-    (slot,) = rows[1].cells["methods"].entries
+    (addition,) = rows[1].cells["methods"].entries
+    assert addition == recipe.Entry(
+        "stages/cons/methods.bl", False, "declaration/spec.yml", "stages.cons.methods.all[0]", None
+    )
+    (slot,) = rows[2].cells["settings"].entries
     assert slot == recipe.Entry(
-        "$cons_method", True, "declaration/spec.yml", "stages.cons.methods.all[0]", None
+        "$disc_settings", True, "declaration/spec.yml", "stages.disc.settings.all[0]", None
     )
     disc = rows[2].cells["calibration"]
     assert [entry.text for entry in disc.entries] == [
@@ -443,7 +450,6 @@ def test_the_recipe_as_a_table_at_the_heads_period(lifecycle_folder):
     assert [entry.text for entry in later[2].cells["calibration"].entries] == [
         "calibration/portfolio"
     ]
-    assert rows[2].cells["settings"] == recipe.Cell("settings", (), {})
 
 
 def test_each_list_of_a_binding_is_a_line_with_the_periods_it_holds_for(lifecycle_folder):
@@ -453,7 +459,7 @@ def test_each_list_of_a_binding_is_a_line_with_the_periods_it_holds_for(lifecycl
     the block prints them, `all` for the list `all` and `periods 0–0` for
     the range `0-0`; the range line is marked at the head's period, which
     it holds at `periods[0]` and not at `periods[1]`, and the line `all` is
-    never marked. A kind the recipe writes no list for has no line."""
+    never marked."""
     folder = model.open_folder(lifecycle_folder)
     syntactic = recipe.read_source(folder, RECIPE)
     rows = recipe.table(folder, RECIPE, syntactic, 0)
@@ -468,9 +474,10 @@ def test_each_list_of_a_binding_is_a_line_with_the_periods_it_holds_for(lifecycl
         ("all", False),
         ("periods 0–0", False),
     ]
-    (slot,) = rows[1].cells["methods"].lines
-    assert slot == recipe.BindingLine("all", "all", rows[1].cells["methods"].entries, False)
-    assert rows[2].cells["settings"].lines == ()
+    (addition,) = rows[1].cells["methods"].lines
+    assert addition == recipe.BindingLine("all", "all", rows[1].cells["methods"].entries, False)
+    (slot,) = rows[2].cells["settings"].lines
+    assert slot == recipe.BindingLine("all", "all", rows[2].cells["settings"].entries, False)
 
 
 def test_the_table_of_a_trellis_file_holds_each_records_one_value(consport_folder):
@@ -484,7 +491,7 @@ def test_the_table_of_a_trellis_file_holds_each_records_one_value(consport_folde
     assert [row.key for row in rows] == ["port", "cons", "disc"]
     assert rows[1].cells["methods"].entries == (
         recipe.Entry(
-            "methods/cons_vfi.yml",
+            "stages/cons/methods.vfi.bl",
             False,
             "declaration/trellis.port-cons-vfi.yml",
             "periods[0].stages.cons.methods",
@@ -500,60 +507,49 @@ def test_the_table_of_a_trellis_file_holds_each_records_one_value(consport_folde
 
 
 def test_the_files_a_cell_may_take(lifecycle_folder):
-    """The methods files of the folder's `declaration/`, those of its folder
-    `methods/` and the methods file `methods.yml` of a stage's folder,
-    where the one layout of a model folder places a stage's own methods,
-    each with its first comment line and, for a methods file, the stage it
-    names and the places it binds a method at."""
+    """The additions of the folder's `declaration/`, each beside its stage
+    file, `methods.bl` and the replacing selection `methods.vfi.bl` of the
+    consumption stage (decision S7-W2), each with its first comment line and
+    nothing else, since the Workbench reads nothing of an addition beyond
+    its first line (decision S7-W1); a kind that is none is an empty
+    listing."""
     folder = model.open_folder(lifecycle_folder)
     found = recipe.choices(folder, "methods")
     assert [choice.path for choice in found] == [
-        "declaration/methods/cons.yml",
-        "declaration/methods/cons_vfi.yml",
-        "declaration/methods/port.yml",
-        "declaration/stages/disc/methods.yml",
+        "declaration/stages/cons/methods.bl",
+        "declaration/stages/cons/methods.vfi.bl",
+        "declaration/stages/disc/methods.bl",
+        "declaration/stages/port/methods.bl",
     ]
-    assert found[3] == recipe.Choice(
-        "declaration/stages/disc/methods.yml",
-        "",
-        "disc",
-        ("cntn_to_dcsn", "dcsn_to_arvl", "arvl_to_dcsn", "dcsn_to_cntn"),
+    assert found[0] == recipe.Choice(
+        "declaration/stages/cons/methods.bl",
+        "The methods of the consumption stage as an addition to",
         None,
     )
-    assert found[0].stage == "cons"
-    # since decision SD-39 cons-port's `methods/cons.yml` binds the
-    # demonstration's block file at the policy and at the decision builder,
-    # and `!Linear` at the decision builder's Evaluation for the stated
-    # derivative, `cntn_to_dcsn.evaluate.marginal` (AMD-MB-002; AMD-MB-003); the arrival
-    # builder's entries
-    # went with the arrival perch (AMD-MB-001 D8); its first comment line
-    # names the stage file (SE-34)
-    assert found[0].targets == ("policy", "cntn_to_dcsn", "cntn_to_dcsn.evaluate.marginal")
-    assert found[0].comment.startswith("The consumption stage's methods. The stage file writes the maximization alone")
+    assert found[1].comment.startswith("Value function iteration on the decision value builder")
     assert recipe.choices(folder, "nothing") == []
-
 
 def test_a_choice_replaces_one_entry_keeping_the_comments_and_the_other_entries(
     scratch_lifecycle, scratch_consport
 ):
-    """Choosing `declaration/methods/cons.yml` for the slot of the
-    consumption stage's methods answers the recipe's text with `methods/cons`
-    in its place, the file's path from the recipe's folder without its
-    extension, and no other character changed, its comments kept, and
-    writes nothing to disk, the Workbench applying the text to the recipe's
-    buffer (AAS, M-D17; design pass 9 §4); a stage folder's methods file is
-    written `stages/disc/methods`, as the layout names it, a stage file and
-    the trellis file with their extension, and a slot as it is; in a
-    trellis file, the record's value takes the file's path relative to the
-    trellis file (specification §3.2)."""
+    """Choosing `declaration/stages/cons/methods.vfi.bl` for the entry of
+    the consumption stage's methods answers the recipe's text with
+    `stages/cons/methods.vfi.bl` in its place, the file's path from the
+    recipe's folder with its extension, as an addition is named, and no
+    other character changed, its comments kept, and writes nothing to disk,
+    the Workbench applying the text to the recipe's buffer (AAS, M-D17;
+    design pass 9 §4); a stage file and the trellis file are written with
+    their extension, and a slot as it is; in a trellis file, the record's
+    value takes the file's path relative to the trellis file (specification
+    §3.2)."""
     folder = model.open_folder(scratch_lifecycle)
     recipe_file = scratch_lifecycle / "declaration/spec.yml"
     before = recipe_file.read_text(encoding="utf-8")
     rows = recipe.table(folder, RECIPE, recipe.read_source(folder, RECIPE), 1)
-    (slot,) = rows[1].cells["methods"].entries
+    (addition,) = rows[1].cells["methods"].entries
     assert (
-        recipe.written_name(folder, RECIPE, slot, "declaration/stages/disc/methods.yml")
-        == "stages/disc/methods"
+        recipe.written_name(folder, RECIPE, addition, "declaration/stages/disc/methods.bl")
+        == "stages/disc/methods.bl"
     )
     assert (
         recipe.written_name(folder, RECIPE, rows[0].stage, "declaration/stages/disc/disc.bl")
@@ -563,13 +559,13 @@ def test_a_choice_replaces_one_entry_keeping_the_comments_and_the_other_entries(
     assert recipe.written_name(folder, RECIPE, trellis_entry, "declaration/trellis.yml") == (
         "trellis.yml"
     )
-    written = recipe.choose(folder, RECIPE, slot, "declaration/methods/cons.yml", before)
-    assert written == before.replace("$cons_method", "methods/cons")
+    written = recipe.choose(folder, RECIPE, addition, "declaration/stages/cons/methods.vfi.bl", before)
+    assert written == before.replace("stages/cons/methods.bl", "stages/cons/methods.vfi.bl")
     assert recipe_file.read_text(encoding="utf-8") == before
     (portfolio,) = rows[0].cells["calibration"].entries
     assert recipe.choose(folder, RECIPE, portfolio, "$fill", before) == before.replace(
-        "calibration: {all: [calibration/portfolio]}, settings: {all: [settings/port]}",
-        "calibration: {all: [$fill]}, settings: {all: [settings/port]}",
+        "calibration: {all: [calibration/portfolio]}, methods: {all: [stages/port/methods.bl]}",
+        "calibration: {all: [$fill]}, methods: {all: [stages/port/methods.bl]}",
     )
     consport = model.open_folder(scratch_consport)
     source = recipe.Source("trellis", "declaration/trellis.port-cons-vfi.yml")
@@ -579,12 +575,12 @@ def test_a_choice_replaces_one_entry_keeping_the_comments_and_the_other_entries(
         .entries[0]
     )
     assert (
-        recipe.written_name(consport, source, entry, "declaration/methods/cons.yml")
-        == "methods/cons.yml"
+        recipe.written_name(consport, source, entry, "declaration/stages/cons/methods.bl")
+        == "stages/cons/methods.bl"
     )
     text = (scratch_consport / source.path).read_text(encoding="utf-8")
-    assert recipe.choose(consport, source, entry, "declaration/methods/cons.yml", text) == (
-        text.replace("methods: methods/cons_vfi.yml", "methods: methods/cons.yml")
+    assert recipe.choose(consport, source, entry, "declaration/stages/cons/methods.bl", text) == (
+        text.replace("methods: stages/cons/methods.vfi.bl", "methods: stages/cons/methods.bl")
     )
 
 
@@ -638,26 +634,28 @@ def test_a_choice_is_refused_where_the_text_no_longer_writes_the_entry(scratch_l
     entry the table did not show is replaced (specification §3.2; design
     pass 9 §4)."""
     folder = model.open_folder(scratch_lifecycle)
-    (slot,) = (
+    (addition,) = (
         recipe.table(folder, RECIPE, recipe.read_source(folder, RECIPE), 0)[1]
         .cells["methods"]
         .entries
     )
     original = (scratch_lifecycle / "declaration/spec.yml").read_text(encoding="utf-8")
-    sentence = "the file no longer writes $cons_method at stages.cons.methods.all[0]"
-    for written in ("methods/cons_vfi", ""):
-        changed = original.replace("$cons_method", written)
+    sentence = "the file no longer writes stages/cons/methods.bl at stages.cons.methods.all[0]"
+    for written in ("stages/cons/methods.vfi.bl", ""):
+        changed = original.replace("stages/cons/methods.bl", written)
         with pytest.raises(ValueError) as refused:
-            recipe.choose(folder, RECIPE, slot, "declaration/methods/cons.yml", changed)
+            recipe.choose(
+                folder, RECIPE, addition, "declaration/stages/cons/methods.vfi.bl", changed
+            )
         assert str(refused.value) == sentence
 
 
 def test_the_table_of_a_recipe_that_no_longer_reads_is_total(scratch_lifecycle):
-    """The table and the trellis file are total (specification §2.2 rule 4):
-    a recipe that no longer reads as YAML gives no rows and no trellis file;
-    a stage written as a list, `cons: [methods/cons]`, a shape the factory
-    refuses, reads as a stage that writes nothing, its row kept with every
-    cell empty."""
+    """The table and the trellis file are total (specification §2.2 rule 4): a
+    recipe that no longer reads as YAML gives no rows and no trellis file; a
+    stage written as a list, `cons: [stages/cons/methods.bl]`, a shape the
+    factory refuses, reads as a stage that writes nothing, its row kept with
+    every cell empty."""
     folder = model.open_folder(scratch_lifecycle)
     syntactic = recipe.read_source(folder, RECIPE)
     recipe_file = scratch_lifecycle / "declaration/spec.yml"
@@ -668,7 +666,7 @@ def test_the_table_of_a_recipe_that_no_longer_reads_is_total(scratch_lifecycle):
     start = original.index("  cons: {")
     end = original.index("\n", start)
     recipe_file.write_text(
-        original[:start] + "  cons: [methods/cons]" + original[end:], encoding="utf-8"
+        original[:start] + "  cons: [stages/cons/methods.bl]" + original[end:], encoding="utf-8"
     )
     rows = recipe.table(folder, RECIPE, syntactic, 1)
     assert [row.key for row in rows] == ["port", "cons", "disc"]
@@ -682,21 +680,22 @@ def test_the_table_reads_the_unsaved_texts_as_the_reading_of_the_source_does(
 ):
     """The table and the trellis file a recipe names read the recipe through
     the mapping of unsaved texts, as `read_source` reads it (spec 0.4 §3.1;
-    AAS, M-D7): the lifecycle recipe's buffer that writes
-    `methods/cons_vfi` in place of the slot `$cons_method` gives that entry
-    and no slot, the file on disk still giving the slot; a buffer that no
-    longer reads as YAML gives no rows and no trellis file. A trellis file's
-    buffer gives the value its record writes there, `methods/cons.yml` in
-    place of `methods/cons_vfi.yml`."""
+    AAS, M-D7): the lifecycle recipe's buffer that writes the replacing
+    selection `stages/cons/methods.vfi.bl` in place of the addition
+    `stages/cons/methods.bl` gives that entry, the file on disk still giving
+    the addition; a buffer that no longer reads as YAML gives no rows and
+    no trellis file. A trellis file's buffer gives the value its record
+    writes there, `stages/cons/methods.bl` in place of
+    `stages/cons/methods.vfi.bl`."""
     folder = model.open_folder(lifecycle_folder)
     text = (lifecycle_folder / RECIPE_FILE).read_text(encoding="utf-8")
-    chosen = text.replace("$cons_method", "methods/cons_vfi")
+    chosen = text.replace("stages/cons/methods.bl", "stages/cons/methods.vfi.bl")
     texts = trellis.texts_of(unsaved_of(lifecycle_folder, {RECIPE_FILE: chosen}))
     syntactic = recipe.read_source(folder, RECIPE, texts)
     (entry,) = recipe.table(folder, RECIPE, syntactic, 0, texts)[1].cells["methods"].entries
-    assert (entry.text, entry.slot) == ("methods/cons_vfi", False)
-    (slot,) = recipe.table(folder, RECIPE, syntactic, 0)[1].cells["methods"].entries
-    assert (slot.text, slot.slot) == ("$cons_method", True)
+    assert (entry.text, entry.slot) == ("stages/cons/methods.vfi.bl", False)
+    (on_disk,) = recipe.table(folder, RECIPE, syntactic, 0)[1].cells["methods"].entries
+    assert (on_disk.text, on_disk.slot) == ("stages/cons/methods.bl", False)
     assert recipe.trellis_entry(folder, RECIPE, texts).text == "trellis.yml"
     broken = trellis.texts_of(unsaved_of(lifecycle_folder, {RECIPE_FILE: text + "  broken: [\n"}))
     assert recipe.table(folder, RECIPE, syntactic, 0, broken) == []
@@ -705,12 +704,14 @@ def test_the_table_reads_the_unsaved_texts_as_the_reading_of_the_source_does(
     consport = model.open_folder(consport_folder)
     source = recipe.Source("trellis", "declaration/trellis.port-cons-vfi.yml")
     written = (consport_folder / source.path).read_text(encoding="utf-8")
-    buffer = written.replace("methods: methods/cons_vfi.yml", "methods: methods/cons.yml")
+    buffer = written.replace(
+        "methods: stages/cons/methods.vfi.bl", "methods: stages/cons/methods.bl"
+    )
     texts = trellis.texts_of(unsaved_of(consport_folder, {source.path: buffer}))
     rows = recipe.table(consport, source, recipe.read_source(consport, source, texts), 2, texts)
-    assert rows[1].cells["methods"].entries[0].text == "methods/cons.yml"
+    assert rows[1].cells["methods"].entries[0].text == "stages/cons/methods.bl"
     rows = recipe.table(consport, source, recipe.read_source(consport, source), 2)
-    assert rows[1].cells["methods"].entries[0].text == "methods/cons_vfi.yml"
+    assert rows[1].cells["methods"].entries[0].text == "stages/cons/methods.vfi.bl"
 
 
 def test_an_empty_list_written_all_colon_is_a_cell_with_no_entry(scratch_lifecycle):
@@ -721,9 +722,9 @@ def test_an_empty_list_written_all_colon_is_a_cell_with_no_entry(scratch_lifecyc
     be a mark no file writes (specification §1; unit L, Task 11)."""
     recipe_file = scratch_lifecycle / "declaration/spec.yml"
     text = recipe_file.read_text(encoding="utf-8")
-    assert text.count("methods: {all: [stages/disc/methods]}") == 1
+    assert text.count("methods: {all: [stages/disc/methods.bl]}") == 1
     recipe_file.write_text(
-        text.replace("methods: {all: [stages/disc/methods]}", "methods: {all: }"),
+        text.replace("methods: {all: [stages/disc/methods.bl]}", "methods: {all: }"),
         encoding="utf-8",
     )
     folder = model.open_folder(scratch_lifecycle)
@@ -742,7 +743,7 @@ def test_a_choice_whose_entry_cannot_be_replaced_is_refused_in_the_package_s_sen
     answered and the choice is refused in the package's sentence; no other
     exception reaches the page's handler."""
     folder = model.open_folder(scratch_lifecycle)
-    (slot,) = (
+    (addition,) = (
         recipe.table(folder, RECIPE, recipe.read_source(folder, RECIPE), 0)[1]
         .cells["methods"]
         .entries
@@ -750,13 +751,16 @@ def test_a_choice_whose_entry_cannot_be_replaced_is_refused_in_the_package_s_sen
     anchored = (
         (scratch_lifecycle / "declaration/spec.yml")
         .read_text(encoding="utf-8")
-        .replace("methods: {all: [$cons_method]}", "methods: {all: [&m $cons_method]}")
-        .replace("methods: {all: [stages/disc/methods]}", "methods: {all: [*m]}")
+        .replace(
+            "methods: {all: [stages/cons/methods.bl]}", "methods: {all: [&m stages/cons/methods.bl]}"
+        )
+        .replace("methods: {all: [stages/disc/methods.bl]}", "methods: {all: [*m]}")
     )
     with pytest.raises(ValueError) as refused:
-        recipe.choose(folder, RECIPE, slot, "declaration/methods/cons.yml", anchored)
+        recipe.choose(folder, RECIPE, addition, "declaration/stages/cons/methods.vfi.bl", anchored)
     assert str(refused.value) == (
-        "'methods/cons' cannot be written as a string at 'stages.cons.methods.all[0]'"
+        "'stages/cons/methods.vfi.bl' cannot be written as a string at "
+        "'stages.cons.methods.all[0]'"
     )
 
 
@@ -784,9 +788,11 @@ def test_a_stage_s_periods_are_written_in_the_recipe_s_text(scratch_durables):
         return line
 
     replaced = recipe.write_periods(text, "bequest", "0-1", "0–0")
-    assert row_of(replaced, "bequest").endswith("methods: {all: [stages/bequest/methods]}, periods: [0, 1]}")
+    assert row_of(replaced, "bequest").endswith(
+        "methods: {all: [stages/bequest/methods.bl]}, periods: [0, 1]}"
+    )
     added = recipe.write_periods(text, "tenure", "2–5", None)
-    assert row_of(added, "tenure").endswith("$tenure_method]}, periods: [2, 5]}")
+    assert row_of(added, "tenure").endswith("stages/tenure/methods.bl]}, periods: [2, 5]}")
     assert row_of(recipe.write_periods(text, "tenure", "[3, 4]", None), "tenure").endswith(
         "periods: [3, 4]}"
     )
@@ -794,7 +800,7 @@ def test_a_stage_s_periods_are_written_in_the_recipe_s_text(scratch_durables):
         "periods: [7, 7]}"
     )
     assert row_of(recipe.write_periods(text, "bequest", " ", "0–0"), "bequest").endswith(
-        "methods: {all: [stages/bequest/methods]}}"
+        "methods: {all: [stages/bequest/methods.bl]}}"
     )
     assert recipe.write_periods(text, "tenure", "", None) == text
     for typed, shown, sentence in (
@@ -809,24 +815,21 @@ def test_a_stage_s_periods_are_written_in_the_recipe_s_text(scratch_durables):
 
 
 def test_the_files_a_cell_may_take_include_one_that_cannot_be_read(scratch_lifecycle):
-    """`choices` is total (specification §2.2 rule 4): a methods file that is
-    no UTF-8 text is listed with the sentence that it cannot be read, and a
-    methods file whose `methods` is a number with its stage and no target;
-    neither raises in the chooser's render."""
-    methods = scratch_lifecycle / "declaration/methods"
-    (methods / "binary.yml").write_bytes(b"\xff\xfe methods: []\n")
-    (methods / "five.yml").write_text(
-        "# methods written as a number\nstage: cons\nmethods: 5\n", encoding="utf-8"
-    )
+    """`choices` is total (specification §2.2 rule 4): a file named as an
+    addition beside a stage file that is no UTF-8 text is listed with the
+    sentence that it cannot be read, and one whose first line is a stage's
+    is no addition and is left out; neither raises in the chooser's
+    render."""
+    stages = scratch_lifecycle / "declaration/stages"
+    (stages / "cons/methods.binary.bl").write_bytes(b"\xff\xfe policy.method : !egm\n")
+    (stages / "disc/methods.stage.bl").write_text("@stage: disc\n", encoding="utf-8")
     folder = model.open_folder(scratch_lifecycle)
     found = {choice.path: choice for choice in recipe.choices(folder, "methods")}
-    binary = found["declaration/methods/binary.yml"]
-    assert (binary.comment, binary.stage, binary.targets) == ("", "", ())
+    binary = found["declaration/stages/cons/methods.binary.bl"]
+    assert binary.comment == ""
     assert binary.unread.startswith("the file cannot be read: ")
-    assert found["declaration/methods/five.yml"] == recipe.Choice(
-        "declaration/methods/five.yml", "methods written as a number", "cons", (), None
-    )
-    assert found["declaration/methods/cons.yml"].unread is None
+    assert "declaration/stages/disc/methods.stage.bl" not in found
+    assert found["declaration/stages/cons/methods.bl"].unread is None
 
 
 def test_value_place_is_the_place_of_the_last_source_that_sets_the_parameter(lifecycle_folder):
@@ -1012,73 +1015,61 @@ def test_find_occurrence_and_uses_of_read_the_unsaved_recipe(scratch_folder):
 def test_the_methods_tab_offers_at_each_target_the_tags_the_package_admits_there(
     model_folder,
 ):
-    """Each row of the Methods tab is a method the stage binds, read from
-    `stage.methods` (decision S7-W1 of specification 0.7), and a row whose
-    method one YAML entry binds offers the tags that the package admits at
-    that entry's target, `admitted_methods` of `bellman.stage` (AMD-MI-002 §5
-    rule 5; unit L, Task 18; K-I150). On the portfolio model's `cons.bl`,
-    bound as the recipe binds it, the policy block offers `!egm`, since it
-    writes the grid line, and not `!vfi`, which stands on the backward
-    decision builder alone; the forward blocks `arvl_to_dcsn` and
-    `dcsn_to_cntn` offer neither; the one representation that the entries of
-    the value and of its marginal bind at the decision builder's Evaluation
-    is one row, named by its place, which offers no tag, since a tag written
-    at one of the two entries would leave them apart; and `!gauss-hermite`,
-    which stands at an expectation alone, is offered at no row."""
+    """Each row of the Methods tab is a place of the version at which a
+    component is typed, read from `stage.methods` (decision S7-W1 of
+    specification 0.7), and offers the words that the package admits at the
+    place, `admitted_methods` of `bellman.stage` (AMD-MI-002 §5 rule 5; unit
+    L, Task 18; K-I150). On the portfolio model's `cons.bl`, bound as the
+    recipe binds it by the addition beside it: the two forward builders, the
+    decision builder's Evaluation, which one entry types for the value and
+    its stated derivative (D4), and the policy builder, whose row offers
+    `!egm` among the words a builder admits; the Evaluation offers the two
+    bases and nothing else; the forward decision builder, which the addition
+    gives a handler and no word, shows `handler only` and offers the words
+    too, a choice there appending the entry."""
     folder = model.open_folder(model_folder)
     found = recipe.find_occurrence(folder, RECIPE, CONS)
     text = Path(found.origin).read_text(encoding="utf-8")
     cons = recipe.bind_occurrence(elaborate_text(text, found.origin), found)
     tab = recipe.methods_tab(folder, cons.stage, cons.record, "cons")
-    assert (tab.file, tab.sentence) == ("declaration/stages/cons/methods.yml", None)
-    assert [(row.target, row.bound) for row in tab.rows] == [
-        ("policy", "!egm"),
-        ("cntn_to_dcsn:Evaluation", "!Linear"),
-        ("arvl_to_dcsn", "!deterministic"),
-        ("dcsn_to_cntn", "handler only"),
+    assert (tab.file, tab.sentence) == ("declaration/stages/cons/methods.bl", None)
+    assert [(row.target, row.tag, row.bound) for row in tab.rows] == [
+        ("arvl_to_dcsn", "!deterministic", "!deterministic"),
+        ("dcsn_to_cntn", "", "handler only"),
+        ("cntn_to_dcsn.evaluate", "!Linear", "!Linear"),
+        ("policy", "!egm", "!egm"),
     ]
     shown = {row.target: row.choices for row in tab.rows}
-    for target in ("policy", "arvl_to_dcsn", "dcsn_to_cntn"):
+    for target in shown:
         assert shown[target] == admitted_methods(cons.stage, target)
-    assert "!egm" in shown["policy"] and "!vfi" not in shown["policy"]
-    for target in ("arvl_to_dcsn", "dcsn_to_cntn"):
-        assert {"!egm", "!vfi"}.isdisjoint(shown[target])
-    assert shown["cntn_to_dcsn:Evaluation"] == ()
-    assert not any("!gauss-hermite" in choices for choices in shown.values())
-
+    assert "!egm" in shown["policy"] and shown["cntn_to_dcsn.evaluate"] == ("!Linear", "!pchip")
+    assert not any("!gauss_hermite" in choices for choices in shown.values())
 
 # the stage files of the pension model of the UX simulation whose Methods
-# tabs defects 8 and 9 name, and the package's refusal of `!monte-carlo`
-# written for `arvl_to_dcsn` of `renter_cons`, whose required option
-# `n_paths` the entry does not write
+# tabs defects 8 and 9 name, and the addition of the renter's stage
 RENTER_CONS = "declaration/stages/renter_cons/renter_cons.bl"
-RENTER_CONS_METHODS = "declaration/stages/renter_cons/methods.yml"
+RENTER_CONS_METHODS = "declaration/stages/renter_cons/methods.bl"
 TENURE_PA = "declaration/stages/tenure_pa/tenure_pa.bl"
-MONTE_CARLO_REFUSED = (
-    "Method target 'arvl_to_dcsn' in stage 'renter_cons': !monte-carlo has missing required "
-    "option n_paths; write every required option using the keys shown by method_types of "
-    "bellman.stage"
-)
 
 
 def test_a_refused_methods_entry_binds_no_method_and_a_branching_stage_offers_its_tags(
     tmp_path,
 ):
-    """A methods entry that `methodize` refuses leaves the stage with no
-    method bound, so that the Methods tab, which reads `stage.methods`
+    """A typing entry that the package refuses leaves the stage with no
+    component, so that the Methods tab, which reads `stage.methods`
     (decision S7-W1 of specification 0.7), has no row and the package's
     sentence stands among the binding's notes, under the error mark; a
-    branching stage's rows offer the tags the package admits at their
-    targets (unit L, Task 18; defect 9 of the UX simulation). On a copy of
+    branching stage's rows offer the words the package admits at their
+    places (unit L, Task 18; defect 9 of the UX simulation). On a copy of
     the pension model the UX simulation's post-doc built, `renter_cons.bl`
-    bound as `periods[1] / renter_cons` shows the four methods it binds, the
-    representation that the value's and the marginal's entries bind at one
-    Evaluation in one row, and the row `arvl_to_dcsn`, a forward block,
-    offers no `!egm`. `!monte-carlo`, which that block admits, written there
-    in place of `!deterministic`, is refused by `methodize`, since the entry
-    writes no `n_paths`. The branching `tenure_pa.bl` bound as `periods[1] /
-    tenure_pa` shows a row for each entry of its methods file, each bound
-    and offering the tags the package admits at its target, and the tab
+    bound as `periods[1] / renter_cons` shows the four places its addition
+    types, and the row `arvl_to_dcsn`, a forward builder, offers `!egm` too,
+    since admission is by the kind of the place. `!monte_carlo`, which that
+    builder admits, written there in place of `!deterministic`, is refused
+    when the stage is bound again, since the entry writes no `n_paths`, the
+    keyword its row requires. The branching `tenure_pa.bl` bound as
+    `periods[1] / tenure_pa` shows a row for each place its addition types,
+    each bound and offering the words the package admits there, and the tab
     says no sentence."""
     copy = pensions_copy(tmp_path / "durables", PENSIONS_WORKING_YEARS)
     folder = model.open_folder(copy)
@@ -1094,22 +1085,21 @@ def test_a_refused_methods_entry_binds_no_method_and_a_branching_stage_offers_it
     tab = recipe.methods_tab(folder, renter.stage, renter.record, "renter_cons")
     rows = {row.target: row for row in tab.rows}
     assert {target: row.bound for target, row in rows.items()} == {
-        "policy.optimality.argmax": "!root-find",
-        "cntn_to_dcsn:Evaluation": "!Linear",
+        "policy.optimality.argmax": "!root_find",
+        "cntn_to_dcsn.evaluate": "!Linear",
         "arvl_to_dcsn": "!deterministic",
         "dcsn_to_cntn": "!deterministic",
     }
     assert tab.sentence is None
     assert rows["arvl_to_dcsn"].choices == admitted_methods(renter.stage, "arvl_to_dcsn")
-    assert "!egm" not in rows["arvl_to_dcsn"].choices
-    assert "!monte-carlo" in rows["arvl_to_dcsn"].choices
+    assert {"!egm", "!monte_carlo"} <= set(rows["arvl_to_dcsn"].choices)
 
     written = recipe.write_method(
-        folder, renter.record, "renter_cons", "arvl_to_dcsn", "!deterministic", "!monte-carlo"
+        folder, renter.record, "renter_cons", "arvl_to_dcsn", "!deterministic", "!monte_carlo"
     )
     assert written.saved
     renter = bound(RENTER_CONS, "renter_cons")
-    assert MONTE_CARLO_REFUSED in renter.notes
+    assert any("n_paths" in note and "monte_carlo" in note for note in renter.notes)
     tab = recipe.methods_tab(folder, renter.stage, renter.record, "renter_cons")
     assert (tab.rows, tab.file, tab.sentence) == ((), RENTER_CONS_METHODS, None)
 
@@ -1117,10 +1107,11 @@ def test_a_refused_methods_entry_binds_no_method_and_a_branching_stage_offers_it
     tab = recipe.methods_tab(folder, tenure.stage, tenure.record, "tenure_pa")
     assert tab.sentence is None
     assert [(row.target, row.tag, row.bound) for row in tab.rows] == [
-        ("policy", "!max", "!max"),
-        ("cntn_to_dcsn.evaluate.value", "!Linear", "!Linear"),
-        ("dcsn_to_cntn", "!monte-carlo", "!monte-carlo"),
         ("arvl_to_dcsn", "!deterministic", "!deterministic"),
+        ("dcsn_to_cntn", "!monte_carlo", "!monte_carlo"),
+        ("cntn_to_dcsn.evaluate", "!Linear", "!Linear"),
+        ("policy", "!max", "!max"),
     ]
     for row in tab.rows:
         assert row.choices and row.choices == admitted_methods(tenure.stage, row.target)
+

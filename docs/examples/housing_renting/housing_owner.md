@@ -6,7 +6,7 @@ topic: [applications]
 # Housing model
 
 > [!note] Source
-> Application folder: [`applications/housing-owner/`](../../../applications/housing-owner), which holds the model's two stage files, `declaration/stages/housing_choice/housing_choice.bl` and `declaration/stages/consumption_choice/consumption_choice.bl`, each with its methods file, and the block files those methods files bind, under `declaration/methods/`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
+> Application folder: [`applications/housing-owner/`](../../../applications/housing-owner), which holds the model's two stage files, `declaration/stages/housing_choice/housing_choice.bl` and `declaration/stages/consumption_choice/consumption_choice.bl`, each with its methods file `methods.bl` beside it, an addition to the stage file that the package reads with it, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
 
 **Sequential composition and branching in a housing tenure-choice model.**
 
@@ -73,17 +73,16 @@ where:
 
 ## 4 Files
 
-The application folder holds each stage file with its methods file and its note in the stage's folder, the block files that the methods files bind, the settings file of the consumption stage's exogenous grid of savings, the paper the model follows and the structural tests:
+The application folder holds each stage file with its methods file and its note in the stage's folder, the settings file of the consumption stage's exogenous grid of savings, the paper the model follows and the structural tests. The methods file of the consumption stage types the policy builder with the endogenous grid method and its grid of savings and writes the method's lines; the methods file of the housing stage appends the derivative lines of its two values and types no method:
 
 ```
 applications/housing-owner/
 ├── README.md
 ├── declaration/
-│   ├── methods/                   consumption_choice_egm.bl  marginals_consumption_choice.bl  marginals_housing_choice.bl
 │   ├── settings/                  housing-owner.yml
 │   └── stages/
-│       ├── housing_choice/        housing_choice.bl  methods.yml  housing_choice.md
-│       └── consumption_choice/    consumption_choice.bl  methods.yml  consumption_choice.md
+│       ├── housing_choice/        housing_choice.bl  methods.bl  housing_choice.md
+│       └── consumption_choice/    consumption_choice.bl  methods.bl  consumption_choice.md
 ├── reference/                     fella-2014.pdf
 └── tests/                         test_housing_choice_ast.py  test_consumption_choice_ast.py
 ```

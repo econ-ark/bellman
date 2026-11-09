@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model diagram · Project Bellman</title>
+<link rel="stylesheet" href="../workbench/flow/base.css">
+<link rel="stylesheet" href="../workbench/graph.css">
+<link id="vscode-codicon-stylesheet" rel="stylesheet" href="../workbench/codicons/codicon.css">
+<link rel="stylesheet" href="embed.css">
+<script type="module" src="../workbench/vscode-elements/bundled.js"></script>
+<script defer src="../workbench/flow/elk.bundled.js"></script>
+<script defer src="../workbench/flow/bellman-flow.js"></script>
+<script defer src="embed.js"></script>
+</head>
+<body>
+<main class="workbench-frame" aria-label="Model diagram and authored source">
+  <div class="frame-bar">
+    <div role="tablist" aria-label="Model view" class="view-tabs">
+      <button role="tab" id="diagram-tab" aria-controls="diagram-panel" aria-selected="true">Diagram</button>
+      <button role="tab" id="source-tab" aria-controls="source-panel" aria-selected="false" tabindex="-1">Source</button>
+    </div>
+    <span id="filename" class="filename"></span>
+  </div>
+  <div id="diagram-panel" role="tabpanel" aria-labelledby="diagram-tab" class="diagram-panel" tabindex="0">
+    <div class="native-window bl-window"><section class="bl-view"><div class="bl-canvas">
+      <div id="graph" class="bl-view-host"></div>
+      <div class="bl-graph-controls"><span id="native-controls" class="bl-graph-icons"></span></div>
+    </div></section></div>
+    <div id="loading" class="loading-state" role="status">
+      <span id="loading-text">Loading the model diagram…</span>
+      <a id="fallback-link" href="../../overview/07-workbench/" target="_top" hidden>Read the Workbench guide</a>
+    </div>
+  </div>
+  <div id="source-panel" role="tabpanel" aria-labelledby="source-tab" hidden tabindex="0">
+    <div class="source-info"><span>Forward declaration</span><span id="line-range"></span></div>
+    <p id="source-status" class="source-status" role="status">Loading the authored source…</p>
+    <pre id="source-code" aria-label="Authored model source"></pre>
+  </div>
+  <noscript><a href="../../overview/07-workbench/" target="_top">Read the Workbench guide</a> to explore the model.</noscript>
+</main>
+</body>
+</html>

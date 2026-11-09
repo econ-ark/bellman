@@ -1,0 +1,241 @@
+/* The module faces are translucent. */
+@property --pm-rim-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1.5px;
+}
+.pm-field {
+  --pm-scale: .58;
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--pm-art-height);
+  z-index: 1;
+  perspective: 900px;
+  perspective-origin: 50% 18%;
+  pointer-events: none;
+}
+/* The horizon wash sits behind the field. */
+.pm-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 18%, rgb(33 78 218 / .22), transparent 64%);
+  opacity: .12;
+}
+
+.pm-plane { --cell: calc(230px * var(--pm-scale)); --block: calc(160px * var(--pm-scale)); --depth: calc(30px * var(--pm-scale));
+  position: absolute; left: 50%; top: 58%; width: calc(var(--cols) * var(--cell)); height: calc(var(--rows) * var(--cell));
+  display: grid; grid-template-columns: repeat(var(--cols), var(--cell)); grid-template-rows: repeat(var(--rows), var(--cell));
+  transform-style: preserve-3d; transform: translate(-50%, -50%) rotateX(64deg) translateZ(70px) translateY(22%); }
+.pm-plane i {
+  position: relative;
+  display: block;
+  place-self: center;
+  width: var(--block);
+  height: var(--block);
+  transform-style: preserve-3d;
+  --pm-top-edge: rgb(237 247 252 / .95);
+  --pm-side-edge: rgb(237 247 252 / .75);
+  --pm-tip-edge: rgb(237 247 252 / .9);
+}
+
+.pm-face {
+  position: absolute;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+
+/* Stroke centres lie on the shared corners of the faces. */
+.pm-face path {
+  fill: none;
+  stroke: var(--pm-side-edge);
+  stroke-width: 1.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.pm-face--top {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--pm-top-fill, rgb(237 247 252 / .08));
+}
+
+.pm-face .pm-top-side,
+.pm-face .pm-top-rim {
+  stroke: var(--pm-top-edge);
+}
+
+.pm-face .pm-top-rim {
+  stroke-width: var(--pm-rim-width, 1.5px);
+  stroke-linecap: butt;
+}
+
+.pm-face .pm-tip {
+  fill: var(--pm-tip-fill, rgb(237 247 252 / .10));
+  /* The triangle stays filled if the projected outline is unavailable. */
+  stroke: none;
+  transform-box: view-box;
+  transform-origin: 100% 50%;
+  transform: scaleX(0);
+  visibility: hidden;
+}
+
+.pm-face--left,
+.pm-face--right {
+  top: 0;
+  width: var(--depth);
+  height: 100%;
+  background: var(--pm-fold-fill, rgb(145 190 215 / .14));
+}
+
+.pm-face--left {
+  left: 0;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+}
+
+.pm-face--right {
+  right: 0;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+}
+
+.pm-face--bottom {
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--depth);
+  background: var(--pm-fold-fill, rgb(197 229 241 / .16));
+  transform-origin: center bottom;
+  transform: rotateX(90deg);
+}
+
+.pm-plane i.pm-o {
+  --pm-top-edge: #f5a46f;
+  --pm-side-edge: #f5a46f;
+  --pm-tip-edge: #f5a46f;
+  --pm-top-fill: rgb(237 118 45 / .28);
+  --pm-tip-fill: rgb(237 118 45 / .28);
+  --pm-fold-fill: rgb(237 118 45 / .22);
+}
+
+.pm-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.pm-projected-wires .pm-face path {
+  stroke: none;
+}
+
+.pm-field--frame .pm-plane {
+  --cell: calc(260px * var(--pm-scale));
+  --block: calc(190px * var(--pm-scale));
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pm-dis {
+      view-timeline: --dis block;
+      --pm-timeline: --dis;
+      --pm-camera-end: contain 100%;
+      --pm-gather-start: 22%;
+      --pm-gather-end: 72%;
+    }
+
+    .pm-slot {
+      view-timeline: --slot block;
+      --pm-timeline: --slot;
+      --pm-camera-end: contain 94%;
+      --pm-gather-start: 21%;
+      --pm-gather-end: 66%;
+    }
+
+    .pm-plane,
+    .pm-field::before {
+      animation: pm-flyback linear both;
+      animation-timeline: var(--pm-timeline);
+      animation-range: contain 0% var(--pm-camera-end);
+    }
+
+    .pm-field::before { animation-name: pm-horizon; }
+
+    .pm-plane i,
+    .pm-plane .pm-tip {
+      animation: pm-lift linear both;
+      animation-timeline: var(--pm-timeline);
+      animation-range: contain calc(var(--pm-gather-start) + var(--j) * 1.35%)
+        contain calc(var(--pm-gather-end) + var(--j) * 1.5%);
+    }
+
+    .pm-plane .pm-tip { animation-name: pm-tip; }
+  }
+}
+
+@keyframes pm-flyback {
+  0% { transform: translate(-50%, -50%) rotateX(54deg) translateZ(168px) translateY(10%); }
+  26% { transform: translate(-50%, -50%) rotateX(56deg) translateZ(156px) translateY(8%); }
+  49% { transform: translate(-50%, -50%) rotateX(61deg) translateZ(110px) translateY(2%); }
+  70% { transform: translate(-50%, -50%) rotateX(66deg) translateZ(56px) translateY(-23%); }
+  88% { transform: translate(-50%, -50%) rotateX(71deg) translateZ(14px) translateY(-68%); }
+  100% { transform: translate(-50%, -50%) rotateX(74deg) translateZ(0px) translateY(-130%); }
+}
+
+@keyframes pm-horizon {
+  0%, 26% { opacity: .12; }
+  68% { opacity: .46; }
+  89% { opacity: .64; }
+  100% { opacity: .42; }
+}
+
+@keyframes pm-lift {
+  0% {
+    transform: translate3d(calc(var(--dx) * var(--pm-scale)), calc(var(--dy) * var(--pm-scale)), calc(var(--dz) * var(--pm-scale)))
+      rotateX(var(--rx)) rotateZ(var(--rz)) scale3d(1, 1, 1);
+    --pm-rim-width: 1.5px;
+  }
+
+  33%, 63% {
+    transform: translate3d(0, 0, calc(var(--h) * var(--pm-scale)))
+      rotateX(0deg) rotateZ(0deg) scale3d(1, 1, 1);
+    --pm-rim-width: 1.5px;
+  }
+
+  87%, 100% {
+    /* The complete point fits inside its grid cell. */
+    transform: translate3d(0, 0, calc((var(--h) + 18px) * var(--pm-scale)))
+      rotateX(0deg) rotateZ(0deg) scale3d(.78, .16, 1);
+    /* The near-horizontal strokes are compressed by the perspective. */
+    --pm-rim-width: 5px;
+  }
+}
+@keyframes pm-tip {
+  0%, 65% { transform: scaleX(0); visibility: hidden; }
+  87%, 100% { transform: scaleX(1); visibility: visible; }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @media (max-width: 900px), (max-height: 649px), (hover: none), (pointer: coarse) {
+      .pm-field {
+        view-timeline: --pm-art block;
+        --pm-timeline: --pm-art;
+        --pm-camera-end: exit 100%;
+      }
+
+      .pm-plane i,
+      .pm-plane .pm-tip {
+        animation-range: contain calc(30% + var(--j) * 1.35%) exit calc(70% + var(--j) * 1.5%);
+      }
+    }
+  }
+}
+
+@media (min-width: 901px) and (min-height: 650px) and (hover: hover) and (pointer: fine) {
+  .pm-field { --pm-scale: 1; }
+}

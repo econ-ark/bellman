@@ -1,0 +1,37 @@
+@methods: retiree_cons
+# The methods of the retiree's consumption stage, written as an addition to
+# retiree_cons.bl beside this file: the endogenous grid method on the policy
+# builder with its grid of savings and its handler, and the three lines of
+# the method, the inverted Euler relation with its note, the endogenous grid
+# of cash on hand and the identification of c with the candidate; the
+# envelope line of the decision value and the derivative line of the arrival
+# value; and the linear representation of the arrival value and of its stated
+# derivative on the asset grid, each named at its own Evaluation. The three
+# settings the file reads are declared at the top with their sets. Each grid
+# is its own typing entry at its place, one factor keyed by its coordinate:
+# the savings b_ret, the continuation state on which !egm builds its grid,
+# and the assets a_ret at each of the two Evaluations of the arrival builder.
+#
+# With the solution method !egm on the policy builder, the three lines stand
+# in place of the declared maximization at the operative level, and the
+# declared level keeps the stage file's line.
+
+n_a_ret : ℕ          :: ["number of points of the retiree's asset grid"]
+a_ret_min : Xa       :: ["lower bound of the retiree's asset grid"]
+a_ret_max : Xa       :: ["upper bound of the retiree's asset grid"]
+
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(b_ret=(a_ret_min, a_ret_max, n_a_ret)) | policy.handler : "asva:make_egm_1d"] {
+    c[>]     <= 𝑑𝑢𝑖𝑛𝑣(β*D_{b_ret}V[>])                :: [id=InvEuler, "Implies a correspondence: where equality holds, c[>] takes on a single value, where inequality holds, it is multiple values"]
+    w_ret[>] = b_ret + c[>]                          :: [id=endoggrid]
+    c        = c[>]                                  :: [id=cons_choice]
+}
+
+[id=cntn_to_dcsn] {
+    D_{w_ret}V = 𝑑𝑢(c)              :: [id=marginal]
+}
+
+[id=dcsn_to_arvl
+    | evaluate[V[<]].method : !Linear | evaluate[V[<]].grid : !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret)) | evaluate[V[<]].handler : "dcsmm:interp_as_3"
+    | evaluate[D_{a_ret}V[<]].method : !Linear | evaluate[D_{a_ret}V[<]].grid : !Cartesian(a_ret=(a_ret_min, a_ret_max, n_a_ret)) | evaluate[D_{a_ret}V[<]].handler : "dcsmm:interp_as_3"] {
+    D_{a_ret}V[<] = R*D_{w_ret}V    :: [id=marginal]
+}

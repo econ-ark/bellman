@@ -247,7 +247,7 @@
       var ns = n.namespace || '';
       var attrs = attrsOf(n.attrs);
       nodes[n.id] = {
-        id: n.id, label: n.label, namespace: ns, attrs: attrs, style: n.style || {},
+        id: n.id, label: n.label, description: n.description, namespace: ns, attrs: attrs, style: n.style || {},
         marker: !ns && BOUNDARY_KINDS.indexOf(attrs.kind) >= 0 ? attrs.kind : null,
         inputs: (n.inputsMetadata || []).map(function (p) { return { id: p.id, attrs: attrsOf(p.attrs) }; }),
         outputs: (n.outputsMetadata || []).map(function (p) { return { id: p.id, attrs: attrsOf(p.attrs) }; }),
@@ -370,7 +370,11 @@
   // The id of a port the exporter adds to a stage occurrence of the forward
   // trellis graph for one state field, `periods[h]/<key>/unjoined:<identity>`
   // or `periods[h]/<key>/joined:<identity>` (specification 0.4 §3.4, J-D16).
-  var FIELD_PORT = /\/(?:un)?joined:[^/]+$/;
+  var FIELD_PORT = /^periods\[\d+\]\/[^/]+\/(?:un)?joined:[^/:]+:(arvl|dcsn|cntn):([^/]+)$/;
+  function fieldPort(port) {
+    var identity = FIELD_PORT.exec(port.id);
+    return !!identity && port.attrs.role === 'state' && port.attrs.perch === identity[1] && port.attrs.field === identity[2];
+  }
   // The id of such a port for a field no join reaches (J-D16).
   var UNJOINED_FIELD = /\/unjoined:[^/]+$/;
   // The perch's sign at the end of a field's label, which the side of the
@@ -394,7 +398,7 @@
      (J-D47), and nothing for every other port, whose label stands in its
      handle's title (R-D49). */
   function portLabel(port) {
-    return FIELD_PORT.test(port.id) ? port.attrs.label || '' : '';
+    return fieldPort(port) ? port.attrs.label || '' : '';
   }
 
   // The most characters a label printed on a wire takes (spec 0.4 §2.1).
@@ -597,7 +601,7 @@
   function frameGeometry(spec, dir, measure) {
     var count = spec.builders || 0, unfold = !!spec.unfold;
     function port(p) {
-      var full = p.attrs.label || '', field = FIELD_PORT.test(p.id), words = fieldWords(full);
+      var full = p.attrs.label || '', field = fieldPort(p), words = fieldWords(full);
       return { id: p.id, full: full, attrs: p.attrs, wire: !!p.wire, field: field, marker: !!p.marker, reach: p.reach,
                open: field ? UNJOINED_FIELD.test(p.id) : !!p.attrs.unjoined,
                branch: field ? words.branch : (p.branch == null ? '' : String(p.branch)), name: field ? words.name : full };
@@ -1120,6 +1124,17 @@
        hovers (AMD-MB-001 §5.4). */
     var split = options.split || [];
     var pairBundles = [], pairOf = {};
+    var initialRoutes = new Map();
+    function initialRouteFor(w) {
+      var route = w.attrs.route;
+      if (m.graph.id !== 'forward initial diagram' || !route || route.source === route.destination) return null;
+      var from = m.nodes[w.from], to = m.nodes[w.to];
+      if (from.attrs.kind !== 'field' || to.attrs.kind !== 'field' ||
+          chain(from.namespace)[1] !== route.source || chain(to.namespace)[1] !== route.destination) return null;
+      var id = 'initial-route::' + JSON.stringify([route.source, route.destination, route.branch, route.law]);
+      if (!initialRoutes.has(id)) initialRoutes.set(id, { id: id, route: route, wires: [], count: 0 });
+      return initialRoutes.get(id);
+    }
     // the port of the graph JSON that the wire `w` reaches
     function readingPort(w) {
       return m.nodes[w.to].inputs.filter(function (p) { return p.id === w.into; })[0] || { id: w.into, attrs: {} };
@@ -1150,6 +1165,7 @@
       return from + '|' + to + (route && route.branch != null ? '|' + route.branch : '');
     }
     m.wires.forEach(function (w) {
+      if (initialRouteFor(w)) return;
       var a = shown(m, w.from, open), b = shown(m, w.to, open);
       var ends = bundleKey(w, a, b), key = w.from + '|' + w.out;
       if (ends === null) return;
@@ -1192,6 +1208,7 @@
       var a = shown(m, w.from, open), b = shown(m, w.to, open);
       var aId = a.node || (a.layer + LAYER_ENDING), bId = b.node || (b.layer + LAYER_ENDING);
       if (aId === bId) return;
+      var initial = initialRouteFor(w);
       var outPort = m.nodes[w.from].outputs.filter(function (p) { return p.id === w.out; })[0] || { id: w.out, attrs: {} };
       var inPort = m.nodes[w.to].inputs.filter(function (p) { return p.id === w.into; })[0] || { id: w.into, attrs: {} };
       var wireKey = w.from + '|' + w.out;
@@ -1199,10 +1216,10 @@
       if (a.layer && periodOf(m, w.from) !== periodOf(m, w.to)) outward[a.layer] = true;
       // the bundle the wire belongs to, or null; a wire of a bundle not split crosses the two cards' borders at the
       // bundle's ports, and a boundary marker at the port of the bundle's first wire (design pass 12 §2)
-      var ends = bundleKey(w, a, b), pair = ends === null ? null : pairOf[ends] || null;
+      var ends = initial ? null : bundleKey(w, a, b), pair = ends === null ? null : pairOf[ends] || null;
       if (pair && !pair.bundled) pair = null;
       var drawn = pair && !pair.split ? pair : null;
-      var crossing = drawn ? drawn.id : wireKey, leaving = drawn ? drawn.id : wireKey;
+      var crossing = initial ? initial.id : drawn ? drawn.id : wireKey, leaving = crossing;
       // the route the wire's edge carries, where one does (unit N, Task 6): its branch and its pairs
       var route = w.attrs.route || null, branch = route && route.branch != null ? String(route.branch) : null;
       if (drawn) {
@@ -1211,6 +1228,10 @@
         drawn.members.push({ from: w.from, out: w.out, to: w.to, into: w.into, label: outPort.attrs.label || '',
                              join: inPort.attrs.join || '', value: valueName(inPort),
                              valued: VALUE_ROLES.indexOf((inPort.attrs || {}).role) >= 0 });
+      }
+      if (initial) {
+        initial.count++;
+        if (!writtenBy[initial.id]) writtenBy[initial.id] = w.from;
       }
       // a port that a wire crosses the border at, named by the wire's writer and output, or by its bundle; a
       // writing port carries the branch of the wire's route (design pass 10 §6); each carries the rank of the end
@@ -1246,6 +1267,7 @@
       }
       if (seen[key]) return;
       seen[key] = true;
+      if (initial) initial.wires.push(key);
       // a cable (design pass 10 §6): a wire between two stage occurrences' cards, or between a card and a boundary
       // marker, whose stub to an `outside` marker is dashed; the count of the wires it carries, the pairs of its
       // route where it carries a measure, and one where it carries one value function (design pass 12 §3); and its
@@ -1271,6 +1293,7 @@
                    // (design pass 14 §1, rule 3)
                    within: a.layer ? m.layers[a.layer].parent : m.nodes[w.from].namespace,
                    dashed: markerA === 'outside' || markerB === 'outside',
+                   initialRoute: initial ? initial.id : undefined,
                    pairBundle: drawn || undefined, pairOf: pair && pair.split ? pair.id : undefined });
     });
     // a bundle's joins and its label, which its wire prints and its ports' hovers name: where a wire of it
@@ -1445,7 +1468,7 @@
       var at = shown(m, id, open), n = m.nodes[id];
       if (!at.layer) return;
       var own = OCCURRENCE.test(at.layer) && n.namespace === at.layer;
-      function stands(p) { return p.attrs.unjoined || (own && FIELD_PORT.test(p.id)); }
+      function stands(p) { return p.attrs.unjoined || (own && fieldPort(p)); }
       n.inputs.forEach(function (p) { if (stands(p)) closed[at.layer].ins.push({ id: p.id, attrs: p.attrs }); });
       n.outputs.forEach(function (p) { if (stands(p)) closed[at.layer].outs.push({ id: p.id, attrs: p.attrs }); });
     });
@@ -1499,7 +1522,7 @@
        stands directly in the occurrence's layer and one of its ports is a
        field's. */
     function carriesFields(n) {
-      return OCCURRENCE.test(n.namespace) && n.inputs.concat(n.outputs).some(function (p) { return FIELD_PORT.test(p.id); });
+      return OCCURRENCE.test(n.namespace) && n.inputs.concat(n.outputs).some(fieldPort);
     }
 
     // the nodes; an open occurrence's own `Inputs` or `Outputs` that carries its field ports is laid out in the
@@ -1520,7 +1543,15 @@
       else if (n.marker) { type = 'marker'; spec.marker = n.marker; spec.role = 'frame'; spec.target = n.attrs.target || ''; }
       // an occurrence's own Inputs and Outputs, in the face of a frame's name in a trellis graph (M-D15)
       else if (!kind) { type = 'boundary'; spec.role = stageView ? 'boundary' : 'frame'; spec.boundary = true; }
-      if (!kind && carriesFields(n)) { spec.fields = true; dir = dirOf(m.layers[n.namespace].parent); }
+      if (m.graph.id === 'forward' && OCCURRENCE.test(n.namespace) &&
+          (id === n.namespace + '/GraphInputs' || id === n.namespace + '/GraphOutputs')) {
+        // Connector ports belong to the card, outside the expanded operator diagram.
+        spec.inputs = spec.inputs.filter(function (p) { return !fieldPort(p); });
+        spec.outputs = spec.outputs.filter(function (p) { return !fieldPort(p); });
+        if (!spec.inputs.length && !spec.outputs.length) return;
+        spec.fields = !!n.description;
+      } else if (!kind && carriesFields(n)) { spec.fields = true; dir = dirOf(m.layers[n.namespace].parent); }
+      else if (spec.boundary && n.description) spec.fields = true;
       var geom = boxGeometry(spec, dir, measure);
       var elk = { id: id, width: geom.width, height: geom.height };
       addPorts(elk, geom, id);
@@ -1546,9 +1577,9 @@
       var b = boxes[boxId];
       return chain(b.type === 'layer' ? b.layer.parent : b.node.namespace);
     }
-    /* The bundles of unit K's decision K-D5: the wires that run from boxes
-       inside one open period layer to one reading port, the same port of
-       the same node of the graph JSON, inside another open period layer,
+    /* The bundles of unit K's decision K-D5: the wires that run from one period
+       to one reading port, the same port of the same node of the graph
+       JSON, inside another open period layer,
        where they are two or more. Each bundle is `{id, key, from, to,
        reader, into, wires, join}`: `key`, which names the one port at the
        reading period's border its wires share; `from` and `to`, the
@@ -1564,11 +1595,13 @@
     (function () {
       var groups = {}, order = [];
       wires.forEach(function (w) {
+        if (w.initialRoute) return;
         var A = layersAbove(w.source), B = layersAbove(w.target);
-        if (!A.length || !B.length || A[0] === B[0] || !PERIOD.test(A[0]) || !PERIOD.test(B[0])) return;
-        var key = 'pair:' + A[0] + '|' + B[0] + '|' + w.to + '|' + w.into;
+        var from = outermost(w.source, A), to = B[0];
+        if (!from || !to || from === to || !PERIOD.test(from) || !PERIOD.test(to)) return;
+        var key = 'pair:' + from + '|' + to + '|' + w.to + '|' + w.into;
         if (!groups[key]) {
-          groups[key] = { id: 'pair::' + A[0] + '|' + w.to + '|' + w.into, key: key, from: A[0], to: B[0],
+          groups[key] = { id: 'pair::' + from + '|' + w.to + '|' + w.into, key: key, from: from, to: to,
                           reader: w.to, into: w.into, wires: [], join: w.join, cable: !!w.cable, count: 0 };
           order.push(key);
         }
@@ -1585,6 +1618,20 @@
       });
     })();
     wires.forEach(function (w) { if (bundleOf[w.id]) w.bundle = bundleOf[w.id].id; });
+
+    // Wires from other occurrences in one period can share an entrance to the exact same input.
+    var samePeriod = new Map(), incoming = new Map();
+    wires.forEach(function (w) {
+      if (w.initialRoute) return;
+      var a = chain(m.nodes[w.from].namespace), b = chain(m.nodes[w.to].namespace);
+      if (!a[1] || !b[1] || a[1] === b[1] || a[0] !== b[0] || !PERIOD.test(a[0])) return;
+      var key = JSON.stringify([w.to, w.into]);
+      if (!samePeriod.has(key)) samePeriod.set(key, []);
+      samePeriod.get(key).push(w.id);
+    });
+    samePeriod.forEach(function (ids, key) {
+      if (ids.length > 1) ids.forEach(function (id) { incoming.set(id, 'reader:' + key); });
+    });
 
     /* The `+ period` controls (§3.6), each as wide as its words with
        G.addPad at each side and G.addH high (design pass 2, §2). A control
@@ -1645,11 +1692,10 @@
     /* A wire that crosses the border of an open layer is cut there: each open
        layer it leaves or enters gains a port for it, and each piece is an
        edge, ELK's record of a wire, in the layer it runs in. The wires of a
-       bundle cross the border of the reading period at the bundle's one
-       port, and the writing period's border each at a port of its own, so
-       that their pieces at the root meet on one vertical run in the gap
-       and share the run into the reading period (K-D5; design pass 13 §1,
-       rule 4). No piece of a cable keeps room for a label at rest (B4). */
+       bundle enter each open layer of the reader at one port. Each wire
+       leaves the writing period at its own port. The wires meet in the
+       gap and share their route to the reading port (K-D5; design pass 13
+       §1, rule 4). No piece of a cable keeps room for a label at rest (B4). */
     var portsMade = {}, piecesMade = {};
     // the room of a `+ period` control in the gap between two periods, along the root's direction, the
     // control with G.layerPad at each side (K-D13): the periods of a graph with controls stand that far
@@ -1671,20 +1717,18 @@
       var A = layersAbove(w.source), B = layersAbove(w.target);
       var d = 0;
       while (d < A.length && d < B.length && A[d] === B[d]) d++;
-      // a bundle's wires run from one period to another, so that d is 0 and A[0] and B[0] are the two periods;
-      // the wires that enter an open period from a box of the graph's root, a boundary marker or a closed period,
-      // into one socket cross the period's border at one port, the socket's, so that they meet outside the frame
-      // and share one run across its border into the socket, and the frame keeps its padding (the fix wave Q3a,
-      // item 6; A22, B20)
+      // Wires from the root into one socket share a border port on the open period (Q3a, item 6).
       var bundle = bundleOf[w.id] || null, pieces = [], from = w.sourceHandle, i;
       var fromRoot = !A.length && B.length > 0 && PERIOD.test(B[0]);
       function keyAt(depth) {
-        if (bundle && depth === 0) return bundle.key;
+        if (w.initialRoute) return depth <= 1 ? w.initialRoute : w.initialRoute + '::' + w.targetHandle;
+        if (bundle) return bundle.key;
         if (fromRoot && depth === 0) return 'into:' + (elkPortOf[w.targetHandle] || w.targetHandle);
-        return w.sourceHandle;
+        return incoming.get(w.id) || w.sourceHandle;
       }
       for (i = A.length - 1; i >= d; i--) {
-        var pOut = layerPort(A[i], 'hout', w.sourceHandle);
+        var port = w.initialRoute ? (i <= 1 ? w.initialRoute : w.initialRoute + '::' + w.sourceHandle) : w.sourceHandle;
+        var pOut = layerPort(A[i], 'hout', port);
         pieces.push({ container: A[i], source: from, target: pOut });
         from = pOut;
       }
@@ -1697,7 +1741,7 @@
       // the reading end's ELK port, the one port of a card's socket (A8)
       var last = elkPortOf[w.targetHandle] || w.targetHandle;
       // a piece of a wire of the stage graph prints the label of its joins, and a piece of a cable none (B4)
-      var label = w.cable ? '' : bundle ? bundle.join : w.join;
+      var label = w.cable || w.initialRoute ? '' : bundle ? bundle.join : w.join;
       pieces.push({ container: d ? A[d - 1] : '', source: from, target: into.length ? into[0] : last,
                     join: label, bundle: bundle });
       for (i = 0; i < into.length; i++) pieces.push({ container: B[d + i], source: into[i], target: i + 1 < into.length ? into[i + 1] : last });
@@ -1721,6 +1765,11 @@
         }
         return id;
       });
+      if (w.initialRoute) {
+        // Pieces inside either occurrence connect its fields to the shared cable at its border.
+        w.initialStart = Math.max(0, A.length - Math.max(d, 1));
+        w.initialEnd = w.pieces.length - Math.max(0, B.length - Math.max(d, 1));
+      }
     });
     /* A gap that holds a `+ period` control and that no piece of the root
        crosses is held by an edge of the root from the earlier period's
@@ -1743,6 +1792,8 @@
       frame.children.sort(function (a, b) { return rankOfChild(a) - rankOfChild(b) || given.indexOf(a) - given.indexOf(b); });
     });
     return { elk: elkRoot, boxes: boxes, wires: wires, bundles: bundles, pairBundles: pairBundles, compact: compact,
+             initialRoutes: Array.from(initialRoutes.values()).filter(function (u) { return u.wires.length; }),
+             samePeriod: Array.from(samePeriod.values()).filter(function (ids) { return ids.length > 1; }),
              stage: aligned ? stageColumn(m, namespaces, boxes, wires) : null };
   }
 
@@ -1846,6 +1897,106 @@
         ? [route[at[k]]].concat(rest) : [here].concat(rest);
     });
     return { points: points, rests: rests };
+  }
+
+  /* Partition the collinear overlaps of the routes into one input. Keep each original route for its
+     record and source mark. The endpoints of the segments on each line divide it into intervals with a
+     fixed set of wires. A shared interval takes its own stroke, and the remainder of each wire is kept
+     in route order so an uninterrupted corner is still drawn as one path. */
+  function partitionRuns(ids, routeOf, atSocket, pair, paint, sharedRuns) {
+    var lines = new Map(), segmentsByWire = new Map(), order = new Map();
+    function point(axis, fixed, along) {
+      return axis === 'x' ? { x: along, y: fixed } : { x: fixed, y: along };
+    }
+    ids.forEach(function (id, i) {
+      order.set(id, i);
+      var route = routeOf(id), segments = [];
+      segmentsByWire.set(id, segments);
+      for (var i = 1; i < route.length; i++) {
+        var a = route[i - 1], b = route[i];
+        var axis = a.y === b.y ? 'x' : a.x === b.x ? 'y' : null;
+        var fixed = axis === 'x' ? a.y : a.x;
+        var segment = { a: a, b: b, axis: axis, fixed: fixed, cuts: [], id: id, last: i === route.length - 1 };
+        segments.push(segment);
+        if (!axis || a[axis] === b[axis]) continue;
+        var key = axis + ':' + fixed;
+        if (!lines.has(key)) lines.set(key, []);
+        lines.get(key).push(segment);
+      }
+    });
+    lines.forEach(function (segments) {
+      if (segments.length < 2) return;
+      var axis = segments[0].axis, fixed = segments[0].fixed, events = new Map();
+      function event(at) {
+        if (!events.has(at)) events.set(at, { start: [], stop: [] });
+        return events.get(at);
+      }
+      segments.forEach(function (s) {
+        event(Math.min(s.a[axis], s.b[axis])).start.push(s);
+        event(Math.max(s.a[axis], s.b[axis])).stop.push(s);
+      });
+      var points = Array.from(events.keys()).sort(function (a, b) { return a - b; });
+      var active = new Set(), pending = null;
+      function emit() {
+        if (!pending) return;
+        var run = { id: 'shared-run::' + sharedRuns.length,
+                    points: [point(axis, fixed, pending.low), point(axis, fixed, pending.high)],
+                    members: pending.members, terminal: pending.end != null };
+        if (pending.end === pending.low) run.points.reverse();
+        if (pair && run.terminal && run.members.length === ids.length) run.pair = pair;
+        sharedRuns.push(run);
+      }
+      for (var i = 0; i + 1 < points.length; i++) {
+        var low = points[i], high = points[i + 1], changes = events.get(low);
+        changes.stop.forEach(function (s) { active.delete(s); });
+        changes.start.forEach(function (s) { active.add(s); });
+        if (active.size < 2) continue;
+        var involved = new Set(), endsLow = new Set(), endsHigh = new Set();
+        active.forEach(function (s) {
+          involved.add(s.id);
+          if (!atSocket || !s.last) return;
+          if (s.b[axis] === low) endsLow.add(s.id);
+          if (s.b[axis] === high) endsHigh.add(s.id);
+        });
+        if (involved.size < 2) continue;
+        active.forEach(function (s) { s.cuts.push([low, high]); });
+        var members = Array.from(involved).sort(function (a, b) { return order.get(a) - order.get(b); });
+        var end = endsLow.size === members.length ? low : endsHigh.size === members.length ? high : null;
+        if (pending && pending.high === low && pending.members.length === members.length &&
+            pending.members.every(function (id, j) { return id === members[j]; })) {
+          pending.high = high;
+          if (end != null) pending.end = end;
+        } else {
+          emit();
+          pending = { low: low, high: high, members: members, end: end };
+        }
+      }
+      emit();
+    });
+    segmentsByWire.forEach(function (segments, id) {
+      if (!segments.some(function (s) { return s.cuts.length > 0; })) return;
+      var pieces = [], part = null;
+      function same(a, b) { return a.x === b.x && a.y === b.y; }
+      function keep(a, b) {
+        if (same(a, b)) return;
+        if (!part || !same(part[part.length - 1], a)) {
+          part = [a];
+          pieces.push(part);
+        }
+        part.push(b);
+      }
+      segments.forEach(function (s) {
+        if (!s.cuts.length) { keep(s.a, s.b); return; }
+        var forward = s.a[s.axis] < s.b[s.axis], from = s.a;
+        var cuts = forward ? s.cuts : s.cuts.slice().reverse();
+        cuts.forEach(function (cut) {
+          keep(from, point(s.axis, s.fixed, cut[forward ? 0 : 1]));
+          from = point(s.axis, s.fixed, cut[forward ? 1 : 0]);
+        });
+        keep(from, s.b);
+      });
+      paint[id] = pieces;
+    });
   }
 
   // The ending of the id of an undrawn edge, or of its ports: an edge of ELK's graph between the middles of two
@@ -2493,19 +2644,77 @@
       if (!b.geom || !at) return;
       b.geom.ins.concat(b.geom.outs).forEach(function (p) { if (p.handle) portAt[p.handle] = { x: at.ax + p.x, y: at.ay + p.y }; });
     });
-    var routes = {}, parts = {}, bundles = {};
+    var routes = {}, parts = {}, bundles = {}, wireById = {};
     built.wires.forEach(function (w) {
+      wireById[w.id] = w;
       var pts = joined(w.pieces);
       routes[w.id] = pts.length >= 2 && portAt[w.sourceHandle] && portAt[w.targetHandle] ? snapRoute(pts, portAt[w.sourceHandle], portAt[w.targetHandle]) : pts;
+    });
+    var initialRoutes = [], initialPaths = [], initialArrows = {}, arrowPorts = new Set();
+    (built.initialRoutes || []).forEach(function (u) {
+      var first = wireById[u.wires[0]], points = joined(first.pieces.slice(first.initialStart, first.initialEnd));
+      if (points.length < 2) return;
+      var start = (first.initialStart === 0 && portAt[first.sourceHandle]) || points[0];
+      var end = (first.initialEnd === first.pieces.length && portAt[first.targetHandle]) || points[points.length - 1];
+      var trunk = snapRoute(points, start, end);
+      if (trunk.length < 2) return;
+      initialRoutes.push({ id: u.id, points: trunk, wires: u.wires, count: u.count, route: u.route });
+      initialPaths.push({ id: u.id, route: u.id, points: trunk, cable: true });
+      var painted = new Set();
+      function leg(ids, from, to) {
+        var key = JSON.stringify(ids);
+        if (!ids.length || painted.has(key)) return null;
+        var local = joined(ids);
+        if (local.length < 2) return null;
+        painted.add(key);
+        return snapRoute(local, from || local[0], to || local[local.length - 1]);
+      }
+      u.wires.forEach(function (id) {
+        var w = wireById[id];
+        var lead = leg(w.pieces.slice(0, w.initialStart), portAt[w.sourceHandle], start);
+        var tail = leg(w.pieces.slice(w.initialEnd), end, portAt[w.targetHandle]);
+        parts[id] = [lead, tail].filter(function (line) { return line && line.length > 1; });
+        parts[id].forEach(function (points) { initialPaths.push({ id: id, route: u.id, points: points }); });
+        if (tail && tail.length > 1 && built.boxes[w.target].node && !arrowPorts.has(w.targetHandle)) {
+          arrowPorts.add(w.targetHandle);
+          initialArrows[id] = true;
+        }
+      });
     });
     (built.bundles || []).forEach(function (u) {
       // the route the bundle's wires share, from the reading port back to the point where the last of them
       // joins the others, drawn once, and each wire's own route up to that point (K-D5)
       var own = u.wires.map(function (id) { return routes[id].slice().reverse(); });
-      if (own.some(function (r) { return r.length < 2; })) return;
+      if (!own.length || own.some(function (r) { return r.length < 2; })) return;
+      var socket = own[0][0];
+      if (own.some(function (r) { return r[0].x !== socket.x || r[0].y !== socket.y; })) return;
       var shared = sharedStart(own);
+      if (shared.points.length < 2) return;
       bundles[u.id] = { points: shared.points.slice().reverse(), join: null };
       u.wires.forEach(function (id, k) { parts[id] = [shared.rests[k].slice().reverse()]; });
+    });
+    var paint = {}, sharedRuns = [];
+    (built.samePeriod || []).forEach(function (ids) {
+      partitionRuns(ids, function (id) { return routes[id]; }, true, null, paint, sharedRuns);
+    });
+    (built.bundles || []).forEach(function (u) {
+      var shared = !!bundles[u.id];
+      partitionRuns(u.wires, function (id) { return parts[id] ? parts[id][0] : routes[id]; },
+                    !shared, shared ? null : u.id, paint, sharedRuns);
+    });
+    // Initial paths share strokes without changing their routes, arrows or count marks.
+    var initialPaint = {}, initialRuns = [];
+    partitionRuns(initialPaths.map(function (_, i) { return i; }), function (i) { return initialPaths[i].points; },
+                  false, null, initialPaint, initialRuns);
+    initialPaths.forEach(function (path, i) {
+      var drawn = paint[path.id] || (paint[path.id] = []);
+      drawn.push.apply(drawn, initialPaint[i] || [path.points]);
+    });
+    var initialSharedRuns = initialRuns.map(function (run) {
+      var members = run.members.map(function (i) { return initialPaths[i]; });
+      return { id: 'initial-' + run.id, points: run.points,
+               routes: Array.from(new Set(members.map(function (path) { return path.route; }))),
+               cable: members.some(function (path) { return path.cable; }) };
     });
     // the place of each wire's label
     var joins = {};
@@ -2559,7 +2768,8 @@
                        ax: frame.ax + box.at.x, ay: frame.ay + box.at.y };
     });
     return { place: place, routes: routes, parts: parts, bundles: bundles, joins: joins, width: width, height: height,
-             builders: builders };
+             builders: builders, paint: paint, sharedRuns: sharedRuns, initialRoutes: initialRoutes, initialArrows: initialArrows,
+             initialSharedRuns: initialSharedRuns };
   }
 
   return { model: model, build: build, arrange: arrange, settle: settle, columnWidths: columnWidths, read: read, shown: shown, chain: chain, configOf: configOf, directionOf: directionOf,

@@ -7,13 +7,19 @@ under the key `stage` of the stage's entry, and each source in a source list;
 nothing is read in place of a path the recipe does not write. `load_recipe`
 reads the recipe, the trellis file and its period templates, checks that the
 recipe and the templates name the same stages, reads each stage file and each
-source once, binds each fill to its slot, merges each source list and writes
-one record per stage and period. A source file is told apart by its top key,
-and its `parent:` chain is merged beneath it. A slot is written `$<name>` in
-a source list. The `registry` block admits names no stage declares. A fill is
-read against the declarations of the stages that receive it. Every refusal
-names a rule of `FACTORY_RULES` and says where, what is written, why, and what
-to write instead.
+source once, binds each fill to its slot, merges each calibration and settings
+list and writes one record per stage and period. A calibration or a settings
+file is told apart by its top key, and its `parent:` chain is merged beneath
+it. A methods list names `.bl` additions, `stages/<key>/methods.bl` beside the
+stage file or a replacing selection `methods.<variant>.bl`, read into the
+record in the order the list writes them, `{all: [...]}` for the additions
+every occurrence takes and a range list for those of its periods
+(specification 0.7, D3 and F76); a change of selection is another addition
+named in the list, so a methods list takes no slot. A slot is written
+`$<name>` in a calibration or a settings list. The `registry` block admits
+names no stage declares. A fill is read against the declarations of the
+stages that receive it. Every refusal names a rule of `FACTORY_RULES` and
+says where, what is written, why, and what to write instead.
 """
 
 from __future__ import annotations
@@ -32,14 +38,15 @@ from bellman.factory.loading import (
     _mapping_and_digest,
     is_addition_path,
     load_stage,
+    named_addition,
     plain_python,
-    read_addition,
     read_trellis_file,
 )
-from bellman.refusals import FactoryError
+from bellman.refusals import FactoryError, written_kind
 from bellman.stage.construction import stage_name
-from bellman.stage.sources import entry_key, load_methods, read_yaml_mapping
+from bellman.stage.sources import key_marks, read_yaml_mapping
 from bellman.syntax.lower import item_addresses, parse_with_spans
+from bellman.syntax.union import union
 from bellman.typing.declarations import Declarations
 
 __all__ = ["load_recipe"]
@@ -102,15 +109,18 @@ def load_recipe(directory, recipe, texts=None, /, **fills):
     registry, registry_lists = _registry_assignments(
         read, directory=directory, file=file, cache=cache
     )
-    # the declarations a fill is read against parse every stage text, so they
-    # are read when a fill is given
+    # the declarations a fill is read against parse every stage text and its
+    # additions, so they are read when a fill is given
     if fills:
         declared = {
             key: declared_parameters(stages[key]["stage"]["text"], stages[key]["stage"]["origin"])
             for key in stages
         }
         settings = {
-            key: _setting_names(read, key, directory=directory, file=file, cache=cache)
+            key: _setting_names(
+                read, key, stages[key], templates=templates, directory=directory, file=file,
+                cache=cache,
+            )
             for key in stages
         }
     else:
@@ -156,6 +166,9 @@ def load_recipe(directory, recipe, texts=None, /, **fills):
 
 # the keys a stage's block of the recipe may hold
 _BLOCK_KEYS = ("stage",) + KINDS + ("periods",)
+# the two kinds whose sources assign values, merged and filled; the methods
+# of a stage are additions, named and read in order
+_VALUED = ("calibration", "settings")
 
 
 def _read_recipe(path, texts=None):
@@ -171,6 +184,7 @@ def _read_recipe(path, texts=None):
     text was taken, else None (model interface spec 0.4 §3.1)."""
     path = Path(path)
     raw, digest, taken = _mapping_and_digest(path, texts, rule="recipe-shape", address="recipe")
+    marks = key_marks(path, text=None if taken is None else texts[taken])
     file = str(path)
     if not isinstance(raw.get("stages"), Mapping):
         raise FactoryError(
@@ -180,7 +194,7 @@ def _read_recipe(path, texts=None):
             address="stages",
             written=repr(raw)[:80],
             write="stages: {<stage key>: {stage: <path>.bl, calibration: {all: [...]}, "
-            "settings: {all: [...]}, methods: {all: [...]}}}",
+            "settings: {all: [...]}, methods: {all: [stages/<key>/methods.bl]}}}",
         )
     if not _is_path(raw.get("trellis")):
         raise FactoryError(
@@ -200,9 +214,10 @@ def _read_recipe(path, texts=None):
                 rule="recipe-shape",
                 file=file,
                 address=f"stages.{stage}",
+                **_at(marks, "stages", stage),
                 written=repr(block)[:80],
                 write="stage: <path>.bl, calibration: {all: [...]}, settings: {all: [...]}, "
-                "methods: {all: [...]}",
+                "methods: {all: [stages/<key>/methods.bl]}",
             )
         unknown = sorted(str(key) for key in block if key not in _BLOCK_KEYS)
         if unknown:
@@ -212,6 +227,7 @@ def _read_recipe(path, texts=None):
                 rule="recipe-shape",
                 file=file,
                 address=f"stages.{stage}.{unknown[0]}",
+                **_at(marks, "stages", stage, unknown[0]),
                 written=unknown[0],
                 write="stage:, calibration:, settings:, methods: "
                 "and periods: as the keys of a stage's block",
@@ -222,6 +238,7 @@ def _read_recipe(path, texts=None):
                 rule="recipe-shape",
                 file=file,
                 address=f"stages.{stage}",
+                **_at(marks, "stages", stage),
                 written=repr(block)[:80],
                 write=f"`stage: stages/{stage}/{stage}.bl`, the path from this folder",
             )
@@ -239,24 +256,28 @@ def _read_recipe(path, texts=None):
                     rule="recipe-shape",
                     file=file,
                     address=f"stages.{stage}.periods",
+                    **_at(marks, "stages", stage, "periods"),
                     written=repr(written),
                     write="periods: [lo, hi] with lo ≤ hi, both integers",
                 )
             periods = (written[0], written[1])
         entry = {"stage": block["stage"], "periods": periods}
         for kind in KINDS:
-            entry[kind], named = _source_lists(block.get(kind), stage, kind, file=file)
+            entry[kind], named = _source_lists(
+                block.get(kind), stage, kind, file=file, marks=marks
+            )
             slots |= named
         stages[str(stage)] = entry
     registry = raw.get("registry") or {}
     if not isinstance(registry, Mapping) or any(
-        kind not in KINDS or not isinstance(names, list) for kind, names in registry.items()
+        kind not in _VALUED or not isinstance(names, list) for kind, names in registry.items()
     ):
         raise FactoryError(
-            "the registry block is not `{kind: [source names]}`",
+            "the registry block is not `{kind: [source names]}`, kind calibration or settings",
             rule="recipe-shape",
             file=file,
             address="registry",
+            **_at(marks, "registry"),
             written=repr(registry)[:80],
             write="registry: {calibration: [calibration/wage_schedule]}",
         )
@@ -277,11 +298,25 @@ def _is_path(value):
     return isinstance(value, str) and bool(value.strip())
 
 
-def _source_lists(block, stage, kind, *, file):
+def _at(marks, *path):
+    """The line and the column of the key or the list item at `path` in the
+    recipe, each key the string the recipe writes and each list item its
+    index, from the recipe's node marks `marks`
+    (`bellman.stage.sources.key_marks`), as the keyword arguments of a
+    `FactoryError`; None where the recipe writes no such key."""
+    line, column = marks.get(tuple(path), (None, None))
+    return {"line": line, "column": column}
+
+
+def _source_lists(block, stage, kind, *, file, marks):
     """`{"all": [names], "lo-hi": [names]}` of one kind block of one stage and
     the slots it names; a missing block is an empty `all` list; the ranges
     are checked for their form and for overlap, the source names for their
-    form."""
+    form. A methods list names `.bl` additions and no slot: a name of another
+    form is refused under `recipe-source`, a slot under `recipe-shape`, since
+    a change of selection is another addition named in the list (D3). A
+    refusal of the block, of a key or of a list item is positioned at it in
+    the recipe, from the recipe's node marks `marks`."""
     address = f"stages.{stage}.{kind}"
     if block is None:
         return {"all": []}, set()
@@ -291,16 +326,37 @@ def _source_lists(block, stage, kind, *, file):
             rule="recipe-shape",
             file=file,
             address=address,
+            **_at(marks, "stages", stage, kind),
             written=repr(block)[:80],
-            write=f"{kind}: {{all: [<source>, $<slot>]}}",
+            write=(
+                f"{kind}: {{all: [stages/{stage}/methods.bl]}}"
+                if kind == "methods"
+                else f"{kind}: {{all: [<source>, $<slot>]}}"
+            ),
         )
     lists, slots, ranges = {}, set(), []
     for key, names in block.items():
-        names = [] if names is None else (list(names) if isinstance(names, list) else [names])
+        listed = isinstance(names, list)
+        names = [] if names is None else (list(names) if listed else [names])
         sources = []
-        for name in names:
+        for index, name in enumerate(names):
+            # a name written alone, under the key, stands at the key
+            at = _at(marks, "stages", stage, kind, key, *((index,) if listed else ()))
             name = str(name).strip()
             if name.startswith("$"):
+                if kind == "methods":
+                    raise FactoryError(
+                        f"the methods list {address}.{key} names the slot {name}; a methods list "
+                        "names the `.bl` additions each occurrence takes, and a change of "
+                        "selection is another addition named in the list (specification 0.7, "
+                        "D3), so no slot stands in it",
+                        rule="recipe-shape",
+                        file=file,
+                        address=f"{address}.{key}",
+                        **at,
+                        written=name,
+                        write=f"the path of an addition, stages/{stage}/methods.<variant>.bl",
+                    )
                 slots.add(name[1:])
             elif ".." in name or Path(name).is_absolute():
                 raise FactoryError(
@@ -308,8 +364,21 @@ def _source_lists(block, stage, kind, *, file):
                     rule="recipe-source",
                     file=file,
                     address=f"{address}.{key}",
+                    **at,
                     written=name,
                     write="a path relative to the registry directory, such as calibration/main",
+                )
+            elif kind == "methods" and not is_addition_path(name):
+                raise FactoryError(
+                    f"the source name {name!r} in {address}.{key} names no addition; a methods "
+                    "list names `.bl` additions, each by its path from the registry "
+                    "(specification 0.7 §4)",
+                    rule="recipe-source",
+                    file=file,
+                    address=f"{address}.{key}",
+                    **at,
+                    written=name,
+                    write=f"the path of an addition, stages/{stage}/methods.bl",
                 )
             sources.append(name)
         if key != "all":
@@ -514,13 +583,37 @@ def declared_parameters(text, origin):
     return tuple(declarations.parameters())
 
 
-def _setting_names(read, key, *, directory, file, cache):
+def declared_settings(text, origin, additions):
+    """The settings the additions of a stage declare, as the declaration pass
+    classifies them and `stage.settings` lists them: the top-level scalar
+    declarations of the additions unioned with the stage text that are
+    neither fields nor shocks (specification 0.7, S1), read by the pass's own
+    reading of the parsed union; the stage is not constructed. `additions`
+    are the records `{text, origin}` a source record holds under `methods`.
+    A text the parser, the union or the reading refuses raises that
+    refusal."""
+    parsed = union(
+        parse_with_spans(text, filename=origin),
+        [parse_with_spans(held["text"], filename=held["origin"]) for held in additions],
+    )
+    items = item_addresses(parsed.term)
+    declarations = Declarations(stage_name(parsed.term, items, parsed.spans), items, parsed.spans)
+    declarations.read(parsed.term)
+    return tuple(declarations.settings())
+
+
+def _setting_names(read, key, record, *, templates, directory, file, cache):
     """The setting names a stage may be given in a fill: the keys of the
-    settings files its settings lists name, and the names the entries of its
-    methods files reference under `settings`, since a stage file declares no
-    setting."""
+    settings files its settings lists name, and the settings the additions
+    its methods lists name declare (`declared_settings`), since a stage file
+    declares no setting. The additions are read as they apply at each period
+    the stage occupies (`_source_names_at`), once for each distinct list,
+    and the names united: a selection of one range and the replacing
+    selection of another are unioned with the stage text at no period, so
+    they are not read together."""
+    entry = read["stages"][key]
     names = set()
-    for listed in read["stages"][key]["settings"].values():
+    for listed in entry["settings"].values():
         for name in listed:
             if not name.startswith("$"):
                 names |= set(
@@ -533,38 +626,20 @@ def _setting_names(read, key, *, directory, file, cache):
                         cache=cache,
                     ).assignments
                 )
-    for listed in read["stages"][key]["methods"].values():
-        for name in listed:
-            # the settings an addition declares are the semantics' to read
-            # (specification 0.7, unit U3), so an addition names none here
-            if not name.startswith("$") and not is_addition_path(name):
-                mapping = _read_source(
-                    name,
-                    "methods",
-                    directory=directory,
-                    file=file,
-                    address=f"stages.{key}.methods",
-                    cache=cache,
-                ).assignments
-                for entry in mapping.get("methods", []):
-                    names |= set(_strings_in(entry.get("settings", {})))
+    occupied = [
+        h
+        for h, template in enumerate(templates)
+        if key in template["stages"] and _is_active(entry["periods"], h)
+    ]
+    selections = dict.fromkeys(
+        tuple(_source_names_at(entry, "methods", h, file=file)) for h in occupied
+    )
+    for listed in selections:
+        additions, _ = _additions_listed(listed, key, directory=directory, file=file)
+        names |= set(
+            declared_settings(record["stage"]["text"], record["stage"]["origin"], additions)
+        )
     return names
-
-
-def _strings_in(value):
-    """Every string among the values of a nested mapping or sequence, but
-    those of a tagged value, the kind of a grid written `grid: !Cartesian`,
-    which names no setting (AMD-MB-003 §3)."""
-    if isinstance(value, str):
-        yield value
-    elif isinstance(value, Mapping) and "__yaml_tag__" in value:
-        return
-    elif isinstance(value, Mapping):
-        for item in value.values():
-            yield from _strings_in(item)
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            yield from _strings_in(item)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -593,7 +668,7 @@ def _fill_parts(read, fills, *, declared, settings, registry, file):
     for slot in read["slots"]:
         if slot not in fills:
             slot_parts[slot] = SlotFill(
-                parts={kind: None for kind in KINDS},
+                parts={kind: None for kind in _VALUED},
                 registry={},
                 names={},
                 entry={"slot": slot, "bound": False},
@@ -604,7 +679,7 @@ def _fill_parts(read, fills, *, declared, settings, registry, file):
             "calibration": {name for key in receivers["calibration"] for name in declared[key]},
             "settings": {name for key in receivers["settings"] for name in settings[key]},
         }
-        admitted = {kind: set(registry.get(kind, {})) for kind in KINDS}
+        admitted = {kind: set(registry.get(kind, {})) for kind in _VALUED}
         stated = _declarations_stated(receivers, declared, settings)
         given = _fill_by_kind(
             slot,
@@ -615,7 +690,7 @@ def _fill_parts(read, fills, *, declared, settings, registry, file):
             stated=stated,
             file=file,
         )
-        parts, to_registry = {kind: None for kind in KINDS}, {}
+        parts, to_registry = {kind: None for kind in _VALUED}, {}
         for kind, part in given.items():
             parts[kind], named = _split_part(
                 slot,
@@ -639,15 +714,15 @@ def _fill_parts(read, fills, *, declared, settings, registry, file):
 
 
 def _receivers(read, slot):
-    """The stages whose source lists of each kind name `slot`, `{kind: [key,
-    ...]}`, each list sorted."""
+    """The stages whose calibration or settings lists name `slot`, `{kind:
+    [key, ...]}`, each list sorted."""
     return {
         kind: sorted(
             key
             for key, entry in read["stages"].items()
             if any("$" + slot in names for names in entry[kind].values())
         )
-        for kind in KINDS
+        for kind in _VALUED
     }
 
 
@@ -672,29 +747,35 @@ def _fill_by_kind(slot, value, *, receivers, admits, admitted, stated, file):
     """The fill `value` of `slot` divided by kind, `{kind: part}`: a fill
     keyed by kind as written; a flat mapping read as a fill of the one kind
     whose names the receiving stages declare or the registry block admits.
-    Refused: a fill that is no mapping, a flat fill naming parameters and
-    settings both, a flat key of no kind."""
-    methods_only = (
-        bool(receivers["methods"]) and not receivers["calibration"] and not receivers["settings"]
-    )
+    Refused: a fill that is no mapping, a fill keyed by kind with a methods
+    part, since no methods list holds a slot, a flat fill naming parameters
+    and settings both, a flat key of no kind."""
     if not isinstance(value, Mapping):
         raise FactoryError(
-            f"slot {slot!r} is given a {type(value).__name__}, not a "
-            f"{'methods mapping' if methods_only else 'mapping'}",
+            f"slot {slot!r} is given {written_kind(value)}, which is no mapping of names to "
+            f"values",
             rule="slot-value-not-a-mapping",
             file=file,
             address=slot,
             written=repr(value)[:60],
-            write=(
-                f"{slot}={{'methods': [{{'on': <target>, 'method': <tag>, ...}}]}}"
-                if methods_only
-                else f"{slot}={{'calibration': {{...}}, 'settings': {{...}}}} or a flat mapping "
-                "of names to values"
-            ),
+            write=f"{slot}={{'calibration': {{...}}, 'settings': {{...}}}} or a flat mapping "
+            "of names to values",
         )
     value = plain_python(value)
     if value and set(value) <= set(KINDS):
-        return {kind: value[kind] for kind in KINDS if kind in value}
+        if "methods" in value:
+            raise FactoryError(
+                f"slot {slot!r} gives a methods part, and no methods list holds a slot: the "
+                "methods of an occurrence are the additions its list names, and a change of "
+                "selection is another addition named there",
+                rule="fill-names-nothing",
+                file=file,
+                address=slot,
+                written="methods",
+                write="a replacing selection named in the stage's methods list, "
+                "stages/<key>/methods.<variant>.bl, and no methods part in a fill",
+            )
+        return {kind: value[kind] for kind in _VALUED if kind in value}
     as_parameters = [
         name for name in value if name in admits["calibration"] or name in admitted["calibration"]
     ]
@@ -719,7 +800,7 @@ def _fill_by_kind(slot, value, *, receivers, admits, admitted, stated, file):
             f"slot {slot!r}, key {key!r}: no stage that receives this slot declares {key!r} as "
             f"a parameter ({stated['calibration']}) or as a setting ({stated['settings']}), and "
             f"no registry block admits it; a fill key names a parameter or a setting of a stage "
-            f"that receives it (AMD-FAC-002 §5)",
+            f"that receives it",
             rule="fill-names-nothing",
             file=file,
             address=slot,
@@ -747,38 +828,13 @@ def _unknown_key_advice(declared, registry_names):
 
 
 def _split_part(slot, kind, part, *, receivers, admits, admitted, stated, file):
-    """The part of `kind` of the fill of `slot` divided in two: the names
-    the receiving stages declare, which their lists take, and the names only
-    the registry block admits; a methods part is read as a methods mapping by
-    `load_methods` and goes to the stages whole. Refused: a methods part no
-    stage receives in a methods list or that is no methods mapping, a part
-    of another kind that is no mapping, and a name neither declared nor
-    admitted."""
-    if kind == "methods":
-        if not receivers["methods"]:
-            raise FactoryError(
-                f"slot {slot!r} gives a methods part, and no stage receives this slot in a "
-                f"methods list",
-                rule="fill-names-nothing",
-                file=file,
-                address=slot,
-                written="methods",
-                write="a slot a methods list names, such as `$method_switch`",
-            )
-        part = {"methods": part} if isinstance(part, list) else part
-        if not isinstance(part, Mapping) or not isinstance(part.get("methods"), list):
-            raise FactoryError(
-                f"the methods part of slot {slot!r} is no methods mapping",
-                rule="slot-value-not-a-mapping",
-                file=file,
-                address=slot,
-                written=repr(part)[:60],
-                write=f"{slot}={{'methods': [{{'on': <target>, 'method': <tag>, ...}}]}}",
-            )
-        return load_methods(part), {}
+    """The part of `kind` of the fill of `slot`, the calibration or the
+    settings, divided in two: the names the receiving stages declare, which
+    their lists take, and the names only the registry block admits. Refused:
+    a part that is no mapping, and a name neither declared nor admitted."""
     if not isinstance(part, Mapping):
         raise FactoryError(
-            f"the {kind} part of slot {slot!r} is a {type(part).__name__}, not a mapping",
+            f"the {kind} part of slot {slot!r} is {written_kind(part)}, which is no mapping",
             rule="slot-value-not-a-mapping",
             file=file,
             address=slot,
@@ -790,8 +846,7 @@ def _split_part(slot, kind, part, *, receivers, admits, admitted, stated, file):
         raise FactoryError(
             f"slot {slot!r}, key {strange[0]!r}: no stage that receives this slot in a {kind} "
             f"list declares {strange[0]!r} ({stated[kind]}), and no registry block admits it; a "
-            f"fill key names a parameter or a setting of a stage that receives it "
-            f"(AMD-FAC-002 §5)",
+            f"fill key names a parameter or a setting of a stage that receives it",
             rule="fill-names-nothing",
             file=file,
             address=slot,
@@ -808,8 +863,7 @@ def _names_received(parts, receivers, declared, settings):
     """The names of the fill each receiving stage takes, `{kind: {stage:
     [name, ...]}}`: for a calibration list the fill's parameter names the
     stage declares, for a settings list its setting names the stage's
-    settings files and methods name, for a methods list the targets of its
-    methods entries."""
+    settings files and additions declare."""
     return {
         "calibration": {
             key: [name for name in sorted(parts["calibration"] or {}) if name in declared[key]]
@@ -818,10 +872,6 @@ def _names_received(parts, receivers, declared, settings):
         "settings": {
             key: [name for name in sorted(parts["settings"] or {}) if name in settings[key]]
             for key in receivers["settings"]
-        },
-        "methods": {
-            key: sorted({entry["on"] for entry in (parts["methods"] or {}).get("methods", [])})
-            for key in receivers["methods"]
         },
     }
 
@@ -833,11 +883,12 @@ def _syntactic_periods(read, templates, *, stages, slot_parts, directory, file, 
     """The periods of the syntactic trellis: one period per template and in it
     one record per stage the template names and the recipe makes active at
     that period, in the key order `stage, calibration, settings, methods,
-    provenance`: the stage's source, the merged mapping of each kind
-    and, under `provenance["source_lists"]`, the ordered sources that produced
-    it; the interval of a stage restricted by `periods: [lo, hi]` stands under
-    `provenance["active"]`. A record is its own dictionary and shares no
-    mapping with another."""
+    provenance`: the stage's source, the merged calibration and settings, the
+    additions the methods list names at that period, each its text and its
+    origin, in order, and, under `provenance["source_lists"]`, the ordered
+    sources that produced each; the interval of a stage restricted by
+    `periods: [lo, hi]` stands under `provenance["active"]`. A record is its
+    own dictionary and shares no mapping with another."""
     periods = []
     for h, template in enumerate(templates):
         records = {}
@@ -845,18 +896,18 @@ def _syntactic_periods(read, templates, *, stages, slot_parts, directory, file, 
             entry = read["stages"][key]
             if not _is_active(entry["periods"], h):
                 continue
-            mappings, lists, additions = {}, {}, []
+            mappings, lists = {}, {}
             for kind in KINDS:
-                mappings[kind], lists[kind], added = _merged_source_list(
-                    _source_names_at(entry, kind, h, file=file),
-                    kind,
-                    key,
-                    directory=directory,
-                    file=file,
-                    cache=cache,
+                names = _source_names_at(entry, kind, h, file=file)
+                if kind == "methods":
+                    mappings[kind], lists[kind] = _additions_listed(
+                        names, key, directory=directory, file=file
+                    )
+                    continue
+                mappings[kind], lists[kind] = _merged_source_list(
+                    names, kind, key, directory=directory, file=file, cache=cache,
                     slot_parts=slot_parts,
                 )
-                additions.extend(added)
             provenance = {**stages[key]["provenance"], "source_lists": lists}
             if entry["periods"] is not None:
                 provenance["active"] = list(entry["periods"])
@@ -865,8 +916,6 @@ def _syntactic_periods(read, templates, *, stages, slot_parts, directory, file, 
                 **mappings,
                 "provenance": provenance,
             }
-            if additions:
-                records[key]["additions"] = additions
         periods.append({"stages": records, "connectors": copy.deepcopy(template["connectors"])})
     return periods
 
@@ -884,43 +933,39 @@ def _source_names_at(entry, kind, h, *, file):
     return names
 
 
+def _additions_listed(names, stage, *, directory, file):
+    """The additions a methods list names at one period, `(name, range key)`
+    pairs as `_source_names_at` lists them, each read into its record in the
+    order named (specification 0.7, D3), and the provenance entry of each
+    (`loading.named_addition`), with its range key where it stands in a
+    range list."""
+    additions, entries = [], []
+    for name, range_key in names:
+        address = f"stages.{stage}.methods.{range_key or 'all'}"
+        addition = named_addition(
+            name, _registry_file(name, directory=directory, file=file, address=address)
+        )
+        additions.append(addition.record)
+        entries.append(
+            addition.entry if range_key is None else {**addition.entry, "range": range_key}
+        )
+    return additions, entries
+
+
 def _merged_source_list(names, kind, stage, *, directory, file, cache, slot_parts):
-    """The merged assignments of one source list, its ordered provenance
-    entries and, for a methods list, the additions it names: a file's entry
-    from `_read_source`, a slot's from `slot_parts`, its `names` the list of
-    the fill's names of this kind that this stage declares, each entry with
-    its range key where it stands in a range list; an unbound slot
-    contributes nothing. A name of a methods list that ends in `.bl` names an
-    addition, a methods file in the stage grammar, read into its text and its
-    origin in the order named (specification 0.7, D3), with an entry of its
-    own among the provenance entries."""
-    chain, entries, additions = [], [], []
+    """The merged assignments of one calibration or settings list and its
+    ordered provenance entries: a file's entry from `_read_source`, a slot's
+    from `slot_parts`, its `names` the list of the fill's names of this kind
+    that this stage declares, each entry with its range key where it stands
+    in a range list; an unbound slot contributes nothing."""
+    chain, entries = [], []
     for name, range_key in names:
         address = f"stages.{stage}.{kind}.{range_key or 'all'}"
-        if kind == "methods" and is_addition_path(name):
-            path = _registry_file(name, directory=directory, file=file, address=address)
-            addition = read_addition(path)
-            additions.append(addition)
-            entry = {
-                "source": name,
-                "path": str(path),
-                "sha256": sha256(addition["text"].encode("utf-8")).hexdigest(),
-            }
-            if range_key is not None:
-                entry["range"] = range_key
-            entries.append(entry)
-            continue
         if name.startswith("$"):
             slot = slot_parts[name[1:]]
             part = slot.parts[kind]
             entry = {**slot.entry, "names": list(slot.names.get(kind, {}).get(stage, []))}
-            values = (
-                {}
-                if part is None
-                else {"methods": part}
-                if kind == "methods" and isinstance(part, list)
-                else part
-            )
+            values = {} if part is None else part
         else:
             values, entry = _read_source(
                 name, kind, directory=directory, file=file, address=address, cache=cache
@@ -931,12 +976,7 @@ def _merged_source_list(names, kind, stage, *, directory, file, cache, slot_part
             entry["range"] = range_key
         chain.append(values)
         entries.append(entry)
-    merged = _merge_sources(chain)
-    # a methods list merges to the methods mapping the reader returns,
-    # `{"methods": []}` when the list names no source, the form into which
-    # `load_trellis` reads an inline mapping, so that the two readers of a
-    # trellis write one record
-    return (load_methods(merged) if kind == "methods" else merged), entries, additions
+    return _merge_sources(chain), entries
 
 
 # --- the sources ---
@@ -1012,8 +1052,7 @@ def _registry_file(name, *, directory, file, address):
 def _source_contents(path, *, directory, file, address, chain=()):
     """The contents of a source file with its `parent:` chain merged beneath
     it and its metadata keys removed, not yet unwrapped, and the files of the
-    chain, the file itself first; the parent's methods list is merged by `on`,
-    as a source list merges."""
+    chain, the file itself first."""
     resolved = path.resolve()
     if len(chain) > 10:
         raise FactoryError(
@@ -1061,19 +1100,20 @@ def _source_contents(path, *, directory, file, address, chain=()):
 def _kind_and_assignments(contents, path, *, file, address):
     """The kind and the assignments of a source file, its kind told by its
     top key: `calibration:` (and `parameters:` inside it) and `settings:`
-    unwrapped, `methods:` read as a methods mapping by `load_methods`."""
+    unwrapped. A file whose top key is `methods:` is no source: the methods
+    of a stage are `.bl` additions, named in the methods list."""
     if "methods" in contents:
-        try:
-            return "methods", load_methods(contents)
-        except (TypeError, ValueError) as error:
-            raise FactoryError(
-                f"{path} is not a methods file the reader admits: {error}",
-                rule="recipe-source",
-                file=file,
-                address=address,
-                written=repr(contents.get("methods"))[:60],
-                write="methods: a list of entries, each naming its target under `on`",
-            ) from None
+        raise FactoryError(
+            f"{path} writes its top key `methods:`, the retired form of a methods selection; "
+            "the methods of a stage are `.bl` additions, named in the stage's methods list "
+            "(specification 0.7 §4)",
+            rule="recipe-source",
+            file=file,
+            address=address,
+            written="methods",
+            write="an addition `stages/<key>/methods.bl` in the methods list, and no YAML "
+            "methods file",
+        )
     if set(contents) == {"calibration"} and isinstance(contents["calibration"], Mapping):
         inner = contents["calibration"]
         return "calibration", dict(inner.get("parameters", inner))
@@ -1086,7 +1126,7 @@ def _kind_and_assignments(contents, path, *, file, address):
         file=file,
         address=address,
         written=", ".join(sorted(map(str, contents))),
-        write="calibration:, settings: or methods: as the one top key",
+        write="calibration: or settings: as the one top key",
     )
 
 
@@ -1100,8 +1140,8 @@ def _merge_sources(chain):
 
 
 def _deep_merge(base, overlay):
-    """The merge of two assignments: mappings key by key, lists of mappings
-    entry by entry matched on `on`, any other value the overlay's."""
+    """The merge of two assignments: mappings key by key, any other value the
+    overlay's."""
     if isinstance(base, Mapping) and isinstance(overlay, Mapping):
         result = dict(base)
         for key, value in overlay.items():
@@ -1109,23 +1149,4 @@ def _deep_merge(base, overlay):
                 _deep_merge(result[key], value) if key in result else copy.deepcopy(value)
             )
         return result
-    if isinstance(base, list) and isinstance(overlay, list):
-        return _merge_keyed_list(base, overlay)
     return copy.deepcopy(overlay)
-
-
-def _merge_keyed_list(base, overlay):
-    """Two lists of mappings merged entry by entry on the key `on`, an entry
-    of `!marginals` matched only by another of `!marginals` (`entry_key`), the
-    overlay's unmatched entries appended; the overlay replaces the list whole
-    where an entry of either carries no `on`, since no entry of it can be
-    matched."""
-    if not all(isinstance(entry, Mapping) and "on" in entry for entry in base + overlay):
-        return copy.deepcopy(overlay)
-    result, seen = [], set()
-    for entry in base:
-        over = next((o for o in overlay if entry_key(o) == entry_key(entry)), None)
-        result.append(_deep_merge(entry, over) if over is not None else copy.deepcopy(entry))
-        seen.add(entry_key(entry))
-    result.extend(copy.deepcopy(o) for o in overlay if entry_key(o) not in seen)
-    return result

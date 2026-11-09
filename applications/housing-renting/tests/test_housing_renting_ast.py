@@ -2,10 +2,10 @@
 
 Every expected node below is derived from the surface text of
 `tenure_choice.bl`, `owner_housing.bl`, `owner_cons.bl`, `renter_housing.bl`
-and `renter_cons.bl`, of the block files that hold their derivative lines and
-the inverse Euler lines of the two consumption stages under
-`declaration/methods/` (`marginals_<stage>.bl`, `owner_cons_egm.bl`,
-`renter_cons_egm.bl`), and from the generated term constructors
+and `renter_cons.bl`, of the methods file `methods.bl` beside each, the
+addition that holds the stage's derivative line, the inverse Euler lines of
+the two consumption stages and the typing entries of their methods, of the
+owner's second addition `methods.vfi.bl`, and from the generated term constructors
 (`bellman.sym.terms`, generated from `dynspec_full.asdl`), not copied from
 their recorded encodings `*.ast.json` under
 `packages/bellman/tests/snapshot/corpus/housing-renting/`. Each file is parsed
@@ -21,11 +21,13 @@ families declared as products of ten sets and selected by position, the
 discrete sets written with the grid constructor (D21), the nested branch
 blocks of the tenure choice and the tuple selections of a branch value and of
 the derivatives of the branch values (D02, D03), the declarative maximization
-the stage file states (D19), the inverse Euler statement, in the method block
-of the policy builder, written as an inequality (D20), and the policy input
-sides, which carry continuation objects and no continuation state (D22). The
-claim that the maximization is marked `!doc` is deleted: the mark stood while
-the inverse Euler lines shared the policy block (decision MB-V22).
+the stage file states (D19), the inverse Euler statement, in the addition's
+block of the policy builder, written as an inequality (D20), the policy input
+sides, which carry continuation objects and no continuation state (D22), and
+the typing entries of the additions, the refined and the unrefined form of a
+representation's entries and a grid that names the cash coordinate alone. The claim that the
+maximization is marked `!doc` is deleted: the mark stood while the inverse
+Euler lines shared the policy block (decision MB-V22).
 """
 
 import pathlib
@@ -38,13 +40,15 @@ import stage_ast
 from stage_ast import (VLU, at_var, block, check, describes, dom, extended_real,
                        parsed, run_checks, sym)
 from stage_types import (
-    Add, Annotation, Arrival, Assignment, At, Block, Call, Closed, Constant,
-    Continuation, Control, Coordinate, CorrDef, Declaration, Declare, Decision,
-    Div, Domain, Equation, FiniteSet, FuncDef, In, Inequality, Infoset,
-    Interval, Key, KeyValue, Law, Le, Metadata, Mul, Named, Number, Open,
-    Operator, Pos, Product, Range, Role, Select, Signature, Statement, Sub,
-    Subject, Tag, Tuple, Typer, Var,
+    Add, Annotation, Arrival, Assignment, At, Block, Call, Cartesian, Closed,
+    Constant, Continuation, Control, Coordinate, CorrDef, Declaration, Declare,
+    Decision, Div, Domain, Equation, Feasible, FiniteSet, FuncDef, Grid, In,
+    Inequality, Infoset, Interval, Key, KeyValue, Keyword, Law, Le, Metadata,
+    Method, Mul, Name, Named, Number, Open, Operator, Pos, Product, Range, Role,
+    Segment, Select, Signature, Spaced, Statement, Sub, Subject, Tag, Term,
+    Tuple, Typer, Var, Word,
 )
+from stage_types import Path as TermPath
 
 # the folder of the model's stage folders
 STAGE_FOLDERS = pathlib.Path(__file__).resolve().parents[1] / "declaration" / "stages"
@@ -53,14 +57,15 @@ OWNER_H = parsed(STAGE_FOLDERS / "owner_housing" / "owner_housing.bl")
 OWNER_C = parsed(STAGE_FOLDERS / "owner_cons" / "owner_cons.bl")
 RENTER_H = parsed(STAGE_FOLDERS / "renter_housing" / "renter_housing.bl")
 RENTER_C = parsed(STAGE_FOLDERS / "renter_cons" / "renter_cons.bl")
-# the block files: the marginal block of each stage and the method blocks of
-# the two consumption stages' policy builders
-METHODS = pathlib.Path(__file__).resolve().parents[1] / "declaration" / "methods"
-MARGINALS = {name: parsed(METHODS / f"marginals_{name}.bl")
+# the additions: the methods file beside each stage file, whose block
+# `cntn_to_dcsn` holds the stage's derivative line and whose block `policy`,
+# in the two consumption stages, holds the lines of the endogenous grid
+# method; and the owner's second addition, the alternative by value function
+# iteration, which replaces the first
+ADDITIONS = {name: parsed(STAGE_FOLDERS / name / "methods.bl")
              for name in ("tenure_choice", "owner_housing", "owner_cons",
                           "renter_housing", "renter_cons")}
-EGM = {name: block(parsed(METHODS / f"{name}_egm.bl").items, "egm")
-       for name in ("owner_cons", "renter_cons")}
+VFI = parsed(STAGE_FOLDERS / "owner_cons" / "methods.vfi.bl")
 
 
 # --- local helpers ----------------------------------------------------------
@@ -80,6 +85,85 @@ def ids(body):
     """The `id=` of each statement of a block body, in order."""
     return [e.value for statement in body for e in statement.annot.entries
             if isinstance(e, KeyValue) and e.key == "id"]
+
+
+def marginal_lines(name):
+    """The lines the addition of `name` appends to the decision value builder."""
+    return block(ADDITIONS[name].items, "cntn_to_dcsn").body
+
+
+def path(*names, at=None):
+    """The path of a typing entry's subject, `evaluate.method`; `at` refines
+    the first segment by the object it evaluates, `evaluate[V].method`."""
+    segments = [Segment(name=name, selectors=()) for name in names]
+    if at is not None:
+        segments[0] = Segment(name=names[0], selectors=(at,))
+    return TermPath(segments=tuple(segments))
+
+
+def typed(subject, classifier):
+    """A typing entry of a header or a group, `<path> : <method or grid>`."""
+    return Typer(Declaration(subject=subject, classifiers=(classifier,), value=None))
+
+
+def word(name, **keywords):
+    """A method word with its keyword arguments, each valued by a name."""
+    return Method(Word(name=name, arguments=tuple(
+        Keyword(key=key, value=Name(name=value)) for key, value in keywords.items())))
+
+
+def spaced(coordinate, lower, upper, count):
+    """A factor of a grid, a triple of declared settings."""
+    return Spaced(coordinate=coordinate, lower=Name(name=lower), upper=Name(name=upper),
+                  count=Name(name=count), spacing=None)
+
+
+def cartesian(*factors):
+    return Grid(Cartesian(factors=tuple(factors)))
+
+
+def selection(subject, classifier):
+    """A typing line at file level, routed by its path to the node it names."""
+    return Declare(Declaration(subject=subject, classifiers=(classifier,), value=None), None)
+
+
+def typing_lines(items):
+    """The typing lines of an addition, the Declare items whose subject is a
+    path, in order."""
+    return [item for item in items
+            if isinstance(item, Declare) and isinstance(item.declaration.subject, TermPath)]
+
+
+CASH = cartesian(spaced("w_d", "w_min", "w_max", "w_points"))
+EGM = word("egm", upper_envelope="upper_envelope",
+           c_max="c_max",
+           n_constraint_points="n_constraint_points",
+           n_constraint_points_nxt="n_constraint_points_nxt",
+           fues_m_bar="fues_m_bar",
+           fues_lb="fues_lb",
+           fues_include_intersections="fues_include_intersections",
+           fues_return_intersections_separately="fues_return_intersections_separately",
+           fues_single_intersection="fues_single_intersection",
+           fues_endog_mbar="fues_endog_mbar",
+           fues_padding_mbar="fues_padding_mbar",
+           fues_no_double_jumps="fues_no_double_jumps",
+           fues_disable_jump_checks="fues_disable_jump_checks",
+           fues_use_post_state_jump_test="fues_use_post_state_jump_test",
+           fues_left_turn_no_jump_strict="fues_left_turn_no_jump_strict",
+           fues_post_clean_double_jumps="fues_post_clean_double_jumps",
+           fues_detect_decreasing_policy="fues_detect_decreasing_policy",
+           fues_post_clean_passes="fues_post_clean_passes",
+           fues_jump_check_tol="fues_jump_check_tol",
+           fues_correct_jumps="fues_correct_jumps",
+           fues_min_segment_length="fues_min_segment_length",
+           fues_eps_d="fues_eps_d",
+           fues_eps_sep="fues_eps_sep",
+           fues_eps_fwd_back="fues_eps_fwd_back",
+           fues_parallel_guard="fues_parallel_guard",
+           tax_enabled="tax_enabled",
+           tax_c_lb_pct="tax_c_lb_pct",
+           tax_c_ub_pct="tax_c_ub_pct",
+           tax_n_points_per_node="tax_n_points_per_node")
 
 
 # --- the five files ---------------------------------------------------------
@@ -246,8 +330,7 @@ def test_tenure_branches_are_nested_blocks_under_an_empty_output_side():
 
 
 def test_tenure_value_and_marginal_are_tuple_selections():
-    body = (block(TENURE.items, "cntn_to_dcsn").body
-            + block(MARGINALS["tenure_choice"].items, "dcsn_marginal").body)
+    body = block(TENURE.items, "cntn_to_dcsn").body + marginal_lines("tenure_choice")
     assert ids(block(TENURE.items, "cntn_to_dcsn").body) == ["choice_value"]
     assert ids(body) == ["choice_value", "choice_marginal"]
     # V = (V_o[>], V_r[>])[d]: a two-item tuple in the order of the label set,
@@ -373,11 +456,11 @@ def test_owner_budget_and_its_derivative():
                            sym("y_d")),
                        Call("𝛷", [sym("H_d"), sym("H_new")]))),
           "owner_housing.dcsn_to_cntn.owner_budget")
-    # The backward block passes the value through, and its marginal block
+    # The backward block passes the value through, and the derivative line
+    # the addition appends to it, in the block `cntn_to_dcsn` of `methods.bl`,
     # turns the derivative in cash into a derivative in assets with the
     # derivative of that budget.
-    body = (block(OWNER_H.items, "cntn_to_dcsn").body
-            + block(MARGINALS["owner_housing"].items, "dcsn_marginal").body)
+    body = block(OWNER_H.items, "cntn_to_dcsn").body + marginal_lines("owner_housing")
     assert ids(block(OWNER_H.items, "cntn_to_dcsn").body) == ["value"]
     assert ids(body) == ["value", "marginal"]
     check(body[0].core, Equation(sym("V"), at_var("V", Continuation)),
@@ -479,8 +562,7 @@ def test_consumption_budgets_and_backward_blocks():
     # arrival value of the next period's tenure stage, which already holds the
     # expectation over income, so no expectation is written here. The
     # renter's services enter utility scaled by ϑ.
-    check(block(OWNER_C.items, "cntn_to_dcsn").body
-          + block(MARGINALS["owner_cons"].items, "dcsn_marginal").body,
+    check(block(OWNER_C.items, "cntn_to_dcsn").body + marginal_lines("owner_cons"),
           [Statement(Equation(sym("V"),
                               Add(Call("𝑢", [sym("c"), sym("H_d")]),
                                   Mul(sym("β"), at_var("V", Continuation)))),
@@ -511,9 +593,9 @@ def test_consumption_policy_blocks():
         check(sig.target,
               Subject([Coordinate("c", None, [dom("ℝ₊₊"), Role(Control())])]),
               f"{name}.policy.target")
-        # The stage file's policy block holds the maximization, and the method
-        # block of the policy builder holds the three lines of the method.
-        body = policy.body + EGM[name].body
+        # The stage file's policy block holds the maximization, and the
+        # addition's block of the same id holds the three lines of the method.
+        body = policy.body + block(ADDITIONS[name].items, "policy").body
         assert ids(policy.body) == ["optimality"]
         assert ids(body) == ["optimality", "InvEuler", "endoggrid",
                              "cons_choice"]
@@ -549,5 +631,72 @@ def test_consumption_policy_blocks():
               f"{name}.policy.cons_choice")
 
 
+# --- the typing entries of the additions ------------------------------------
+
+
+def test_additions_type_the_methods_at_their_places():
+    # The owner's addition writes the absolute subjects and one refined entry
+    # per stored object; the renter's the relative subjects and one unrefined
+    # pair for both. Each grid names the cash or the savings coordinate alone:
+    # the housing, the rented services and the income take the default.
+    for name, file in ADDITIONS.items():
+        check(file.items[0], Metadata("methods", name), f"{name}/methods.bl items[0]")
+    savings = {"owner_cons": "a_nxt_o", "renter_cons": "a_nxt_r"}
+    check(block(ADDITIONS["owner_cons"].items, "policy").tag,
+          Annotation([KeyValue("id", "policy"),
+                      typed(path("policy", "method"), EGM),
+                      typed(path("policy", "grid"),
+                            cartesian(spaced(savings["owner_cons"], "a_nxt_min", "a_nxt_max", "a_nxt_points")))]),
+          "owner_cons/methods.bl policy.tag")
+    check(block(ADDITIONS["renter_cons"].items, "policy").tag,
+          Annotation([KeyValue("id", "policy"),
+                      typed(path("method"), EGM),
+                      typed(path("grid"),
+                            cartesian(spaced(savings["renter_cons"], "a_nxt_min", "a_nxt_max", "a_nxt_points")))]),
+          "renter_cons/methods.bl policy.tag")
+    value_at = Key("V")
+    marginal_at = Term(Operator("D", [Var("w_d")], [sym("V")]))
+    refined = [typed(path("evaluate", "method", at=value_at), word("Linear")),
+               typed(path("evaluate", "grid", at=value_at), CASH),
+               typed(path("evaluate", "method", at=marginal_at), word("Linear")),
+               typed(path("evaluate", "grid", at=marginal_at), CASH)]
+    check(block(ADDITIONS["owner_cons"].items, "cntn_to_dcsn").tag,
+          Annotation([KeyValue("id", "cntn_to_dcsn")] + refined),
+          "owner_cons/methods.bl cntn_to_dcsn.tag")
+    check(block(ADDITIONS["renter_cons"].items, "cntn_to_dcsn").tag,
+          Annotation([KeyValue("id", "cntn_to_dcsn"),
+                      typed(path("evaluate", "method"), word("Linear")),
+                      typed(path("evaluate", "grid"), CASH)]),
+          "renter_cons/methods.bl cntn_to_dcsn.tag")
+    # The housing stages and the tenure choice type their discrete choice at
+    # file level, since the policy builder gains no line; the tenure choice
+    # names the expectation over the income chain through the line `value`.
+    check(typing_lines(ADDITIONS["owner_housing"].items),
+          [selection(path("policy", "method"), word("discrete_choice"))],
+          "owner_housing/methods.bl typing lines")
+    check(typing_lines(ADDITIONS["tenure_choice"].items),
+          [selection(path("policy", "method"), word("discrete_choice")),
+           selection(path("dcsn_to_arvl", "value", "E_y", "method"), word("markov"))],
+          "tenure_choice/methods.bl typing lines")
+    check(block(ADDITIONS["tenure_choice"].items, "cntn_to_dcsn").tag,
+          Annotation([KeyValue("id", "cntn_to_dcsn"),
+                      typed(path("evaluate", "method"), word("Linear")),
+                      typed(path("evaluate", "grid"),
+                            cartesian(spaced("a_d", "a_min", "a_max", "a_points")))]),
+          "tenure_choice/methods.bl cntn_to_dcsn.tag")
+    # The alternative by value function iteration stands on the decision
+    # value builder with the count of its dense grid as a feasible factor of
+    # the control, and restates the two representations.
+    check(VFI.items[0], Metadata("methods", "owner_cons"), "methods.vfi.bl items[0]")
+    check(block(VFI.items, "cntn_to_dcsn").tag,
+          Annotation([KeyValue("id", "cntn_to_dcsn"),
+                      typed(path("method"), word("vfi")),
+                      typed(path("grid"), Grid(Cartesian(factors=(
+                          Feasible(coordinate="c", set="Γ", count=Name(name="N_arg_grid_vfi")),))))]
+                     + refined),
+          "methods.vfi.bl cntn_to_dcsn.tag")
+    assert ids(block(VFI.items, "cntn_to_dcsn").body) == ["marginal"]
+
+
 if __name__ == "__main__":
-    sys.exit(run_checks(globals(), "on the five housing-renting stages"))
+    sys.exit(run_checks(globals(), "on the five housing-renting stages and their additions"))

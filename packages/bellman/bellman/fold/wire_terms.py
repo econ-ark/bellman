@@ -120,6 +120,39 @@ def stated_derivative(core):
     return to_source(lhs.args[0]), lhs.subs[0].name, inner.rhs
 
 
+def derivative_text(term):
+    """A term as the stage file writes a derivative of a value, `D_{m_d}V`,
+    `D_{k}V[<]`: the derivative operator with one subscript and one field as
+    its argument is written without parentheses, as a derivative line writes
+    its left side; every other term as `to_source` writes it. The objects an
+    Evaluation stores and the selectors of a typing entry's path are spelled
+    by this one function, so that the two agree (specification 0.7 D4)."""
+    if (
+        isinstance(term, T.Operator)
+        and term.head == "D"
+        and len(term.subs) == 1
+        and len(term.args) == 1
+        and isinstance(term.subs[0], T.Var)
+        and isinstance(term.args[0], T.Sym)
+    ):
+        return f"D_{{{term.subs[0].name}}}{to_source(term.args[0])}"
+    return to_source(term)
+
+
+def path_text(path):
+    """A path of a typing entry as written, `dcsn_to_arvl.evaluate[D_{k}V[<]]`:
+    its segments joined by dots, each selector in brackets, a name or a
+    position as it is and a term as `derivative_text` spells it."""
+    segments = []
+    for segment in path.segments:
+        selectors = "".join(
+            f"[{derivative_text(s.at) if isinstance(s, T.Term) else s.at}]"
+            for s in segment.selectors
+        )
+        segments.append(segment.name + selectors)
+    return ".".join(segments)
+
+
 def defined_name(core):
     """(name, side) of the field a statement defines, None where its left side
     names none; a derivative line states a derivative of a field and defines

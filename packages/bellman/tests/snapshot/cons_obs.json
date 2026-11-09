@@ -2504,7 +2504,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(1, 2, cons_obs:dcsn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(1, 2, cons_obs:dcsn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:dcsn:V"
       ],
@@ -2632,7 +2632,7 @@
     ],
     "interior": [
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Cap(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Cap(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "cntn",
       "name": "Cap(cons_obs:cntn:c, cons_obs:cntn:c)",
@@ -2642,7 +2642,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(0, 1, cons_obs:cntn:μ)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(0, 1, cons_obs:cntn:μ)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "cntn",
       "name": "Spider(0, 1, cons_obs:cntn:μ)",
@@ -2651,7 +2651,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:μ, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:μ, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:μ",
        "cons_obs:cntn:c"
@@ -2664,7 +2664,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:μ, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:μ, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:μ",
        "cons_obs:cntn:c"
@@ -2677,7 +2677,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:μ, cons_obs:cntn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:μ, cons_obs:cntn:V)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:μ",
        "cons_obs:cntn:V"
@@ -2703,7 +2703,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(1, 2, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(1, 2, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:c"
       ],
@@ -2715,7 +2715,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(0, 1, cons_obs:cntn:a)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(0, 1, cons_obs:cntn:a)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [],
       "kind": "cntn",
       "name": "Spider(0, 1, cons_obs:cntn:a)",
@@ -2724,7 +2724,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:c",
        "cons_obs:cntn:c"
@@ -2750,7 +2750,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(1, 0, cons_obs:cntn:m_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Spider(1, 0, cons_obs:cntn:m_d)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:m_d"
       ],
@@ -2771,7 +2771,7 @@
       "references": []
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:c, cons_obs:dcsn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:c, cons_obs:dcsn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:c",
        "cons_obs:dcsn:c"
@@ -2784,7 +2784,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Swap(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:c",
        "cons_obs:cntn:c"
@@ -2797,7 +2797,7 @@
       ]
      },
      {
-      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Cup(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object (AMD-SG-007 §2, rule target-version); ask the version whose view holds the box, or pass a box of this version's view",
+      "denotation": "refused: TargetError: stage 'cons_obs': the box 'Cup(cons_obs:cntn:c, cons_obs:cntn:c)' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object\n  write: Ask the version whose view holds the box, or pass a box of this version's view",
       "inputs": [
        "cons_obs:cntn:c",
        "cons_obs:cntn:c"

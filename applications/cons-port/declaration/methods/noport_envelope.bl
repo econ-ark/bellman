@@ -1,5 +1,0 @@
-@stage: noport
-
-[id=dcsn_marginal, (V[>]) : !cntn -> (V) : !dcsn] {
-    D_{k}V = E_{θ}(D_{m}V[>]*R)     :: [id=envelope]
-}

@@ -108,7 +108,7 @@ from typing import NamedTuple
 from bellman.fold.block_lines import parameter_sets
 from bellman.native.provenance import source_description
 from bellman.native.versions import StageVersion
-from bellman.refusals import Diagnostic, FactoryError
+from bellman.refusals import Diagnostic, FactoryError, written_kind
 from bellman.stage.grains import graph_of, graph_refusal
 from bellman.stage.stage_answers import branches, entry_perch, fields
 from bellman.syntax import terms as T
@@ -382,10 +382,11 @@ def select_connections(periods, inter_connectors, calibrations=None, *, first=0)
         and component_of[pair.writing.h, pair.writing.key]
         is component_of.get((pair.reading.h, pair.reading.key))
     }
-    routes = _conflicted_routes(_routes(selected, types), diagnostics, cyclic_pairs)
-    for route in routes:
+    routes = []
+    for route, depends_on in _conflicted_routes(_routes(selected, types), diagnostics, cyclic_pairs):
+        routes.append(route)
         if route.status != CERTIFIED:
-            diagnostics.append(_route_diagnostic(route))
+            diagnostics.append(_route_diagnostic(route, depends_on))
     cycles = sum(1 for diagnostic in diagnostics if diagnostic.rule == "authored-cycle")
     counts = {
         "uses": len(uses),
@@ -426,29 +427,40 @@ def _sources(pairs):
 def _conflicted_routes(routes, diagnostics, cyclic_pairs):
     """Withhold route certificates affected by a duplicate source claim or
     an authored cycle, including edges omitted from a cycle witness. Other
-    routes retain their own certificate."""
+    routes retain their own certificate. Answers each route paired with the
+    address of the diagnostic its withholding rests on, the cycle's or the
+    claim's, which the route's own diagnostic names as `depends_on`, and
+    with None where the route keeps its certificate."""
     claimed_twice = {
-        pair.writing
+        pair.writing: diagnostic.address
         for diagnostic in diagnostics
         if diagnostic.rule == "use-claimed-twice"
         for pair in diagnostic.candidates
     }
+    cycles = [d for d in diagnostics if d.rule in ("authored-cycle", "selected-cycle")]
     found = []
     for route in routes:
-        if not any(pair in cyclic_pairs or pair.writing in claimed_twice for pair in route.pairs):
-            found.append(route)
+        on_cycle = [pair for pair in route.pairs if pair in cyclic_pairs]
+        claimed = [pair for pair in route.pairs if pair.writing in claimed_twice]
+        if not on_cycle and not claimed:
+            found.append((route, None))
             continue
-        obligation = (
-            "an authored cycle includes this route"
-            if any(pair in cyclic_pairs for pair in route.pairs)
-            else "two authored entries claim a continuation field of this route"
-        )
-        found.append(
-            route._replace(
-                status=UNCERTIFIED,
-                obligations=route.obligations + (obligation,),
+        if on_cycle:
+            obligation = "an authored cycle includes this route"
+            # the cycle one of the route's pairs lies on, else the first
+            # recorded, since a cycle's witness may leave out an edge
+            witness = next(
+                (d for d in cycles if any(pair in d.candidates for pair in on_cycle)),
+                cycles[0] if cycles else None,
             )
+            depends_on = None if witness is None else witness.address
+        else:
+            obligation = "two authored entries claim a continuation field of this route"
+            depends_on = claimed_twice[claimed[0].writing]
+        withheld = route._replace(
+            status=UNCERTIFIED, obligations=route.obligations + (obligation,)
         )
+        found.append((withheld, depends_on))
     return found
 
 
@@ -456,9 +468,15 @@ def _conflicted_routes(routes, diagnostics, cyclic_pairs):
 
 
 def _digest(stage):
-    """The key under which the readings of one stage text are kept: the
-    text's digest, or the object itself where the stage holds none."""
-    return stage.provenance.get("sha256") or id(stage)
+    """The key under which the readings of one construction are kept: the
+    text's digest with the digest of each addition read into it, since two
+    occurrences of one text with different additions declare different
+    fields (specification 0.7, F42); the object itself where the stage holds
+    no digest."""
+    provenance = stage.provenance
+    if not provenance.get("sha256"):
+        return id(stage)
+    return provenance["sha256"], tuple(held["sha256"] for held in provenance.get("additions", ()))
 
 
 def _uses(periods, first=0):
@@ -477,7 +495,8 @@ def _uses(periods, first=0):
                     "fields of constructed stages"
                 )
             # Formal field declarations and branches are the same for every
-            # occurrence of one text; values remain separate in _Types.
+            # occurrence of one text with the same additions; values remain
+            # separate in _Types.
             digest = _digest(stage)
             if digest not in readings:
                 labels = {
@@ -593,7 +612,8 @@ def _authored(
             Diagnostic(
                 "connector-shape",
                 address,
-                f"the {what} is a {type(connector).__name__}, not a mapping",
+                f"the {what} is written as {written_kind(connector)}, and a connector is a "
+                f"mapping, `{{<continuation field>: <arrival field>}}`",
                 (connector,),
                 ((address, None, None),),
             )
@@ -710,17 +730,35 @@ def _one(index, token, h, perch, key, address, diagnostics, between, source_entr
     if len(found) == 1:
         return found[0]
     if not found:
+        stage = key
+        if key is None and "." in token:
+            # the stage the token names before its final dot, or none
+            stage = token.rsplit(".", 1)[0]
+            keys = sorted({k for (period, k, _) in index.by_key if period == h})
+            if stage not in keys:
+                diagnostics.append(
+                    Diagnostic(
+                        "endpoint-unresolved",
+                        address,
+                        f"{token!r} names the stage {stage!r}, which periods[{h}] does not "
+                        f"hold{pair}; the stages there are {', '.join(keys) or 'none'}",
+                        source_entries=(source_entry,),
+                    )
+                )
+                return None
+            where = f"{stage} in periods[{h}]"
         held = sorted(
             index.names(h, perch)
-            if key is None
-            else {use.field for use in index.by_key.get((h, key, perch), [])}
+            if stage is None
+            else {use.field for use in index.by_key.get((h, stage, perch), [])}
         )
+        there = f"of {stage} there" if stage is not None else "there"
         diagnostics.append(
             Diagnostic(
                 "endpoint-unresolved",
                 address,
                 f"{token!r} names no {side} state field of {where}{pair}; the {side} "
-                f"state fields there are {', '.join(held) or 'none'}",
+                f"state fields {there} are {', '.join(held) or 'none'}",
                 source_entries=(source_entry,),
             )
         )
@@ -2136,11 +2174,12 @@ def _together(statuses):
     return COMPATIBLE
 
 
-def _route_diagnostic(route):
+def _route_diagnostic(route, depends_on=None):
     """The diagnostic of a route not certified: its rule the first that
     applies of incomplete, incompatible, no law, not established. A route
     affected by a conflicting authored claim is not established as a
-    transport even when its own field comparison succeeded."""
+    transport even when its own field comparison succeeded; `depends_on` is
+    then the address of the cycle's or the claim's diagnostic."""
     if route.state == "incomplete":
         rule = "route-incomplete"
     elif INCOMPATIBLE in (route.compatibility, route.backward):
@@ -2157,6 +2196,7 @@ def _route_diagnostic(route):
         f"the route {_at(route.source, route.branch)} → {_at(route.destination)} is not "
         f"certified: " + "; ".join(route.obligations),
         source_entries=sources,
+        depends_on=depends_on,
     )
 
 

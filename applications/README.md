@@ -37,7 +37,7 @@ Every folder keeps the files the language reads in its subfolder
 │   ├── spec.yml        the recipe; a variant's recipe is spec.<name>.yml
 │   ├── trellis.yml     the trellis file; a variant's is trellis.<name>.yml
 │   ├── period.yml      the period file; a variant's is period.<name>.yml
-│   ├── stages/<stage>/ the stage file <stage>.bl, its methods.yml and its note <stage>.md
+│   ├── stages/<stage>/ the stage file <stage>.bl, its methods file methods.bl and its note <stage>.md
 │   ├── calibration/    the parameter values
 │   └── settings/       the numerical settings
 ├── code/               the model's programs
@@ -68,8 +68,8 @@ and are left as they are.
   `portfolio-choice/`, `retirement-choice/` — `.bl` stage files with
   their walkthrough pages and structural tests.
 - `cons-port/` — the portfolio–consumption application: its stages
-  written with the maximization alone and the block files its methods
-  files bind, with the two recipes of its two orders, in `declaration/`;
+  written with the maximization alone and the methods files that
+  complete them, with the two recipes of its two orders, in `declaration/`;
   the model's numerical tool in `code/`; the tests of its stages, its
   recipes and its solve in `tests/`; and the fixed reference with its
   recorded sources in the earlier YAML form in `reference/legacy/`. Its

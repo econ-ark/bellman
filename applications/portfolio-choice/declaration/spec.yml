@@ -1,10 +1,11 @@
 # The recipe of the portfolio model: the trellis file and each stage's file,
 # by their paths from this folder, and for each stage the ordered sources of
 # its calibration, settings and methods. One calibration serves the three
-# stages; each binds the parameters it declares. The methods of a stage stand
-# in its own folder beside its equations.
+# stages; each binds the parameters it declares. The methods of a stage are
+# the addition its methods list names, the `.bl` file `methods.bl` in the
+# stage's own folder, read with the stage file at every occurrence.
 trellis: trellis.yml
 stages:
-  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/port]}, methods: {all: [stages/port/methods]}}
-  cons: {stage: stages/cons/cons.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/cons]}, methods: {all: [stages/cons/methods]}}
-  disc: {stage: stages/disc/disc.bl, calibration: {all: [calibration/portfolio]}, methods: {all: [stages/disc/methods]}}
+  port: {stage: stages/port/port.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/port]}, methods: {all: [stages/port/methods.bl]}}
+  cons: {stage: stages/cons/cons.bl, calibration: {all: [calibration/portfolio]}, settings: {all: [settings/cons]}, methods: {all: [stages/cons/methods.bl]}}
+  disc: {stage: stages/disc/disc.bl, calibration: {all: [calibration/portfolio]}, methods: {all: [stages/disc/methods.bl]}}

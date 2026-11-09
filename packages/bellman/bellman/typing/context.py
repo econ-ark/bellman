@@ -16,16 +16,18 @@ function, a tuple, a label), a function applied to arguments of another number
 or kind than it declares, `Inv` of anything but one function, a line whose two
 sides are of different kinds or whose left side names another number of fields
 than its right side has results; under `declared-once`, a binder named twice in
-one subscript; under `definition-order`, a recursive definition; under
-`not-constructed`, a definition whose right side is not a function of the
-stage; and under `readable-form`, the forms only a term decoded from a saved
-AST can hold. The `KeyError` of a name that resolves to no input is no refusal:
-`_binder_input` and a dynamic selection read it as a signal, and the
-declaration pass has refused a name nothing declares before the walk. Two
-conditions raise a `ValueError` and name no rule: an expectation's binder that
-is no subject of its distribution, and one input read at two types. The walk
-records no condition: the conditions of a stage are computed by the fold from
-the same terms and answered by `stage.stage_answers.obligations`.
+one subscript, and an expectation whose binder is a name already bound where
+it stands, by an enclosing operator or by the parameters of the definition,
+so that it is no subject of its distribution; under `definition-order`, a
+recursive definition; under `not-constructed`, a definition whose right side
+is not a function of the stage; and under `readable-form`, the forms only a
+term decoded from a saved AST can hold. The `KeyError` of a name that resolves
+to no input is no refusal: `_binder_input` and a dynamic selection read it as
+a signal, and the declaration pass has refused a name nothing declares before
+the walk. One condition raises a `ValueError` and names no rule, an input
+that two sub-expressions read at two types. The walk records no condition:
+the conditions of a stage are computed by the fold from the same terms and
+answered by `stage.stage_answers.obligations`.
 """
 
 from __future__ import annotations
@@ -47,6 +49,7 @@ from bellman.syntax.vocabulary import (
     SHCK,
     SHOCK,
     STATE,
+    WRITTEN_MARK,
 )
 from bellman.typing import sets
 from bellman.typing.line_unknowns import derivative_left_side
@@ -521,12 +524,23 @@ class TypingContext:
                 # stage. A set defined by a grid constructor has no
                 # construction rule yet; refuse at the span instead of
                 # failing inside the definition record.
+                applied = getattr(source.body, "fun", None)
+                written = f"{name!r} writes `{to_source(source.body)}`"
+                forms = (
+                    "a definition without arguments defines a set, as `Xa := ℝ₊` does, or a "
+                    "function of the stage, as `𝑑𝑢 := D_{c}(𝑢)` does"
+                )
                 raise self.declarations.error(
                     "not-constructed",
                     source.address,
-                    f"no construction rule for the definition {name!r}: its right side "
-                    f"{to_source(source.body)} is not a function of the stage, and a set "
-                    f"defined by a grid constructor is not yet constructed",
+                    (
+                        f"the definition {written}, a call of {applied}, whose value is no "
+                        f"function of the stage; {forms}, and the construction defines no set by "
+                        f"a call such as a grid constructor"
+                        if applied is not None
+                        else f"the definition {written}, whose value is no function of the stage; "
+                        f"{forms}"
+                    ),
                     error_class=NotConstructed,
                 )
             definition = _TypedDefinition(
@@ -843,6 +857,13 @@ class TypingContext:
                     f"the derivative {to_source(expr)} names {len(expr.subs)} formal "
                     f"arguments ({names}); a derivative names exactly one formal argument"
                 ),
+                write=(
+                    "Write one derivative for one formal argument, "
+                    + " or ".join(
+                        f"`{to_source(dataclasses.replace(expr, subs=(sub,)))}`"
+                        for sub in expr.subs
+                    )
+                ),
             )
         bound, additions, laws, domain_contexts = [], [], [], []
         original_inputs = self._local_shocks(local)
@@ -870,7 +891,20 @@ class TypingContext:
             if expr.head == "E":
                 law = self._typed_distribution(name)
                 if template.identity not in law.subjects:
-                    raise ValueError(f"{address}: expectation binder is not a subject of its law")
+                    # the binder resolves to a name already bound where the
+                    # expectation stands, by an enclosing operator or by the
+                    # parameters of the definition, and not to the shock
+                    raise self.declarations.error(
+                        "declared-once",
+                        address,
+                        (
+                            f"the expectation `{to_source(expr)}` binds {name!r}, a name "
+                            f"already bound where it stands, so it integrates no shock; a nest "
+                            f"of binders binds each name once; remove the inner "
+                            f"`E_{{{name}}}`, or bind another shock"
+                        ),
+                        write=f"Remove the inner `E_{{{name}}}`, or bind another shock",
+                    )
                 if law.identity not in [entry.identity for entry in laws]:
                     laws.append(law)
         body_parts = tuple(
@@ -956,6 +990,7 @@ class TypingContext:
                     f"`{to_source(expr)}` names {name} twice in its subscript; an operator's "
                     f"subscript names each variable once. Write `{expr.head}_{{{once}}}(…)`"
                 ),
+                write=f"Write `{expr.head}_{{{once}}}(…)`",
             )
         return name, domain
 
@@ -990,6 +1025,7 @@ class TypingContext:
                     if discrete
                     else f"no state coordinate of {where}, {read}"
                 )
+                admitted = [state for state in states if not self._is_discrete_field(state)]
                 raise self.declarations.error(
                     "derivative-coordinate",
                     address,
@@ -998,6 +1034,12 @@ class TypingContext:
                         f"a derivative of a value is taken in a state coordinate of the perch "
                         f"at which the value is read, written without its mark, and the "
                         f"coordinates of {where} are {listed}"
+                    ),
+                    write=(
+                        f"Name a state coordinate of {where}, "
+                        + " or ".join(f"`D_{{{state}}}{field}`" for state in admitted)
+                        if admitted
+                        else None
                     ),
                 )
             return
@@ -1021,6 +1063,11 @@ class TypingContext:
                     f"the derivative {to_source(expr)} names the formal argument {name!r} "
                     f"of function {function!r}, which is product-valued; a derivative names "
                     f"one scalar formal argument"
+                ),
+                write=(
+                    f"Declare {function!r} with a scalar formal argument for each coordinate "
+                    f"of {name!r}, reading them in its body in place of those coordinates, "
+                    f"and take the derivative in one of them"
                 ),
             )
 
@@ -1181,6 +1228,7 @@ class TypingContext:
                         "a set written by comprehension holds a condition with two bounds; no "
                         "construction rule reads one there. Write the two bounds as two conditions"
                     ),
+                    write="Write the two bounds as two conditions",
                 )
             if (
                 not isinstance(setexpr.bound, terms.Subject)
@@ -1766,8 +1814,8 @@ def _builder_nodes(box, nodes, *, boundary, declarations, calls, definitions) ->
                     raise unreadable_form_refusal(
                         declarations,
                         node.node_id,
-                        f"the node reads {identity!r}, which is neither "
-                        f"a builder input nor an earlier node output",
+                        f"the node reads {_written(identity)}, which is neither an input of "
+                        f"the block nor an output of an earlier node",
                     )
             _check_node_read(
                 node,
@@ -1791,6 +1839,12 @@ def _builder_nodes(box, nodes, *, boundary, declarations, calls, definitions) ->
     return tuple(found)
 
 
+def _written(identity):
+    """The name of a field as a line writes it, with the mark of its perch,
+    `V[>]` or `c`, for a refusal of an authored node."""
+    return f"{identity.field}{WRITTEN_MARK.get(identity.perch, '')}"
+
+
 def _node_producers(nodes, lines, declarations) -> dict:
     """The node that produces each identity, in the order of the nodes and of
     their outputs; two nodes that produce one identity are refused under
@@ -1802,8 +1856,8 @@ def _node_producers(nodes, lines, declarations) -> dict:
                 raise declarations.error(
                     "declared-once",
                     node.node_id,
-                    f"nodes {producers[output.identity]!r} and "
-                    f"{node.node_id!r} both produce {output.identity!r}",
+                    f"the nodes {producers[output.identity]!r} and {node.node_id!r} both "
+                    f"write {_written(output.identity)}",
                 )
             producers[output.identity] = node.node_id
     return producers
@@ -1818,7 +1872,7 @@ def _check_node_read(node, port, *, producers, lines, inputs, written, declarati
         raise unreadable_form_refusal(
             declarations,
             node.node_id,
-            f"the node reads output {identity!r} before an earlier node produces it",
+            f"the node reads {_written(identity)} before an earlier node writes it",
         )
     if identity in producers and port.value_type != next(
         output.value_type
@@ -1828,7 +1882,8 @@ def _check_node_read(node, port, *, producers, lines, inputs, written, declarati
         raise unreadable_form_refusal(
             declarations,
             node.node_id,
-            f"the node reads {identity!r} with a different type from its producer",
+            f"the node reads {_written(identity)} at another type than the node that writes "
+            f"it gives",
         )
 
 
@@ -1851,7 +1906,8 @@ def _node_inputs(node, *, lines, aliases, declarations, calls, definitions) -> t
                 raise declarations.error(
                     "declared-once",
                     node.node_id,
-                    f"local dependency {port.identity!r} has conflicting definitions {local!r}",
+                    f"the node reads {_written(port.identity)}, which {len(local)} lines of "
+                    f"its block define",
                 )
             visit(local[0], active)
         else:
@@ -1860,7 +1916,7 @@ def _node_inputs(node, *, lines, aliases, declarations, calls, definitions) -> t
                 raise unreadable_form_refusal(
                     declarations,
                     node.node_id,
-                    f"local dependency {port.identity!r} has inconsistent mathematical types",
+                    f"the node reads {_written(port.identity)} at two different types",
                 )
             if port.role == "function":
                 function(port.identity, active)

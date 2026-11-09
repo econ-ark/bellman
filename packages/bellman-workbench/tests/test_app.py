@@ -32,7 +32,7 @@ import solara
 from workbench_support import (
     CAGETTI_DENARDI,
     CONS,
-    CONS_PORT_TRELLIS,
+    CONS_PATH,
     CONS_PORT_RECIPE,
     DEMO_STAGES,
     ENTREPRENEUR_DEATH_PATH,
@@ -85,8 +85,8 @@ from bellman_workbench import app, creation, icons, model, navigation, recipe, t
 # the recipe of a folder in the one layout, as the source of its trellis
 RECIPE = recipe.Source("recipe", RECIPE_FILE)
 
-# the methods file of the consumption stage, in its stage folder
-CONS_METHODS = ROOT / "applications/portfolio-choice/declaration/stages/cons/methods.yml"
+# the methods file of the consumption stage, the addition beside its stage file
+CONS_METHODS = ROOT / "applications/portfolio-choice/declaration/stages/cons/methods.bl"
 
 
 def view_selects(rendered) -> dict:
@@ -183,7 +183,7 @@ def test_the_header_offers_the_two_selects_and_the_trellis_button():
         app.graph.value = "backward"
 
 
-def test_the_legend_of_cons_with_its_methods_lists_its_levels_methods_and_marks(cons):
+def test_the_legend_of_cons_with_its_methods_lists_its_levels_methods_and_marks(cons_text):
     """On `cons` with its methods, the legend of `backward` is titled by the
     collection's label, `cons methodized`, and lists the three levels the
     graph draws, each with its swatch, the two bound methods by tag and
@@ -193,7 +193,9 @@ def test_the_legend_of_cons_with_its_methods_lists_its_levels_methods_and_marks(
     `decision` and `continuation`. The legend of `forward` lists the method
     bound at the builder `arvl_to_dcsn` and no mark `· !tag`, since no
     label of the forward graph holds one."""
-    methodized = cons.methodize(str(CONS_METHODS))
+    # a stage of its own, since `methodize` binds the stage it is given in
+    # place and the fixture `cons` is the session's
+    methodized = elaborate_text(cons_text, CONS_PATH).methodize(str(CONS_METHODS))
     collection = model.collection(methodized)
     title, groups = app.legend_entries(collection, "backward", None)
     assert title == "cons methodized"
@@ -202,9 +204,10 @@ def test_the_legend_of_cons_with_its_methods_lists_its_levels_methods_and_marks(
         ("primitive operator", "operator"),
         ("builder's output", "output"),
     ]
+    # each word at the place its addition types it (specification 0.7)
     assert [entry.text for entry in groups["methods"]] == [
         "!Linear  cntn_to_dcsn:Evaluation",
-        "!egm  policy:Evaluation",
+        "!egm  policy",
     ]
     assert [entry.text for entry in groups["marks"]] == ["· !tag", "at 𝑐", "𝑔≺, 𝑔≻"]
     assert all(entry.sentence for entry in groups["marks"])
@@ -241,14 +244,16 @@ def test_the_legend_of_a_trellis_lists_each_place_of_a_bound_method_once(conspor
         ("primitive operator", "operator"),
         ("builder's output", "output"),
     ]
+    # each word at the place the stage's addition types it (specification
+    # 0.7), the portfolio stage solved by time iteration on its policy
     places = [entry.text for entry in groups["methods"]]
     assert sorted(places) == [
         "!Linear  cons/cntn_to_dcsn:Evaluation",
         "!Linear  port/cntn_to_dcsn:Evaluation",
-        "!egm  cons/policy:Evaluation",
-        "!gauss-hermite  port/cntn_to_dcsn:Expectation",
-        "!gauss-hermite  port/policy.foc:Expectation:1",
-        "!vfi  port/cntn_to_dcsn",
+        "!egm  cons/policy",
+        "!gauss_hermite  port/cntn_to_dcsn.value:Expectation:1",
+        "!gauss_hermite  port/policy.euler:Expectation:1",
+        "!time_iteration  port/policy",
     ]
     # the graph's `method` rows, of its nodes and of its layers, are six
     # times as many: each period holds every place once
@@ -260,23 +265,22 @@ def test_the_legend_of_a_trellis_lists_each_place_of_a_bound_method_once(conspor
     assert len(rows) == 6 * len(places)
 
 
-def test_the_legend_of_an_initial_diagram_lists_each_role_with_its_fields(cons):
+def test_the_legend_of_an_initial_diagram_lists_each_role_with_its_fields(cons_text):
     """The legend of `backward initial diagram` of `cons` lists its levels,
     the perches, the fields and the blocks, and each role of its fields with
-    the fields' labels, `value  V≻, V, V≺`; no method and no mark, since
+    the fields' labels, `value  V≻, V, V≺`, a value's derivative being a
+    term of its wire and no field (AMD-MB-001); no method and no mark, since
     the diagram carries none."""
-    collection = model.collection(cons.methodize(str(CONS_METHODS)))
+    # a stage of its own, as in the legend of cons with its methods
+    stage = elaborate_text(cons_text, CONS_PATH).methodize(str(CONS_METHODS))
+    collection = model.collection(stage)
     _, groups = app.legend_entries(collection, "backward initial diagram", None)
     assert [(entry.text, entry.swatch) for entry in groups["levels"]] == [
         ("perch", "perch"),
         ("field", "field"),
         ("block", "block"),
     ]
-    assert [entry.text for entry in groups["roles"]] == [
-        "value  V≻, V, V≺",
-        "marginal value  dV≻, dV, dV≺",
-        "control  c",
-    ]
+    assert [entry.text for entry in groups["roles"]] == ["value  V≻, V, V≺", "control  c"]
     assert groups["methods"] == groups["marks"] == []
 
 
@@ -334,13 +338,13 @@ def test_b_the_status_line_of_a_trellis_names_its_file_its_bindings_and_its_coun
         f"{PORT_CONS_RECIPE} · trellis · calibrated, methodized, configured · loop {seconds}"
     )
     assert "".join(text for text, _ in rest) == (
-        " · 6 periods, 18 occurrences · 0 unjoined fields"
+        " · 6 periods, 18 occurrences · 0 unjoined internal entry fields"
     )
     assert all(term in app.TERMS for _, term in line + rest if term)
     narrow_line, narrow_rest = app.narrow_status_parts(line, rest)
     assert "".join(text for text, _ in narrow_line) == f"{PORT_CONS_RECIPE} · trellis · loop {seconds}"
     assert "".join(text for text, _ in narrow_rest) == (
-        " · calibrated, methodized, configured · 6 periods, 18 occurrences · 0 unjoined fields"
+        " · calibrated, methodized, configured · 6 periods, 18 occurrences · 0 unjoined internal entry fields"
     )
     refused = trellis.TrellisOutcome(None, model.diagnostic_of(ValueError("no")), None, 0.1, {})
     app.source.value = recipe.Source("trellis", "declaration/trellis.yml")
@@ -408,8 +412,8 @@ def test_b_a_draft_trellis_is_read_again_once_a_file_it_read_is_corrected_and_sa
 ):
     """The pension copy whose terminal connector names no field is shown
     with a diagnostic; the watcher compares the files that reading read,
-    the recipe, the trellis file, the period file, the four stage files and
-    their four methods files,
+    the recipe, the trellis file, the period file, the four stage files,
+    their four additions and the two saving stages' settings files,
     so the corrected `declaration/trellis.yml`, saved as the editor saves it,
     raises the count once, and the next reading removes that diagnostic.
     The trellis re-elaborates when a file the model reads is saved
@@ -438,12 +442,14 @@ def test_b_a_draft_trellis_is_read_again_once_a_file_it_read_is_corrected_and_sa
                 "stages/retire_choice/retire_choice.bl",
                 "stages/retiree_saving/retiree_saving.bl",
                 "stages/terminal/terminal.bl",
-                # the four stages' methods files, which the recipe names
-                # (decision MB-V38)
-                "stages/worker_saving/methods.yml",
-                "stages/retire_choice/methods.yml",
-                "stages/retiree_saving/methods.yml",
-                "stages/terminal/methods.yml",
+                # the four stages' additions and the two saving stages'
+                # settings files, which the recipe names (decision S7-W2)
+                "stages/worker_saving/methods.bl",
+                "stages/retire_choice/methods.bl",
+                "stages/retiree_saving/methods.bl",
+                "stages/terminal/methods.bl",
+                "settings/worker_saving.yml",
+                "settings/retiree_saving.yml",
             )
         }
         count = app.trellis_rebuild.value
@@ -632,7 +638,7 @@ def test_b_a_first_reading_under_a_refused_restriction_draws_the_whole_trellis_w
         line, rest = app.trellis_status_parts(app.trellis_outcome.value, app.trellis_shown.value)
         assert "".join(text for text, _ in line + rest) == (
             f"{PORT_CONS_RECIPE} · trellis · calibrated, methodized, configured · loop "
-            f"{outcome.shown.seconds:.2f} s · 6 periods, 18 occurrences · 0 unjoined fields"
+            f"{outcome.shown.seconds:.2f} s · 6 periods, 18 occurrences · 0 unjoined internal entry fields"
         )
         assert app.trellis_seen.value and app.trellis_seen.value == outcome.shown.files
     finally:
@@ -642,19 +648,10 @@ def test_b_a_first_reading_under_a_refused_restriction_draws_the_whole_trellis_w
 def test_b_a_lookup_error_while_a_recipe_is_read_is_recorded_as_a_refused_reading(
     monkeypatch, app_state, lifecycle_folder
 ):
-    """The package raising a LookupError while the lifecycle recipe is read,
-    a class outside the refusals the recipe's readers caught: the trellis's
-    task records a refused reading, its sentence and the files whose change
-    reads the trellis again, the recipe and its trellis file, and raises
-    nothing (specification §2.2 rule 4). A KeyError is of no class of the
-    package's refusals, so the refusal is the exception as Python prints
-    it, `KeyError: <the error's text>`, in the recipe's file, the file
-    whose reading raised it, under the rule `package-exception`, and so is
-    the one note of cons.bl, bound through that recipe; the list under the
-    error mark holds the one refusal once, with the recipe's file (unit L,
-    Task 21, which replaces ruling R51's sentence `declaration/spec.yml
-    does not read: …` for an exception; defects 17 and 18 of the UX
-    simulation)."""
+    """A lookup error while the recipe is read is an internal failure with
+    no rule. The trellis reading and the stage bound through that recipe
+    name the same error, and the Problems list holds one line in the
+    recipe's file. Both source files remain watched for changes."""
     app_state(lifecycle_folder)
     root = lifecycle_folder.resolve() / "declaration"
 
@@ -667,8 +664,9 @@ def test_b_a_lookup_error_while_a_recipe_is_read_is_recorded_as_a_refused_readin
     try:
         outcome = app.run_trellis()
         assert app.trellis_outcome.value is outcome and outcome.shown is None
-        assert outcome.refusal.message == sentence
-        assert outcome.refusal.rule == model.EXCEPTION_RULE == "package-exception"
+        assert model.sentence(outcome.refusal) == sentence
+        assert (outcome.refusal.kind, outcome.refusal.rule) == ("internal", None)
+        assert outcome.refusal.entry
         assert outcome.refusal.file == str(root / "spec.yml")
         assert set(app.trellis_seen.value) == {str(root / "spec.yml"), str(root / "trellis.yml")}
         app.open_file(CONS)
@@ -701,11 +699,11 @@ def test_a_trellis_file_the_factory_refuses_is_listed_whole_with_its_place_once(
     )
     try:
         outcome = app.run_trellis()
-        assert outcome.shown is None and outcome.refusal.message == sentence
+        assert outcome.shown is None and model.sentence(outcome.refusal) == sentence
         app.open_file("declaration/stages/worker/worker.bl")
         app.run_loop()
         assert app.shown.value.notes == [sentence]
-        assert app.shown.value.refusal == outcome.refusal
+        assert app.shown.value.refusal._replace(revision=None) == outcome.refusal
         listed = [(each.sentence, each.file, each.line) for each in app.standing_refusals()]
         assert listed == [(sentence, "declaration/trellis.yml", 12)]
     finally:
@@ -1119,24 +1117,24 @@ def test_the_list_keeps_the_refusal_of_the_stage_shown_while_a_text_file_is_open
     """With `entrepreneur_death.bl` of the Cagetti–De Nardi copy open and
     elaborated, its forward builders graph refused at line 17, the list
     under the error mark holds that refusal once, with the stage file and
-    line 17. With the stage's `methods.yml` then opened as text, the view
-    and the panel keep the stage, and the list keeps the refusal, once,
+    line 17. With the stage's addition `methods.bl` then opened as text, the
+    view and the panel keep the stage, and the list keeps the refusal, once,
     with the stage file and line 17 (AMD-MI-002 §6a rule 1: the sentence
     the refusing node's panel no longer prints stands in the list)."""
     stage_file = (ROOT / ENTREPRENEUR_DEATH_PATH).relative_to(CAGETTI_DENARDI).as_posix()
-    methods_file = stage_file.rpartition("/")[0] + "/methods.yml"
+    methods_file = stage_file.rpartition("/")[0] + "/methods.bl"
     app_state(cagetti_folder)
     try:
         app.open_file(stage_file)
         app.run_loop()
         refusal = model.refused_directions(app.shown.value.stage)["forward"]
-        line = (refusal["message"], stage_file, 17)
+        line = (model.sentence(refusal), stage_file, 17)
 
         def listed():
             # the lines of the list under the error mark as triples
             return [(each.sentence, each.file, each.line) for each in app.standing_refusals()]
 
-        assert refusal["line"] == 17 and listed().count(line) == 1
+        assert refusal.line == 17 and listed().count(line) == 1
         # the editor answers the flush request with the stage's document,
         # which completes the switch to the methods file
         held = app.buffers.value[stage_file]
@@ -1164,10 +1162,10 @@ def test_the_list_keeps_the_refused_graph_of_the_stage_drawn_after_its_text_is_r
     rows alone. The list under the error mark holds the text's refusal at
     line 24 and the drawn stage's forward refusal at line 17, each once,
     newest first, with the stage file: while the stage file stays open,
-    and while its `methods.yml` is open as text (AMD-MI-002 §6a rule 1:
+    and while its addition `methods.bl` is open as text (AMD-MI-002 §6a rule 1:
     the sentence a place no longer shows stands in the list)."""
     stage_file = (ROOT / ENTREPRENEUR_DEATH_PATH).relative_to(CAGETTI_DENARDI).as_posix()
-    methods_file = stage_file.rpartition("/")[0] + "/methods.yml"
+    methods_file = stage_file.rpartition("/")[0] + "/methods.bl"
     app_state(cagetti_folder)
     try:
         app.open_file(stage_file)
@@ -1177,7 +1175,7 @@ def test_the_list_keeps_the_refused_graph_of_the_stage_drawn_after_its_text_is_r
         held = app.buffers.value[stage_file]
         refused_text = held["text"].replace("    a = a_ed\n", "    a = a_ed - - θ_n\n", 1)
         (text,) = model.elaborate_buffer(refused_text, stage_file).diagnostics
-        expected = [(text.message, stage_file, 24), (forward["message"], stage_file, 17)]
+        expected = [(model.sentence(text), stage_file, 24), (model.sentence(forward), stage_file, 17)]
 
         def listed():
             # the lines of the list under the error mark as triples
@@ -1371,11 +1369,13 @@ def test_m_10_the_recipe_tab_draws_each_binding_of_the_recipe_as_a_control(
     without its kind's folder or the stage's own, whose options are the files
     of its kind and then the recipe's slots of that kind; the range list `0-0`
     with its periods `0–0` on the line of its select, and of its text at
-    rest; `—` for a kind the recipe writes none of; each row's trash
+    rest; `—` for a kind the recipe writes none of, the portfolio stage's
+    settings; each row's trash
     button, its hover naming the key; no element reading `Replace`, the
     select's hover alone naming the replacement; the icon button `new-file`
-    beside the slot whose own file is missing, its hover the file it
-    writes, and no other; the periods fields empty with the placeholder
+    beside the slot whose own file is missing, the discount stage's
+    settings, its hover the file it writes, and no other; the periods
+    fields empty with the placeholder
     `All` and the periods the trellis lists the stage in as their hover;
     and the add row's `Stage`, which opens the stage list beside it and no
     form, a second click closing the list (unit N, Task 5; design pass 10
@@ -1463,7 +1463,7 @@ def test_m_10_the_recipe_tab_draws_each_binding_of_the_recipe_as_a_control(
                 opened = rendered_recipe_rows(rendered)[key]
                 assert opened.children[-1].attributes["data-stage"] == key
                 new_files[key] = rendered.find(v.Html, class_="bl-new-file").widgets
-                if key == "cons":
+                if key == "disc":
                     # `New file` an icon button beside its select
                     (new,) = new_files[key]
                     assert (new.tag, new.attributes["icon"], new.attributes["label"]) == (
@@ -1472,16 +1472,15 @@ def test_m_10_the_recipe_tab_draws_each_binding_of_the_recipe_as_a_control(
                         "New file",
                     )
                     assert (new.attributes["data-address"], new.attributes["title"]) == (
-                        "stages.cons.methods.all[0]",
-                        "Write declaration/stages/cons/methods.yml",
+                        "stages.disc.settings.all[0]",
+                        "Write declaration/settings/disc.yml",
                     )
                     (slot_entry,) = [
                         entry
                         for entry in entries
-                        if entry.attributes["data-address"] == "stages.cons.methods.all[0]"
+                        if entry.attributes["data-address"] == "stages.disc.settings.all[0]"
                     ]
                     assert slot_entry.children[1] is new
-                if key == "disc":
                     # the range list's periods on the line of its select, at
                     # its left
                     (ranged,) = [
@@ -1506,29 +1505,31 @@ def test_m_10_the_recipe_tab_draws_each_binding_of_the_recipe_as_a_control(
                 "trellis": "trellis.yml",
                 "stages.port.stage": "port.bl",
                 "stages.port.calibration.all[0]": "portfolio",
-                "stages.port.settings.all[0]": "port",
-                "stages.port.methods.all[0]": "port",
+                "stages.port.methods.all[0]": "methods.bl",
                 "stages.cons.stage": "cons.bl",
                 "stages.cons.calibration.all[0]": "portfolio",
                 "stages.cons.settings.all[0]": "cons",
-                "stages.cons.methods.all[0]": "$cons_method",
+                "stages.cons.methods.all[0]": "methods.bl",
                 "stages.disc.stage": "disc.bl",
                 "stages.disc.calibration.all[0]": "portfolio",
                 "stages.disc.calibration.0-0[0]": "terminal",
-                "stages.disc.methods.all[0]": "methods",
+                "stages.disc.settings.all[0]": "$disc_settings",
+                "stages.disc.methods.all[0]": "methods.bl",
             }
-            slot = fields["stages.cons.methods.all[0]"]
+            slot = fields["stages.disc.settings.all[0]"]
             assert (slot.kind, slot.hover, slot.named) == (
                 "select",
-                "Replace $cons_method",
-                "Replace $cons_method",
+                "Replace $disc_settings",
+                "Replace $disc_settings",
             )
-            assert slot.options == [
-                "cons",
-                "cons_vfi",
-                "port",
-                "stages/disc/methods",
-                "$cons_method",
+            assert slot.options == ["cons", "$disc_settings"]
+            # the additions of a methods cell: the stage's own by their names,
+            # another stage's by its path (decision S7-W2)
+            assert fields["stages.cons.methods.all[0]"].options == [
+                "methods.bl",
+                "methods.vfi.bl",
+                "stages/disc/methods.bl",
+                "stages/port/methods.bl",
             ]
             assert fields["stages.port.calibration.all[0]"].options == ["portfolio", "terminal"]
             assert fields["trellis"].options == ["trellis.yml"]
@@ -1540,8 +1541,8 @@ def test_m_10_the_recipe_tab_draws_each_binding_of_the_recipe_as_a_control(
             assert addresses == set(fields)
             assert {key: len(found) for key, found in new_files.items()} == {
                 "port": 0,
-                "cons": 1,
-                "disc": 0,
+                "cons": 0,
+                "disc": 1,
             }
             # the range list's periods at rest on the line of its text
             app.recipe_open_stage.value = None
@@ -1585,9 +1586,9 @@ def test_m_10_a_choice_edits_the_recipe_s_buffer_and_a_refused_one_marks_its_sel
     app_state, scratch_lifecycle
 ):
     """Unit M, Task 10 (AAS, M-D17; design pass 9 §4). With no file open,
-    and cons's row of the Recipe tab opened by a click (design pass 11 §2),
-    a choice of `cons` in the select of the slot `$cons_method` writes
-    `methods/cons` in the slot's place in the recipe's buffer, one change of
+    and disc's row of the Recipe tab opened by a click (design pass 11 §2),
+    a choice of `cons` in the select of the slot `$disc_settings` writes
+    `settings/cons` in the slot's place in the recipe's buffer, one change of
     it, the file on disk unchanged, the status line's note naming the entry
     written; a choice asked of the same entry, which the buffer no longer
     writes, is refused in one sentence, nothing written, the sentence under
@@ -1602,41 +1603,41 @@ def test_m_10_a_choice_edits_the_recipe_s_buffer_and_a_refused_one_marks_its_sel
         app.run_trellis()
         _, rendered = solara.render(app.RecipeRegion(), handle_error=False)
         try:
-            open_rendered_recipe_row(rendered, "cons")
-            field = recipe_tab_fields(rendered)["stages.cons.methods.all[0]"]
+            open_rendered_recipe_row(rendered, "disc")
+            field = recipe_tab_fields(rendered)["stages.disc.settings.all[0]"]
             field.vue_entered("cons")
             written = app.buffers.value[RECIPE.path]
-            assert "methods: {all: [methods/cons]}" in written["text"]
-            assert written["text"] == on_disk.replace("[$cons_method]", "[methods/cons]")
+            assert "settings: {all: [settings/cons]}" in written["text"]
+            assert written["text"] == on_disk.replace("[$disc_settings]", "[settings/cons]")
             assert (scratch_lifecycle / RECIPE.path).read_text(encoding="utf-8") == on_disk
             assert app.choice_refusal.value is None
             assert app.gesture_note.value["sentence"] == (
-                "spec.yml, stages.cons.methods.all[0]: methods/cons written"
+                "spec.yml, stages.disc.settings.all[0]: settings/cons written"
             )
             # the entry the table showed, which the buffer no longer writes
             held = app.trellis_shown.value
-            (entry,) = recipe.table(app.tab_folder.value, RECIPE, held.syntactic, 0)[1].cells[
-                "methods"
+            (entry,) = recipe.table(app.tab_folder.value, RECIPE, held.syntactic, 0)[2].cells[
+                "settings"
             ].entries
             drawn = recipe_tab_fields(rendered)
-            app.choose_file(entry, "declaration/methods/port.yml")
+            app.choose_file(entry, "declaration/settings/cons.yml")
             assert app.buffers.value[RECIPE.path]["text"] == written["text"]
             refused = app.choice_refusal.value
-            sentence = "the file no longer writes $cons_method at stages.cons.methods.all[0]"
+            sentence = "the file no longer writes $disc_settings at stages.disc.settings.all[0]"
             assert (refused["sentence"], refused["control"]) == (sentence, app.SELECT)
             (listed,) = [item for item in app.standing_refusals() if item.sentence == sentence]
-            assert (listed.file, listed.line) == (RECIPE.path, 6)
-            field = recipe_tab_fields(rendered)["stages.cons.methods.all[0]"]
+            assert (listed.file, listed.line) == (RECIPE.path, 8)
+            field = recipe_tab_fields(rendered)["stages.disc.settings.all[0]"]
             assert field.classes == "bl-code-small bl-refusal-mark"
             # the refused select, the same element, is answered at the
             # refusal, and the others at the reading alone (fix round 1),
             # another select of the open row among them, port's row standing
             # at rest with none (design pass 11 §2)
             made = app.trellis_outcome.value.made
-            assert field is drawn["stages.cons.methods.all[0]"]
+            assert field is drawn["stages.disc.settings.all[0]"]
             assert field.answered == f"{made} {refused['made']}"
-            other = recipe_tab_fields(rendered)["stages.cons.calibration.all[0]"]
-            assert (other is drawn["stages.cons.calibration.all[0]"], other.answered) == (
+            other = recipe_tab_fields(rendered)["stages.disc.calibration.all[0]"]
+            assert (other is drawn["stages.disc.calibration.all[0]"], other.answered) == (
                 True,
                 f"{made} 0.0",
             )
@@ -1654,11 +1655,11 @@ def test_m_10_the_periods_field_and_new_file_write_the_recipe_s_buffer(
     `disc` add `periods: [0, 1]` at the end of its block in the recipe's
     buffer, which disc's row prints at rest (design pass 11 §2); a text that
     is no range is refused in the page's sentence, the field marked, in
-    cons's row opened, and no other; `New file` beside `$cons_method`
-    writes the empty methods file of `cons` to disk and
-    `stages/cons/methods` in the slot's place in the buffer, and opens the
-    new file; asked again, it is refused in the creation unit's sentence,
-    since the file exists, its button marked."""
+    cons's row opened, and no other; `New file` beside `$disc_settings`
+    writes the empty settings file of `disc` to disk and `settings/disc` in
+    the slot's place in the buffer, and opens the new file; asked again, it
+    is refused in the creation unit's sentence, since the file exists, its
+    button marked."""
     app_state(scratch_lifecycle)
     app.source.value = RECIPE
     app.view_mode.value = "trellis"
@@ -1668,7 +1669,7 @@ def test_m_10_the_periods_field_and_new_file_write_the_recipe_s_buffer(
         app.choose_periods("disc", "0-1", None)
         text = app.buffers.value[RECIPE.path]["text"]
         (row,) = [line for line in text.splitlines() if line.startswith("  disc:")]
-        assert row.endswith("methods: {all: [stages/disc/methods]}, periods: [0, 1]}")
+        assert row.endswith("methods: {all: [stages/disc/methods.bl]}, periods: [0, 1]}")
         assert app.gesture_note.value["sentence"] == "spec.yml, stages.disc.periods: 0-1 written"
         app.choose_periods("cons", "late", None)
         refused = app.choice_refusal.value
@@ -1711,21 +1712,21 @@ def test_m_10_the_periods_field_and_new_file_write_the_recipe_s_buffer(
         finally:
             rendered.close()
         held = app.trellis_shown.value
-        (slot,) = recipe.table(app.tab_folder.value, RECIPE, held.syntactic, 0)[1].cells[
-            "methods"
+        (slot,) = recipe.table(app.tab_folder.value, RECIPE, held.syntactic, 0)[2].cells[
+            "settings"
         ].entries
-        app.new_file_for(slot, "cons", "methods")
-        made = root / "declaration/stages/cons/methods.yml"
-        assert made.read_text(encoding="utf-8") == "stage: cons\nmethods: []\n"
-        assert "methods: {all: [stages/cons/methods]}" in app.buffers.value[RECIPE.path]["text"]
-        assert app.open_path.value == "declaration/stages/cons/methods.yml"
+        app.new_file_for(slot, "disc", "settings")
+        made = root / "declaration/settings/disc.yml"
+        assert made.read_text(encoding="utf-8") == "settings: {}\n"
+        assert "settings: {all: [settings/disc]}" in app.buffers.value[RECIPE.path]["text"]
+        assert app.open_path.value == "declaration/settings/disc.yml"
         assert app.choice_refusal.value is None
         # no editor answers in this test, so the new file's tab is closed
         app.open_path.value = None
-        app.new_file_for(slot, "cons", "methods")
+        app.new_file_for(slot, "disc", "settings")
         refused = app.choice_refusal.value
         assert (refused["sentence"], refused["control"]) == (
-            "declaration/stages/cons/methods.yml exists",
+            "declaration/settings/disc.yml exists",
             app.NEW_FILE,
         )
     finally:
@@ -1793,11 +1794,11 @@ def test_m_10_a_change_of_source_clears_the_refusal_of_a_change_of_the_tab():
     """With the refusal of a change of the Recipe tab standing, showing
     another source clears it (specification §3.2), so that no mark stands
     on a control of another recipe."""
-    entry = recipe.Entry("$cons_method", True, RECIPE.path, "stages.cons.methods.all[0]", None)
+    entry = recipe.Entry("$disc_settings", True, RECIPE.path, "stages.disc.settings.all[0]", None)
     try:
         app.source.value = RECIPE
         app.choice_refusal.value = {
-            "sentence": "the file no longer writes $cons_method at stages.cons.methods.all[0]",
+            "sentence": "the file no longer writes $disc_settings at stages.disc.settings.all[0]",
             "address": entry.address,
             "control": app.SELECT,
             "file": entry.file,
@@ -1812,20 +1813,18 @@ def test_m_10_a_change_of_source_clears_the_refusal_of_a_change_of_the_tab():
 
 
 def test_k_a_block_prints_an_entry_without_its_kind_s_folder_or_the_stage_s_own():
-    """An entry of a stage's row of the Recipe tab prints without the
-    kind's folder or the stage's own folder at its start, which the column's
-    head and the row's key name (unit K, K-D30; design pass 9 §3):
-    `calibration/durables` prints `durables`, `stages/tenure/methods`
-    `methods`, the stage file `stages/tenure/tenure.bl` `tenure.bl` and
-    `methods/cons` `cons`; another stage's folder, a path that holds the
-    stage's folder further in, a slot and an entry that would print nothing
-    stand as written."""
+    """An entry of a stage's row of the Recipe tab prints without the kind's
+    folder or the stage's own folder at its start, which the column's head and
+    the row's key name (unit K, K-D30; design pass 9 §3):
+    `calibration/durables` prints `durables`, `stages/tenure/methods.bl`
+    `methods.bl` and the stage file `stages/tenure/tenure.bl` `tenure.bl`;
+    another stage's folder, a path that holds the stage's folder further in, a
+    slot and an entry that would print nothing stand as written."""
     assert app.block_text("calibration/durables", "tenure", "calibration") == "durables"
-    assert app.block_text("stages/tenure/methods", "tenure", "methods") == "methods"
+    assert app.block_text("stages/tenure/methods.bl", "tenure", "methods") == "methods.bl"
     assert app.block_text("stages/tenure/tenure.bl", "tenure") == "tenure.bl"
-    assert app.block_text("methods/cons", "cons", "methods") == "cons"
     for text, key, kind in (
-        ("stages/disc/methods", "cons", "methods"),
+        ("stages/disc/methods.bl", "cons", "methods"),
         ("../../portfolio-choice/declaration/stages/port/port.bl", "port", None),
         ("$fill", "tenure", "calibration"),
         ("calibration/", "tenure", "calibration"),
@@ -2327,18 +2326,22 @@ def test_r_the_fields_tables_read_the_parse_of_a_refused_text_and_mark_the_row_i
     defines h, shows the rows of that parse, editable. The continuation
     table lists a, h, k and V[>], h and k on line 16 with their sets
     and roles and no link to a box, since the construction holds neither
-    field, the other rows linked. The row of h, which the refusal's
-    sentence names, is marked with that sentence, and no other row is.
+    field, the other rows linked. The row of h, whose listing the
+    refusal's record names as a related location, is marked with the
+    refusal's sentence, and no other row is (Model Interface 0.9 §4).
     Given the same parse with `editable` false, as while a later text does
     not parse, the tables keep those rows, locked."""
     later = cons_text.replace("(a : Xa) : !cntn", "(a : Xa, h : ℝ₊, k : ℝ₊) : !cntn")
     assert changed_lines(cons_text, later) == [16]
     (refusal,) = model.elaborate_buffer(later, CONS).diagnostics
-    assert "'cons:cntn:h'" in refusal.message
+    (listed,) = refusal.related
+    assert (refusal.rule, listed.role, listed.file, listed.line) == (
+        "output-defined", "listed output", CONS, 16
+    )
     parsed = app.parse_text(CONS, later)
     current = shown_of(cons, cons_text, CONS)
     _, rendered = solara.render(
-        app.BellmanTypeRegion(current, CONS, True, parsed, (refusal.message,)),
+        app.BellmanTypeRegion(current, CONS, True, parsed, (refusal,)),
         handle_error=False,
     )
 
@@ -2361,8 +2364,8 @@ def test_r_the_fields_tables_read_the_parse_of_a_refused_text_and_mark_the_row_i
         tables = rendered.find(ipyvue.VueTemplate).widget
         assert tables.disabled is False
         assert continuation() == rows
-        assert tables.named == {"cons:cntn:h": refusal.message}
-        rendered.render(app.BellmanTypeRegion(current, CONS, False, parsed, (refusal.message,)))
+        assert tables.named == {"cons:cntn:h": model.sentence(refusal)}
+        rendered.render(app.BellmanTypeRegion(current, CONS, False, parsed, (refusal,)))
         tables = rendered.find(ipyvue.VueTemplate).widget
         assert tables.disabled is True
         assert continuation() == rows
@@ -3536,12 +3539,12 @@ def test_j_a_gesture_of_several_files_edits_the_open_document_last(repository, a
             own = app.edit_request.value
             assert own["n"] != confirm["n"] and own["expected"] == text
             new = applied(text, [model.Replacement(**edit) for edit in own["edits"]])
-            assert new == text + f"  noport: {creation.recipe_row('noport')}\n"
+            row = creation.recipe_row("noport", ("stages/noport/methods.bl",))
+            assert new == text + f"  noport: {row}\n"
             assert "  - noport\n" in app.buffers.value[period]["text"]
             assert sorted(set(file_bytes(created.folder)) - set(before)) == [
-                "declaration/methods/noport_envelope.bl",
                 "declaration/settings/noport.yml",
-                "declaration/stages/noport/methods.yml",
+                "declaration/stages/noport/methods.bl",
                 "declaration/stages/noport/noport.bl",
             ]
             assert app.gesture_note.value is None and app.form_open.value == "add stage"
@@ -3580,7 +3583,7 @@ def test_j_a_gesture_of_several_files_edits_the_open_document_last(repository, a
         assert (app.form_open.value, app.form_error.value, app.gesturing.value) == (None, "", None)
         assert app.gesture_note.value["sentence"] == (
             "period.yml, stages: noport written, periods 0–5; new: stages/noport/noport.bl, "
-            "settings/noport.yml, methods/noport_envelope.bl, stages/noport/methods.yml"
+            "settings/noport.yml, stages/noport/methods.bl"
         )
         assert {period, creation.ANSWERS} <= set(app.buffers.value)
     finally:
@@ -3849,7 +3852,6 @@ def test_r_the_status_line_prints_place_file_stage_state_and_digest(cons, cons_t
         seconds=0.1,
         digests={"text": digest, "methods": "f" * 64},
         version="bound",
-        diagnostics=[],
         refusals=[],
         stale=False,
         note=None,
@@ -3919,8 +3921,7 @@ def test_r_the_status_line_prints_place_file_stage_state_and_digest(cons, cons_t
         seconds=0.1,
         digests={"text": elaboration.digest},
         version=None,
-        diagnostics=[],
-        refusals=[{"message": diagnostic.message, "rule": diagnostic.rule}],
+        refusals=[diagnostic],
         stale=True,
         note=None,
     )
@@ -3956,8 +3957,8 @@ def test_r_a_tab_closes_its_saved_buffer_and_never_an_unsaved_one(app_state, scr
     app_state(scratch_consport)
     first, second, third = (
         "declaration/calibration/portfolio.yml",
-        "declaration/methods/cons.yml",
-        "declaration/methods/noport.yml",
+        "declaration/stages/cons/methods.bl",
+        "declaration/stages/cons/methods.vfi.bl",
     )
 
     def answer(path, text=None):
@@ -4001,8 +4002,8 @@ def test_r_a_tab_closes_its_saved_buffer_and_never_an_unsaved_one(app_state, scr
                 for widget in closes
             ] == [
                 ("Close portfolio.yml", "Save the file first.", "true"),
-                ("Close cons.yml", "Close", None),
-                ("Close noport.yml", "Close", None),
+                ("Close methods.bl", "Close", None),
+                ("Close methods.vfi.bl", "Close", None),
             ]
             closes[0].fire_event("click", {})
             assert list(app.buffers.value) == [first, second, third]
@@ -4293,18 +4294,20 @@ def test_k_the_list_under_the_error_mark_holds_the_notes_of_the_last_reading_alo
     app_state, scratch_folder
 ):
     """Unit K, Task 13 (usability walkthrough §4 item 15): on a copy of the
-    portfolio model whose cons methods file names the stage port, the notes
-    of cons.bl's binding stand in the list under the error mark. The
-    trellis's binding, which reads the same file, gives its refusals,
-    which stand while its last reading answered the trellis shown and
-    leave the list once a later reading is refused, the refusal standing
-    in their place (unit L, Task 21, which gives the trellis's refusals in
-    place of its notes of verbs skipped, which are no refusals). Once the
-    methods file is written back on disk, before any reading binds cons.bl
-    again, the list holds none of the stage's notes."""
-    methods = scratch_folder / "declaration/stages/cons/methods.yml"
+    portfolio model whose cons addition names the stage port, the notes of
+    cons.bl's binding stand in the list under the error mark. The trellis's
+    reading, which constructs the same stage with its addition, is refused
+    under the package's rule `metadata-mismatch`, since an addition's first
+    line names the stage it adds to; the refusal stands while that reading is
+    the last and leaves the list once a later reading is refused, the later
+    refusal standing in its place (unit L, Task 21). Once the addition is
+    written back on disk, before any reading binds cons.bl again, the list
+    holds none of the stage's notes. Each sentence is compared as the list
+    prints it, its paths relative to the folder (K-D11), since the package's
+    refusal names the files by their absolute paths."""
+    methods = scratch_folder / "declaration/stages/cons/methods.bl"
     written = methods.read_text(encoding="utf-8")
-    _rewrite(methods, "stage: cons\n", "stage: port\n")
+    _rewrite(methods, "@methods: cons\n", "@methods: port\n")
     app_state(scratch_folder)
     app.source.value = RECIPE
 
@@ -4315,18 +4318,19 @@ def test_k_the_list_under_the_error_mark_holds_the_notes_of_the_last_reading_alo
     try:
         app.open_file(CONS)
         app.run_loop()
-        notes = app.shown.value.notes
-        assert any("names the stage 'port'" in note for note in notes)
+        notes = [app.folder_relative(note) for note in app.shown.value.notes]
+        assert any("'port'" in note for note in notes)
         assert set(notes) <= set(listed())
         outcome = app.run_trellis()
-        refused = trellis.binding_notes(outcome.shown.binding)
-        assert len(refused) == 2 and set(refused) <= set(listed())
+        assert outcome.shown is None and outcome.refusal.rule == "metadata-mismatch"
+        refused = app.folder_relative(outcome.refusal.message)
+        assert refused in listed()
         sentence = "declaration/spec.yml does not read: a refusal of a later reading"
         refusal = model.Diagnostic(None, None, None, None, None, sentence, None, None, None)
         app.trellis_outcome.value = trellis.TrellisOutcome(
             None, refusal, None, 0.0, {}, made=time.monotonic()
         )
-        assert sentence in listed() and not set(refused) & set(listed())
+        assert sentence in listed() and refused not in listed()
         methods.write_text(written, encoding="utf-8")
         assert not set(notes) & set(listed())
     finally:
@@ -4437,22 +4441,21 @@ def test_k_the_slots_line_reads_each_slot_once_with_the_lists_it_stands_in(tmp_p
     opened = model.open_folder(folder)
     rows = recipe.table(opened, RECIPE, recipe.read_source(opened, RECIPE), 0)
     found = recipe.slots(rows)
+    # the calibration and the settings of each row are slots, a methods list
+    # naming additions and no slot (decision S7-F3)
     assert [slot.keyword for slot in found] == [
         "port_calibration",
         "port_settings",
-        "port_methods",
         "cons_calibration",
         "late",
         "cons_settings",
-        "cons_methods",
         "disc_calibration",
         "disc_settings",
-        "disc_methods",
     ]
-    assert found[3] == recipe.Slot(
+    assert found[2] == recipe.Slot(
         "cons_calibration", ("cons · calibration", "cons · calibration · 0-2")
     )
-    assert found[4] == recipe.Slot("late", ("cons · calibration · 0-2",))
+    assert found[3] == recipe.Slot("late", ("cons · calibration · 0-2",))
     keywords = {slot.keyword: {} for slot in found}
     assert load_recipe(folder / "declaration", "spec.yml", **keywords)["periods"]
     source = recipe.Source("recipe", PORT_CONS_RECIPE)
@@ -4532,7 +4535,7 @@ def test_k_the_list_under_the_error_mark_prints_the_package_s_sentence_with_path
     root = str(app.tab_folder.value.root)
     try:
         outcome = app.run_trellis()
-        message = outcome.refusal.message
+        message = model.sentence(outcome.refusal)
         assert message.count(f"{root}/") == 2
         assert message.replace(f"{root}/", "") == NO_PERIOD_HOLDS_DISC
         app.open_file(CONS)
@@ -4543,7 +4546,7 @@ def test_k_the_list_under_the_error_mark_prints_the_package_s_sentence_with_path
         # recipe's sentence stands alone (the header lost the marginal field `dV[>]`
         # that no line read, AMD-MB-001)
         assert listed == [NO_PERIOD_HOLDS_DISC]
-        hover = app._diagnostic_record(outcome.refusal)["message"]
+        hover = app.editor_record(outcome.refusal)["message"]
         assert hover == NO_PERIOD_HOLDS_DISC
         assert not [sentence for sentence in [*listed, hover] if root in sentence]
     finally:
@@ -4964,7 +4967,7 @@ def test_l_16_three_values_typed_in_a_second_are_written_in_turn_and_a_matrix_is
             assert [(entry["name"], entry["typed"]) for entry in queued] == [
                 (name, value) for name, _, value in typed
             ]
-            rows = app._tab_rows(app.value_tab(current, "Parameters"), queued)
+            rows = app._tab_rows(app.value_tab(current, "Parameters"), "Parameters", queued)
             shown_rows = {row["name"]: row["value"] for row in rows}
             assert {name: shown_rows[name] for name, _, _ in typed} == {
                 name: value for name, _, value in typed
@@ -4987,7 +4990,9 @@ def test_l_16_three_values_typed_in_a_second_are_written_in_turn_and_a_matrix_is
         current = app.shown.value
         (note,) = [note for note in current.notes if "parameter 'y_R'" in note]
         assert f"the value {TENURE_MATRIX} lies outside the declared set ℝ₊" in note
-        rows = app._tab_rows(app.value_tab(current, "Parameters"), (), tuple(current.notes))
+        rows = app._tab_rows(
+            app.value_tab(current, "Parameters"), "Parameters", (), tuple(current.notes)
+        )
         noted = {row["name"]: (row["value"], row["note"]) for row in rows}
         assert noted["y_R"] == (TENURE_MATRIX, app.folder_relative(note))
         assert noted["R"] == ("1.05", None)
@@ -5088,7 +5093,7 @@ def test_l_17_one_undo_takes_a_drop_back_in_both_files_it_edited(repository, app
     texts = {}
     for name, old, new in (
         (trellis_file, six, six + earliest),
-        (recipe_file, "{all: [$port_methods]}}", "{all: [$port_methods]}, periods: [0, 5]}"),
+        (recipe_file, "port/methods.bl]}}", "port/methods.bl]}, periods: [0, 5]}"),
     ):
         text = (folder / name).read_text(encoding="utf-8")
         assert text.count(old) == 1
@@ -5160,72 +5165,6 @@ def test_l_17_one_undo_takes_a_drop_back_in_both_files_it_edited(repository, app
         clear_trellis_state()
 
 
-def test_l_18_the_refusal_to_list_a_stage_s_places_stands_once_under_the_error_mark(
-    scratch_durables, app_state
-):
-    """Task 18 (defect 9 of the UX simulation; AMD-MI-002 §6a rule 1). With
-    `tenure.bl` of the durables model shown at `periods[3]/tenure`, a
-    branching stage whose places `places()` refuses to list, the list under
-    the error mark holds the package's sentence of that refusal once, with
-    no file and no line (`recipe.places_refusal`). A methods entry naming
-    `dcsn_to_cntn.keep.cash_on_hand`, a place the package cannot read,
-    makes `methodize` refuse in the same sentence, which the binding's note
-    then gives, and the list still holds the sentence once. With
-    `keeper_cons.bl` shown, whose places the package lists, no line gives
-    the sentence."""
-    app_state(scratch_durables)
-    methods = scratch_durables / "declaration/stages/tenure/methods.yml"
-
-    def listed() -> list[tuple]:
-        # each line of the list under the error mark as its sentence, its
-        # file and its line
-        return [(each.sentence, each.file, each.line) for each in app.standing_refusals()]
-
-    app.source.value = RECIPE
-    app.head.value = (3, "tenure")
-    try:
-        app.open_file(TENURE)
-        app.run_loop()
-        current = app.shown.value
-        assert (current.path, current.position) == (TENURE, (3, "tenure"))
-        unlisted = recipe.places_refusal(current.stage)
-        assert unlisted is not None and unlisted.startswith(
-            "'dcsn_to_cntn.keep.cash_on_hand' in stage 'tenure' names no line"
-        )
-        assert listed().count((unlisted, None, None)) == 1
-
-        # an entry at the place the package cannot read, which methodize
-        # refuses in the same sentence, the binding's note
-        entry = "  - on: dcsn_to_cntn.keep.cash_on_hand\n    method: !Linear\n"
-        methods.write_text(methods.read_text(encoding="utf-8") + entry, encoding="utf-8")
-        app.rebind.value = app.rebind.value + 1
-        app.run_loop()
-        current = app.shown.value
-        assert unlisted in current.notes
-        assert [sentence for sentence, _, _ in listed()].count(unlisted) == 1
-
-        # a stage whose places the package lists, opened as the editor
-        # answers the flush of the open file's document
-        app.head.value = (3, "keeper_cons")
-        app.open_file(KEEPER_CONS)
-        held = app.buffers.value[TENURE]
-        app.on_change(
-            {"path": TENURE, "revision": held["document_revision"], "text": held["text"]}
-        )
-        app.run_loop()
-        current = app.shown.value
-        assert (current.path, current.position) == (KEEPER_CONS, (3, "keeper_cons"))
-        assert recipe.places_refusal(current.stage) is None
-        assert unlisted not in [sentence for sentence, _, _ in listed()]
-    finally:
-        app.source.value, app.head.value, app.view_mode.value = None, None, "stage"
-        app.open_path.value, app.buffers.value, app.results.value = None, {}, {}
-        app.shown.value, app.drawing.value, app.rebind_sources.value = None, False, {}
-        app.rebind.value = 0
-        app.sources.value, app.tree.value, app.git_line.value = [], [], ""
-        app.folder_read.value = False
-
-
 # The two lines of the pension model's `contribution` stage that write the
 # contribution rate out inside each expression (`pensions-working-years`),
 # and the three lines the UX simulation's post-doc typed first in their place
@@ -5248,25 +5187,13 @@ V_RATE_EXCEPTION = (
 )
 
 
-def test_l_21_an_exception_of_the_package_stands_under_its_rule_at_the_line_it_names(
+def test_l_21_an_exception_names_its_operation_and_log_entry_without_a_rule_or_line(
     app_state, tmp_path, monkeypatch, caplog
 ):
-    """Task 21 (defect 18 of the UX simulation; L-D13; A2-D13). The
-    contribution stage of the pension model as the post-doc first typed
-    it, for which the package raises a KeyError where a refusal was due:
-    the loop's one refusal is the exception as Python prints it, under the
-    rule `package-exception`, at the address its message names,
-    `dcsn_to_cntn.contributions`, line 40, which the editor marks; Details'
-    head names the place and the rule; the list under the error mark holds
-    the sentence once with the file and the line; and the page's log holds
-    the exception with its traceback. The trellis's reading meets the same
-    exception in the same text: it prints it as the loop does, in that
-    stage file at line 40, followed by the factory's note naming the
-    occurrences, and logs it; the list then holds the one refusal once, as
-    the trellis's line, at line 40 (L-I244). A message that
-    names no address of the text, or a number alone, gives no line. An
-    exception the package raises outside the reading's catch stands under
-    the same rule in the source's file, and is logged too."""
+    """An unexpected exception in the contribution stage has no rule or
+    source position. The loop, trellis reading and Details name the stopped
+    operation and its log entry; the Problems list holds one line for the
+    three occurrences, and the log holds each exception's traceback."""
     copy = pensions_copy(tmp_path / "models" / "durables", PENSIONS_WORKING_YEARS)
     stage = copy / CONTRIBUTION
     lines = stage.read_text(encoding="utf-8").splitlines(keepends=True)
@@ -5275,85 +5202,65 @@ def test_l_21_an_exception_of_the_package_stands_under_its_rule_at_the_line_it_n
     )
     stage.write_text("".join(lines[:37]) + V_RATE_LINES + "".join(lines[39:]), encoding="utf-8")
     app_state(copy)
+    occurrences = ((4, "contribution"), (5, "contribution"), (6, "contribution"))
+    app.source.value = recipe.Source("recipe", PENSIONS_RECIPE)
     try:
         app.open_file(CONTRIBUTION)
-        with caplog.at_level(logging.ERROR, logger="bellman_workbench.app"):
+        with caplog.at_level(logging.ERROR, logger="bellman_workbench.model"):
             outcome = app.run_loop()
         assert app.shown.value is None and outcome.stale
         (refusal,) = outcome.refusals
-        assert refusal["message"] == V_RATE_EXCEPTION
-        assert (refusal["rule"], refusal["address"], refusal["line"]) == (
-            "package-exception",
-            "dcsn_to_cntn.contributions",
-            40,
+        assert refusal.message == V_RATE_EXCEPTION
+        assert (refusal.kind, refusal.operation, refusal.rule, refusal.address, refusal.line) == (
+            "internal", "elaborate", None, None, None,
         )
-        assert [diagnostic["line"] for diagnostic in outcome.diagnostics] == [40]
+        assert refusal.entry and refusal.occurrences == occurrences
+        editor = app.editor_record(refusal)
+        assert all(editor[key] is None for key in ("line", "column", "end_line", "end_column", "rule"))
         listed = [(each.sentence, each.file, each.line) for each in app.standing_refusals()]
-        assert listed == [(V_RATE_EXCEPTION, CONTRIBUTION, 40)]
-        (record,) = [each for each in caplog.records if each.name == "bellman_workbench.app"]
+        assert listed == [(V_RATE_EXCEPTION, CONTRIBUTION, None)]
+        (record,) = [each for each in caplog.records if each.name == "bellman_workbench.model"]
         assert record.levelno == logging.ERROR and CONTRIBUTION in record.getMessage()
         assert isinstance(record.exc_info[1], KeyError) and record.exc_info[2] is not None
         _, rendered = solara.render(app.RefusalBox(CONTRIBUTION, refusal), handle_error=False)
         try:
             head = drawn_text(rendered.find(v.Html, class_="bl-refusal-rule").widget)
-            assert head.startswith(f"refused at {CONTRIBUTION}:40:")
-            assert head.endswith("dcsn_to_cntn.contributions · rule package-exception")
+            assert head == f"elaborate stopped in {CONTRIBUTION} · logged as {refusal.entry}"
         finally:
             rendered.close()
 
-        # the trellis's reading, which constructs the same text
         app.source.value = recipe.Source("recipe", PENSIONS_RECIPE)
         caplog.clear()
-        with caplog.at_level(logging.ERROR, logger="bellman_workbench.trellis"):
+        with caplog.at_level(logging.ERROR, logger="bellman_workbench.model"):
             read = app.run_trellis()
         found = read.refusal
-        assert read.shown is None and found.message == (
-            f"{V_RATE_EXCEPTION}\nAffected stage occurrences: periods[4].stages['contribution'], "
-            "periods[5].stages['contribution'], periods[6].stages['contribution']"
+        assert read.shown is None and found.message == V_RATE_EXCEPTION
+        assert (found.kind, found.operation, found.line, found.rule, found.address) == (
+            "internal", "elaborate", None, None, None,
         )
-        assert (found.line, found.rule, found.address) == (
-            40,
-            "package-exception",
-            "dcsn_to_cntn.contributions",
-        )
+        assert found.entry and found.occurrences == occurrences
         assert recipe.relative(app.tab_folder.value, found.file) == CONTRIBUTION
-        assert trellis.without_occurrence(found.message) == V_RATE_EXCEPTION
         listed = [(each.sentence, each.file, each.line) for each in app.standing_refusals()]
-        assert listed == [(found.message, CONTRIBUTION, 40)]
-        (record,) = [each for each in caplog.records if each.name == "bellman_workbench.trellis"]
+        assert listed == [(V_RATE_EXCEPTION, CONTRIBUTION, None)]
+        (record,) = [each for each in caplog.records if each.name == "bellman_workbench.model"]
         assert isinstance(record.exc_info[1], KeyError) and record.exc_info[2] is not None
 
-        # a message that names no address of the text, or a number alone
-        spans = source_spans(stage.read_text(encoding="utf-8"), str(stage))
-        assert "2" in spans
-        for error in (KeyError("no address named"), KeyError("item 2 of 3")):
-            found = model.exception_diagnostic(error, CONTRIBUTION, spans)
-            assert (found.rule, found.line, found.address) == ("package-exception", None, None)
-
-        # the trellis's reading
         def raising(*arguments, **keywords):
             raise RuntimeError("an error of the reading")
 
         monkeypatch.setattr(trellis, "show_trellis", raising)
-        app.source.value = recipe.Source("recipe", PENSIONS_RECIPE)
         caplog.clear()
-        with caplog.at_level(logging.ERROR, logger="bellman_workbench.app"):
+        with caplog.at_level(logging.ERROR, logger="bellman_workbench.model"):
             read = app.run_trellis()
-        assert read.refusal == model.Diagnostic(
-            str((copy / PENSIONS_RECIPE).resolve()),
-            None,
-            None,
-            None,
-            None,
-            "RuntimeError: an error of the reading",
-            "package-exception",
-            None,
-            None,
+        found = read.refusal
+        assert (found.file, found.kind, found.operation, found.rule, found.line) == (
+            str((copy / PENSIONS_RECIPE).resolve()), "internal", "read", None, None,
         )
-        assert ("RuntimeError: an error of the reading", PENSIONS_RECIPE, None) in [
+        assert found.message == "RuntimeError: an error of the reading" and found.entry
+        assert (found.message, PENSIONS_RECIPE, None) in [
             (each.sentence, each.file, each.line) for each in app.standing_refusals()
         ]
-        (record,) = [each for each in caplog.records if each.name == "bellman_workbench.app"]
+        (record,) = [each for each in caplog.records if each.name == "bellman_workbench.model"]
         assert isinstance(record.exc_info[1], RuntimeError)
     finally:
         clear_trellis_state()
@@ -5363,16 +5270,16 @@ def test_l_21_the_list_holds_each_refusal_once_and_no_line_of_a_verb_skipped(
     app_state, scratch_folder, tmp_path
 ):
     """Task 21 (defect 17 of the UX simulation; K-D29; A2-D13). On a copy
-    of the portfolio model whose cons methods file names the stage port,
-    the stage shown's binding of cons.bl and the trellis's binding both
-    refuse that file in one sentence, the trellis's with the line naming
-    the stage occurrence: the list holds that refusal once, as the
-    trellis's line, and each other refusal once. On a folder of the forms,
+    of the portfolio model whose cons addition names the stage port, the
+    stage shown's binding of cons.bl and the trellis's reading, which
+    constructs the stage with its addition, both refuse that addition: the
+    list holds that refusal once, and each other refusal once. On a folder
+    of the forms,
     whose bindings are slots, every verb is skipped: neither the trellis's
     binding nor cons.bl's gives a note, and no line of the list names a
     source, since a slot is a parameter of the load and no refusal."""
-    methods = scratch_folder / "declaration/stages/cons/methods.yml"
-    _rewrite(methods, "stage: cons\n", "stage: port\n")
+    methods = scratch_folder / "declaration/stages/cons/methods.bl"
+    _rewrite(methods, "@methods: cons\n", "@methods: port\n")
     app_state(scratch_folder)
     app.source.value = RECIPE
 
@@ -5383,16 +5290,12 @@ def test_l_21_the_list_holds_each_refusal_once_and_no_line_of_a_verb_skipped(
     try:
         app.open_file(CONS)
         app.run_loop()
-        (named,) = [note for note in app.shown.value.notes if "names the stage 'port'" in note]
+        assert any("'port'" in note for note in app.shown.value.notes)
         outcome = app.run_trellis()
-        given = trellis.binding_notes(outcome.shown.binding)
-        (occurrence,) = [note for note in given if trellis.without_occurrence(note) == named]
-        assert occurrence == named + "\nStage occurrence: periods[0].stages['cons']"
+        assert outcome.shown is None and outcome.refusal.rule == "metadata-mismatch"
         found = listed()
-        assert [trellis.without_occurrence(sentence) for sentence in found].count(named) == 1
-        assert occurrence in found and named not in found
-        assert len(found) == len({trellis.without_occurrence(sentence) for sentence in found})
-        assert set(given) <= set(found)
+        assert sum("'port'" in sentence for sentence in found) == 1, found
+        assert len(found) == len(set(found))
 
         # the folder of the forms, in a tab that holds nothing of the first
         clear_trellis_state()
@@ -5413,24 +5316,6 @@ def test_l_21_the_list_holds_each_refusal_once_and_no_line_of_a_verb_skipped(
         app.folder_read.value = False
 
 
-def test_l_21_lines_in_the_same_words_join_unless_they_name_two_files():
-    """Task 21 (unit L's final judgment, §6 item 8; Task 21's review, Minor
-    1): lines in the same words, once the line naming the stage occurrence
-    is taken out, give one line where they name one file or one of them
-    names none, the line naming the occurrence standing; lines that name
-    two files stand as two, each with its file, so that neither file's
-    link is lost."""
-    sentence = "the block dcsn_to_cntn reads no field m"
-    named = f"{sentence}\nStage occurrence: periods[0].stages['cons']"
-    lines = [
-        app.Refusal(sentence, CONS, 30, 1.0),
-        app.Refusal(sentence, PORT, 30, 2.0),
-        app.Refusal(named, CONS, 30, 3.0),
-        app.Refusal(sentence, None, None, 4.0),
-    ]
-    assert app._one_line_per_refusal(lines) == [lines[2], lines[1]]
-
-
 def test_l_21_a_target_error_of_the_elaboration_is_a_refusal_under_its_own_rule(
     app_state, scratch_folder, monkeypatch, caplog
 ):
@@ -5438,7 +5323,7 @@ def test_l_21_a_target_error_of_the_elaboration_is_a_refusal_under_its_own_rule(
     3): a `TargetError` that the elaboration of the open text raises is of
     a class of the package's refusals (`model.is_refusal`), so the loop's
     one refusal is its sentence under the rule of the identity table it
-    names, not `package-exception`, the state is `parsed, refused`, and
+    names, the state is `parsed, refused`, and
     the page's log holds no exception where a refusal was due."""
     sentence = "'no_such_builder' in stage 'cons' names no builder"
 
@@ -5454,7 +5339,7 @@ def test_l_21_a_target_error_of_the_elaboration_is_a_refusal_under_its_own_rule(
             outcome, current = app.elaborate(CONS, text, 1)
         assert current is None and outcome.state == "parsed, refused"
         (refusal,) = outcome.refusals
-        assert (refusal["message"], refusal["rule"]) == (sentence, TARGET_RULES[0])
+        assert (refusal.message, refusal.rule) == (sentence, TARGET_RULES[0])
         assert not [each for each in caplog.records if each.name == "bellman_workbench.app"]
     finally:
         clear_trellis_state()
@@ -5474,7 +5359,7 @@ def test_l_21_the_status_line_and_problems_count_the_same_unjoined_fields(app_st
         assert {(each["key"], each["field"]) for each in found} == {("S", "x"), ("U", "z")}
         assert trellis.unjoined_count(held) == len(found) == 2
         _, rest = app.trellis_status_parts(outcome, held)
-        assert " · 2 unjoined fields" in [text for text, _ in rest]
+        assert " · 2 unjoined internal entry fields" in "".join(text for text, _ in rest)
         items = app.lacking_items((), outcome, held, app.tab_folder.value)
         assert {item.label for item in items if item.kind == "unjoined"} == {"S · x unjoined", "U · z unjoined"}
     finally:
@@ -6054,7 +5939,7 @@ def test_comp_problems_separate_native_errors_from_open_fields_and_keep_source_l
         try:
             button = rendered.find(v.Html, tag="button", class_="bl-error-mark bl-has-errors").widget
             assert button.attributes["aria-controls"] == "bl-problems-list"
-            assert "errors" in button.attributes["aria-label"]
+            assert button.attributes["aria-label"] == "Problems: 1 error, 3 to review"
             links = rendered.find(v.Html, tag="button", class_="bl-error-place").widgets
             assert any(link.attributes["data-path"] == "period.yml" for link in links)
             assert rendered.find(v.Html, class_="bl-problem-group bl-problem-unjoined").widget.attributes["data-count"] == str(count)

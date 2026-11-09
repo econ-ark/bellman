@@ -392,6 +392,7 @@ def test_item_1_the_window_stands_in_the_frames_measures_and_folds_and_narrows_i
     assert visible_in_viewport(page, ".bl-save")
     assert visible_in_viewport(page, ".bl-types-button")
     assert visible_in_viewport(page, ".bl-main-bar .bl-fold[data-fold=\"matsya\"]")
+    page.set_viewport_size({"width": 1200, "height": 1000})
     fold.click()
     wait_until(lambda: abs(tracks(page)[0] - 170) <= 1, 5.0, "the folder opened at 1200 px")
     assert tracks(page)[1] >= 299 and abs(tracks(page)[2] - 300) <= 1

@@ -86,7 +86,7 @@ stage 'cons': no builder joins cntn → arvl; the builders are arvl → dcsn, dc
 
 A pair that two builders join, as two forward blocks from arrival to decision may, is refused in the same way, and the refusal names the two builders, each with the key of its graph that reads it by the id of its block (§3). Where the construction refused the graph of one direction, a pair of that direction raises the construction's refusal, `NotConstructed` ([Refusals](../../reference/refusals.md)), while the pairs of the other direction still answer.
 
-The declared builders, the operators the blocks of the stage file denote as elaboration builds them, are read by the same pairs through `stage.declared`: `stage.declared["cntn", "dcsn"]`, `stage.declared.policy` and `stage.declared.bwd` answer as `stage.builder` does. Until a method block is bound the two answer the same builders; a method block that `methodize` binds changes the builder it opens or adds lines to in `stage.builder` and leaves `stage.declared` as the stage file states it ([Binding verbs](09-binding-verbs.md)). The card of a declared builder prints no binding, nor do the cards of the blocks and the lines of the initial diagrams, so that no binding changes them; their `methods` answers the methods the stage binds within them, which the cards of `stage.builder` print.
+The declared builders, the operators the blocks of the stage file denote as elaboration builds them, are read by the same pairs through `stage.declared`: `stage.declared["cntn", "dcsn"]`, `stage.declared.policy` and `stage.declared.bwd` answer as `stage.builder` does. The two differ as soon as a methods file adds a line: a derivative line the file adds stands at the Evaluation of the operative builder and not at the declared one's, and the lines of a solution method stand in the operative builder in place of the stage file's, `stage.declared` keeping each builder as the stage file states it ([Methodization](../../04-methodization.md) §5; [Binding verbs](09-binding-verbs.md); [A builder](04-builder.md) §2). The card of a declared builder prints no binding, nor do the cards of the blocks and the lines of the initial diagrams, so that no binding changes them; their `methods` answers the methods the stage binds within them, which the cards of `stage.builder` print.
 
 ## 2 The perch paths
 
@@ -190,12 +190,12 @@ print(stage.builder.bwd.methods)
 2  dcsn_to_arvl  builder  → 𝑉≺
 3  policy        builder  → 𝑐
 in         𝑉≻ : Xa → [−∞, ∞)
-out        𝑉≺ : Xm → ℝ
+out        𝑉≺ : Xm × ℝ₊ → ℝ
 out        𝑐(m_d) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m_d) ∈ Γ(m_d)})
 
 1  arvl_to_dcsn  builder  → μ
 2  dcsn_to_cntn  builder  → μ≻
-in         μ≺ : finite measure on Xm
+in         μ≺ : finite measure on Xm × ℝ₊
 out        μ≻ : finite measure on Xa
 
 Drawing
@@ -204,7 +204,7 @@ none
 
 The policy stands on no [wire](02-initial.md) into the decision builder: the decision builder is the operator at a policy, and the policy's type is printed once, on the output of the policy builder, `𝑐(m_d)` above.
 
-Read as one operator, the backward graph takes the value functions supplied at the continuation perch to those of the arrival perch, the stage's contribution to the Bellman operator. Its wires carry value functions, or sets of functions where an operation admits several: an operation of the kind `Argmax`, whose output is the set of maximizing policies, and an operation whose output is among the unknowns of its own rule, such as `cons_choice:Pullback`, the identification of the policy builder, which equates the policy at the cash on hand of each saving with the candidate consumption there ([A builder](04-builder.md) §2; [Operations](../../reference/operations.md) §§1 and 4). An exact evaluation keeps such a set as it is, selecting no member. The policy builder states the policy, and which policy stands at the decision builder in a computation is stated at [methodization](07-methods.md). The policy is read where the control appears: in the law of motion, the aggregator and a conditional distribution of a decision builder, and in the push-forward of a forward decision builder, each of which the builder is stated at. An evaluation reads, selects and inserts no policy: it returns the field's function, and a set of feasible policies as that same set. The backward graph's printed record:
+Read as one operator, the backward graph takes the value functions supplied at the continuation perch to those of the arrival perch, the stage's contribution to the Bellman operator. Its wires carry value functions, or sets of functions where an operation admits several: an operation of the kind `Argmax`, whose output is the set of maximizing policies, and an operation whose output is among the unknowns of its own rule, such as `identification:Pullback`, the identification of the policy builder once the methods file has brought the lines of the endogenous grid method, which equates the policy at the cash on hand of each saving with the candidate consumption there ([A builder](04-builder.md) §2; [Operations](../../reference/operations.md) §§1 and 4). An exact evaluation keeps such a set as it is, selecting no member. The policy builder states the policy, and which policy stands at the decision builder in a computation is stated at [methodization](07-methods.md). The policy is read where the control appears: in the law of motion, the aggregator and a conditional distribution of a decision builder, and in the push-forward of a forward decision builder, each of which the builder is stated at. An evaluation reads, selects and inserts no policy: it returns the field's function, and a set of feasible policies as that same set. The backward graph's printed record:
 
 ```python
 print(stage.builder.bwd.denote())
@@ -215,115 +215,117 @@ STAGE cons / BACKWARD BUILDERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Signature
   in   𝑉≻  : Xa → [−∞, ∞)
-       ─────────────────────────────────────────────────────
-  out  𝑉≺  : Xm → ℝ
+       ──────────────────────────────────────────────────────────────────────
+  out  𝑉≺  : Xm × ℝ₊ → ℝ
        𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 At
   𝑐  : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
-Declared
-  𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
-
 Operations
       cntn_to_dcsn
       in: 𝑉≻                            out: 𝑉
-      ──────────────────────────────────────────────────────
+      ───────────────────────────────────────────────────────────────────────
       rule: 𝑉 : Xm → [−∞, ∞)
 
    1    Pullback
         in: 𝑉≻                          out: 𝑉≻ ∘ 𝑔≻(·, 𝑐)
-        ────────────────────────────────────────────────────
+        ─────────────────────────────────────────────────────────────────────
         rule: (𝑉≻ ∘ 𝑔≻(·, 𝑐))(m_d) = 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
 
    2    Aggregation
         in: (1)                         out: 𝑉
-        ────────────────────────────────────────────────────
+        ─────────────────────────────────────────────────────────────────────
         rule: 𝑉(m_d) = 𝑢(𝑐(m_d)) + 𝑉≻(𝑔≻(m_d, 𝑐(m_d)))
 
    3    Evaluation
         in: 𝑉                           out: 𝑉
-        ────────────────────────────────────────────────────
+        ─────────────────────────────────────────────────────────────────────
         rule: 𝑉 : Xm → [−∞, ∞)
-        derivative: D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))
-                    cntn_to_dcsn.marginal, marginal-reading
+              D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))
 
       dcsn_to_arvl
       in: 𝑉                             out: 𝑉≺
-      ──────────────────────────────────────────────────────
-      rule: 𝑉≺ : Xm → ℝ
+      ───────────────────────────────────────────────────────────────────────
+      rule: 𝑉≺ : Xm × ℝ₊ → ℝ
 
    4    Pullback
         in: 𝑉                           out: 𝑉 ∘ 𝑔≺
-        ────────────────────────────────────────────────────
-        rule: (𝑉 ∘ 𝑔≺)(m) = 𝑉(𝑔≺(m))
+        ─────────────────────────────────────────────────────────────────────
+        rule: (𝑉 ∘ 𝑔≺)(m, l) = 𝑉(𝑔≺(m, l))
 
    5    Aggregation
         in: (4)                         out: 𝑉≺
-        ────────────────────────────────────────────────────
-        rule: 𝑉≺(m) = 𝑉(𝑔≺(m))
+        ─────────────────────────────────────────────────────────────────────
+        rule: 𝑉≺ = 𝑉(𝑔≺(m, l))                             on (m, l) ∈ Xm × ℝ₊
 
    6    Evaluation
         in: 𝑉≺                          out: 𝑉≺
-        ────────────────────────────────────────────────────
-        rule: 𝑉≺ : Xm → ℝ
+        ─────────────────────────────────────────────────────────────────────
+        rule: 𝑉≺ : Xm × ℝ₊ → ℝ
 
       policy
       in: 𝑉≻                            out: 𝑐
-      ──────────────────────────────────────────────────────
+      ───────────────────────────────────────────────────────────────────────
       rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
-   7    InvEuler:Aggregation
-        in: 𝑉≻                          out: 𝑐≻
-        ────────────────────────────────────────────────────
-        rule: 𝑐≻(a) ≤ 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a)) ⟂ a ≥ 0
+   7    Pullback
+        in: 𝑉≻                          out: 𝑉≻ ∘ 𝑔≻
+        ─────────────────────────────────────────────────────────────────────
+        rule: (𝑉≻ ∘ 𝑔≻)(m_d, c) = 𝑉≻(𝑔≻(m_d, c))
 
-   8    endoggrid:Aggregation
-        in: 𝑐≻                          out: 𝑚_d≻
-        ────────────────────────────────────────────────────
-        rule: 𝑚_d≻(a) = a + 𝑐≻(a)
+   8    optimality:Aggregation
+        in: (7)                         out: (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))
+        ─────────────────────────────────────────────────────────────────────
+        rule: (m_d, c) ↦ 𝑢(c) + 𝑉≻(𝑔≻(m_d, c))
 
-   9    cons_choice:Pullback
-        in: 𝑐≻, 𝑚_d≻                    out: 𝑐
-        ────────────────────────────────────────────────────
-        rule: 𝑐(𝑚_d≻(a)) = 𝑐≻(a)                                   on 𝑚_d≻(Xa)
+   9    optimality:Argmax
+        in: (8)                         out: 𝑐
+        ─────────────────────────────────────────────────────────────────────
+        rule: 𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]
 
   10    Evaluation
         in: 𝑐                           out: 𝑐
-        ────────────────────────────────────────────────────
+        ─────────────────────────────────────────────────────────────────────
         rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 
 Conditions
-  cntn_to_dcsn:Aggregation      𝑉(m_d) ∈ [−∞, ∞)
-  dcsn_to_arvl:Aggregation      𝑉≺(m) ∈ ℝ
-  policy.endoggrid:Aggregation  𝑚_d≻(a) ∈ Xm
-  𝑢                             ¬(1 − ρ = 0)
+  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
+  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
+  𝑢                         ¬(1 − ρ = 0)
+  cntn_to_dcsn.marginal     marginal-reading: the right side of each
+                              derivative line equals the derivative, in the
+                              named coordinate, of the value the builder
+                              writes, under the envelope conditions: concavity
+                              of the continuation value, interiority of the
+                              maximizer or the multiplier's term at a binding
+                              constraint, differentiability of the reward in
+                              the control, a measurable selection of the
+                              policy, and differentiability of the value at
+                              the point read; listed and not checked
+                              [required]
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  14  m_d = m
-  18  a = m_d - c
-  22  V        = 𝑢(c) + V[>]                       :: [id=value]
-  23  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
-  27  V[<] = V                                     :: [id=value]
-  31  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality, !doc]
-  32  c[>]   <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0          :: [id=InvEuler]
-  33  m_d[>] = a + c[>]                            :: [id=endoggrid]
-  34  c      = c[>]                                :: [id=cons_choice]
+  13  m_d = m
+  17  a = m_d - c
+  21  V        = 𝑢(c) + V[>]                       :: [id=value]
+  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
+  26  V[<] = V                                     :: [id=value]
+  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[>])  :: [id=optimality]
 
 Definitions referenced
-  Xm     cons:set:Xm
-  Xa     cons:set:Xa
-  ρ      cons:parameter:ρ
-  𝑢      cons:function:𝑢
-  𝑑𝑢     cons:function:𝑑𝑢
-  𝑑𝑢𝑖𝑛𝑣  cons:function:𝑑𝑢𝑖𝑛𝑣
-  Γ      cons:correspondence:Γ
-  𝑔≺     cons:g:arvl_to_dcsn
-  𝑔≻     cons:g:dcsn_to_cntn
+  Xm    cons:set:Xm
+  Xa    cons:set:Xa
+  ρ     cons:parameter:ρ
+  𝑢     cons:function:𝑢
+  𝑑𝑢    cons:function:𝑑𝑢
+  Γ     cons:correspondence:Γ
+  𝑔≺    cons:g:arvl_to_dcsn
+  𝑔≻    cons:g:dcsn_to_cntn
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-The card names the policy under `At`, writes the law of motion at that policy out in its rules, `𝑉≻(𝑔≻(m_d, 𝑐(m_d)))`, and under `Declared` states the line `optimality`, marked `!doc`, with the constructed output substituted. The graph holds the chain of the two backward builders and, beside it, the policy builder, which reads a copy of the continuation functions. No wire joins the policy builder's output to the decision builder, whose pullback, aggregation or conditional distribution refers to the policy by a free name ([A builder](04-builder.md) §1), so the pieces form no chain: they stand in the order of their dependencies, each after every piece that writes a wire it reads, and the drawing shows the wiring.
+The card names the policy under `At` and writes the law of motion at that policy out in its rules, `𝑉≻(𝑔≻(m_d, 𝑐(m_d)))`; on a version whose policy builder holds the lines of a solution method, it states the stage file's maximization under `Declared`, with the constructed output substituted ([A builder](04-builder.md) §2). The graph holds the chain of the two backward builders and, beside it, the policy builder, which reads a copy of the continuation functions. No wire joins the policy builder's output to the decision builder, whose pullback, aggregation or conditional distribution refers to the policy by a free name ([A builder](04-builder.md) §1), so the pieces form no chain: they stand in the order of their dependencies, each after every piece that writes a wire it reads, and the drawing shows the wiring.
 
 The forward graph is the operator on measures that a simulation, or the computation of a stationary distribution, iterates, and it is a chain: `arvl_to_dcsn` carries the arrival measure to the decision measure, and `dcsn_to_cntn` pushes that measure forward through the law of motion at the policy, the map `m_d ↦ 𝑔≻(m_d, 𝑐(m_d))`, taking as kernel data any conditional distribution of a shock that depends on the policy. Its printed record, the pieces of each builder in order of application:
 
@@ -335,7 +337,7 @@ print(stage.builder.fwd.denote())
 STAGE cons / FORWARD BUILDERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Signature
-  in   μ≺  : finite measure on Xm
+  in   μ≺  : finite measure on Xm × ℝ₊
        ────────────────────────────────────────
   out  μ≻  : finite measure on Xa
 
@@ -351,7 +353,7 @@ Operations
   1    Pushforward
        in: μ≺                           out: μ
        ────────────────────────────────────────
-       rule: μ(B) = μ≺({m≺ ∈ Xm | 𝑔≺(m≺) ∈ B})
+       rule: μ(B) = μ≺({m≺, l≺ ∈ Xm × ℝ₊ | 𝑔≺(m≺, l≺) ∈ B})
 
      dcsn_to_cntn
      in: μ                              out: μ≻
@@ -364,14 +366,24 @@ Operations
        rule: μ≻(B) = μ({m_d ∈ Xm | 𝑔≻(m_d, 𝑐(m_d)) ∈ B})
 
 Conditions
-  𝑢                             ¬(1 − ρ = 0)
-  cntn_to_dcsn:Aggregation      𝑉(m_d) ∈ [−∞, ∞)
-  dcsn_to_arvl:Aggregation      𝑉≺(m) ∈ ℝ
-  policy.endoggrid:Aggregation  𝑚_d≻(a) ∈ Xm
+  𝑢                         ¬(1 − ρ = 0)
+  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
+  cntn_to_dcsn.marginal     marginal-reading: the right side of each
+                              derivative line equals the derivative, in the
+                              named coordinate, of the value the builder
+                              writes, under the envelope conditions: concavity
+                              of the continuation value, interiority of the
+                              maximizer or the multiplier's term at a binding
+                              constraint, differentiability of the reward in
+                              the control, a measurable selection of the
+                              policy, and differentiability of the value at
+                              the point read; listed and not checked
+                              [required]
+  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
 ──────────────────────────────────────────────────────────────────────────────
 Source  cons.bl
-  14  m_d = m
-  18  a = m_d - c
+  13  m_d = m
+  17  a = m_d - c
 
 Definitions referenced
   Xm    cons:set:Xm
@@ -396,20 +408,20 @@ print(repr(stage.builder.bwd.primitives["cntn_to_dcsn:Aggregation"]))
 
 ```text
 BuildersGraph('cons', 'backward', primitives)
-1  cntn_to_dcsn:Pullback         primitive
-2  cntn_to_dcsn:Aggregation      primitive  → 𝑉
-3  cntn_to_dcsn:Evaluation       primitive  → 𝑉
-1  dcsn_to_arvl:Pullback         primitive
-2  dcsn_to_arvl:Aggregation      primitive  → 𝑉
-3  dcsn_to_arvl:Evaluation       primitive  → 𝑉≺
-1  policy.InvEuler:Aggregation   primitive  → 𝑐≻
-2  policy.endoggrid:Aggregation  primitive  → 𝑚_d≻
-3  policy.cons_choice:Pullback   primitive  → 𝑐
-4  policy:Evaluation             primitive  → 𝑐
+1  cntn_to_dcsn:Pullback          primitive
+2  cntn_to_dcsn:Aggregation       primitive  → 𝑉
+3  cntn_to_dcsn:Evaluation        primitive  → 𝑉
+1  dcsn_to_arvl:Pullback          primitive
+2  dcsn_to_arvl:Aggregation       primitive  → 𝑉
+3  dcsn_to_arvl:Evaluation        primitive  → 𝑉≺
+1  policy:Pullback                primitive
+2  policy.optimality:Aggregation  primitive
+3  policy.optimality:Argmax       primitive  → 𝑐
+4  policy:Evaluation              primitive  → 𝑐
 Operator('cons', 'cntn_to_dcsn:Aggregation')
 ```
 
-A primitive operator's name is its builder and its kind, `cntn_to_dcsn:Pullback`, with a number where one builder holds several of one kind; an operator that realizes one line of the file carries that line's address in place of the bare builder, `policy.endoggrid:Aggregation`. [Operations](../../reference/operations.md) lists the kinds an operator can be. A box that acts on every value function its block reads on one base carries no field in its name, whether that is one function or several: `cntn_to_dcsn:Pullback` and `dcsn_to_arvl:Pullback` each act on the one value their block reads. Where two boxes of one kind and one law of motion remain in one builder, because they act on functions of different states, each keeps in its name the field it acts on; no stage under `applications/` has two such boxes. The address of a line is the stable name: adding a statement to a file can merge two boxes of one kind into one box, whose name is then the builder's and no longer the line's, while the line's address is unchanged, which is why methods attach to lines.
+A primitive operator's name is its builder and its kind, `cntn_to_dcsn:Pullback`, with a number where one builder holds several of one kind; an operator that realizes one line of the file carries that line's address in place of the bare builder, `policy.optimality:Aggregation`. [Operations](../../reference/operations.md) lists the kinds an operator can be. A box that acts on every value function its block reads on one base carries no field in its name, whether that is one function or several: `cntn_to_dcsn:Pullback` and `dcsn_to_arvl:Pullback` each act on the one value their block reads. Where two boxes of one kind and one law of motion remain in one builder, because they act on functions of different states, each keeps in its name the field it acts on; no stage under `applications/` has two such boxes. The address of a line is the stable name: adding a statement to a file can merge two boxes of one kind into one box, whose name is then the builder's and no longer the line's, while the line's address is unchanged, which is why methods attach to lines.
 
 The consumption stage writes no line marked `!node`, so its two finer grains hold the same boxes. The smooth-ambiguity savings stage `applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl` marks two, the risk and the ambiguity certainty equivalents that [A builder](04-builder.md) §4 reads, and its backward graph counts a different number of boxes at each grain:
 

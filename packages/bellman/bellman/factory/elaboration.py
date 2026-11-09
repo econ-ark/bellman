@@ -2,16 +2,17 @@
 `load_stage` returns: `elaborate_stage` for a record and `elaborate_text`
 for a text and its origin; `source_spans` for the span table of a text, and
 `bind_stage` for the binding of a stage from a record's three sources with a
-report of what bound. A record may carry additions, the `.bl` methods files
-of the stage, each as its text and its origin: `construct_stage` parses the
-stage text and each addition, unions the parsed files (`bellman.syntax.union`)
-and constructs the one term, so that the elaborator reads every entry and
-line of an addition as if the stage file had written it; the provenance of
-the version records each addition. `elaborate_stage` binds, unless its
-keyword `bind` is false, every source the record supplies, by the inner forms
-of the three binding verbs (`bellman.stage.binding_verbs`), which copy
-nothing, and copies the stage once, at the end. A text the parser or the
-lowering cannot read is refused under the rule `syntax`.
+report of what bound. The methods of a record are its additions, the `.bl`
+methods files of the stage, each as its text and its origin: `construct_stage`
+parses the stage text and each addition, unions the parsed files
+(`bellman.syntax.union`) and constructs the one term, so that the elaborator
+reads every entry and line of an addition as if the stage file had written
+it; the provenance of the version records each addition. `elaborate_stage`
+binds, unless its keyword `bind` is false, every source the record supplies:
+the additions with the text at the construction, the calibration and the
+settings by the inner forms of their verbs (`bellman.stage.binding_verbs`),
+which copy nothing; the stage is copied once, at the end. A text the parser
+or the lowering cannot read is refused under the rule `syntax`.
 """
 
 from __future__ import annotations
@@ -32,12 +33,14 @@ from bellman.stage.binding_verbs import (
     calibrated_version,
     configured_version,
     methodized_version,
-    methods_folder,
 )
 from bellman.stage.elaborated import make_stage
-from bellman.stage.method_blocks import operative_level
-from bellman.stage.method_table import solution_words
-from bellman.stage.sources import load_methods
+from bellman.stage.levels import (
+    addition_records,
+    methods_location,
+    methods_source,
+    supplies_addition,
+)
 from bellman.syntax.lower import parse_with_spans
 from bellman.syntax.parse import expected_forms, grammar_sentence, marked_line, place_at
 from bellman.syntax.union import union
@@ -49,22 +52,22 @@ def elaborate_stage(record, *, bind=True):
     """The stage of one source record, the mapping `load_stage` returns: its
     text parsed and constructed at its origin and, where `bind` is true, as
     it is by default, every source the record supplies bound, in the order
-    calibrate, methodize, configure. A non-empty `calibration` is bound as
-    `calibrate` binds it, a `methods` mapping from which `load_methods` reads
-    at least one entry as `methodize` binds it, and a non-empty `settings` as
-    `configure` binds it. An empty source is no source: the record
-    `load_stage` returns, whose calibration and settings are `{}` and whose
-    methods are `{"methods": []}`, answers the symbolic stage, and so does
-    any record with `bind=False`. The additions a record carries under
-    `additions`, each its text and its origin, are unioned with the stage
-    text before the construction (`construct_stage`). Each binding is made
-    by the inner form of its verb, which copies nothing, and the stage is
-    copied once, at the end, by `copy_native`; its provenance records the
-    additions and the bindings as the three verbs record them. Reads no
-    file. A path string, or a mapping that is no record, is refused under
-    `record-shape`; a `bind` that is not True or False is refused; a source
-    is refused as its verb refuses it, and settings supplied without methods
-    as `configure` refuses them.
+    calibrate, methodize, configure. The additions the record holds under
+    `methods`, each its text and its origin, are unioned with the stage text
+    before the construction (`construct_stage`), so that the elaborator
+    reads their entries and lines as the stage file's own; a non-empty
+    `calibration` is bound as `calibrate` binds it and a non-empty `settings`
+    as `configure` binds it. An empty source is no source: the record
+    `load_stage` returns for a stage file alone, whose calibration and
+    settings are `{}` and whose methods are `[]`, answers the symbolic stage,
+    and so does any record with `bind=False`, whose additions are left out
+    with the other sources. Each binding is made by the inner form of its
+    verb, which copies nothing, and the stage is copied once, at the end, by
+    `copy_native`; its provenance records the additions read and the
+    bindings as the verbs record them. Reads no file. A path string, or a
+    mapping that is no record, is refused under `record-shape`; a `bind`
+    that is not True or False is refused; a source is refused as its verb
+    refuses it.
 
     See `docs/Bellman-Sym/API/stage/01-the-stage.md` §1."""
     if type(bind) is not bool:
@@ -74,22 +77,33 @@ def elaborate_stage(record, *, bind=True):
             "stage, or leave bind out to bind them"
         )
     source = stage_text_of(record)
+    additions = source.additions if bind else ()
     version = stage_occurrence(
         record,
-        construct_stage(source.text, source.origin, source.additions),
+        construct_stage(source.text, source.origin, additions),
         address="record",
         version_record=grammar_versions(),
+        with_additions=bind,
     )
     if bind:
         # each source the record supplies, by the inner form of its verb; an
         # empty source binds nothing, and no version before the last is copied
         if record["calibration"]:
             version = calibrated_version(version, record["calibration"])
-        if load_methods(record["methods"])["methods"]:
-            version = methodized_version(version, record["methods"])
         if record["settings"]:
-            version = configured_version(version, record["settings"])
+            version = configured_version(
+                version, record["settings"], files=settings_files(record)
+            )
     return copy_native(version)
+
+
+def settings_files(record):
+    """The settings files whose keys supplied a record's merged settings, in
+    the order they were merged, each by its path, as the record's provenance
+    lists them under `source_lists`. An entry without a path, such as a fill
+    given at the call, is left out."""
+    lists = record.get("provenance", {}).get("source_lists", {})
+    return tuple(entry["path"] for entry in lists.get("settings", ()) if "path" in entry)
 
 
 def elaborate_text(text, origin):
@@ -97,15 +111,14 @@ def elaborate_text(text, origin):
     source, as `elaborate_stage` builds it from the record of the text with
     empty calibration, settings and methods sources: the one reader of a text
     that the dossier, the refusal catalogue and the command line elaborate.
-    Its methods source is the empty mapping `{}`, from which the digest that
-    `--encoding` prints is computed; the mapping `load_stage` writes,
-    `{"methods": []}`, would give another digest."""
+    Its methods are the empty list, no addition, described as every empty
+    source is described (`levels.methods_source`)."""
     return elaborate_stage(
         {
             "stage": {"text": text, "origin": origin},
             "calibration": {},
             "settings": {},
-            "methods": {},
+            "methods": [],
         }
     )
 
@@ -127,7 +140,7 @@ class Addition(NamedTuple):
 class StageText(NamedTuple):
     """The stage text of a source record: the text, its origin, the SHA-256
     digest of the text, the provenance entries the record supplies, and the
-    additions the record carries, in order."""
+    additions the record holds under `methods`, in order."""
 
     text: str
     origin: str
@@ -150,8 +163,8 @@ def stage_text_of(record, address="record"):
     Refused under `record-shape` where the record is a path string or no
     mapping, lacks a field, holds a field of the wrong form, writes its stage
     as a path, supplies a location or a digest that disagrees with its
-    source, or carries an addition that is not the text and the origin of a
-    methods file."""
+    source, or holds under `methods` anything but the additions `load_stage`
+    reads, each the text and the origin of a methods file."""
     if not isinstance(record, Mapping):
         what = (
             f"the path string {record!r}"
@@ -167,17 +180,29 @@ def stage_text_of(record, address="record"):
             write="elaborate_stage(load_stage(path))",
         )
     missing = sorted(name for name in _REQUIRED if name not in record)
-    unknown = sorted(record.keys() - set(_REQUIRED) - {"label", "provenance", "additions"})
+    unknown = sorted(record.keys() - set(_REQUIRED) - {"label", "provenance"})
     if missing or unknown:
+        parts = []
+        if missing:
+            parts.append(
+                f"holds no {' or '.join(filter(None, (', '.join(missing[:-1]), missing[-1])))} "
+                f"field{'s' if len(missing) > 1 else ''}"
+            )
+        if unknown:
+            parts.append(
+                f"holds the field{'s' if len(unknown) > 1 else ''} "
+                f"{' and '.join(filter(None, (', '.join(unknown[:-1]), unknown[-1])))}, which no "
+                f"record has"
+            )
         raise FactoryError(
-            f"missing fields {missing!r}; unknown fields {unknown!r}",
+            f"the record {' and '.join(parts)}",
             rule="record-shape",
             address=address,
-            written=repr(sorted(record)),
+            written=", ".join(sorted(record)),
             write="a record with stage, calibration, settings "
-            "and methods, and optionally label, provenance and additions",
+            "and methods, and optionally label and provenance",
         )
-    for name in ("calibration", "settings", "methods", "provenance"):
+    for name in ("calibration", "settings", "provenance"):
         if not isinstance(record.get(name, {}), Mapping):
             raise FactoryError(
                 f"{name} must be a mapping",
@@ -186,6 +211,20 @@ def stage_text_of(record, address="record"):
                 written=repr(record[name])[:80],
                 write=f"{name}: {{...}}",
             )
+    # the methods of a record are its additions, read by `load_stage`: a list
+    # of them, each its text and its origin, or an empty mapping for none
+    methods = record["methods"]
+    if isinstance(methods, Mapping) and not methods:
+        methods = ()
+    if not isinstance(methods, (list, tuple)):
+        raise FactoryError(
+            "methods holds the additions load_stage read, a list of the text and the origin of "
+            "each; a verb of the factory reads no file",
+            rule="record-shape",
+            address=f"{address}.methods",
+            written=repr(record["methods"])[:80],
+            write="elaborate_stage(load_stage(path, additions)), or methods: []",
+        )
     if "label" in record and not isinstance(record["label"], str):
         raise FactoryError(
             "label must be a string",
@@ -221,7 +260,7 @@ def stage_text_of(record, address="record"):
     text, origin = source["text"], source["origin"]
     digest = sha256(text.encode("utf-8")).hexdigest()
     additions = []
-    for number, addition in enumerate(record.get("additions") or (), 1):
+    for number, addition in enumerate(methods, 1):
         if (
             not isinstance(addition, Mapping)
             or set(addition) != {"text", "origin"}
@@ -232,9 +271,9 @@ def stage_text_of(record, address="record"):
             raise FactoryError(
                 f"addition {number} requires exactly text and origin, both strings",
                 rule="record-shape",
-                address=f"{address}.additions",
+                address=f"{address}.methods",
                 written=repr(addition)[:80],
-                write="additions: [{text: <the methods file's text>, origin: <its path>}]",
+                write="methods: [{text: <the methods file's text>, origin: <its path>}]",
             )
         additions.append(
             Addition(
@@ -270,19 +309,27 @@ def stage_text_of(record, address="record"):
 # --- the stage occurrence and the construction of a text ---
 
 
-def stage_occurrence(record, initial, *, address, version_record, position=None):
+def stage_occurrence(
+    record, initial, *, address, version_record, position=None, with_additions=True
+):
     """The version of `initial`, the stage the record's text constructs, whose
     provenance holds the record's own entries (its `source_lists` among them,
-    unread), the origin, the text, the digest, the origin, the text and the
-    digest of each addition under `additions` where the record carries one,
-    the description of each of its three mappings under `sources`, the
-    `versions` record given, the record's `label` and `position` where
-    given. The caller copies it with `copy_native`, so that no two positions
-    share a version."""
+    unread), the origin, the text, the digest, the description of each of
+    its three sources under `sources`, the `versions` record given, the
+    record's `label` and `position` where given, and, where `with_additions`
+    is true, the path, the digest and the text of each addition the record
+    holds under `additions`, the additions `initial` was constructed with;
+    `elaborate_stage(record, bind=False)` constructs the text alone and
+    records none. The caller copies it with `copy_native`, so that no two
+    positions share a version."""
     source = stage_text_of(record, address)
     text, origin, digest, supplied = source.text, source.origin, source.digest, source.supplied
+    read = tuple((addition.text, addition.origin) for addition in source.additions)
     sources = {
-        name: source_description(record[name], supplied.get(name))
+        name: source_description(
+            methods_source(record[name]) if name == "methods" else record[name],
+            supplied.get(name) or (methods_location(read) if name == "methods" else None),
+        )
         for name in ("methods", "settings", "calibration")
     }
     provenance = {
@@ -293,11 +340,8 @@ def stage_occurrence(record, initial, *, address, version_record, position=None)
         "sources": sources,
         "versions": version_record,
     }
-    if source.additions:
-        provenance["additions"] = tuple(
-            {"origin": addition.origin, "text": addition.text, "sha256": addition.digest}
-            for addition in source.additions
-        )
+    if with_additions and read:
+        provenance["additions"] = addition_records(read)
     if position is not None:
         provenance["position"] = position
     if "label" in record:
@@ -309,11 +353,12 @@ def construct_stage(text, origin, additions=()):
     """The stage a text constructs at `origin`, with the `additions`, each an
     `Addition`, unioned into it in order, or its refusal: a text the parser
     or the lowering cannot read is refused under `syntax` in its own file,
-    the union refuses as `bellman.syntax.union` refuses, the union is read
-    at the operative level (`operative_level`, with the solution words of
-    the catalogue), and the construction reads the one term. The frames of
-    the parser and the construction are cleared, so that no refusal holds a
-    parsed AST."""
+    the union refuses as `bellman.syntax.union` refuses, and the construction
+    reads the one term at its two levels (`make_stage`, through
+    `levels.construct`). An exception of no refusal class, a `ValueError` the
+    lowering raises on a defect of its own among them, is an internal
+    failure and passes through under no rule. The frames of the parser and
+    the construction are cleared, so that no refusal holds a parsed AST."""
     parsed = unioned = None
     try:
         failure = None
@@ -322,7 +367,7 @@ def construct_stage(text, origin, additions=()):
         for held_text, held_origin in files:
             try:
                 parsed.append(parse_with_spans(held_text, filename=held_origin))
-            except (LarkError, ValueError) as error:
+            except (LarkError, ConstructionError) as error:
                 failure = _syntax_refusal(error, held_text, held_origin)
                 clear_frames(error.__traceback__)
                 break
@@ -330,7 +375,7 @@ def construct_stage(text, origin, additions=()):
         if failure is not None:
             raise failure from None
         try:
-            unioned = operative_level(union(parsed[0], parsed[1:]), origin, solution_words())
+            unioned = union(parsed[0], parsed[1:])
             return make_stage(unioned.term, unioned.spans)
         except ConstructionError as error:
             if error.file is None:
@@ -357,15 +402,14 @@ def construct_stage(text, origin, additions=()):
 
 
 class SyntaxParts(NamedTuple):
-    """The three parts a refusal under the rule `syntax` writes its message
-    from, which the catalogue of refusals prints each under its own heading:
-    `why`, what the file writes there and what the language admits; `what`,
-    the line of the file with a mark under the column; `write`, what to write
-    instead."""
+    """The two parts of a refusal under the rule `syntax` that the catalogue
+    of refusals prints each under its own heading: `why`, what the file
+    writes there and what the language admits, and `what`, the line of the
+    file with a mark under the column. The message is written from these two
+    alone; the action stands once, in the refusal's `write`."""
 
     why: str
     what: str
-    write: str
 
 
 def _syntax_refusal(error, text, origin):
@@ -373,25 +417,41 @@ def _syntax_refusal(error, text, origin):
     rule `syntax` or the rule the lowering names, in the four parts of a refusal.
 
     Where: the file, the line and the column, which `ConstructionError` writes
-    before the message. What: the line of the file with a mark under the
+    before the message, and the end of the token the parser read or of the
+    item the lowering refused, so that an editor underlines the token and
+    guesses no end. What: the line of the file with a mark under the
     column. Why: what the file writes there and, for a refusal of the parser,
     the forms the language admits at that place, each terminal of the grammar
-    read once from `syntax.parse.FORMS`. What to write: the sentence of the
-    grammar's own comment for the place the position falls inside, where it
-    falls inside a block header or an operator's subscript, and the sentence
-    the lowering supplies where the lowering refuses. No token name and no
-    rule name of Lark is written."""
-    line = getattr(error, "line", None)
-    column = getattr(error, "column", None)
-    line = line if type(line) is int else None
-    column = column if type(column) is int else None
+    read once from `syntax.parse.FORMS`. What to write, the refusal's
+    `write`: the sentence of the grammar's own comment for the place the
+    position falls inside, where it falls inside a block header or an
+    operator's subscript, and the sentence the lowering supplies where the
+    lowering refuses. No token name and no rule name of Lark is written."""
+    lowered = isinstance(error, ConstructionError)
+    token = getattr(error, "token", None)
+    line, column, end_line, end_column = (
+        (error.line, error.column, error.end_line, error.end_column)
+        if lowered
+        else (
+            getattr(error, "line", None),
+            getattr(error, "column", None),
+            getattr(token, "end_line", None),
+            getattr(token, "end_column", None),
+        )
+    )
+    line, column, end_line, end_column = (
+        held if type(held) is int else None for held in (line, column, end_line, end_column)
+    )
+    if line is not None and (end_line is None or end_column is None):
+        # the parser stopped at one character, and names no token
+        end_line, end_column = line, column + 1
     forms = expected_forms(
         getattr(error, "accepts", None)
         or getattr(error, "expected", None)
         or getattr(error, "allowed", None)
         or ()
     )
-    advice = getattr(error, "advice", None)
+    advice = error.write if lowered else None
     if forms:
         # a spelling of the language is quoted; a phrase that says what may
         # stand there, `a name`, is written as it reads
@@ -404,20 +464,23 @@ def _syntax_refusal(error, text, origin):
     else:
         # the lowering refuses in its own sentence, which quotes what it read
         # (`syntax.lower._refusal`)
-        why = error.message if isinstance(error, ConstructionError) else str(error)
+        why = error.message if lowered else str(error)
     marked = "" if line is None else marked_line(text, line, column)
-    parts = SyntaxParts(why=why, what=marked, write=advice or "")
+    parts = SyntaxParts(why=why, what=marked)
     refusal = ConstructionError(
-        "\n".join(part for part in parts if part),
+        "\n".join(part for part in (why, marked) if part),
         file=origin,
         line=line,
         column=column,
+        end_line=None if line is None else end_line,
+        end_column=None if line is None else end_column,
         # a refusal of the lowering keeps the rule it names, `syntax` or
         # `marginal-role-retired`; a refusal of the parser is under `syntax`
-        rule=error.rule if isinstance(error, ConstructionError) else "syntax",
+        rule=error.rule if lowered else "syntax",
+        write=advice or None,
     )
-    # the three parts the message is written from, which the catalogue of the
-    # rules (`refusal_catalogue.py`) shows each under its own heading
+    # the explanation and the marked line, which the catalogue of the rules
+    # (`refusal_catalogue.py`) shows each under its own heading
     refusal.parts = parts
     return refusal
 
@@ -462,7 +525,7 @@ def source_spans(text, origin):
     editor marks one place for the spans and for the elaboration."""
     try:
         return parse_with_spans(text, filename=origin).spans
-    except (LarkError, ValueError) as error:
+    except (LarkError, ConstructionError) as error:
         refusal = _syntax_refusal(error, text, origin)
         clear_frames(error.__traceback__)
     raise refusal from None
@@ -481,34 +544,43 @@ class Binding(NamedTuple):
     failed: dict
 
 
-def bind_stage(stage, record):
+def bind_stage(stage, record, *, on_refusal=None):
     """The `Binding` of `stage` from the three sources of `record`, the
     `calibration`, `methods` and `settings` of a record `load_stage` or
-    `load_recipe` returns, each a mapping or the path of a YAML file. Each
-    source is applied as `elaborate_stage` applies it, in that order, by the
-    inner form of its verb: a calibration or a settings source that is a path
-    or a non-empty mapping, and a methods source from which `load_methods`
-    reads at least one entry; an empty source is skipped. A verb that refuses
+    `load_recipe` returns, a calibration or a settings source a mapping or
+    the path of a YAML file and a methods source the additions it holds,
+    which `methodize` reads into the stage.
+    Each source is applied as `elaborate_stage` applies it, in that order,
+    by the inner form of its verb: a calibration or a settings source that
+    is a path or a non-empty mapping, and a methods source that names at
+    least one addition; an empty source is skipped. A verb that refuses
     its source leaves the stage as the verbs before it made it, and its
     sentence stands in `failed` under the verb's name; the next verb is still
-    applied, so settings after a failed methodize are refused as the verb
-    refuses settings without methods. The inner forms bind a version of
+    applied, so settings after a failed methodize are bound against the
+    methods bound before it. The inner forms bind a version of
     the stage's own, holding its records, so that the stage given is left as
     it was; that version is copied once, at the end, where a verb bound, and
     otherwise the answer holds the stage given. A source given as a path is
-    read as its verb reads it."""
-    # the block paths of a methods mapping are read beside the methods file
-    # the record's provenance names (decision SC-16)
-    folder = methods_folder(record.get("provenance") or {})
+    read as its verb reads it. Where `on_refusal` is supplied, it receives
+    the exception and the verb's name, and its answer is kept in `failed`
+    in place of the sentence. This lets an interface keep the rule and
+    source locations of a refusal without applying the binding twice."""
     verbs = (
         ("calibrate", "calibration", lambda source: bool(source), calibrated_version),
         (
             "methodize",
             "methods",
-            lambda source: bool(load_methods(source)["methods"]),
-            lambda version, source: methodized_version(version, source, base=folder),
+            supplies_addition,
+            lambda version, source: methodized_version(version, source),
         ),
-        ("configure", "settings", lambda source: bool(source), configured_version),
+        (
+            "configure",
+            "settings",
+            lambda source: bool(source),
+            lambda version, source: configured_version(
+                version, source, files=settings_files(record)
+            ),
+        ),
     )
     version, bound, skipped, failed = replace_stage(stage), [], [], {}
     for verb, kind, supplied, inner_form in verbs:
@@ -519,7 +591,7 @@ def bind_stage(stage, record):
                 continue
             version = inner_form(version, source)
         except (ValueError, LookupError, TypeError) as refusal:
-            failed[verb] = str(refusal)
+            failed[verb] = str(refusal) if on_refusal is None else on_refusal(refusal, verb)
             continue
         bound.append(verb)
     return Binding(stage=copy_native(version) if bound else stage,

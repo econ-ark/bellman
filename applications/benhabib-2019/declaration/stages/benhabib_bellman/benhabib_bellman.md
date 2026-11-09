@@ -41,12 +41,15 @@ described in `economics.md`. A walkthrough of this stage is still to be written.
   because the source stage carries them. No line of this stage uses them;
   the bequest stage `declaration/stages/bequest/bequest.bl`, in the terminal period, does.
 - The policy block states the maximization, as the source's argmax line
-  does. The method block of `declaration/methods/benhabib_bellman_egm.bl`,
-  which the methods file binds with `!egm`, writes the endogenous-grid form
-  of the portfolio corpus: the inverse Euler line, the endogenous grid
-  `m[>] = c[>] + (a - wage_fn[tau]) / R_vec[r_type]`, and `c = c[>]`; the
-  two coincide where the Euler equation characterizes the optimum.
+  does. The methods file beside this file,
+  `declaration/stages/benhabib_bellman/methods.bl`, is an addition to it,
+  read with it: its block `policy` types the policy builder with `!egm`, the
+  grid of savings `!Cartesian(a=(a_min, a_max, n_a))` and the legacy's
+  handler, and writes the endogenous-grid form of the portfolio corpus, the
+  inverse Euler line, the endogenous grid
+  `m[>] = c[>] + (a - wage_fn[tau]) / R_vec[r_type]`, and `c = c[>]`, which
+  stand in place of the maximization at the operative level while the
+  declared level keeps it; the two coincide where the Euler equation
+  characterizes the optimum.
 - The derivative of the decision value in wealth, `D_{m}V = c^(-σ)`, is
-  stated by the marginal block of
-  `declaration/methods/marginals_benhabib_bellman.bl`, which the methods
-  file binds with `!marginals`.
+  stated by the line the methods file appends to the block `cntn_to_dcsn`.

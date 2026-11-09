@@ -1,0 +1,41 @@
+@methods: cons
+# The methods of the consumption stage at the occurrences of the two recipes,
+# spec.cons-port.yml and spec.port-cons.yml, whose settings file
+# settings/cons_wide.yml values multi-exponential grids: the endogenous grid
+# method on the policy builder, realized by the function egm of
+# code/cons_port_tool.py on the savings grid, with its three lines, the inverse
+# Euler equation, the endogenous grid of resources and the identification of
+# the policy; the envelope line of the decision value; and one linear
+# representation of that value and of its stated derivative on the grid of
+# resources. The marginal utility and its inverse are defined in closed form,
+# so that nothing is differentiated. The three lines of the policy block stand
+# in place of the maximization at the operative level, and stage.declared keeps
+# the maximization. Each grid is its own typing entry at its place, the word
+# !expmult its spacing; methods.reference.bl writes the same methods on evenly
+# spaced grids. The block policy restates the signature of the stage's policy
+# builder with the classifiers of its two coordinates.
+
+𝑑𝑢(c : ℝ₊₊) := c^(-ρ)
+𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/ρ)
+
+n_a : ℕ              :: ["number of points of the savings grid"]
+a_min : Xa           :: ["lower bound of the savings grid"]
+a_max : Xa           :: ["upper bound of the savings grid"]
+n_m : ℕ              :: ["number of points of the grid of resources"]
+m_min : Xm           :: ["lower bound of the grid of resources"]
+m_max : Xm           :: ["upper bound of the grid of resources"]
+
+[id=policy, method : !egm,
+    (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn
+    | handler : "cons-port:egm"
+    | grid : !Cartesian(a=(a_min, a_max, n_a, !expmult))] {
+    c[>] <= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>]) ⟂ a >= 0      :: [id=InvEuler]
+    m[>] = a + c[>]                          :: [id=grid]
+    c = c[>]                                 :: [id=identification]
+}
+
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(m=(m_min, m_max, n_m, !expmult))] {
+    D_{m}V = 𝑑𝑢(c)                           :: [id=envelope]
+}

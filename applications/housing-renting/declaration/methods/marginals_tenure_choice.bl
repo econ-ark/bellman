@@ -1,9 +1,0 @@
-@methods: tenure_choice
-# The derivative of the value of the tenure choice in assets, stated as the
-# marginal block of the decision value builder (AMD-MB-001 §4.3): the
-# derivative of the branch value the choice d selects, the renter's carrying
-# the derivative of the liquidation in assets.
-
-[id=dcsn_marginal, (V_o[>], V_r[>], d) : !cntn -> (V) : !dcsn] {
-    D_{a_d}V = (D_{a_o}V_o[>], (1 + r - 𝑑𝑇(a_d))*D_{w_r}V_r[>])[d]  :: [id=choice_marginal, "the derivative with respect to the assets a_d held on arrival, on the branch chosen; the owner's value already carries the derivative of the owner's budget"]
-}

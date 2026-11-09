@@ -45,6 +45,7 @@ import pytest
 from conftest import (
     CORPUS,
     CORPUS_CALIBRATIONS,
+    CONS_METHODS,
     DURABLES,
     ROOT,
     SA_SAVINGS_CALIBRATIONS,
@@ -74,7 +75,7 @@ LESSON = "topics/kernels"
 # the law of motion and the aggregation of the backward decision builder
 COMPOSED = (
     ("policy", "InvEuler:Aggregation"),
-    ("policy", "endoggrid:Aggregation"),
+    ("policy", "grid:Aggregation"),
     ("bwd", "Pullback"),
     ("bwd", "Aggregation"),
 )
@@ -84,7 +85,6 @@ COMPOSED = (
 CHANGED_GRIDS = {
     "n_m": 60, "m_min": 0.05, "m_max": 8.0,
     "n_a": 300, "a_min": 1.0e-6, "a_max": 50.0,
-    "grid_spacing": "expmult",
 }
 # what a record walked by `held_by` holds without being opened
 LEAVES = (str, bytes, bool, int, float, complex, type(None), numpy.ndarray,
@@ -164,7 +164,7 @@ def held_by(record, stops=(), into_functions=True):
                               types.BuiltinFunctionType))]
         elif isinstance(getattr(held, "py_func", None), types.FunctionType):
             stack.append(held.py_func)
-        elif type(held).__module__.startswith("bellman"):
+        elif isinstance(held, types.SimpleNamespace) or type(held).__module__.startswith("bellman"):
             stack += list(getattr(held, "__dict__", {}).values())
             stack += [getattr(held, name) for name in getattr(type(held), "__slots__", ())
                       if hasattr(held, name)]
@@ -211,11 +211,11 @@ def run_in_a_new_process(code, *arguments, path=()):
     return done.stdout
 
 
-def test_item_1_numba_compiles_each_kernel_the_tool_composes_in_one_call(cons_calibrated):
+def test_item_1_numba_compiles_each_kernel_the_tool_composes_in_one_call(cons_methodized):
     compiled = {}
     for builder, key in COMPOSED:
-        kernel = operation(cons_calibrated, builder, key).kernel()
-        function = numba.njit(operation(cons_calibrated, builder, key).compile_kernel())
+        kernel = operation(cons_methodized, builder, key).kernel()
+        function = numba.njit(operation(cons_methodized, builder, key).compile_kernel())
         count = len(inspect.signature(function.py_func).parameters) - len(kernel.parameters)
         # one call of numba.njit, with no function the kernel calls compiled
         # beforehand; the compiled function evaluates on numbers and on
@@ -228,14 +228,14 @@ def test_item_1_numba_compiles_each_kernel_the_tool_composes_in_one_call(cons_ca
             numpy.broadcast_to(numbers, numpy.shape(on_arrays)))
         compiled[key] = function
     assert compiled["Pullback"](3.0, 1.0) == 2.0
-    assert tuple(compiled["Aggregation"](2.0, 3.0, 1.0, 6.0)) == (1.8, 1.0)
+    assert compiled["Aggregation"](2.0, 3.0, 1.0, 6.0) == 1.8
 
 
 def test_item_2_the_source_is_the_text_and_the_text_does_not_change(
-        cons, elaborate_text, text_of):
-    first = copy_native(cons).calibrate(CORPUS_CALIBRATIONS["cons"])
-    again = elaborate_text(text_of("cons"), CORPUS["cons"]).calibrate(CORPUS_CALIBRATIONS["cons"])
-    other = copy_native(cons).calibrate(SECOND_CALIBRATIONS["cons"])
+        cons_methods_only, elaborate_text, text_of):
+    first = copy_native(cons_methods_only).calibrate(CORPUS_CALIBRATIONS["cons"])
+    again = elaborate_text(text_of("cons"), CORPUS["cons"]).methodize(CONS_METHODS).calibrate(CORPUS_CALIBRATIONS["cons"])
+    other = copy_native(cons_methods_only).calibrate(SECOND_CALIBRATIONS["cons"])
     for direction in ("bwd", "fwd"):
         compiled = compiled_operations(getattr(first.builder, direction))
         assert compiled, direction
@@ -247,16 +247,16 @@ def test_item_2_the_source_is_the_text_and_the_text_does_not_change(
                 assert held.encode("utf-8") == text.encode("utf-8"), key
     # the four kernels the cons-port tool composes are among them
     assert {key for key, _, _ in compiled_operations(first.builder.bwd)} >= {
-        "policy.InvEuler:Aggregation", "policy.endoggrid:Aggregation",
+        "policy.InvEuler:Aggregation", "policy.grid:Aggregation",
         "cntn_to_dcsn:Pullback", "cntn_to_dcsn:Aggregation"}
 
 
 def test_item_3_cloudpickle_saves_a_kernel_and_pickle_loads_its_text_in_a_new_process(
-        cons_calibrated, tmp_path, monkeypatch):
+        cons_methodized, tmp_path, monkeypatch):
     expected, pickled = {}, {}
     for index, (builder, key) in enumerate(COMPOSED):
-        kernel = operation(cons_calibrated, builder, key).kernel()
-        function = operation(cons_calibrated, builder, key).compile_kernel()
+        kernel = operation(cons_methodized, builder, key).kernel()
+        function = operation(cons_methodized, builder, key).compile_kernel()
         count = len(inspect.signature(function).parameters) - len(kernel.parameters)
         values = [2.0] * count + list(kernel.parameter_values)
         # cloudpickle saves and loads the function made in memory
@@ -285,25 +285,36 @@ def test_item_3_cloudpickle_saves_a_kernel_and_pickle_loads_its_text_in_a_new_pr
     assert json.loads(written) == expected
 
 
-def test_item_4_a_new_calibration_reaches_the_function_compiled_once(cons, cons_calibrated):
-    at_two = copy_native(cons).calibrate({"ρ": 2.0})
+def test_item_4_a_new_calibration_reaches_the_function_compiled_once(cons_methods_only, cons_methodized):
+    at_two = copy_native(cons_methods_only).calibrate({"ρ": 2.0})
     for builder, key in COMPOSED:
-        six = operation(cons_calibrated, builder, key).kernel()
+        six = operation(cons_methodized, builder, key).kernel()
         two = operation(at_two, builder, key).kernel()
         assert two.python == six.python, key
         assert two.parameters == six.parameters, key
         assert two.parameter_values == tuple(2.0 for _ in two.parameters), key
-    aggregator_six = operation(cons_calibrated, "bwd", "Aggregation").kernel()
+    aggregator_six = operation(cons_methodized, "bwd", "Aggregation").kernel()
     aggregator_two = operation(at_two, "bwd", "Aggregation").kernel()
     assert aggregator_six.parameter_values == (6.0,)
     assert aggregator_two.parameter_values == (2.0,)
-    compiled = numba.njit(operation(cons_calibrated, "bwd", "Aggregation").compile_kernel())
+    compiled = numba.njit(operation(cons_methodized, "bwd", "Aggregation").compile_kernel())
     # at V≻ = 2, m_d = 3 and c = 0.5: u(0.5) + 2 = 0.5^(−5)/(−5) + 2 and
     # du(0.5) = 0.5^(−6) at ρ = 6; 0.5^(−1)/(−1) + 2 and 0.5^(−2) at ρ = 2
     six_values = compiled(2.0, 3.0, 0.5, *aggregator_six.parameter_values)
     two_values = compiled(2.0, 3.0, 0.5, *aggregator_two.parameter_values)
-    assert tuple(six_values) == pytest.approx((-4.4, 64.0))
-    assert tuple(two_values) == pytest.approx((0.0, 4.0))
+    assert six_values == pytest.approx(-4.4)
+    assert two_values == pytest.approx(0.0)
+    derivative_six = next(piece.function for piece in cons_methodized.dcsn.builder.bwd.kernels().pieces
+                          if piece.kind == "Derivative")
+    derivative_two = next(piece.function for piece in at_two.dcsn.builder.bwd.kernels().pieces
+                          if piece.kind == "Derivative")
+    marginal = numba.njit(derivative_six)
+    assert marginal(2.0, 3.0, 0.5, 6.0) == 64.0
+    assert marginal(2.0, 3.0, 0.5, 2.0) == derivative_two(2.0, 3.0, 0.5, 2.0) == 4.0
+    assert len(marginal.signatures) == 1
+    numpy.testing.assert_array_equal(
+        marginal(numpy.full(3, 2.0), numpy.full(3, 3.0), numpy.full(3, 0.5), 6.0),
+        numpy.full(3, 64.0))
     own = operation(at_two, "bwd", "Aggregation").compile_kernel()
     assert as_floats(two_values) == as_floats(
         own(2.0, 3.0, 0.5, *aggregator_two.parameter_values))
@@ -327,13 +338,14 @@ def step_as_before(stage, tool, continuation):
     def apply(key, *arguments):
         function, values = bound[key]
         return function(*arguments, *values)
-    chosen = apply("InvEuler:Aggregation", continuation.dV(savings), savings)
-    at = apply("endoggrid:Aggregation", chosen, savings)
+    chosen = apply("InvEuler:Aggregation", continuation(savings), savings, continuation.dV(savings))
+    at = apply("grid:Aggregation", chosen, savings)
     order = numpy.argsort(at)
     c = numpy.clip(numpy.interp(resources, at[order], chosen[order]), 1e-10, resources - 1e-10)
     a = numpy.clip(apply("Pullback", resources, c), savings[0], savings[-1])
     continued = continuation(a)
-    value, marginal = apply("Aggregation", continued, resources, c)
+    value = apply("Aggregation", continued, resources, c)
+    marginal = c ** (-stage.par["ρ"].value)
     return {"grid": resources, "values": numpy.where(c > 0, value, tool.LOW + continued),
             "dvalues": numpy.where(c > 0, marginal, tool.HIGH), "c": c, "a": a}
 
@@ -378,8 +390,8 @@ print(json.dumps(answers))
 
 
 def test_item_5_egm_builds_the_tools_operator_from_two_records_free_of_the_stage(
-        cons, tmp_path, monkeypatch):
-    version = copy_native(cons).calibrate(CORPUS_CALIBRATIONS["cons"])
+        cons_methods_only, tmp_path, monkeypatch):
+    version = copy_native(cons_methods_only).calibrate(CORPUS_CALIBRATIONS["cons"])
     stops = stage_objects(version)
     records = {"policy": version.dcsn.builder.policy.kernels(),
                "bwd": version.dcsn.builder.bwd.kernels()}
@@ -433,7 +445,7 @@ def test_item_5_egm_builds_the_tools_operator_from_two_records_free_of_the_stage
         raise AssertionError(f"the constructed operator read the stage's attribute {name!r}")
     # the calibration and the grids of the fixed reference, then a changed
     # calibration and changed grid settings
-    methods = str(APPLICATION / "declaration/methods/cons.yml")
+    methods = str(APPLICATION / "declaration/stages/cons/methods.bl")
     reference = (str(APPLICATION / "declaration/calibration/portfolio.yml"),
                  str(APPLICATION / "declaration/settings/cons.yml"))
     # the methods file binds the block file beside it,
@@ -476,7 +488,7 @@ def test_item_5_egm_builds_the_tools_operator_from_two_records_free_of_the_stage
 # identification and the evaluation (cons), a joint solve's residual system
 # (adjuster_cons), a choice (cons_argmax) and an expectation (sa_savings)
 WITHOUT = {
-    "cons": ("cons_choice:Pullback", "Evaluation"),
+    "cons": ("identification:Pullback", "Evaluation"),
     "adjuster_cons": ("choice:Aggregation", "Evaluation"),
     "cons_argmax": ("optimality:Argmax",),
     "sa_savings": ("objective:Expectation:1",),
@@ -484,9 +496,9 @@ WITHOUT = {
 
 
 def test_item_6_a_row_without_a_function_refuses_and_stands_as_its_relation(
-        cons_calibrated, adjuster_cons, cons_argmax, sa_savings, elaborate_text, text_of):
+        cons_methodized, adjuster_cons, cons_argmax, sa_savings, elaborate_text, text_of):
     versions = {
-        "cons": cons_calibrated,
+        "cons": cons_methodized,
         "adjuster_cons": copy_native(adjuster_cons).calibrate(
             str(DURABLES / "calibration/durables.yml")
         ),
@@ -501,8 +513,8 @@ def test_item_6_a_row_without_a_function_refuses_and_stands_as_its_relation(
     # in the record of a builder, a row with no explicit function stands as
     # its printed relation and holds no function; every other row holds the
     # function its kernel compiles to
-    for name, builder in (("cons", cons_calibrated.builder.policy),
-                          ("cons", cons_calibrated.dcsn.builder.bwd),
+    for name, builder in (("cons", cons_methodized.builder.policy),
+                          ("cons", cons_methodized.dcsn.builder.bwd),
                           ("adjuster_cons", versions["adjuster_cons"].builder.policy)):
         record = builder.kernels()
         stops = stage_objects(builder.version)
@@ -516,18 +528,22 @@ def test_item_6_a_row_without_a_function_refuses_and_stands_as_its_relation(
                 assert refused.rule == "kernel-target", (name, str(key))
                 relation = str(piece.kernel())
                 assert relation in texts or relation in str(record), (name, str(key), relation)
-        assert sorted(functions_of(record, stops)) == sorted(compiled), name
+        derivatives = {piece.function.__name__ for piece in record.pieces
+                       if piece.kind == "Derivative" and piece.function is not None}
+        assert sorted(set(functions_of(record, stops)) - derivatives) == sorted(compiled), name
     # the inverse Euler row compiles its explicit side,
     # 𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻) = 𝑑𝑉≻^(−1/ρ), with the clause ⟂ a >= 0 on its line and
     # without it
     clause = " ⟂ a >= 0"
-    assert text_of("cons").count(clause) == 1
-    without_clause = elaborate_text(text_of("cons").replace(clause, ""), CORPUS["cons"])
+    addition = CONS_METHODS.read_text()
+    assert addition.count(clause) == 1
+    without_clause = elaborate_text(text_of("cons"), CORPUS["cons"]).methodize(
+        {"text": addition.replace(clause, ""), "origin": str(CONS_METHODS)})
     marginal, saving = numpy.array([2.0, 0.25, 0.8]), numpy.array([0.5, 1.0, 4.0])
-    for version in (cons_calibrated, without_clause.calibrate(CORPUS_CALIBRATIONS["cons"])):
+    for version in (cons_methodized, without_clause.calibrate(CORPUS_CALIBRATIONS["cons"])):
         row = version.builder.policy["InvEuler:Aggregation"]
         values = row.kernel().parameter_values
-        numpy.testing.assert_allclose(row.compile_kernel()(marginal, saving, *values),
+        numpy.testing.assert_allclose(row.compile_kernel()(numpy.zeros_like(saving), saving, marginal, *values),
                                       marginal ** (-1 / 6.0))
     # the lesson executes and is recorded
     record = json.loads((ROOT / "tutorials/lessons.json").read_text(encoding="utf-8"))

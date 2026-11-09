@@ -32,12 +32,13 @@ from bellman.fold.stage_names import StageNames
 from bellman.fold.wire_terms import term_nodes
 from bellman.native.identity import Identity
 from bellman.native.labels import italic, wire_spelling
-from bellman.native.records import DEFINITION_KINDS_TABLE
+from bellman.native.records import DEFINITION_KINDS_TABLE, method_lines, typing_text
 from bellman.native.versions import kept_answer, stored
 from bellman.stage.boxes import builder_rows_of
 from bellman.stage.builder_pairs import DIRECTION_WORDS
 from bellman.stage.grains import DIRECTIONS, graph_of, graph_refusal, stored_graph_name
-from bellman.stage.stage_answers import fields
+from bellman.stage.places import components_by_place, is_methodized
+from bellman.stage.stage_answers import fields, settings_readers
 from bellman.syntax import terms as T
 from bellman.syntax.source import comprehension_text, set_text, to_source
 from bellman.syntax.vocabulary import (
@@ -52,12 +53,25 @@ from bellman.typing.typed_expressions import UNDECLARED_SET_TEXT, clauses
 
 
 # the bindings in the order a stage is bound, calibrate then methodize then
-# configure, with the stopping-point word each initial segment reaches
+# configure, each with the test of its presence and the stopping-point word
+# each initial segment reaches; a stage is methodized when an operator's
+# signature carries a method component, a handler alone leaving it symbolic
+# (`places.is_methodized`; specification 0.7, decision S7-W7)
 _BINDING_ORDER = (
-    ("calibration", "calibration", "calibrated"),
-    ("methods", "methods", "methodized"),
-    ("settings", "settings", "specified"),
+    ("calibration", lambda stage: stage.bindings.calibration is not None, "calibrated"),
+    ("methods", is_methodized, "methodized"),
+    ("settings", lambda stage: stage.bindings.settings is not None, "specified"),
 )
+
+
+def binding_entries(stage, at=None):
+    """The (label, content) entries of the stage sheet's bindings section:
+    the calibration, the components by place and the settings, each absent
+    one naming the verb that supplies it (`records.Bindings.entries`,
+    `records.method_lines`). `at` is the column the content begins at, which
+    breaks a wide settings entry under its third column."""
+    calibration, settings = stage.bindings.entries(settings_readers(stage), at)
+    return [calibration, ("methods", method_lines(components_by_place(stage))), settings]
 
 
 def stage_sheet(stage) -> str:
@@ -72,9 +86,7 @@ def stage_sheet(stage) -> str:
     answer."""
     source = stage.provenance.get("path") or stage.provenance.get("origin")
     table = fields(stage)
-    bound = all(
-        getattr(stage.bindings, attribute) is not None for attribute, _, _ in _BINDING_ORDER
-    )
+    bound = all(present(stage) for _, present, _ in _BINDING_ORDER)
     # the entries of the perches, the fields, the blocks and the graphs are
     # written once: the column the five upper sections share is read from
     # them, and the sections are set from them; the bindings are written whole
@@ -83,7 +95,7 @@ def stage_sheet(stage) -> str:
     by_role = _field_entries(stage, table)
     blocks = _block_lines(stage)
     graphs = _graph_entries(stage)
-    bindings = stage.bindings.entries()
+    bindings = binding_entries(stage)
     upper = sheets.label_column_width(perches + by_role + blocks + graphs + bindings, separation=1)
     # the column the bindings section's content begins at, so that a settings
     # entry breaks under its own third column and not into the second
@@ -101,7 +113,7 @@ def stage_sheet(stage) -> str:
             ("GRAPHS", sheets.label_columns(graphs, upper, separation=2)),
             (
                 "BINDINGS",
-                sheets.label_columns(stage.bindings.entries(at), upper, separation=2),
+                sheets.label_columns(binding_entries(stage, at), upper, separation=2),
                 bound,
             ),
             ("DIRECTIONS", sheets.label_columns(_direction_entries(stage))),
@@ -302,6 +314,7 @@ _RECORD_WORDS = {
     "set": "sets",
     "distribution": "distributions",
     "parameter": "parameters",
+    "setting": "settings",
     "function": "functions",
     "function_alias": "function aliases",
     "correspondence": "correspondences",
@@ -309,6 +322,7 @@ _RECORD_WORDS = {
     "G": "value aggregators",
     "line": "block lines",
     "multiplier": "multipliers",
+    "typing": "typing entries",
 }
 
 
@@ -337,7 +351,7 @@ def _definition_table(stage):
 def _records_of_kind(stage, kind, items):
     """The records of one kind in file order, as the definitions table of the
     stage sheet prints them (AMD-SG-015 §3), and the separator between two of
-    them: the sets and the parameters as declared, the plain functions grouped
+    them: the sets, the parameters and the settings as declared, the plain functions grouped
     by the set they are defined on, the correspondences as maps between sets,
     the laws of motion and the value aggregators by their rules so that the
     table says what the model is, and the block lines by their addresses.
@@ -349,7 +363,7 @@ def _records_of_kind(stage, kind, items):
     (AMD-SG-019 §5a item 5)."""
     if kind == "set":
         return [f"{d.identity.field} := {to_source(d.equations[0])}" for d in items], ", "
-    if kind == "parameter":
+    if kind in ("parameter", "setting"):
         return [
             f"{d.identity.field} : "
             + (
@@ -369,6 +383,8 @@ def _records_of_kind(stage, kind, items):
         return [_law_rule(stage, d) for d in items], "; "
     if kind == "G":
         return [_aggregator_rules(stage, d) for d in items], "; "
+    if kind == "typing":
+        return [typing_text(d) for d in items], "; "
     return [d.address for d in items], ", "
 
 
@@ -579,15 +595,11 @@ def version_word(stage) -> str:
     """The version of a stage occurrence in one word or a list: symbolic,
     calibrated, methodized, specified, or the bindings present in the order
     calibrate, methodize, configure where they are no initial segment of it."""
-    present = [
-        (name, word)
-        for attribute, name, word in _BINDING_ORDER
-        if getattr(stage.bindings, attribute) is not None
-    ]
+    present = [(name, word) for name, held, word in _BINDING_ORDER if held(stage)]
     if not present:
         return "symbolic"
     names = [name for name, _ in present]
-    if names == [name for _, name, _ in _BINDING_ORDER[: len(names)]]:
+    if names == [name for name, _, _ in _BINDING_ORDER[: len(names)]]:
         return present[-1][1]
     return ", ".join(names)
 

@@ -1,0 +1,33 @@
+@methods: retiree_saving
+# The methods of the retiree's saving stage, an addition to retiree_saving.bl:
+# time iteration on the policy builder, written by the relative subject
+# method, with the Euler equation of consumption and its complementarity
+# clause as its line; the envelope line of the decision value; and the two
+# derivative lines of the arrival value, which keep the factors 1 + r_f and
+# 1 + r_p of the law of m_r. The Euler relation stands in place of the
+# maximization at the operative level, and stage.declared keeps the
+# maximization. No representation is bound.
+#
+# The policy builder's grid is its own typing entry, written by the relative
+# subject grid: the decision grid on which the Euler relation is solved, one
+# factor for the one state coordinate m_r of the decision perch. Its three
+# settings are declared below with their sets and valued in
+# settings/retiree_saving.yml.
+
+n_m_r : ℕ            :: ["number of points of the grid of resources"]
+m_r_min : ℝ₊₊        :: ["lower bound of the grid of resources"]
+m_r_max : ℝ₊₊        :: ["upper bound of the grid of resources"]
+
+[id=policy, method : !time_iteration
+    | grid : !Cartesian(m_r=(m_r_min, m_r_max, n_m_r))] {
+    𝑑𝑢(c) = β*D_{y_f_ret}V[>] ⟂ m_r - c >= 0           :: [id=euler_financial]
+}
+
+[id=cntn_to_dcsn] {
+    D_{m_r}V = 𝑑𝑢(c)                                  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl] {
+    D_{y_f_r}V[<] = (1 + r_f)*D_{m_r}V                :: [id=marginal_financial]
+    D_{y_p_r}V[<] = (1 + r_p)*D_{m_r}V                :: [id=marginal_pension]
+}

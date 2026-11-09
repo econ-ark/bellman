@@ -1,0 +1,12 @@
+@methods: bequest_pa
+# The bequest's value and its marginal value read by linear interpolation in
+# the bequest base, on the grid the grid entry names; forward, the base is
+# formed deterministically.
+
+n_B : ℕ              :: ["number of points of the grid of the bequest base"]
+B_min : ℝ₊           :: ["lower bound of the grid of the bequest base"]
+B_max : ℝ₊           :: ["upper bound of the grid of the bequest base"]
+
+cntn_to_dcsn.evaluate.method : !Linear
+cntn_to_dcsn.evaluate.grid : !Cartesian(B=(B_min, B_max, n_B))
+arvl_to_dcsn.method : !deterministic

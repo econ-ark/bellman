@@ -41,6 +41,7 @@ struct Desktop {
     settings: Mutex<Settings>,
     settings_path: PathBuf,
     recent: Mutex<RecentProjects>,
+    welcome_folders: Mutex<Vec<PathBuf>>,
     recent_path: PathBuf,
     logs: PathBuf,
     next: AtomicU64,
@@ -65,8 +66,14 @@ fn welcome_status(app: &AppHandle, message: &str, busy: bool) {
     if let Some(window) = app.get_webview_window("welcome") {
         let message = serde_json::to_string(message).expect("serializable status");
         let _ = window.eval(format!(
-            "(()=>{{const status=document.getElementById('open-status');if(status){{status.textContent={message};}}document.querySelectorAll('[data-open-action]').forEach(button=>{{button.disabled={busy};}});}})()"
+            "window.bellmanWelcome?.setOpenStatus({message}, {busy});"
         ));
+    }
+}
+
+fn finish_opening(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("welcome") {
+        let _ = window.destroy();
     }
 }
 
@@ -214,9 +221,10 @@ fn refresh_window_folders(app: &AppHandle) -> Result<(), String> {
             .lock()
             .unwrap()
             .get_mut(&label)
-            .is_some_and(|entry| record_folder(entry, folder));
+            .is_some_and(|entry| record_folder(entry, folder.clone()));
         if changed {
             let _ = window.set_title(&title);
+            record_recent(app, &folder);
         }
     }
     Ok(())
@@ -258,7 +266,10 @@ fn route_request(app: &AppHandle, request: OpenRequest) {
                 Ok(())
             };
             match delivered {
-                Ok(()) => record_recent(app, &existing.folder),
+                Ok(()) => {
+                    record_recent(app, &existing.folder);
+                    finish_opening(app);
+                }
                 Err(error) => show_error(app, error.to_string()),
             }
             let _ = window.unminimize();
@@ -340,7 +351,7 @@ fn route_request(app: &AppHandle, request: OpenRequest) {
                     location.file_name().unwrap_or_default().to_string_lossy()
                 ))
                 .inner_size(1440.0, 940.0)
-                .min_inner_size(900.0, 600.0)
+                .min_inner_size(720.0, 560.0)
                 .initialization_script(format!(
                     "window.__bellmanFolder = {};",
                     serde_json::to_string(&location).unwrap()
@@ -382,9 +393,7 @@ fn route_request(app: &AppHandle, request: OpenRequest) {
                         }
                         _ => {}
                     });
-                    if let Some(welcome) = app.get_webview_window("welcome") {
-                        let _ = welcome.destroy();
-                    }
+                    finish_opening(&app);
                 }
                 Err(error) => {
                     state.windows.lock().unwrap().remove(&label);
@@ -493,7 +502,7 @@ fn choose_path(app: &AppHandle, folder: bool) {
     let app = app.clone();
     let callback = move |file: Option<tauri_plugin_dialog::FilePath>| {
         let Some(file) = file else {
-            welcome_status(&app, "", false);
+            welcome_status(&app, "Opening cancelled.", false);
             return;
         };
         let path = match file.into_path() {
@@ -548,11 +557,107 @@ fn choose_command(app: &AppHandle, editor: bool) {
     });
 }
 
+fn render_welcome(window: &WebviewWindow) -> tauri::Result<()> {
+    let state = window.state::<Desktop>();
+    let folders = state.recent.lock().unwrap().folders().to_vec();
+    let data = serde_json::json!({
+        "recentProjects": folders.iter().map(|folder| serde_json::json!({
+            "name": folder.file_name().unwrap_or(folder.as_os_str()).to_string_lossy(),
+            "path": folder.to_string_lossy(),
+        })).collect::<Vec<_>>(),
+        "shortcutModifier": if cfg!(target_os = "macos") { "⌘" } else { "Ctrl" },
+    });
+    window.eval(format!("window.bellmanWelcome?.setNativeState({data});"))?;
+    *state.welcome_folders.lock().unwrap() = folders;
+    Ok(())
+}
+
+fn show_welcome(app: &AppHandle) -> tauri::Result<()> {
+    if let Some(window) = app.get_webview_window("welcome") {
+        let state = app.state::<Desktop>();
+        let recent = state.recent.lock().unwrap();
+        if recent.folders() != state.welcome_folders.lock().unwrap().as_slice() {
+            window.reload()?;
+        }
+        window.unminimize()?;
+        window.show()?;
+        return window.set_focus();
+    }
+    let welcome_app = app.clone();
+    let welcome = WebviewWindowBuilder::new(app, "welcome", WebviewUrl::App("index.html".into()))
+        .background_color(WINDOW_BACKGROUND)
+        .theme(Some(tauri::Theme::Dark))
+        .title("Bellman Workbench")
+        .inner_size(800.0, 560.0)
+        .min_inner_size(640.0, 480.0)
+        .on_navigation(move |url| match welcome_navigation_path(url) {
+            Some("/open-project") => {
+                choose_path(&welcome_app, true);
+                false
+            }
+            Some("/open-file") => {
+                choose_path(&welcome_app, false);
+                false
+            }
+            Some(path) if recent_index(path).is_some() => {
+                let index = recent_index(path).expect("checked recent index");
+                let state = welcome_app.state::<Desktop>();
+                let request = recent_request(&state.welcome_folders.lock().unwrap(), index);
+                match request {
+                    Ok(request) => {
+                        welcome_status(&welcome_app, "Opening project…", true);
+                        open_request(&welcome_app, request);
+                    }
+                    Err(error) => show_error(&welcome_app, error),
+                }
+                false
+            }
+            Some(_) => true,
+            None => false,
+        })
+        .on_new_window(|_, _| tauri::webview::NewWindowResponse::Deny)
+        .on_page_load(|window, payload| {
+            if matches!(payload.event(), PageLoadEvent::Finished) {
+                if let Err(error) = render_welcome(&window) {
+                    show_error(window.app_handle(), format!("Cannot list recent projects: {error}"));
+                }
+            }
+        });
+    #[cfg(target_os = "macos")]
+    let welcome = welcome.title_bar_style(tauri::TitleBarStyle::Transparent);
+    welcome.build().map(|_| ())
+}
+
+fn request_welcome(app: &AppHandle) {
+    let app = app.clone();
+    std::thread::spawn(move || {
+        if let Err(error) = refresh_window_folders(&app) {
+            eprintln!("Cannot refresh recent projects: {error}");
+        }
+        let welcome_app = app.clone();
+        if let Err(error) = app.run_on_main_thread(move || {
+            if let Err(error) = show_welcome(&welcome_app) {
+                show_error(&welcome_app, format!("Cannot open Welcome: {error}"));
+            }
+        }) {
+            show_error(&app, format!("Cannot open Welcome: {error}"));
+        }
+    });
+}
+
 fn main() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
-            for arg in args.iter().skip(1).filter(|arg| !arg.starts_with('-')) {
-                open_argument(app, arg, Path::new(&cwd));
+            let mut locations = args
+                .iter()
+                .skip(1)
+                .filter(|arg| !arg.starts_with('-'))
+                .peekable();
+            if locations.peek().is_none() {
+                request_welcome(app);
+            }
+            for location in locations {
+                open_argument(app, location, Path::new(&cwd));
             }
         }))
         .plugin(tauri_plugin_deep_link::init())
@@ -562,15 +667,6 @@ fn main() {
             let settings = Settings::load(&settings_path);
             let recent_path = app.path().app_config_dir()?.join("recent-projects.json");
             let recent = RecentProjects::load(&recent_path);
-            let welcome_folders = recent.folders().to_vec();
-            let welcome_data = serde_json::json!({
-                "recentProjects": welcome_folders.iter().map(|folder| serde_json::json!({
-                    "name": folder.file_name().unwrap_or(folder.as_os_str()).to_string_lossy(),
-                    "path": folder.to_string_lossy(),
-                })).collect::<Vec<_>>(),
-                "shortcutModifier": if cfg!(target_os = "macos") { "⌘" } else { "Ctrl" },
-            })
-            .to_string();
             let logs = app.path().app_log_dir()?;
             std::fs::create_dir_all(&logs)?;
             let (requests, received) = mpsc::channel();
@@ -580,6 +676,7 @@ fn main() {
                 settings: Mutex::new(settings.clone().unwrap_or_default()),
                 settings_path,
                 recent: Mutex::new(recent),
+                welcome_folders: Mutex::new(Vec::new()),
                 recent_path,
                 logs,
                 next: AtomicU64::new(1),
@@ -603,6 +700,7 @@ fn main() {
                 .build(app)?;
             let file = SubmenuBuilder::new(app, "File")
                 .items(&[&open_project, &open_file])
+                .text("welcome", "Welcome")
                 .separator()
                 .close_window()
                 .build()?;
@@ -629,48 +727,7 @@ fn main() {
                     .items(&[&application, &file, &edit, &settings_menu])
                     .build()?,
             )?;
-            let welcome_app = app.handle().clone();
-            let welcome =
-                WebviewWindowBuilder::new(app, "welcome", WebviewUrl::App("index.html".into()))
-                    .background_color(WINDOW_BACKGROUND)
-                    .theme(Some(tauri::Theme::Dark))
-                    .title("Bellman Workbench")
-                    .inner_size(800.0, 560.0)
-                    .min_inner_size(640.0, 480.0)
-                    .on_navigation(move |url| match welcome_navigation_path(url) {
-                        Some("/open-project") => {
-                            choose_path(&welcome_app, true);
-                            false
-                        }
-                        Some("/open-file") => {
-                            choose_path(&welcome_app, false);
-                            false
-                        }
-                        Some(path) if recent_index(path).is_some() => {
-                            let index = recent_index(path).expect("checked recent index");
-                            match recent_request(&welcome_folders, index) {
-                                Ok(request) => {
-                                    welcome_status(&welcome_app, "Opening project…", true);
-                                    open_request(&welcome_app, request);
-                                }
-                                Err(error) => show_error(&welcome_app, error),
-                            }
-                            false
-                        }
-                        Some(_) => true,
-                        None => false,
-                    })
-                    .on_new_window(|_, _| tauri::webview::NewWindowResponse::Deny)
-                    .on_page_load(move |window, payload| {
-                        if matches!(payload.event(), PageLoadEvent::Finished) {
-                            let _ = window.eval(format!(
-                                "window.bellmanWelcome?.setNativeState({welcome_data});"
-                            ));
-                        }
-                    });
-            #[cfg(target_os = "macos")]
-            let welcome = welcome.title_bar_style(tauri::TitleBarStyle::Transparent);
-            welcome.build()?;
+            show_welcome(app.handle())?;
             if let Err(error) = settings {
                 show_error(app.handle(), error);
             }
@@ -694,6 +751,7 @@ fn main() {
         .on_menu_event(|app, event| match event.id().as_ref() {
             "open-folder" => choose_path(app, true),
             "open-file" => choose_path(app, false),
+            "welcome" => request_welcome(app),
             "workbench-command" => choose_command(app, false),
             "editor-command" => choose_command(app, true),
             _ => {}

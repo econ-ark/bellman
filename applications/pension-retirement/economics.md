@@ -13,11 +13,12 @@ topic: [applications]
 > consumes, contributes to the pension under an incentive, and chooses whether
 > to work next period; a retiree receives the pension balance as a lump sum
 > and a benefit each period. Three stages: `worker_saving`, `retire_choice`,
-> `retiree_saving`. The policy blocks state the maximizations; the method
-> blocks the methods files bind write the first-order conditions in the
-> spelling of the Kuhn–Tucker condition at the decision perch with the
-> complementary-slackness clause (`docs/Bellman-Sym/10-constraints.md` §3),
-> the paper's equations (16) to (20).
+> `retiree_saving`. The policy blocks state the maximizations; the methods
+> file beside each stage file, `declaration/stages/<stage>/methods.bl`, an
+> addition to it, writes the first-order conditions in the spelling of the
+> Kuhn–Tucker condition at the decision perch with the complementary-slackness
+> clause (`docs/Bellman-Sym/10-constraints.md` §3), the paper's equations (16)
+> to (20).
 
 ## The model, in the paper's equations
 
@@ -36,15 +37,16 @@ and the discount factor is $\beta$.
 
 `worker_saving.bl`'s policy block states the worker's maximization over
 consumption and the contribution. Its first-order conditions, equations (16)
-to (20), are written as the two statements of the method block `foc` of
-`declaration/methods/worker_saving_foc.bl`, which the worker's methods file
-binds on the policy builder with `!time-iteration`: the financial Euler
-equation $u'(c) = \beta\, \partial_{y_f} V^{\succ}$ with the bound
+to (20), are the two lines the worker's methods file,
+`declaration/stages/worker_saving/methods.bl`, adds to the policy builder
+under the method `!time_iteration`, with the decision grid on which they are
+solved: the financial Euler equation
+$u'(c) = \beta\, \partial_{y_f} V^{\succ}$ with the bound
 $y_f \ge 0$ and its multiplier $\mu_f$ (18), and the pension Euler equation
 $u'(c) = \beta\,(1 + \chi'(c_p))\, \partial_{y_p} V^{\succ}$ with the bounds
 $0 \le c_p \le w$ and their multipliers $\mu_p$ (19) and $\mu_{\bar p}$ (20).
-The shadow values (21) and (22) are the derivative lines of the marginal
-blocks of `declaration/methods/marginals_worker_saving.bl`:
+The shadow values (21) and (22) are the derivative lines the same file adds
+to the two value builders:
 $\partial_{m_f} V = u'(c)$ at the decision perch and
 $\partial_{m_p} V = \beta\, \partial_{y_p} V^{\succ}$ for a worker, and
 $(1 + r_p)\, u'(c)$ for a retiree, who consumes the balance. The return
@@ -67,17 +69,19 @@ written again; the fourteen earlier periods repeat `period.yml`. One inter-perio
 period's `worker_saving`, and the retire branch and the retiree's savings
 to next period's `retiree_saving`, so no path leads back to work. The
 model states no terminal value, so the terminal stage writes the boundary
-data alone: its continuation value is zero, and the marginal block of
-`declaration/methods/marginals_terminal.bl` states its two derivatives as
+data alone: its continuation value is zero, and its methods file,
+`declaration/stages/terminal/methods.bl`, states its two derivatives as
 zero. AAS to confirm. The recipe
 `spec.yml` names the slot `$fill` for the calibration of the two
-saving stages, since no calibration file is written (below).
+saving stages, since no calibration file is written (below), and the
+settings files `declaration/settings/<stage>.yml` for their decision grids,
+whose values are placeholders until AAS supplies them.
 
 ## What the stage files do not state
 
 - **The contribution cap** (constraint iv, $c_p \le w$, multiplier
   $\mu_{\bar p}$ of equation 20) is stated by the two-sided clause of
-  `euler_pension`, the second line of the method block `foc`,
+  `euler_pension`, the second line the methods file adds to the policy builder,
   `⟂ 0 <= c_p <= w_d`, which with the feasibility
   correspondence $\Gamma_p(w) = [0, w]$ of the declared maximization
   transcribes equations (17), (19) and (20). The residual of that line is

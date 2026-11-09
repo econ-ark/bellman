@@ -1,6 +1,6 @@
 """The one layout of a model folder, checked on every folder under
-`applications/`, and the trellises the recipes load, compared with the
-trellises they loaded before their files moved into that layout.
+`applications/`, and the trellises the recipes load, compared with digests
+of their answers as they were when this module was last run as a script.
 
 The layout is that of §2 of the project's issue on the layout of the
 application folders, which AAS adopted on 2 October 2026. A folder under
@@ -8,24 +8,24 @@ application folders, which AAS adopted on 2 October 2026. A folder under
 `README.md` and a folder `declaration/`. Under `declaration/` stand the
 recipe, the trellis and period files, the calibration and settings
 files and one folder per stage, `declaration/stages/<key>/`, which holds the
-stage file `<key>.bl`, its methods file `methods.yml` and its note `<key>.md`
-and nothing else; a block file, the `.bl` file a methods entry names under
-`block:`, stands at `declaration/methods/<name>.bl` (decision SD-14 of
-specification 0.6). The top of the folder holds `README.md`, `economics.md`
+stage file `<key>.bl`, its note `<key>.md`, its addition `methods.bl` and a
+replacing selection `methods.<variant>.bl`, and nothing else (decision S7-W2
+of specification 0.7); a `.bl` file stands nowhere else under `declaration/`,
+and the folder `declaration/methods/` of the YAML methods files and the
+block files of specification 0.6 is retired (S7-W6). The top of the folder
+holds `README.md`, `economics.md`
 and the folders `declaration/`, `code/`, `notebooks/`, `paper/`,
 `reference/`, `results/` and `tests/`; the contents of the last six are not
 examined here. No path has a component `derived` or `__pycache__`.
 
 The recipes of `RECIPES` are compared with the fixture
 `tests/fixtures/layout_base_trellises.json`, which holds digests of their
-answers and not the answers themselves. It was written before the files
-moved, from the answers of the recipes at their earlier paths, each path
-mapped to the place the file moved to. Running this module as a script, from
-`packages/bellman`,
+answers, and not the answers themselves, as they were when this module was
+last run as a script. Running it as a script, from `packages/bellman`,
 
     PYTHONPATH=. python tests/test_layout.py
 
-writes the fixture again from the current answers, so that a deliberate later
+writes the fixture again from the current answers, so that a deliberate
 change of a recipe or of a file a recipe reads is recorded once.
 """
 from __future__ import annotations
@@ -59,8 +59,8 @@ RECIPES = (
     "packages/bellman/tests/corpus/branching/examples/cagetti-denardi-2006/registry/spec.yml",
 )
 
-# the suffixes of the files the language reads: a stage file, and a recipe,
-# trellis, period, calibration, settings or methods file
+# the suffixes of the files the language reads: a stage file or an addition,
+# and a recipe, trellis, period, calibration or settings file
 READ = (".bl", ".yml", ".yaml")
 # the files a model folder holds at its top, beside its folders
 TOP_FILES = ("README.md", "economics.md")
@@ -70,11 +70,21 @@ TOP_FILES = ("README.md", "economics.md")
 UNEXAMINED = ("code", "notebooks", "paper", "reference", "results", "tests")
 # how a file at a model folder's top is known as one the language reads
 # (`_read_at_the_top`): a recipe, trellis or period file by the beginning of
-# its name, and a calibration, settings or methods file by a stem that is
-# its kind or ends in `_<kind>`, as the earlier layout named these files and
-# as Bellman Workbench's tree gives them their roles
+# its name, and a calibration or settings file by a stem that is its kind or
+# ends in `_<kind>`, as the earlier layout named these files and as Bellman
+# Workbench's tree gives them their roles
 READ_NAMES = ("spec", "trellis", "period")
-KINDS = ("calibration", "settings", "methods")
+KINDS = ("calibration", "settings")
+# the name of an addition in a stage folder: `methods.bl`, or a replacing
+# selection `methods.<variant>.bl` (decision S7-W2)
+ADDITION = re.compile(r"methods(?:\.[^.]+)?\.bl")
+# the three sentences of the rules under `declaration/`
+STAGE_FOLDER = ("declaration/stages/ holds one folder per stage, declaration/stages/<key>/, "
+                "holding <key>.bl, <key>.md, methods.bl and methods.<variant>.bl and nothing else")
+STAGE_FILE = ("a stage file stands at declaration/stages/<key>/<key>.bl, and an addition beside "
+              "it as methods.bl or methods.<variant>.bl")
+RETIRED_METHODS = ("declaration/methods/ is retired: an addition stands in its stage's folder as "
+                   "methods.bl or methods.<variant>.bl")
 
 
 # --- the layout ---
@@ -121,10 +131,10 @@ def layout_faults(paths):
 
 def _read_at_the_top(file):
     """Whether the file `file`, standing at a model folder's top, is one the
-    language reads: a stage file, or a `.yml` or `.yaml` file whose name
-    begins with one of `READ_NAMES`, or whose stem is one of `KINDS` or ends
-    in `_` and one of them. The check reads names alone; another file is
-    read only where a recipe names it."""
+    language reads: a `.bl` file, a stage file or an addition, or a `.yml` or
+    `.yaml` file whose name begins with one of `READ_NAMES`, or whose stem is
+    one of `KINDS` or ends in `_` and one of them. The check reads names
+    alone; another file is read only where a recipe names it."""
     if file.suffix == ".bl":
         return True
     return file.suffix in READ and (
@@ -142,17 +152,14 @@ def _faults_of(file):
     if first == "declaration":
         if len(file.parts) > 2 and file.parts[1] == "stages":
             key = file.parts[2]
-            if len(file.parts) == 4 and file.name in (f"{key}.bl", "methods.yml", f"{key}.md"):
+            if len(file.parts) == 4 and (file.name in (f"{key}.bl", f"{key}.md")
+                                         or ADDITION.fullmatch(file.name)):
                 return []
-            return ["declaration/stages/ holds one folder per stage, declaration/stages/<key>/, "
-                    "holding <key>.bl, methods.yml and <key>.md and nothing else"]
+            return [STAGE_FOLDER]
+        if len(file.parts) > 2 and file.parts[1] == "methods":
+            return [RETIRED_METHODS]
         if file.suffix == ".bl":
-            # a block file stands beside the methods files that name it
-            # (decision SD-14)
-            if len(file.parts) == 3 and file.parts[1] == "methods":
-                return []
-            return ["a stage file stands at declaration/stages/<key>/<key>.bl, and a block "
-                    "file at declaration/methods/<name>.bl"]
+            return [STAGE_FILE]
         return []
     if len(file.parts) == 1 and file.name in TOP_FILES:
         return []
@@ -172,7 +179,7 @@ def _faults_of(file):
 def test_every_application_has_the_one_layout():
     """Every folder under `applications/` that holds a stage file or a file
     the language reads has `declaration/` and `README.md`; a stage's file, its
-    methods file and its note stand in its stage folder; a recipe, a trellis,
+    note and its additions stand in its stage folder; a recipe, a trellis,
     period, calibration or settings file stands under `declaration/`; the
     folder's top holds no other file than `README.md` and `economics.md`; and
     no path is generated."""
@@ -182,12 +189,13 @@ def test_every_application_has_the_one_layout():
 
 def test_a_file_at_a_folders_top_is_refused_by_the_rule_it_breaks():
     """At a model folder's top, a file the language reads is sent under
-    `declaration/`: a stage file, a recipe, trellis or period file, and a
-    calibration, settings or methods file named after its kind, as the
+    `declaration/`: a stage file or an addition, a recipe, trellis or period
+    file, and a calibration or settings file named after its kind, as the
     earlier layout named them. Any other file is refused by the rule of the
-    folder's top, among them `answers.yml` and the `.gitignore` that Bellman
-    Workbench's "new trellis" writes there. The paths are planted, not read
-    from git."""
+    folder's top, among them `answers.yml`, the `.gitignore` that Bellman
+    Workbench's "new trellis" writes there and a YAML methods file of the
+    retired form, which the language no longer reads. The paths are planted,
+    not read from git."""
     top = "the top of a model folder holds README.md, economics.md and folders alone"
     read = "a file the language reads stands under declaration/"
     planted = {
@@ -195,7 +203,8 @@ def test_a_file_at_a_folders_top_is_refused_by_the_rule_it_breaks():
         "answers.yml": top,
         "calibration.yml": read,
         "cons.bl": read,
-        "cons_methods.yml": read,
+        "cons_methods.yml": top,
+        "methods.bl": read,
         "notes.yaml": top,
         "period.young.yml": read,
         "settings.yml": read,
@@ -210,14 +219,14 @@ def test_a_file_at_a_folders_top_is_refused_by_the_rule_it_breaks():
     ]
 
 
-def test_a_block_file_stands_beside_the_methods_files_and_nowhere_else():
-    """A block file, the `.bl` file a methods entry names under `block:`,
-    stands at `declaration/methods/<name>.bl`, beside the methods files that
-    name it (decision SD-14); a `.bl` file in another folder of
-    `declaration/`, or in a folder below `declaration/methods/`, is refused.
-    The paths are planted, not read from git."""
-    rule = ("a stage file stands at declaration/stages/<key>/<key>.bl, and a block file at "
-            "declaration/methods/<name>.bl")
+def test_an_addition_stands_in_its_stage_folder_and_the_methods_folder_is_retired():
+    """A stage folder holds the stage file, its note, its addition
+    `methods.bl` and a replacing selection `methods.<variant>.bl`, and refuses
+    the retired `methods.yml` and any other name; a `.bl` file in another
+    folder of `declaration/` is refused by the rule of the stage file; and
+    every file under `declaration/methods/`, the folder of the retired YAML
+    methods files and block files, is refused by the rule that retires it
+    (decisions S7-W2 and S7-W6). The paths are planted, not read from git."""
     paths = [
         "applications/demo/README.md",
         "applications/demo/declaration/blocks/cons_egm.bl",
@@ -225,10 +234,20 @@ def test_a_block_file_stands_beside_the_methods_files_and_nowhere_else():
         "applications/demo/declaration/methods/cons_egm.bl",
         "applications/demo/declaration/methods/egm/cons_egm.bl",
         "applications/demo/declaration/spec.yml",
+        "applications/demo/declaration/stages/cons/cons.bl",
+        "applications/demo/declaration/stages/cons/cons.md",
+        "applications/demo/declaration/stages/cons/methods.bl",
+        "applications/demo/declaration/stages/cons/methods.vfi.bl",
+        "applications/demo/declaration/stages/cons/methods.yml",
+        "applications/demo/declaration/stages/cons/notes.md",
     ]
     assert layout_faults(paths) == [
-        f"applications/demo/declaration/blocks/cons_egm.bl: {rule}",
-        f"applications/demo/declaration/methods/egm/cons_egm.bl: {rule}",
+        f"applications/demo/declaration/blocks/cons_egm.bl: {STAGE_FILE}",
+        f"applications/demo/declaration/methods/cons.yml: {RETIRED_METHODS}",
+        f"applications/demo/declaration/methods/cons_egm.bl: {RETIRED_METHODS}",
+        f"applications/demo/declaration/methods/egm/cons_egm.bl: {RETIRED_METHODS}",
+        f"applications/demo/declaration/stages/cons/methods.yml: {STAGE_FOLDER}",
+        f"applications/demo/declaration/stages/cons/notes.md: {STAGE_FOLDER}",
     ]
 
 
@@ -295,8 +314,7 @@ def write_fixture(held):
 def test_every_recipe_loads_to_the_base_trellis(recipe):
     """The recipe's answer, normalized, has the digests the fixture holds:
     every stage key's records and the rest of the answer equal those the
-    recipe loaded before its files moved, each path mapped to its new
-    place."""
+    recipe gave when the module was last run as a script."""
     held = json.loads(FIXTURE.read_text(encoding="utf-8"))
     assert sorted(held) == sorted(RECIPES)
     assert (ROOT / recipe).is_file(), f"no recipe stands at {recipe}"

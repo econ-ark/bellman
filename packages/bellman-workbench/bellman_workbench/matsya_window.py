@@ -36,9 +36,8 @@ request, `Ask`, `Search sources` or `Build declaration`, then a search's
 collection or a build's output level, and last the send control, named by
 the kind, the Codicon `send` in a circle.
 A search lists the passages of the client's index search, each opened with
-`Discuss`; a build sends its request as the user's entry of the folder's
-project session, then shows its prepared material with the one action
-`Build declaration` (decision SG4-7); a folder not connected offers
+`Discuss`; a build shows its prepared material before appending its request to the
+project session and starting Architect through `Build declaration`; a folder not connected offers
 `Connect this folder to Matsya`. The questions and answers are held per tab
 for the page's life and written to no file. Each question is answered in
 a task run off the page's thread (`answer_last`), so that the page stays
@@ -118,6 +117,7 @@ class Exchange:
     kind: str = "question"
     job: str | None = None
     scope: str | None = None
+    turn: str | None = None
 
 
 class Context(NamedTuple):
@@ -201,20 +201,20 @@ class JobView(NamedTuple):
 
 
 class BuildView(NamedTuple):
-    """What the column holds of one build (decision SG4-7): `entry`, the
-    number of the user's entry the request appended, as text, None before
-    the client answered; `prepared`, unit G2's `Prepared` of the files the
-    job is to start from; `choice`, the choice made for unsaved buffers;
-    `job`, the job the action `Build declaration` started; `refusal`, the
-    sentence of a step refused; and `listed`, whether `Files` lists
-    the files."""
+    """A build review and the identity of its accepted job."""
 
-    entry: str | None = None
     prepared: object = None
     choice: str | None = None
     job: str | None = None
     refusal: str | None = None
     listed: bool = False
+    history: list[dict] | None = None
+    source: object = None
+    session: matsya_work.Session | None = None
+    root: Path | None = None
+    busy: bool = False
+    restored: bool = False
+    review_again: bool = False
 
 
 # --- the words of the column ---
@@ -288,13 +288,15 @@ DOWNLOAD = "Download returned files"
 OPEN_COPY = "Open returned files"
 REPLACE = "Replace model files…"
 REPLACE_NOW = "Replace model files"
+ADOPT_FIRST = "Adopt first declaration"
+RESTORE = "Restore originals"
+COMPLETE = "Complete replacement"
 CANCEL = "Cancel"
 COMMIT = "Commit…"
 # a plan whose copy holds no file that differs from the model's
 NO_CHANGE = "no file differs"
 # the refusals of a build's first step
 NOT_CONNECTED_SENTENCE = "this folder is not connected to Matsya"
-NO_SOURCE_SENTENCE = "this folder holds no recipe and no trellis file to build from"
 
 
 def client_sentence(text: str) -> str:
@@ -338,15 +340,23 @@ discussed = solara.reactive(None)
 # builds requested, on which the task that prepares the last depends
 builds = solara.reactive({})
 requested = solara.reactive(0)
+submission = solara.reactive(None)
+
+
+conversation_generation = solara.reactive(0)
+remote_history_unavailable = solara.reactive(False)
 
 
 def clear_conversation() -> None:
     """Empties the conversation, the passages opened and the jobs, as a
     change of the tab's folder does; the field keeps its text."""
+    conversation_generation.value += 1
+    remote_history_unavailable.value = False
     exchanges.value = ()
     opened.value = frozenset()
     jobs.value = {}
     builds.value = {}
+    submission.value = None
     discussed.value = None
 
 
@@ -389,7 +399,7 @@ def send(text: str | None) -> None:
     if not question or answering():
         return
     if kind.value == BUILD:
-        exchanges.value = (*exchanges.value, Exchange(question, kind="build"))
+        exchanges.value = (*exchanges.value, Exchange(question, kind="build", scope=target.value))
         draft.value = ""
         requested.value = requested.value + 1
         return
@@ -412,71 +422,105 @@ TURN_SECONDS = 1.0
 TURN_ENDS = ("failed", "refused", "cancelled")
 
 
+def _job_started(turn: dict) -> str | None:
+    """The job this turn started, distinct from the job it discussed."""
+    record = turn.get("record")
+    result = record.get("result") if isinstance(record, dict) else None
+    started = result.get("job_started") if isinstance(result, dict) else None
+    job_id = started.get("id") if isinstance(started, dict) else None
+    return job_id if isinstance(job_id, str) and job_id else None
+
+
 def _turn_answer(
-    folder: model.Folder, session, question: str, standing
-) -> matsya_client.Cited | None:
-    """The answer of `question` asked in the folder's project session
-    `session` (decision SG4-25; D-1): a turn started by unit G2's
-    `matsya_work.start_turn`, whose record stands in the folder before the
-    client runs, then read by `matsya_work.follow`, `turn status`, every
-    TURN_SECONDS until the service has finished it, within the adapter's
-    limit of `matsya_client.ANSWER_SECONDS`. A turn the service did not
-    accept answers the client's sentence; one that ended without an answer
-    answers NO_ANSWER; None where the question no longer stands
-    (`standing`), as after the conversation was emptied."""
-    record = matsya_work.start_turn(folder, session, question).record
-    if record["accepted"] is None:
-        return matsya_client.Cited(
-            client_sentence(record["warning"]) or matsya_client.NO_ANSWER, (), ()
-        )
+    folder: model.Folder,
+    session: matsya_work.Session,
+    question: str,
+    standing: Callable[[], bool],
+    on_accepted: Callable[[str], None],
+) -> tuple[matsya_client.Cited | None, str | None, str | None]:
+    """Read the accepted turn's answer and the job it started."""
+    if not matsya_work.session_current(folder, session) or (
+        matsya_client.service_url() is None and matsya_work.read_session(session, folder) is None
+    ):
+        refusal = "The connected Matsya session could not be verified."
+        return matsya_client.Cited(refusal, (), ()), None, None
+    work = matsya_work.start_turn(folder, session, question)
+    turn_id = work.record["accepted"]
+    if turn_id is None:
+        refusal = client_sentence(work.record["warning"]) or matsya_client.NO_ANSWER
+        return matsya_client.Cited(refusal, (), ()), None, None
+    if standing() and matsya_work.session_current(folder, session):
+        on_accepted(turn_id)
     for _ in range(int(matsya_client.ANSWER_SECONDS / TURN_SECONDS)):
-        if not standing():
-            return None
-        turn = matsya_work.follow(record)
-        state = turn.get("state") if isinstance(turn, dict) else None
+        if not standing() or not matsya_work.session_current(folder, session):
+            return None, turn_id, None
+        turn = matsya_work.read_turn(session, turn_id)
+        state = turn.get("state") if turn is not None else None
         if state == "finished":
             found = matsya_client.read_turn(turn)
-            return (
-                found if found is not None else matsya_client.Cited(matsya_client.UNREAD, (), ())
-            )
+            if found is None:
+                found = matsya_client.Cited(matsya_client.UNREAD, (), ())
+            job_id = _job_started(turn)
+            if job_id is not None and matsya_work.session_current(folder, session):
+                matsya_work.record_started_job(folder, work, job_id)
+            return found, turn_id, job_id
         if state in TURN_ENDS:
-            return matsya_client.Cited(matsya_client.NO_ANSWER, (), ())
+            return matsya_client.Cited(matsya_client.NO_ANSWER, (), ()), turn_id, None
         time.sleep(TURN_SECONDS)
-    return matsya_client.Cited(matsya_client.NO_ANSWER, (), ())
+    return matsya_client.Cited(matsya_client.NO_ANSWER, (), ()), turn_id, None
 
 
 def answer_last(session: str, actions=None) -> None:
-    """The task of the window: asks Matsya the last question sent and
-    writes the answer, its passages and their citation records into that
-    question's exchange. In a folder connected to Matsya the question is a
-    turn of the folder's project session (`_turn_answer`; D-1); otherwise
-    it is asked in the conversation `session`, unit M's, named by a digest
-    of the folder's path, by `matsya_client.ask_cited`. A question already
-    answered, or none, asks nothing; an answer whose question no longer
-    stands unanswered at its place, as after the state was emptied, is not
-    written."""
+    """Answer a question in the project session or anonymous conversation."""
     held = exchanges.value
     numbers = [n for n, exchange in enumerate(held) if exchange.kind == "question"]
     if not numbers or held[numbers[-1]].answer is not None:
         return
     number = numbers[-1]
-    question = held[number].question
+    pending = held[number]
+    generation = conversation_generation.value
+    folder = actions.folder() if actions is not None else None
 
     def standing() -> bool:
         current = exchanges.value
-        return number < len(current) and current[number] == Exchange(question)
+        return (
+            generation == conversation_generation.value
+            and (actions is None or actions.folder().root == folder.root)
+            and number < len(current)
+            and current[number] is pending
+        )
 
-    folder = actions.folder() if actions is not None else None
+    def accepted(turn_id: str) -> None:
+        nonlocal pending
+        current = exchanges.value
+        pending = dataclasses.replace(pending, turn=turn_id)
+        exchanges.value = (*current[:number], pending, *current[number + 1 :])
+
     project = matsya_work.connected_session(folder) if folder is not None else None
+    turn_id = job_id = None
     if project is not None:
-        found = _turn_answer(folder, project, question, standing)
+        found, turn_id, job_id = _turn_answer(
+            folder, project, pending.question, standing, accepted
+        )
     else:
-        found = matsya_client.ask_cited(question, session)
-    if found is None or not standing():
+        found = matsya_client.ask_cited(pending.question, session)
+    if not standing():
+        return
+    status = matsya_work.read_job(project, job_id) if job_id is not None else None
+    if not standing():
+        return
+    if turn_id is not None and not matsya_work.session_current(folder, project):
+        message = "The connected Matsya session changed while this question was being read."
+        found, turn_id, job_id = matsya_client.Cited(message, (), ()), None, None
+    if found is None:
         return
     current = exchanges.value
-    answered = Exchange(question, found.answer, found.passages, found.citations)
+    answered = Exchange(
+        pending.question, found.answer, found.passages, found.citations, turn=turn_id
+    )
     exchanges.value = (*current[:number], answered, *current[number + 1 :])
+    if job_id is not None:
+        register_job(job_id, status)
 
 
 # --- a search, a connection and a passage discussed ---
@@ -551,82 +595,136 @@ def _set_build(number: int, **changes) -> None:
     builds.value = {**builds.value, number: held._replace(**changes)}
 
 
-def build_last(actions) -> None:
-    """The first step of the last build requested (decision SG4-7), run off
-    the page's thread: its text appended to the folder's project session as
-    the user's entry (`matsya_work.add_entry`), then the files of the
-    source the tab shows prepared at the chosen level, the user's entries
-    reviewed through that one (`matsya_work.prepare`), which writes the
-    prepared record and sends nothing; the column then shows the material
-    with the one action `Build declaration`. A folder not connected, a
-    folder without a source and an entry the client does not acknowledge
-    are refused with a sentence; nothing is prepared again for a build
-    already prepared."""
+def build_last(actions, number: int | None = None) -> None:
+    """Read the session and capture the declaration before any new text is sent."""
     numbers = [n for n, exchange in enumerate(exchanges.value) if exchange.kind == "build"]
-    if actions is None or not numbers or builds.value.get(numbers[-1]) is not None:
+    if actions is None or not numbers:
         return
-    number = numbers[-1]
+    if number is None:
+        number = numbers[-1]
+        if number in builds.value:
+            return
     folder = actions.folder()
     session = matsya_work.connected_session(folder)
     if session is None:
         _set_build(number, refusal=NOT_CONNECTED_SENTENCE)
         return
+    exchange = exchanges.value[number]
     source = actions.source()
-    if source is None:
-        _set_build(number, refusal=NO_SOURCE_SENTENCE)
+    try:
+        history = matsya_work.reviewed_entries(folder, session)
+    except (OSError, ValueError) as error:
+        if actions.folder().root == folder.root and exchanges.value[number:number + 1] == (exchange,):
+            _set_build(number, refusal=str(error))
         return
-    work = matsya_work.add_entry(folder, session, exchanges.value[number].question)
-    entry = work.record["accepted"]
-    if entry is None:
-        _set_build(
-            number, refusal=client_sentence(work.record["warning"]) or matsya_client.NO_ANSWER
-        )
+    if actions.folder().root != folder.root or exchanges.value[number:number + 1] != (exchange,):
         return
-    _set_build(number, entry=entry)
+    previous = builds.value.get(number, BuildView())
+    if previous.restored:
+        question = previous.prepared.record["prompt"]
+        exchange = dataclasses.replace(exchange, question=question)
+        current = exchanges.value
+        exchanges.value = (*current[:number], exchange, *current[number + 1:])
+    builds.value = {**builds.value, number: BuildView(
+        history=history, source=source, session=session, root=folder.root
+    )}
     prepare_build(actions, number, None)
 
 
 def prepare_build(actions, number: int, choice: str | None) -> None:
-    """Prepares the build of the exchange `number` with the choice `choice`
-    for the unsaved buffers of the files its source reads, None before one
-    is made (`matsya_work.prepare`)."""
+    """Capture the reviewed file versions and the new entry."""
     folder = actions.folder()
-    session = matsya_work.connected_session(folder)
     view = builds.value.get(number, BuildView())
-    if session is None or view.entry is None:
+    if view.session is None or view.history is None or folder.root != view.root:
         return
-    prepared = matsya_work.prepare(
-        folder,
-        actions.source(),
-        TARGETS[target.value],
-        session,
-        int(view.entry),
-        actions.buffers(),
-        choice,
-    )
-    _set_build(number, prepared=prepared, choice=choice)
+    exchange = exchanges.value[number]
+    try:
+        prepared = matsya_work.prepare(
+            folder, view.source, TARGETS[exchange.scope], view.session, 0,
+            actions.buffers(), choice, history=view.history, prompt=exchange.question,
+        )
+    except (OSError, ValueError) as error:
+        _set_build(number, refusal=str(error))
+        return
+    if actions.folder().root == folder.root and exchanges.value[number:number + 1] == (exchange,):
+        _set_build(number, prepared=prepared, choice=choice, refusal=None)
 
 
 def submit_build(actions, number: int) -> None:
-    """The second step, the action `Build declaration`: the reviewed
-    prepared inputs sent as they stand (`matsya_work.submit`); the job the
-    service accepted is added to the conversation as a message of its own
-    and read now (`matsya_work.follow`)."""
+    """Send the reviewed text and inputs, and show the accepted job."""
     folder = actions.folder()
-    session = matsya_work.connected_session(folder)
     view = builds.value.get(number, BuildView())
-    if session is None or view.prepared is None or view.prepared.path is None or view.job:
+    if (view.session is None or folder.root != view.root or view.prepared is None
+        or view.prepared.path is None or view.job or view.busy):
         return
-    work = matsya_work.submit(folder, view.prepared.path, session)
-    accepted = work.record["accepted"]
-    if accepted is None:
-        _set_build(
-            number, refusal=client_sentence(work.record["warning"]) or matsya_client.NO_ANSWER
-        )
+    exchange = exchanges.value[number]
+    _set_build(number, busy=True, refusal=None)
+    review_again = False
+    try:
+        work = matsya_work.submit(folder, view.prepared.path, view.session, view.prepared.record)
+        accepted = work.record["accepted"]
+        if accepted is None:
+            refusal = client_sentence(work.record["warning"]) or matsya_client.NO_ANSWER
+            review_again = "the last entry the request reviewed:" in work.record["warning"]
+            answer = None
+        else:
+            refusal = None
+            answer = matsya_work.follow(work.record)
+    except (OSError, ValueError) as error:
+        accepted, answer, refusal = None, None, str(error)
+        review_again = isinstance(error, matsya_work.ReviewRequired)
+    if actions.folder().root != folder.root or exchanges.value[number:number + 1] != (exchange,):
         return
-    _set_build(number, job=accepted, refusal=None)
-    _set_job(accepted, job=matsya_work.follow(work.record))
-    exchanges.value = (*exchanges.value, Exchange("", kind="job", job=accepted))
+    if matsya_work.connected_session(folder) != view.session:
+        _set_build(number, busy=False, review_again=True,
+                   refusal="The Matsya connection changed. Prepare the build again.")
+        return
+    _set_build(number, job=accepted, refusal=refusal, busy=False, review_again=review_again)
+    if accepted:
+        register_job(accepted, answer)
+
+
+def queue_submission(number: int) -> None:
+    """Start submission on the background task for this conversation."""
+    if submission.value is None:
+        submission.value = (conversation_generation.value, number)
+
+
+def submit_requested(actions, request) -> None:
+    if actions is None or request is None:
+        return
+    generation, number = request
+    try:
+        if generation == conversation_generation.value:
+            submit_build(actions, number)
+    finally:
+        if submission.value == request:
+            submission.value = None
+
+
+def restore_build_reviews(
+    folder: model.Folder, session: matsya_work.Session, entries: list[dict]
+) -> None:
+    """Offer to resume an earlier reviewed submission using its original delivery."""
+    generation = conversation_generation.value
+    levels = {value: name for name, value in TARGETS.items()}
+    for prepared, history in matsya_work.pending_builds(folder, session, entries):
+        if generation != conversation_generation.value or not matsya_work.session_current(
+            folder, session
+        ):
+            return
+        if any(view.prepared is not None and view.prepared.path == prepared.path
+               for view in builds.value.values()):
+            continue
+        level = levels.get(prepared.record["target"])
+        if level is None:
+            continue
+        number = len(exchanges.value)
+        _set_build(number, prepared=prepared, history=history, session=session,
+                   root=folder.root, restored=True)
+        exchanges.value = (*exchanges.value, Exchange(
+            "Previously reviewed build", kind="build", scope=level
+        ))
 
 
 # --- the citations ---
@@ -725,64 +823,138 @@ def _count(found: tuple) -> str:
     return str(len(found)) if found else "none"
 
 
+def _prose_disagreements(name: str, check) -> tuple[str, ...]:
+    if not isinstance(check, dict):
+        return ()
+    unavailable = check.get("unavailable")
+    if isinstance(unavailable, dict):
+        reason = _texts(unavailable.get("reason"))
+        return (f"{name} unavailable" + (f" ({reason[0]})" if reason else ""),)
+    if check.get("agrees") is not False:
+        return ()
+    headings = {}
+    for report in check.get("reports") or ():
+        items = report.get("items") if isinstance(report, dict) else None
+        if isinstance(items, dict):
+            for heading, finding in items.items():
+                if isinstance(finding, dict) and finding.get("agrees") is False:
+                    quotes = headings.setdefault(heading, {})
+                    quotes.update(dict.fromkeys(_texts(finding.get("quotes"))))
+    if not headings:
+        return (f"{name} reports a disagreement.",)
+    return tuple(
+        f"{name} disagrees on {heading}." + (" " + " ".join(quotes) if quotes else "")
+        for heading, quotes in headings.items()
+    )
+
+
+def _written_files(product: dict) -> dict:
+    """The service's latest available writing, with its older fallback."""
+    writing = product.get("available_writing", product.get("last_cycle"))
+    files = writing.get("files") if isinstance(writing, dict) else None
+    return files if isinstance(files, dict) else {}
+
+
+def _can_download(job: dict) -> bool:
+    """A job can return a report and record even without a declaration."""
+    return isinstance(job.get("result"), dict) or isinstance(job.get("record"), dict)
+
+
+def _declaration_absent(job: dict) -> bool:
+    product = job.get("result")
+    if not isinstance(product, dict):
+        return False
+    if "available_writing" not in product and "last_cycle" not in product:
+        return False
+    return all(name == "note.md" for name in _written_files(product))
+
+
 def parts(view: JobView) -> tuple[Part, ...]:
-    """The five parts of the job's result, apart (amendment 06 §2 item
-    25): semantic convergence, from the service's comparison of the native
-    elaborated objects, `converged`, `not converged` with its differences,
-    or `unavailable` where no comparison was given, which is not a failed
-    comparison; the comments on the prose and the source; the unresolved
-    assumptions, the job's questions and an unresolved note of its writer;
-    the construction and binding of the saved copy as a model of its own,
-    `not downloaded` before the download, then `constructed` or `refused`
-    with the copy's missing dependencies and construction notes; and the
-    numerical checks, `not run`, since the Workbench runs no model. The
-    service's answer is read in the form unit G2's stand-in writes, `result`,
-    and in the products view of the service's record, `record`."""
+    """The service's results, native construction, and numerical checks."""
     job = view.job or {}
     result = job.get("result") if isinstance(job.get("result"), dict) else {}
     record = job.get("record") if isinstance(job.get("record"), dict) else {}
-    last = record.get("last_cycle") if isinstance(record.get("last_cycle"), dict) else {}
-    # the stand-in's comparison, `result.comparison`, or the products view's
-    comparison = result.get("comparison") if isinstance(result.get("comparison"), dict) else {}
-    converged = comparison.get("converged")
-    differences = _texts(comparison.get("differences"))
-    if not isinstance(converged, bool):
-        compared = record.get("last_completed_comparison") or last.get("comparison")
-        equal = compared.get("equal") if isinstance(compared, dict) else None
-        converged = equal if isinstance(equal, bool) else None
-        first = compared.get("first_difference") if isinstance(compared, dict) else None
-        differences = _texts(first) or ((json.dumps(first, ensure_ascii=False),) if first else ())
-    words = {True: "converged", False: "not converged", None: "unavailable"}
-    comments = _texts(result.get("comments")) or (
-        _texts(record.get("paper_source_check"))
-        + _texts(record.get("paper_form_check"))
-        + _texts(last.get("judging"))
+    native_keys = (
+        "last_completed_comparison", "last_cycle", "paper_source_check",
+        "paper_form_check", "available_writing",
     )
-    questions = _texts(result.get("questions")) or _texts(record.get("questions"))
-    if last.get("unresolved_note") is True:
-        questions += ("writer's note unresolved",)
+    native = any(key in result for key in native_keys)
+    product = result if native else record
+    last = product.get("last_cycle")
+    last = last if isinstance(last, dict) else {}
+
+    # Older responses supplied `result.comparison` or a separate record.
+    comparison = result.get("comparison") if not native else None
+    if isinstance(comparison, dict):
+        converged = comparison.get("converged")
+        differences = _texts(comparison.get("differences"))
+    else:
+        comparison = product.get("last_completed_comparison") or last.get("comparison")
+        converged = comparison.get("equal") if isinstance(comparison, dict) else None
+        first = comparison.get("first_difference") if isinstance(comparison, dict) else None
+        differences = _texts(first) or ((json.dumps(first, ensure_ascii=False),) if first else ())
+    if not isinstance(converged, bool):
+        converged = None
+    words = {True: "converged", False: "not converged", None: "unavailable"}
+
+    source_check = product.get("paper_source_check")
+    form_check = product.get("paper_form_check")
+    judging = last.get("judging")
+    comments = _prose_disagreements("Source comparison", source_check)
+    comments += _prose_disagreements("Prose comparison", judging)
+    if isinstance(form_check, dict) and form_check.get("passed") is False:
+        comments += _texts(form_check.get("findings")) or ("Model prose failed the form check.",)
+    if last.get("citations_supported") is False:
+        comments += ("One or more quotations are missing or unsupported by the model prose.",)
+    if not native:
+        comments += _texts(result.get("comments")) + _texts(source_check) + _texts(form_check)
+        comments += _texts(judging)
+    has_prose = bool(comments) or any(
+        check.get(key) is True
+        for check, key in ((source_check, "agrees"), (judging, "agrees"), (form_check, "passed"))
+        if isinstance(check, dict)
+    )
+    if not native:
+        has_prose |= "comments" in result
+
+    questions = _texts(product.get("questions")) or _texts(result.get("questions"))
+    unresolved = last.get("unresolved_note")
+    if unresolved is True:
+        note = _texts(_written_files(product).get("note.md"))
+        detail = note[0] if note else "The service did not provide the note text."
+        questions += (f"The writer's note marks unresolved assumptions. {detail}",)
+    has_assumptions = (
+        bool(questions) or unresolved is False or "questions" in result or "questions" in product
+    )
     inspected = view.inspected
     if inspected is None:
         construction = Part(PART_NAMES[3], NOT_DOWNLOADED)
     else:
         notes = tuple(inspected.missing) + tuple(inspected.construction)
+        notes += tuple(f"External terminal input {entry}" for entry in inspected.terminal_inputs)
         built = inspected.shown is not None and not inspected.missing
         construction = Part(PART_NAMES[3], "constructed" if built else "refused", notes)
     return (
         Part(PART_NAMES[0], words[converged], differences if converged is False else ()),
-        Part(PART_NAMES[1], _count(comments), comments),
-        Part(PART_NAMES[2], _count(questions), questions),
+        Part(PART_NAMES[1], _count(comments) if has_prose else UNAVAILABLE, comments),
+        Part(PART_NAMES[2], _count(questions) if has_assumptions else UNAVAILABLE, questions),
         construction,
         Part(PART_NAMES[4], "not run"),
     )
 
 
 def _ended(job: dict | None) -> bool:
-    """Whether the service's answer for a job names a state in which it
-    holds a result to show."""
-    return isinstance(job, dict) and (
-        isinstance(job.get("result"), dict) or isinstance(job.get("record"), dict)
-    )
+    """Whether the job stopped running, even if it returned no products."""
+    if not isinstance(job, dict):
+        return False
+    state = job.get("state")
+    if state in ("queued", "running"):
+        return False
+    if state in (
+        "converged", "not_converged", "needs_input", "cancelled", "failed", "interrupted"
+    ):
+        return True
+    return isinstance(job.get("result"), dict) or isinstance(job.get("record"), dict)
 
 
 def job_name(job_id: str) -> str:
@@ -800,51 +972,104 @@ def _set_job(job_id: str, **changes) -> None:
     jobs.value = {**jobs.value, job_id: held._replace(**changes)}
 
 
-def recover_jobs(folder: model.Folder) -> None:
-    """The column's jobs, in a folder connected to Matsya: each job the
-    folder's request records name as accepted by the folder's project
-    session (`matsya_work.records`), read now from the service
-    (`matsya_work.follow`), with the copy the folder holds of it; a job not
-    listed yet is added to the conversation as an exchange of the kind
-    `job`. Nothing is written."""
+def register_job(job_id: str, answer: dict | None = None) -> None:
+    """Show one card for an accepted job regardless of how it was started."""
+    if answer is not None or job_id not in jobs.value:
+        _set_job(job_id, job=answer)
+    if not any(exchange.job == job_id for exchange in exchanges.value):
+        exchanges.value = (*exchanges.value, Exchange("", kind="job", job=job_id))
+
+
+def recover_jobs(folder: model.Folder, generation: int | None = None) -> None:
+    """Read the connected project's conversation and jobs from Matsya."""
     session = matsya_work.connected_session(folder)
     if session is None:
         return
+    if generation is None:
+        generation = conversation_generation.value
+
+    def standing() -> bool:
+        return (
+            generation == conversation_generation.value
+            and matsya_work.session_current(folder, session)
+        )
+
+    held = matsya_work.read_session(session, folder)
+    if generation != conversation_generation.value:
+        return
+    remote_history_unavailable.value = held is None
+    if held is None or not standing():
+        return
     copies = _copies(folder.root)
-    listed = {exchange.job for exchange in exchanges.value if exchange.kind == "job"}
-    added = []
+    job_ids = {
+        job["id"]: None for job in held.get("jobs") or ()
+        if isinstance(job, dict) and isinstance(job.get("id"), str) and job["id"]
+    }
+    local_turns = {}
     for record in matsya_work.records(folder, session):
+        kind = record.get("kind")
         accepted = record.get("accepted")
-        if record.get("kind") != "job" or accepted is None:
+        job_id = accepted if kind == "job" else record.get("started_job")
+        if isinstance(job_id, str) and job_id:
+            job_ids.setdefault(job_id, None)
+        if kind == "turn" and isinstance(accepted, str):
+            local_turns[accepted] = record.get("question")
+    entries = {
+        entry["number"]: entry["text"] for entry in held.get("entries") or ()
+        if isinstance(entry, dict)
+        and type(entry.get("number")) is int
+        and isinstance(entry.get("text"), str)
+    }
+    known = {exchange.turn for exchange in exchanges.value if exchange.turn}
+    turn_ids = dict.fromkeys(
+        turn_id for turn_id in (*(held.get("turns") or ()), *local_turns)
+        if isinstance(turn_id, str) and turn_id not in known
+    )
+    for turn_id in turn_ids:
+        turn = matsya_work.read_turn(session, turn_id)
+        if not standing():
+            return
+        if turn is None or turn.get("state") != "finished":
             continue
-        answer = matsya_work.follow(record)
-        view = jobs.value.get(accepted, JobView())
-        copy = view.copy or copies.get(accepted)
+        job_id = _job_started(turn)
+        if job_id is not None:
+            job_ids.setdefault(job_id, None)
+        found = matsya_client.read_turn(turn) or matsya_client.Cited(matsya_client.UNREAD, (), ())
+        entry = turn.get("question")
+        question = entries.get(entry) if type(entry) is int else None
+        question = question or local_turns.get(turn_id)
+        if isinstance(question, str) and not any(e.turn == turn_id for e in exchanges.value):
+            exchanges.value = (
+                *exchanges.value,
+                Exchange(question, found.answer, found.passages, found.citations, turn=turn_id),
+            )
+    for job_id in job_ids:
+        answer = matsya_work.read_job(session, job_id)
+        if not standing():
+            return
+        # A failed membership read must not attach an unknown job.
+        if answer is None:
+            continue
+        view = jobs.value.get(job_id, JobView())
+        copy = view.copy or copies.get(job_id)
         inspected = view.inspected
         if copy is not None and inspected is None:
             inspected = returned.inspect(folder, copy)
-        _set_job(
-            accepted,
-            job=answer if answer is not None else view.job,
-            copy=copy,
-            inspected=inspected,
-        )
-        if accepted not in listed:
-            added.append(Exchange("", kind="job", job=accepted))
-            listed.add(accepted)
-    if added:
-        exchanges.value = (*exchanges.value, *added)
+        if not standing():
+            return
+        _set_job(job_id, copy=copy, inspected=inspected)
+        register_job(job_id, answer)
+    if standing():
+        restore_build_reviews(folder, session, held.get("entries") or [])
 
 
-# the seconds between two readings of the jobs that have not ended, and the
-# number of readings after which the column stops following them
+# The interval and limit for reading current jobs.
 FOLLOW_SECONDS = 5.0
 FOLLOW_READINGS = 720
 
 
 def unfinished_jobs() -> tuple[str, ...]:
-    """The jobs of the conversation whose last answer holds no result, in
-    the order they stand."""
+    """The displayed jobs whose observation is still active."""
     return tuple(
         exchange.job
         for exchange in exchanges.value
@@ -852,32 +1077,33 @@ def unfinished_jobs() -> tuple[str, ...]:
     )
 
 
-def follow_jobs(folder: model.Folder, followed: tuple[str, ...]) -> None:
-    """The task that follows the jobs `followed`, which have not ended,
-    run off the page's thread: every FOLLOW_SECONDS each is read from the
-    service by its request record (`matsya_work.follow`) and its message
-    drawn again where the answer changed, until one of them holds a result,
-    the conversation no longer lists them, or FOLLOW_READINGS readings have
-    passed. Following downloads nothing and writes nothing (amendment 06 §2
-    item 18)."""
+def follow_jobs(
+    folder: model.Folder, followed: tuple[str, ...], generation: int | None = None
+) -> None:
+    """Observe jobs of the same project session until their state changes."""
     session = matsya_work.connected_session(folder) if followed else None
     if session is None:
         return
-    records = {
-        record["accepted"]: record
-        for record in matsya_work.records(folder, session)
-        if record.get("kind") == "job" and record.get("accepted") in followed
-    }
+    if generation is None:
+        generation = conversation_generation.value
+
+    def standing() -> bool:
+        return (
+            generation == conversation_generation.value
+            and matsya_work.session_current(folder, session)
+            and unfinished_jobs() == followed
+        )
+
     for _ in range(FOLLOW_READINGS):
         time.sleep(FOLLOW_SECONDS)
-        if unfinished_jobs() != followed:
+        if not standing():
             return
-        for job_id, record in records.items():
-            answer = matsya_work.follow(record)
+        for job_id in followed:
+            answer = matsya_work.read_job(session, job_id)
+            if not standing():
+                return
             if answer is not None and answer != jobs.value.get(job_id, JobView()).job:
                 _set_job(job_id, job=answer)
-        if unfinished_jobs() != followed:
-            return
 
 
 def discuss_job(folder: model.Folder, job_id: str) -> None:
@@ -913,52 +1139,64 @@ def download(folder: model.Folder, job_id: str) -> None:
     _set_job(job_id, copy=found.path, inspected=returned.inspect(folder, found.path), refusal=None)
 
 
-# the kinds of file an adoption takes, the files the language reads
-# (decision SG3-18)
-_ADOPTED_SUFFIXES = (".bl", ".yml", ".yaml")
-
-
-def changed_files(folder: model.Folder, copy: str) -> list[str]:
-    """The files of the saved copy at `copy` an adoption is offered: each
-    file of the copy's `declaration/` the language reads whose text differs
-    from the folder's file at the same path, or that the folder does not
-    hold, by its path within the copy, in order; a named recipe's returned
-    `spec.yml` differs from the folder's and is mapped to its own files by
-    the plan (decision SG3-19)."""
-    root = folder.root / copy
-    found = []
-    for path in sorted((root / model.FACTORY_FOLDER).rglob("*")):
-        if not path.is_file() or path.suffix not in _ADOPTED_SUFFIXES:
-            continue
-        within = path.relative_to(root).as_posix()
-        local = folder.root / within
-        if not local.is_file() or local.read_bytes() != path.read_bytes():
-            found.append(within)
-    return found
+def _adoption_refusal(folder: model.Folder, job_id: str) -> str | None:
+    session = matsya_work.connected_session(folder)
+    if session is None:
+        return NOT_CONNECTED_SENTENCE
+    if not matsya_work.session_current(folder, session):
+        return "The configured Matsya service does not match this project."
+    found = matsya_work.membership(session, job_id, "adopted")
+    return client_sentence(found.refusal) if found.refusal else None
 
 
 def review_replacement(folder: model.Folder, job_id: str, buffers: dict) -> None:
-    """`Replace model files…`: the plan of adopting the files of the job's
-    saved copy that differ from the model's (`changed_files`;
-    `returned.plan`), with the reviewed versions, the destinations and the
-    line differences, the editor's unsaved buffers included, which the
-    column shows before anything is written; the copy's other files are
-    retained where they stand identical."""
+    """Review the returned files at the destinations the adoption will use."""
     view = jobs.value.get(job_id, JobView())
     if view.copy is None:
         return
-    selection = changed_files(folder, view.copy)
-    _set_job(job_id, plan=returned.plan(folder, view.copy, selection, buffers), adoption=None)
+    refusal = _adoption_refusal(folder, job_id)
+    if refusal:
+        _set_job(job_id, refusal=refusal)
+        return
+    planned = returned.plan(folder, view.copy, buffers=buffers, changed_only=True)
+    _set_job(job_id, plan=planned, adoption=None, refusal=None)
 
 
 def replace(folder: model.Folder, job_id: str, buffers: dict) -> None:
-    """`Replace model files`: the reviewed plan adopted by unit G3's
-    `returned.adopt`, which checks disk and editor again before writing and
-    records each write."""
+    """Recheck membership and apply the reviewed plan."""
     view = jobs.value.get(job_id, JobView())
     if view.plan is None:
         return
-    _set_job(job_id, adoption=returned.adopt(folder, view.plan, buffers), plan=None)
+    refusal = _adoption_refusal(folder, job_id)
+    if refusal:
+        _set_job(job_id, plan=None, refusal=refusal)
+        return
+    _set_job(job_id, adoption=returned.adopt(folder, view.plan, buffers), plan=None, refusal=None)
+
+
+def recover_replacement(
+    folder: model.Folder, job_id: str, buffers: dict, *, finish: bool = False
+) -> None:
+    """Restore locally or finish writing the same reviewed copy."""
+    adoption = jobs.value.get(job_id, JobView()).adoption
+    if adoption is None or adoption.id is None or adoption.record is None:
+        return
+    if finish:
+        refusal = _adoption_refusal(folder, job_id)
+        if refusal:
+            _set_job(job_id, refusal=refusal)
+            return
+        outcome = returned.complete(folder, adoption.id, buffers)
+    else:
+        for entry in adoption.record["files"]:
+            destination = entry["destination"]
+            if entry["outcome"] == "written" and destination in buffers:
+                _set_job(job_id, refusal=f"{destination} holds unsaved changes in the editor")
+                return
+        outcome = returned.restore(folder, adoption.id)
+    if outcome.record is None:
+        outcome = outcome._replace(record=adoption.record)
+    _set_job(job_id, adoption=outcome, refusal=None)
 
 
 # --- the drawing ---
@@ -1076,10 +1314,17 @@ def _meta(job: dict) -> str:
     its configuration, each where the service gives it."""
     result = job.get("result") if isinstance(job.get("result"), dict) else {}
     record = job.get("record") if isinstance(job.get("record"), dict) else {}
-    cycles = result.get("cycles_run", record.get("cycles_run"))
+    progress = job.get("progress")
+    progress = progress if isinstance(progress, dict) else {}
+    cycles = result.get("cycles_run", record.get("cycles_run", progress.get("cycle")))
     revision = job.get("revision", job.get("reviewed_through"))
     configuration = job.get("configuration_id")
+    label = job.get("label")
+    target = label.get("target") if isinstance(label, dict) else None
+    step = progress.get("step")
     found = [
+        str(target).capitalize() if isinstance(target, str) else None,
+        str(step).replace("_", " ") if isinstance(step, str) else None,
         f"iteration {cycles}" if cycles is not None else None,
         f"revision {revision}" if revision is not None else None,
         f"configuration {configuration[:12] if configuration else DEFAULT}",
@@ -1111,7 +1356,14 @@ def JobItem(job_id: str, text_button, actions):
                 rv.Html(
                     tag="div", class_="bl-matsya-job-meta bl-code-small", children=[_meta(job)]
                 )
+            declaration_absent = _declaration_absent(job)
             if _ended(view.job):
+                if declaration_absent:
+                    rv.Html(
+                        tag="div",
+                        class_="bl-small",
+                        children=["A report is available. The job returned no declaration files."],
+                    )
                 with rv.Html(tag="dl", class_="bl-matsya-parts"):
                     for part in parts(view):
                         with rv.Html(
@@ -1123,8 +1375,9 @@ def JobItem(job_id: str, text_button, actions):
                                 rv.Html(
                                     tag="dd", class_="bl-matsya-part-detail", children=[detail]
                                 )
-            if view.refusal:
-                rv.Html(tag="div", class_="bl-matsya-refusal", children=[view.refusal])
+            refusal = view.refusal or job.get("error")
+            if isinstance(refusal, str) and refusal:
+                rv.Html(tag="div", class_="bl-matsya-refusal", children=[refusal])
             if text_button is None or actions is None or not _ended(view.job):
                 return
             folder = actions.folder()
@@ -1139,7 +1392,7 @@ def JobItem(job_id: str, text_button, actions):
                         lambda: discuss_job(folder, job_id),
                         "bl-matsya-discuss-job",
                     ).key(f"{DISCUSS} job")
-                if view.copy is None:
+                if view.copy is None and _can_download(job):
                     ActionButton(
                         text_button,
                         DOWNLOAD,
@@ -1147,7 +1400,7 @@ def JobItem(job_id: str, text_button, actions):
                         "bl-matsya-download",
                         "download returned files",
                     ).key(DOWNLOAD)
-                else:
+                elif view.copy is not None:
                     ActionButton(
                         text_button,
                         OPEN_COPY,
@@ -1155,15 +1408,16 @@ def JobItem(job_id: str, text_button, actions):
                         "bl-matsya-open-copy",
                         "open returned files",
                     ).key(OPEN_COPY)
-                    ActionButton(
-                        text_button,
-                        REPLACE,
-                        lambda: review_replacement(folder, job_id, actions.buffers()),
-                        "bl-matsya-replace",
-                        "replace model files",
-                    ).key(REPLACE)
+                    if not declaration_absent:
+                        ActionButton(
+                            text_button,
+                            REPLACE,
+                            lambda: review_replacement(folder, job_id, actions.buffers()),
+                            "bl-matsya-replace",
+                            "replace model files",
+                        ).key(REPLACE)
             if view.adoption is not None:
-                AdoptionItem(view.adoption, text_button, actions)
+                AdoptionItem(job_id, view.adoption, text_button, actions)
 
 
 @solara.component
@@ -1200,20 +1454,21 @@ def PlanItem(job_id: str, planned, text_button, actions):
             rv.Html(tag="div", class_="bl-matsya-refusal", children=[sentence])
         with rv.Html(tag="div", class_="bl-matsya-actions"):
             if planned.files and not planned.refusals:
+                words = ADOPT_FIRST if planned.first else REPLACE_NOW
                 ActionButton(
                     text_button,
-                    REPLACE_NOW,
+                    words,
                     lambda: replace(folder, job_id, actions.buffers()),
                     "bl-matsya-replace-now",
                     "replace model files",
-                ).key(REPLACE_NOW)
+                ).key(words)
             ActionButton(
                 text_button, CANCEL, lambda: _set_job(job_id, plan=None), "bl-matsya-cancel"
             ).key(CANCEL)
 
 
 @solara.component
-def AdoptionItem(adoption, text_button, actions):
+def AdoptionItem(job_id: str, adoption, text_button, actions):
     """What an adoption answered: the files it wrote, its refusals, and,
     for an adoption recorded as adopted, `Commit…`, which opens the commit
     form with the adopted files alone (amendment 06 §2 item 23)."""
@@ -1222,7 +1477,25 @@ def AdoptionItem(adoption, text_button, actions):
             rv.Html(tag="div", class_="bl-matsya-adopted bl-code-small", children=[path])
         for sentence in adoption.refusals:
             rv.Html(tag="div", class_="bl-matsya-refusal", children=[sentence])
-        if adoption.record is not None and adoption.record.get("state") == "adopted":
+        state = adoption.record.get("state") if adoption.record is not None else None
+        if state in ("stopped", "restore failed"):
+            with rv.Html(tag="div", class_="bl-matsya-actions"):
+                ActionButton(
+                    text_button,
+                    RESTORE,
+                    lambda: recover_replacement(actions.folder(), job_id, actions.buffers()),
+                    "bl-matsya-restore",
+                ).key(RESTORE)
+                if state == "stopped":
+                    ActionButton(
+                        text_button,
+                        COMPLETE,
+                        lambda: recover_replacement(
+                            actions.folder(), job_id, actions.buffers(), finish=True
+                        ),
+                        "bl-matsya-complete",
+                    ).key(COMPLETE)
+        if state == "adopted":
             with rv.Html(tag="div", class_="bl-matsya-actions"):
                 ActionButton(
                     text_button,
@@ -1308,16 +1581,17 @@ def BuildItem(number: int, exchange: Exchange, text_button, actions, context):
                     rv.Html(tag="div", class_="bl-matsya-pending", children=[PREPARING])
                 return
             with rv.Html(tag="div", class_="bl-matsya-job-line"):
-                rv.Html(tag="span", class_="bl-small", children=[f"{BUILD} · {target.value}"])
+                rv.Html(tag="span", class_="bl-small", children=[f"{BUILD} · {exchange.scope}"])
             record = prepared.record
             if record is not None:
-                name = PurePosixPath(record["source"]["path"]).name
+                source = record["source"]
+                name = PurePosixPath(source["path"]).name if source else "Description only"
                 rv.Html(
                     tag="div",
                     class_="bl-matsya-build-what bl-code-small",
                     children=[f"{name} · {len(record['files'])} files"],
                 )
-                service = context.service if context is not None and context.service else UNKNOWN
+                service = record.get("server") or UNKNOWN
                 rv.Html(
                     tag="div",
                     class_="bl-matsya-build-what bl-code-small",
@@ -1342,14 +1616,33 @@ def BuildItem(number: int, exchange: Exchange, text_button, actions, context):
                     rv.Html(tag="div", class_="bl-matsya-refusal", children=[sentence])
             if record is None:
                 return
+            with rv.Html(tag="details"):
+                rv.Html(tag="summary", children=["Text and session history"])
+                rv.Html(tag="div", class_="bl-matsya-answer", children=[record["prompt"]])
+                entries = view.history or ()
+                accepted = {entry.get("replies_to") for entry in entries
+                            if entry["kind"] == "acceptance"}
+                for entry in entries:
+                    role = entry["kind"]
+                    if role == "answer":
+                        role += " · accepted" if entry["number"] in accepted else " · excluded from build"
+                    elif role == "acceptance":
+                        role += f" of answer {entry.get('replies_to')}"
+                    rv.Html(tag="div", class_="bl-small",
+                            children=[f"Entry {entry['number']} · {role}"])
+                    rv.Html(tag="div", class_="bl-matsya-answer", children=[entry["text"]])
             if view.listed:
                 with rv.Html(tag="ul", class_="bl-matsya-build-files"):
                     for entry in record["files"]:
-                        rv.Html(
-                            tag="li",
-                            class_="bl-code-small",
-                            children=[f"{entry['path']} · {entry['sha256'][:12]}"],
-                        ).key(entry["path"])
+                        with rv.Html(tag="li", class_="bl-code-small").key(entry["path"]):
+                            with rv.Html(tag="details"):
+                                rv.Html(tag="summary", children=[
+                                    f"{entry['path']} · sent {entry['sent_sha256'][:12]}"
+                                ])
+                                rv.Html(tag="div", class_="bl-matsya-answer",
+                                        children=[prepared.texts[entry["name"]]])
+            if view.busy:
+                rv.Html(tag="div", class_="bl-matsya-pending", children=["Submitting build"])
             with rv.Html(tag="div", class_="bl-matsya-actions"):
                 ActionButton(
                     text_button,
@@ -1357,11 +1650,14 @@ def BuildItem(number: int, exchange: Exchange, text_button, actions, context):
                     lambda: _set_build(number, listed=not view.listed),
                     "bl-matsya-files-sent",
                 ).key(FILES_SENT)
-                if view.job is None:
+                if view.review_again:
+                    ActionButton(text_button, "Prepare again", lambda: build_last(actions, number),
+                                 "bl-matsya-review-again").key("prepare again")
+                elif view.job is None and not view.busy and submission.value is None:
                     ActionButton(
                         text_button,
-                        BUILD,
-                        lambda: submit_build(actions, number),
+                        "Resume submission" if view.restored else BUILD,
+                        lambda: queue_submission(number),
                         "bl-matsya-submit",
                         "ask matsya",
                     ).key(BUILD)
@@ -1459,10 +1755,11 @@ def Composer(context: Context, field, button, handle=None):
                     event_entered=set_target,
                 )
             waits = ANSWERING if answering() else None
+            action = "Prepare build" if kind.value == BUILD else kind.value
             button(
                 "ask matsya",
-                ASK if kind.value == ASK else kind.value,
-                waits or (ASK_HOVER if kind.value == ASK else f"{kind.value} (Enter)"),
+                action,
+                waits or (ASK_HOVER if kind.value == ASK else f"{action} (Enter)"),
                 lambda: send(draft.value),
                 "bl-matsya-ask",
                 {"data-ready": "true" if draft.value.strip() and waits is None else "false"},
@@ -1498,18 +1795,25 @@ def MatsyaWindow(
     solara.lab.use_task(
         lambda: build_last(actions), dependencies=[requested.value], raise_error=False
     )
-    # the jobs that have not ended, followed until one ends
-    followed = unfinished_jobs() if actions is not None else ()
+    pending_submission = submission.value
     solara.lab.use_task(
-        lambda: follow_jobs(actions.folder(), followed) if followed else None,
-        dependencies=[followed],
+        lambda: submit_requested(actions, pending_submission),
+        dependencies=[pending_submission],
         raise_error=False,
     )
-    # the folder's jobs, read once the column is drawn for a folder
-    root = str(actions.folder().root) if actions is not None else None
+    folder = actions.folder() if actions is not None else None
+    root = str(folder.root) if folder is not None else None
+    generation = conversation_generation.value
+    connection = connections.value
+    followed = unfinished_jobs() if folder is not None else ()
     solara.lab.use_task(
-        lambda: recover_jobs(actions.folder()) if actions is not None else None,
-        dependencies=[root],
+        lambda: follow_jobs(folder, followed, generation) if followed else None,
+        dependencies=[root, generation, connection, followed],
+        raise_error=False,
+    )
+    solara.lab.use_task(
+        lambda: recover_jobs(folder, generation) if folder is not None else None,
+        dependencies=[root, generation, connection],
         raise_error=False,
     )
     with rv.Html(tag="section", class_="bl-matsya"):
@@ -1532,6 +1836,12 @@ def MatsyaWindow(
                 class_="bl-matsya-exchanges",
                 attributes={"tabindex": "0", "aria-label": "Conversation", "aria-live": "polite"},
             ):
+                if remote_history_unavailable.value:
+                    rv.Html(
+                        tag="li",
+                        class_="bl-matsya-refusal",
+                        children=["The connected Matsya session history could not be read."],
+                    )
                 if (
                     actions is not None
                     and text_button is not None

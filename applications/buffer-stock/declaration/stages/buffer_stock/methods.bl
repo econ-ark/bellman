@@ -1,0 +1,62 @@
+@methods: buffer_stock
+# The methods of the buffer-stock stage, an addition to buffer_stock.bl, the
+# stage file beside this one. The endogenous grid method stands on the policy
+# builder with its exogenous grid of savings a; its three lines, the inverted
+# Euler equation, the inverted law of motion and the identification of the
+# chosen consumption with the candidate, stand in place of the maximization
+# when the stage is solved, and the maximization remains the stage's
+# statement of the choice. The consumption function is read by linear
+# interpolation at the policy builder's Evaluation, between the pairs the
+# method computes. Its grid names the cash coordinates at which the
+# consumption function is represented. Each value builder gains its
+# derivative line: the envelope condition of the decision value, and the
+# derivative of the arrival value, whose weight R*(Γ*ψ)^(-ρ) inside the
+# expectation comes from the law m = R*k/(Γ*ψ) + ξ and the normalization
+# (Γ*ψ)^(1-ρ) of the value. At the arrival builder the expectation over the
+# two income shocks is taken by Gauss-Hermite quadrature with one node count
+# per shock, the point mass of the transitory shock at zero exact, and the
+# arrival value and its derivative are represented together, by linear
+# interpolation on the grid of assets k, named once at that builder's
+# Evaluation. The settings the entries read are declared first, with their
+# sets: a count in ℕ, a bound a point of Xa, the set the stage declares for
+# the savings and the assets, and a cash bound a point of Xm. The cash grid
+# uses illustrative bounds 0.001 to 20 and 960 points, independent of the
+# endogenous cash points. The other settings have the values recorded in
+# declaration/settings/buffer_stock.yml and are those of the HARK solution of
+# this model in the QuantEcon community library
+# (projects/HARK/buffer-stock/tutorial.ipynb, HARK 0.17.1): seven nodes per
+# shock and 960 points from 0.001 to 20 for the savings and for the assets.
+# HARK's seven values per shock are equiprobable conditional means and its
+# grid is exponentially nested; here the rule is Gauss-Hermite and each grid
+# is stated by its bounds and its count.
+
+n_a : ℕ              :: ["number of points of the savings grid"]
+a_min : Xa           :: ["lower bound of the savings grid"]
+a_max : Xa           :: ["upper bound of the savings grid"]
+n_k : ℕ              :: ["number of points of the asset grid"]
+k_min : Xa           :: ["lower bound of the asset grid"]
+k_max : Xa           :: ["upper bound of the asset grid"]
+m_a : ℕ              :: ["number of points of the cash representation grid"]
+m_min : Xm           :: ["lower bound of the cash representation grid"]
+m_max : Xm           :: ["upper bound of the cash representation grid"]
+n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
+n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
+
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+    | policy.evaluate.method : !Linear
+    | policy.evaluate.grid : !Cartesian(m=(m_min, m_max, m_a))] {
+    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
+    m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
+    c[~] = c[>]                     :: [id=cons_choice]
+}
+
+[id=cntn_to_dcsn] {
+    D_{m}V = 𝑑𝑢(c)                                  :: [id=marginal]
+}
+
+[id=dcsn_to_arvl
+    | E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))] {
+    D_{k}V[<] = E_{ψ,ξ}(R * (Γ*ψ)^(-ρ) * D_{m}V)    :: [id=marginal]
+}

@@ -1,0 +1,36 @@
+@methods: owner_cons
+# The alternative selection of the owner's consumption stage that the comment
+# in the earlier YAML file stages/owner_cons/methods.yml recorded for the reference solutions of the
+# paper's tables: value function iteration on a dense grid in place of the
+# !egm entry, the other entries unchanged. It is written as a methods file of
+# its own that replaces the complete selection of methods.bl, never
+# one entry of it (the proposal's §4 and D3), so it restates the envelope line
+# and the two representations and holds no line of the endogenous grid method.
+# The variant name vfi is the method word, since the alternative has no YAML
+# file of its own. The renter's consumption stage admits the same alternative;
+# it is not written again here.
+#
+# The YAML's comment wrote the method on policy with the count n_grid; the
+# catalogue's row places !vfi on the backward decision builder cntn_to_dcsn,
+# and under D5 (writer's sheet §7) the count is the count of a grid entry
+# beside the method: the settings file calls it the dense grid of value
+# function iteration, and the addition reads it as the grid of the control c
+# over its feasible set Γ(w_d), the form §7 gives a control's factor.
+#
+# The grids of the two Evaluations are those of methods.bl, the cash
+# coordinate alone (decision S7-C17 of 5 November 2026). Every setting the
+# file reads is declared with its set (writer's sheet §6).
+
+N_arg_grid_vfi : ℕ        :: ["number of points of the dense grid of value function iteration"]
+w_points : ℕ              :: ["number of points of the cash grid"]
+w_min : ℝ₊₊               :: ["lower bound of the cash grid"]
+w_max : ℝ₊₊               :: ["upper bound of the cash grid"]
+
+[id=cntn_to_dcsn, method : !vfi
+    | grid : !Cartesian(c=(Γ, N_arg_grid_vfi))
+    | evaluate[V].method : !Linear
+    | evaluate[V].grid : !Cartesian(w_d=(w_min, w_max, w_points))
+    | evaluate[D_{w_d}V].method : !Linear
+    | evaluate[D_{w_d}V].grid : !Cartesian(w_d=(w_min, w_max, w_points))] {    # no form in §4: on: policy, method: !vfi, settings: {n_grid: N_arg_grid_vfi}, in a comment of the YAML; the catalogue row places !vfi on cntn_to_dcsn, and the count n_grid, with no bounds and no coordinate, is read as the grid of the control c
+    D_{w_d}V = 𝑑𝑢(c)                      :: [id=marginal]
+}

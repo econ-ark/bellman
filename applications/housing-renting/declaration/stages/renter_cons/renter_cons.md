@@ -62,11 +62,9 @@ housing stock a renter carries forward:
 The zero is an equation of the stage and not a value written into a
 connector: a connector identifies fields and computes nothing.
 
-The backward blocks, the policy block and the two block files,
-`declaration/methods/marginals_renter_cons.bl` and
-`declaration/methods/renter_cons_egm.bl`, are those of the owner's stage
-with `ϑ*S_d` in place of the housing stock and `a_nxt_r` in place of
-`a_nxt_o`. The value line and the maximization stand in the stage file:
+The backward blocks, the policy block and the methods file `methods.bl`
+beside this file are those of the owner's stage with `ϑ*S_d` in place of the
+housing stock and `a_nxt_r` in place of `a_nxt_o`. The value line and the maximization stand in the stage file:
 
 ```bl
     V = 𝑢(c, ϑ*S_d) + β*V[>]    :: [id=value]
@@ -76,8 +74,9 @@ with `ϑ*S_d` in place of the housing stock and `a_nxt_r` in place of
     c = argmax_{c : Γ(w_d)}(𝑢(c, ϑ*S_d) + β*V[>])    :: [id=optimality]
 ```
 
-The derivative line stands in the marginal block, and the three lines of the
-endogenous grid method in the method block:
+The derivative line stands in the block `cntn_to_dcsn` of the methods file
+`methods.bl`, and the three lines of the endogenous grid method in its block
+`policy`:
 
 ```bl
     D_{w_d}V = 𝑑𝑢(c)                   :: [id=marginal]
@@ -107,8 +106,8 @@ applications/housing-renting/declaration/stages/renter_cons/renter_cons.bl: Elab
 
 ## Numerical methods
 
-`declaration/stages/renter_cons/methods.yml` is the owner's file with the renter's stage name
-and block files: the endogenous grid method at the policy block with the same savings grid,
+`declaration/stages/renter_cons/methods.bl` is the owner's addition with the renter's stage name
+and coordinates: the endogenous grid method on the policy builder with the same savings grid,
 upper envelope and candidate settings, and the decision value and its
 derivative on the cash grid. The solver runs the same routine for both
 stages, with the services scale and the zero housing stock the only

@@ -1,0 +1,9 @@
+# The numerical settings of the retiree's saving stage: the decision grid of
+# resources m_r on which time iteration solves the Euler equation, as
+# stages/retiree_saving/methods.bl declares it. The values are placeholders
+# inside the declared sets, written so that the stage configures; the paper
+# states no grid, and AAS has not yet supplied one.
+settings:
+  n_m_r: 50
+  m_r_min: 0.1
+  m_r_max: 50.0

@@ -24,20 +24,23 @@ walkthrough page is still to be written.
 - The backward block `cntn_to_dcsn` reads the housing stock at the
   decision perch, `H_d`, a coordinate of its output that its header does
   not list. The source's decision-side marginal (its ShadowBellman) is the
-  derivative line `D_{w_d}V = …` of the marginal block of
-  `declaration/methods/marginals_consumption_choice.bl`, which the stage's
-  methods file binds on the decision value builder with `!marginals`.
+  derivative line `D_{w_d}V = …` that the stage's methods file,
+  `declaration/stages/consumption_choice/methods.bl`, appends to the block
+  `cntn_to_dcsn`; a methods file is an addition to the stage file, read with
+  it, whose blocks name blocks of the stage by their ids.
 - The policy block's input is the continuation value `V[>]` alone, at the
   perch word `!cntn`; the decision states `w_d` and `H_d` are not in the
   signature, consumption being decision-measurable (AAS, 9 September 2026).
   Its one line is the declarative maximisation over the feasible set,
   `c = argmax_{cp : Γ(w_d)}(…)`, with `Γ(x : ℝ₊) := (0, x]` defined at
-  file level. The method block `egm` of
-  `declaration/methods/consumption_choice_egm.bl`, which the methods file
-  binds on the policy builder with `!egm`, holds the inverse Euler line on
+  file level. The block `policy` of the methods file types the policy
+  builder with `!egm` and its grid of savings,
+  `!Cartesian(a_nxt=(a_min, a_max, n_a))`, and holds the inverse Euler line on
   `H_c`, reading the derivative of the continuation value by the term
   `D_{a_nxt}V[>]`, the endogenous grid `w[>] = a_nxt + c[>]`, and
-  `c = c[>]` in the spelling of the portfolio corpus.
+  `c = c[>]` in the spelling of the portfolio corpus; with the solution
+  method on the builder these lines stand in place of the maximization at
+  the operative level, and the declared level keeps the maximization.
 - Statement ids follow the corpus convention (`optimality`, `InvEuler`,
   `regrid`, `cons_choice`).
 - The inverse-Euler exponent is carried verbatim from the source YAML;

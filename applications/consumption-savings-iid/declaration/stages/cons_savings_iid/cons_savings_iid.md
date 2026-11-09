@@ -118,7 +118,7 @@ boundary remains unspecified.
 
 The first backward block defines the decision value `V`, and the second
 averages it over income to obtain the arrival value. The stage file writes
-the values alone; their derivatives stand in the marginal blocks below.
+the values alone; their derivatives stand in the methods file, quoted below.
 
 ```bl
 [id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
@@ -129,21 +129,21 @@ the values alone; their derivatives stand in the marginal blocks below.
 }
 ```
 
-The block file `declaration/methods/marginals.bl` states the derivative of
-each value as a marginal block of the builder that writes the value, and
-the methods file `declaration/methods/cons_savings_iid.yml` binds each block
-with `!marginals`. At the selected optimum, differentiating the decision
+The methods file `declaration/stages/cons_savings_iid/methods.bl`, an
+addition to the stage file that the package reads together with it,
+appends the derivative of each value as a line of the builder that writes
+the value, under that builder's own id. At the selected optimum, differentiating the decision
 value with respect to cash on hand gives `D_{w}V = 𝑑𝑢(c)`; this is the
 envelope condition. The arrival line averages that derivative over income.
 The factor `R` in it is the derivative of cash on hand with respect to
 beginning-of-period assets.
 
 ```bl
-[id=dcsn_marginal, (c) : !cntn -> (V) : !dcsn] {
+[id=cntn_to_dcsn] {
     D_{w}V = 𝑑𝑢(c)                  :: [id=marginal]
 }
 
-[id=arvl_marginal, (V) : !dcsn -> (V[<]) : !arvl] {
+[id=dcsn_to_arvl] {
     D_{b}V[<] = E_{y}(R * D_{w}V)   :: [id=marginal]
 }
 ```
@@ -162,13 +162,15 @@ where the inputs are known and where the output is used.
 }
 ```
 
-The methods file opens the policy builder with the endogenous grid method,
-`!egm`, and the method block `egm` of the block file
-`declaration/methods/cons_savings_iid_egm.bl`, whose three lines compute the
-policy in place of the maximization.
+The methods file names the endogenous grid method, `!egm`, as the policy
+builder's method, with its grid of savings beside it, and appends three
+lines to the policy block, which compute the policy in place of the
+maximization when the stage is solved; the maximization remains the
+stage's statement of the choice.
 
 ```bl
-[id=egm, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+[id=policy, method : !egm
+    | policy.grid : !Cartesian(a=(a_min, a_max, n_a))] {
     c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
     w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
@@ -199,7 +201,7 @@ the endogenous grid method tabulates the first two lines on a grid of `a`,
 checks that the resulting cash-on-hand knots increase, and interpolates the
 pairs `(w[>], c[>])` at the decision state; a root-finding method solves
 the identification pointwise instead. Neither the interpolation nor the
-inversion of the endogenous grid is written in the stage file or in the
-block file, for the same reason that the representation of `V` on its grid
-is not: the files name the mathematical statements, and the methods file
-names the device that realizes them.
+inversion of the endogenous grid is written as an equation, for the same
+reason that the representation of `V` on its grid is not: the lines name
+the mathematical statements, and the method words of the methods file name
+the devices that realize them.

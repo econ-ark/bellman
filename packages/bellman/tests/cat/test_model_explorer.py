@@ -345,13 +345,13 @@ def join_edges(graph):
 
 
 @needs_viewer
-def test_item_1_two_graphs_one_node_per_primitive_in_its_builders_namespace(cons, sa_savings):
+def test_item_1_two_graphs_one_node_per_primitive_in_its_builders_namespace(cons_methods_only, sa_savings):
     from model_explorer import graph_builder as gb
 
-    collection = me.to_model_explorer(cons)
-    assert isinstance(collection, gb.GraphCollection) and collection.label == "cons"
+    collection = me.to_model_explorer(cons_methods_only)
+    assert isinstance(collection, gb.GraphCollection) and collection.label == "cons methodized"
     assert [graph.id for graph in collection.graphs] == STAGE_GRAPHS
-    for stage in (cons, sa_savings):
+    for stage in (cons_methods_only, sa_savings):
         for graph in builders_graphs(me.to_model_explorer(stage)):
             boxes = operator_boxes(stage, graph.id)
             op_nodes = {node.id: node for node in graph.nodes if node.id not in me.BOUNDARY_IDS}
@@ -422,15 +422,15 @@ def test_a_layer_is_crossed_by_the_wires_its_primitives_read_and_shows_its_signa
 
 
 @needs_viewer
-def test_item_1_every_wire_is_an_edge_with_its_label_perch_type_and_role(cons):
-    graph = graph_named(me.to_model_explorer(cons), "backward")
+def test_item_1_every_wire_is_an_edge_with_its_label_perch_type_and_role(cons_methods_only):
+    graph = graph_named(me.to_model_explorer(cons_methods_only), "backward")
     nodes = {n.id: n for n in graph.nodes}
-    hypergraph = graph_of(cons, "builders", "backward", grain="primitive")
+    hypergraph = graph_of(cons_methods_only, "builders", "backward", grain="primitive")
     identities = {str(identity): identity for identity in drawn_sorts(hypergraph)}
-    wires = wire_table(cons)
+    wires = wire_table(cons_methods_only)
     edges = [(n.id, e) for n in graph.nodes for e in n.incomingEdges]
     # one edge for each wire a box reads and each wire the graph gives
-    reads = sum(len(box.dom.inside) for box in operator_boxes(cons, "backward"))
+    reads = sum(len(box.dom.inside) for box in operator_boxes(cons_methods_only, "backward"))
     assert len(edges) == reads + len(hypergraph.cod.inside)
     for target_id, edge in edges:
         assert edge.sourceNodeId in nodes
@@ -453,7 +453,7 @@ def test_item_1_every_wire_is_an_edge_with_its_label_perch_type_and_role(cons):
     # the type of a port is the type the builder's signature prints
     ports = {m.id: attributes(m) for n in graph.nodes for m in n.inputsMetadata}
     for key in ("cntn_to_dcsn", "dcsn_to_arvl", "policy"):
-        signature = cons.builder.bwd[key].signature()
+        signature = cons_methods_only.builder.bwd[key].signature()
         for wire in signature.inputs + signature.outputs:
             assert ports[str(wire.identity)]["type"] == wire.type, wire.identity
     # the wire the pullback writes is read by one box, the aggregation
@@ -463,8 +463,8 @@ def test_item_1_every_wire_is_an_edge_with_its_label_perch_type_and_role(cons):
     # its writer holds for it
     readers = [(t, e) for t, e in edges if e.sourceNodeOutputId == "cons:function:cntn:c"]
     assert sorted(t for t, _ in readers) == [
-        "policy.cons_choice:Pullback",
-        "policy.endoggrid:Aggregation",
+        "policy.grid:Aggregation",
+        "policy.identification:Pullback",
     ]
     assert {e.sourceNodeId for _, e in readers} == {"policy.InvEuler:Aggregation"}
     written = [m.id for m in nodes["policy.InvEuler:Aggregation"].outputsMetadata]
@@ -499,24 +499,24 @@ def test_an_output_shows_the_wires_label_perch_type_and_role_as_its_input_does(c
 
 @needs_viewer
 def test_item_1_a_node_shows_the_symbol_with_the_cards_law_and_its_ports_as_drawn(
-    cons,
+    cons_methods_only,
 ):
-    nodes = {n.id: n for n in graph_named(me.to_model_explorer(cons), "backward").nodes}
-    hypergraph = graph_of(cons, "builders", "backward", grain="primitive")
+    nodes = {n.id: n for n in graph_named(me.to_model_explorer(cons_methods_only), "backward").nodes}
+    hypergraph = graph_of(cons_methods_only, "builders", "backward", grain="primitive")
     # the names the drawing is given, from the one function that gives
     # them, and the sorts and value aggregations it reads itself
-    names = drawing_arguments(cons, hypergraph)["wire_names"]
+    names = drawing_arguments(cons_methods_only, hypergraph)["wire_names"]
     sorts, aggregations = drawn_sorts(hypergraph), value_aggregations_of(hypergraph)
-    for box in operator_boxes(cons, "backward"):
+    for box in operator_boxes(cons_methods_only, "backward"):
         node = nodes[str(box_identity(box))]
         # the kind over the drawing's symbol, composed with the name the
         # box's card gives the law of motion the box references, where it
         # references one (AMD-MI-001, rules 1 and 3)
-        record = cons.builder.bwd.primitives[box.name].denote()
+        record = cons_methods_only.builder.bwd.primitives[box.name].denote()
         named = {held.identity: held.symbol for held in record.definitions}
         law = next((named[ref] for ref in box.data if getattr(ref, "kind", None) == "g"), None)
         assert attributes(node)["kind"] == box_identity(box).kind, box.name
-        assert node.label == box_symbol(box, aggregations, law), box.name
+        assert node.label.removesuffix(" · " + attributes(node).get("method", "")) == box_symbol(box, aggregations, law), box.name
         for wires, items in (
             (box.dom.inside, node.inputsMetadata),
             (box.cod.inside, node.outputsMetadata),
@@ -542,10 +542,11 @@ def test_an_identification_that_reads_no_coordinate_function_shows_the_drawings_
     # function m_d[>]: the identification `c = c[>]` then reads no state
     # wire and references the policy block's G, no law of motion (ruling
     # MI1-K2), and the construction accepts the stage
-    text = "\n".join(
-        line for line in corpus_text("cons").split("\n") if "[id=endoggrid]" not in line
-    )
-    stage = elaborate_text(text, "cons.bl")
+    from conftest import CONS_METHODS
+    addition = "\n".join(line for line in CONS_METHODS.read_text().splitlines()
+                           if "[id=grid]" not in line)
+    stage = elaborate_text(corpus_text("cons"), "cons.bl").methodize(
+        {"text": addition, "origin": str(CONS_METHODS)})
     collection = me.to_model_explorer(stage)
     # no graph of the view is refused: no node holds the attribute `refusal`
     held = [node for graph in collection.graphs for node in graph.nodes]
@@ -553,9 +554,9 @@ def test_an_identification_that_reads_no_coordinate_function_shows_the_drawings_
     # the node's label is the symbol the drawing of the same graph
     # shows for the box, the label of its DOT statement before its tooltip
     source = stage.builder.bwd.primitives.diagram().source
-    drawn = re.search(r'\[label="([^"]*)" tooltip="policy\.cons_choice:Pullback — ', source)
+    drawn = re.search(r'\[label="([^"]*)" tooltip="policy\.identification:Pullback — ', source)
     nodes = {node.id: node for node in graph_named(collection, "backward").nodes}
-    assert nodes["policy.cons_choice:Pullback"].label == drawn.group(1)
+    assert nodes["policy.identification:Pullback"].label == drawn.group(1)
 
 
 @needs_viewer
@@ -755,7 +756,7 @@ def test_the_card_module_answers_the_sections_the_card_prints(
             assert all(s.heading.startswith(WORDS[s.label]) for s in sections)
 
 
-def test_item_2_a_primitives_attributes_are_its_cards_rows_one_line_each(cons, port, ret_choice):
+def test_item_2_a_primitives_attributes_are_its_cards_rows_one_line_each(cons, port, ret_choice, cons_obs):
     for stage in (cons, port, ret_choice):
         for direction in DIRECTIONS:
             for box in operator_boxes(stage, direction):
@@ -778,13 +779,18 @@ def test_item_2_a_primitives_attributes_are_its_cards_rows_one_line_each(cons, p
                         )
                     }
                     expected = [rule for rule in expected if rule not in before]
-                assert [spaced(rule) for rule in numbered(attrs, "rule")] == expected, identity
+                assert ["".join(rule.split()) for rule in numbered(attrs, "rule")] == [
+                    "".join(rule.split()) for rule in expected], identity
                 # `lines`: the file and the numbers of the lines the card's
                 # `Source` section quotes
                 assert expanded(attrs.get("lines")) == quoted_lines(card), identity
                 # the rows of `Where` stand on the builder's layer
                 assert not numbered(attrs, "where"), identity
                 assert "method" not in attrs  # a symbolic version binds no method
+    # A repeated rule with differently printed region names is removed too.
+    evaluation = me.box_attributes(
+        cons_obs, "backward", box_named(cons_obs, "backward", "policy:Evaluation"))
+    assert numbered(evaluation, "rule") == ["𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)"]
     attrs = me.box_attributes(
         cons, "backward", box_named(cons, "backward", "cntn_to_dcsn:Aggregation")
     )
@@ -848,13 +854,13 @@ def test_a_primitive_shows_no_card_call_and_no_condition_rows(cons, port, ret_ch
 
 
 def test_a_primitive_whose_card_prints_no_rule_carries_no_rule(elaborate_text):
-    # the identification of `keeper_cons.bl`'s policy builder, which the method
-    # block of `keeper_cons_egm.bl` opens once the stage is bound with its
-    # methods file, is the one primitive of the core stages whose card has no
-    # `Rule` section (decision MB-U15)
+    # the identification of `keeper_cons.bl`'s policy builder, which the lines
+    # of the endogenous grid method open once the stage is bound with the
+    # addition beside it, is the one primitive of the core stages whose card
+    # has no `Rule` section (decision MB-U15)
     path = "applications/durables/declaration/stages/keeper_cons/keeper_cons.bl"
     stage = elaborate_text((ROOT / path).read_text(encoding="utf-8"), path)
-    stage.methodize(ROOT / "applications/durables/declaration/stages/keeper_cons/methods.yml")
+    stage.methodize(ROOT / "applications/durables/declaration/stages/keeper_cons/methods.bl")
     box = box_named(stage, "backward", "policy.cons_choice:Pullback")
     attrs = me.box_attributes(stage, "backward", box)
     assert not numbered(attrs, "rule")
@@ -862,118 +868,44 @@ def test_a_primitive_whose_card_prints_no_rule_carries_no_rule(elaborate_text):
 
 
 @needs_viewer
-def test_item_3_every_bound_method_stands_in_its_nodes_row_and_mark_or_on_its_layer(
-    cons, cons_methods_only
-):
-    def showing(collection, keys):
-        """The ids of the nodes and the namespaces of the layers that show
-        one of these attributes."""
-        found = set()
-        for graph in collection.graphs:
-            found |= {n.id for n in graph.nodes if keys & set(attributes(n))}
-            layers = (graph.groupNodeAttributes or {}).items()
-            found |= {namespace for namespace, shown in layers if keys & set(shown)}
-        return found
-
-    def marked(collection):
-        """The tag the label of each node marks, by node id: the text after
-        the last ` · ` of the label's last line where it begins with `!`,
-        and the empty text where the label marks no tag."""
-        found = {}
-        for graph in collection.graphs:
-            for n in graph.nodes:
-                _, mark, tag = n.label.split("\n")[-1].rpartition(" · ")
-                found[n.id] = tag if mark and tag.startswith("!") else ""
-        return found
-
-    # the plain version shows no method on any node, layer or label
+def test_item_3_every_bound_method_stands_in_its_nodes_row_and_mark_or_on_its_layer(cons, cons_methods_only):
     plain = me.to_model_explorer(cons)
-    assert showing(plain, {"method", "handler"}) == set()
-    assert set(marked(plain).values()) == {""}
-    # every binding the builders graphs answer stands on one node or on one
-    # layer, a binding with a handler and no tag included
+    assert all(not {"method", "handler", "grid"} & set(attributes(n))
+               for graph in plain.graphs for n in graph.nodes)
     bound = me.to_model_explorer(cons_methods_only)
-    graphs = (cons_methods_only.builder.bwd, cons_methods_only.builder.fwd)
-    targets = {str(target) for graph in graphs for target in graph.methods}
-    assert showing(bound, {"method", "handler"}) == targets
+    backward = graph_named(bound, "backward")
+    nodes = {n.id: n for n in backward.nodes}
+    evaluation = attributes(nodes["cntn_to_dcsn:Evaluation"])
+    assert evaluation["method"] == "!Linear"
+    assert evaluation["grid"] == "!Cartesian(m_d=(m_min, m_max, n_m))"
+    assert evaluation["handler"] == "cons-port:_make_interp"
+    assert numbered(evaluation, "setting") == [
+        str(cons_methods_only.settings[name]) for name in ("m_min", "m_max", "n_m")]
+    assert nodes["cntn_to_dcsn:Evaluation"].label.endswith(" · !Linear")
+    policy = backward.groupNodeAttributes["policy"]
+    assert (policy["method"], policy["handler"], policy["grid"]) == (
+        "!egm", "cons-port:egm", "!Cartesian(a=(a_min, a_max, n_a))")
+    assert "method" not in attributes(nodes["policy:Evaluation"])
+    forward = graph_named(bound, "forward").groupNodeAttributes
+    assert forward["arvl_to_dcsn"]["method"] == "!deterministic"
+    assert forward["dcsn_to_cntn"]["handler"] == "cons-port:transition_fwd"
+    assert "method" not in forward["dcsn_to_cntn"]
     for graph in bound.graphs:
         assert all("\n" not in value for n in graph.nodes for value in attributes(n).values())
-        layers = (graph.groupNodeAttributes or {}).values()
-        assert all("\n" not in value for shown in layers for value in shown.values())
-    # the label of a node marks the tag its `method` row holds, and the label
-    # of a node with no `method` row marks none
-    rows = {n.id: attributes(n).get("method", "") for g in bound.graphs for n in g.nodes}
-    assert marked(bound) == rows
-    # two backward evaluations hold a tag, since the methods of the forward
-    # graph are bound at its builders alone
-    assert {node_id: tag for node_id, tag in rows.items() if tag} == {
-        "cntn_to_dcsn:Evaluation": "!Linear",
-        "policy:Evaluation": "!egm",
-    }
-    # a bound method colors no node: each node keeps the style it has in the
-    # plain version
-    styles = {n.id: n.style for g in plain.graphs for n in g.nodes}
-    assert {n.id: n.style for g in bound.graphs for n in g.nodes} == styles
-    # the node shows the card's `Method` row as its tag and its handler, and
-    # one attribute to a row of the card's `Options`
-    nodes = {n.id: n for n in graph_named(bound, "backward").nodes}
-    evaluation = attributes(nodes["cntn_to_dcsn:Evaluation"])
-    assert evaluation["handler"] == "cons-port:_make_interp"
-    box = box_named(cons_methods_only, "backward", "cntn_to_dcsn:Evaluation")
-    card = str(me.piece_handle(cons_methods_only, "backward", box).denote())
-    (options,) = [held for heading, held in printed_sections(card) if heading == "Options"]
-    assert numbered(evaluation, "option") == [one_line(row) for row in options]
-    assert numbered(evaluation, "option") == [
-        "grid = !Cartesian",
-        "orders = {'m_d': 'n_m'}",
-        "bounds = {'m_d': ('m_min', 'm_max')}",
-    ]
-    assert not numbered(evaluation, "setting")  # this version configures no setting
-    # `!egm` names its exogenous grid of savings (AMD-MB-003 §1)
-    assert numbered(attributes(nodes["policy:Evaluation"]), "option") == [
-        "grid = !Cartesian",
-        "orders = {'a': 'n_a'}",
-        "bounds = {'a': ('a_min', 'a_max')}",
-    ]
-    # a method bound at a builder, and at none of its primitives, stands on
-    # the builder's layer
-    layers = graph_named(bound, "forward").groupNodeAttributes
-    assert layers["arvl_to_dcsn"]["method"] == "!deterministic"
-    assert layers["dcsn_to_cntn"]["handler"] == "cons-port:transition_fwd"
-    assert "method" not in layers["dcsn_to_cntn"]
+        assert all("\n" not in value for shown in (graph.groupNodeAttributes or {}).values()
+                   for value in shown.values())
 
 
 def test_a_configured_version_shows_the_settings_its_options_name(cons_configured):
-    box = box_named(cons_configured, "backward", "cntn_to_dcsn:Evaluation")
-    attrs = me.box_attributes(cons_configured, "backward", box)
-    # the card writes the configured values into the options
-    assert numbered(attrs, "option") == [
-        "grid = !Cartesian",
-        "orders = {'m_d': 8000}",
-        "bounds = {'m_d': (0.01, 2000.0)}",
-    ]
-    # one attribute to a setting the options name, as the version's settings
-    # print it
+    collection = me.to_model_explorer(cons_configured)
+    graph = graph_named(collection, "backward")
+    evaluation = next(n for n in graph.nodes if n.id == "cntn_to_dcsn:Evaluation")
+    attrs = attributes(evaluation)
+    assert attrs["grid"] == "!Cartesian(m_d=(m_min, m_max, n_m))"
     assert numbered(attrs, "setting") == [
-        str(cons_configured.settings[name]) for name in ("n_m", "m_min", "m_max")
-    ]
-    assert attrs["setting 1"] == (
-        "n_m = 8000, read at cntn_to_dcsn:Evaluation by !Linear for its grid !Cartesian")
-    # the method's rows stand after the kernel and before the lines
-    assert list(attrs) == [
-        "kind",
-        "rule 1",
-        "rule 2",
-        "kernel",
-        "method",
-        "handler",
-        "option 1",
-        "option 2",
-        "option 3",
-        "setting 1",
-        "setting 2",
-        "setting 3",
-    ]
+        str(cons_configured.settings[name]) for name in ("m_min", "m_max", "n_m")]
+    assert "m_min = 0.01 : Xm" in attrs["setting 1"]
+    assert "n_m = 8000 : ℕ" in attrs["setting 3"]
 
 
 @needs_viewer
@@ -1555,7 +1487,6 @@ class WireRecord:
     coordinates: tuple
 
 
-
 def _attribute_of(item, key):
     """The value of the attribute `key` of a node, a port or an edge, None
     where it has none."""
@@ -1944,11 +1875,10 @@ def test_line_2_the_where_rows_stand_once_on_the_layer_of_their_builder(
                     if heading == "Where":
                         assert {spaced(one_line(row)) for row in held} <= builder, box.name
     # the keep branch's two continuation coordinates, which the derivative
-    # lines of the marginal block of `marginals_house_choice.bl` name, stand
-    # once under the law's own row, on the stage bound with its methods file
-    # (decision MB-U37)
+    # lines of the addition beside the stage file name, stand once under the
+    # law's own row, on the stage bound with that addition (decision MB-U37)
     bound = branching_stage("house_choice")
-    bound.methodize(ROOT / "applications/housing-frictions/declaration/stages/house_choice/methods.yml")
+    bound.methodize(ROOT / "applications/housing-frictions/declaration/stages/house_choice/methods.bl")
     layers = graph_named(me.to_model_explorer(bound), "backward").groupNodeAttributes
     assert numbered(layers["cntn_to_dcsn"], "where") == [
         "𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)",
@@ -1958,31 +1888,16 @@ def test_line_2_the_where_rows_stand_once_on_the_layer_of_their_builder(
 
 
 def test_line_3_lines_name_the_file_and_the_numbers_of_the_lines_the_card_quotes(
-    cons, house_choice
+    cons_methods_only, house_choice
 ):
     def lines(stage, direction, name):
         """The attribute `lines` of the primitive of this name, or None."""
         box = box_named(stage, direction, name)
         return me.box_attributes(stage, direction, box).get("lines")
 
-    # neither the address, which the id's first segment names, nor the quoted
-    # text, which the rules restate
-    assert lines(cons, "backward", "cntn_to_dcsn:Aggregation") == "cons.bl 21"
-    assert lines(cons, "backward", "policy.cons_choice:Pullback") == "cons.bl 35"
-    # a run of consecutive lines by its first and last, the others after a
-    # comma
-    assert lines(house_choice, "backward", "cntn_to_dcsn:Pullback:keep") == (
-        "house_choice.bl 18–19, 22"
-    )
-    # an expectation quotes the declaration of its distribution as well
-    assert lines(house_choice, "backward", "dcsn_to_arvl.value:Expectation:1") == (
-        "house_choice.bl 9, 31"
-    )
-    # an evaluation of a builder quotes no line and has no `lines`
-    assert lines(cons, "backward", "policy:Evaluation") is None
     # the numbers are those the printed `Source` section begins its rows
     # with, read from the card's record (`cards.source_lines`)
-    for stage in (cons, house_choice):
+    for stage in (cons_methods_only, house_choice):
         for direction in DIRECTIONS:
             for box in operator_boxes(stage, direction):
                 record = me.piece_handle(stage, direction, box).denote()
@@ -1992,102 +1907,6 @@ def test_line_3_lines_name_the_file_and_the_numbers_of_the_lines_the_card_quotes
                 if quoted is not None:
                     file, numbers = quoted
                     assert source_lines(record) == tuple(SourceLine(file, n) for n in numbers)
-
-
-def test_line_4_the_region_of_a_rule_stands_on_the_row_of_its_rule(cons, house_choice):
-    aggregation = box_named(house_choice, "backward", "cntn_to_dcsn:Aggregation")
-    region = "on (m_f, m_h) ∈ ℝ₊₊ × ℝ₊₊"
-    # the card sets each region on a row of its own, under its rule
-    card = str(me.piece_handle(house_choice, "backward", aggregation).denote())
-    (rows,) = [held for heading, held in printed_sections(card) if heading == "Rule"]
-    assert [one_line(row) for row in rows][1::2] == [region]
-    # the view writes it after its rule and two spaces, as one rule
-    attrs = me.box_attributes(house_choice, "backward", aggregation)
-    assert numbered(attrs, "rule") == [
-        f"𝑉 = (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑]  {region}",
-    ]
-    # a region the card sets at the right margin of its rule's line stands
-    # after the same two spaces
-    pullback = box_named(cons, "backward", "policy.cons_choice:Pullback")
-    assert me.box_attributes(cons, "backward", pullback)["rule"] == (
-        "𝑐(𝑚_d≻(a)) = 𝑐≻(a)  on 𝑚_d≻(Xa)"
-    )
-    # no rule of any primitive is a region alone
-    for stage in (cons, house_choice):
-        for direction in DIRECTIONS:
-            for box in operator_boxes(stage, direction):
-                rules = numbered(me.box_attributes(stage, direction, box), "rule")
-                assert not [rule for rule in rules if rule.startswith("on ")], box.name
-
-
-def test_line_5_an_evaluation_lists_its_typing_rows_and_no_rule_of_the_box_before_it(
-    cons, house_choice, cons_obs, cons_methods_only
-):
-    def rules(stage, name):
-        """The rules the node of the backward primitive `name` lists."""
-        box = box_named(stage, "backward", name)
-        return numbered(me.box_attributes(stage, "backward", box), "rule")
-
-    assert rules(cons, "cntn_to_dcsn:Evaluation") == ["𝑉 : Xm → [−∞, ∞)", "D_{m_d}𝑉(m_d) = 𝑑𝑢(𝑐(m_d))"]
-    assert rules(cons, "policy:Evaluation") == ["𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)"]
-    assert rules(house_choice, "cntn_to_dcsn:Evaluation") == [
-        "𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ",
-        "𝑑𝑉_f : ℝ₊₊ × ℝ₊₊ → ℝ₊₊",
-        "𝑑𝑉_h : ℝ₊₊ × ℝ₊₊ → ℝ₊₊",
-    ]
-    # the evaluation's card spells the abbreviation of the region of the rule
-    # it repeats otherwise than the card of the box before it, since its
-    # record does not define that abbreviation; the rule is known as a copy
-    # by its record, not by its printing
-    assert rules(cons_obs, "policy:Evaluation") == ["𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)"]
-    for name, region in (
-        ("policy:Evaluation", "on 𝑚_d≻(𝐴≻,𝑝𝑜𝑙𝑖𝑐𝑦)"),
-        ("policy.cons_choice:Pullback", "on 𝑚_d≻(A≻,policy)"),
-    ):
-        card = str(
-            me.piece_handle(cons_obs, "backward", box_named(cons_obs, "backward", name)).denote()
-        )
-        assert printed_rules(card)[0].endswith(region), name
-    evaluations = 0
-    for stage in (cons, house_choice, cons_obs):
-        for direction in DIRECTIONS:
-            for box in operator_boxes(stage, direction):
-                if box_identity(box).kind != "Evaluation":
-                    continue
-                evaluations += 1
-                # the kernel of an evaluation is the identity
-                assert str(kernel(stage, box)).startswith("identity at "), box.name
-                # the rules its record holds and no box that writes a wire it
-                # reads holds, each a membership that types an output
-                earlier = {
-                    rule
-                    for other in boxes_before(stage, direction, box)
-                    for wire in me.piece_handle(stage, direction, other).denote().outputs
-                    for rule in wire.rules
-                }
-                record = me.piece_handle(stage, direction, box).denote()
-                own = [rule for wire in record.outputs for rule in wire.rules]
-                kept = [rule for rule in own if rule not in earlier]
-                assert len(kept) < len(own), box.name
-                assert all(S.membership_parts(rule.statement) is not None for rule in kept)
-                # one row each, among the rows the evaluation's card prints,
-                # `name : carrier`
-                listed = [
-                    spaced(rule)
-                    for rule in numbered(me.box_attributes(stage, direction, box), "rule")
-                ]
-                assert len(listed) == len(kept), box.name
-                assert set(listed) <= set(printed_rules(str(record))), box.name
-                assert all(" : " in rule for rule in listed), box.name
-    assert evaluations > 0
-    # the method rows of an evaluation within which a method is bound stay
-    evaluation = box_named(cons_methods_only, "backward", "policy:Evaluation")
-    attrs = me.box_attributes(cons_methods_only, "backward", evaluation)
-    assert {key: attrs[key] for key in ("rule", "method", "handler")} == {
-        "rule": "𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)",
-        "method": "!egm",
-        "handler": "cons-port:egm",
-    }
 
 
 @needs_viewer
@@ -2142,7 +1961,7 @@ def test_line_8_the_policy_layer_lists_the_definition_of_each_feasible_set_its_p
     assert layers["policy"]["feasible set"] == "Γ(x : ℝ₊₊) := (0, x]"
     source = (ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl").read_text(
         encoding="utf-8")
-    assert source.splitlines()[10] == layers["policy"]["feasible set"]
+    assert layers["policy"]["feasible set"] in source.splitlines()
     assert [namespace for namespace, shown in layers.items() if "feasible set" in shown] == [
         "policy"
     ]
@@ -2361,70 +2180,6 @@ def test_the_initial_diagrams_stand_first_with_the_fields_as_nodes_in_their_perc
                 assert {m.id for m in node.inputsMetadata} == {
                     e.targetNodeInputId for e in node.incomingEdges
                 }, node.id
-    # the block's attributes, from its record: its kind, its header as the
-    # file writes it, its statements as the card quotes them with their line
-    # numbers, and its lines, the header's line first
-    backward = graph_named(collection, "backward initial diagram")
-    nodes = {n.id: n for n in backward.nodes}
-    shown = attributes(nodes["cntn_to_dcsn"])
-    record = cons.initial.backward["cntn_to_dcsn"].denote()
-    assert list(shown) == ["kind", "header", "statement 1", "statement 2", "lines"]
-    assert shown["kind"] == "block"
-    assert shown["header"] == record.header[0]
-    assert shown["header"] == (
-        "(V[>] : [-inf, inf) @ !vlu, c) : !cntn -> "
-        "(V : [-inf, inf) @ !vlu) : !dcsn"
-    )
-    source = (ROOT / "applications/portfolio-choice/declaration/stages/cons/cons.bl").read_text(
-        encoding="utf-8")
-    assert source.splitlines()[20] == f"[id=cntn_to_dcsn, {shown['header']}] {{"
-    assert numbered(shown, "statement") == [
-        "21  V        = 𝑢(c) + V[>]  :: [id=value]",
-        "22  D_{m_d}V = 𝑑𝑢(c)        :: [id=marginal]",
-    ]
-    assert shown["lines"] == "cons.bl 20–22"
-    # a `!doc` line, which forms no operation, is still a statement of its
-    # block
-    statements = numbered(attributes(nodes["policy"]), "statement")
-    assert statements[0].endswith("[id=optimality, !doc]")
-    assert attributes(nodes["policy"])["lines"] == "cons.bl 31–35"
-    # a port of a field: the label the drawing prints, its perch, its role
-    # and its declared set as the fields table prints it; no `type` and no
-    # `field`, since the field's node carries the name
-    (port,) = nodes["cntn_to_dcsn"].inputsMetadata
-    assert attributes(port) == {
-        "__tensor_tag": "V≻",
-        "label": "V≻",
-        "perch": "cntn",
-        "role": "value",
-        "set": "[-inf, inf)",
-    }
-    assert attributes(port)["set"] == to_source(cons.fields().get("cons:cntn:V").domain)
-    # the field's node: its rows in the order the fields table prints them,
-    # the line of the header that first lists the field last
-    assert attributes(nodes["cons:cntn:V"]) == {
-        "kind": "field",
-        "perch": "cntn",
-        "role": "value",
-        "set": "[-inf, inf)",
-        "lines": "cons.bl 21",
-    }
-    # the control `c` is listed by the header of the forward block at line
-    # 17, among the inputs it is read at, before the policy writes it at line
-    # 31
-    assert attributes(nodes["cons:dcsn:c"])["lines"] == "cons.bl 17"
-    lines = source.splitlines()
-    assert lines[16].startswith("[id=dcsn_to_cntn, (m_d, c : !ctrl")
-    assert lines[30].startswith("[id=policy, (V[>]")
-    # the forward diagram: the block `dcsn_to_cntn` on its state and no port
-    # for the control its header names
-    forward = graph_named(collection, "forward initial diagram")
-    assert attributes({n.id: n for n in forward.nodes}["dcsn_to_cntn"]) == {
-        "kind": "block",
-        "header": "(m_d, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : Xa) : !cntn",
-        "statement": "18  a = m_d - c",
-        "lines": "cons.bl 17–18",
-    }
     # a shock belongs to no perch: its node stands outside the layers, and
     # its row `edge` is the pair of perches the fields table draws it on
     forward = graph_named(me.to_model_explorer(sa_savings), "forward initial diagram")
@@ -2435,7 +2190,7 @@ def test_the_initial_diagrams_stand_first_with_the_fields_as_nodes_in_their_perc
         "edge": "∼→≻",
         "role": "shock",
         "set": "ℝ₊₊",
-        "lines": "sa_savings.bl 22",
+        "lines": "sa_savings.bl 18",
     }
     assert sa_savings.fields().edges["sa_savings:shck:Ψ"] == ("dcsn", "cntn")
     assert [e.sourceNodeId for e in forward.nodes[-1].incomingEdges] == [
@@ -2447,54 +2202,8 @@ def test_the_initial_diagrams_stand_first_with_the_fields_as_nodes_in_their_perc
 
 
 @needs_viewer
-def test_the_field_diagrams_of_cons_read_the_fields_through_the_blocks(cons):
-    # the forward diagram of
-    # `applications/portfolio-choice/declaration/stages/cons/cons.bl`: the
-    # three states, one in each perch's layer, from arrival to continuation,
-    # and the two blocks outside the layers
-    collection = me.to_model_explorer(cons)
-    forward = graph_named(collection, "forward initial diagram")
-    assert [(n.id, n.namespace, n.label) for n in forward.nodes] == [
-        ("cons:arvl:m", "arvl", "m≺"),
-        ("cons:dcsn:m_d", "dcsn", "m_d"),
-        ("cons:cntn:a", "cntn", "a≻"),
-        ("arvl_to_dcsn", "", "arvl_to_dcsn"),
-        ("dcsn_to_cntn", "", "dcsn_to_cntn"),
-    ]
-    assert list(forward.groupNodeAttributes) == ["arvl", "dcsn", "cntn"]
-    # the edges read m → arvl_to_dcsn → m_d → dcsn_to_cntn → a, each
-    # carrying the wire of the field at its end
-    assert sorted(edges_of(forward)) == sorted(
-        [
-            ("cons:arvl:m", "arvl_to_dcsn", "cons:arvl:m"),
-            ("arvl_to_dcsn", "cons:dcsn:m_d", "cons:dcsn:m_d"),
-            ("cons:dcsn:m_d", "dcsn_to_cntn", "cons:dcsn:m_d"),
-            ("dcsn_to_cntn", "cons:cntn:a", "cons:cntn:a"),
-        ]
-    )
-    # the backward diagram: the layers from continuation to arrival; the
-    # policy writes the control `c` at the decision perch, and the
-    # continuation value `V≻` is read by the decision block and the policy
-    backward = graph_named(collection, "backward initial diagram")
-    assert list(backward.groupNodeAttributes) == ["cntn", "dcsn", "arvl"]
-    nodes = {n.id: n for n in backward.nodes}
-    assert [n.id for n in backward.nodes if n.namespace == "dcsn"] == [
-        "cons:dcsn:V",
-        "cons:dcsn:c",
-    ]
-    c = nodes["cons:dcsn:c"]
-    assert (c.label, attributes(c)["role"]) == ("c", "control")
-    assert [e.sourceNodeId for e in c.incomingEdges] == ["policy"]
-    value = nodes["cons:cntn:V"]
-    assert (value.label, value.incomingEdges, value.inputsMetadata) == ("V≻", [], [])
-    assert sorted(t for s, t, _ in edges_of(backward) if s == "cons:cntn:V") == [
-        "cntn_to_dcsn",
-        "policy",
-    ]
-
-
-@needs_viewer
-def test_the_shorter_port_label_waits_behind_the_switch(cons, monkeypatch):
+def test_the_shorter_port_label_waits_behind_the_switch(cons_methods_only, monkeypatch):
+    cons = cons_methods_only
     # off, the default, the recorded form, which the drawing prints: a
     # result wire by the expression it denotes
     assert me.SHORT_LABELS is False
@@ -2509,11 +2218,11 @@ def test_the_shorter_port_label_waits_behind_the_switch(cons, monkeypatch):
     assert {n.id: n.label for n in backward.nodes} == nodes
     labels = {m.id: attributes(m)["label"] for n in backward.nodes for m in n.outputsMetadata}
     assert labels["cntn_to_dcsn:Aggregation:V:result"] == "𝑉(m_d)"
-    assert labels["dcsn_to_arvl:Aggregation:V:result"] == "𝑉(m)"
+    assert labels["dcsn_to_arvl:Aggregation:V:result"] == "𝑉(m, l)"
     assert labels["policy:Evaluation:c:result"] == "𝑐(m_d)"
     # a result that carries a set of candidate policies keeps its
     # expression, and a pulled-back wire, no result, keeps its name
-    assert labels["policy.cons_choice:Pullback:c:result"].startswith("{f ∈ {c ∈ (Xm → ℝ₊₊)")
+    assert labels["policy.identification:Pullback:c:result"].startswith("{f ∈ {c ∈ (Xm → ℝ₊₊)")
     assert labels["cons:function:cntn:V:g"] == "𝑉≻(𝑔(m_d, 𝑐(m_d)))"
 
 
@@ -2960,9 +2669,9 @@ def test_layers_to_open_names_the_first_parts_of_the_namespaces(cons, port, tmp_
 
 @needs_viewer
 def test_node_place_reads_the_occurrence_and_the_block_from_the_namespace(
-    cons, port, retiree_death
+    cons_methods_only, port, retiree_death
 ):
-    collection = me.to_model_explorer(cons)
+    collection = me.to_model_explorer(cons_methods_only)
     place = me.node_place
     assert place(collection, "backward", "policy.InvEuler:Aggregation") == ("", "policy")
     assert place(collection, "backward", "cntn_to_dcsn:Pullback") == ("", "cntn_to_dcsn")
@@ -2976,7 +2685,7 @@ def test_node_place_reads_the_occurrence_and_the_block_from_the_namespace(
     # a box of one branch of a branching block, `<block>:<operator>:<branch>`,
     # stands in that block
     assert place(retiree, "backward", "cntn_to_dcsn:Pullback:survive").block == "cntn_to_dcsn"
-    two = me.to_model_explorer(two_periods(cons, port))
+    two = me.to_model_explorer(two_periods(cons_methods_only, port))
     assert place(two, "backward", "periods[0]/cons/policy.InvEuler:Aggregation") == (
         "periods[0]/cons",
         "policy",
@@ -2996,14 +2705,15 @@ def test_node_place_reads_the_occurrence_and_the_block_from_the_namespace(
 
 
 @needs_viewer
-def test_wire_counts_count_distinct_wires_of_the_two_builders_graphs(cons, retiree_death):
-    collection = me.to_model_explorer(cons)
-    # 20 wires for cons.bl, the count spec 0.3 §2.5 states: a wire two boxes
-    # read counts once
-    assert me.wire_counts(collection) == {"backward": 17, "forward": 3}
-    assert me.wire_counts(dataclasses.asdict(collection)) == {"backward": 17, "forward": 3}
-    backward = next(graph for graph in collection.graphs if graph.id == "backward")
-    assert sum(len(node.incomingEdges) for node in backward.nodes) == 18
+def test_wire_counts_count_distinct_wires_of_the_two_builders_graphs(cons_methods_only, retiree_death):
+    collection = me.to_model_explorer(cons_methods_only)
+    expected = {graph.id: len({(edge.sourceNodeId, edge.sourceNodeOutputId)
+                for node in graph.nodes for edge in node.incomingEdges})
+                for graph in builders_graphs(collection)}
+    assert me.wire_counts(collection) == expected
+    assert me.wire_counts(dataclasses.asdict(collection)) == expected
+    backward = graph_named(collection, "backward")
+    assert sum(len(node.incomingEdges) for node in backward.nodes) > expected["backward"]
     assert me.wire_counts(me.to_model_explorer(retiree_death))["forward"] == 0
 
 

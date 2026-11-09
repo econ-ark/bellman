@@ -2,14 +2,16 @@
 
 `load_stage` reads one stage file, with the additions given beside it, the
 `.bl` methods files whose first line is `@methods: <stage>`, into its source
-record. `read_addition` reads one addition into the text and the origin a
-record carries. `load_trellis` reads a trellis file whose stages are records
-into the syntactic trellis; a record's `methods` may name an addition, or a
-list of additions applied in order, in place of a YAML selection.
-`read_trellis_file` reads the periods and the inter-period mappings a trellis
-file writes, each `{template, repeat}` entry and a mapping standing for every
-pair expanded; `load_trellis` and `load_recipe` both read a trellis file
-through it. Nothing here parses a stage or binds a mapping.
+record, each addition read by the verbs' reader
+`bellman.stage.levels.read_addition` into the text and the origin the record
+holds under `methods`. `load_trellis`
+reads a trellis file whose stages are records into the syntactic trellis; a
+record's `methods` names one addition or a list of additions, read in the
+order named (specification 0.7, D3 and F76). `read_trellis_file` reads the
+periods and the inter-period mappings a trellis file writes, each `{template,
+repeat}` entry and a mapping standing for every pair expanded; `load_trellis`
+and `load_recipe` both read a trellis file through it. Nothing here parses a
+stage or binds a mapping.
 """
 
 from __future__ import annotations
@@ -19,9 +21,11 @@ from copy import deepcopy
 from hashlib import sha256
 from os import fspath
 from pathlib import Path
+from typing import NamedTuple
 
 from bellman.refusals import FactoryError
-from bellman.stage.sources import load_calibration, load_methods, load_settings, read_yaml_mapping
+from bellman.stage.levels import read_addition
+from bellman.stage.sources import load_calibration, load_settings, read_yaml_mapping
 
 __all__ = [
     "KINDS",
@@ -29,9 +33,9 @@ __all__ = [
     "is_addition_path",
     "load_stage",
     "load_trellis",
+    "named_addition",
     "period_and_repeat",
     "plain_python",
-    "read_addition",
     "read_trellis_file",
 ]
 
@@ -49,51 +53,65 @@ METADATA = frozenset({"parent", "description", "version", "__comment__", "__yaml
 
 def load_stage(path, additions=()):
     """The source record of the stage file at `path`: its text and its origin
-    under `stage`, the calibration and the settings empty, the methods the
-    empty methods mapping `{"methods": []}`, its origin and the digest of its
-    text under `provenance`, and, where `additions` names methods files, the
-    text and the origin of each under `additions`, in the order given.
-    Nothing is parsed. A path that names no `.bl` file, or a file that
-    cannot be read as UTF-8 text, is refused under `readable-file`."""
+    under `stage`, the calibration and the settings empty, under `methods`
+    the record of each addition whose path `additions` lists, in the order
+    given (`named_addition`), and its origin and the digest of its text
+    under `provenance`. Nothing is parsed. A path that names no `.bl` file,
+    or a file that cannot be read as UTF-8 text, is refused under
+    `readable-file`, and an addition as the verbs refuse it, under
+    `readable-form`."""
     original = fspath(path)
-    text = _bl_text(original, "stage file")
-    record = {
+    text = _bl_text(original)
+    return {
         "stage": {"text": text, "origin": original},
         "calibration": {},
         "settings": {},
-        "methods": load_methods({}),
+        "methods": [named_addition(str(held), held).record for held in additions],
         "provenance": {"origin": original, "sha256": sha256(text.encode("utf-8")).hexdigest()},
     }
-    if additions:
-        record["additions"] = [read_addition(addition) for addition in additions]
-    return record
 
 
-def read_addition(path):
-    """The text and the origin of the addition at `path`, a methods file, as
-    a source record carries them under `additions`; refused under
-    `readable-file` as a stage file is."""
-    original = fspath(path)
-    return {"text": _bl_text(original, "methods file"), "origin": original}
+class Addition(NamedTuple):
+    """An addition as a trellis file or a recipe names it: `record`, its text
+    and its origin as a source record holds them under `methods`, and
+    `entry`, its provenance entry, the name as written, the path read and
+    the SHA-256 digest of the text."""
+
+    record: dict
+    entry: dict
+
+
+def named_addition(name, path):
+    """The addition `name` names at `path`, read by the verbs' reader
+    `bellman.stage.levels.read_addition` into its record and its provenance
+    entry (`Addition`). The one reader of a named addition: `load_stage`,
+    the trellis file and the recipe read through it, the trellis file and
+    the recipe refusing a path that names no file in their own words before
+    the call, and a file that is no `.bl` file or no UTF-8 text refused here
+    under `readable-form`."""
+    text, origin = read_addition(path)
+    return Addition(
+        {"text": text, "origin": origin},
+        {"source": name, "path": str(path), "sha256": sha256(text.encode("utf-8")).hexdigest()},
+    )
 
 
 def is_addition_path(value):
     """Whether a value a trellis file or a recipe writes for a stage's methods
-    names an addition, a `.bl` file, rather than a YAML selection."""
+    names an addition, a `.bl` file."""
     return isinstance(value, str) and value.endswith(".bl")
 
 
-def _bl_text(original, what):
-    """The text of the `.bl` file at `original`, read as UTF-8; `what` names
-    the kind of file a refusal speaks of."""
+def _bl_text(original):
+    """The text of the stage file at `original`, read as UTF-8."""
     name = Path(original).name
     if Path(original).suffix != ".bl":
         raise FactoryError(
-            f"load_stage reads a {what}, and {name} is no .bl file",
+            f"{name} names no stage file, since a stage file is a `.bl` file",
             rule="readable-file",
             file=original,
             written=name,
-            write=f"the path of a {what}, `<name>.bl`",
+            write="the path of a stage file, `<name>.bl`",
         )
     try:
         with open(original, encoding="utf-8", newline="") as stream:
@@ -104,7 +122,7 @@ def _bl_text(original, what):
             rule="readable-file",
             file=original,
             written=name,
-            write=f"the path of a {what} that exists",
+            write="the path of a stage file that exists",
         ) from None
     except OSError as error:
         raise FactoryError(
@@ -112,7 +130,7 @@ def _bl_text(original, what):
             rule="readable-file",
             file=original,
             written=name,
-            write=f"the path of a readable {what}",
+            write="the path of a readable stage file",
         ) from None
     except UnicodeDecodeError:
         raise FactoryError(
@@ -120,7 +138,7 @@ def _bl_text(original, what):
             rule="readable-file",
             file=original,
             written=name,
-            write=f"a {what} saved as UTF-8 text",
+            write="a stage file saved as UTF-8 text",
         ) from None
 
 
@@ -130,13 +148,15 @@ def _bl_text(original, what):
 def load_trellis(file, texts=None):
     """The syntactic trellis a trellis file writes out: each period's `stages`
     a mapping from keys to records, each record naming its `.bl` file under
-    `stage` and its three mappings inline or as paths, both relative to the
-    file's directory; a `{template, repeat}` entry read as `read_trellis_file`
-    reads it; each stage file read once. The result holds `periods`,
-    `inter_connectors` and, under `provenance`, the file's path and digest.
-    `texts` maps a file's resolved path to the text read in its place, and
-    reaches the trellis file and its period files alone, whose paths taken
-    stand under the provenance's `texts` (model interface spec 0.4 §3.1)."""
+    `stage`, its calibration and its settings inline or as paths, and its
+    methods as the path of one `.bl` addition or a list of them, applied in
+    the order written, every path relative to the file's directory; a
+    `{template, repeat}` entry read as `read_trellis_file` reads it; each
+    stage file read once. The result holds `periods`, `inter_connectors` and,
+    under `provenance`, the file's path and digest. `texts` maps a file's
+    resolved path to the text read in its place, and reaches the trellis
+    file and its period files alone, whose paths taken stand under the
+    provenance's `texts` (model interface spec 0.4 §3.1)."""
     file = Path(file)
     directory = file.parent
     read = read_trellis_file(file, texts)
@@ -194,12 +214,12 @@ def load_trellis(file, texts=None):
                 "provenance": {**source["provenance"], "source_lists": {}},
             }
             for kind in KINDS:
-                record[kind], record["provenance"]["source_lists"][kind] = _record_mapping(
-                    kind, written.get(kind), directory, file, f"{where}.{kind}"
+                value, address = written.get(kind), f"{where}.{kind}"
+                record[kind], record["provenance"]["source_lists"][kind] = (
+                    _additions_of(value, directory, file, address)
+                    if kind == "methods"
+                    else _record_mapping(kind, value, directory, file, address)
                 )
-            additions = _additions_of(written.get("methods"), directory, file, f"{where}.methods")
-            if additions:
-                record["additions"] = additions
             if "label" in written:
                 record["label"] = written["label"]
             records[key] = record
@@ -234,7 +254,10 @@ def read_trellis_file(file, texts=None):
     taken = set() if text_path is None else {text_path}
     if not isinstance(raw.get("periods"), list) or not raw["periods"]:
         raise _trellis_shape_refusal(
-            "the trellis file has no list `periods`",
+            "the list `periods` of the trellis file is empty, and a trellis holds at least one "
+            "period"
+            if isinstance(raw.get("periods"), list)
+            else "the trellis file has no list `periods`",
             file=file,
             address="periods",
             written=repr(raw)[:60],
@@ -371,24 +394,35 @@ def _mapping_and_digest(path, texts, *, rule, address):
 
 # --- the mappings of a record and the refusal of a trellis file ---
 
-# the reader of each kind of binding source
+# the reader of the two kinds of binding source a record names by a path or
+# writes inline; the methods of a record are additions, read by `_additions_of`
 SOURCE_READERS = {
     "calibration": load_calibration,
     "settings": load_settings,
-    "methods": load_methods,
 }
 
 
 def _additions_of(value, directory, file, address):
-    """The additions a record's `methods` names, each read into its text and
-    its origin: the one `.bl` path the value is, or the `.bl` paths of the
-    list it is, in order; none where the value names a YAML selection or
-    nothing."""
+    """The additions a record's `methods` names, each read into its record,
+    with one provenance entry each (`named_addition`): the one `.bl` path the
+    value is, or the `.bl` paths of the list it is, in order, relative to
+    `directory`; none where the value is absent or null. A value that is no
+    such path, a mapping or the path of a YAML file among them, is refused
+    under `trellis-file-shape`."""
+    if value is None:
+        return [], []
     named = value if isinstance(value, list) else [value]
-    additions = []
+    additions, entries = [], []
     for item in named:
         if not is_addition_path(item):
-            continue
+            raise _trellis_shape_refusal(
+                f"{address} is {repr(item)[:60]}; a record's methods is the path of a `.bl` "
+                "addition, or a list of them, applied in order",
+                file=file,
+                address=address,
+                written=repr(item)[:60],
+                write="methods: stages/<key>/methods.bl, or a list of such paths",
+            )
         path = Path(item) if Path(item).is_absolute() else Path(directory) / item
         if not path.is_file():
             raise _trellis_shape_refusal(
@@ -396,29 +430,23 @@ def _additions_of(value, directory, file, address):
                 file=file,
                 address=address,
                 written=item,
-                write="methods: the path of a methods file, or a list of them",
+                write="methods: the path of an addition, or a list of them",
             )
-        additions.append(read_addition(path))
-    return additions
+        addition = named_addition(item, path)
+        additions.append(addition.record)
+        entries.append(addition.entry)
+    return additions, entries
 
 
 def _record_mapping(kind, value, directory, file, address):
-    """The mapping of one kind a written record gives, inline or read from the
-    file its string names relative to `directory`, with its provenance
-    entries: one for a file, none for a mapping. An absent or null methods
-    value is the empty methods mapping `{"methods": []}`; a methods file read
-    by path drops the metadata keys `METADATA` names. A methods value that
-    names an addition, a `.bl` file, or a list of additions, gives the empty
-    methods mapping; the additions are read by `_additions_of`."""
+    """The mapping of one kind a written record gives, the calibration or the
+    settings, inline or read from the file its string names relative to
+    `directory`, with its provenance entries: one for a file, none for a
+    mapping; an absent or null value is the empty mapping."""
     if value is None:
-        return (load_methods({}) if kind == "methods" else {}), []
-    if kind == "methods" and (
-        is_addition_path(value)
-        or (isinstance(value, list) and all(is_addition_path(item) for item in value))
-    ):
-        return load_methods({}), []
+        return {}, []
     if isinstance(value, Mapping):
-        return (load_methods(value) if kind == "methods" else dict(value)), []
+        return dict(value), []
     if isinstance(value, str):
         path = Path(value) if Path(value).is_absolute() else Path(directory) / value
         if not path.is_file():
@@ -429,10 +457,7 @@ def _record_mapping(kind, value, directory, file, address):
                 written=value,
                 write=f"{kind}: {{...}} inline, or the path of a file",
             )
-        mapping = SOURCE_READERS[kind](path)
-        if kind == "methods":
-            mapping = {key: item for key, item in mapping.items() if key not in METADATA}
-        return mapping, [
+        return SOURCE_READERS[kind](path), [
             {"source": value, "path": str(path), "sha256": sha256(path.read_bytes()).hexdigest()}
         ]
     raise _trellis_shape_refusal(

@@ -68,10 +68,10 @@ from bellman.native.versions import (
 
 # the class body below binds a function of each of these modules as a method
 from bellman.stage import binding_verbs, denotations, stage_answers
-from bellman.stage.construction import stage_fields
 from bellman.stage.encoding import encoding
 from bellman.stage.inventory import stage_sheet, version_word
-from bellman.stage.method_blocks import declared_version
+from bellman.stage.components import check_components
+from bellman.stage.levels import construct, declared_version
 from bellman.stage.pieces import (
     BoundMethods,
     BuilderPairs,
@@ -80,6 +80,7 @@ from bellman.stage.pieces import (
     Settings,
     StoredAttribute,
 )
+from bellman.stage.places import components_by_place, places, typings
 from bellman.syntax.vocabulary import ARRIVAL, CONTINUATION, DECISION
 
 
@@ -140,13 +141,14 @@ class ElaboratedStage(StageVersion):
 
     @property
     def methods(self):
-        """The methods bound to this version, by target, as a read-only
-        mapping, read by the target a method is bound at or by the target as
-        the methods file writes it, `methods["policy"]`. The answer is empty
-        before `methodize`; each piece answers its own bindings.
+        """The components typed at the places of this version, by place, as
+        a read-only mapping, `methods["policy"]`: the method word with its
+        arguments, the grid and the handler the typing entries at the place
+        give it. The answer is empty for a stage whose signatures carry no
+        component; each piece answers the components within it.
 
         See `docs/Bellman-Sym/API/stage/07-methods.md` §2."""
-        return BoundMethods(self, dict(self.bindings.methods or {}))
+        return BoundMethods(self, dict(components_by_place(self)))
 
     @property
     def par(self):
@@ -180,10 +182,9 @@ class ElaboratedStage(StageVersion):
         """The declared builders, the operators the blocks of the stage file
         denote as elaboration builds them, with the interface of
         `stage.builder`: `stage.declared.policy`, `stage.declared["cntn",
-        "dcsn"]`, `stage.declared.bwd`. Until a method block is bound they are
-        the operative builders `stage.builder` answers; a bound block changes
-        the operative builders and leaves these as they were (specification
-        0.6 §§1, 7; decision S0-4).
+        "dcsn"]`, `stage.declared.bwd`. Until a solution method's rows open a
+        builder they are the operative builders `stage.builder` answers; the
+        rows change the operative builders and leave these as they were.
 
         See `docs/Bellman-Sym/API/stage/03-build.md` §1."""
         return BuilderPairs(declared_version(self))
@@ -222,7 +223,7 @@ class ElaboratedStage(StageVersion):
     diagnostics = stage_answers.diagnostics
     denote = denotations.denote
     encoding = encoding
-    places = stage_answers.places
+    places = places
 
     methodize = binding_verbs.methodize
     calibrate = binding_verbs.calibrate
@@ -354,10 +355,19 @@ class ElaboratedStage(StageVersion):
 
 def make_stage(term, spans):
     """The `ElaboratedStage` of the stage that `term`, the parsed AST of a
-    stage file, describes, with the span table `spans` of its parse, or None
-    for a decoded term: the stage of the fields `construction.stage_fields`
-    constructs, which states the pipeline and its refusals."""
-    return ElaboratedStage(**stage_fields(term, spans))
+    stage file or of its union with its additions, describes, with the span
+    table `spans` of its parse, or None for a decoded term: the stage of the
+    fields `construction.stage_fields` constructs, which states the pipeline
+    and its refusals, read at its two levels by `levels.construct`, with
+    every typing entry resolved to its place (`places.typings`) and the
+    components checked against the catalogue's rows
+    (`components.check_components`), so that an entry that names no place,
+    types a component twice, omits a keyword its row requires or writes a
+    grid the place does not admit is refused where the stage is made."""
+    stage = ElaboratedStage(**construct(ElaboratedStage, term, spans))
+    typings(stage, spans)
+    check_components(stage)
+    return stage
 
 
 # The questions the stage answers about itself, each a method of the same

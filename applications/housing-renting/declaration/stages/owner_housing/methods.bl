@@ -1,0 +1,41 @@
+@methods: owner_housing
+# The methods of the owner's housing stage as an addition to
+# applications/housing-renting/declaration/stages/owner_housing/owner_housing.bl,
+# rewritten from the earlier YAML file stages/owner_housing/methods.yml and the
+# former block file methods/marginals_owner_housing.bl: the discrete choice over the housing
+# sizes of XH on the policy builder; the derivative of the decision value in
+# the assets a_d, the derivative of the continuation value in cash times the
+# derivative of the owner's budget in assets, from marginals_owner_housing.bl
+# with its doc string; and one linear representation of the decision value and
+# of its stated derivative, for the YAML's two equal entries, with its grid as
+# an entry of its own (D5, decided; writer's sheet §7).
+#
+# The policy builder gains no line, and a block of a methods file may not have
+# an empty body, so its method is a file-level line routed by its path to the
+# block policy (rule 7; finding F24). The entry on dcsn_to_cntn, with on alone,
+# binds nothing and is not written (writer's sheet §5).
+#
+# The grid names the asset coordinate alone, as the YAML did: the housing
+# H_d, a size of the stage's own finite set XH, and the income y_d, a level
+# of the chain, take the default (decision S7-C17 of 5 November 2026).
+#
+# The stage file is refused by the elaborator today (rule not-constructed, the
+# definition XH := linspace(H_min, H_max, n_H) of its line 3), so no address of
+# this file is checked against the stage's places until that set is
+# constructed.
+#
+# The three settings the file reads are declared with their sets (writer's
+# sheet §6): the bounds as points of ℝ₊, the set owner_housing.bl gives the
+# assets a_d, and the count in ℕ.
+
+a_points : ℕ       :: ["number of points of the asset grid"]
+a_min : ℝ₊         :: ["lower bound of the asset grid"]
+a_max : ℝ₊         :: ["upper bound of the asset grid"]
+
+policy.method : !discrete_choice
+
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(a_d=(a_min, a_max, a_points))] {
+    D_{a_d}V = (1 + r - 𝑑𝑇(a_d))*D_{w_own}V[>]    :: [id=marginal, "the derivative with respect to the assets a_d, which enter cash after tax"]
+}

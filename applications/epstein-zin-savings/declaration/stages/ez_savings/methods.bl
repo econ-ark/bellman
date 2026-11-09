@@ -1,0 +1,43 @@
+@methods: ez_savings
+# The methods of the Epstein-Zin savings stage, an addition to ez_savings.bl,
+# the stage file beside this one. Value function iteration stands on the
+# decision value builder and compares n_c candidate consumption levels at
+# each point of the builder's grid of resources m_d. The expectation over
+# the return Ψ is taken by Gauss-Hermite quadrature at both of its
+# occurrences, in the value line and in the objective. The decision value is
+# represented by a shape-preserving cubic and its stated derivative by
+# linear interpolation, each on its own grid of resources; the policy is
+# represented linearly between the pairs of resources and consumption that
+# the iteration computes, and that entry writes no grid; and the forward
+# builder is simulated by Monte Carlo draws from the declared law of Ψ. The
+# one line added is the envelope condition of the decision value, the
+# derivative of the Epstein-Zin aggregator in c at the maximizer. Value
+# function iteration reads neither that line nor the representation of its
+# derivative; they state the marginal value that a method reading one, such
+# as the endogenous grid method of a preceding period, would read. The
+# settings the entries read are declared first, with their sets: the counts
+# and the seed in ℕ, and the bounds of the grids points of ℝ₊₊, the set the
+# stage declares for the resources. Their values stand in
+# declaration/settings/ez_savings.yml.
+
+n_m : ℕ              :: ["number of points of the grid of resources"]
+m_min : ℝ₊₊          :: ["lower bound of the grid of resources"]
+m_max : ℝ₊₊          :: ["upper bound of the grid of resources"]
+n_c : ℕ              :: ["number of points of the finite feasible set the search over consumption uses"]
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the gross return"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulation"]
+
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)
+policy.objective.E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+policy.evaluate.method : !Linear
+
+[id=cntn_to_dcsn, method : !vfi(n_c=n_c)
+    | cntn_to_dcsn.grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | E_Ψ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes)
+    | evaluate[V].method : !pchip
+    | evaluate[V].grid : !Cartesian(m_d=(m_min, m_max, n_m))
+    | evaluate[D_{m_d}V].method : !Linear
+    | evaluate[D_{m_d}V].grid : !Cartesian(m_d=(m_min, m_max, n_m))] {
+    D_{m_d}V = (1-β)*c^(-ρ)*V^ρ        :: [id=marginal]
+}

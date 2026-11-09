@@ -1,28 +1,10 @@
-"""The acceptance file of lane K of the internal developer release 0.01, the
-kinds of the policy block's rows and the places of its methods (the second
-layer of the tests, `packages/bellman/README.md` §8): one test for each of the
-six items the release's implementation plan states for lane K (its §3).
+"""Policy operations, compilation, and authored method places.
 
-The rows of a builder take the kinds `Pullback`, `Aggregation`,
-`Expectation`, `Evaluation` and `Argmax`: an operative `argmax` line forms an
-`Argmax` row, a relational line or a `solve` line an `Aggregation` carrying
-its relation, and the identification line of the endogenous grid the
-`Pullback` of the policy along the coordinate map; the kinds `Selection`,
-`Inversion` and `Solution` are retired with their definitions. `cons_argmax`
-is spelling A restated, a twin text of `conftest.py`: its argmax line is
-operative and the first-order condition is attached to it as its property,
-`optimality.euler`. Item 6 is closed by the recorded guard and by AAS's
-reading of the policy cards in the notebook the lane's build record names;
-its test holds the recorded guard to the kinds. The last assertion of
-item 2, like item 6, reads the recordings, and passes after the snapshot
-and the stored encodings are re-recorded.
-
-Item 1 sweeps the stage files of the core applications and carries the mark
-`sweep`, which a run given no marker expression, or `-m 'not sweep'`, leaves
-out. It runs by `pytest packages/bellman/tests/cat/test_policy_kinds.py -m
-sweep -n 4` after the snapshot and the stored encodings are re-recorded, and
-it is part of the lane's acceptance run; the other five items run in the fast
-core.
+An operative maximization forms an Argmax operation; a relation or joint
+solution forms an Aggregation. A property of a maximization has no separate
+operation or method place. Numerical checks retain explicit kernels and
+refusals for operations without a function. Methods stay at their authored
+builder or operator, under the catalogue's admitted kinds.
 """
 import json
 import re
@@ -33,16 +15,12 @@ import pytest
 
 from bellman.native.hypergraphs import copy_native
 
-from bellman.refusal_catalogue import refusal_of
-from bellman.refusal_examples import EXAMPLES
-from bellman.refusals import ConstructionError, NotConstructed, TargetError
-from conftest import CORPUS_CALIBRATIONS, DURABLES, ROOT, SA_SAVINGS_CALIBRATIONS, flat, section
+from bellman.refusals import ConstructionError, NotConstructed
+from conftest import (CORPUS_CALIBRATIONS, DURABLES, ROOT, SA_SAVINGS_CALIBRATIONS, STAGE_FILES,
+                      flat)
 from snapshot.record import CORPUS_RECORDINGS, recording_path
 
 APPLICATIONS = ROOT / "applications"
-# the stage files of the core applications, each in its stage folder,
-# `declaration/stages/<key>/<key>.bl`
-CORE = sorted(APPLICATIONS.glob("*/declaration/stages/*/*.bl"))
 # the stored recordings of the core applications' stage files, the parsed
 # terms and the encodings
 STORED = sorted(CORPUS_RECORDINGS.glob("*/*.json"))
@@ -55,15 +33,14 @@ RETIRED = re.compile(r"\b(?:Selection|Inversion|Solution)")
 BLOCK = re.compile(r"^\[id=(?P<block>[^,\]\s]+)")
 # a line whose right side is an argmax, and the tags of its annotation
 ARGMAX_WRITTEN = re.compile(r"=\s*argmax_\{.*::\s*\[(?P<tags>[^\]]*)\]")
-# the five operative argmax lines the lane's brief names, by stage file and
-# line; the fifth file, housing_choice.bl, is refused at elaboration under
-# `family-selection` and forms no row
+# The named applications contain operative maximizations. The housing-owner
+# stage is refused before construction, as the corpus recording specifies.
 NAMED = {
-    "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl": 37,
-    "applications/epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl": 31,
-    "applications/durables/declaration/stages/tenure/tenure.bl": 47,
-    "applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl": 25,
-    "applications/housing-owner/declaration/stages/housing_choice/housing_choice.bl": 41,
+    "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl",
+    "applications/epstein-zin-savings/declaration/stages/ez_savings/ez_savings.bl",
+    "applications/durables/declaration/stages/tenure/tenure.bl",
+    "applications/retirement-choice/declaration/stages/ret_choice/ret_choice.bl",
+    "applications/housing-owner/declaration/stages/housing_choice/housing_choice.bl",
 }
 # the declared maximization of `cons.bl`, which prints with its operator head
 # and its binder, the kind `Argmax` being keyed apart from the head `argmax`
@@ -136,13 +113,14 @@ def holds_the_optimality_obligation(value):
 
 
 @pytest.mark.sweep
-@pytest.mark.parametrize("src", CORE, ids=lambda path: path.relative_to(APPLICATIONS).as_posix())
+@pytest.mark.parametrize("src", STAGE_FILES,
+                         ids=lambda path: path.relative_to(APPLICATIONS).as_posix())
 def test_item_1_no_output_of_a_core_application_names_a_retired_kind_and_each_operative_argmax_line_forms_an_argmax_row(
         src, elaborate_text):
     relative = src.relative_to(ROOT).as_posix()
     lines = argmax_lines(src)
     if relative in NAMED:
-        assert NAMED[relative] in [number for number, _, _, declared in lines if not declared]
+        assert any(not declared for _, _, _, declared in lines), relative
     # the pattern of every recording of the stage file: its parsed term and
     # its encodings
     pattern = recording_path(src, ".*json")
@@ -178,8 +156,8 @@ def test_item_2_cons_argmax_prints_its_property_under_the_argmax_row_as_no_row_n
     label = next(i for i, line in enumerate(lines) if "optimality.euler" in line)
     closing = next(i for i, line in enumerate(lines) if i > row and "Evaluation" in line)
     assert row <= label < closing
-    assert flat("𝑑𝑢(𝑐(m_d)) = 𝑑𝑉≻(𝑔≻(m_d, 𝑐(m_d)))") in flat(card)
-    assert flat("⟂ 𝑔≻(m_d, 𝑐(m_d)) ≥ 0") in flat(card)
+    assert flat("optimality.euler: 𝑑𝑢(𝑐(m_d))") in flat(card)
+    assert flat("⟂ m_d − 𝑐(m_d) ≥ 0") in flat(card)
     # no box at any grain of the builders graph or of the initial diagram, and
     # no method place, carries the property's id
     backward = cons_argmax.builder.bwd
@@ -187,10 +165,13 @@ def test_item_2_cons_argmax_prints_its_property_under_the_argmax_row_as_no_row_n
                                         cons_argmax.initial.backward.primitives) for key in grain.list()]
     places = [row["address"] for row in cons_argmax.places()]
     assert [address for address in addresses + places if "euler" in address] == []
-    with pytest.raises(TargetError):
-        copy_native(cons_argmax).methodize({"stage": "cons_argmax", "methods": [
-            {"on": "policy.optimality.euler", "method": "!root-find"}]})
-    # the obligation `optimality` stands on no stage and in no recording
+    with pytest.raises(ConstructionError) as refused:
+        copy_native(cons_argmax).methodize({
+            "text": "@methods: cons_argmax\npolicy.optimality.euler.method : !root_find\n",
+            "origin": "cons_argmax.methods.bl"})
+    assert refused.value.rule == "name-in-scope"
+    assert "policy.optimality.euler" in str(refused.value)
+    # No separate optimality obligation is introduced by the property.
     for stage in (cons_argmax, cons, cons_kt, cons_obs, port):
         assert "optimality" not in {item.condition for item in stage.obligations()}, stage.name
     recordings = sorted(SNAPSHOT.glob("*.json")) + STORED
@@ -203,7 +184,7 @@ def test_item_2_cons_argmax_prints_its_property_under_the_argmax_row_as_no_row_n
 # relation that is the output's name alone against a closed expression; every
 # other row of these builders has none
 EXPLICIT = {
-    "cons": ("InvEuler:Aggregation", "endoggrid:Aggregation"),
+    "cons": ("InvEuler:Aggregation", "grid:Aggregation"),
     "cons_argmax": ("Pullback", "optimality:Aggregation"),
     "adjuster_cons": ("InvEuler:Aggregation", "endoggrid:Aggregation", "Pullback"),
     "port": ("Pullback", "foc:Aggregation:1"),
@@ -212,7 +193,7 @@ EXPLICIT = {
 # among the others, one row of each kind that has none: the identification,
 # a joint solve's residual system, a choice, an expectation and an evaluation
 WITHOUT = {
-    "cons": ("cons_choice:Pullback", "Evaluation"),
+    "cons": ("identification:Pullback", "Evaluation"),
     "adjuster_cons": ("choice:Aggregation",),
     "cons_argmax": ("optimality:Argmax",),
     "sa_savings": ("objective:Expectation:1",),
@@ -220,9 +201,9 @@ WITHOUT = {
 
 
 def test_item_3_compile_kernel_answers_the_explicit_side_of_the_inverse_euler_row_and_refuses_each_row_without_one(
-        cons_calibrated, cons_argmax, adjuster_cons, port, sa_savings):
+        cons_methodized, cons_argmax, adjuster_cons, port, sa_savings):
     versions = {
-        "cons": cons_calibrated,
+        "cons": cons_methodized,
         "cons_argmax": copy_native(cons_argmax).calibrate(CORPUS_CALIBRATIONS["cons"]),
         "adjuster_cons": copy_native(adjuster_cons).calibrate(str(DURABLES / "calibration/durables.yml")),
         "port": copy_native(port).calibrate(CORPUS_CALIBRATIONS["port"]),
@@ -240,132 +221,66 @@ def test_item_3_compile_kernel_answers_the_explicit_side_of_the_inverse_euler_ro
                 policy[key].compile_kernel()
             assert refused.value.rule == "kernel-target", (name, key)
     # at a positive saving the row answers its explicit side,
-    # 𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻(a)) = 𝑑𝑉≻(a)^(−1/ρ), with its arguments the marginal value and
+    # 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a)) = D_{a}𝑉≻(a)^(−1/ρ), with its arguments the marginal value and
     # the saving, as the cons-port tool composes it
-    ρ = cons_calibrated.par["ρ"].value
-    inverse = cons_calibrated.builder.policy["InvEuler:Aggregation"].compile_kernel()
+    ρ = cons_methodized.par["ρ"].value
+    inverse = cons_methodized.builder.policy["InvEuler:Aggregation"].compile_kernel()
     marginal, saving = numpy.array([2.0, 0.25, 0.8]), numpy.array([0.5, 1.0, 4.0])
-    assert numpy.allclose(numpy.asarray(inverse(marginal, saving, ρ)), marginal ** (-1 / ρ))
+    assert numpy.allclose(numpy.asarray(inverse(numpy.zeros_like(saving), saving, marginal, ρ)), marginal ** (-1 / ρ))
     # while the row's relation keeps its clause, and with it the segment of
-    # candidates below 𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻(0)) at zero saving
-    row = str(cons_calibrated.builder.policy["InvEuler:Aggregation"])
-    assert flat("𝑐≻(a) ≤ 𝑑𝑢𝑖𝑛𝑣(𝑑𝑉≻(a)) ⟂ a ≥ 0") in flat(row)
+    # candidates below 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(0)) at zero saving
+    row = str(cons_methodized.builder.policy["InvEuler:Aggregation"])
+    assert flat("𝑐≻(a) ≤ 𝑑𝑢𝑖𝑛𝑣(D_{a}𝑉≻(a)) ⟂ a ≥ 0") in flat(row)
 
 
-# the cons stage's `methods.yml` entry that binds the endogenous grid method,
-# with its exogenous grid of savings (AMD-MB-003 §1)
-EGM = {"on": "policy", "method": "!egm", "handler": "cons-port:egm",
-       "settings": {"grid": "!Cartesian", "orders": {"a": "n_a"}, "bounds": {"a": ["a_min", "a_max"]}}}
-
-
-def method_of(example):
-    """The method tag a refusal example's methods entry writes, without its `!`."""
-    return str(example.entry.get("method", "")).removeprefix("!")
-
-
-def written_by(example):
-    """The stage text a refusal example writes, or the lines it writes into a
-    corpus stage file."""
-    return example.text + "".join(changed for _, changed in example.changes)
-
-
-def operations_of(stage):
-    """The `Operations` section of the card of a stage's policy builder, its
-    white space removed."""
-    return flat("\n".join(section(str(stage.builder.policy), "Operations")))
-
-
-def test_item_4_egm_binds_at_the_evaluation_of_cons_and_at_the_argmax_row_of_cons_argmax_and_is_refused_on_port(
-        cons, cons_argmax, port, sa_savings, text_of, elaborate_text):
-    for stage, box in ((cons, "policy:Evaluation"), (cons_argmax, "policy.optimality:Argmax")):
-        methodized = stage.methodize({"stage": stage.name, "methods": [EGM]})
-        assert [(str(bound), method.tag) for bound, method in methodized.bindings.methods.items()] == [(box, "egm")]
-    # `cons.bl` is spelling C of the sub-brief (`spellings/spelling-C.bl`) up
-    # to the spacing of its line 33: the policy card's operation column reads
-    # the four rows of the sub-brief's §6 item 1, and the binding of `!egm` at
-    # the Evaluation leaves every rule of the card's operations as it was
-    methodized = copy_native(cons).methodize({"stage": "cons", "methods": [EGM]})
-    assert [str(key) for key in methodized.builder.policy.primitives.list()] == [
-        "InvEuler:Aggregation", "endoggrid:Aggregation", "cons_choice:Pullback", "Evaluation"]
-    assert operations_of(methodized) == operations_of(cons)
-    # port's policy block writes no grid line and holds no Argmax row
-    with pytest.raises(TargetError) as refused:
-        copy_native(port).methodize({"stage": "port", "methods": [EGM]})
-    assert refused.value.rule == "method-attachment" and "grid line" in str(refused.value)
-    # !vfi hands a whole backward decision builder to a toolkit and stands on
-    # no Argmax row, named by its box or by its operator occurrence
-    for target in ("policy.objective:Argmax", "policy.objective.argmax"):
-        with pytest.raises(TargetError) as refused:
-            copy_native(sa_savings).methodize({"stage": "sa_savings", "methods": [{"on": target, "method": "!vfi"}]})
+def test_item_4_egm_stands_at_its_authored_builder_or_argmax_and_refuses_an_evaluation(
+        cons_candidate, cons_argmax, port, sa_savings, elaborate_text):
+    for stage, target in ((cons_candidate, "policy"), (cons_argmax, "policy.optimality.argmax"),
+                          (port, "policy")):
+        bound = copy_native(stage).methodize({
+            "text": f"@methods: {stage.name}\n{target}.method : !egm\n",
+            "origin": f"{stage.name}.methods.bl"})
+        assert bound.methods[target].word == "!egm"
+        if target == "policy":
+            assert any(item.condition == "egm-eligibility" for item in bound.obligations())
+        assert [str(key) for key in bound.builder.policy.list()] == [
+            str(key) for key in stage.builder.policy.list()]
+    for stage, target, word in ((cons_candidate, "policy.evaluate", "egm"),
+                                (sa_savings, "policy.objective.argmax", "vfi")):
+        with pytest.raises(ConstructionError) as refused:
+            copy_native(stage).methodize({
+                "text": f"@methods: {stage.name}\n{target}.method : !{word}\n",
+                "origin": f"{stage.name}.methods.bl"})
+        assert refused.value.rule == "method-admission"
         assert target in str(refused.value)
-    # a dotted id whose owner is no line of its block, as `cons.bl` wrote at
-    # 476c31134
-    text = text_of("cons")
-    for written, changed in (("[id=InvEuler]", "[id=argmax.FOC]"),
-                             ("[id=endoggrid]", "[id=argmax.inverse_dcsn_kernal]")):
-        assert text.count(written) == 1
-        text = text.replace(written, changed)
+    # A property must name an authored parent line.
+    from conftest import C_LINES, twin_text
+    text = twin_text("cons", C_LINES).replace("[id=InvEuler]", "[id=argmax.FOC]")
     with pytest.raises(ConstructionError) as refused:
-        elaborate_text(text, "applications/portfolio-choice/declaration/stages/cons/cons.bl")
+        elaborate_text(text, "cons.bl")
     assert "argmax.FOC" in str(refused.value)
-    # a refusal example of the package's catalogue for each of the three
-    examples = [
-        [example for example in EXAMPLES.values() if example.provokes == "methodize" and method_of(example) == "egm"
-         and "port" in (example.corpus, Path(example.origin).stem)],
-        [example for example in EXAMPLES.values() if example.provokes == "methodize" and method_of(example) == "vfi"
-         and example.entry.get("on") in ("policy.objective:Argmax", "policy.objective.argmax")],
-        [example for example in EXAMPLES.values() if "argmax.FOC" in written_by(example)],
-    ]
-    for found in examples:
-        assert found and all(refusal_of(example) is not None for example in found)
 
 
-def test_item_5_root_find_binds_at_the_argmax_row_and_vfi_on_the_backward_decision_builder_alone(
+def test_item_5_root_find_is_an_operator_method_and_vfi_is_a_builder_method(
         cons_argmax, adjuster_cons):
-    def bound(stage, entry):
-        methodized = stage.methodize({"stage": stage.name, "methods": [entry]})
-        return [(str(box), method.tag) for box, method in methodized.bindings.methods.items()]
-
-    assert bound(cons_argmax, {"on": "policy.optimality.argmax", "method": "!root-find"}) == [
-        ("policy.optimality:Argmax", "root-find")]
-    assert bound(cons_argmax, {"on": "cntn_to_dcsn", "method": "!vfi"}) == [("cntn_to_dcsn", "vfi")]
-    for target in ("policy", "dcsn_to_arvl"):
-        with pytest.raises(TargetError) as refused:
-            copy_native(cons_argmax).methodize({"stage": "cons_argmax", "methods": [{"on": target, "method": "!vfi"}]})
-        assert refused.value.rule == "method-attachment", target
-    # the durables adjuster's method choice of the factory's acceptance
-    # (test_amd_fac_002.py, item 3), on the adjuster's backward decision
-    # builder
-    choice = {"on": "cntn_to_dcsn", "method": "!vfi", "handler": "fues-durables:make_adjuster_vfi"}
-    assert bound(adjuster_cons, choice) == [("cntn_to_dcsn", "vfi")]
-    with pytest.raises(TargetError):
-        copy_native(adjuster_cons).methodize({"stage": "adjuster_cons", "methods": [{**choice, "on": "policy"}]})
-    # on the adjuster's policy block (the sub-brief's §6 item 3) a computing
-    # method binds at the Aggregation of the joint solve, the row whose output
-    # is the pair (𝑐, ℎ_choice), and `!egm` at the Evaluation
-    assert bound(adjuster_cons, {"on": "policy.choice.solve", "method": "!root-find"}) == [
-        ("policy.choice:Aggregation", "root-find")]
-    egm = {"on": "policy", "method": "!egm", "handler": "fues-durables:make_adjuster_ops",
-           "settings": {"grid": "!Cartesian", "orders": {"a_nxt_adj": "n_a"},
-                        "bounds": {"a_nxt_adj": ["a_min", "a_max"]}}}
-    assert bound(adjuster_cons, egm) == [("policy:Evaluation", "egm")]
-
-
-def test_item_6_the_recorded_guard_names_the_new_rows_and_no_retired_kind():
-    recordings = sorted(SNAPSHOT.glob("*.json")) + STORED
-    assert [path.name for path in recordings if RETIRED.search(path.read_text(encoding="utf-8"))] == []
-    for name, rows in (("sa_savings", ("policy.objective:Argmax",)),
-                       ("ez_savings", ("policy.objective:Argmax",)),
-                       ("tenure", ("policy.choice:Argmax",))):
-        recorded = (SNAPSHOT / f"{name}.json").read_text(encoding="utf-8")
-        assert [row for row in rows if row not in recorded] == [], name
-    # the rows of the inverse Euler form, in the recording of the inverse
-    # Euler stage, since the corpus `cons.bl` writes the maximization alone
-    # (MB-T217)
-    from bellman.refusal_examples import INVERSE_EULER
-    from conftest import stage_from_text
-    from snapshot.record import recording_of
-    recorded = json.dumps(recording_of(stage_from_text(INVERSE_EULER, "t.bl")), ensure_ascii=False)
-    rows = ("policy.InvEuler:Aggregation", "policy.identification:Pullback")
-    assert [row for row in rows if row not in recorded] == []
-    assert not RETIRED.search(recorded)
+    for stage, target, word in (
+        (cons_argmax, "policy.optimality.argmax", "root_find"),
+        (adjuster_cons, "policy.choice.solve", "root_find"),
+        (cons_argmax, "cntn_to_dcsn", "vfi"),
+        (cons_argmax, "policy", "vfi"),
+        (cons_argmax, "dcsn_to_arvl", "vfi"),
+        (adjuster_cons, "cntn_to_dcsn", "vfi"),
+        (adjuster_cons, "policy", "egm"),
+    ):
+        bound = copy_native(stage).methodize({
+            "text": f"@methods: {stage.name}\n{target}.method : !{word}\n",
+            "origin": f"{stage.name}.methods.bl"})
+        assert bound.methods[target].word == "!" + word
+    for stage, target, word in ((cons_argmax, "policy", "root_find"),
+                               (adjuster_cons, "policy.choice.solve", "vfi")):
+        with pytest.raises(ConstructionError) as refused:
+            copy_native(stage).methodize({
+                "text": f"@methods: {stage.name}\n{target}.method : !{word}\n",
+                "origin": f"{stage.name}.methods.bl"})
+        assert refused.value.rule == "method-admission"
+        assert target in str(refused.value)

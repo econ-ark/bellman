@@ -1,8 +1,0 @@
-@methods: Port2
-# The marginal block of the portfolio stage's decision value builder, which
-# states the derivative of the decision value in capital as the expectation of
-# the derivative of the continuation value times the portfolio return.
-
-[id=dcsn_marginal, (V[>], ς) : !cntn -> (V) : !dcsn] {
-    D_{k_d}V = E_{Ψ,θ}(D_{m_next}V[>]*(ς*Ψ + (1-ς)*R))   :: [id=marginal]
-}

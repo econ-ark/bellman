@@ -71,12 +71,9 @@ namespaces = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# A test marked `sweep` is part of a sweep over the corpus stages, the refusal
-# catalogue or a whole trellis. tests/conftest.py leaves the sweeps out of a
-# run given no marker expression, so that the fast core is the default
-# selection, and `-m sweep` runs them.
+# Every package test runs by default. `-m sweep` selects corpus checks.
 markers = [
-    "sweep: part of a sweep over the corpus stages, the refusal catalogue or a whole trellis; left out of a run given no marker expression, run by -m sweep",
+    "sweep: checks corpus stages, the refusal catalogue or a whole trellis; selected by -m sweep",
 ]
 
 [tool.ruff]

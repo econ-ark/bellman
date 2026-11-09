@@ -1,0 +1,21 @@
+@methods: housing_choice
+# The methods of the owner's housing-choice stage, written as an addition to
+# housing_choice.bl beside this file: the derivative of the decision value in
+# cash on hand, appended to the decision value builder, and the derivative of
+# the arrival value in assets, with the factor R of the law w = R*b + z_vals[y],
+# appended to the arrival value builder. The stage's earlier methods file
+# bound no method, so this file writes no method entry, no grid and no
+# setting. The two blocks name the stage's blocks by their ids and add no
+# coordinate, so they carry no signature.
+# The stage file is refused by the elaborator today at the selection
+# z_vals[y] of the line cash_on_hand, under the rule family-selection, and
+# would next be refused at XH := linspace(H_min, H_max, n_H), under the rule
+# not-constructed, so this file is read with no stage until both are repaired.
+
+[id=cntn_to_dcsn] {
+    D_{w}V = D_{w_c}V[>]            :: [id=marginal]
+}
+
+[id=dcsn_to_arvl] {
+    D_{b}V[<] = E_{y}(R*D_{w}V)     :: [id=marginal]
+}

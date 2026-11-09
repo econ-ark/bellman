@@ -75,7 +75,7 @@ applications/cagetti-denardi-2006/declaration/stages/retiree/retiree.bl: Elabora
   view ('operator', 'forward'): constructed
 ```
 
-The stage constructs all three views. Elaborated alone on 14 September 2026 with `bellman.elaborate`, which AMD-FAC-002 removed for `elaborate_stage` and the three binding verbs, from `declaration/stages/retiree/methods.yml`, `declaration/settings/cagetti-denardi-2006.yml` and `declaration/calibration/cagetti-denardi-2006.yml`, it was methodized and configured, every method target resolving, and its calibration was refused because the paper reports no value of the pension:
+The stage constructs all three views. Elaborated alone on 14 September 2026 with `bellman.elaborate`, which AMD-FAC-002 removed for `elaborate_stage` and the three binding verbs, from its methods file (then a YAML file; since 5 November 2026 the addition `declaration/stages/retiree/methods.bl`), `declaration/settings/cagetti-denardi-2006.yml` and `declaration/calibration/cagetti-denardi-2006.yml`, it was methodized and configured, every method target resolving, and its calibration was refused because the paper reports no value of the pension:
 
 ```text
 elaborate(retiree alone, upto='specified'): ValueError: stage 'retiree', parameter 'p' (term address '6'): the calibration source supplies no value for it; every declared parameter is valued when values are bound […]; write `p: <value>` in the calibration source

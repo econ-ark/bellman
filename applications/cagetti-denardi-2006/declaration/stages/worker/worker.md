@@ -86,7 +86,7 @@ applications/cagetti-denardi-2006/declaration/stages/worker/worker.bl: Elaborate
   view ('operator', 'forward'): constructed
 ```
 
-The stage constructs all three views. Elaborated alone on 14 September 2026 with `bellman.elaborate`, which AMD-FAC-002 removed for `elaborate_stage` and the three binding verbs, from `declaration/stages/worker/methods.yml`, `declaration/settings/cagetti-denardi-2006.yml` and `declaration/calibration/cagetti-denardi-2006.yml`, it was methodized and configured, every method target resolving, and its calibration was refused because the calibration supplies no wage:
+The stage constructs all three views. Elaborated alone on 14 September 2026 with `bellman.elaborate`, which AMD-FAC-002 removed for `elaborate_stage` and the three binding verbs, from its methods file (then a YAML file; since 5 November 2026 the addition `declaration/stages/worker/methods.bl`), `declaration/settings/cagetti-denardi-2006.yml` and `declaration/calibration/cagetti-denardi-2006.yml`, it was methodized and configured, every method target resolving, and its calibration was refused because the calibration supplies no wage:
 
 ```text
 elaborate(worker alone, upto='specified'): ValueError: stage 'worker', parameter 'w' (term address '8'): the calibration source supplies no value for it; every declared parameter is valued when values are bound […]; write `w: <value>` in the calibration source

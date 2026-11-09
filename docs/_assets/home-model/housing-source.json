@@ -1,0 +1,12 @@
+{
+  "path": "applications/housing-frictions/declaration/stages/house_choice/house_choice.bl",
+  "sha256": "443c62e38d828e81897ae8e29310069483d31fe4797a0a78d7c9d83c3186bb10",
+  "text": "@stage: house_choice\n\nr    : ℝ₊        :: [\"rate of return on financial assets\"]\nW    : ℝ₊₊       :: [\"earnings at the age of the period, before the shock\"]\nη_lo : ℝ₊₊       :: [\"the low earnings shock\"]\nη_hi : ℝ₊₊       :: [\"the high earnings shock\"]\n\nη : ℝ₊₊\nη ~ Mixture((0.5, η_lo), (0.5, η_hi))\n\n[id=arvl_to_dcsn, (y_f : ℝ₊, y_h : ℝ₊₊, η) : !arvl -> (m_f : ℝ₊₊, m_h : ℝ₊₊) : !dcsn] {\n    m_f = (1 + r)*y_f + W*η                             :: [id=financial_assets]\n    m_h = y_h                                           :: [id=housing]\n}\n\n[id=dcsn_to_cntn, (m_f, m_h, d : !ctrl @ {keep, adjust}) : !dcsn -> ()] {\n    [label=keep,   () -> (w_kp : ℝ₊₊, h_kp : ℝ₊₊) : !cntn] {\n        w_kp = m_f                                      :: [id=cash_on_hand]\n        h_kp = m_h                                      :: [id=housing_kept]\n    }\n    [label=adjust, () -> (w_adj : ℝ₊₊) : !cntn] {\n        w_adj = m_f + m_h                               :: [id=total_resources]\n    }\n}\n\n[id=cntn_to_dcsn, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = (V_kp[>], V_adj[>])[d]                          :: [id=choice_value]\n}\n\n[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = E_{η}(V)                                     :: [id=value]\n}\n\n[id=policy, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu) : !cntn -> (d : {keep, adjust} @ !ctrl) : !dcsn] {\n    d = argmax_{d}(V_kp[>], V_adj[>])                   :: [id=choice]\n}\n",
+  "excerpts": {
+    "forward": {
+      "start_line": 11,
+      "end_line": 24,
+      "text": "[id=arvl_to_dcsn, (y_f : ℝ₊, y_h : ℝ₊₊, η) : !arvl -> (m_f : ℝ₊₊, m_h : ℝ₊₊) : !dcsn] {\n    m_f = (1 + r)*y_f + W*η                             :: [id=financial_assets]\n    m_h = y_h                                           :: [id=housing]\n}\n\n[id=dcsn_to_cntn, (m_f, m_h, d : !ctrl @ {keep, adjust}) : !dcsn -> ()] {\n    [label=keep,   () -> (w_kp : ℝ₊₊, h_kp : ℝ₊₊) : !cntn] {\n        w_kp = m_f                                      :: [id=cash_on_hand]\n        h_kp = m_h                                      :: [id=housing_kept]\n    }\n    [label=adjust, () -> (w_adj : ℝ₊₊) : !cntn] {\n        w_adj = m_f + m_h                               :: [id=total_resources]\n    }\n}\n"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+@methods: bequest
+# The methods of the terminal stage, written as an addition to bequest.bl
+# beside this file: the derivative of the terminal value in wealth, zero, as
+# an authored line of the decision value builder. The block names the stage's
+# block by its id and adds no coordinate, so it carries no signature. The
+# stage takes no method: its values are closed forms.
+
+[id=cntn_to_dcsn] {
+    D_{x}V = 0                                         :: [id=marginal_wealth]
+}

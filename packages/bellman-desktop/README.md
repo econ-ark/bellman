@@ -6,6 +6,8 @@ The desktop application opens the installed Workbench page in its own window. Py
 
 The opening screen has **Start** and **Recent projects** sections. **Open Project…** chooses a model folder; **Open File…** chooses a stage or recipe. Both use the native file chooser. Cancelling restores the actions, and opening a project displays progress until its window is ready. Recent projects lists up to eight successfully opened folders, newest first, with their paths; selecting one opens it again. Missing folders remain listed and show an error if selected. Command configuration remains in Settings.
 
+Use **File → Welcome** to return to the opening screen and see the latest projects. If a file chooser is cancelled, the control that opened it keeps keyboard focus.
+
 The same actions are available through **File → Open Project…** (⌘O on macOS, Ctrl+O elsewhere) or **Open File…** (add Shift), or through a link of this form:
 
 ```text

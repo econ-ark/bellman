@@ -1,0 +1,11 @@
+@methods: survival
+# The expectation over survival and death is the sum of the two branch values
+# weighted by the survival probability; forward, each household is drawn
+# alive or dead by Monte Carlo.
+
+n_paths : ℕ          :: ["number of simulated households"]
+seed : ℕ             :: ["seed of the simulation"]
+
+cntn_to_dcsn.E_s.method : !sum
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_paths, seed=seed)
+arvl_to_dcsn.method : !deterministic

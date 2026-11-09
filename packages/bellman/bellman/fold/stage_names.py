@@ -34,6 +34,7 @@ from bellman.fold.block_lines import (
     header_wire_sorts,
     multiplier_sorts,
     parameter_sets,
+    setting_sets,
     property_owners,
     wire_sorts,
 )
@@ -102,6 +103,9 @@ class StageNames:
             self.by_name.setdefault(identity.field, []).append(identity)
         self.parameter_sets = parameter_sets(stage)
         self.parameter_names = set(self.parameter_sets)
+        # the settings a methods file declares, which no line of the model
+        # reads and only a grid factor or a keyword argument names
+        self.setting_sets = setting_sets(stage)
         # the definitions table the context reads: the table given, which the
         # construction's fold makes before the working stage holds one, or the
         # constructed stage's own; the working stage alone holds none

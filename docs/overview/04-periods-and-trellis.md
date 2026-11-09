@@ -49,7 +49,7 @@ for pair in report.pairs:
 
 ```text
 6 2 2 0
-periods[0].port.m_next -> periods[0].disc.a (authored, compatible)
+periods[0].port.w -> periods[0].disc.a (authored, compatible)
 periods[1].disc.a -> periods[0].port.k (authored, compatible)
 ```
 

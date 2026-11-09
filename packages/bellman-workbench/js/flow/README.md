@@ -30,7 +30,7 @@ Built on 16 October 2026 with Node v22.17.1, npm 10.9.2, macOS (darwin-arm64). L
 | `bellman_workbench/public/flow/LICENSES.txt` | 130,842 | `61ec40ef99088da2d647e6342af5003dc64f9d4009937c681461ac30230a9332` |
 | `bellman_workbench/public/flow/STIX-Two-Math-OFL.txt` | 4,391 | `0c8b99c034064cbb3c8ad9ba4531b89e179645b93d612da3e8be1cc52b393e58` |
 | `bellman_workbench/public/flow/base.css` | 13,585 | `4171d20d683eae89681eb1fe7c3bf52d8d326103b28078484d26e2f370d81778` |
-| `bellman_workbench/public/flow/bellman-flow.js` | 441,938 | `c8b93f0c071d3dfd36347e68e6d3a5b111a9fcf7b8e9b14c6c3fe22615aaaf35` |
+| `bellman_workbench/public/flow/bellman-flow.js` | 453,059 | `6aed4d37d2421ead9588c9740939c552b6dab49af48f0b9c522d8efc71ace97e` |
 | `bellman_workbench/public/flow/elk.bundled.js` | 1,609,707 | `1222e44f953ce7746af23801e723708f8e6f436b8b377a6a5fc7552f34a307b3` |
 | `bellman_workbench/public/flow/elkjs-LICENSE.md` | 14,443 | `637e81f4a1b6b4079535c499fca05e238cf7605c1ff5b76d60d7da7ce96700c9` |
 | `bellman_workbench/public/flow/stix-two-math-latin-400-normal.woff2` | 403,344 | `8b2a6834cfe1f4e0f3724ffa59fe92000013fc5a4c41e6a3f438006c26c60f0d` |
@@ -169,10 +169,20 @@ A build followed the change of `src/flow-canvas.js` in the fix wave Q3b of unit 
 
 A build followed the change of the two sources of design pass 14 on 21 October 2026 (unit S; AAS: "in the backward builder, there are still multiple wires across a single branch?", "make the vertical view default; moreover once a view is selected it should stay that way even if we switch stages or views", "some text overlaps boxes"). In `src/flow-layout.js`: in a stage's builders graph the value wires from one box to another are one bundle, `boxes::<writer>|<reader>`, drawn from the port of its first wire on each box with the ports of its other wires neither drawn nor laid out, the layer the writer stands in spaced by the bundle's first run, and the hover of a port the labels of the wires drawn at it (§1; S-D2 to S-D4); laid out downward the markers of one frame side spread at the pitch of their widest label with 4 px at each side (§3; S-D7); a trellis's initial diagram draws no occurrence compact and no builder segment, and a wire of it counts the wires drawn as its line (§7, rule 5; S-D13); and the `add` glyph of the controls is 12 px with 4 px before its word (§8; S-D15). In `src/flow-canvas.js`: a bundle of the stage graph draws the bus mark at its plug with its arrowhead kept and lights its ports with a selected box (§1; S-D3); the layout's direction is the page's, one for every graph and tab, read from the browser's storage under `bellman-workbench layout` once at the script's load, written by the foot's button and removed on the turn back, the automatic turn of a wide field diagram withdrawn (§2; S-D5); and a builder's segment takes the class of the perch its pair joins besides the decision perch, `.bf-pair-cntn` or `.bf-pair-arvl` (§9; S-D14). The build completed with Node v22.17.1, npm 10.9.2 and the same lockfile, with the three known warnings in its log. Only `bellman-flow.js` changed, to 441,736 bytes with SHA-256 `b36e3b01cf3d130454f538148483472badd815ada5f22e5798234dceab73a048`; the other six files and the lockfile were unchanged by the build.
 
-The latest build, which the table records, followed on 22 October 2026 the wire that an input of a builder a method block opens, which no operation inside the builder reads, adds to the line entering the builder from the same writer, as the graph JSON names it under `unread` on that line's reading port (specification 0.6, units E2 to E4, SE-19); the packages were installed from the npm cache with `npm_config_offline=true bash build.sh`, and in it only `bellman-flow.js` changed.
+A build followed on 22 October 2026 the wire that an input of a builder a method block opens, which no operation inside the builder reads, adds to the line entering the builder from the same writer, as the graph JSON names it under `unread` on that line's reading port (specification 0.6, units E2 to E4, SE-19); the packages were installed from the npm cache with `npm_config_offline=true bash build.sh`, and in it only `bellman-flow.js` changed.
+
+In the first build of 4 November 2026, wires from one period into one input in the next share the route from their junction to that input, including when the receiving stage is expanded or the writing period is closed. A shared route that carries individual field wires draws its arrow at the input. The build used the same lockfile and Node v22.17.1.
+
+The next build revised the shared wire paths. Each common run into one input is drawn once. A run shared by several connectors offers their records for selection. Only the graph script changed in this build.
+
+A later build distinguished forward measure ports from connector fields. The canvas prints the measure labels and uses the same descriptions as Details.
+
+The table records the build that omits connector fields from expanded forward Operator stages and draws one cable per native route in the forward Initial trellis.
 
 ## ELK and the mathematics font
 
 `elk.bundled.js` is the unchanged file distributed by elkjs 0.12.0 under the Eclipse Public License 2.0, supplied beside it as `elkjs-LICENSE.md` (decision 2). Its package's exact `repository` value is `{"type":"git","url":"https://github.com/kieler/elkjs.git"}`.
 
 STIX Two Math is the `latin-400-normal.woff2` file from its Fontsource 5.3.0 package. Its SIL Open Font License notice stands beside it. The font and its notice belong in `bellman_workbench/public/flow/` under specification §7 (C1). The text fonts, Archivo and IBM Plex Mono, are copied to `bellman_workbench/public/fonts/` by `../fonts/build.sh`.
+
+The following build on 4 November 2026 draws shared Forward Initial segments once while retaining each route and field arrow. It keeps native measure labels for stages named `joined` or `unjoined` and restricts keyboard traversal to visible boxes and compact builder segments. Node v22.17.1 and the existing lockfile produced the bundle recorded above.

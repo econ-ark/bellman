@@ -22,5 +22,6 @@ of the shock distributions it calls `check_family_conditions`,
 numbers `check_family_conditions` and `check_conditioning_covariance` again.
 
 Every function that takes `refuse` calls it as `refuse(rule, address,
-message)` and relies on it to raise.
+message)`, with the action as the keyword `write` where the sentence gives an
+edit, and relies on it to raise.
 """

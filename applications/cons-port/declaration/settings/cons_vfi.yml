@@ -1,9 +1,8 @@
 # The consumption stage's numerical settings for the grid search over consumption in the notebooks' trellis
-# file trellis.port-cons-vfi.yml: the grid of resources of settings/cons_wide.yml, the multi-exponential grid of
-# 64,000 points up to 2,000, so that the two rules of notebook 03 §8 stand on one grid, and the reference's
-# 200 candidates at each point (ffp_utils.py line 798).
+# file trellis.port-cons-vfi.yml: the grid of resources of settings/cons_wide.yml, 64,000 points up to 2,000,
+# multi-exponential by the word !expmult of stages/cons/methods.vfi.bl, so that the two rules of notebook 03 §8
+# stand on one grid; and the reference's 200 candidates at each point (ffp_utils.py line 798).
 settings:
-  grid_spacing: expmult
   n_m: 64000
   m_min: 0.01
   m_max: 2000.0

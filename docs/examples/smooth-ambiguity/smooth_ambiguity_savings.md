@@ -9,7 +9,7 @@ topic: [applications]
 > The household chooses consumption under uncertainty about the mean of its log return. Risk aversion, ambiguity aversion and the elasticity of intertemporal substitution are separate parameters. Two nested certainty equivalents—the sure continuation values the household regards as equivalent to the uncertain ones—distinguish return risk from uncertainty about its mean.
 
 > [!info]- Relationship with other documents
-> The separation of the three curvatures follows Ju and Miao (2012). The uncertain normal mean of the log return and the lognormal return given that mean adapt the ambiguous-mean example of Backus, Ferrière and Zin (2015). The stage file is `applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl`; the rules it relies on are in [Appendix C](../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md), R7.
+> The separation of the three curvatures follows Ju and Miao (2012). The uncertain normal mean of the log return and the lognormal return given that mean adapt the ambiguous-mean example of Backus, Ferrière and Zin (2015). The stage file is `applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl`; beside it stands its methods file, `methods.bl`, an addition to the stage file, and `declaration/settings/sa_savings.yml` gives the values of the settings that file declares. The rules the stage file relies on are in [Appendix C](../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md), R7.
 
 ## 1 The model
 

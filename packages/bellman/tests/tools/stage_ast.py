@@ -7,9 +7,9 @@ module re-exports them and keeps the ASDL-notation and HTML renderers,
 written by hand part company, and the spellings the per-model tests write
 their terms with."""
 
+import pathlib
 import re
 from dataclasses import fields, is_dataclass
-from pathlib import Path
 
 from bellman.syntax.lower import (  # noqa: F401
     ToAst, parse_annotation, condition_tail_domain, to_json, unlowered_parse_nodes, number_value, RELATION_OF_SYMBOL)
@@ -64,7 +64,7 @@ MRGNVL = Role(Value(1))       # !mrgnvl
 
 def parsed(path):
     """The lowered tree of the stage file at `path`."""
-    return ToAst().transform(build_parser().parse(Path(path).read_text(encoding="utf-8")))
+    return ToAst().transform(build_parser().parse(pathlib.Path(path).read_text(encoding="utf-8")))
 
 
 def sym(name):

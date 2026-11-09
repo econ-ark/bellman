@@ -1,0 +1,35 @@
+@methods: port
+# The methods of the portfolio stage as the fixed reference solved it, at its
+# occurrences in the trellis files trellis.reference-<name>.yml with the
+# settings file settings/port.yml: the methods of methods.bl with the two
+# handlers of the reference, share_search_reference, which takes the marginal
+# value as the difference quotient of the values, and gauss_hermite_reference,
+# the earlier library's rule, which added the mean of the logarithms twice;
+# and an evenly spaced capital grid, which carries no spacing word.
+
+n_k : ℕ              :: ["number of points of the capital grid"]
+k_min : ℝ₊           :: ["lower bound of the capital grid"]
+k_max : ℝ₊           :: ["upper bound of the capital grid"]
+n_ς : ℕ              :: ["number of shares the search compares"]
+n_Ψ_nodes : ℕ        :: ["quadrature nodes of the return shock"]
+n_θ_nodes : ℕ        :: ["quadrature nodes of the income shock"]
+n_sim : ℕ            :: ["number of simulated paths"]
+sim_seed : ℕ         :: ["seed of the simulation"]
+
+[id=policy, policy.method : !time_iteration
+    | policy.handler : "cons-port:share_search_reference"
+    | policy.grid : !Cartesian(ς=(Γ_ς, n_ς))
+    | E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+    | E_Ψ_θ.handler : "cons-port:gauss_hermite_reference"] {
+    ς = solve_{ς}(E_{Ψ,θ}(D_{w}V[>]*(Ψ - R)))       :: [id=euler]
+}
+
+[id=cntn_to_dcsn
+    | E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)
+    | E_Ψ_θ.handler : "cons-port:gauss_hermite_reference"
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))] {
+    D_{k}V = E_{Ψ,θ}(D_{w}V[>]*(ς*Ψ + (1-ς)*R))     :: [id=envelope]
+}
+
+dcsn_to_cntn.method : !monte_carlo(n_paths=n_sim, seed=sim_seed)

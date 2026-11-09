@@ -79,13 +79,15 @@ The backward block passes the owner's consumption value through:
 }
 ```
 
-The marginal block of `declaration/methods/marginals_owner_housing.bl`,
-which the methods file binds on this builder with `!marginals`, turns the
-derivative of that value with respect to cash into a derivative with respect
-to assets:
+The line the methods file `methods.bl`, the addition beside this file, appends
+to this builder's block `cntn_to_dcsn`, whose header types the representation of
+the value and its derivative on the asset grid, turns the derivative of that
+value with respect to cash into a derivative with respect to assets:
 
 ```bl
-[id=dcsn_marginal, (V[>]) : !cntn -> (V) : !dcsn] {
+[id=cntn_to_dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(a_d=(a_min, a_max, a_points))] {
     D_{a_d}V = (1 + r - 𝑑𝑇(a_d))*D_{w_own}V[>]    :: [id=marginal, ...]
 }
 ```
@@ -127,8 +129,8 @@ expense function and the discrete maximisation included.
 
 ## Numerical methods
 
-`declaration/stages/owner_housing/methods.yml` records the search over the sizes at the policy
-block and the decision value and its derivative held on the asset grid by
+`declaration/stages/owner_housing/methods.bl` types the discrete choice over the sizes on the
+policy builder and the decision value and its derivative held on the asset grid by
 linear interpolation. The solver reads the consumption value at the cash each
 size leaves by interpolating on the cash grid, which belongs to the owner's
 consumption stage.

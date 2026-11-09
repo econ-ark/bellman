@@ -27,8 +27,8 @@ from bellman.trellis import (accrete, calibrate_trellis, configure_trellis, elab
 
 records = {
     "disc": {
-        **load_stage("applications/portfolio-choice/declaration/stages/disc/disc.bl"),
-        "methods": {"methods": [{"on": "cntn_to_dcsn"}]},
+        **load_stage("applications/portfolio-choice/declaration/stages/disc/disc.bl",
+                     ["applications/portfolio-choice/declaration/stages/disc/methods.bl"]),
         "calibration": {"β": 0.96},
     }
 }
@@ -41,7 +41,7 @@ specified = configure_trellis(
 disc = specified["periods"][0]["stages"]["disc"]
 ```
 
-The `on`-only entry recognizes the discounting builder without selecting a numerical routine. The calls construct and bind one stage; they supply no terminal continuation value and solve nothing.
+The methods file of the discounting stage, read with the stage file by `load_stage`, types its two forward builders `!deterministic` and nothing else. The calls construct and bind one stage; they supply no terminal continuation value and solve nothing.
 
 ## 2 A period read from a file
 

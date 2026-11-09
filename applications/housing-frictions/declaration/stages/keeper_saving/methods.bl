@@ -1,0 +1,34 @@
+@methods: keeper_saving
+# The methods of the keeper's saving stage, an addition to keeper_saving.bl:
+# time iteration on the policy builder, whose operative line is the Euler
+# relation euler_financial with its Kuhn-Tucker clause and whose maximization
+# the stage file marks !doc, with the grid of the two decision states, cash
+# on hand m_d and housing h_d, at whose points the relation is solved for c;
+# the inverse of the marginal utility of consumption in closed form, at the
+# definition 𝑢_c of the stage file, by which the Euler relation is solved; the
+# derivatives of the decision value in cash on hand and in housing; and one
+# linear representation of the decision value and of its two stated
+# derivatives on the grid of the two decision states. Each grid is its own
+# typing entry, one factor per coordinate; the six settings they read are
+# declared below with their sets and valued in settings/keeper_saving.yml.
+# The block cntn_to_dcsn keeps the signature (V[>], c) -> (V) : !dcsn, whose
+# three coordinates are the stage's own, so that the union adds none.
+
+n_m : ℕ          :: ["number of points of the grid of cash on hand"]
+m_min : ℝ₊₊      :: ["lower bound of the grid of cash on hand"]
+m_max : ℝ₊₊      :: ["upper bound of the grid of cash on hand"]
+n_h : ℕ          :: ["number of points of the grid of housing"]
+h_min : ℝ₊₊      :: ["lower bound of the grid of housing"]
+h_max : ℝ₊₊      :: ["upper bound of the grid of housing"]
+
+policy.method : !time_iteration
+policy.grid : !Cartesian(m_d=(m_min, m_max, n_m), h_d=(h_min, h_max, n_h))
+
+𝑢_c.method : !analytic_inverse
+
+[id=cntn_to_dcsn, (V[>], c) -> (V) : !dcsn
+    | evaluate.method : !Linear
+    | evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m), h_d=(h_min, h_max, n_h))] {
+    D_{m_d}V = 𝑢_c(c)                                   :: [id=marginal_cash]
+    D_{h_d}V = 𝑢_h(h_d) + β*D_{y_h_kp}V[>]              :: [id=marginal_housing]
+}

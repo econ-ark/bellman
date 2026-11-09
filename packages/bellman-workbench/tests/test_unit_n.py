@@ -587,14 +587,14 @@ def test_task_1_the_main_bar_holds_the_mark_the_history_the_path_and_the_four_to
             60.0,
             "the worker's occurrence",
         )
-        tab.set_viewport_size({"width": 1024, "height": 800})
-        wait_until(lambda: tab.evaluate(PATH_CUT_JS)["wider"], 10.0, "the path cut at 1024 px")
+        tab.set_viewport_size({"width": 420, "height": 800})
+        wait_until(lambda: tab.evaluate(PATH_CUT_JS)["wider"], 10.0, "the path cut at 420 px")
         cut = tab.evaluate(PATH_CUT_JS)
-        end = boxes(tab, ".bl-main-bar .bl-main-end > *")
+        end = boxes(tab, ".bl-main-bar .bl-main-end > .bl-goto-button")
     finally:
         context.close()
 
-    print(f"task 1: the rows {rows}; the bar {drawn}; the path at 1024 px {cut}")
+    print(f"task 1: the rows {rows}; the bar {drawn}; the path at 420 px {cut}")
     # the three rows of chrome (design pass 10 §2)
     assert rows["main bar"] == (0, 36), rows
     assert {top for top, _ in list(rows.values())[1:]} == {36}, rows
@@ -618,8 +618,7 @@ def test_task_1_the_main_bar_holds_the_mark_the_history_the_path_and_the_four_to
     assert (folded, unfolded) == ("false", "true")
     # no element reads `BellmanSym`
     assert trellis_words == [] and stage_words == [], (trellis_words, stage_words)
-    # at 1024 px the path cut at its left, on one line, and the right group
-    # in one row
+    # In compact mode the path is cut at its left and Go to stays on that row.
     assert cut["wider"], cut
     assert cut["first"] < 0 and cut["last"] >= -0.5, cut
     assert max(cut["centers"]) - min(cut["centers"]) <= 2, cut

@@ -133,6 +133,26 @@ GRAPH_JS = r"""
   };
   const handles = {};
   for (const h of host.querySelectorAll('.react-flow__handle')) handles[h.dataset.handleid] = h;
+  // a run the drawing shares among cables, drawn once from where the cables meet into the socket (the wire
+  // overlap plan of 4 November 2026, rule 2): a cable whose last run is shared ends where the run begins, so
+  // its reading end is followed through the runs that begin where it ends
+  const runs = Array.from(host.querySelectorAll('.react-flow__edge.bf-shared-run .react-flow__edge-path, .react-flow__edge.bf-initial-shared-run .react-flow__edge-path'), (path) => {
+    const points = ((path.getAttribute('d') || '').match(/[ML][^ML]*/g) || []).map((step) => {
+      const [x, y] = step.slice(1).split(',').map(Number);
+      return {x, y};
+    });
+    return points.length ? {first: points[0], last: points[points.length - 1]} : null;
+  }).filter(Boolean);
+  const near = (a, b) => Math.abs(a.x - b.x) <= 0.5 && Math.abs(a.y - b.y) <= 0.5;
+  const followed = (point) => {
+    let end = point;
+    for (let step = 0; step < 4; step++) {
+      const run = runs.find((r) => near(r.first, end) && !near(r.last, end));
+      if (!run) break;
+      end = run.last;
+    }
+    return end;
+  };
   const edges = [];
   for (const edge of host.querySelectorAll('.react-flow__edge')) {
     const path = edge.querySelector('.react-flow__edge-path');
@@ -150,7 +170,7 @@ GRAPH_JS = r"""
     const pair = edge.classList.contains('bf-join-pair'), shared = edge.classList.contains('bf-cable-shared');
     const ends = {};
     if (s && first.length && !pair) { const c = center(s); ends.source = [first[0].x - c.x, first[0].y - c.y]; }
-    if (t && last.length && !shared) { const c = center(t); ends.target = [last[last.length - 1].x - c.x, last[last.length - 1].y - c.y]; }
+    if (t && last.length && !shared) { const c = center(t), end = followed(last[last.length - 1]); ends.target = [end.x - c.x, end.y - c.y]; }
     const segments = parts.flatMap((part) => part.slice(1).map((p, i) => [part[i], p]));
     const count = edge.querySelector('.bf-cable-count'), bus = edge.querySelector('.bf-cable-bus');
     const sourceNode = s ? s.closest('.react-flow__node').dataset.id : null;
@@ -284,7 +304,9 @@ def cables_of(drawn: dict) -> list[dict]:
 def ends_of(drawn: dict) -> list[tuple]:
     """Every end a cable of the drawing `drawn` (GRAPH_JS) is to meet a port at, (the cable's id, the end, dx,
     dy): a cable's writing end, the reading end of a cable that shares no piece, and the reading end of a
-    piece a pair of periods shares (K-D5)."""
+    piece a pair of periods shares (K-D5); a cable whose last run the drawing shares with another cable
+    within a period is followed through that run to its socket (the wire overlap plan of 4 November 2026,
+    rule 2)."""
     return [
         (e["id"], end, dx, dy)
         for e in drawn["edges"]

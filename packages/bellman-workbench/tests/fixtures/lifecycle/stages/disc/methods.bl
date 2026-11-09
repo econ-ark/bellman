@@ -1,0 +1,12 @@
+@methods: disc
+# The methods of the discount stage as an addition to
+# applications/portfolio-choice/declaration/stages/disc/disc.bl: the two
+# forward builders are deterministic, a representation of a forward
+# builder's measure that takes no grid. Nothing is typed for the two value
+# builders, cntn_to_dcsn and dcsn_to_arvl, since an entry there would bind
+# nothing (sheet §5). No line is added, so no block is written: an empty
+# body is refused, and each selection is a file-level line routed by its
+# path (rule 7).
+
+arvl_to_dcsn.method : !deterministic
+dcsn_to_cntn.method : !deterministic

@@ -75,9 +75,11 @@ PORTFOLIO = (
     "[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (ς : [0, 1] @ !ctrl) : !dcsn] {\n"
     "    ς = solve_{ς}(E_{Ψ,θ}(D_{m_next}V[>]*(Ψ - R)))   :: [id=foc]\n}\n"
 )
+# the quadrature typed at the operator head `E_Ψ_θ` at file level, which
+# names every occurrence of the operator in the stage (specification 0.7 F3)
 GAUSS_HERMITE = {
-    "stage": "t",
-    "methods": [{"on": "E_Ψ_θ", "method": "!gauss-hermite", "settings": {"n_nodes": [7, 7]}}],
+    "text": "@methods: t\nE_Ψ_θ.method : !gauss_hermite(n_Ψ=7, n_θ=7)\n",
+    "origin": "t.methods.bl",
 }
 
 
@@ -220,7 +222,8 @@ def test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_poli
     # line with its two shocks counted, and the stage configures
     portfolio = stage_from_text(PORTFOLIO)
     portfolio.methodize(GAUSS_HERMITE)
-    assert "cntn_to_dcsn.marginal:Expectation:1   !gauss-hermite" in str(portfolio.methods)
+    assert str(portfolio.methods["E_Ψ_θ"]) == "!gauss_hermite(n_Ψ=7, n_θ=7)"
+    assert list(portfolio.builder["cntn", "dcsn"].primitives["value:Expectation:1"].methods) == ["E_Ψ_θ"]
     portfolio.configure({"settings": {}})
     # the derivative line's right side is one expectation: the piece compiles its
     # integrand with the shocks among its arguments and names them (MB-A18)
@@ -287,9 +290,9 @@ def _two_stage_trellises(term, representation=None, disc_text=DISC_ENTRY):
     `term`, and the discounting stage `disc_text`, the consumption stage's
     continuation joined to the discounting stage's entry state `k` and the
     discounting stage's continuation to the consumption stage's decision
-    state `m`; with `representation`, that method is bound at the Evaluation
-    of the discounting stage's value builder, `cntn_to_dcsn.evaluate.value`
-    (AMD-MB-002)."""
+    state `m`; with `representation`, that method and its grid are typed at
+    the Evaluation of the discounting stage's value builder,
+    `cntn_to_dcsn.evaluate` (specification 0.7 D4, D5)."""
     from conftest import stage_from_text
 
     from bellman.factory.trellis import elaborate_trellis
@@ -299,13 +302,12 @@ def _two_stage_trellises(term, representation=None, disc_text=DISC_ENTRY):
         cons = stage_from_text(CONS_ENTRY.replace("TERM", term), "cons.bl")
         disc = stage_from_text(disc_text, "disc.bl")
         if representation is not None:
-            # the representation names its grid by the setting `grid`, the
-            # kind as its tag and the fields beside it (AMD-MB-003)
-            grid = {"grid": "!Cartesian", "orders": {"k": "n_k"}, "bounds": {"k": ["k_min", "k_max"]}}
-            disc.methodize(
-                {"methods": [{"on": "cntn_to_dcsn.evaluate.value", "method": representation,
-                              "settings": grid}]}
-            )
+            disc.methodize({
+                "text": (f"@methods: disc\ncntn_to_dcsn.evaluate.method : {representation}\n"
+                         "k_min : ℝ\nk_max : ℝ\nn_k : ℕ\n"
+                         "cntn_to_dcsn.evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))\n"),
+                "origin": "disc.methods.bl",
+            })
         stages = {"cons": cons, "disc": disc}
         within = {"cons.a": "disc.k"} if order[0] == "cons" else {"disc.k_next": "cons.m"}
         between = {"k_next": "m"} if order[0] == "cons" else {"a": "k"}

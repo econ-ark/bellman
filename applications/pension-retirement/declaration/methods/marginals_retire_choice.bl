@@ -1,9 +1,0 @@
-@methods: retire_choice
-# The derivatives of the value of the retirement choice in the two assets,
-# stated as the marginal block of the decision value builder (AMD-MB-001
-# §4.3): the derivatives of the branch value the choice d selects.
-
-[id=dcsn_marginal, (V_wk[>], V_rt[>], d) : !cntn -> (V) : !dcsn] {
-    D_{y_f_d}V = (D_{y_f_wk}V_wk[>], D_{y_f_rt}V_rt[>])[d]  :: [id=marginal_financial]
-    D_{y_p_d}V = (D_{y_p_wk}V_wk[>], D_{y_p_rt}V_rt[>])[d]  :: [id=marginal_pension]
-}
