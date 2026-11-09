@@ -2,7 +2,7 @@
 
 {% block extrahead %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ '_stylesheets/home.css' | url }}?v=20261109b">
+  <link rel="stylesheet" href="{{ '_stylesheets/home.css' | url }}?v=20261109c">
 {% endblock %}
 
 {% block header %}
@@ -32,8 +32,8 @@
 {% set home_sections = page.content.split('<!-- home:properties -->') %}
 <div class="bellman-home" data-md-component="content">
   <section class="bellman-home__hero" aria-labelledby="build-modular-economics">
-    <div class="bellman-home__art bellman-home__art--pair">
-      {% include "partials/brand-loops-pair.html" %}
+    <div class="bellman-home__art bellman-home__art--arrival">
+      {% include "partials/brand-loop-arrival.html" %}
     </div>
     <div class="bellman-home__copy">
       {{ home_sections[0] }}
@@ -41,6 +41,9 @@
         <a class="bellman-home__button bellman-home__button--primary" href="{{ 'examples/' | url }}">Start with an example</a>
         <a class="bellman-home__button bellman-home__github" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">{% include "partials/github-icon.html" %}GitHub<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
       </div>
+    </div>
+    <div class="bellman-home__art bellman-home__art--corner">
+      {% include "partials/brand-loop-decision.html" %}
     </div>
   </section>
   <section class="pm-dis" aria-labelledby="properties">
