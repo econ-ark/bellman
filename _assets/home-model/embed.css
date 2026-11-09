@@ -2,14 +2,16 @@
 html { color-scheme: dark; }
 html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 body { background: var(--bl-navy); color: var(--bl-ice); font: 14px/1.5 Archivo, sans-serif; }
-button { font: inherit; cursor: pointer; border-radius: 0; }
+button, select { font: inherit; border-radius: 0; }
+button, select { cursor: pointer; }
 a { color: var(--bl-ice-2); }
-button:focus-visible, a:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -4px; }
+button:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -4px; }
 .workbench-frame {
   --frame-inset: 20px;
-  --controls-height: 56px;
+  --controls-height: 64px;
+  --source-width: 38%;
   display: grid;
-  grid-template-rows: 52px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   height: 100vh;
   width: 100%;
   min-width: 0;
@@ -17,13 +19,25 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--bl-ice-2); outl
   border: 1px solid var(--bl-hairline);
   background: var(--bl-navy);
 }
-.frame-bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 var(--frame-inset); min-width: 0; border-bottom: 1px solid var(--bl-hairline); background: var(--bl-chrome); }
-.view-tabs { display: flex; flex-shrink: 0; height: 100%; gap: 24px; }
-.view-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--bl-ice-3); padding: 0 4px; }
-.view-tabs button[aria-selected=true] { color: var(--bl-ice); border-color: var(--bl-ice-2); }
-.view-tabs button:hover { color: var(--bl-ice); }
-.filename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px/1.4 'IBM Plex Mono', monospace; color: var(--bl-ice-3); }
-.diagram-panel { position: relative; min-height: 0; }
+.compact-tabs { display: none; }
+.compact-tabs button { min-height: 44px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--bl-ice-3); padding: 0 4px; }
+.compact-tabs button[aria-selected=true] { color: var(--bl-ice); border-color: var(--bl-ice-2); }
+.compact-tabs button:hover { color: var(--bl-ice); }
+.pane-layout { display: grid; grid-template-columns: clamp(260px, var(--source-width), calc(100% - 348px)) 8px minmax(340px, 1fr); min-width: 0; min-height: 0; }
+.source-panel, .diagram-panel { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; overflow: hidden; background: var(--bl-navy); }
+.pane-bar { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 8px 16px; border-bottom: 1px solid var(--bl-hairline); background: var(--bl-chrome); }
+.pane-bar h2 { flex: 0 0 auto; margin: 0; color: var(--bl-ice); font: inherit; }
+.filename { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px/1.4 'IBM Plex Mono', monospace; color: var(--bl-ice-3); }
+#wrap-source { flex: 0 0 auto; min-height: 44px; padding: 0 8px; border: 1px solid var(--bl-hairline); background: transparent; color: var(--bl-ice-3); font-size: 12px; }
+#wrap-source[aria-pressed=true], #wrap-source:hover { color: var(--bl-ice); border-color: var(--bl-ice-3); }
+.graph-bar { flex-wrap: wrap; }
+.graph-options { display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 12px; min-width: 0; }
+.graph-options label { display: flex; align-items: center; gap: 6px; color: var(--bl-ice-3); font-size: 12px; }
+.graph-options select { min-width: 0; min-height: 44px; padding: 0 6px; border: 1px solid var(--bl-hairline); background: var(--bl-navy); color: var(--bl-ice); font-size: 12px; }
+#pane-resizer { position: relative; min-height: 0; border: 0; border-left: 1px solid var(--bl-hairline); border-right: 1px solid var(--bl-hairline); background: var(--bl-chrome); cursor: col-resize; touch-action: none; }
+#pane-resizer:hover, #pane-resizer:focus-visible { background: var(--bl-hairline); }
+#pane-resizer:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -2px; }
+.diagram-body { position: relative; min-width: 0; min-height: 0; }
 [role=tabpanel]:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -3px; }
 .native-window.bl-window { display: block !important; position: relative !important; height: 100% !important; min-height: 0 !important; width: 100% !important; min-width: 0 !important; padding: 0 !important; background: var(--bl-navy) !important; }
 .native-window > .bl-view { display: block !important; position: relative !important; height: 100% !important; min-height: 0 !important; width: 100% !important; min-width: 0 !important; overflow: hidden; }
@@ -33,26 +47,38 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--bl-ice-2); outl
 #diagram-panel .react-flow { background-image: radial-gradient(circle, color-mix(in srgb, var(--bl-ice-3) 10%, transparent) .8px, transparent .9px); background-size: 28px 28px; background-position: 14px 14px; }
 #diagram-panel #graph.bl-view-host .bf-perch-layer { background-color: var(--bl-navy) !important; }
 #diagram-panel .bl-graph-controls { left: var(--frame-inset); bottom: 8px; border-color: var(--bl-hairline); padding: 3px; gap: 2px; }
-#native-controls vscode-toolbar-button { --bl-target: 32px; cursor: pointer; }
+#native-controls vscode-toolbar-button { --bl-target: 44px; cursor: pointer; }
 #diagram-panel .react-flow__panel.react-flow__attribution { right: calc(var(--frame-inset) - 5px); bottom: var(--frame-inset); background: var(--bl-navy); }
 .loading-state { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; padding: 24px; text-align: center; background: var(--bl-navy); color: var(--bl-ice-3); }
-#source-panel { min-height: 0; overflow: auto; background: var(--bl-navy); }
-.source-info { display: flex; justify-content: space-between; gap: 20px; position: sticky; left: 0; width: 100%; padding: 21px 24px 14px; color: var(--bl-ice-3); font-size: 12px; }
-.source-status { margin: 0; padding: 8px 24px 24px; color: var(--bl-ice-3); }
-pre { margin: 0; padding: 8px 24px 30px; width: max-content; min-width: 100%; font: 13px/1.9 'IBM Plex Mono', 'STIX Two Math', monospace; tab-size: 4; color: var(--bl-ice); }
-.source-line { display: block; }
-.line-number { display: inline-block; width: 34px; margin-right: 17px; color: var(--bl-ice-3); user-select: none; }
+.source-scroll { min-width: 0; min-height: 0; overflow: auto; }
+.source-scroll:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -3px; }
+.source-status { margin: 0; padding: 20px 16px; color: var(--bl-ice-3); }
+pre { margin: 0; padding: 20px 16px 30px; width: max-content; min-width: 100%; font: 13px/1.9 'IBM Plex Mono', 'STIX Two Math', monospace; tab-size: 4; color: var(--bl-ice); }
+.source-line { display: block; position: relative; min-height: 1.9em; padding-left: 38px; white-space: pre; }
+.source-line.is-selected { background: var(--bl-navy-2); box-shadow: inset 2px 0 var(--bl-ultramarine-light); }
+.line-number { position: absolute; left: 0; width: 26px; color: var(--bl-ice-3); user-select: none; }
+.source-panel[data-wrap=true] pre { width: 100%; }
+.source-panel[data-wrap=true] .source-line { white-space: pre-wrap; overflow-wrap: anywhere; }
 noscript { position: fixed; inset: 0; z-index: 10; display: grid; align-content: center; padding: 24px; background: var(--bl-navy); }
 [hidden] { display: none !important; }
-@media (max-width: 600px) {
-  .workbench-frame { --frame-inset: 16px; --controls-height: 64px; grid-template-rows: 50px minmax(0, 1fr); }
-  .frame-bar { gap: 16px; }
-  .view-tabs { gap: 18px; }
-  .filename { font-size: 10px; }
-  #native-controls vscode-toolbar-button { --bl-target: 44px; }
-  .source-info { padding: 18px 16px 10px; }
-  pre { padding-left: 16px; font-size: 12px; }
-  .line-number { width: 24px; margin-right: 12px; }
+@media (max-width: 759px) {
+  .workbench-frame { --frame-inset: 16px; grid-template-rows: 50px minmax(0, 1fr); }
+  .compact-tabs { display: flex; gap: 18px; padding: 0 var(--frame-inset); border-bottom: 1px solid var(--bl-hairline); background: var(--bl-chrome); }
+  .pane-layout { grid-template-columns: minmax(0, 1fr); }
+  #pane-resizer { display: none; }
+  .graph-bar { gap: 8px; }
+  .graph-options { gap: 8px; }
+  .graph-options label { gap: 4px; }
+}
+@media (max-width: 400px) {
+  .pane-bar { padding-right: 12px; padding-left: 12px; }
+  .graph-bar h2 { flex-basis: 100%; }
+  .graph-options { justify-content: flex-start; }
+  .graph-options label { display: grid; flex: 1 1 0; min-width: 0; gap: 2px; }
+  .graph-options select { width: 100%; }
+  pre { font-size: 12px; }
+  .source-line { padding-left: 32px; }
+  .line-number { width: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; }

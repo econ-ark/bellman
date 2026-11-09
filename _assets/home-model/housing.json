@@ -3145,7 +3145,7 @@
         "nodes": [
           {
             "id": "GraphInputs",
-            "label": "Inputs",
+            "label": "Input measure",
             "namespace": "",
             "subgraphIds": [],
             "attrs": [
@@ -3189,7 +3189,8 @@
               "hoveredBorderColor": "#214EDA",
               "textColor": "#172A52"
             },
-            "config": null
+            "config": null,
+            "description": "Forward operators propagate finite measures over the state spaces. When the transition takes an action, the policy supplies it."
           },
           {
             "id": "arvl_to_dcsn:DistributionExtension:η",
@@ -3514,7 +3515,7 @@
           },
           {
             "id": "GraphOutputs",
-            "label": "Outputs",
+            "label": "Output measures",
             "namespace": "",
             "subgraphIds": [],
             "attrs": [
@@ -3594,7 +3595,8 @@
               "hoveredBorderColor": "#214EDA",
               "textColor": "#172A52"
             },
-            "config": null
+            "config": null,
+            "description": "Forward operators propagate finite measures over the state spaces. When the transition takes an action, the policy supplies it."
           }
         ],
         "groupNodeAttributes": {
@@ -3637,11 +3639,63 @@
     "graphSorting": "node_count_desc"
   },
   "graph": "forward initial diagram",
-  "layers": [
-    "arvl",
-    "dcsn",
-    "cntn"
-  ],
+  "layers": {
+    "backward initial diagram": [
+      "cntn",
+      "dcsn",
+      "arvl"
+    ],
+    "forward initial diagram": [
+      "arvl",
+      "dcsn",
+      "cntn"
+    ],
+    "backward": [
+      "cntn_to_dcsn",
+      "dcsn_to_arvl",
+      "policy"
+    ],
+    "forward": [
+      "arvl_to_dcsn",
+      "dcsn_to_cntn"
+    ]
+  },
+  "styles": {
+    "node": {
+      "backgroundColor": "#FFFFFF",
+      "borderColor": "#172A52",
+      "hoveredBorderColor": "#214EDA",
+      "textColor": "#172A52"
+    },
+    "output": {
+      "backgroundColor": "#FFFFFF",
+      "borderColor": "#214EDA",
+      "hoveredBorderColor": "#172A52",
+      "textColor": "#172A52"
+    },
+    "layers": {
+      "period": [
+        "#FFFFFF",
+        "#172A52",
+        "#172A52"
+      ],
+      "stage": [
+        "#EDF7FC",
+        "#172A52",
+        "#172A52"
+      ],
+      "builder": [
+        "#C5E5F1",
+        "#172A52",
+        "#172A52"
+      ],
+      "sub-builder": [
+        "#91BED7",
+        "#172A52",
+        "#172A52"
+      ]
+    }
+  },
   "source_path": "applications/housing-frictions/declaration/stages/house_choice/house_choice.bl",
   "source_sha256": "443c62e38d828e81897ae8e29310069483d31fe4797a0a78d7c9d83c3186bb10"
 }
