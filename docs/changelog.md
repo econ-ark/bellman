@@ -10,7 +10,7 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ### 2026-11-09 — Website loading and mobile layout
 
-- The homepage retains the real market and rowing footage. The opening illustration has two opposing triangles on the brand's ice background.
+- The homepage retains the real market and rowing footage. The opening illustration has two opposing triangles on the original ultramarine background.
 - On small screens, touch devices and with reduced motion selected, text follows the normal page layout and the videos display still images.
 - The mobile properties panel no longer shifts above its container. Decorative three-dimensional fields are hidden in the simpler layout.
 - Pages without mathematics no longer load MathJax, the equation display library. The website uses https://bellman.io/ as its canonical address.
