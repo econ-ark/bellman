@@ -239,21 +239,21 @@ Changing the income process changes the model and may require different sufficie
 
 ## 5. Refinement and numerical methods
 
-Nothing above is yet a numerical method. The map $\Upsilon$ produces mathematical operators. Methodization assigns computational handlers, numerical routines for evaluating those operators. This order matters: methods refine operators that already have ranks and meanings; they do not supply the model's semantics.
+Nothing above is yet a numerical method. The map $\Upsilon$ produces mathematical operators. Methodization assigns methods to those operators; a handler supplies the numerical computation. This order matters: methods refine operators that already have ranks and meanings; they do not supply the model's semantics.
 
-Refinement first expands coarse operator symbols into finer terms. The optimizing continuation-to-decision builder decomposes into three typed layers — aggregator kernel, induced aggregator, and policy selection/evaluation:
+Refinement first expands coarse operator symbols into finer terms. The optimizing continuation-to-decision builder decomposes into an aggregator kernel, its induced aggregator, and policy selection followed by insertion:
 
 $$
 \mathbb{T}_{\succ}
 \;\longmapsto\;
-\operatorname{evaluate}\circ\langle B_\succ,\ \operatorname{argmax}\circ B_\succ\rangle,
+\iota^{*}\circ\langle B_\succ,\ \operatorname{argmax}\circ B_\succ\rangle,
 \qquad
 \max
 :=
-\operatorname{evaluate}\circ\langle \mathrm{id}_{\mathsf Q_\Gamma},\ \operatorname{argmax}\rangle,
+\iota^{*}\circ\langle \mathrm{id}_{\mathsf Q_\Gamma},\ \operatorname{argmax}\rangle,
 $$
 
-In this composition display, $B_\succ$ denotes the map from a continuation function $f$ to the function $(x,a)\mapsto B_\succ(x,a,f)$. Here $\mathsf Q_\Gamma$ denotes the chosen functions on feasible state–action pairs, and `argmax` denotes a specified measurable maximizer selection on the domain where one exists. Evaluation maps a choice-value function and a measurable feasible policy to the decision function obtained by evaluating at that policy. The display assumes attainment, compatible domains, and finite integrals. For the fixed independent shock laws used in [Stages and perches](./03-Stages%20and%20perches.md), $B_\succ$ is the induced aggregator
+In this composition display, $B_\succ$ denotes the map from a continuation function $f$ to the function $(x,a)\mapsto B_\succ(x,a,f)$. Here $\mathsf Q_\Gamma$ denotes the chosen functions on feasible state–action pairs, and `argmax` denotes a specified measurable maximizer selection on the domain where one exists. [Policy insertion](./catalogues/operators.md#policyinsertion) maps a choice-value function and a measurable feasible policy to the decision function $\iota^{*}(Q,\pi)(x)=Q(x,\pi(x))$. It differs from exact Evaluation, which carries the retained function unchanged into its declared carrier and neither supplies nor applies a policy. The display assumes attainment, compatible domains, and finite integrals. For the fixed independent shock laws used in [Stages and perches](./03-Stages%20and%20perches.md), $B_\succ$ is the induced aggregator
 
 $$
 B_\succ(x, a, v_\succ)
