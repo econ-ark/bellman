@@ -1,0 +1,2550 @@
+{
+  "collection": {
+    "label": "retire_choice",
+    "graphs": [
+      {
+        "id": "backward initial diagram",
+        "nodes": [
+          {
+            "id": "retire_choice:cntn:V_wk",
+            "label": "V_wk≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 17"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:cntn:V_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_wk≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_wk≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:cntn:V_rt",
+            "label": "V_rt≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 17"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:cntn:V_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_rt≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_rt≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:dcsn:V",
+            "label": "V",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 17"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn",
+                "sourceNodeOutputId": "retire_choice:dcsn:V",
+                "targetNodeInputId": "retire_choice:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:dcsn:d",
+            "label": "d",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "control"
+              },
+              {
+                "key": "set",
+                "value": "{work, retire}"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy",
+                "sourceNodeOutputId": "retire_choice:dcsn:d",
+                "targetNodeInputId": "retire_choice:dcsn:d"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:dcsn:d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "set",
+                    "value": "{work, retire}"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn",
+            "label": "cntn_to_dcsn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V_wk[>] : ℝ @ !vlu, V_rt[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn"
+              },
+              {
+                "key": "statement",
+                "value": "18  V = (V_wk[>], V_rt[>])[d]  :: [id=choice_value]"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 17–18"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "retire_choice:cntn:V_wk",
+                "sourceNodeOutputId": "retire_choice:cntn:V_wk",
+                "targetNodeInputId": "retire_choice:cntn:V_wk"
+              },
+              {
+                "sourceNodeId": "retire_choice:cntn:V_rt",
+                "sourceNodeOutputId": "retire_choice:cntn:V_rt",
+                "targetNodeInputId": "retire_choice:cntn:V_rt"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:cntn:V_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_wk≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_wk≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:cntn:V_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_rt≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_rt≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy",
+            "label": "policy",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V_wk[>], V_rt[>]) : !cntn -> (d : {work, retire} @ !ctrl) : !dcsn"
+              },
+              {
+                "key": "statement",
+                "value": "22  d = argmax_{d}(V_wk[>], V_rt[>])  :: [id=choice]"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 21–22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "retire_choice:cntn:V_wk",
+                "sourceNodeOutputId": "retire_choice:cntn:V_wk",
+                "targetNodeInputId": "retire_choice:cntn:V_wk"
+              },
+              {
+                "sourceNodeId": "retire_choice:cntn:V_rt",
+                "sourceNodeOutputId": "retire_choice:cntn:V_rt",
+                "targetNodeInputId": "retire_choice:cntn:V_rt"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:dcsn:d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "set",
+                    "value": "{work, retire}"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:cntn:V_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_wk≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_wk≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:cntn:V_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_rt≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_rt≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "cntn": {},
+          "dcsn": {}
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 1,
+            "backgroundColor": "#EDF7FC",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "forward initial diagram",
+        "nodes": [
+          {
+            "id": "retire_choice:dcsn:y_f_d",
+            "label": "y_f_d",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xf"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:dcsn:y_f_d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f_d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f_d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xf"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:dcsn:y_p_d",
+            "label": "y_p_d",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xp"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:dcsn:y_p_d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_p_d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_p_d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xp"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:cntn:y_f_wk",
+            "label": "y_f_wk≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xf"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "retire_choice:cntn:y_f_wk",
+                "targetNodeInputId": "retire_choice:cntn:y_f_wk"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:cntn:y_f_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f_wk≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f_wk≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xf"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:cntn:y_p_wk",
+            "label": "y_p_wk≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xp"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "retire_choice:cntn:y_p_wk",
+                "targetNodeInputId": "retire_choice:cntn:y_p_wk"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:cntn:y_p_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_p_wk≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_p_wk≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xp"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:cntn:y_f_rt",
+            "label": "y_f_rt≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xf"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "retire_choice:cntn:y_f_rt",
+                "targetNodeInputId": "retire_choice:cntn:y_f_rt"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:cntn:y_f_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f_rt≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f_rt≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xf"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "retire_choice:cntn:y_p_rt",
+            "label": "y_p_rt≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "Xp"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "retire_choice:cntn:y_p_rt",
+                "targetNodeInputId": "retire_choice:cntn:y_p_rt"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:cntn:y_p_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_p_rt≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_p_rt≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xp"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_cntn",
+            "label": "dcsn_to_cntn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(y_f_d : Xf, y_p_d : Xp, d : !ctrl @ {work, retire}) : !dcsn -> ()"
+              },
+              {
+                "key": "statement 1",
+                "value": "8   y_f_wk = y_f_d  :: [id=financial_if_working]"
+              },
+              {
+                "key": "statement 2",
+                "value": "9   y_p_wk = y_p_d  :: [id=pension_if_working]"
+              },
+              {
+                "key": "statement 3",
+                "value": "12  y_f_rt = y_f_d  :: [id=financial_if_retiring]"
+              },
+              {
+                "key": "statement 4",
+                "value": "13  y_p_rt = y_p_d  :: [id=pension_paid_out]"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 6, 8–9, 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "retire_choice:dcsn:y_f_d",
+                "sourceNodeOutputId": "retire_choice:dcsn:y_f_d",
+                "targetNodeInputId": "retire_choice:dcsn:y_f_d"
+              },
+              {
+                "sourceNodeId": "retire_choice:dcsn:y_p_d",
+                "sourceNodeOutputId": "retire_choice:dcsn:y_p_d",
+                "targetNodeInputId": "retire_choice:dcsn:y_p_d"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:cntn:y_f_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f_wk≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f_wk≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xf"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:cntn:y_p_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_p_wk≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_p_wk≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xp"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:cntn:y_f_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f_rt≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f_rt≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xf"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:cntn:y_p_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_p_rt≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_p_rt≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xp"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:dcsn:y_f_d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f_d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f_d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xf"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:dcsn:y_p_d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_p_d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_p_d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "Xp"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "dcsn": {},
+          "cntn": {}
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 1,
+            "backgroundColor": "#EDF7FC",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "backward",
+        "nodes": [
+          {
+            "id": "GraphInputs",
+            "label": "Inputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "inputs",
+                "value": "𝑉_wk≻ : Xf × Xp → ℝ, 𝑉_rt≻ : Xf × Xp → ℝ"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_wk≻(y_f_wk, y_p_wk)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_wk≻(y_f_wk, y_p_wk)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:function:cntn:V_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_rt≻(y_f_rt, y_p_rt)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_rt≻(y_f_rt, y_p_rt)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Pullback:work",
+            "label": "𝑉_wk≻ ∘ 𝑔_work≻",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_wk≻ ∘ 𝑔_work≻)(y_f_d, y_p_d) = 𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(y_f_d, y_p_d, d) = (y_f_d, y_p_d, y_f_d, y_p_d)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻); unused d; y_f_wk≻ reads y_f_d; y_p_wk≻ reads y_p_d; y_f_rt≻ reads y_f_d; y_p_rt≻ reads y_p_d"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 8–9, 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_wk",
+                "targetNodeInputId": "retire_choice:function:cntn:V_wk"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_wk:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_wk≻(y_f_wk, y_p_wk)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_wk≻(y_f_wk, y_p_wk)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Pullback:retire",
+            "label": "𝑉_rt≻ ∘ 𝑔_retire≻",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_rt≻ ∘ 𝑔_retire≻)(y_f_d, y_p_d) = 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(y_f_d, y_p_d, d) = (y_f_d, y_p_d, y_f_d, y_p_d)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻); unused d; y_f_wk≻ reads y_f_d; y_p_wk≻ reads y_p_d; y_f_rt≻ reads y_f_d; y_p_rt≻ reads y_p_d"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 8–9, 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_rt",
+                "targetNodeInputId": "retire_choice:function:cntn:V_rt"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_rt:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_rt≻(y_f_rt, y_p_rt)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_rt≻(y_f_rt, y_p_rt)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Aggregation",
+            "label": "𝐺",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "policy",
+                "value": "𝑑"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉 = (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑]  on (y_f_d, y_p_d) ∈ Xf × Xp"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of cntn_to_dcsn: 𝐺(V_wk≻, V_rt≻, y_f_d, y_p_d, d) = (V_wk≻, V_rt≻)[d]"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output V; unused y_f_d, y_p_d"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 18"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Pullback:work",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_wk:g",
+                "targetNodeInputId": "retire_choice:function:cntn:V_wk:g"
+              },
+              {
+                "sourceNodeId": "cntn_to_dcsn:Pullback:retire",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_rt:g",
+                "targetNodeInputId": "retire_choice:function:cntn:V_rt:g"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "cntn_to_dcsn:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f_d, y_p_d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑(y_f_d, y_p_d)]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f_d, y_p_d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑(y_f_d, y_p_d)]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_wk:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:function:cntn:V_rt:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Evaluation",
+            "label": "𝑉(y_f_d, y_p_d)",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉 : Xf × Xp → ℝ"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at (y_f_d, y_p_d); no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Aggregation",
+                "sourceNodeOutputId": "cntn_to_dcsn:Aggregation:V:result",
+                "targetNodeInputId": "cntn_to_dcsn:Aggregation:V:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:function:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "cntn_to_dcsn:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f_d, y_p_d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑(y_f_d, y_p_d)]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f_d, y_p_d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[𝑑(y_f_d, y_p_d)]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Pullback:work",
+            "label": "𝑉_wk≻ ∘ 𝑔_work≻",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_wk≻ ∘ 𝑔_work≻)(y_f_d, y_p_d) = 𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(y_f_d, y_p_d, d) = (y_f_d, y_p_d, y_f_d, y_p_d)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻); unused d; y_f_wk≻ reads y_f_d; y_p_wk≻ reads y_p_d; y_f_rt≻ reads y_f_d; y_p_rt≻ reads y_p_d"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 8–9, 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_wk",
+                "targetNodeInputId": "retire_choice:function:cntn:V_wk"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_wk:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_wk",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_wk≻(y_f_wk, y_p_wk)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_wk≻(y_f_wk, y_p_wk)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Pullback:retire",
+            "label": "𝑉_rt≻ ∘ 𝑔_retire≻",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_rt≻ ∘ 𝑔_retire≻)(y_f_d, y_p_d) = 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(y_f_d, y_p_d, d) = (y_f_d, y_p_d, y_f_d, y_p_d)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻); unused d; y_f_wk≻ reads y_f_d; y_p_wk≻ reads y_p_d; y_f_rt≻ reads y_f_d; y_p_rt≻ reads y_p_d"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 8–9, 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_rt",
+                "targetNodeInputId": "retire_choice:function:cntn:V_rt"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_rt:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_rt",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_rt≻(y_f_rt, y_p_rt)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_rt≻(y_f_rt, y_p_rt)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy.choice:Aggregation",
+            "label": "𝐺 · choice",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "rule",
+                "value": "(y_f_d, y_p_d, d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of policy, segment policy.choice:Aggregation: 𝐺(V_wk≻, V_rt≻, y_f_d, y_p_d, d) = (V_wk≻, V_rt≻)[d]"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output (V_wk≻, V_rt≻)[d]; unused y_f_d, y_p_d"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy:Pullback:work",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_wk:g:policy",
+                "targetNodeInputId": "retire_choice:function:cntn:V_wk:g:policy"
+              },
+              {
+                "sourceNodeId": "policy:Pullback:retire",
+                "sourceNodeOutputId": "retire_choice:function:cntn:V_rt:g:policy",
+                "targetNodeInputId": "retire_choice:function:cntn:V_rt:g:policy"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy.choice:Aggregation:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f_d, y_p_d, d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f_d, y_p_d, d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp × {work, retire} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:function:cntn:V_wk:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:function:cntn:V_rt:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy.choice:Argmax",
+            "label": "argmax · choice",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Argmax"
+              },
+              {
+                "key": "rule",
+                "value": "𝑑(y_f_d, y_p_d) ∈ argmax_{d ∈ {work, retire}} [(𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]]"
+              },
+              {
+                "key": "kernel",
+                "value": "objective V_wk[>]; objective function (y_f_d, y_p_d, d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d](y_f_d, y_p_d, d); choice d; feasible set {work, retire}"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy.choice:Aggregation",
+                "sourceNodeOutputId": "policy.choice:Aggregation:result",
+                "targetNodeInputId": "policy.choice:Aggregation:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy.choice:Argmax:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "{d ∈ (Xf × Xp → {work, retire}) | ∀ y_f_d ∈ Xf, y_p_d ∈ Xp: (∀ c ∈ {work, retire}: (policy.choice:Aggregation(y_f_d, y_p_d, d(y_f_d, y_p_d)) ≥ policy.choice:Aggregation(y_f_d, y_p_d, c)))}"
+                  },
+                  {
+                    "key": "label",
+                    "value": "{d ∈ (Xf × Xp → {work, retire}) | ∀ y_f_d ∈ Xf, y_p_d ∈ Xp: (∀ c ∈ {work, retire}: (policy.choice:Aggregation(y_f_d, y_p_d, d(y_f_d, y_p_d)) ≥ policy.choice:Aggregation(y_f_d, y_p_d, c)))}"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(Xf × Xp → {work, retire})"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "policy.choice:Aggregation:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f_d, y_p_d, d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f_d, y_p_d, d) ↦ (𝑉_wk≻(𝑔_work≻(y_f_d, y_p_d)), 𝑉_rt≻(𝑔_retire≻(y_f_d, y_p_d)))[d]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp × {work, retire} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Evaluation",
+            "label": "𝑑(y_f_d, y_p_d)",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑑 : Xf × Xp → {work, retire}"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at (y_f_d, y_p_d); no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy.choice:Argmax",
+                "sourceNodeOutputId": "policy.choice:Argmax:d:result",
+                "targetNodeInputId": "policy.choice:Argmax:d:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy:Evaluation:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑑(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑑(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(Xf × Xp → {work, retire})"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "policy.choice:Argmax:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "{d ∈ (Xf × Xp → {work, retire}) | ∀ y_f_d ∈ Xf, y_p_d ∈ Xp: (∀ c ∈ {work, retire}: (policy.choice:Aggregation(y_f_d, y_p_d, d(y_f_d, y_p_d)) ≥ policy.choice:Aggregation(y_f_d, y_p_d, c)))}"
+                  },
+                  {
+                    "key": "label",
+                    "value": "{d ∈ (Xf × Xp → {work, retire}) | ∀ y_f_d ∈ Xf, y_p_d ∈ Xp: (∀ c ∈ {work, retire}: (policy.choice:Aggregation(y_f_d, y_p_d, d(y_f_d, y_p_d)) ≥ policy.choice:Aggregation(y_f_d, y_p_d, c)))}"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(Xf × Xp → {work, retire})"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "GraphOutputs",
+            "label": "Outputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "outputs",
+                "value": "𝑑(y_f_d, y_p_d) : 𝒫(Xf × Xp → {work, retire}), 𝑉 : Xf × Xp → ℝ"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy:Evaluation",
+                "sourceNodeOutputId": "policy:Evaluation:d:result",
+                "targetNodeInputId": "policy:Evaluation:d:result"
+              },
+              {
+                "sourceNodeId": "cntn_to_dcsn:Evaluation",
+                "sourceNodeOutputId": "retire_choice:function:dcsn:V",
+                "targetNodeInputId": "retire_choice:function:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "policy:Evaluation:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑑(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑑(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(Xf × Xp → {work, retire})"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:function:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(y_f_d, y_p_d)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xf × Xp → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "cntn_to_dcsn": {
+            "inputs": "𝑉_wk≻ : Xf × Xp → ℝ, 𝑉_rt≻ : Xf × Xp → ℝ",
+            "outputs": "𝑉 : Xf × Xp → ℝ",
+            "where 1": "𝑔_work≻    : Xf × Xp → Xf × Xp, 𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)",
+            "where 2": "𝑔_retire≻  : Xf × Xp → Xf × Xp, 𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)"
+          },
+          "policy": {
+            "inputs": "𝑉_wk≻ : Xf × Xp → ℝ, 𝑉_rt≻ : Xf × Xp → ℝ",
+            "outputs": "𝑑(y_f_d, y_p_d) : 𝒫(Xf × Xp → {work, retire})",
+            "where 1": "𝑔_work≻    : Xf × Xp → Xf × Xp, 𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)",
+            "where 2": "𝑔_retire≻  : Xf × Xp → Xf × Xp, 𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)"
+          }
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": "/",
+            "layoutDirection": 0,
+            "backgroundColor": "#91BED7",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          },
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 0,
+            "backgroundColor": "#C5E5F1",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "forward",
+        "nodes": [
+          {
+            "id": "GraphInputs",
+            "label": "Inputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "inputs",
+                "value": "μ : finite measure on Xf × Xp"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:measure:dcsn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xf × Xp"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_cntn:Pushforward",
+            "label": "𝑔≻∗μ",
+            "namespace": "dcsn_to_cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pushforward"
+              },
+              {
+                "key": "policy",
+                "value": "𝑑"
+              },
+              {
+                "key": "rule 1",
+                "value": "μ_work≻(B) = μ({y_f_d, y_p_d ∈ Xf × Xp | 𝑑(y_f_d, y_p_d) = work ∧ 𝑔_work≻(y_f_d, y_p_d) ∈ B})"
+              },
+              {
+                "key": "rule 2",
+                "value": "μ_retire≻(B) = μ({y_f_d, y_p_d ∈ Xf × Xp | 𝑑(y_f_d, y_p_d) = retire ∧ 𝑔_retire≻(y_f_d, y_p_d) ∈ B})"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(y_f_d, y_p_d, d) = (y_f_d, y_p_d, y_f_d, y_p_d)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (y_f_wk≻, y_p_wk≻, y_f_rt≻, y_p_rt≻); unused d; y_f_wk≻ reads y_f_d; y_p_wk≻ reads y_p_d; y_f_rt≻ reads y_f_d; y_p_rt≻ reads y_p_d"
+              },
+              {
+                "key": "lines",
+                "value": "retire_choice.bl 8–9, 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "retire_choice:measure:dcsn",
+                "targetNodeInputId": "retire_choice:measure:dcsn"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "retire_choice:measure:cntn:work",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_work≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_work≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xf × Xp"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:measure:cntn:retire",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_retire≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_retire≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xf × Xp"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:measure:dcsn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xf × Xp"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "GraphOutputs",
+            "label": "Outputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "outputs",
+                "value": "μ_work≻ : finite measure on Xf × Xp, μ_retire≻ : finite measure on Xf × Xp"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn:Pushforward",
+                "sourceNodeOutputId": "retire_choice:measure:cntn:work",
+                "targetNodeInputId": "retire_choice:measure:cntn:work"
+              },
+              {
+                "sourceNodeId": "dcsn_to_cntn:Pushforward",
+                "sourceNodeOutputId": "retire_choice:measure:cntn:retire",
+                "targetNodeInputId": "retire_choice:measure:cntn:retire"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "retire_choice:measure:cntn:work",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_work≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_work≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xf × Xp"
+                  }
+                ]
+              },
+              {
+                "id": "retire_choice:measure:cntn:retire",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_retire≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_retire≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on Xf × Xp"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "dcsn_to_cntn": {
+            "inputs": "μ : finite measure on Xf × Xp",
+            "outputs": "μ_work≻ : finite measure on Xf × Xp, μ_retire≻ : finite measure on Xf × Xp",
+            "where 1": "𝑔_work≻    : Xf × Xp → Xf × Xp, 𝑔_work≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, work)",
+            "where 2": "𝑔_retire≻  : Xf × Xp → Xf × Xp, 𝑔_retire≻(y_f_d, y_p_d) = 𝑔≻(y_f_d, y_p_d, retire)"
+          }
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": "/",
+            "layoutDirection": 0,
+            "backgroundColor": "#91BED7",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          },
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 0,
+            "backgroundColor": "#C5E5F1",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      }
+    ],
+    "graphSorting": "node_count_desc"
+  },
+  "graph": "forward initial diagram",
+  "layers": [
+    "dcsn",
+    "cntn"
+  ],
+  "source_path": "applications/pension-retirement/declaration/stages/retire_choice/retire_choice.bl",
+  "source_sha256": "3edc557b72a6ee88d0883c5f9c126f004f0fded9fe2ec57b215f283ba0d3223d"
+}

@@ -1,0 +1,3647 @@
+{
+  "collection": {
+    "label": "house_choice",
+    "graphs": [
+      {
+        "id": "backward initial diagram",
+        "nodes": [
+          {
+            "id": "house_choice:cntn:V_kp",
+            "label": "V_kp≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 26"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:cntn:V_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_kp≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_kp≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:cntn:V_adj",
+            "label": "V_adj≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 26"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:cntn:V_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_adj≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_adj≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:dcsn:V",
+            "label": "V",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 26"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn",
+                "sourceNodeOutputId": "house_choice:dcsn:V",
+                "targetNodeInputId": "house_choice:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:dcsn:d",
+            "label": "d",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "control"
+              },
+              {
+                "key": "set",
+                "value": "{keep, adjust}"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 16"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy",
+                "sourceNodeOutputId": "house_choice:dcsn:d",
+                "targetNodeInputId": "house_choice:dcsn:d"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:dcsn:d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "set",
+                    "value": "{keep, adjust}"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:arvl:V",
+            "label": "V≺",
+            "namespace": "arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "arvl"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "ℝ"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 30"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl",
+                "sourceNodeOutputId": "house_choice:arvl:V",
+                "targetNodeInputId": "house_choice:arvl:V"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn",
+            "label": "cntn_to_dcsn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn"
+              },
+              {
+                "key": "statement",
+                "value": "27  V = (V_kp[>], V_adj[>])[d]  :: [id=choice_value]"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 26–27"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "house_choice:cntn:V_kp",
+                "sourceNodeOutputId": "house_choice:cntn:V_kp",
+                "targetNodeInputId": "house_choice:cntn:V_kp"
+              },
+              {
+                "sourceNodeId": "house_choice:cntn:V_adj",
+                "sourceNodeOutputId": "house_choice:cntn:V_adj",
+                "targetNodeInputId": "house_choice:cntn:V_adj"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:cntn:V_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_kp≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_kp≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:cntn:V_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_adj≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_adj≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl",
+            "label": "dcsn_to_arvl",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl"
+              },
+              {
+                "key": "statement",
+                "value": "31  V[<] = E_{η}(V)  :: [id=value]"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 30–31"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "house_choice:dcsn:V",
+                "sourceNodeOutputId": "house_choice:dcsn:V",
+                "targetNodeInputId": "house_choice:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy",
+            "label": "policy",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu) : !cntn -> (d : {keep, adjust} @ !ctrl) : !dcsn"
+              },
+              {
+                "key": "statement",
+                "value": "35  d = argmax_{d}(V_kp[>], V_adj[>])  :: [id=choice]"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 34–35"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "house_choice:cntn:V_kp",
+                "sourceNodeOutputId": "house_choice:cntn:V_kp",
+                "targetNodeInputId": "house_choice:cntn:V_kp"
+              },
+              {
+                "sourceNodeId": "house_choice:cntn:V_adj",
+                "sourceNodeOutputId": "house_choice:cntn:V_adj",
+                "targetNodeInputId": "house_choice:cntn:V_adj"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:dcsn:d",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "d"
+                  },
+                  {
+                    "key": "label",
+                    "value": "d"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "set",
+                    "value": "{keep, adjust}"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:cntn:V_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_kp≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_kp≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:cntn:V_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "V_adj≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "V_adj≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "cntn": {},
+          "dcsn": {},
+          "arvl": {}
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 1,
+            "backgroundColor": "#EDF7FC",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "forward initial diagram",
+        "nodes": [
+          {
+            "id": "house_choice:arvl:y_f",
+            "label": "y_f≺",
+            "namespace": "arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "arvl"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 11"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:arvl:y_f",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:arvl:y_h",
+            "label": "y_h≺",
+            "namespace": "arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "arvl"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 11"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:arvl:y_h",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_h≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_h≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:dcsn:m_f",
+            "label": "m_f",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 11"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn",
+                "sourceNodeOutputId": "house_choice:dcsn:m_f",
+                "targetNodeInputId": "house_choice:dcsn:m_f"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:dcsn:m_f",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:dcsn:m_f",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:dcsn:m_h",
+            "label": "m_h",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 11"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn",
+                "sourceNodeOutputId": "house_choice:dcsn:m_h",
+                "targetNodeInputId": "house_choice:dcsn:m_h"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:dcsn:m_h",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:dcsn:m_h",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:cntn:w_kp",
+            "label": "w_kp≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 16"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "house_choice:cntn:w_kp",
+                "targetNodeInputId": "house_choice:cntn:w_kp"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:cntn:w_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "w_kp≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "w_kp≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:cntn:h_kp",
+            "label": "h_kp≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 16"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "house_choice:cntn:h_kp",
+                "targetNodeInputId": "house_choice:cntn:h_kp"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:cntn:h_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "h_kp≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "h_kp≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:cntn:w_adj",
+            "label": "w_adj≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "state"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 16"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn",
+                "sourceNodeOutputId": "house_choice:cntn:w_adj",
+                "targetNodeInputId": "house_choice:cntn:w_adj"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:cntn:w_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "w_adj≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "w_adj≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "house_choice:shck:η",
+            "label": "η",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "edge",
+                "value": "≺→∼"
+              },
+              {
+                "key": "role",
+                "value": "shock"
+              },
+              {
+                "key": "set",
+                "value": "ℝ₊₊"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 11"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:shck:η",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "η"
+                  },
+                  {
+                    "key": "label",
+                    "value": "η"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "shck"
+                  },
+                  {
+                    "key": "role",
+                    "value": "shock"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "arvl_to_dcsn",
+            "label": "arvl_to_dcsn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(y_f : ℝ₊, y_h : ℝ₊₊, η) : !arvl -> (m_f : ℝ₊₊, m_h : ℝ₊₊) : !dcsn"
+              },
+              {
+                "key": "statement 1",
+                "value": "12  m_f = (1 + r)*y_f + W*η  :: [id=financial_assets]"
+              },
+              {
+                "key": "statement 2",
+                "value": "13  m_h = y_h                :: [id=housing]"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 11–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "house_choice:arvl:y_f",
+                "sourceNodeOutputId": "house_choice:arvl:y_f",
+                "targetNodeInputId": "house_choice:arvl:y_f"
+              },
+              {
+                "sourceNodeId": "house_choice:arvl:y_h",
+                "sourceNodeOutputId": "house_choice:arvl:y_h",
+                "targetNodeInputId": "house_choice:arvl:y_h"
+              },
+              {
+                "sourceNodeId": "house_choice:shck:η",
+                "sourceNodeOutputId": "house_choice:shck:η",
+                "targetNodeInputId": "house_choice:shck:η"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:dcsn:m_f",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:dcsn:m_h",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:arvl:y_f",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_f≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_f≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:arvl:y_h",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "y_h≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "y_h≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:shck:η",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "η"
+                  },
+                  {
+                    "key": "label",
+                    "value": "η"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "shck"
+                  },
+                  {
+                    "key": "role",
+                    "value": "shock"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_cntn",
+            "label": "dcsn_to_cntn",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "block"
+              },
+              {
+                "key": "header",
+                "value": "(m_f, m_h, d : !ctrl @ {keep, adjust}) : !dcsn -> ()"
+              },
+              {
+                "key": "statement 1",
+                "value": "18  w_kp = m_f         :: [id=cash_on_hand]"
+              },
+              {
+                "key": "statement 2",
+                "value": "19  h_kp = m_h         :: [id=housing_kept]"
+              },
+              {
+                "key": "statement 3",
+                "value": "22  w_adj = m_f + m_h  :: [id=total_resources]"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 16, 18–19, 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "house_choice:dcsn:m_f",
+                "sourceNodeOutputId": "house_choice:dcsn:m_f",
+                "targetNodeInputId": "house_choice:dcsn:m_f"
+              },
+              {
+                "sourceNodeId": "house_choice:dcsn:m_h",
+                "sourceNodeOutputId": "house_choice:dcsn:m_h",
+                "targetNodeInputId": "house_choice:dcsn:m_h"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:cntn:w_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "w_kp≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "w_kp≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:cntn:h_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "h_kp≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "h_kp≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:cntn:w_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "w_adj≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "w_adj≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:dcsn:m_f",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_f"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:dcsn:m_h",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m_h"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "state"
+                  },
+                  {
+                    "key": "set",
+                    "value": "ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "arvl": {},
+          "dcsn": {},
+          "cntn": {}
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 1,
+            "backgroundColor": "#EDF7FC",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "backward",
+        "nodes": [
+          {
+            "id": "GraphInputs",
+            "label": "Inputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "inputs",
+                "value": "𝑉_kp≻ : ℝ₊₊ × ℝ₊₊ → ℝ, 𝑉_adj≻ : ℝ₊₊ → ℝ"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_kp≻(w_kp, h_kp)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_kp≻(w_kp, h_kp)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:function:cntn:V_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_adj≻(w_adj)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_adj≻(w_adj)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Pullback:keep",
+            "label": "𝑉_kp≻ ∘ 𝑔_keep≻",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_kp≻ ∘ 𝑔_keep≻)(m_f, m_h) = 𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m_f, m_h, d) = (m_f, m_h, m_f + m_h)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (w_kp≻, h_kp≻, w_adj≻); unused d; w_kp≻ reads m_f; h_kp≻ reads m_h; w_adj≻ reads m_f, m_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 18–19, 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_kp",
+                "targetNodeInputId": "house_choice:function:cntn:V_kp"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_kp:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_kp≻(w_kp, h_kp)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_kp≻(w_kp, h_kp)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Pullback:adjust",
+            "label": "𝑉_adj≻ ∘ 𝑔_adjust≻",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_adj≻ ∘ 𝑔_adjust≻)(m_f, m_h) = 𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m_f, m_h, d) = (m_f, m_h, m_f + m_h)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (w_kp≻, h_kp≻, w_adj≻); unused d; w_kp≻ reads m_f; h_kp≻ reads m_h; w_adj≻ reads m_f, m_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 18–19, 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_adj",
+                "targetNodeInputId": "house_choice:function:cntn:V_adj"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_adj:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_adj≻(w_adj)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_adj≻(w_adj)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Aggregation",
+            "label": "𝐺",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "policy",
+                "value": "𝑑"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉 = (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑]  on (m_f, m_h) ∈ ℝ₊₊ × ℝ₊₊"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of cntn_to_dcsn: 𝐺(V_kp≻, V_adj≻, m_f, m_h, d) = (V_kp≻, V_adj≻)[d]"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output V; unused m_f, m_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 27"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Pullback:keep",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_kp:g",
+                "targetNodeInputId": "house_choice:function:cntn:V_kp:g"
+              },
+              {
+                "sourceNodeId": "cntn_to_dcsn:Pullback:adjust",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_adj:g",
+                "targetNodeInputId": "house_choice:function:cntn:V_adj:g"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "cntn_to_dcsn:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(m_f, m_h) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑(m_f, m_h)]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(m_f, m_h) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑(m_f, m_h)]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_kp:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:function:cntn:V_adj:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "cntn_to_dcsn:Evaluation",
+            "label": "𝑉(m_f, m_h)",
+            "namespace": "cntn_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at (m_f, m_h); no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Aggregation",
+                "sourceNodeOutputId": "cntn_to_dcsn:Aggregation:V:result",
+                "targetNodeInputId": "cntn_to_dcsn:Aggregation:V:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(m_f, m_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(m_f, m_h)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "cntn_to_dcsn:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(m_f, m_h) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑(m_f, m_h)]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(m_f, m_h) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[𝑑(m_f, m_h)]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl:Pullback",
+            "label": "𝑉 ∘ 𝑔≺",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉 ∘ 𝑔≺)(y_f, y_h, η) = 𝑉(𝑔≺(y_f, y_h, η))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of arvl_to_dcsn: 𝑔(y_f, y_h, η) = ((1 + r)*y_f + W*η, y_h)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (m_f, m_h); m_f reads y_f, η; m_h reads y_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Evaluation",
+                "sourceNodeOutputId": "house_choice:function:dcsn:V",
+                "targetNodeInputId": "house_choice:function:dcsn:V"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:dcsn:V:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(𝑔(y_f, y_h, η))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(𝑔(y_f, y_h, η))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:dcsn:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(m_f, m_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(m_f, m_h)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl.value:Expectation:1",
+            "label": "E η · value",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Expectation"
+              },
+              {
+                "key": "rule",
+                "value": "value:Expectation:1(y_f, y_h) = E_{η}[𝑉(𝑔≺(y_f, y_h, η))]"
+              },
+              {
+                "key": "kernel 1",
+                "value": "distribution of η: η ~ Mixture((0.5, η_lo), (0.5, η_hi))"
+              },
+              {
+                "key": "kernel 2",
+                "value": "conditioned on none declared; drawn on the edge arvl_to_dcsn; in dcsn_to_arvl at each point of (y_f, y_h), integrates η; declared at house_choice:distribution:η"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 9, 31"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl:Pullback",
+                "sourceNodeOutputId": "house_choice:function:dcsn:V:g",
+                "targetNodeInputId": "house_choice:function:dcsn:V:g"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "dcsn_to_arvl.value:Expectation:1:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f, y_h) ↦ E_{η}[𝑉(𝑔(y_f, y_h, η))]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f, y_h) ↦ E_{η}[𝑉(𝑔(y_f, y_h, η))]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:dcsn:V:g",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉(𝑔(y_f, y_h, η))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉(𝑔(y_f, y_h, η))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl:Aggregation",
+            "label": "𝐺",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉≺ = E_{η}[𝑉(𝑔≺(y_f, y_h, η))]  on (y_f, y_h) ∈ ℝ₊ × ℝ₊₊"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of dcsn_to_arvl: 𝐺(E_{η}(V), y_f, y_h) = E_{η}(V)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output V; unused y_f, y_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 31"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl.value:Expectation:1",
+                "sourceNodeOutputId": "dcsn_to_arvl.value:Expectation:1:result",
+                "targetNodeInputId": "dcsn_to_arvl.value:Expectation:1:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "dcsn_to_arvl:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f, y_h) ↦ dcsn_to_arvl.value:Expectation:1(y_f, y_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f, y_h) ↦ dcsn_to_arvl.value:Expectation:1(y_f, y_h)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "dcsn_to_arvl.value:Expectation:1:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f, y_h) ↦ E_{η}[𝑉(𝑔(y_f, y_h, η))]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f, y_h) ↦ E_{η}[𝑉(𝑔(y_f, y_h, η))]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_arvl:Evaluation",
+            "label": "𝑉≺(y_f, y_h)",
+            "namespace": "dcsn_to_arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑉≺ : ℝ₊ × ℝ₊₊ → ℝ"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at (y_f, y_h); no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl:Aggregation",
+                "sourceNodeOutputId": "dcsn_to_arvl:Aggregation:V:result",
+                "targetNodeInputId": "dcsn_to_arvl:Aggregation:V:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≺(y_f, y_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≺(y_f, y_h)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "dcsn_to_arvl:Aggregation:V:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(y_f, y_h) ↦ dcsn_to_arvl.value:Expectation:1(y_f, y_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(y_f, y_h) ↦ dcsn_to_arvl.value:Expectation:1(y_f, y_h)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Pullback:keep",
+            "label": "𝑉_kp≻ ∘ 𝑔_keep≻",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_kp≻ ∘ 𝑔_keep≻)(m_f, m_h) = 𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m_f, m_h, d) = (m_f, m_h, m_f + m_h)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (w_kp≻, h_kp≻, w_adj≻); unused d; w_kp≻ reads m_f; h_kp≻ reads m_h; w_adj≻ reads m_f, m_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 18–19, 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_kp",
+                "targetNodeInputId": "house_choice:function:cntn:V_kp"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_kp:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_kp",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_kp≻(w_kp, h_kp)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_kp≻(w_kp, h_kp)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Pullback:adjust",
+            "label": "𝑉_adj≻ ∘ 𝑔_adjust≻",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pullback"
+              },
+              {
+                "key": "rule",
+                "value": "(𝑉_adj≻ ∘ 𝑔_adjust≻)(m_f, m_h) = 𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m_f, m_h, d) = (m_f, m_h, m_f + m_h)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (w_kp≻, h_kp≻, w_adj≻); unused d; w_kp≻ reads m_f; h_kp≻ reads m_h; w_adj≻ reads m_f, m_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 18–19, 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_adj",
+                "targetNodeInputId": "house_choice:function:cntn:V_adj"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_adj:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_adj",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_adj≻(w_adj)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_adj≻(w_adj)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy.choice:Aggregation",
+            "label": "𝐺 · choice",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Aggregation"
+              },
+              {
+                "key": "rule",
+                "value": "(m_f, m_h, d) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝐺 of policy, segment policy.choice:Aggregation: 𝐺(V_kp≻, V_adj≻, m_f, m_h, d) = (V_kp≻, V_adj≻)[d]"
+              },
+              {
+                "key": "kernel 2",
+                "value": "output (V_kp≻, V_adj≻)[d]; unused m_f, m_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 35"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy:Pullback:keep",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_kp:g:policy",
+                "targetNodeInputId": "house_choice:function:cntn:V_kp:g:policy"
+              },
+              {
+                "sourceNodeId": "policy:Pullback:adjust",
+                "sourceNodeOutputId": "house_choice:function:cntn:V_adj:g:policy",
+                "targetNodeInputId": "house_choice:function:cntn:V_adj:g:policy"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy.choice:Aggregation:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(m_f, m_h, d) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(m_f, m_h, d) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:cntn:V_kp:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_kp≻(𝑔_keep≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:function:cntn:V_adj:g:policy",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉_adj≻(𝑔_adjust≻(m_f, m_h))"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy.choice:Argmax",
+            "label": "argmax · choice",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Argmax"
+              },
+              {
+                "key": "rule",
+                "value": "𝑑(m_f, m_h) ∈ argmax_{d ∈ {keep, adjust}} [(𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]]"
+              },
+              {
+                "key": "kernel",
+                "value": "objective V_kp[>]; objective function (m_f, m_h, d) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d](m_f, m_h, d); choice d; feasible set {keep, adjust}"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 35"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy.choice:Aggregation",
+                "sourceNodeOutputId": "policy.choice:Aggregation:result",
+                "targetNodeInputId": "policy.choice:Aggregation:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy.choice:Argmax:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "{d ∈ (ℝ₊₊ × ℝ₊₊ → {keep, adjust}) | ∀ m_f ∈ ℝ₊₊, m_h ∈ ℝ₊₊: (∀ c ∈ {keep, adjust}: (policy.choice:Aggregation(m_f, m_h, d(m_f, m_h)) ≥ policy.choice:Aggregation(m_f, m_h, c)))}"
+                  },
+                  {
+                    "key": "label",
+                    "value": "{d ∈ (ℝ₊₊ × ℝ₊₊ → {keep, adjust}) | ∀ m_f ∈ ℝ₊₊, m_h ∈ ℝ₊₊: (∀ c ∈ {keep, adjust}: (policy.choice:Aggregation(m_f, m_h, d(m_f, m_h)) ≥ policy.choice:Aggregation(m_f, m_h, c)))}"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(ℝ₊₊ × ℝ₊₊ → {keep, adjust})"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "policy.choice:Aggregation:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "(m_f, m_h, d) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]"
+                  },
+                  {
+                    "key": "label",
+                    "value": "(m_f, m_h, d) ↦ (𝑉_kp≻(𝑔_keep≻(m_f, m_h)), 𝑉_adj≻(𝑔_adjust≻(m_f, m_h)))[d]"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊₊ × ℝ₊₊ × {keep, adjust} → ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "policy:Evaluation",
+            "label": "𝑑(m_f, m_h)",
+            "namespace": "policy",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Evaluation"
+              },
+              {
+                "key": "rule",
+                "value": "𝑑 : ℝ₊₊ × ℝ₊₊ → {keep, adjust}"
+              },
+              {
+                "key": "kernel",
+                "value": "identity at (m_f, m_h); no policy is inserted"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "policy.choice:Argmax",
+                "sourceNodeOutputId": "policy.choice:Argmax:d:result",
+                "targetNodeInputId": "policy.choice:Argmax:d:result"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "policy:Evaluation:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑑(m_f, m_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑑(m_f, m_h)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(ℝ₊₊ × ℝ₊₊ → {keep, adjust})"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "policy.choice:Argmax:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "{d ∈ (ℝ₊₊ × ℝ₊₊ → {keep, adjust}) | ∀ m_f ∈ ℝ₊₊, m_h ∈ ℝ₊₊: (∀ c ∈ {keep, adjust}: (policy.choice:Aggregation(m_f, m_h, d(m_f, m_h)) ≥ policy.choice:Aggregation(m_f, m_h, c)))}"
+                  },
+                  {
+                    "key": "label",
+                    "value": "{d ∈ (ℝ₊₊ × ℝ₊₊ → {keep, adjust}) | ∀ m_f ∈ ℝ₊₊, m_h ∈ ℝ₊₊: (∀ c ∈ {keep, adjust}: (policy.choice:Aggregation(m_f, m_h, d(m_f, m_h)) ≥ policy.choice:Aggregation(m_f, m_h, c)))}"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(ℝ₊₊ × ℝ₊₊ → {keep, adjust})"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "GraphOutputs",
+            "label": "Outputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "outputs",
+                "value": "𝑉≺ : ℝ₊ × ℝ₊₊ → ℝ, 𝑑(m_f, m_h) : 𝒫(ℝ₊₊ × ℝ₊₊ → {keep, adjust})"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl:Evaluation",
+                "sourceNodeOutputId": "house_choice:function:arvl:V",
+                "targetNodeInputId": "house_choice:function:arvl:V"
+              },
+              {
+                "sourceNodeId": "policy:Evaluation",
+                "sourceNodeOutputId": "policy:Evaluation:d:result",
+                "targetNodeInputId": "policy:Evaluation:d:result"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:function:arvl:V",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑉≺(y_f, y_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑉≺(y_f, y_h)"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "ℝ₊ × ℝ₊₊ → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "policy:Evaluation:d:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝑑(m_f, m_h)"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝑑(m_f, m_h)"
+                  },
+                  {
+                    "key": "role",
+                    "value": "control"
+                  },
+                  {
+                    "key": "type",
+                    "value": "𝒫(ℝ₊₊ × ℝ₊₊ → {keep, adjust})"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "cntn_to_dcsn": {
+            "inputs": "𝑉_kp≻ : ℝ₊₊ × ℝ₊₊ → ℝ, 𝑉_adj≻ : ℝ₊₊ → ℝ",
+            "outputs": "𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ",
+            "where 1": "𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)",
+            "where 2": "𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)"
+          },
+          "dcsn_to_arvl": {
+            "inputs": "𝑉 : ℝ₊₊ × ℝ₊₊ → ℝ",
+            "outputs": "𝑉≺ : ℝ₊ × ℝ₊₊ → ℝ",
+            "parameter 1": "r : ℝ₊, unbound",
+            "parameter 2": "W : ℝ₊₊, unbound",
+            "parameter 3": "η_lo : ℝ₊₊, unbound",
+            "parameter 4": "η_hi : ℝ₊₊, unbound"
+          },
+          "policy": {
+            "inputs": "𝑉_kp≻ : ℝ₊₊ × ℝ₊₊ → ℝ, 𝑉_adj≻ : ℝ₊₊ → ℝ",
+            "outputs": "𝑑(m_f, m_h) : 𝒫(ℝ₊₊ × ℝ₊₊ → {keep, adjust})",
+            "where 1": "𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)",
+            "where 2": "𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)"
+          }
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": "/",
+            "layoutDirection": 0,
+            "backgroundColor": "#91BED7",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          },
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 0,
+            "backgroundColor": "#C5E5F1",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      },
+      {
+        "id": "forward",
+        "nodes": [
+          {
+            "id": "GraphInputs",
+            "label": "Inputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "inputs",
+                "value": "μ≺ : finite measure on ℝ₊ × ℝ₊₊"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:measure:arvl",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊ × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "arvl_to_dcsn:DistributionExtension:η",
+            "label": "μ ⊗ η",
+            "namespace": "arvl_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "DistributionExtension"
+              },
+              {
+                "key": "rule",
+                "value": "μ≺⊗P_η(B) = ∫_{(y_f, y_h) ∈ ℝ₊ × ℝ₊₊} [P_η({η ∈ ℝ₊₊ | (y_f, y_h, η) ∈ B})] μ≺(d(y_f, y_h))"
+              },
+              {
+                "key": "kernel 1",
+                "value": "distribution of η: η ~ Mixture((0.5, η_lo), (0.5, η_hi))"
+              },
+              {
+                "key": "kernel 2",
+                "value": "extends the measure by η; conditioning arguments none"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 9"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "house_choice:measure:arvl",
+                "targetNodeInputId": "house_choice:measure:arvl"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:measure:arvl:with-distribution:η",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:measure:arvl",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊ × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "arvl_to_dcsn:Pushforward",
+            "label": "𝑔≺∗μ",
+            "namespace": "arvl_to_dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pushforward"
+              },
+              {
+                "key": "rule",
+                "value": "μ(B) = μ≺⊗P_η({y_f≺, y_h≺, η ∈ ℝ₊ × ℝ₊₊ × ℝ₊₊ | 𝑔≺(y_f≺, y_h≺, η) ∈ B})"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of arvl_to_dcsn: 𝑔(y_f, y_h, η) = ((1 + r)*y_f + W*η, y_h)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (m_f, m_h); m_f reads y_f, η; m_h reads y_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 12–13"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn:DistributionExtension:η",
+                "sourceNodeOutputId": "house_choice:measure:arvl:with-distribution:η",
+                "targetNodeInputId": "house_choice:measure:arvl:with-distribution:η"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:measure:dcsn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊₊ × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:measure:arvl:with-distribution:η",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊ × ℝ₊₊ × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "dcsn_to_cntn:Pushforward",
+            "label": "𝑔≻∗μ",
+            "namespace": "dcsn_to_cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "Pushforward"
+              },
+              {
+                "key": "policy",
+                "value": "𝑑"
+              },
+              {
+                "key": "rule 1",
+                "value": "μ_keep≻(B) = μ({m_f, m_h ∈ ℝ₊₊ × ℝ₊₊ | 𝑑(m_f, m_h) = keep ∧ 𝑔_keep≻(m_f, m_h) ∈ B})"
+              },
+              {
+                "key": "rule 2",
+                "value": "μ_adjust≻(B) = μ({m_f, m_h ∈ ℝ₊₊ × ℝ₊₊ | 𝑑(m_f, m_h) = adjust ∧ 𝑔_adjust≻(m_f, m_h) ∈ B})"
+              },
+              {
+                "key": "kernel 1",
+                "value": "𝑔 of dcsn_to_cntn: 𝑔(m_f, m_h, d) = (m_f, m_h, m_f + m_h)"
+              },
+              {
+                "key": "kernel 2",
+                "value": "outputs (w_kp≻, h_kp≻, w_adj≻); unused d; w_kp≻ reads m_f; h_kp≻ reads m_h; w_adj≻ reads m_f, m_h"
+              },
+              {
+                "key": "lines",
+                "value": "house_choice.bl 18–19, 22"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "arvl_to_dcsn:Pushforward",
+                "sourceNodeOutputId": "house_choice:measure:dcsn",
+                "targetNodeInputId": "house_choice:measure:dcsn"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "house_choice:measure:cntn:keep",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_keep≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_keep≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊₊ × ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:measure:cntn:adjust",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_adjust≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_adjust≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:measure:dcsn",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊₊ × ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#214EDA",
+              "hoveredBorderColor": "#172A52",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "GraphOutputs",
+            "label": "Outputs",
+            "namespace": "",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "outputs",
+                "value": "μ_keep≻ : finite measure on ℝ₊₊ × ℝ₊₊, μ_adjust≻ : finite measure on ℝ₊₊"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_cntn:Pushforward",
+                "sourceNodeOutputId": "house_choice:measure:cntn:keep",
+                "targetNodeInputId": "house_choice:measure:cntn:keep"
+              },
+              {
+                "sourceNodeId": "dcsn_to_cntn:Pushforward",
+                "sourceNodeOutputId": "house_choice:measure:cntn:adjust",
+                "targetNodeInputId": "house_choice:measure:cntn:adjust"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "house_choice:measure:cntn:keep",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_keep≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_keep≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊₊ × ℝ₊₊"
+                  }
+                ]
+              },
+              {
+                "id": "house_choice:measure:cntn:adjust",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "μ_adjust≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "μ_adjust≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "measure"
+                  },
+                  {
+                    "key": "type",
+                    "value": "finite measure on ℝ₊₊"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          }
+        ],
+        "groupNodeAttributes": {
+          "arvl_to_dcsn": {
+            "inputs": "μ≺ : finite measure on ℝ₊ × ℝ₊₊",
+            "outputs": "μ : finite measure on ℝ₊₊ × ℝ₊₊",
+            "parameter 1": "r : ℝ₊, unbound",
+            "parameter 2": "W : ℝ₊₊, unbound",
+            "parameter 3": "η_lo : ℝ₊₊, unbound",
+            "parameter 4": "η_hi : ℝ₊₊, unbound"
+          },
+          "dcsn_to_cntn": {
+            "inputs": "μ : finite measure on ℝ₊₊ × ℝ₊₊",
+            "outputs": "μ_keep≻ : finite measure on ℝ₊₊ × ℝ₊₊, μ_adjust≻ : finite measure on ℝ₊₊",
+            "where 1": "𝑔_keep≻    : ℝ₊₊ × ℝ₊₊ → ℝ₊₊ × ℝ₊₊,  𝑔_keep≻(m_f, m_h) = 𝑔≻(m_f, m_h, keep)",
+            "where 2": "𝑔_adjust≻  : ℝ₊₊ × ℝ₊₊ → ℝ₊₊,  𝑔_adjust≻(m_f, m_h) = 𝑔≻(m_f, m_h, adjust)"
+          }
+        },
+        "groupNodeConfigs": [
+          {
+            "namespaceRegex": "/",
+            "layoutDirection": 0,
+            "backgroundColor": "#91BED7",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          },
+          {
+            "namespaceRegex": ".*",
+            "layoutDirection": 0,
+            "backgroundColor": "#C5E5F1",
+            "borderColor": "#172A52",
+            "textColor": "#172A52"
+          }
+        ],
+        "nodeLabelsToHide": null,
+        "tasksData": null,
+        "layoutConfigs": null
+      }
+    ],
+    "graphSorting": "node_count_desc"
+  },
+  "graph": "forward initial diagram",
+  "layers": [
+    "arvl",
+    "dcsn",
+    "cntn"
+  ],
+  "source_path": "applications/housing-frictions/declaration/stages/house_choice/house_choice.bl",
+  "source_sha256": "443c62e38d828e81897ae8e29310069483d31fe4797a0a78d7c9d83c3186bb10"
+}

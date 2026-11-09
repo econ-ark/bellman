@@ -1,0 +1,12 @@
+{
+  "path": "applications/pension-retirement/declaration/stages/retire_choice/retire_choice.bl",
+  "sha256": "3edc557b72a6ee88d0883c5f9c126f004f0fded9fe2ec57b215f283ba0d3223d",
+  "text": "@stage: retire_choice\n\nXf := ℝ₊\nXp := ℝ₊\n\n[id=dcsn_to_cntn, (y_f_d : Xf, y_p_d : Xp, d : !ctrl @ {work, retire}) : !dcsn -> ()] {\n    [label=work,   () -> (y_f_wk : Xf, y_p_wk : Xp) : !cntn] {\n        y_f_wk = y_f_d                                :: [id=financial_if_working]\n        y_p_wk = y_p_d                                :: [id=pension_if_working]\n    }\n    [label=retire, () -> (y_f_rt : Xf, y_p_rt : Xp) : !cntn] {\n        y_f_rt = y_f_d                                :: [id=financial_if_retiring]\n        y_p_rt = y_p_d                                :: [id=pension_paid_out]\n    }\n}\n\n[id=cntn_to_dcsn, (V_wk[>] : ℝ @ !vlu, V_rt[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = (V_wk[>], V_rt[>])[d]                         :: [id=choice_value]\n}\n\n[id=policy, (V_wk[>], V_rt[>]) : !cntn -> (d : {work, retire} @ !ctrl) : !dcsn] {\n    d = argmax_{d}(V_wk[>], V_rt[>])                  :: [id=choice]\n}\n",
+  "excerpts": {
+    "forward": {
+      "start_line": 6,
+      "end_line": 15,
+      "text": "[id=dcsn_to_cntn, (y_f_d : Xf, y_p_d : Xp, d : !ctrl @ {work, retire}) : !dcsn -> ()] {\n    [label=work,   () -> (y_f_wk : Xf, y_p_wk : Xp) : !cntn] {\n        y_f_wk = y_f_d                                :: [id=financial_if_working]\n        y_p_wk = y_p_d                                :: [id=pension_if_working]\n    }\n    [label=retire, () -> (y_f_rt : Xf, y_p_rt : Xp) : !cntn] {\n        y_f_rt = y_f_d                                :: [id=financial_if_retiring]\n        y_p_rt = y_p_d                                :: [id=pension_paid_out]\n    }\n}\n"
+    }
+  }
+}

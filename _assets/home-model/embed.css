@@ -1,0 +1,59 @@
+* { box-sizing: border-box; }
+html { color-scheme: dark; }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+body { background: var(--bl-navy); color: var(--bl-ice); font: 14px/1.5 Archivo, sans-serif; }
+button { font: inherit; cursor: pointer; border-radius: 0; }
+a { color: var(--bl-ice-2); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -4px; }
+.workbench-frame {
+  --frame-inset: 20px;
+  --controls-height: 56px;
+  display: grid;
+  grid-template-rows: 52px minmax(0, 1fr);
+  height: 100vh;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--bl-hairline);
+  background: var(--bl-navy);
+}
+.frame-bar { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 var(--frame-inset); min-width: 0; border-bottom: 1px solid var(--bl-hairline); background: var(--bl-chrome); }
+.view-tabs { display: flex; flex-shrink: 0; height: 100%; gap: 24px; }
+.view-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--bl-ice-3); padding: 0 4px; }
+.view-tabs button[aria-selected=true] { color: var(--bl-ice); border-color: var(--bl-ice-2); }
+.view-tabs button:hover { color: var(--bl-ice); }
+.filename { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px/1.4 'IBM Plex Mono', monospace; color: var(--bl-ice-3); }
+.diagram-panel { position: relative; min-height: 0; }
+[role=tabpanel]:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -3px; }
+.native-window.bl-window { display: block !important; position: relative !important; height: 100% !important; min-height: 0 !important; width: 100% !important; min-width: 0 !important; padding: 0 !important; background: var(--bl-navy) !important; }
+.native-window > .bl-view { display: block !important; position: relative !important; height: 100% !important; min-height: 0 !important; width: 100% !important; min-width: 0 !important; overflow: hidden; }
+.native-window .bl-canvas { position: relative !important; height: 100% !important; width: 100% !important; min-height: 0 !important; }
+.native-window .bl-view-host { position: absolute; inset: 0 0 var(--controls-height); width: 100%; height: auto; min-height: 0; }
+.native-window .bl-view-host, .native-window .react-flow__pane { touch-action: pan-y !important; }
+#diagram-panel .react-flow { background-image: radial-gradient(circle, color-mix(in srgb, var(--bl-ice-3) 10%, transparent) .8px, transparent .9px); background-size: 28px 28px; background-position: 14px 14px; }
+#diagram-panel #graph.bl-view-host .bf-perch-layer { background-color: var(--bl-navy) !important; }
+#diagram-panel .bl-graph-controls { left: var(--frame-inset); bottom: 8px; border-color: var(--bl-hairline); padding: 3px; gap: 2px; }
+#native-controls vscode-toolbar-button { --bl-target: 32px; cursor: pointer; }
+#diagram-panel .react-flow__panel.react-flow__attribution { right: calc(var(--frame-inset) - 5px); bottom: var(--frame-inset); background: var(--bl-navy); }
+.loading-state { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; padding: 24px; text-align: center; background: var(--bl-navy); color: var(--bl-ice-3); }
+#source-panel { min-height: 0; overflow: auto; background: var(--bl-navy); }
+.source-info { display: flex; justify-content: space-between; gap: 20px; position: sticky; left: 0; width: 100%; padding: 21px 24px 14px; color: var(--bl-ice-3); font-size: 12px; }
+.source-status { margin: 0; padding: 8px 24px 24px; color: var(--bl-ice-3); }
+pre { margin: 0; padding: 8px 24px 30px; width: max-content; min-width: 100%; font: 13px/1.9 'IBM Plex Mono', 'STIX Two Math', monospace; tab-size: 4; color: var(--bl-ice); }
+.source-line { display: block; }
+.line-number { display: inline-block; width: 34px; margin-right: 17px; color: var(--bl-ice-3); user-select: none; }
+noscript { position: fixed; inset: 0; z-index: 10; display: grid; align-content: center; padding: 24px; background: var(--bl-navy); }
+[hidden] { display: none !important; }
+@media (max-width: 600px) {
+  .workbench-frame { --frame-inset: 16px; --controls-height: 64px; grid-template-rows: 50px minmax(0, 1fr); }
+  .frame-bar { gap: 16px; }
+  .view-tabs { gap: 18px; }
+  .filename { font-size: 10px; }
+  #native-controls vscode-toolbar-button { --bl-target: 44px; }
+  .source-info { padding: 18px 16px 10px; }
+  pre { padding-left: 16px; font-size: 12px; }
+  .line-number { width: 24px; margin-right: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; transition: none !important; }
+}
