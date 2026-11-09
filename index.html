@@ -63,7 +63,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="_stylesheets/home.css?v=20261109k">
+  <link rel="stylesheet" href="_stylesheets/home.css?v=20261110a">
   <link rel="stylesheet" href="_stylesheets/home-modules.css">
   <script defer src="_javascripts/home-scenes.js" data-bellman-home-script></script>
 
@@ -253,9 +253,9 @@
   </div>
   <div class="home-features__layout">
     <div class="home-feature-list">
-      <a class="home-feature" href="wiki/elaborated_stage/#1-the-complete-typed-statement-of-the-problem"><h2>The Bellman language</h2><p>Express economic relationships as a typed semantic ontology.</p><span aria-hidden="true">↗</span></a>
-      <a class="home-feature" href="wiki/semgraph/"><h2>Typed semantics</h2><p>Humans and AI can inspect the quantities, equations and mathematical operations that define the model.</p><span aria-hidden="true">↗</span></a>
-      <a class="home-feature" href="wiki/rho/"><h2>AI-assisted implementation</h2><p>Use explicit model meaning to support code generation and numerical implementation.</p><span aria-hidden="true">↗</span></a>
+      <a class="home-feature" href="wiki/elaborated_stage/#1-the-complete-typed-statement-of-the-problem"><h2>The Bellman language</h2><p>Express economic relationships as a typed semantic ontology.</p><span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
+      <a class="home-feature" href="wiki/semgraph/"><h2>Typed semantics</h2><p>Humans and AI can inspect the quantities, equations and mathematical operations that define the model.</p><span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
+      <a class="home-feature" href="wiki/rho/"><h2>AI-assisted implementation</h2><p>Use explicit model meaning to support code generation and numerical implementation.</p><span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
     </div>
   </div>
   <div class="home-media__caption">
@@ -2056,18 +2056,18 @@
 </section>
 
 <section class="home-applications" id="examples" aria-labelledby="applications-heading">
-  <div class="home-section-heading"><h2 id="applications-heading">Applications</h2><a href="examples/">All examples <span aria-hidden="true">→</span></a></div>
+  <div class="home-section-heading"><h2 id="applications-heading">Applications</h2><a href="examples/">All examples <span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a></div>
   <div class="home-applications__layout">
     <div class="home-model-choice">
       <div class="home-model-tabs" hidden role="tablist" aria-label="Example models" aria-orientation="vertical">
-        <button type="button" role="tab" id="model-housing" data-model="housing" aria-controls="home-model-panel" aria-selected="true">Housing</button>
-        <button type="button" role="tab" id="model-pensions" data-model="pensions" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Pensions</button>
-        <button type="button" role="tab" id="model-buffer-stock" data-model="buffer-stock" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Buffer-stock saving</button>
+        <button type="button" role="tab" id="model-housing" data-model="housing" aria-controls="home-model-panel" aria-selected="true">Housing<span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></button>
+        <button type="button" role="tab" id="model-pensions" data-model="pensions" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Pensions<span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></button>
+        <button type="button" role="tab" id="model-buffer-stock" data-model="buffer-stock" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Buffer-stock saving<span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></button>
       </div>
-      <div class="home-model-description" data-model-description="housing"><p>A household chooses whether to keep its home or adjust its housing stock.</p><a href="examples/housing-frictions/">Read the model <span aria-hidden="true">→</span></a></div>
-      <div class="home-model-description" data-model-description="pensions" hidden><p>A worker chooses consumption and pension contributions before deciding whether to retire next period.</p><a href="examples/pension-retirement/">Read the model <span aria-hidden="true">→</span></a></div>
-      <div class="home-model-description" data-model-description="buffer-stock" hidden><p>A household chooses consumption and saving under permanent and temporary income risk.</p><a href="examples/buffer-stock/buffer_stock/">Read the model <span aria-hidden="true">→</span></a></div>
-      <a class="home-model-workbench" href="overview/07-workbench/">Workbench guide <span aria-hidden="true">↗</span></a>
+      <div class="home-model-description" data-model-description="housing"><p>A household chooses whether to keep its home or adjust its housing stock.</p><a href="examples/housing-frictions/">Read the model <span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a></div>
+      <div class="home-model-description" data-model-description="pensions" hidden><p>A worker chooses consumption and pension contributions before deciding whether to retire next period.</p><a href="examples/pension-retirement/">Read the model <span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a></div>
+      <div class="home-model-description" data-model-description="buffer-stock" hidden><p>A household chooses consumption and saving under permanent and temporary income risk.</p><a href="examples/buffer-stock/buffer_stock/">Read the model <span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a></div>
+      <a class="home-model-workbench" href="overview/07-workbench/">Workbench guide <span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
       <noscript><p><a href="examples/pension-retirement/">Pensions</a> and <a href="examples/buffer-stock/buffer_stock/">Buffer-stock saving</a> are also available in the examples.</p></noscript>
     </div>
     <div id="home-model-panel" class="home-model-panel" role="tabpanel" aria-labelledby="model-housing">
@@ -2079,17 +2079,17 @@
 <section class="home-project" id="project" aria-labelledby="project-heading">
   <div class="home-section-heading"><h2 id="project-heading">The project</h2><p>Tools for writing and inspecting economic models.</p></div>
   <div class="home-project__rows">
-    <a href="Bellman-Sym/"><h3>Bellman-SYM<span>Language</span></h3><p>State quantities, equations and the order of decisions.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="overview/07-workbench/"><h3>Workbench</h3><p>Edit model files beside diagrams constructed from their equations.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="matsya/"><h3>Matsya</h3><p>Draft model declarations from prose and equations, then review the result.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="bellman-calculus/"><h3>Bellman calculus</h3><p>Read the mathematics of staged decision problems and their operators.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
-    <a href="asva/"><h3>Asva</h3><p>Build numerical steps, compare model variants and estimate parameters.</p><span class="home-project__arrow" aria-hidden="true">↗</span></a>
+    <a href="Bellman-Sym/"><h3>Bellman-SYM<span>Language</span></h3><p>State quantities, equations and the order of decisions.</p><span class="home-arrow home-project__arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
+    <a href="overview/07-workbench/"><h3>Workbench</h3><p>Edit model files beside diagrams constructed from their equations.</p><span class="home-arrow home-project__arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
+    <a href="matsya/"><h3>Matsya</h3><p>Draft model declarations from prose and equations, then review the result.</p><span class="home-arrow home-project__arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
+    <a href="bellman-calculus/"><h3>Bellman calculus</h3><p>Read the mathematics of staged decision problems and their operators.</p><span class="home-arrow home-project__arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
+    <a href="asva/"><h3>Asva</h3><p>Build numerical steps, compare model variants and estimate parameters.</p><span class="home-arrow home-project__arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
   </div>
 </section>
 
 <section class="home-start" aria-label="Start using Bellman">
-  <a href="overview/00-install/"><h2>Start here</h2><p>Install Bellman and open an example.</p><span aria-hidden="true">↗</span></a>
-  <a href="https://github.com/econ-ark/bellman/issues/new"><h2>Ask about a model</h2><p>Describe your model or ask a question on GitHub.</p><span aria-hidden="true">↗</span></a>
+  <a href="overview/00-install/"><h2>Start here</h2><p>Install Bellman and open an example.</p><span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
+  <a href="https://github.com/econ-ark/bellman/issues/new"><h2>Ask about a model</h2><p>Describe your model or ask a question on GitHub.</p><span class="home-arrow" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg></span></a>
 </section>
 </div>
 
