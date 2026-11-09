@@ -129,7 +129,10 @@ body:has(.bellman-home) .md-top {
 
 .bellman-home__hero {
   --bellman-hero-bottom: clamp(48px, 6vw, 88px);
+  --bellman-corner-width: clamp(200px, 18vw, 260px);
+  position: relative;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  row-gap: clamp(28px, 3.5vw, 48px);
   padding: clamp(48px, 7vw, 96px) var(--bellman-home-pad) var(--bellman-hero-bottom);
   background: var(--bl-ultramarine);
   color: #fff;
@@ -145,12 +148,19 @@ body:has(.bellman-home) .md-top {
   margin-left: calc(-1 * var(--bellman-home-pad) - clamp(72px, 8vw, 144px));
 }
 
+.bellman-home__art--arrival .bellman-home__loop {
+  max-width: 500px;
+}
+
 .bellman-home__art--corner {
-  grid-column: 2;
-  justify-self: end;
-  width: clamp(260px, 30vw, 480px);
-  margin-right: calc(-1 * var(--bellman-home-pad) - clamp(32px, 5vw, 80px));
-  margin-bottom: calc(-1 * var(--bellman-hero-bottom) - clamp(52px, 6vw, 96px));
+  position: absolute;
+  right: clamp(-32px, -2vw, -20px);
+  bottom: calc(-.3955 * var(--bellman-corner-width));
+  width: var(--bellman-corner-width);
+}
+
+.bellman-home__art--corner * {
+  animation: none !important;
 }
 
 .bellman-home__loop {
@@ -216,6 +226,7 @@ body:has(.bellman-home) .md-top {
 }
 
 .bellman-home__actions {
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -428,6 +439,7 @@ body:has(.bellman-home) .md-top {
 
   .bellman-home__hero {
     --bellman-hero-bottom: 40px;
+    --bellman-corner-width: clamp(120px, 38vw, 220px);
   }
 
   .bellman-home__art--arrival {
@@ -438,11 +450,18 @@ body:has(.bellman-home) .md-top {
     max-width: 360px;
   }
 
+  .bellman-home__art--arrival .bellman-home__loop {
+    max-width: 320px;
+  }
+
   .bellman-home__art--corner {
-    grid-column: 1;
-    width: clamp(220px, 52vw, 320px);
-    margin-right: calc(-1 * var(--bellman-home-pad) - 32px);
-    margin-bottom: calc(-1 * var(--bellman-hero-bottom) - 44px);
+    right: -32px;
+    bottom: calc(-.28 * var(--bellman-corner-width));
+  }
+
+  .bellman-home__actions {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .bellman-home h1 {
