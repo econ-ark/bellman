@@ -1,4 +1,5 @@
 import {linesForNode} from './source-lines.js?v=20261110p';
+import {sourceParts} from './source-presentation.js?v=20261110s';
 
 (() => {
   'use strict';
@@ -21,6 +22,10 @@ import {linesForNode} from './source-lines.js?v=20261110p';
   const kind = document.querySelector('#graph-kind');
   const direction = document.querySelector('#graph-direction');
   const wrap = document.querySelector('#wrap-source');
+  const types = document.querySelector('#source-types');
+  const notes = document.querySelector('#source-notes');
+  const copy = document.querySelector('#copy-source');
+  const copyStatus = document.querySelector('#source-copy-status');
   const panes = document.querySelector('.pane-layout');
   const resizer = document.querySelector('#pane-resizer');
   const compact = matchMedia('(max-width:759px)');
@@ -33,8 +38,13 @@ import {linesForNode} from './source-lines.js?v=20261110p';
     sourcePanel.dataset.wrap = 'false';
     wrap.setAttribute('aria-pressed', 'false');
   }
+  types.setAttribute('aria-pressed', String(preferences.types !== false));
+  notes.setAttribute('aria-pressed', String(preferences.notes === true));
   function savePreferences() {
-    try { sessionStorage.setItem(preferenceKey, JSON.stringify({kind: kind.value, direction: direction.value, wrap: sourcePanel.dataset.wrap === 'true'})); } catch (_) {}
+    try { sessionStorage.setItem(preferenceKey, JSON.stringify({
+      kind: kind.value, direction: direction.value, wrap: sourcePanel.dataset.wrap === 'true',
+      types: types.getAttribute('aria-pressed') === 'true', notes: notes.getAttribute('aria-pressed') === 'true'
+    })); } catch (_) {}
   }
   let region = null;
   let initialFit = false;
@@ -44,13 +54,70 @@ import {linesForNode} from './source-lines.js?v=20261110p';
   let currentGraph = '';
   let sourceWidth = 38;
   let sourceLines = [];
+  let sourceText = [];
+  let authoredSource = '';
+  let sourceDisplay = null;
+  let selectedLines = new Set();
   let lastSelection = null;
+
+  function drawSource() {
+    const scroll = document.querySelector('.source-scroll');
+    const top = scroll.getBoundingClientRect().top;
+    const anchor = sourceLines.find(row => row.getBoundingClientRect().bottom > top);
+    const offset = anchor ? anchor.getBoundingClientRect().top - top : 0;
+    const choices = {types: types.getAttribute('aria-pressed') === 'true', notes: notes.getAttribute('aria-pressed') === 'true'};
+    sourceLines.forEach((row, index) => {
+      const content = row.querySelector('.line-content');
+      const parts = sourceParts(sourceText[index], index + 1, sourceDisplay, choices, selectedLines.has(index + 1));
+      content.replaceChildren();
+      for (const [partIndex, part] of parts.entries()) {
+        if (part.kind === 'text') {
+          content.append(document.createTextNode(part.text));
+          continue;
+        }
+        const note = document.createElement('span');
+        note.className = 'source-note';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'source-note-button';
+        button.title = part.text.slice(1, -1);
+        button.setAttribute('aria-label', 'Show note on line ' + (index + 1) + ': ' + part.text.slice(1, -1));
+        button.setAttribute('aria-expanded', 'false');
+        const icon = document.createElement('span');
+        icon.className = 'codicon codicon-note';
+        icon.setAttribute('aria-hidden', 'true');
+        button.append(icon);
+        const text = document.createElement('span');
+        text.className = 'source-note-text';
+        text.id = 'source-note-' + index + '-' + partIndex;
+        text.textContent = part.text;
+        text.hidden = true;
+        button.setAttribute('aria-controls', text.id);
+        button.addEventListener('click', () => {
+          text.hidden = !text.hidden;
+          button.setAttribute('aria-expanded', String(!text.hidden));
+          button.setAttribute('aria-label', (text.hidden ? 'Show' : 'Hide') + ' note on line ' + (index + 1) + ': ' + part.text.slice(1, -1));
+        });
+        button.addEventListener('keydown', event => {
+          if (event.key !== 'Escape') return;
+          text.hidden = true;
+          button.setAttribute('aria-expanded', 'false');
+          button.setAttribute('aria-label', 'Show note on line ' + (index + 1) + ': ' + part.text.slice(1, -1));
+        });
+        note.append(button, text);
+        content.append(note);
+      }
+    });
+    if (anchor && !sourcePanel.hidden) scroll.scrollTop += anchor.getBoundingClientRect().top - top - offset;
+  }
 
   function highlightSource(selection) {
     lastSelection = selection;
     const lines = linesForNode(collection, selection, models[model]?.file, sourceLines.length);
-    const selected = new Set(lines);
-    sourceLines.forEach((row, index) => row.classList.toggle('is-selected', selected.has(index + 1)));
+    const changed = lines.length !== selectedLines.size || lines.some(line => !selectedLines.has(line));
+    selectedLines = new Set(lines);
+    if (changed) drawSource();
+    sourceLines.forEach((row, index) => row.classList.toggle('is-selected', selectedLines.has(index + 1)));
     if (lines.length && !sourcePanel.hidden) {
       const scroll = document.querySelector('.source-scroll');
       const first = sourceLines[lines[0] - 1];
@@ -138,6 +205,23 @@ import {linesForNode} from './source-lines.js?v=20261110p';
     wrap.setAttribute('aria-pressed', String(enabled));
     savePreferences();
   });
+  for (const control of [types, notes]) {
+    control.addEventListener('click', () => {
+      control.setAttribute('aria-pressed', String(control.getAttribute('aria-pressed') !== 'true'));
+      drawSource();
+      savePreferences();
+    });
+  }
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(authoredSource);
+      copyStatus.textContent = 'Complete source copied.';
+      copy.title = 'Complete source copied';
+    } catch (_) {
+      copyStatus.textContent = 'Copy failed. Show types and notes, then select the source to copy it.';
+      copy.title = 'Copy failed. Show types and notes, then select the source to copy it.';
+    }
+  });
 
   function resizeSource(pixels) {
     if (compact.matches) return;
@@ -213,7 +297,10 @@ import {linesForNode} from './source-lines.js?v=20261110p';
   }
   readJSON(model + '-source.json').then(source => {
     const code = document.querySelector('#source-code');
-    source.text.replace(/\n$/, '').split('\n').forEach((text, index) => {
+    authoredSource = source.text;
+    sourceText = source.text.replace(/\n$/, '').split('\n');
+    sourceDisplay = source.display;
+    sourceText.forEach((text, index) => {
       const row = document.createElement('span');
       row.className = 'source-line';
       const number = document.createElement('span');
@@ -227,7 +314,13 @@ import {linesForNode} from './source-lines.js?v=20261110p';
       code.append(row);
       sourceLines.push(row);
     });
+    const hasDisplay = Array.isArray(sourceDisplay?.types) && Array.isArray(sourceDisplay?.notes);
+    types.disabled = !hasDisplay || sourceDisplay.types.length === 0;
+    notes.disabled = !hasDisplay || sourceDisplay.notes.length === 0;
+    if (hasDisplay && !sourceDisplay.notes.length) notes.title = 'This model has no annotation notes';
     sourceStatus.hidden = true;
+    copy.disabled = false;
+    drawSource();
     highlightSource(lastSelection);
   }).catch(() => {
     sourceStatus.textContent = 'The authored source could not be loaded. ';
