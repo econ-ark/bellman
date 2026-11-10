@@ -2,6 +2,95 @@
   "path": "applications/pension-retirement/declaration/stages/retire_choice/retire_choice.bl",
   "sha256": "3edc557b72a6ee88d0883c5f9c126f004f0fded9fe2ec57b215f283ba0d3223d",
   "text": "@stage: retire_choice\n\nXf := ℝ₊\nXp := ℝ₊\n\n[id=dcsn_to_cntn, (y_f_d : Xf, y_p_d : Xp, d : !ctrl @ {work, retire}) : !dcsn -> ()] {\n    [label=work,   () -> (y_f_wk : Xf, y_p_wk : Xp) : !cntn] {\n        y_f_wk = y_f_d                                :: [id=financial_if_working]\n        y_p_wk = y_p_d                                :: [id=pension_if_working]\n    }\n    [label=retire, () -> (y_f_rt : Xf, y_p_rt : Xp) : !cntn] {\n        y_f_rt = y_f_d                                :: [id=financial_if_retiring]\n        y_p_rt = y_p_d                                :: [id=pension_paid_out]\n    }\n}\n\n[id=cntn_to_dcsn, (V_wk[>] : ℝ @ !vlu, V_rt[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = (V_wk[>], V_rt[>])[d]                         :: [id=choice_value]\n}\n\n[id=policy, (V_wk[>], V_rt[>]) : !cntn -> (d : {work, retire} @ !ctrl) : !dcsn] {\n    d = argmax_{d}(V_wk[>], V_rt[>])                  :: [id=choice]\n}\n",
+  "display": {
+    "types": [
+      {
+        "line": 6,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 6,
+        "from": 16,
+        "to": 84
+      },
+      {
+        "line": 7,
+        "from": 5,
+        "to": 11
+      },
+      {
+        "line": 7,
+        "from": 15,
+        "to": 59
+      },
+      {
+        "line": 8,
+        "from": 58,
+        "to": 61
+      },
+      {
+        "line": 9,
+        "from": 58,
+        "to": 61
+      },
+      {
+        "line": 11,
+        "from": 5,
+        "to": 11
+      },
+      {
+        "line": 11,
+        "from": 17,
+        "to": 59
+      },
+      {
+        "line": 12,
+        "from": 58,
+        "to": 61
+      },
+      {
+        "line": 13,
+        "from": 58,
+        "to": 61
+      },
+      {
+        "line": 17,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 17,
+        "from": 16,
+        "to": 95
+      },
+      {
+        "line": 18,
+        "from": 58,
+        "to": 61
+      },
+      {
+        "line": 21,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 21,
+        "from": 10,
+        "to": 78
+      },
+      {
+        "line": 22,
+        "from": 58,
+        "to": 61
+      }
+    ],
+    "notes": [],
+    "native_sha256": {
+      "packages/bellman-workbench/js/codemirror/src/hidden_types.js": "c52d6587818638f071267af4fc2d5caf03c0b39c97cab6077c49b7a199753e09",
+      "packages/bellman-workbench/bellman_workbench/public/codemirror/bellman-workbench.js": "151afa800c6af7150308fce6e08dd645e80e3d94f3e8e40353ded3583ae78afd"
+    }
+  },
   "excerpts": {
     "forward": {
       "start_line": 6,
