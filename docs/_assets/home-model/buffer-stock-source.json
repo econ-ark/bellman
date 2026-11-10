@@ -2,6 +2,159 @@
   "path": "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
   "sha256": "1c52da52a54b6f33350f5894625d9c2171c7ffaeb060fe3dece37d05b8f64bb8",
   "text": "@stage: buffer_stock\n\nXm := ℝ₊₊\nXa := ℝ₊₊\n\nβ : (0,1)        :: [\"discount factor\"]\nρ : (1, inf)     :: [\"coefficient of relative risk aversion, greater than one\"]\nR : ℝ₊₊          :: [\"gross interest rate\"]\nΓ : ℝ₊₊          :: [\"deterministic permanent income growth factor\"]\nσ_ψ : ℝ₊         :: [\"standard deviation of the log permanent shock\"]\nσ_ξ : ℝ₊         :: [\"standard deviation of the log transitory shock, conditional on a positive draw\"]\nμ_ξ : ℝ          :: [\"log-mean of the positive transitory draw; E[ξ] = 1 requires μ_ξ = -log(1 - p_zero) - σ_ξ^2/2\"]\np_zero : (0,1)   :: [\"probability ℘ of a zero transitory draw\"]\n\nψ : ℝ₊₊\nψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)\nξ : ℝ₊\nξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))\n\n𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]\n𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]\n𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]\n\nΓ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}   :: [id=feasible_consumption]\n\n[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {\n    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]\n}\n\n[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {\n    a = m - c                       :: [id=savings]\n}\n\n[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = 𝑢(c) + β*V[>]               :: [id=value]\n}\n\n[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n}\n\n[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {\n    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]\n}\n",
+  "display": {
+    "types": [
+      {
+        "line": 20,
+        "from": 41,
+        "to": 44
+      },
+      {
+        "line": 21,
+        "from": 44,
+        "to": 47
+      },
+      {
+        "line": 22,
+        "from": 47,
+        "to": 50
+      },
+      {
+        "line": 24,
+        "from": 40,
+        "to": 43
+      },
+      {
+        "line": 26,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 26,
+        "from": 16,
+        "to": 60
+      },
+      {
+        "line": 27,
+        "from": 40,
+        "to": 43
+      },
+      {
+        "line": 30,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 30,
+        "from": 16,
+        "to": 66
+      },
+      {
+        "line": 31,
+        "from": 40,
+        "to": 43
+      },
+      {
+        "line": 34,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 34,
+        "from": 16,
+        "to": 72
+      },
+      {
+        "line": 35,
+        "from": 41,
+        "to": 44
+      },
+      {
+        "line": 38,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 38,
+        "from": 16,
+        "to": 58
+      },
+      {
+        "line": 39,
+        "from": 44,
+        "to": 47
+      },
+      {
+        "line": 42,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 42,
+        "from": 10,
+        "to": 66
+      },
+      {
+        "line": 43,
+        "from": 54,
+        "to": 57
+      }
+    ],
+    "notes": [
+      {
+        "line": 6,
+        "from": 21,
+        "to": 38,
+        "text": "\"discount factor\""
+      },
+      {
+        "line": 7,
+        "from": 21,
+        "to": 78,
+        "text": "\"coefficient of relative risk aversion, greater than one\""
+      },
+      {
+        "line": 8,
+        "from": 21,
+        "to": 42,
+        "text": "\"gross interest rate\""
+      },
+      {
+        "line": 9,
+        "from": 21,
+        "to": 67,
+        "text": "\"deterministic permanent income growth factor\""
+      },
+      {
+        "line": 10,
+        "from": 21,
+        "to": 68,
+        "text": "\"standard deviation of the log permanent shock\""
+      },
+      {
+        "line": 11,
+        "from": 21,
+        "to": 101,
+        "text": "\"standard deviation of the log transitory shock, conditional on a positive draw\""
+      },
+      {
+        "line": 12,
+        "from": 21,
+        "to": 115,
+        "text": "\"log-mean of the positive transitory draw; E[ξ] = 1 requires μ_ξ = -log(1 - p_zero) - σ_ξ^2/2\""
+      },
+      {
+        "line": 13,
+        "from": 21,
+        "to": 62,
+        "text": "\"probability ℘ of a zero transitory draw\""
+      }
+    ],
+    "native_sha256": {
+      "packages/bellman-workbench/js/codemirror/src/hidden_types.js": "c52d6587818638f071267af4fc2d5caf03c0b39c97cab6077c49b7a199753e09",
+      "packages/bellman-workbench/bellman_workbench/public/codemirror/bellman-workbench.js": "151afa800c6af7150308fce6e08dd645e80e3d94f3e8e40353ded3583ae78afd"
+    }
+  },
   "excerpts": {
     "forward": {
       "start_line": 26,

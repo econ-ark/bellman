@@ -4,6 +4,7 @@ from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 
@@ -29,8 +30,14 @@ def export_models():
     for name, (application, stage_name, first, last) in MODELS.items():
         source_path = f"applications/{application}/declaration/stages/{stage_name}/{stage_name}.bl"
         source = ROOT / source_path
-        text = source.read_text(encoding="utf-8")
-        digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        source_bytes = source.read_bytes()
+        text = source_bytes.decode("utf-8")
+        digest = hashlib.sha256(source_bytes).hexdigest()
+        display_result = subprocess.run(
+            ["node", str(ROOT / "docs/_hooks/home_source_display.mjs")],
+            input=json.dumps({name: text}), text=True, capture_output=True, check=True,
+        )
+        display = json.loads(display_result.stdout)[name]
         excerpt = "".join(text.splitlines(keepends=True)[first - 1:last])
         if not excerpt.startswith("[id=") or not excerpt.rstrip().endswith("}"):
             raise ValueError(f"Review the forward excerpt of {source_path}.")
@@ -56,6 +63,7 @@ def export_models():
             "path": source_path,
             "sha256": digest,
             "text": text,
+            "display": display,
             "excerpts": {"forward": {
                 "start_line": first, "end_line": last, "text": excerpt,
             }},

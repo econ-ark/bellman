@@ -2,6 +2,150 @@
   "path": "applications/housing-frictions/declaration/stages/house_choice/house_choice.bl",
   "sha256": "443c62e38d828e81897ae8e29310069483d31fe4797a0a78d7c9d83c3186bb10",
   "text": "@stage: house_choice\n\nr    : ℝ₊        :: [\"rate of return on financial assets\"]\nW    : ℝ₊₊       :: [\"earnings at the age of the period, before the shock\"]\nη_lo : ℝ₊₊       :: [\"the low earnings shock\"]\nη_hi : ℝ₊₊       :: [\"the high earnings shock\"]\n\nη : ℝ₊₊\nη ~ Mixture((0.5, η_lo), (0.5, η_hi))\n\n[id=arvl_to_dcsn, (y_f : ℝ₊, y_h : ℝ₊₊, η) : !arvl -> (m_f : ℝ₊₊, m_h : ℝ₊₊) : !dcsn] {\n    m_f = (1 + r)*y_f + W*η                             :: [id=financial_assets]\n    m_h = y_h                                           :: [id=housing]\n}\n\n[id=dcsn_to_cntn, (m_f, m_h, d : !ctrl @ {keep, adjust}) : !dcsn -> ()] {\n    [label=keep,   () -> (w_kp : ℝ₊₊, h_kp : ℝ₊₊) : !cntn] {\n        w_kp = m_f                                      :: [id=cash_on_hand]\n        h_kp = m_h                                      :: [id=housing_kept]\n    }\n    [label=adjust, () -> (w_adj : ℝ₊₊) : !cntn] {\n        w_adj = m_f + m_h                               :: [id=total_resources]\n    }\n}\n\n[id=cntn_to_dcsn, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu, d) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = (V_kp[>], V_adj[>])[d]                          :: [id=choice_value]\n}\n\n[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = E_{η}(V)                                     :: [id=value]\n}\n\n[id=policy, (V_kp[>] : ℝ @ !vlu, V_adj[>] : ℝ @ !vlu) : !cntn -> (d : {keep, adjust} @ !ctrl) : !dcsn] {\n    d = argmax_{d}(V_kp[>], V_adj[>])                   :: [id=choice]\n}\n",
+  "display": {
+    "types": [
+      {
+        "line": 11,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 11,
+        "from": 16,
+        "to": 84
+      },
+      {
+        "line": 12,
+        "from": 60,
+        "to": 63
+      },
+      {
+        "line": 13,
+        "from": 60,
+        "to": 63
+      },
+      {
+        "line": 16,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 16,
+        "from": 16,
+        "to": 70
+      },
+      {
+        "line": 17,
+        "from": 5,
+        "to": 11
+      },
+      {
+        "line": 17,
+        "from": 15,
+        "to": 57
+      },
+      {
+        "line": 18,
+        "from": 60,
+        "to": 63
+      },
+      {
+        "line": 19,
+        "from": 60,
+        "to": 63
+      },
+      {
+        "line": 21,
+        "from": 5,
+        "to": 11
+      },
+      {
+        "line": 21,
+        "from": 17,
+        "to": 46
+      },
+      {
+        "line": 22,
+        "from": 60,
+        "to": 63
+      },
+      {
+        "line": 26,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 26,
+        "from": 16,
+        "to": 96
+      },
+      {
+        "line": 27,
+        "from": 60,
+        "to": 63
+      },
+      {
+        "line": 30,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 30,
+        "from": 16,
+        "to": 58
+      },
+      {
+        "line": 31,
+        "from": 60,
+        "to": 63
+      },
+      {
+        "line": 34,
+        "from": 1,
+        "to": 4
+      },
+      {
+        "line": 34,
+        "from": 10,
+        "to": 101
+      },
+      {
+        "line": 35,
+        "from": 60,
+        "to": 63
+      }
+    ],
+    "notes": [
+      {
+        "line": 3,
+        "from": 21,
+        "to": 57,
+        "text": "\"rate of return on financial assets\""
+      },
+      {
+        "line": 4,
+        "from": 21,
+        "to": 74,
+        "text": "\"earnings at the age of the period, before the shock\""
+      },
+      {
+        "line": 5,
+        "from": 21,
+        "to": 45,
+        "text": "\"the low earnings shock\""
+      },
+      {
+        "line": 6,
+        "from": 21,
+        "to": 46,
+        "text": "\"the high earnings shock\""
+      }
+    ],
+    "native_sha256": {
+      "packages/bellman-workbench/js/codemirror/src/hidden_types.js": "c52d6587818638f071267af4fc2d5caf03c0b39c97cab6077c49b7a199753e09",
+      "packages/bellman-workbench/bellman_workbench/public/codemirror/bellman-workbench.js": "151afa800c6af7150308fce6e08dd645e80e3d94f3e8e40353ded3583ae78afd"
+    }
+  },
   "excerpts": {
     "forward": {
       "start_line": 11,

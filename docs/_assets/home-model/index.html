@@ -7,11 +7,11 @@
 <link rel="stylesheet" href="../workbench/flow/base.css">
 <link rel="stylesheet" href="../workbench/graph.css">
 <link id="vscode-codicon-stylesheet" rel="stylesheet" href="../workbench/codicons/codicon.css">
-<link rel="stylesheet" href="embed.css?v=20261110p">
+<link rel="stylesheet" href="embed.css?v=20261110s">
 <script type="module" src="../workbench/vscode-elements/bundled.js"></script>
 <script defer src="../workbench/flow/elk.bundled.js"></script>
 <script defer src="../workbench/flow/bellman-flow.js"></script>
-<script type="module" src="embed.js?v=20261110p"></script>
+<script type="module" src="embed.js?v=20261110s"></script>
 </head>
 <body>
 <main class="workbench-frame" aria-label="Bellman Syntax and Bellman semantics">
@@ -21,10 +21,18 @@
   </div>
   <div class="pane-layout">
     <section id="source-panel" class="source-panel" aria-labelledby="source-heading" data-wrap="true">
-      <div class="pane-bar">
-        <h2 id="source-heading">Bellman Syntax</h2>
-        <span id="filename" class="filename"></span>
-        <button type="button" id="wrap-source" aria-pressed="true" title="Wrap long source lines">Wrap lines</button>
+      <div class="pane-bar source-bar">
+        <div class="source-identity">
+          <h2 id="source-heading">Bellman Syntax</h2>
+          <span id="filename" class="filename"></span>
+        </div>
+        <div class="source-controls" role="group" aria-label="Bellman Syntax display">
+          <button type="button" id="source-types" aria-pressed="true" title="Show or hide the bracketed entries" disabled>Types</button>
+          <button type="button" id="source-notes" aria-pressed="false" title="Show or hide the notes" disabled>Notes</button>
+          <button type="button" id="wrap-source" aria-pressed="true" title="Wrap long source lines">Wrap lines</button>
+          <button type="button" id="copy-source" aria-label="Copy complete source" title="Copy complete source" disabled><span class="codicon codicon-copy" aria-hidden="true"></span></button>
+        </div>
+        <span id="source-copy-status" class="visually-hidden" role="status" aria-live="polite"></span>
       </div>
       <div class="source-scroll" tabindex="0" aria-label="Read-only model source">
         <p id="source-status" class="source-status" role="status">Loading the authored source…</p>
