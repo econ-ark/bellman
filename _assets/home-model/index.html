@@ -7,11 +7,11 @@
 <link rel="stylesheet" href="../workbench/flow/base.css">
 <link rel="stylesheet" href="../workbench/graph.css">
 <link id="vscode-codicon-stylesheet" rel="stylesheet" href="../workbench/codicons/codicon.css">
-<link rel="stylesheet" href="embed.css?v=20261110s">
+<link rel="stylesheet" href="embed.css?v=20261110t">
 <script type="module" src="../workbench/vscode-elements/bundled.js"></script>
 <script defer src="../workbench/flow/elk.bundled.js"></script>
 <script defer src="../workbench/flow/bellman-flow.js"></script>
-<script type="module" src="embed.js?v=20261110s"></script>
+<script type="module" src="embed.js?v=20261111a"></script>
 </head>
 <body>
 <main class="workbench-frame" aria-label="Bellman Syntax and Bellman semantics">
@@ -20,18 +20,15 @@
     <button type="button" role="tab" id="diagram-tab" aria-controls="diagram-panel" aria-selected="true">Bellman semantics</button>
   </div>
   <div class="pane-layout">
-    <section id="source-panel" class="source-panel" aria-labelledby="source-heading" data-wrap="true">
-      <div class="pane-bar source-bar">
-        <div class="source-identity">
-          <h2 id="source-heading">Bellman Syntax</h2>
-          <span id="filename" class="filename"></span>
-        </div>
-        <div class="source-controls" role="group" aria-label="Bellman Syntax display">
-          <button type="button" id="source-types" aria-pressed="true" title="Show or hide the bracketed entries" disabled>Types</button>
-          <button type="button" id="source-notes" aria-pressed="false" title="Show or hide the notes" disabled>Notes</button>
-          <button type="button" id="wrap-source" aria-pressed="true" title="Wrap long source lines">Wrap lines</button>
-          <button type="button" id="copy-source" aria-label="Copy complete source" title="Copy complete source" disabled><span class="codicon codicon-copy" aria-hidden="true"></span></button>
-        </div>
+    <section id="source-panel" class="source-panel" aria-labelledby="source-heading">
+      <div class="bl-bar pane-bar source-bar">
+        <h2 id="source-heading" class="pane-name">Bellman Syntax</h2>
+        <span id="filename" class="filename"></span>
+        <span class="bl-tab-actions source-controls" role="group" aria-label="Bellman Syntax display">
+          <button type="button" id="source-types" class="bl-text-button" aria-pressed="true" title="Show or hide the bracketed entries" disabled>Types</button>
+          <button type="button" id="source-notes" class="bl-text-button" aria-pressed="false" title="Show or hide the notes" disabled>Notes</button>
+          <button type="button" id="copy-source" class="icon-button" aria-label="Copy complete source" title="Copy complete source" disabled><span class="codicon codicon-copy" aria-hidden="true"></span></button>
+        </span>
         <span id="source-copy-status" class="visually-hidden" role="status" aria-live="polite"></span>
       </div>
       <div class="source-scroll" tabindex="0" aria-label="Read-only model source">
@@ -39,13 +36,23 @@
         <pre id="source-code" aria-label="Authored model source"></pre>
       </div>
     </section>
-    <div id="pane-resizer" role="separator" tabindex="0" aria-label="Bellman Syntax pane width" aria-controls="source-panel diagram-panel" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="38"></div>
+    <div id="pane-resizer" role="separator" tabindex="0" aria-label="Bellman Syntax pane width" aria-controls="source-panel diagram-panel" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="42"></div>
     <section id="diagram-panel" class="diagram-panel" aria-labelledby="diagram-heading">
-      <div class="pane-bar graph-bar">
-        <h2 id="diagram-heading">Bellman semantics</h2>
-        <div class="graph-options">
-          <label for="graph-kind">Graph<select id="graph-kind" disabled><option value="initial">Initial</option><option value="operator">Operator</option></select></label>
-          <label for="graph-direction">Direction<select id="graph-direction" disabled><option value="backward">Backward</option><option value="forward" selected>Forward</option></select></label>
+      <div class="bl-bar bl-graph-bar pane-bar graph-bar">
+        <div class="bl-graph-tools">
+          <h2 id="diagram-heading" class="bl-graph-name pane-name">Bellman semantics</h2>
+          <div class="bl-field bl-view-select" title="Graph">
+            <vscode-single-select id="graph-kind" label="Graph" position="below" disabled>
+              <vscode-option value="initial" selected>Initial</vscode-option>
+              <vscode-option value="operator">Operator</vscode-option>
+            </vscode-single-select>
+          </div>
+          <div class="bl-field bl-view-select" title="Direction">
+            <vscode-single-select id="graph-direction" label="Direction" position="below" disabled>
+              <vscode-option value="backward">Backward</vscode-option>
+              <vscode-option value="forward" selected>Forward</vscode-option>
+            </vscode-single-select>
+          </div>
         </div>
       </div>
       <div class="diagram-body">

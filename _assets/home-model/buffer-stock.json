@@ -2439,8 +2439,7 @@
             "parameter 3": "Γ : ℝ₊₊, unbound",
             "parameter 4": "σ_ψ : ℝ₊, unbound",
             "parameter 5": "σ_ξ : ℝ₊, unbound",
-            "parameter 6": "μ_ξ : ℝ, unbound",
-            "parameter 7": "p_zero : (0, 1), unbound"
+            "parameter 6": "p_zero : (0, 1), unbound"
           },
           "policy": {
             "inputs": "𝑉≻ : Xa → ℝ",
@@ -2966,8 +2965,7 @@
             "parameter 2": "Γ : ℝ₊₊, unbound",
             "parameter 3": "σ_ψ : ℝ₊, unbound",
             "parameter 4": "σ_ξ : ℝ₊, unbound",
-            "parameter 5": "μ_ξ : ℝ, unbound",
-            "parameter 6": "p_zero : (0, 1), unbound"
+            "parameter 5": "p_zero : (0, 1), unbound"
           },
           "dcsn_to_cntn": {
             "inputs": "μ : finite measure on Xm",
@@ -3056,5 +3054,5 @@
     }
   },
   "source_path": "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
-  "source_sha256": "1c52da52a54b6f33350f5894625d9c2171c7ffaeb060fe3dece37d05b8f64bb8"
+  "source_sha256": "065c530b2187e5bee4a28f968560bfc590b02c2272b45db9fd291aea67a0416f"
 }

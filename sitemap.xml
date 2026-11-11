@@ -2,826 +2,866 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://bellman.io/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/about/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/changelog/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/01-stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/03-field-equations/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/04-methodization/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/05-branching/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/06-period/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/07-trellis/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/08-bellman-factory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/09-from-syntax-to-formal-problem-definition/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/10-constraints/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/11-solutions-at-the-perches/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/factory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/factory/period-factory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/factory/spec-factory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/factory/stage-factory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/factory/trellis-factory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/01-the-stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/02-initial/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/03-build/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/04-builder/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/05-piece/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/06-par-and-settings/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/07-methods/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/08-definitions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/09-binding-verbs/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/API/stage/10-model-explorer/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/appendices/12-equation-parsing-rules/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/appendices/13-perch-tagging-rules/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/appendices/15-appendix-d-node-tag-and-field-indexing/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/reference/forms/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/reference/laws/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/reference/methods/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/reference/model-directory-layout/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/reference/operations/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/reference/refusals/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/Bellman-Sym/reference/symbols-conventions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/asva/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/asva/01-numerical-steps/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/asva/02-the-runner/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/asva/03-parameter-sweeps/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/asva/04-saving-solutions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/asva/05-estimation/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/asva/06-cross-entropy-method/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/01-Introduction%20to%20T-calculus/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/02-Illustrative%20example/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/03-Stages%20and%20perches/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/04-fields%2C%20functions%20and%20types/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/05-Operators%20and%20builders/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/06-Methods/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/07-stage-composition/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/08-periods-and-trellis/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/09-branching/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/10-semi-conjugacy/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/11-abstract-grammar/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/APPX-A-SEMANTICS/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/APPX-B-INITIAL-ALGEBRA/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/APPX-C-STAGE-TERM/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/APPX-D-KINDS-AND-SORTS/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/APPX-F-OPERATOR-ALGEBRA/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/ingredients/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/catalogues/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/catalogues/fields/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/catalogues/functions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/catalogues/operators/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/bellman-calculus/catalogues/parameters-settings/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsExtMargMed_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsGenIncProcess_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsIndShock_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsKinkedR_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsKinkyPref_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsLaborIntMarg_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsMarkov_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsMedShock_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsPerfForesight_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsPerfForesight_simple_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsPortfolio_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsPrefShock_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/ConsRiskyAsset_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/HARK-models-lean-experimental/consumer_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/buffer-stock/buffer_stock/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-iid/consumption_savings_iid/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-port-stages/cons_stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-port-stages/noport_stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-port-stages/noport_stage_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-port-stages/port_stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-port-stages/port_stage_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-port-stages/port_with_shocks/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/cons-port-stages/solving-conjugates/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/examples/consumption-perfect-foresight-crra/perfect_foresight/</loc>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/durables/durables/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/formal-mdps/cons_savings_iid_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/formal-mdps/cons_stage_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing-frictions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/housing_choice_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/housing_cons_choice_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/housing_owner/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/period_and_nest/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/stages/owner_cons/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/stages/owner_housing/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/stages/renter_cons/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/stages/renter_housing/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/housing_renting/stages/tenure_choice/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/pension-retirement/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/retirement/retirement_choice/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/smooth-ambiguity/smooth_ambiguity_savings/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/unemployment/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/unemployment/stucture/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/examples/unemployment/unemployment_branching_mdp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/dev-guide/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/dev-guide/01-the-retrieval-index/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/dev-guide/02-what-matsya-reads/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/dev-guide/03-matsya-handlers/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/dev-guide/04-updating-configurations/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/00-for-a-local-model/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/01-the-roles-and-the-work-of-a-job/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/02-working-from-the-command-line/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/03-working-on-a-project-folder/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/04-the-service-by-http/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/05-the-command-reference/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/06-the-python-module/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/matsya/user-guide/07-collections-and-weights/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/00-install/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/01-concepts/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/02-stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/03-language/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/04-periods-and-trellis/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/05-semantics/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/06-workflow/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/07-workbench/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/overview/08-fields-evaluation-and-methods/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/abstract_decision_process/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/accretion-modules/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/addition/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/adequacy/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/aggregation/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/asdl/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/backward_builder/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/banach_contraction/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/bellman_algebra/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/bellman_calculus/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/bellman_operator/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/bellman_sym_writer/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/blackwell_conditions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/branch/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/builder/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/calibration/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/connector/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/declarative_language/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/elaborated_stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/expression/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/ffp/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/field/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/forward_builder/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/functional_form/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/grid/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/handler/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/initial_algebra/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/judge/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/lawvere_theory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/matsya_collection/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/matsya_handler/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/matsya_instructions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/methodization/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/methods/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/operator/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/ordering_conventions/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/parameters/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/perch/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/period/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/prose_writer/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/rank/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/recursive_decision_process/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/reference-guides-matsya/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/referential_transparency/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/rho/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/semantics/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/semgraph/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/semiconjugacy/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/settings/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/signature/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/sort/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/source_span/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/spec_factory/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/specified_stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/statement/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/sub_builder/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/sym/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/symbolic_stage/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/syntax/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/term_address/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/term_json_encoding/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/trellis/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
     </url>
     <url>
          <loc>https://bellman.io/wiki/upsilon/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/00-quickstart/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/01-matsya/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/02-open-and-edit/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/03-inspect-a-model/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/04-edit-equations/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/05-create-and-connect/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/06-recipes-and-variants/</loc>
+         <lastmod>2026-11-11</lastmod>
+    </url>
+    <url>
+         <loc>https://bellman.io/workbench/07-share-and-troubleshoot/</loc>
+         <lastmod>2026-11-11</lastmod>
     </url>
 </urlset>
