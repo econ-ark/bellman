@@ -6,18 +6,26 @@
 
   const modelTabs = [...home.querySelectorAll('[data-model]')];
   const modelFrame = home.querySelector('#home-model-frame');
+  // The frame's scripts weigh more than the page; they load when the Applications section arrives.
+  function loadFrame() {
+    if (!modelFrame.getAttribute('src') && modelFrame.dataset.src) modelFrame.src = modelFrame.dataset.src;
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((entries, observer) => {
+      if (entries.some(entry => entry.isIntersecting)) { loadFrame(); observer.disconnect(); }
+    }, {rootMargin: '240px 0px'}).observe(home.querySelector('#home-model-panel'));
+  } else loadFrame();
   function selectModel(tab, focus = false) {
     if (tab.getAttribute('aria-selected') !== 'true') {
       const model = tab.dataset.model;
-      const url = new URL(modelFrame.src);
+      const loaded = Boolean(modelFrame.getAttribute('src'));
+      const url = new URL(loaded ? modelFrame.src : modelFrame.dataset.src, location.href);
       url.searchParams.set('model', model);
-      modelFrame.contentWindow.location.replace(url.href);
+      if (loaded) modelFrame.contentWindow.location.replace(url.href);
+      else modelFrame.dataset.src = url.href;
       history.replaceState({...history.state, bellmanModel: model}, '');
       modelFrame.title = tab.textContent + ' model: interactive diagram and source';
       home.querySelector('#home-model-panel').setAttribute('aria-labelledby', tab.id);
-      home.querySelectorAll('[data-model-description]').forEach(item => {
-        item.hidden = item.dataset.modelDescription !== model;
-      });
       modelTabs.forEach(item => {
         const active = item === tab;
         item.setAttribute('aria-selected', String(active));
@@ -29,10 +37,12 @@
   modelTabs.forEach(tab => {
     tab.addEventListener('click', () => selectModel(tab));
     tab.addEventListener('keydown', event => {
-      if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+      // The tabs are a row on a wide window and a column on a narrow one, so both pairs of arrow keys move between them.
+      const step = {ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1}[event.key];
+      if (!step && !['Home', 'End'].includes(event.key)) return;
       event.preventDefault();
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? modelTabs.length - 1
-        : (modelTabs.indexOf(tab) + (event.key === 'ArrowDown' ? 1 : -1) + modelTabs.length) % modelTabs.length;
+        : (modelTabs.indexOf(tab) + step + modelTabs.length) % modelTabs.length;
       selectModel(modelTabs[next], true);
     });
   });

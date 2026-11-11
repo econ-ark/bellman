@@ -3,7 +3,7 @@
 Plan := {DB, DC}
 
 γ   : (1, inf)     :: ["curvature of utility, 1/γ the intertemporal elasticity, equation (1)"]
-ρ   : ℝ, < 1       :: ["1/(1 − ρ) the elasticity of substitution between consumption and housing services, equation (1)"]
+ρ   : ℝ @ (-inf, 1) :: ["1/(1 − ρ) the elasticity of substitution between consumption and housing services, equation (1)"]
 φ_S : ℝ₊₊          :: ["rental rate per unit of the house price, Section 4.D"]
 
 𝑢(c : ℝ₊₊, S : ℝ₊₊, α : (0,1))   := (((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ) - 1)/(1 - γ)                 :: [id=util]

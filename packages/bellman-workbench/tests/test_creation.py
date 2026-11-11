@@ -1194,6 +1194,21 @@ def test_k_a_stage_file_given_itself_brings_no_companion_from_a_folder_of_its_ow
     }
 
 
+def test_a_template_offers_no_derived_parameter_as_a_calibration_input(tmp_path):
+    """The parameters a template's calibration must give are the declared
+    parameters of its stage file and no derived parameter, whose value its
+    definition computes and for which `calibrate` refuses a value: the
+    perfect-foresight stage of the refusal examples declares β, ρ, R and Γ
+    and derives h and R_n (AMD-MT-003 build contract §5)."""
+    from bellman.refusal_examples import PERFECT_FORESIGHT
+
+    folder = tmp_path / "perfect_foresight"
+    folder.mkdir()
+    (folder / "perfect_foresight.bl").write_text(PERFECT_FORESIGHT, encoding="utf-8")
+    record = creation.folder_template(str(folder))
+    assert record.calibration == ("β", "ρ", "R", "Γ")
+
+
 def test_k_a_folder_that_holds_no_single_stage_file_is_refused(tmp_path):
     """Unit K, Task 25 (K-D26): `folder_template` refuses, each in one
     sentence that names the path as given, a folder that holds no `.bl`

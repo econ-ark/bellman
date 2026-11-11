@@ -33,6 +33,7 @@ The formal MDP pages state selected examples as Markov decision processes (MDPs)
 |:------|:-----------|:-------|:------------|:-----------|
 | **Consumption-Savings IID** | Single-stage consumption choice with IID income shock, solved by the endogenous grid method (EGM) | 1 | [Historical YAML](cons-iid/consumption_savings_iid.md) | [MDP](formal-mdps/cons_savings_iid_mdp.md) |
 | **Buffer Stock (Normalized)** | Carroll (2024) buffer stock model normalized by permanent income; permanent and transitory shocks with unemployment risk | 1 | [Stage](buffer-stock/buffer_stock.md) | — |
+| **Perfect Foresight (CRRA)** | Consumption-savings without uncertainty, normalized by permanent income: the buffer stock stage without its income shocks, solved in closed form and by the endogenous grid method, and the two solutions compared | 1 | [Stage](consumption-perfect-foresight-crra/perfect_foresight.md) | none |
 | **Housing adjustment** | Keep or adjust housing, followed by consumption and saving; adjustment also chooses the new housing stock | 3 + terminal | [Application](housing-frictions/index.md) | — |
 | **Pensions and retirement** | Consumption and pension contributions precede the choice of whether to retire next period | 3 + terminal | [Application](pension-retirement/index.md) | — |
 | **Housing Owner** | Two-stage discrete housing choice + continuous consumption; branching stage | 2 | [Historical YAML](housing_renting/housing_owner.md) | [housing](housing_renting/housing_choice_mdp.md), [cons](housing_renting/housing_cons_choice_mdp.md) |

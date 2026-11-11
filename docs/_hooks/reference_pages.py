@@ -23,10 +23,17 @@ prose of the page is kept and no table is edited by hand:
   `BOUND_OPERATORS` (`typing/line_unknowns.py`), the named functions of
   `PRIMITIVE_DEFINITIONS`, the arithmetic of the grammar
   (`syntax/grammars/stage.lark`) and the laws;
-- `reference/methods.md`: the method words of `METHOD_TYPES`
-  (`stage/method_table.py`), each with the places it may be bound at, the
-  keyword arguments the package reads, the states its grid lies on where it
-  reads one, and the line that defines it;
+- `reference/methods.md`: one entry for each method word of `METHOD_TYPES`
+  (`stage/method_table.py`, whose rows stand in `stage/method_rows.py`),
+  the representation families of `stage/representations.py` and those
+  registered later included, and one for each grid constructor of
+  `GRID_CONSTRUCTORS` (`stage/grids.py`), each printed from its record and
+  its `EntryText`: the meaning, the declaration and its sites, the type
+  parameters, the arguments, the compatibility, for a representation family
+  the data a fitted representation stores, an example, the
+  availability and the links, with an index of the methods by the place
+  they stand at and an index of the grid constructors; this part of the
+  page holds its section headings;
 - `reference/refusals.md`: the rules of the three vocabularies of
   `refusals.py`, `VOCABULARIES` of `refusal_catalogue.py`, one table per
   vocabulary, each rule with the operation that refuses under it and the
@@ -68,13 +75,16 @@ Run from the repository root with the project interpreter:
     PYTHONPATH=packages/bellman python docs/_hooks/reference_pages.py --check
 
 The first rewrites every table; `--check` reports the tables that differ and
-writes nothing. `--page` names one page. `--source-ref` names the branch, tag
-or commit of `econ-ark/bellman` at which the methods page links the line
-that defines each method type, `SOURCE_REF` by default; the release's commit
-sets `SOURCE_REF` to the release's tag and regenerates the methods page, the
-script and the page committed together, so that `--check` agrees with the
-page. Every page is written or checked through `settle` of
-`stage_object_page.py`, the one printer of the pages the package prints.
+writes nothing. `--page` names one page. `--source-ref` names the exported
+revision of `econ-ark/bellman` at which the methods page links each
+definition, `EXPORTED_REVISION` by default; the generator refuses a revision
+whose file does not hold the definition, and without a revision each entry
+shows the definition's location in the checkout with its public link stated
+unavailable. The release that exports the definitions sets
+`EXPORTED_REVISION` and regenerates the methods page, the script and the
+page committed together, so that `--check` agrees with the page. Every page
+is written or checked through `settle` of `stage_object_page.py`, the one
+printer of the pages the package prints.
 """
 
 from __future__ import annotations
@@ -195,7 +205,10 @@ from bellman.refusals import METHOD_CONDITIONS, ConstructionError, FactoryError 
 from bellman.stage import elaborated, pieces  # noqa: E402
 from bellman.stage.builder_pairs import DIRECTION_WORDS  # noqa: E402
 from bellman.display.cards import grid_sentence  # noqa: E402
+from bellman.native.records import NO_REGISTERED_ARGUMENTS, OMISSIONS  # noqa: E402
+from bellman.stage.grids import GRID_CONSTRUCTORS, HANDLER, PREDICATES  # noqa: E402
 from bellman.stage.method_table import METHOD_TYPES  # noqa: E402
+from bellman.stage.representations import families as registered_families  # noqa: E402
 from bellman.syntax import terms as T  # noqa: E402
 from bellman.syntax.lower import parse_with_spans  # noqa: E402
 from bellman.syntax.source import to_source  # noqa: E402
@@ -242,11 +255,9 @@ TRELLIS = "applications/cons-port/declaration/trellis.port-cons-vfi.yml"
 REGISTRY = "applications/durables/declaration"
 RECIPE = "spec.two-stages.yml"
 
-# the link to a line of the package's source in the repository, at the ref
-# that `--source-ref` names; pin a revision with these definitions until
-# the release sets its tag and regenerates the methods page.
-SOURCE = "https://github.com/econ-ark/bellman/blob/{ref}/packages/bellman/bellman/{module}#L{line}"
-SOURCE_REF = "4742e477c627672e3492ee594c034e91a0e0e652"
+# the link to a line of the package's source in the public repository, at
+# an exported revision that holds the definition (`EXPORTED_REVISION`)
+SOURCE = "https://github.com/econ-ark/bellman/blob/{ref}/{path}#L{line}"
 
 NONE = "—"
 
@@ -901,32 +912,162 @@ def forms_table(page):
     return table(head, rows)
 
 
-# --- the methods: METHOD_TYPES ---
+# --- the methods and the grid constructors: METHOD_TYPES and
+# GRID_CONSTRUCTORS ---
+
+# The revision of the public repository `econ-ark/bellman` whose files hold
+# the definitions the methods page links. No exported revision holds the
+# definitions of this build, so the page shows each definition's location in
+# the checkout and states its public link unavailable; the release that
+# exports them names its revision here, or with `--source-ref`, and the
+# generator then links each definition at the line that revision holds,
+# refusing a revision that does not hold it.
+EXPORTED_REVISION = None
+
+# the folder of the package's modules from the repository's root, which a
+# source location of the package leaves out
+PACKAGE_FOLDER = "packages/bellman/bellman/"
+
+# the sentence of a definition that no exported revision holds
+NO_PUBLIC_LINK = "public link unavailable until an exported revision holds the definition"
+
+# the module of the table that holds a record whose `EntryText.source` is
+# None: a row of the method table, a registered representation family and a
+# grid constructor
+TABLE_MODULES = {
+    "row": "bellman.stage.method_rows",
+    "family": "bellman.stage.representations",
+    "grid": "bellman.stage.grids",
+}
+
+# the words of the kinds of place, as `stage.places()` prints them
+SITE_WORDS = {
+    "builder": "a whole builder",
+    "node": "a line marked `!node`",
+    "statement": "a line with an id",
+    "definition": "a defined function",
+}
+
+# the anchors the page kept from its earlier layout, each above the heading
+# that took its place
+RETAINED_ANCHORS = {"2 The methods": "2-the-table"}
 
 
-def method_lines():
-    """The line of `stage/method_table.py` on which each method type of
-    `METHOD_TYPES` is defined, by its tag."""
-    source = (PACKAGE / "stage/method_table.py").read_text(encoding="utf-8")
-    lines = {}
-    for node in ast.walk(ast.parse(source)):
-        if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "_method_type"
-            and node.args
-            and isinstance(node.args[0], ast.Constant)
-        ):
-            lines[node.args[0].value] = node.lineno
-    return lines
+@dataclasses.dataclass(frozen=True)
+class SourceLocation:
+    """Where a method or a grid constructor is defined: `module`, the path of
+    its module from the repository's root; `definition`, the name of the
+    module-level statement that holds the defining call; `line`, the line of
+    that call in the checkout; and `revision`, the exported revision whose
+    file holds the definition at `public_line`, or None where no exported
+    revision is identified."""
+
+    module: str
+    definition: str
+    line: int
+    revision: str | None = None
+    public_line: int | None = None
 
 
-def place_text(place):
-    """An admitted place as the method's card prints it: `builder`, or an
-    operator by its head, `operator solve`."""
-    if isinstance(place, tuple):
-        return f"operator {code(place[1])}"
-    return code(place)
+def module_path(dotted):
+    """The path from the repository's root of the module `dotted`, a module of
+    the package or of a registered extension, read from the module the
+    interpreter holds; a module outside the repository is refused."""
+    module = sys.modules.get(dotted) or importlib.import_module(dotted)
+    held = Path(module.__file__).resolve()
+    if not held.is_relative_to(ROOT):
+        raise SystemExit(f"the definition's module {dotted} lies outside the repository")
+    return held.relative_to(ROOT).as_posix()
+
+
+def defining_call(source, word, term=None):
+    """(the name of the module-level statement or function, the line) of the
+    call that defines `word` in the text `source`: a call whose first argument
+    is the word, or, for a grid constructor, the entry of the term class
+    `term` in a module-level mapping; None where the text holds neither."""
+    for statement in ast.parse(source).body:
+        if isinstance(statement, ast.Assign):
+            name = statement.targets[0].id if isinstance(statement.targets[0], ast.Name) else None
+        elif isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Call):
+            func = statement.value.func
+            name = func.id if isinstance(func, ast.Name) else None
+        elif isinstance(statement, ast.FunctionDef):
+            name = statement.name
+        else:
+            continue
+        for node in ast.walk(statement):
+            if term is not None and isinstance(node, ast.Dict):
+                for key in node.keys:
+                    if isinstance(key, ast.Attribute) and key.attr == term.__name__:
+                        return name, key.lineno
+            if (
+                term is None
+                and isinstance(node, ast.Call)
+                and node.args
+                and isinstance(node.args[0], ast.Constant)
+                and node.args[0].value == word
+            ):
+                return name, node.lineno
+    return None
+
+
+def exported_source(revision, module):
+    """The text of a module at an exported revision, or None where the
+    repository holds no such revision or file. A revision whose tree holds
+    the internal folder is a commit of the development repository and
+    no export, whose commits hold the toolkit alone, so it is refused."""
+    import subprocess
+
+    def shown(spec):
+        run = subprocess.run(
+            ["git", "show", spec], cwd=str(ROOT), capture_output=True, text=True
+        )
+        return run.stdout if run.returncode == 0 else None
+
+    if shown(f"{revision}:AI") is not None:
+        raise SystemExit(
+            f"the revision {revision} holds the internal folder, so it is no exported "
+            "revision; a private commit is never linked as public"
+        )
+    return shown(f"{revision}:{module}")
+
+
+def source_location(word, record, kind, revision=EXPORTED_REVISION):
+    """The `SourceLocation` of a method or a grid constructor, read from its
+    record: the module its `EntryText.source` names, or the module of the
+    table that holds it, and the call in that module that defines it, so that
+    a family registered from another module is found in that module. With an
+    exported revision, the definition must stand in that revision's file."""
+    text = record.text
+    dotted = (text.source if text is not None else None) or TABLE_MODULES[kind]
+    module = module_path(dotted)
+    term = record.term if kind == "grid" else None
+    found = defining_call((ROOT / module).read_text(encoding="utf-8"), word, term)
+    if found is None:
+        raise SystemExit(f"{dotted} holds no definition of !{word}")
+    definition, line = found
+    if revision is None:
+        return SourceLocation(module, definition, line)
+    held = exported_source(revision, module)
+    public = defining_call(held, word, term) if held is not None else None
+    if public is None:
+        raise SystemExit(
+            f"the exported revision {revision} holds no definition of !{word} in {module}; "
+            "name a revision that holds it, or none"
+        )
+    return SourceLocation(module, definition, line, revision, public[1])
+
+
+def source_sentence(location):
+    """The source part of an entry: the module, the definition and the line in
+    the checkout, then the public link at the exported revision, or the
+    sentence that it is unavailable."""
+    shown = location.module.removeprefix(PACKAGE_FOLDER)
+    where = f"{code(shown)}, {code(location.definition)}, line {location.line}"
+    if location.revision is None:
+        return f"{where}; {NO_PUBLIC_LINK}"
+    link = SOURCE.format(ref=location.revision, path=location.module, line=location.public_line)
+    return f"{where}; [public source at {location.revision[:12]}]({link})"
 
 
 def realized(row):
@@ -934,52 +1075,323 @@ def realized(row):
     first operator its admitted places name. A method whose admitted places
     name no operator, such as `!deterministic`, is bound on a whole builder,
     and the method table does not state whether that builder is backward or
-    forward, so its row links no section."""
+    forward, so its entry links no section."""
     for place in row["admits"]:
         if isinstance(place, tuple) and place[1] in HEAD_TERMS:
             return (HEAD_TERMS[place[1]],)
     return ()
 
 
-def methods_table(page, source_ref=SOURCE_REF):
-    """The table of the methods page: one row for each method word of
-    `METHOD_TYPES` and no other, with the places it may be bound at, the
-    keyword arguments the package reads, the states its grid lies on where
-    it reads one, whether it brings lines, the derivatives a representation
-    evaluates, the condition its construction requires with the sentence of
-    `METHOD_CONDITIONS`, what it realizes and the line of
-    `stage/method_table.py` that defines it, linked at `source_ref`."""
-    lines = method_lines()
+def written_word(word):
+    """A word as a stage file writes it, a hyphen written as an underscore."""
+    return word.replace("-", "_")
+
+
+def site_phrase(place):
+    """An admitted kind of place in words: the occurrences of an operator by
+    its head, or the kind of place."""
+    if isinstance(place, tuple):
+        return f"an occurrence of the operator {code(place[1])}"
+    return SITE_WORDS[place]
+
+
+def joined(items):
+    """Items as a sentence lists them, the last after `and`."""
+    items = list(items)
+    if len(items) < 2:
+        return "".join(items)
+    return ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def definition_link(page, definition):
+    """A link from `page` to a formal definition written relative to the
+    folder `docs/`."""
+    target = posixpath.relpath("docs/" + definition, posixpath.dirname(page))
+    return f"[formal definition]({target})"
+
+
+def entry_link(word):
+    """A link to the entry of a method or of a grid constructor on the same
+    page."""
+    if word not in METHOD_TYPES and word not in GRID_CONSTRUCTORS:
+        raise SystemExit(f"an entry names the related word !{word}, which no record holds")
+    return f"[{code('!' + word)}](#{anchor_of(word)})"
+
+
+def argument_rows(arguments):
+    """The rows of an argument table: each argument's name, the kind of value
+    it takes, what leaving it out means, its restrictions and what it is."""
     rows = []
-    for tag, row in METHOD_TYPES.items():
-        if tag not in lines:
-            raise SystemExit(f"stage/method_table.py defines no `_method_type` call for !{tag}")
-        keywords = [
-            f"{code(name)}: {prose(str(keyword))}" for name, keyword in row["keywords"].items()
-        ]
-        link = SOURCE.format(ref=source_ref, module="stage/method_table.py", line=lines[tag])
-        written = tag.replace("-", "_")
+    for name, option in arguments.items():
+        omission = OMISSIONS[option.omission]
+        if option.default_by is not None:
+            omission += f" The default is {option.default!r}, defined by {option.default_by}."
         rows.append(
             (
-                anchored(tag, code(f"!{tag}")),
-                code(f"<place>.method : !{written}"),
-                "<br>".join(place_text(place) for place in row["admits"]),
-                "<br>".join(keywords) or "none",
-                prose(grid_sentence(row.grid)),
-                "yes" if row.takes_block else "no",
-                prose(row.evaluates) if row.evaluates else "none",
-                f"{code(row.condition)}: {prose(METHOD_CONDITIONS[row.condition])}" if row.condition else "none",
-                denotes(page, *realized(row)),
-                f"[line {lines[tag]}]({link})",
-                read_from("stage/method_table.py", "METHOD_TYPES", tag),
+                code(name),
+                prose(option.kind),
+                prose(omission),
+                prose("; ".join(option.conditions)) if option.conditions else "none",
+                prose(option.description) or "none",
             )
         )
-    # the link to the defining line is headed `defined in`, as the API index
-    # heads a code location; `definition` heads a defining expression on the
-    # operations and laws pages
-    head = ("method", "written", "bound at", "keywords", "grid", "brings lines",
-            "derivatives it evaluates", "condition", "denotes", "defined in", "read from")
-    return table(head, rows)
+    return rows
+
+
+ARGUMENT_HEAD = ("argument", "type", "when left out", "restrictions", "meaning")
+
+
+def arguments_part(arguments, retained=True):
+    """The arguments part of an entry: the table of the registered arguments
+    with the policy for an unlisted keyword, or the sentence of an empty
+    record."""
+    if not arguments:
+        return [f"**Arguments.** {NO_REGISTERED_ARGUMENTS}"]
+    lines = ["**Arguments.**", "", table(ARGUMENT_HEAD, argument_rows(arguments)).rstrip()]
+    if retained:
+        lines += ["", "A keyword the record does not list is retained for the numerical handler."]
+    return lines
+
+
+def type_parameters_part(text):
+    """The type parameters of an entry, labeled apart from the arguments, each
+    with whether the attachment site supplies it."""
+    if text is None or not text.type_parameters:
+        return ["**Type parameters.** None."]
+    held = [
+        f"{code(parameter.name)} is "
+        f"{'inferred from the attachment site' if parameter.inferred else 'written at the site'}. "
+        f"{prose(parameter.meaning)}"
+        for parameter in text.type_parameters
+    ]
+    return ["**Type parameters.** " + " ".join(held) + " A type parameter is no source keyword."]
+
+
+def example_part(text):
+    """The example of an entry: the declaration in a block, then its
+    meaning."""
+    return ["**Example.**", "", "```text", text.example, "```", "", prose(text.example_meaning)]
+
+
+def grid_readers(row):
+    """The grid constructors whose sites admit the grid a method row reads."""
+    return [word for word, record in GRID_CONSTRUCTORS.items() if row.grid in record.sites.readers]
+
+
+def stored_part(family):
+    """The stored-data part of the entry of a registered representation
+    family: the sentence of its record, `RepresentationFamily.stored`, that
+    states the data a fitted representation stores."""
+    return ["**Stored data.** " + prose(family.stored), ""]
+
+
+def method_entry(page, number, word, row, revision):
+    """The entry of one method word: its meaning, declaration, type
+    parameters, arguments, compatibility, for a registered representation
+    family the data a fitted representation stores, then the example,
+    availability and links."""
+    text = row.text
+    if text is None:
+        raise SystemExit(f"the method row !{word} carries no EntryText")
+    held = registered_families().get(word)
+    family = held is not None
+    location = source_location(word, row, "family" if family else "row", revision)
+    sites = joined(site_phrase(place) for place in row["admits"])
+    compatibility = []
+    if row.grid is not None:
+        constructors = joined(entry_link(name) for name in grid_readers(row))
+        compatibility.append(
+            f"Its grid lies {prose(grid_sentence(row.grid))}; the grid constructors its place "
+            f"admits are {constructors}."
+        )
+    else:
+        compatibility.append("It reads no grid.")
+    if row.evaluates:
+        compatibility.append(f"The derivatives it evaluates are {prose(row.evaluates)}.")
+    if row.condition:
+        compatibility.append(
+            f"The obligation {code(row.condition)} states that "
+            f"{prose(METHOD_CONDITIONS[row.condition])}."
+        )
+    compatibility.append(prose(text.compatibility))
+    admission = (
+        "a registered representation family; registration alone establishes no numerical support"
+        if family
+        else "a row of the method table"
+    )
+    links = [definition_link(page, text.definition)]
+    realized_terms = realized(row)
+    if realized_terms:
+        links.append(f"denotes {denotes(page, *realized_terms)}")
+    if text.related:
+        links.append("related entries " + joined(entry_link(name) for name in text.related))
+    links.append("source " + source_sentence(location))
+    links.append("read from " + read_from("stage/method_table.py", "METHOD_TYPES", word))
+    lines = [
+        f'<a id="{anchor_of(word)}"></a>',
+        "",
+        f"### 2.{number} {code('!' + word)}",
+        "",
+        prose(text.meaning),
+        "",
+        f"**Declaration.** {code(f'<place>.method : !{written_word(word)}')}, at {sites}.",
+        "",
+        *type_parameters_part(text),
+        "",
+        *arguments_part(row["keywords"]),
+        "",
+        "**Compatibility.** " + " ".join(compatibility),
+        "",
+        *(stored_part(held) if family else ()),
+        *example_part(text),
+        "",
+        f"**Availability.** Admission: {admission}, admitted at {sites}. "
+        f"Numerical implementation: {prose(text.implementation)}",
+        "",
+        "**Links.** " + "; ".join(links) + ".",
+    ]
+    return "\n".join(lines)
+
+
+def operator_index():
+    """The index of the methods by the place they stand at: each operator head
+    and each other kind of place, with the methods admitted there."""
+    by_site = {}
+    for word, row in METHOD_TYPES.items():
+        for place in row["admits"]:
+            key = f"operator {code(place[1])}" if isinstance(place, tuple) else SITE_WORDS[place]
+            by_site.setdefault(key, []).append(entry_link(word))
+    ordered = sorted(by_site, key=lambda key: (not key.startswith("operator"), key))
+    return table(("site", "methods"), [(key, ", ".join(by_site[key])) for key in ordered])
+
+
+def factor_rows(record):
+    """The rows of the factor forms of `!Cartesian`: the form, its meaning and
+    its parts."""
+    rows = []
+    for form in record.forms:
+        parts = "<br>".join(
+            f"{code(name)}: {prose(option.kind)}, {prose(OMISSIONS[option.omission])}"
+            for name, option in form.arguments.items()
+        )
+        rows.append((code(form.written), prose(form.meaning), parts))
+    return rows
+
+
+def grid_readers_phrase(record):
+    """The places at which a grid constructor may stand, from its sites: the
+    method words whose row's grid is among its readers, and a place with no
+    method word where the readers hold the handler."""
+    words = [word for word, row in METHOD_TYPES.items() if row.grid in record.sites.readers]
+    phrase = "at the grid of " + joined(entry_link(word) for word in words)
+    if HANDLER in record.sites.readers:
+        phrase += ", and at a place whose entries name no method word, for its handler"
+    return phrase
+
+
+def grid_entry(page, number, word, record, revision):
+    """The entry of one grid constructor: its meaning, declaration, type
+    parameters, arguments, factor forms, compatibility, example,
+    availability and links."""
+    text = record.text
+    location = source_location(word, record, "grid", revision)
+    declaration = "<br>".join(code(form) for form in record.syntax)
+    lines = [
+        f'<a id="{anchor_of(word)}"></a>',
+        "",
+        f"### 3.{number} {code('!' + word)}",
+        "",
+        prose(text.meaning),
+        "",
+        f"**Declaration.** {declaration}; {grid_readers_phrase(record)}. "
+        f"{prose(record.sites.condition)} The predicate words of `require` are written last.",
+        "",
+        *type_parameters_part(text),
+        "",
+        *arguments_part(record.arguments, retained=False),
+    ]
+    if record.forms:
+        lines += [
+            "",
+            "**Factor forms.** Each factor takes one of these forms:",
+            "",
+            table(("form", "meaning", "parts"), factor_rows(record)).rstrip(),
+        ]
+    lines += [
+        "",
+        f"**Compatibility.** {prose(text.compatibility)}",
+        "",
+        *example_part(text),
+        "",
+        "**Availability.** Admission: a grid constructor of the language, admitted by the "
+        f"lowering and the grid checks. Numerical implementation: {prose(text.implementation)}",
+        "",
+        "**Links.** "
+        + "; ".join(
+            [
+                definition_link(page, text.definition),
+                "related entries " + joined(entry_link(name) for name in text.related),
+                "source " + source_sentence(location),
+                "read from " + read_from("stage/grids.py", "GRID_CONSTRUCTORS", word),
+            ]
+        )
+        + ".",
+    ]
+    return "\n".join(lines)
+
+
+def grid_index():
+    """The index of the grid constructors: each with its declaration forms."""
+    rows = [
+        (entry_link(word), "<br>".join(code(form) for form in record.syntax))
+        for word, record in GRID_CONSTRUCTORS.items()
+    ]
+    return table(("constructor", "declaration"), rows)
+
+
+def predicate_rows():
+    """The predicate words a grid may require, each with its meaning."""
+    return [(code("!" + word), prose(meaning)) for word, meaning in PREDICATES.items()]
+
+
+def methods_table(page, source_ref=EXPORTED_REVISION):
+    """The generated part of the methods page: the index of the methods by
+    the place they stand at, one entry for each method word of
+    `METHOD_TYPES`, registered representation families included, in the
+    table's order, then the grid section with the index of the grid
+    constructors, the predicate words and one entry for each constructor of
+    `GRID_CONSTRUCTORS`, each entry printed from its record and its
+    `EntryText` alone."""
+    parts = [
+        f'<a id="{RETAINED_ANCHORS["2 The methods"]}"></a>',
+        "",
+        "## 2 The methods",
+        "",
+        "Each method stands at the places this index names; the entries follow it in the "
+        "order of the method table.",
+        "",
+        operator_index().rstrip(),
+    ]
+    for number, (word, row) in enumerate(METHOD_TYPES.items(), start=1):
+        parts += ["", method_entry(page, number, word, row, source_ref)]
+    parts += [
+        "",
+        "## 3 The grid",
+        "",
+        "A method that reads a grid takes it from the grid entry of its place, "
+        "`<place>.grid : !Cartesian(…)`, a typing beside the method's. The language admits "
+        "these grid constructors:",
+        "",
+        grid_index().rstrip(),
+        "",
+        "Each constructor may end with `require=`, one predicate word or a tuple of them, "
+        "a condition on the resulting grid:",
+        "",
+        table(("predicate", "meaning"), predicate_rows()).rstrip(),
+    ]
+    for number, (word, record) in enumerate(GRID_CONSTRUCTORS.items(), start=1):
+        parts += ["", grid_entry(page, number, word, record, source_ref)]
+    return "\n".join(parts) + "\n"
 
 
 # --- the refusals: the three vocabularies ---
@@ -2114,10 +2526,11 @@ def main():
     )
     parser.add_argument(
         "--source-ref",
-        default=SOURCE_REF,
+        default=EXPORTED_REVISION,
         help=(
-            "the branch, tag or commit of econ-ark/bellman at which the methods page links the "
-            f"line that defines each method type (default: {SOURCE_REF})"
+            "the exported revision of econ-ark/bellman, held by this repository, at which the "
+            "methods page links each definition; without one, each public link is stated "
+            "unavailable"
         ),
     )
     arguments = parser.parse_args()

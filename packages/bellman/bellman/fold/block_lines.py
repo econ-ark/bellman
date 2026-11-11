@@ -337,6 +337,13 @@ def fields_of(stage):
     return found, edges
 
 
+def field_role(stage, identity):
+    """The role of a field wire, read from its sort among the fields
+    (`fields_of`); None for no such wire."""
+    sort = fields_of(stage)[0].get(identity)
+    return sort.role if sort is not None else None
+
+
 def shock_edges(stage, ports):
     """The edge that draws each shock the file declares, as the pair of
     perches of the forward builder it is drawn on: `('arvl', 'dcsn')` for a

@@ -796,14 +796,20 @@ def line_domain(block, acc, identity):
     block's edge for a local name or a field of the output perch, the grid
     of its perch for a field marked at another perch (`c[>]`)."""
     perch = identity.perch if identity is not None else None
-    return block.domain if perch is None or perch == block.perch_out else _grid(block, acc, perch)
+    return (
+        block.domain
+        if perch is None or perch == block.perch_out
+        else perch_domain(block, acc, perch)
+    )
 
 
-def _grid(block, acc, perch):
+def perch_domain(block, acc, perch):
     """The domain of the functions a policy line defines at `perch`: the
     states of that perch, then the multipliers the block declares at it
     (AMD-SG-035 §5, fold B), on which a value input of that perch is read at
-    its own coordinates and no law of motion is substituted."""
+    its own coordinates and no law of motion is substituted. `policy.py`
+    reads it for a line that defines an output of the block as an explicit
+    function of the output perch's states."""
     if perch not in acc.grids:
         acc.grids[perch] = _ArgumentDomain(
             perch=perch, base=block.ctx.perch_coordinates(block.name, perch)

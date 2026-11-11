@@ -2,7 +2,7 @@
 
 {% block extrahead %}
   {{ super() }}
-  <link rel="stylesheet" href="{{ '_stylesheets/home.css' | url }}?v=20261110b">
+  <link rel="stylesheet" href="{{ '_stylesheets/home.css' | url }}?v=20261111a">
   <link rel="stylesheet" href="{{ '_stylesheets/home-modules.css' | url }}">
   <script defer src="{{ '_javascripts/home-scenes.js' | url }}" data-bellman-home-script></script>
 {% endblock %}
@@ -21,8 +21,8 @@
     <a href="{{ 'bellman-calculus/' | url }}">Foundations</a>
     <a href="{{ 'asva/' | url }}">Inter-operability</a>
     <a href="{{ 'wiki/declarative_language/' | url }}">AI</a>
-    <a class="bellman-home__github" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">{% include "partials/github-icon.html" %}GitHub<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
   </nav>
+  <a class="bellman-home__github bellman-home-header__repo" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">{% include "partials/github-icon.html" %}GitHub<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
 </header>
 {% endblock %}
 
@@ -34,8 +34,13 @@
 {% from "partials/home-modules.html" import home_modules %}
 <div class="bellman-home" data-md-component="content">
   <section class="bellman-home__hero" aria-labelledby="build-modular-economics">
-    <div class="bellman-home__art bellman-home__art--arrival">
-      {% include "partials/brand-loop-arrival.html" %}
+    <div class="bellman-home__art">
+      <div class="bellman-home__art-loop bellman-home__art-loop--arrival">
+        {% include "partials/brand-loop-arrival.html" %}
+      </div>
+      <div class="bellman-home__art-loop bellman-home__art-loop--decision">
+        {% include "partials/brand-loop-decision.html" %}
+      </div>
     </div>
     <div class="bellman-home__copy">
       {{ page.content }}
@@ -43,9 +48,6 @@
         <a class="bellman-home__button bellman-home__button--primary" href="#examples">Start with an example</a>
         <a class="bellman-home__button bellman-home__github" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">{% include "partials/github-icon.html" %}GitHub<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
       </div>
-    </div>
-    <div class="bellman-home__art bellman-home__art--corner">
-      {% include "partials/brand-loop-decision.html" %}
     </div>
   </section>
   {% include "partials/home-sections.html" %}
@@ -61,6 +63,7 @@
   <nav aria-label="Footer navigation">
     <a href="{{ 'about/' | url }}">About us</a>
     <a href="{{ 'overview/' | url }}">Docs</a>
+    <a href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">Contribute<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
     <a class="bellman-home__github" href="{{ config.repo_url }}" target="_blank" rel="noopener noreferrer">{% include "partials/github-icon.html" %}GitHub<span class="bellman-home__sr-only"> (opens in a new tab)</span></a>
   </nav>
 </footer>

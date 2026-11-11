@@ -37,6 +37,7 @@ from typing import NamedTuple
 
 from bellman.display.printed_records import tuple_text
 from bellman.distributions.conditionals import conditional_texts
+from bellman.fold.block_lines import field_role
 from bellman.fold.conditions import conditional_distribution_of, edge_drawing
 from bellman.fold.stage_names import StageNames
 from bellman.fold.wire_terms import (
@@ -73,11 +74,11 @@ from bellman.stage.kernel_records import (
     spelling,
     stems_of,
 )
-from bellman.stage.stage_answers import field_role
 from bellman.syntax import terms as T
 from bellman.syntax.source import distribution_subject_text, to_source
 from bellman.syntax.vocabulary import PERCH_MARK
 from bellman.typing import sets
+from bellman.typing.declarations import DERIVED_PARAMETER_CALLS
 
 # --- the kernel of an operator, as text and compiled ---
 
@@ -119,10 +120,13 @@ def derivative_piece(stage, box):
 
 
 def derivative_pieces(stage, builder):
-    """The names of the derivative pieces of the builder `builder`, one per
-    entry of its Evaluation rows' `derivatives`, in row order."""
+    """The derivative pieces of the builder `builder`, one per entry of its
+    Evaluation rows' `derivatives`, in row order, each named by the address
+    of its line, `dcsn_to_arvl.marginal:Derivative:1`, which `kernel` and
+    `compile_kernel` resolve to that line even where a line of another
+    builder has the same id."""
     return tuple(
-        f"{entry[2].split('.', 1)[-1]}:Derivative:1"
+        f"{entry[2]}:Derivative:1"
         for row in rows_of(stage, builder)
         if row.kind == "Evaluation"
         for entry in row.derivatives
@@ -945,11 +949,14 @@ def _python_text(stage, box, spec):
     parameters the kernel reads and the Python name of each name of the file
     that Python writes otherwise; then `import numpy as np` and the function.
     Its arguments are the kernel's own, in printed order, then each parameter
-    it reads, directly or through a named function, in declaration order; the
-    named functions it calls are its inner functions, reading those
-    parameters; each output is assigned to its printed name as Python writes
-    it, or to `result` where that name is no identifier, and the outputs are
-    returned in printed order, one as it is and several as a tuple.
+    it reads, directly, through a named function or through a derived
+    parameter, in declaration order; the named functions it calls are its
+    inner functions, reading those parameters; each derived parameter it
+    reads is one assignment after them, written from its definition and
+    named in the header; each output is assigned to its printed name as
+    Python writes it, or to `result` where that name is no identifier, and
+    the outputs are returned in printed order, one as it is and several as a
+    tuple.
     NumPy is reached by `np` alone. The text holds no date and no value, so
     that two elaborations of one file and two calibrations of one version
     give the same text. A form it cannot write is refused under
@@ -971,6 +978,7 @@ def _python_text(stage, box, spec):
             *zip(arguments, spec.shown or spec.names),
             *zip(parameters, read),
             *((function.name, name) for function in functions for name in function.written),
+            *((held.text, name) for name, held in writer.derived.items()),
         )
         if python != written
     )
@@ -1001,10 +1009,16 @@ def _python_text(stage, box, spec):
             "; ".join(f"{python} is {written}" for python, written in renamed)
             or "as in the stage file"
         ),
+        *(
+            f"# derived parameter: {name} := {to_source(held.equations[0])}"
+            for name, held in writer.ctx.derived.items()
+            if name in writer.derived
+        ),
         "import numpy as np",
         "",
         f"def {writer.function}({', '.join(arguments + parameters)}):",
         *(f"    {line}" for function in functions for line in function.lines),
+        *(f"    {line}" for line in writer.derived_lines),
         *(f"    {name} = {value.text}" for name, value in zip(outputs, values)),
         f"    return {', '.join(outputs)}",
     ]
@@ -1099,9 +1113,15 @@ class _Writer:
         # one selection helper for each declared number of collection axes
         self.entry_helpers = {}
         self.function_names = {
-            name: self.names.take(name, "function") for name in self.ctx.functions
+            name: self.names.take(name, "function")
+            for name in self.ctx.functions
+            if name not in self.ctx.derived
         }
         self.functions, self.order, self.writing = {}, [], set()
+        # the derived parameters written, each one assignment of the text, by
+        # name and in the order a reader meets them, and those being written
+        # (AMD-MT-003, build contract §5)
+        self.derived, self.derived_lines, self.writing_derived = {}, [], set()
         self.read = set()
         self.position = None
 
@@ -1142,8 +1162,9 @@ class _Writer:
 
     def _symbol(self, term, env):
         """A name written as an argument of the kernel, a parameter, a
-        parameter of the inner function being written or infinity; any other
-        name is refused."""
+        parameter of the inner function being written, a derived parameter,
+        written through its definition, or infinity; any other name is
+        refused."""
         spec, ctx = self.spec, self.ctx
         if is_wire_symbol(term):
             return self.arguments[spec.index[term.symbol.name]]
@@ -1155,6 +1176,8 @@ class _Writer:
         if side is None and name in ctx.parameter_names:
             self.read.add(name)
             return self.parameters[name]
+        if side is None and name in ctx.derived:
+            return self._derived_parameter(name)
         position = spec.index.get(ctx.resolve(name, spec.builder, side))
         if position is None:
             self._refuse(
@@ -1162,6 +1185,24 @@ class _Writer:
                 "an argument of the kernel nor a parameter"
             )
         return self.arguments[position]
+
+    def _derived_parameter(self, name):
+        """A derived parameter written through its definition: one assignment
+        of the text, `h = 1/(1 - Γ/R)`, written once, after the derived
+        parameters its definition reads and before the outputs, the
+        parameters it reads among the kernel's own, so that the kernel's
+        parameters stay the declared ones (AMD-MT-003, build contract §5)."""
+        if name in self.derived:
+            return self.derived[name]
+        if name in self.writing_derived:
+            self._refuse(f"the derived parameter {name}, whose definition reaches itself")
+        self.writing_derived.add(name)
+        value = self.expression(self.ctx.derived[name].equations[0], {}, {})
+        self.writing_derived.discard(name)
+        python = self.names.take(name, "derived")
+        self.derived_lines.append(f"{python} = {value.text}")
+        self.derived[name] = _Written(python, _ATOM, value.axes, False)
+        return self.derived[name]
 
     def _arithmetic(self, term, env, domains):
         """A sum, a difference, a product, a quotient or a power of two
@@ -1558,7 +1599,14 @@ class _Writer:
 
     def _call(self, term, env, domains):
         """A call of a closed-form function, written as a call of the inner
-        function that the text defines for it."""
+        function that the text defines for it; inside a derived parameter's
+        definition, a call of `log` or `exp` of one argument, written as the
+        NumPy function of that name."""
+        if self.writing_derived and term.fun in DERIVED_PARAMETER_CALLS and len(term.args) == 1:
+            argument = self.expression(term.args[0], env, domains)
+            return _Written(
+                f"np.{term.fun}({argument.text})", _ATOM, argument.axes, argument.batched
+            )
         definition, core = self._closed_form(term)
         if len(term.args) != len(core.params):
             self._refuse(

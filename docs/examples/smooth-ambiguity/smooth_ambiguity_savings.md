@@ -46,7 +46,7 @@ The stage file is `applications/smooth-ambiguity-savings/declaration/stages/sa_s
 β : (0,1) :: ["discount factor"]
 ρ : (1,inf) :: ["1/ρ is the elasticity of intertemporal substitution"]
 γ : (1,inf) :: ["relative risk aversion"]
-η : (1,inf), > γ :: ["ambiguity aversion"]
+η : (1,inf) @ [γ, inf) :: ["ambiguity aversion"]
 κ_1 : ℝ
 σ_ν : ℝ₊
 σ_Ψ : ℝ₊
@@ -73,7 +73,7 @@ The stage file is `applications/smooth-ambiguity-savings/declaration/stages/sa_s
 }
 ```
 
-`N(κ_1, σ_ν^2)` is written with its variance and `LogNormal(ν, σ_Ψ)` with the standard deviation of the logarithm. The declaration of `η` adds the condition `> γ`: ambiguity aversion exceeds risk aversion, the case $\eta > \gamma$ of §2. The feasible set `{c : ℝ₊₊ | c < x}` is open at both ends: at $c = m_d$ the continuation state is zero and its negative powers are undefined. Each group of equations between braces is a **block**, and its **header**, the bracketed list before the braces, names its inputs and outputs. The header of the forward block `dcsn_to_cntn` names only the shock the law of motion reads, `Ψ`; the mean `ν` is drawn on the same edge because the declaration of `Ψ` names it.
+`N(κ_1, σ_ν^2)` is written with its variance and `LogNormal(ν, σ_Ψ)` with the standard deviation of the logarithm. The declaration of `η` writes a second set after `@`, the interval `[γ, inf)`: ambiguity aversion is no less than risk aversion, which covers the two cases of §2, $\eta = \gamma$ and $\eta > \gamma$. The feasible set `{c : ℝ₊₊ | c < x}` is open at both ends: at $c = m_d$ the continuation state is zero and its negative powers are undefined. Each group of equations between braces is a **block**, and its **header**, the bracketed list before the braces, names its inputs and outputs. The header of the forward block `dcsn_to_cntn` names only the shock the law of motion reads, `Ψ`; the mean `ν` is drawn on the same edge because the declaration of `Ψ` names it.
 
 ## 4 What elaboration constructs
 

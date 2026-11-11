@@ -105,8 +105,13 @@ module dynspec
            | Values(argument* items)
            | Nested(word word)
 
-  -- (stage) the grid, one factor per coordinate
-  grid     = Cartesian(factor* factors)
+  -- (stage) the grid, one outer grid word with its predicate words: a product
+  -- of at most one factor per coordinate, the finite support of declared
+  -- points, or
+  -- the pairs of each base state with its feasible controls
+  grid     = Cartesian(factor* factors, identifier* require)
+           | PointGrid(identifier? nodes, identifier* require)
+           | Fibred(grid base, grid fibre, identifier* require)
   factor   = Spaced(identifier coordinate, argument lower, argument upper,
                     argument count, word? spacing)
            | Listed(identifier coordinate, identifier nodes)

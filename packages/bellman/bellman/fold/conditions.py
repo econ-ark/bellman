@@ -316,7 +316,13 @@ def _definition_conditions(ctx, definition, found):
     correspondence's body, its parameters' declared sets in scope, and of a
     function alias's term, placed at the definition's identity, which resolves
     in the definitions table, its address being the ordinal of the item in the
-    file (AMD-SG-014 §3); and `law-support` for a distribution."""
+    file (AMD-SG-014 §3); and `law-support` for a distribution. A derived
+    parameter has here no condition of its own: where the declared sets
+    leave its definition open, or the definition calls log or exp, and only
+    there, the fold records for it the one obligation that its value is a
+    finite real number, which the calibration decides by evaluating its
+    definition (`stage_fold._derived_definedness`; AMD-MT-003, build
+    contract §5)."""
     if definition.kind in ("function", "correspondence"):
         _term_conditions(
             ctx,
@@ -473,8 +479,9 @@ def parameters_named(stage, rows):
 
 def _parameters_used(terms, ctx, functions):
     """The parameters the terms name, through the definitions of the
-    functions they call (`𝑢(c)` names ρ through `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`),
-    in order of first appearance."""
+    functions they call (`𝑢(c)` names ρ through `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`)
+    and of the derived parameters they read (`h` names Γ and R through
+    `h := 1/(1 - Γ/R)`), in order of first appearance."""
     found, seen = [], set()
     pending = list(terms)
     while pending:
@@ -482,6 +489,9 @@ def _parameters_used(terms, ctx, functions):
         for name, side in symbol_occurrences(term):
             if side is None and name in ctx.parameter_names and name not in found:
                 found.append(name)
+            elif side is None and name in ctx.derived and name not in seen:
+                seen.add(name)
+                pending.extend(ctx.derived[name].equations)
         for node in term_nodes(term):
             if isinstance(node, T.Call) and node.fun in functions and node.fun not in seen:
                 seen.add(node.fun)

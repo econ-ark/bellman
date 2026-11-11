@@ -39,12 +39,14 @@ from types import MappingProxyType
 from bellman.fold.wire_terms import stated_derivative
 from bellman.native.frozen import freeze
 from bellman.native.identity import Identity
-from bellman.native.records import BoundBlock
+from bellman.native.records import BoundBlock, refuse_at_entry
 from bellman.native.versions import kept_answer, replace_stage, stored
 from bellman.refusals import ConstructionError
 from bellman.stage.construction import stage_fields
+from bellman.stage.explicit import check_addition, check_explicit, formula_only, method_entry
 from bellman.stage.grains import construction_table, declared_definitions, declared_table
 from bellman.stage.method_table import is_solution_method, row_of
+from bellman.stage.representations import bound_families
 from bellman.syntax import terms as T
 from bellman.syntax.lower import ParsedFile, item_addresses, parse_with_spans
 
@@ -92,14 +94,41 @@ def construct(cls, term, spans):
     where a block's method component holds a solution method and the tree
     appends rows to it (D8). `spans` is the span table of the tree, whose
     files tell an appended line from one of the stage file, or None for a
-    decoded term, which holds no appended line."""
+    decoded term, which holds no appended line.
+
+    The bindings keep the record of each representation family the typing
+    entries name, as it stands now (`representations.bound_families`). A
+    builder whose method is `!explicit` is checked on the declared level,
+    before the operative level is constructed, for the lines an addition
+    appends to the block of its id (`explicit.check_addition`), and its
+    operative lines are then checked as an explicit solution, each refusal
+    at the position of the line at fault (`explicit.check_explicit`); a
+    builder whose method is `!egm` or `!time_iteration` and whose operative
+    lines are a complete formula-only block is refused under
+    `explicit-solution`, naming `!explicit` (AMD-MT-003 build contract
+    §5)."""
     files = _files(term, spans)
     rows = _appended_rows(term, files)
     fields = stage_fields(*_declared_tree(term, spans, files, rows))
+    fields["bindings"] = dataclasses.replace(
+        fields["bindings"], families=bound_families(fields["definitions"])
+    )
+    methods = _builder_methods(fields["definitions"])
     if not rows:
+        if methods:
+            declared = cls(**fields)
+            for block, word in methods.items():
+                if word == "explicit":
+                    check_addition(declared, block, ())
+            _check_solutions(declared, methods, spans)
         return fields
     declared = cls(**fields)
-    reading = cls(**stage_fields(*_operative_tree(term, spans, files, rows)))
+    for block, word in methods.items():
+        if word == "explicit":
+            check_addition(declared, block, _rows_of(term, files, block, rows))
+    operative = _operative_tree(term, spans, files, rows)
+    reading = cls(**stage_fields(*operative))
+    _check_solutions(reading, methods, operative[1])
     table = construction_table(reading)
     blocks = MappingProxyType(
         {block: _bound(declared, reading, table, block, word) for block, word in rows.items()}
@@ -107,6 +136,72 @@ def construct(cls, term, spans):
     fields["definitions"] = operative_definitions(declared, tuple(blocks.values()))
     fields["bindings"] = dataclasses.replace(fields["bindings"], blocks=blocks)
     return fields
+
+
+# the solution methods whose lines iterate on a value input, under which a
+# block of explicit formulas alone is the block of `!explicit`
+_ITERATIVE = ("egm", "time-iteration")
+
+
+def _builder_methods(definitions):
+    """The builders whose method component is `!explicit`, `!egm` or
+    `!time_iteration`, each with the word written there, by the typing
+    entries among `definitions`, in table order."""
+    return {
+        str(record.identity.address): record.equations[0].name
+        for record in definitions.values()
+        if record.kind == "typing"
+        and record.identity.field == "method"
+        and isinstance(record.equations[0], T.Word)
+        and record.equations[0].name.replace("_", "-") in ("explicit", *_ITERATIVE)
+        and "." not in str(record.identity.address)
+    }
+
+
+def _check_solutions(reading, methods, spans):
+    """The checks of the builders `methods` names on `reading`, the stage at
+    its operative level, whose span table is `spans`: an explicit solution
+    for `!explicit`, and for `!egm` and `!time_iteration` the refusal of a
+    complete formula-only block, which is the block of `!explicit`."""
+    for block, word in methods.items():
+        if word == "explicit":
+            check_explicit(reading, block, spans)
+        elif formula_only(reading, block):
+            _refuse_formula_only(reading, block, word)
+
+
+def _rows_of(term, files, block, rows):
+    """The rows an addition appends to the top-level block `block` of the
+    tree, in their order; empty where the block is not among `rows`, the
+    blocks whose own method component holds a solution method and to which
+    an addition appends a row."""
+    if block not in rows:
+        return ()
+    held = next(
+        item for address, item in item_addresses(term)
+        if address == block and isinstance(item, T.Block)
+    )
+    return tuple(line for line in held.body if _is_row(line) and _appended(line, files))
+
+
+def _refuse_formula_only(stage, block, word):
+    """The refusal of a builder under `!egm` or `!time_iteration` whose
+    operative lines define every output by an explicit expression and read
+    no value input: such lines are an explicit solution, which `!explicit`
+    types, and the method named iterates on nothing."""
+    refuse_at_entry(
+        stage,
+        block,
+        method_entry(stage, block),
+        "explicit-solution",
+        f"the block of the builder under !{word} defines every output by an explicit "
+        f"expression of its states and parameters and reads no value input, so it states an "
+        f"explicit solution, on which !{word} has nothing to iterate; type !explicit on the "
+        f"builder for such a block, or write the lines !{word} solves, which read the "
+        "continuation value or its derivative",
+        write=f"Type `{block}.method : !explicit` in place of `{block}.method : !{word}`",
+        kind="builder",
+    )
 
 
 def _files(term, spans):

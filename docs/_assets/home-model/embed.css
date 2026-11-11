@@ -1,15 +1,19 @@
+/* The homepage's model frame drawn in the Workbench's own system, whose
+   stylesheet (brand.css, served here as graph.css) the frame loads for the
+   graph: the ground for the bars, the raised navy for the source and the
+   canvas, the type steps Head, Label, Code and Code small, the bar of 36 px,
+   the control of 26 px and the target of 24 px, the hairline, the one accent
+   for focus and the on mark. The bars, the text buttons, the selects and the
+   canvas controls are the Workbench's classes; this file adds the frame's
+   layout, its handle, the source lines and the compact tabs. */
 * { box-sizing: border-box; }
 html { color-scheme: dark; }
 html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
-body { background: var(--bl-navy); color: var(--bl-ice); font: 14px/1.5 Archivo, sans-serif; }
-button, select { font: inherit; border-radius: 0; }
-button, select { cursor: pointer; }
-a { color: var(--bl-ice-2); }
-button:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -4px; }
+body { background: var(--bl-raised); color: var(--bl-ink-1); font: var(--bl-t-label); font-synthesis: none; }
+button { font: inherit; }
+a { color: var(--bl-ink-2); }
+:is(button, a, [tabindex]):focus-visible { outline: 1px solid var(--bl-accent); outline-offset: 0; }
 .workbench-frame {
-  --frame-inset: 20px;
-  --controls-height: 64px;
-  --source-width: 38%;
   display: grid;
   grid-template-rows: minmax(0, 1fr);
   height: 100vh;
@@ -17,77 +21,106 @@ button:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--bl-hairline);
-  background: var(--bl-navy);
+  background: var(--bl-raised);
 }
-.compact-tabs { display: none; }
-.compact-tabs button { min-height: 44px; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--bl-ice-3); padding: 0 4px; }
-.compact-tabs button[aria-selected=true] { color: var(--bl-ice); border-color: var(--bl-ice-2); }
-.compact-tabs button:hover { color: var(--bl-ice); }
-.pane-layout { display: grid; grid-template-columns: clamp(260px, var(--source-width), calc(100% - 348px)) 8px minmax(340px, 1fr); min-width: 0; min-height: 0; }
-.source-panel, .diagram-panel { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; overflow: hidden; background: var(--bl-navy); }
-.pane-bar { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 64px; padding: 8px 16px; border-bottom: 1px solid var(--bl-hairline); background: var(--bl-chrome); }
-.pane-bar h2 { flex: 0 0 auto; margin: 0; color: var(--bl-ice); font: inherit; }
-.filename { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px/1.4 'IBM Plex Mono', monospace; color: var(--bl-ice-3); }
-.source-bar, .graph-bar { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-.source-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.source-controls { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
-.source-controls button { flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 0 8px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--bl-ice-3); font-size: 12px; }
-.source-controls button[aria-pressed=true] { color: var(--bl-ice); border-bottom-color: var(--bl-ultramarine-light); }
-.source-controls button:hover:not(:disabled) { color: var(--bl-ice); }
-.source-controls button:disabled { opacity: .45; cursor: default; }
-#copy-source { display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+/* The two panes named as tabs where the frame is narrow: a bar of 36 px on
+   the ground, each tab's word in Label, ink-3 at rest and ink-1 for the pane
+   shown, with the on mark, a 2 px accent line at the tab's foot. */
+.compact-tabs { display: none; align-items: stretch; gap: var(--bl-s4); height: var(--bl-bar-h); padding: 0 var(--bl-s3); border-bottom: 1px solid var(--bl-hairline); background: var(--bl-ground); }
+.compact-tabs button { position: relative; padding: 0; border: 0; background: none; font: var(--bl-t-label); color: var(--bl-ink-3); white-space: nowrap; cursor: pointer; }
+.compact-tabs button:hover, .compact-tabs button[aria-selected=true] { color: var(--bl-ink-1); }
+.compact-tabs button[aria-selected=true]::after { content: ""; position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: var(--bl-accent); }
+/* The source pane, the handle of 7 px and the diagram pane. The layout's own
+   ground draws the bars' band, 35 px of ground over one hairline, across the
+   handle's column too, so that the two bars read as one bar. */
+.pane-layout {
+  --source-width: 42%;
+  position: relative;
+  display: grid;
+  grid-template-columns: clamp(260px, var(--source-width), calc(100% - 347px)) 7px minmax(340px, 1fr);
+  min-width: 0;
+  min-height: 0;
+  background: linear-gradient(to bottom, var(--bl-ground) 0 calc(var(--bl-bar-h) - 1px), var(--bl-hairline) calc(var(--bl-bar-h) - 1px) var(--bl-bar-h), var(--bl-raised) var(--bl-bar-h));
+}
+.source-panel, .diagram-panel { display: grid; grid-template-rows: var(--bl-bar-h) minmax(0, 1fr); min-width: 0; min-height: 0; overflow: hidden; background: var(--bl-raised); }
+/* Each pane's bar, the Workbench's bar of 36 px (.bl-bar): the pane's name
+   in Head, then its controls; its items stand on one row and the bar hides
+   first the file's name (data-narrow) and then its own name (data-crowded)
+   where they do not fit, as the Workbench's graph bar does. */
+.pane-bar { min-width: 0; height: var(--bl-bar-h); overflow: hidden; border-bottom: 1px solid var(--bl-hairline); background: var(--bl-ground); }
+.pane-name { flex: none; margin: 0; white-space: nowrap; font: var(--bl-t-head); letter-spacing: normal; text-transform: none; color: var(--bl-ink-1); }
+.pane-bar[data-crowded] .pane-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.filename { flex: none; white-space: nowrap; font: var(--bl-t-code-small); color: var(--bl-ink-3); }
+.source-bar[data-narrow] .filename { display: none; }
+/* The toggles Types and Notes, the Workbench's text buttons of 26 px
+   (.bl-text-button, .bl-tab-actions): a pressed toggle takes the on mark,
+   its word in ink-1 over a 2 px accent line at the foot of its own box; a
+   toggle that waits stands at 40 percent. The copy, an icon button in the
+   24 px target of the Workbench's toolbar buttons, 8 px after them. */
+.source-controls { margin-left: auto; padding-right: 0; }
+.bl-text-button:disabled { opacity: .4; cursor: default; }
+.bl-text-button:disabled:hover, .bl-text-button:disabled:active { background: none; color: var(--bl-ink-2); }
+.icon-button { display: inline-flex; flex: none; align-items: center; justify-content: center; width: var(--bl-target); height: var(--bl-target); padding: 0; border: 0; border-radius: var(--bl-radius); background: none; color: var(--bl-ink-2); cursor: pointer; }
+.icon-button .codicon { font-size: var(--bl-icon); line-height: var(--bl-icon); }
+.icon-button:hover { background: var(--bl-hover); color: var(--bl-ink-1); }
+.icon-button:active { background: var(--bl-press); }
+.icon-button:disabled { opacity: .4; cursor: default; background: none; color: var(--bl-ink-2); }
+#copy-source { margin-left: var(--bl-s1); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
-.graph-options { display: flex; flex: 1 1 auto; justify-content: flex-start; gap: 12px; min-width: 0; }
-.graph-options label { display: flex; align-items: center; gap: 6px; color: var(--bl-ice-3); font-size: 12px; }
-.graph-options select { min-width: 0; min-height: 44px; padding: 0 6px; border: 1px solid var(--bl-hairline); background: var(--bl-navy); color: var(--bl-ice); font-size: 12px; }
-#pane-resizer { position: relative; min-height: 0; border: 0; border-left: 1px solid var(--bl-hairline); border-right: 1px solid var(--bl-hairline); background: var(--bl-chrome); cursor: col-resize; touch-action: none; }
-#pane-resizer:hover, #pane-resizer:focus-visible { background: var(--bl-hairline); }
-#pane-resizer:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -2px; }
+/* The graph bar, the Workbench's (.bl-graph-bar): the name, then the selects
+   Graph and Direction, VSCode Elements' selects of 26 px within the control
+   border, each as wide as its word, on one row of 36 px. */
+.graph-bar.bl-graph-bar { align-items: center; height: var(--bl-bar-h); }
+.graph-bar .bl-graph-tools { flex-wrap: nowrap; min-height: 0; }
+/* The handle between the panes, as the Workbench's: 7 px across, drawing the
+   hairline between the two raised surfaces under the bars' band, and its
+   middle 3 px in the accent under the pointer, while it is dragged and while
+   it holds the focus. */
+#pane-resizer { position: relative; z-index: 2; min-height: 0; padding: 0 2px; background-clip: content-box; cursor: col-resize; touch-action: none; user-select: none; }
+#pane-resizer::before { content: ""; position: absolute; top: var(--bl-bar-h); bottom: 0; left: 3px; width: 1px; background: var(--bl-hairline); }
+#pane-resizer:hover, #pane-resizer[data-resizing], #pane-resizer:focus-visible { background-color: var(--bl-accent); outline: 0; }
+/* The canvas fills the diagram pane under its bar; the foot's controls float
+   over it at the lower left as the Workbench's do (.bl-graph-controls), their
+   targets of 24 px, or 32 px for a coarse pointer. */
 .diagram-body { position: relative; min-width: 0; min-height: 0; }
-[role=tabpanel]:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -3px; }
-.native-window.bl-window { display: block !important; position: relative !important; height: 100% !important; min-height: 0 !important; width: 100% !important; min-width: 0 !important; padding: 0 !important; background: var(--bl-navy) !important; }
+[role=tabpanel]:focus-visible { outline: 1px solid var(--bl-accent); outline-offset: -1px; }
+.native-window.bl-window { display: block !important; position: relative !important; height: 100% !important; min-height: 0 !important; width: 100% !important; min-width: 0 !important; padding: 0 !important; background: var(--bl-raised) !important; }
 .native-window > .bl-view { display: block !important; position: relative !important; height: 100% !important; min-height: 0 !important; width: 100% !important; min-width: 0 !important; overflow: hidden; }
 .native-window .bl-canvas { position: relative !important; height: 100% !important; width: 100% !important; min-height: 0 !important; }
-.native-window .bl-view-host { position: absolute; inset: 0 0 var(--controls-height); width: 100%; height: auto; min-height: 0; }
+.native-window .bl-view-host { position: absolute; inset: 0; width: 100%; height: auto; min-height: 0; }
 .native-window .bl-view-host, .native-window .react-flow__pane { touch-action: pan-y !important; }
-#diagram-panel .react-flow { background-image: radial-gradient(circle, color-mix(in srgb, var(--bl-ice-3) 10%, transparent) .8px, transparent .9px); background-size: 28px 28px; background-position: 14px 14px; }
-#diagram-panel #graph.bl-view-host .bf-perch-layer { background-color: var(--bl-navy) !important; }
-#diagram-panel .bl-graph-controls { left: var(--frame-inset); bottom: 8px; border-color: var(--bl-hairline); padding: 3px; gap: 2px; }
-#native-controls vscode-toolbar-button { --bl-target: 44px; cursor: pointer; }
-#diagram-panel .react-flow__panel.react-flow__attribution { right: calc(var(--frame-inset) - 5px); bottom: var(--frame-inset); background: var(--bl-navy); }
-.loading-state { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; padding: 24px; text-align: center; background: var(--bl-navy); color: var(--bl-ice-3); }
-.source-scroll { min-width: 0; min-height: 0; overflow: auto; }
-.source-scroll:focus-visible { outline: 2px solid var(--bl-ice-2); outline-offset: -3px; }
-.source-status { margin: 0; padding: 20px 16px; color: var(--bl-ice-3); }
-pre { margin: 0; padding: 20px 16px 30px; width: max-content; min-width: 100%; font: 13px/1.9 'IBM Plex Mono', 'STIX Two Math', monospace; tab-size: 4; color: var(--bl-ice); }
-.source-line { display: block; position: relative; min-height: 1.9em; padding-left: 38px; white-space: pre; }
-.source-line.is-selected { background: var(--bl-navy-2); box-shadow: inset 2px 0 var(--bl-ultramarine-light); }
-.line-number { position: absolute; left: 0; width: 26px; color: var(--bl-ice-3); user-select: none; }
-.source-panel[data-wrap=true] pre { width: 100%; }
-.source-panel[data-wrap=true] .source-line { white-space: pre-wrap; overflow-wrap: anywhere; }
-.source-note-button { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0; border: 0; background: transparent; color: var(--bl-ice-3); line-height: 1; vertical-align: middle; }
+#native-controls vscode-toolbar-button { cursor: pointer; }
+@media (pointer: coarse) {
+  #native-controls vscode-toolbar-button { --bl-target: 32px; }
+}
+.loading-state { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: var(--bl-s4); padding: var(--bl-s6); text-align: center; background: var(--bl-raised); color: var(--bl-ink-3); }
+/* The source, set as the Workbench's editor sets a stage file: Code, 12.5 px
+   on lines of 18 px, the line numbers right-aligned in the gutter in the
+   editor's passive number ink, the lines of the selected box washed with
+   the selection and marked by a 2 px accent at the gutter's edge; a long
+   line wraps, since the pane is narrow and the frame does not scroll
+   sideways. */
+.source-scroll { min-width: 0; min-height: 0; overflow: auto; scrollbar-width: thin; }
+.source-status { margin: 0; padding: var(--bl-s4) var(--bl-s3); color: var(--bl-ink-3); }
+pre { margin: 0; padding: var(--bl-s3) var(--bl-s3) var(--bl-s8) 0; width: 100%; font: var(--bl-t-code); tab-size: 4; color: var(--bl-ink-1); }
+.source-line { display: block; position: relative; min-height: 18px; padding-left: 48px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.source-line.is-selected { background: var(--bl-selected); box-shadow: inset 2px 0 var(--bl-accent); }
+.line-number { position: absolute; left: 0; width: 36px; text-align: right; color: var(--bl-line-number); user-select: none; }
+/* A note folded behind its glyph, the Workbench's note marker: the Codicon
+   `note` in ink-3, ink-1 under the pointer and while the note is shown. */
+.source-note-button { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: var(--bl-radius); background: transparent; color: var(--bl-ink-3); line-height: 1; vertical-align: text-bottom; cursor: pointer; }
 .source-note-button .codicon { font-size: 14px; }
-.source-note-button:hover, .source-note-button[aria-expanded=true] { background: var(--bl-navy-2); color: var(--bl-ice); }
-.source-note-text { color: var(--bl-ice-2); }
-noscript { position: fixed; inset: 0; z-index: 10; display: grid; align-content: center; padding: 24px; background: var(--bl-navy); }
+.source-note-button:hover, .source-note-button[aria-expanded=true] { color: var(--bl-ink-1); }
+.source-note-text { color: var(--bl-ink-2); }
+noscript { position: fixed; inset: 0; z-index: 10; display: grid; align-content: center; padding: var(--bl-s6); background: var(--bl-raised); }
 [hidden] { display: none !important; }
 @media (max-width: 759px) {
-  .workbench-frame { --frame-inset: 16px; grid-template-rows: 50px minmax(0, 1fr); }
-  .compact-tabs { display: flex; gap: 18px; padding: 0 var(--frame-inset); border-bottom: 1px solid var(--bl-hairline); background: var(--bl-chrome); }
+  .workbench-frame { grid-template-rows: var(--bl-bar-h) minmax(0, 1fr); }
+  .compact-tabs { display: flex; }
   .pane-layout { grid-template-columns: minmax(0, 1fr); }
   #pane-resizer { display: none; }
-  .graph-bar { gap: 8px; }
-  .graph-options { gap: 8px; }
-  .graph-options label { gap: 4px; }
-}
-@media (max-width: 400px) {
-  .pane-bar { padding-right: 12px; padding-left: 12px; }
-  .graph-options { justify-content: flex-start; }
-  .graph-options label { display: grid; flex: 1 1 0; min-width: 0; gap: 2px; }
-  .graph-options select { width: 100%; }
-  pre { font-size: 12px; }
-  .source-line { padding-left: 32px; }
-  .line-number { width: 22px; }
+  /* the tab names the pane, so the bar holds the controls alone */
+  .pane-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; }

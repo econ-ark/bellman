@@ -56,6 +56,8 @@ LOGNORMAL_LINE = "ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)"
 LAW = "TruncatedLogNormal(-(σ_ψ^2)/2, σ_ψ, 0.5, 2)"
 WRITTEN = "TruncatedLogNormal(-σ_ψ^2/2, σ_ψ, 0.5, 2)"
 PSI = "buffer_stock:distribution:ψ"
+# a value for each declared parameter of the stage; μ_ξ, which the stage
+# defines from σ_ξ and p_zero, takes its value from that definition
 CALIBRATION = {
     "β": 0.96,
     "ρ": 2.0,
@@ -63,7 +65,6 @@ CALIBRATION = {
     "Γ": 1.03,
     "σ_ψ": 0.1,
     "σ_ξ": 0.1,
-    "μ_ξ": -0.005,
     "p_zero": 0.005,
 }
 

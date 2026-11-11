@@ -33,8 +33,10 @@ from typing import Union
 from bellman.distributions.families import law_support
 from bellman.fold.block_lines import parameter_sets, setting_sets
 from bellman.fold.conditions import check_calibrated_distributions
+from bellman.fold.derived_parameters import derived_values
 from bellman.fold.stage_fold import stage_blocks_of
 from bellman.fold.stage_names import StageNames
+from bellman.fold.wire_terms import term_nodes
 from bellman.native.frozen import freeze
 from bellman.native.identity import Identity
 from bellman.native.predicates import Predicate
@@ -43,10 +45,11 @@ from bellman.native.records import Provenance
 from bellman.native.versions import StageVersion, bind_in_place, rebuild_in_place, stored
 from bellman.refusals import ConstructionError, Location
 from bellman.stage.calibration_requirements import (
+    UNVALUED,
     calibration_requirements,
     collection_values,
     declared_set_terms,
-    membership,
+    judged,
     predicate_value,
 )
 from bellman.stage.components import check_bound_values, check_components
@@ -131,21 +134,19 @@ def calibrated_version(stage, calibration_source):
             "stage elaborate_stage and make_stage return"
         )
     values = load_calibration(calibration_source)
-    calibration_requirements(
-        stage, values
-    )  # refuses a missing value and a value outside its declared set
+    # refuses a missing value, a value outside its declared set and a value
+    # for a derived parameter
+    calibration_requirements(stage, values)
     # a collection given as a mapping is bound as the sequence of its entries
     # in the order of the members of its index set at the values, so that a
     # version binds one representation, every check reads it and a compiled
     # kernel reads an array
     bound = collection_values(stage, values)
-    check_calibrated_distributions(
-        stage, bound
-    )  # refuses a distribution the values make invalid (AMD-SG-009 §4)
-    calibrated_supports(stage, calibrated_obligations(stage, stage.obligations(), bound), bound)
+    _check_at_calibration(stage, bound)
     # Parameters remain named in the retained equations; the bound values are
     # the calibration mapping of the new version, inspectable beside the
-    # declarations.
+    # declarations. A derived parameter's value is computed from them where it
+    # is read and is not bound.
     calibration = freeze({name: bound[name] for name in parameter_sets(stage)})
     provenance = binding_provenance(stage, "calibrate", calibration_source, values)
     return bind_in_place(
@@ -190,6 +191,11 @@ def methodized_version(stage, additions):
             settings=stage.bindings.settings,
         ),
     )
+    if fresh.bindings.calibration is not None:
+        # the additions may define derived parameters and distributions, so
+        # the checks the calibration's values decide are made again on the
+        # stage they make (AMD-MT-003, build contract §5)
+        _check_at_calibration(fresh, fresh.bindings.calibration)
     if fresh.bindings.settings is not None:
         _check_declared_settings(fresh, fresh.bindings.settings, ())
         check_bound_values(fresh, fresh.bindings.settings)
@@ -212,6 +218,21 @@ def methodized_version(stage, additions):
         fresh,
         provenance=_provenance_record(provenance),
     )
+
+
+def _check_at_calibration(stage, bound):
+    """The checks the calibration values `bound`, the declared parameters'
+    values, decide on `stage`: each derived parameter's value, its definition
+    evaluated at them (`derived_values`), which refuses a definition that has
+    no value there; then the conditions of the distributions
+    (`check_calibrated_distributions`, AMD-SG-009 §4), the parameter-only
+    obligations and the supports of the laws (`calibrated_supports`), each at
+    the declared values joined by the derived ones, so that every check that
+    reads a derived parameter reads its value (AMD-MT-003, build contract
+    §5)."""
+    known = {**bound, **derived_values(stage, bound)}
+    check_calibrated_distributions(stage, known)
+    calibrated_supports(stage, calibrated_obligations(stage, stage.obligations(), known), known)
 
 
 def _provenance_record(provenance):
@@ -261,10 +282,15 @@ def _check_declared_settings(stage, values, files):
     an unvalued setting carries each file under the role `settings source`.
     The membership is decided as a parameter's is
     (`calibration_requirements`), at the calibration bound and the values
-    given; a membership the set algebra does not decide is admitted."""
+    given, and a faulty value is refused at its own setting, not at a
+    setting whose set reads it (`judged`); a membership the set algebra does
+    not decide is admitted."""
     definitions = dict(stage.definitions)
-    numbers = {**(stage.bindings.calibration or {}), **values}
-    for name, setexpr in setting_sets(stage).items():
+    declared = setting_sets(stage)
+    memberships = judged(stage, definitions, declared, values, settled=stage.bindings.calibration)
+    for name, status, reason in memberships:
+        if status is not UNVALUED and status is not False:
+            continue
         definition = definitions[Identity("setting", stage=stage.name, field=name)]
         file, _, line = definition.address.rpartition(":")
         position = dict(
@@ -274,8 +300,7 @@ def _check_declared_settings(stage, values, files):
             column=1 if line.isdigit() else None,
             address=definition.address,
         )
-        declared = "ℝ" if setexpr is None else to_source(setexpr)
-        if name not in values:
+        if status is UNVALUED:
             raise ConstructionError(
                 f"stage {stage.name!r}, setting {name!r}: the settings source supplies no "
                 f"value for it; every setting the methods file declares is valued when "
@@ -284,19 +309,16 @@ def _check_declared_settings(stage, values, files):
                 related=tuple(Location("settings source", file=path) for path in files),
                 **position,
             )
-        if setexpr is None:
-            continue
-        status, reason = membership(stage, definitions, setexpr, values[name], numbers)
-        if status is False:
-            reason = reason or f"the value {values[name]!r} lies outside the declared set {declared}"
-            key = settings_key_positions(files).get(name)
-            raise ConstructionError(
-                f"stage {stage.name!r}, setting {name!r}: {reason}; a setting's value lies in "
-                f"the set its declaration names; write a value in {declared}",
-                rule="setting-outside-set",
-                related=() if key is None else (Location("rejected setting", *key, address=name),),
-                **position,
-            )
+        written = to_source(declared[name])
+        reason = reason or f"the value {values[name]!r} lies outside the declared set {written}"
+        key = settings_key_positions(files).get(name)
+        raise ConstructionError(
+            f"stage {stage.name!r}, setting {name!r}: {reason}; a setting's value lies in "
+            f"the set its declaration names; write a value in {written}",
+            rule="setting-outside-set",
+            related=() if key is None else (Location("rejected setting", *key, address=name),),
+            **position,
+        )
 
 
 # --- calibration: the conditions decided at the values ---
@@ -308,12 +330,19 @@ def calibrated_obligations(stage, obligations, values):
     predicates hold at the values, refused where one is false and left
     required where one is not decided; any other obligation stays as it is.
 
-    Only declared parameters are available. Formal coordinates and operator
-    binders are excluded even when a parameter has the same spelling.
-    No analytic condition or unsupported predicate is claimed established.
+    Only declared parameters and derived parameters are available, a derived
+    parameter where `values` holds its value (`derived_values`). Formal
+    coordinates and operator binders are excluded even when a parameter has
+    the same spelling. No analytic condition or unsupported predicate is
+    claimed established.
     """
 
-    parameters = {name: values[name] for name in parameter_sets(stage) if name in values}
+    derived = [
+        d.identity.field for d in stage.definitions.values() if d.kind == "derived_parameter"
+    ]
+    parameters = {
+        name: values[name] for name in (*parameter_sets(stage), *derived) if name in values
+    }
     set_terms = declared_set_terms(stage)
     scopes = {}
     for recorded in construction_table(stage).obligations:
@@ -390,9 +419,16 @@ def calibrated_supports(stage, obligations, values):
     every one of those sets, with the values and the support as evidence, and
     refused when it does not; a support the package does not know, or a
     declared set whose bounds it does not read, leaves the condition
-    required. Every other obligation stays as it is."""
+    required. Every other obligation stays as it is. The evidence and the
+    refusal name the declared parameters and the derived parameters the law
+    reads, the names among the symbols of its term, with their values, a
+    derived parameter where `values` holds its value, as
+    `calibrated_obligations` names them (AMD-MT-003, build contract §5)."""
     ctx = StageNames(stage)
     owners = {tuple(owner.subjects): owner for owner in stage_blocks_of(stage).owners}
+    derived = [
+        d.identity.field for d in stage.definitions.values() if d.kind == "derived_parameter"
+    ]
     result = []
     for item in obligations:
         if item.condition != "law-support" or item.status != "required":
@@ -406,10 +442,15 @@ def calibrated_supports(stage, obligations, values):
         if support is None or any(found is None for found in bounds):
             result.append(item)
             continue
+        symbols = {
+            node.symbol.name
+            for node in term_nodes(owner.term)
+            if isinstance(node, T.Sym) and isinstance(node.symbol, T.Constant)
+        }
         read = ", ".join(
             f"{name} = {values[name]!r}"
-            for name in parameter_sets(stage)
-            if name in values and name in to_source(owner.term)
+            for name in (*parameter_sets(stage), *derived)
+            if name in values and name in symbols
         )
         printed = (
             f"{'[' if support.lower_closed else '('}{support.lower:.6g}, "

@@ -1,0 +1,12 @@
+// The one retired spelling the package still reads, in order to refuse it
+// with the text to write. This file is no part of the language: `stage.lark`
+// is the language, and `syntax.parse.parse_text` reads a text with these
+// rules only after the language's own parser has refused it.
+//
+// A bound written after a comma, γ : ℝ₊, < 2, is a spelling AMD-GRAM-004
+// retired; the same bound is now an interval written after @,
+// γ : ℝ₊ @ (-inf, 2). The lowering refuses a declaration that carries one
+// and gives the sets to write (`syntax.lower._retired_bound_refusal`).
+%extend declaration: subject_path typing declared_value? retired_bound STMT_META?
+    | tuple_subject typing? declared_value? retired_bound STMT_META?
+retired_bound: ("," RELOP formula)+

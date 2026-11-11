@@ -44,6 +44,7 @@ STAGE_KINDS = (
     "alias",  # <stage>:alias:<address>:<field>
     "set",  # <stage>:set:<name>
     "parameter",  # <stage>:parameter:<name>
+    "derived",  # <stage>:derived:<name>, a derived parameter (AMD-MT-003, build contract §5)
     "setting",  # <stage>:setting:<name>, a numerical setting a methods file declares
     "multiplier",  # <stage>:multiplier:<name>
     "distribution",  # <stage>:distribution:<subjects>
@@ -313,7 +314,7 @@ class Identity:
             # an anonymous set of the typing pass, named by the address and
             # the position of the text at which it is written
             return (self.stage, "set", self.address, self.mark)
-        if kind in ("set", "parameter", "setting", "multiplier", "correspondence"):
+        if kind in ("set", "parameter", "derived", "setting", "multiplier", "correspondence"):
             return (self.stage, kind, self.field)
         if kind == "primitive":
             return ("primitive",) + ((mark,) if mark else ()) + (self.field,)

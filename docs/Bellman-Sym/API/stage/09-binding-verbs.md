@@ -81,7 +81,7 @@ ElaboratedStage('cons', specified) True
 
 ## 2 Calibration
 
-`calibrate` requires a value for every declared parameter, in the set the file declares it on; a name the stage does not declare is not bound. A parameter declared on the functions from a finite integer or label set, `δ : L_J → ℝ`, takes a sequence with one entry per member in the members' order, nested for a product of index sets, or a mapping keyed by those integers or labels. The entries may be real-valued; the integer keys identify the entries and are not their values. The version holds the sequence, and a wrong count, a key the set does not hold or an entry outside the entries' set is refused naming the declaration and the key.
+`calibrate` requires a value for every declared parameter, in the set the file declares it on; a name the stage does not declare is not bound, except the name of a [derived parameter](../../../wiki/parameters.md), `h := 1/(1 - Γ/R)`, whose value is refused, since calibration computes it from the definition at the bound values before it decides the conditions below. A parameter declared on the functions from a finite integer or label set, `δ : L_J → ℝ`, takes a sequence with one entry per member in the members' order, nested for a product of index sets, or a mapping keyed by those integers or labels. The entries may be real-valued; the integer keys identify the entries and are not their values. The version holds the sequence, and a wrong count, a key the set does not hold or an entry outside the entries' set is refused naming the declaration and the key.
 
 Calibration then decides every condition of the stage that involves parameters and numbers alone: a condition that holds becomes established, with the values as its evidence, and a condition that fails refuses the calibration. So `stage.calibrate({"ρ": 1.0})` is refused, since the utility `c^(1-ρ)/(1-ρ)` divides by `1 - ρ`, while at `ρ = 2.0` that condition is established, as the listing below shows; a condition that involves a [field](../../../wiki/field.md), a control, a function the file does not declare or an expression calibration cannot evaluate stays as the construction left it, and is never turned into a claim of proof. A source may be a mapping as well as a file:
 
@@ -104,6 +104,7 @@ aggregation-admissibility            m_d≻(a) ∈ Xm
 range-compatibility                  m_d − c(m_d) ∈ Xa   [established]
 function-argument-domain-inclusion   The argument for x of cons:function:𝑑𝑢𝑖𝑛𝑣 at policy.InvEuler, from ℝ, must belong to ℝ₊₊.
 egm-eligibility                      the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable on (0, ∞) with a finite positive right derivative at 0
+evaluation-domain                    The representation is evaluated inside the interval its nodes span, or outside it through an identified extension; the node interval does not replace the domain of the represented function.
 ```
 
 ## 3 Methodization and configuration

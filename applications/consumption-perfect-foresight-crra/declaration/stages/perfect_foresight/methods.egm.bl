@@ -1,0 +1,35 @@
+@methods: perfect_foresight
+# The gridded methods of the perfect foresight stage, a replacing selection
+# beside methods.bl. The endogenous grid method stands on the policy builder
+# with its exogenous grid of savings a, whose three settings the application's
+# module supplies, so that the folder holds no settings file. Its three lines,
+# the inverted Euler equation with the inverse marginal utility written out,
+# the inverted law of motion and the identification of the chosen consumption
+# with the candidate, stand in place of the maximization when the stage is
+# solved. The consumption function is read by linear interpolation at the
+# policy builder's Evaluation, between the pairs the method computes, and that
+# Evaluation takes no grid of its own, since the pairs give its nodes. Each
+# value builder gains its derivative line: the envelope condition of the
+# decision value, and the derivative of the arrival value, whose factor
+# R*Γ^(-ρ) comes from the law m = R*k/Γ + 1 and the normalization Γ^(1-ρ) of
+# the value. The settings are declared first, with their sets: a count in ℕ
+# and a bound a point of Xa, the set of the savings.
+
+n_a : ℕ              :: ["number of points of the savings grid"]
+a_min : Xa           :: ["lower bound of the savings grid"]
+a_max : Xa           :: ["upper bound of the savings grid"]
+
+[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+    | policy.evaluate.method : !Linear] {
+    c[>] = (β*D_{a}V[>])^(-1/ρ)     :: [id=InvEuler]
+    m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
+    c[~] = c[>]                     :: [id=cons_choice]
+}
+
+[id=cntn_to_dcsn] {
+    D_{m}V = c^(-ρ)                         :: [id=marginal]
+}
+
+[id=dcsn_to_arvl] {
+    D_{k}V[<] = R * Γ^(-ρ) * D_{m}V         :: [id=marginal]
+}

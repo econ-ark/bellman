@@ -289,11 +289,14 @@ def test_item_4_the_grammar_builds_under_strict_mode():
     """The strict certificate: the parser the package ships, built with
     `strict=True` and no other change of its options, finds no shift/reduce
     or reduce/reduce conflict and, under `interegular`, no collision
-    between terminals of equal priority. Without `interegular` Lark refuses
-    every strict build at the lexer, and the test records the weaker result
-    instead of claiming the certificate."""
+    between terminals of equal priority; and so does the parser with the
+    rules of the one retired spelling added, which reads a text the language
+    refuses (AMD-GRAM-004). Without `interegular` Lark refuses every strict
+    build at the lexer, and the test records the weaker result instead of
+    claiming the certificate."""
     try:
         build_parser(strict=True)
+        build_parser(strict=True, retired=True)
     except LexError as error:
         assert "interegular" in str(error), error
         pytest.skip("not strict-certified under this interpreter: the parser-table half passed, and "
@@ -358,6 +361,8 @@ LOWERING_REFUSALS = [
     ("a keyword written twice", "cntn_to_dcsn.method : !vfi(tol=a, tol=b)\n", (2, 27),
      ("`tol` is written twice",)),
     ("a value on a typing entry", "policy.method : !egm <- 2\n", (2, 1), ("carries a value or a condition",)),
+    ("a condition on a typing entry", "policy.method : !egm, < 2\n", (2, 1),
+     ("carries a value or a condition",)),
 ]
 
 

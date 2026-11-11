@@ -54,7 +54,8 @@ from bellman.fold.block_lines import (
     blocks,
     header_wire_sorts,
 )
-from bellman.fold.declared_sets import check_declared_sets, subject_dimension
+from bellman.fold.declared_sets import REAL, check_declared_sets, subject_dimension
+from bellman.fold.derived_parameters import derived_order
 from bellman.fold.policy import fold_policy_block
 from bellman.fold.stage_names import (
     StageNames,
@@ -78,6 +79,7 @@ from bellman.fold.wire_terms import (
     wire_identities,
 )
 from bellman.native.identity import Identity, piece_identity
+from bellman.native.predicates import Member
 from bellman.native.records import Definition
 from bellman.native.versions import StageVersion
 from bellman.refusals import ConstructionError, NotConstructed, construction_error, location
@@ -92,7 +94,7 @@ from bellman.typing.category_codes import (
     reserved_entries,
 )
 from bellman.syntax.union import is_typing_entry
-from bellman.typing.declarations import TOP_LEVEL
+from bellman.typing.declarations import TOP_LEVEL, derived_parameter_body
 from bellman.typing.line_unknowns import selection_positions
 from bellman.typing.sets import defined, index_factors
 
@@ -181,13 +183,28 @@ def _construction_table(stage, ctx, definitions) -> ConstructionTable:
 
 
 def _definition_obligations(ctx, definitions, obligations):
-    """The conditions of the body of every function and correspondence, and an
-    obligation for each external callable a distribution declaration names."""
+    """The conditions of the body of every function and correspondence; for
+    each derived parameter, only where the declared sets leave its
+    definition open or the definition calls log or exp, the one obligation
+    that its value is a finite real number (`_derived_definedness`); and an
+    obligation for each external callable a distribution declaration
+    names."""
     for d in definitions:
         if d.kind in ("function", "correspondence"):
             ctx.conditions(
                 (d.equations[0].body,), obligations, d.identity, local=dict(d.coordinates)
             )
+        elif d.kind == "derived_parameter":
+            # the conditions of the definition's arithmetic are read only to
+            # learn whether the declared sets leave one open, as a call of log
+            # or exp always does; none of them is recorded, so that a clause
+            # drawn from the declared sets alone, such as a positive base for
+            # a power whose exponent's set holds a noninteger, refuses no
+            # value the definition takes (AMD-MT-003, build contract §5)
+            held = []
+            ctx.conditions((d.equations[0],), held, d.identity)
+            if held or external_calls(d.equations[0], ctx.function_names):
+                obligations.append(_derived_definedness(d))
         elif d.kind == "distribution":
             for call in external_calls(d.equations[0].law, ctx.function_names, distributions=True):
                 # the place is the record's identity, as it is on every other
@@ -202,6 +219,27 @@ def _definition_obligations(ctx, definitions, obligations):
                         f"needs a declared signature and provider.",
                     )
                 )
+
+
+def _derived_definedness(definition):
+    """The obligation a derived parameter owns, `h ∈ ℝ`: its value is a
+    finite real number, which states every condition of its definition's
+    arithmetic and calls at once. It is `arithmetic-definedness` on the
+    derived parameter's identity, with the empty scope of a condition read
+    outside every binder. The calibration reads it at the value the
+    definition takes there (`derived_parameters.derived_values`), so that it
+    is established wherever the definition has a value, and a definition
+    without one has been refused under `derived-parameter` at that
+    definition before any obligation is read (AMD-MT-003, build contract
+    §5)."""
+    name = definition.identity.field
+    return (
+        "arithmetic-definedness",
+        (definition.identity, Member(T.Sym(T.Constant(name)), REAL)),
+        f"The derived parameter {name}, defined as `{to_source(definition.equations[0])}`, "
+        "must have a finite real value at the calibration.",
+        (),
+    )
 
 
 def _line_obligations(ctx, blocks, lines, table, obligations):
@@ -664,6 +702,10 @@ def _definitions_of(term, ctx, stage, spans=None) -> tuple:
     `!categories` holds its category map, and a field declared on it names it
     at every site that names a set (`_coded_field_sites`)."""
     definitions = _declared_definitions(term, ctx, spans)
+    # each derived parameter reads declared parameters, numbers and derived
+    # parameters without a cycle, through the forms its definition admits
+    # (AMD-MT-003, build contract §5)
+    derived_order(definitions, spans)
     _coded_field_sites(stage, ctx, definitions, term, spans)
     items = {address: item for address, item in item_addresses(term)}
     blocks, directions, lines = _blocks_of(stage)
@@ -758,10 +800,12 @@ def _classifier_value(classifier):
 def _declared_definitions(term, ctx, spans):
     """The records of the file's top-level declarations and statements, in
     file order: a multiplier or the parameters a declaration names, and a set,
-    a function alias, a function, a correspondence or a distribution a
-    statement defines. The marker `!categories` on any item but a top-level
-    named set is refused where it is written (`_misplaced_marker`)."""
+    a derived parameter, a function alias, a function, a correspondence or a
+    distribution a statement defines. The marker `!categories` on any item but
+    a top-level named set is refused where it is written
+    (`_misplaced_marker`)."""
     definitions = []
+    derived = _derived_parameters(term)
     for address, item in item_addresses(term):
         if isinstance(item, T.Declare) and is_typing_entry(item.declaration):
             continue  # a typing entry declares no name; `_typing_definitions` records it
@@ -774,8 +818,33 @@ def _declared_definitions(term, ctx, spans):
         if isinstance(item, T.Declare):
             definitions.extend(_declaration_definitions(item, ctx, address, written))
         elif isinstance(item, T.Statement):
-            definitions.extend(_statement_definitions(item, ctx, written))
+            definitions.extend(_statement_definitions(item, ctx, written, derived))
     return tuple(definitions)
+
+
+def _derived_parameters(term):
+    """The names of the file's derived parameters: the definitions without
+    arguments whose right side `derived_parameter_body` reads as an
+    arithmetic expression, against the right side of every definition without
+    arguments, the named sets and the functions and correspondences with
+    arguments (AMD-MT-003, build contract §5)."""
+    bodies, defined = {}, set()
+    for _, item in item_addresses(term):
+        if not isinstance(item, T.Statement):
+            continue
+        core = item.core
+        if isinstance(core, T.Assignment):
+            if isinstance(core.value, T.Space):
+                defined.add(core.target.name)
+            else:
+                bodies[core.target.name] = core.value
+        elif isinstance(core, (T.FuncDef, T.CorrDef)):
+            defined.add(core.name)
+    return frozenset(
+        name
+        for name, body in bodies.items()
+        if derived_parameter_body(body, bodies, frozenset(defined), frozenset({name}))
+    )
 
 
 def _declaration_definitions(item, ctx, address, written):
@@ -826,10 +895,15 @@ def _declaration_definitions(item, ctx, address, written):
     return tuple(found)
 
 
-def _statement_definitions(item, ctx, written):
-    """The record a top-level statement makes: a named set, a function alias,
-    a function, a correspondence or a distribution declaration; none for any
-    other statement."""
+def _statement_definitions(item, ctx, written, derived):
+    """The record a top-level statement makes: a named set, a derived
+    parameter, a function alias, a function, a correspondence or a
+    distribution declaration; none for any other statement. A definition
+    without arguments whose name is among `derived` is a derived parameter, a
+    constant of the stage its definition writes from the parameters, with the
+    kind `derived_parameter` and an identity of the kind `derived`,
+    `<stage>:derived:h` (AMD-MT-003, build contract §5); any other value
+    definition is a function alias."""
     core = item.core
     if isinstance(core, T.Assignment):
         if isinstance(core.value, T.Space):
@@ -844,10 +918,15 @@ def _statement_definitions(item, ctx, written):
                     categories=_set_categories(core, item.annot, ctx, written),
                 ),
             )
+        derived_parameter = core.target.name in derived
         return (
             Definition(
-                Identity("function", stage=ctx.stage_name, field=core.target.name),
-                kind="function_alias",
+                Identity(
+                    "derived" if derived_parameter else "function",
+                    stage=ctx.stage_name,
+                    field=core.target.name,
+                ),
+                kind="derived_parameter" if derived_parameter else "function_alias",
                 coordinates=(),
                 equations=(core.value,),
                 tags=_declared_tags(item.annot),

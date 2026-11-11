@@ -5073,7 +5073,7 @@
    [
     "ez_savings:parameter:β",
     "parameter",
-    "STAGE ez_savings / PARAMETER β\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  β  ∈ {β ∈ (0, 1) | β < E_{Ψ}[Ψ^(1 − γ)]^((ρ − 1)/(1 − γ))}\n──────────────────────────────────────────────────────────────────────────────\nSource  ez_savings.bl\n  3  β : (0,1), < E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ))\n       :: [\"discount factor; the bound is the restriction under which an\n       optimal plan exists\"]\n\nDefinitions referenced\n  ρ     ez_savings:parameter:ρ\n  γ     ez_savings:parameter:γ\n  Ψ     ez_savings:distribution:Ψ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    "STAGE ez_savings / PARAMETER β\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  β  ∈ {β ∈ (0, 1) | β < E_{Ψ}[Ψ^(1 − γ)]^((ρ − 1)/(1 − γ))}\n──────────────────────────────────────────────────────────────────────────────\nSource  ez_savings.bl\n  3  β : (0,1) @ (0, E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ)))\n       :: [\"discount factor; the bound is the restriction under which an\n       optimal plan exists\"]\n\nDefinitions referenced\n  ρ     ez_savings:parameter:ρ\n  γ     ez_savings:parameter:γ\n  Ψ     ez_savings:distribution:Ψ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
    ],
    [
     "ez_savings:parameter:ρ",
@@ -5163,9 +5163,9 @@
    "  kind                 count   in file order",
    "  ───────────────────  ─────   ─────────────────────────────────────────────",
    "  distributions            1   Ψ",
-   "  parameters               5   β : (0, 1) with β <",
-   "                               E_{Ψ}(Ψ^(1 - γ))^((ρ - 1)/(1 - γ)); ρ : ℝ₊₊;",
-   "                               γ : ℝ₊₊; μ_Ψ : ℝ; σ_Ψ : ℝ₊",
+   "  parameters               5   β : (0, 1) @",
+   "                               (0, E_{Ψ}(Ψ^(1 - γ))^((ρ - 1)/(1 - γ)));",
+   "                               ρ : ℝ₊₊; γ : ℝ₊₊; μ_Ψ : ℝ; σ_Ψ : ℝ₊",
    "  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊",
    "  laws of motion           1   a = (m_d - c)*Ψ",
    "  value aggregators        2   cntn_to_dcsn, two kernels; policy, two kernels",

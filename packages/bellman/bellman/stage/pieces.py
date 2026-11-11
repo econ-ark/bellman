@@ -128,9 +128,10 @@ from bellman.stage.grains import (
     kind_of,
     wire_table,
 )
+from bellman.stage.grids import realized_grids
 from bellman.stage.inventory import definitions_listing
 from bellman.stage.kernels import compile_kernel, derivative_pieces, kernel
-from bellman.stage.places import inventory
+from bellman.stage.places import places_by_address
 from bellman.stage.stage_answers import (
     UNBOUND,
     obligations,
@@ -1190,8 +1191,10 @@ def builder_kernels(stage, builder):
     relation holds that text as its relation; every other refusal is raised.
     The parameters of the record are those its pieces read, in the order the
     stage declares them (`parameters_of`), with the values the pieces are
-    called with. Nothing is stored on the stage, and the record refers to no
-    object of the stage."""
+    called with. Its grids are the realized grid of each place within the
+    builder that types a grid, at the bound settings (`grids.realized_grids`).
+    Nothing is stored on the stage, and the record refers to no object of the
+    stage."""
     if is_block(builder.box):
         raise TypeError(
             f"stage {stage.name!r}: {builder.box.name!r} is a block of an initial diagram, "
@@ -1205,8 +1208,8 @@ def builder_kernels(stage, builder):
         piece, declared = _piece_kernel(stage, entry.key, builder[entry.key], builder.box.name)
         pieces.append(piece)
         arguments.extend(declared)
-    for name in derivative_pieces(stage, builder.box.name):
-        piece, declared = _derivative_piece_kernel(stage, name)
+    for address in derivative_pieces(stage, builder.box.name):
+        piece, declared = _derivative_piece_kernel(stage, address)
         pieces.append(piece)
         arguments.extend(declared)
     bound, unbound = {}, set()
@@ -1225,6 +1228,7 @@ def builder_kernels(stage, builder):
         parameters=names,
         parameter_values=None if unbound else tuple(bound[name] for name in names),
         sets=_declared_sets(stage, arguments),
+        grids=realized_grids(stage, builder.box.name),
     )
 
 
@@ -1262,14 +1266,18 @@ def _piece_kernel(stage, key, piece, holder):
     return made, record.arguments
 
 
-def _derivative_piece_kernel(stage, name):
-    """The `PieceKernel` of one derivative piece of a builder, `<line
-    id>:Derivative:1`, the stated derivative of a value builder compiled
-    from the author's right side (AMD-MB-001 §4.3; decision MB-A14), and the
-    pairs of argument name and declared set of its kernel. Its function is
-    None where the right side holds a form the text cannot write."""
-    record = kernel(stage, name)
-    function = None if record.python is None else compile_kernel(stage, name)
+def _derivative_piece_kernel(stage, address):
+    """The `PieceKernel` of one derivative piece of a builder, the stated
+    derivative of a value builder compiled from the author's right side
+    (AMD-MB-001 §4.3; decision MB-A14), read by the address of its line,
+    `<line address>:Derivative:1`, so that two builders whose derivative
+    lines have the same id each hold their own, and named relative to its
+    builder, `<line id>:Derivative:1`; and the pairs of argument name and
+    declared set of its kernel. Its function is None where the right side
+    holds a form the text cannot write."""
+    record = kernel(stage, address)
+    function = None if record.python is None else compile_kernel(stage, address)
+    name = address.split(".", 1)[-1]
     made = PieceKernel(
         key=name,
         relative_name=name,
@@ -1344,9 +1352,12 @@ class BoundMethods(Methods):
 def components_bound_at(stage, bound, place):
     """The `Components` the mapping `bound`, the places typed within one
     piece of `stage`, holds for `place`: the entry at that address, or the
-    one entry whose place a box of that name realizes. A name that names no
-    typed place, or whose box realizes several typed places, is refused with
-    the reason as a `KeyError`, which a membership test reads as absence."""
+    one entry whose place a box of that name realizes, each address read as
+    the place a typing entry there resolves to (`places.places_by_address`),
+    so that the entry at `<node>.evaluate` is the one the node's Evaluation,
+    `<node>:Evaluation`, answers. A name that names no typed place, or whose
+    box realizes several typed places, is refused with the reason as a
+    `KeyError`, which a membership test reads as absence."""
     if place in bound:
         return bound[place]
     held = (
@@ -1359,10 +1370,11 @@ def components_bound_at(stage, bound, place):
             f"stage {stage.name!r}: a place is read by its address as written or by the name of "
             f"the box that realizes it, not by {type(place).__name__}; {held}"
         )
+    by_address = places_by_address(stage)
     found = [
         address
         for address in bound
-        if any(box == place for box, _ in _place_named(stage, address).keys)
+        if address in by_address and any(box == place for box, _ in by_address[address].keys)
     ]
     if len(found) == 1:
         return bound[found[0]]
@@ -1372,11 +1384,6 @@ def components_bound_at(stage, bound, place):
             f"{', '.join(found)}; read one by its address"
         )
     raise KeyError(f"stage {stage.name!r}: no component is typed at {place!r}; {held}")
-
-
-def _place_named(stage, address):
-    """The place of the inventory at `address`."""
-    return next(place for place in inventory(stage) if place.address == address)
 
 
 def _is_protocol_name(name):
@@ -1510,10 +1517,11 @@ class Settings(_NamedRecords):
     declares, in declaration order, then the names a configuration bound
     that no file declares, in binding order.
     `stage.settings["n_a"]` prints as one line, `n_a = 800 : ℕ`, with the
-    places whose components read the setting after it and, where the
-    setting is a bound or a count of a factor of the grid typed there, the
-    grid's kind, and its `value` is
-    the configured value, which `stage.settings.n_a` answers alone. Each
+    places whose components read the setting after it and, where the grid
+    typed there reads the setting, as a bound or a count of one of its
+    factors or as the declared points of `!Points`, the grid's outer word,
+    and its `value` is the configured value, which `stage.settings.n_a`
+    answers alone. Each
     record is read from the setting's declaration in the definitions table,
     the configured value in `stage.bindings.settings` and the components
     that name the setting, and none is kept. `list()` answers the table the
@@ -1562,9 +1570,10 @@ class Settings(_NamedRecords):
     def list(self):
         """The settings as a table, one row for each method that reads a
         setting, with `name`, the declared set under `set`, `value`, `read
-        at`, `by` and `grid`, the kind of the place's grid where the setting
-        is one of its factors; a setting no method reads has one row with
-        the last three empty.
+        at`, `by` and `grid`, the outer word of the place's grid where the
+        grid reads the setting, as a bound or a count of one of its factors
+        or as the declared points of `!Points`; a setting no method reads has
+        one row with the last three empty.
 
         See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §2."""
         return setting_rows(self.version)

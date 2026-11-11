@@ -26,7 +26,7 @@ A **parameter** is an input on which the mathematical problem depends. A **setti
 
 | Role | What the value determines | Source |
 |---|---|---|
-| Parameter | A reward, transition, conditional law, constraint or economic domain. | Typed declarations in `.bl`, with values supplied through calibration bindings. |
+| Parameter | A reward, transition, conditional law, constraint or economic domain. | Typed declarations in `.bl`, with values supplied through calibration bindings; a derived parameter is defined from other parameters by `:=` and evaluated at calibration ([parameters](../../wiki/parameters.md)). |
 | Setting | A numerical grid, quadrature size, stopping tolerance or other method input. | Declared with its set in the methods file and valued in the settings file, in the forms Bellman-SYM's Methodization page gives. |
 
 A constant has a declared type and admissible value domain. That type may include a real interval, integers, vectors, matrices or a finite set of symbols. A domain does not by itself determine a unique source type name or a declared subsort relation; [Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) distinguishes those choices. A parameter supplied to an occurrence is held fixed in that occurrence's equations, even when other occurrences use different values.

@@ -7,10 +7,10 @@
 # when the stage is solved, and the maximization remains the stage's
 # statement of the choice. The consumption function is read by linear
 # interpolation at the policy builder's Evaluation, between the pairs the
-# method computes. Its grid names the cash coordinates at which the
-# consumption function is represented. Each value builder gains its
-# derivative line: the envelope condition of the decision value, and the
-# derivative of the arrival value, whose weight R*(Γ*ψ)^(-ρ) inside the
+# method computes, and that Evaluation takes no grid of its own, since the
+# pairs give its nodes. Each value builder gains its derivative line: the
+# envelope condition of the decision value, and the derivative of the
+# arrival value, whose weight R*(Γ*ψ)^(-ρ) inside the
 # expectation comes from the law m = R*k/(Γ*ψ) + ξ and the normalization
 # (Γ*ψ)^(1-ρ) of the value. At the arrival builder the expectation over the
 # two income shocks is taken by Gauss-Hermite quadrature with one node count
@@ -18,10 +18,8 @@
 # arrival value and its derivative are represented together, by linear
 # interpolation on the grid of assets k, named once at that builder's
 # Evaluation. The settings the entries read are declared first, with their
-# sets: a count in ℕ, a bound a point of Xa, the set the stage declares for
-# the savings and the assets, and a cash bound a point of Xm. The cash grid
-# uses illustrative bounds 0.001 to 20 and 960 points, independent of the
-# endogenous cash points. The other settings have the values recorded in
+# sets: a count in ℕ and a bound a point of Xa, the set the stage declares for
+# the savings and the assets. Their values are recorded in
 # declaration/settings/buffer_stock.yml and are those of the HARK solution of
 # this model in the QuantEcon community library
 # (projects/HARK/buffer-stock/tutorial.ipynb, HARK 0.17.1): seven nodes per
@@ -36,15 +34,11 @@ a_max : Xa           :: ["upper bound of the savings grid"]
 n_k : ℕ              :: ["number of points of the asset grid"]
 k_min : Xa           :: ["lower bound of the asset grid"]
 k_max : Xa           :: ["upper bound of the asset grid"]
-m_a : ℕ              :: ["number of points of the cash representation grid"]
-m_min : Xm           :: ["lower bound of the cash representation grid"]
-m_max : Xm           :: ["upper bound of the cash representation grid"]
 n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 
 [id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
-    | policy.evaluate.method : !Linear
-    | policy.evaluate.grid : !Cartesian(m=(m_min, m_max, m_a))] {
+    | policy.evaluate.method : !Linear] {
     c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]

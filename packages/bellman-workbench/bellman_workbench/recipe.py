@@ -1432,14 +1432,18 @@ def parameters_tab(folder: model.Folder, stage, record: dict | None, key: str | 
     parameter the stage declares, in declaration order
     (`stage.par.list()`), with the set it is declared in as the stage's
     text writes it, valued by the calibration sources the recipe lists for
-    the occurrence (`_declared_tab`)."""
-    return _declared_tab(
-        folder,
-        record,
-        key,
-        "calibration",
-        lambda: [(row["name"], _set_text(row["domain"])) for row in stage.par.list()],
-    )
+    the occurrence (`_declared_tab`); a derived parameter, which no
+    calibration gives, has no row (`model.calibration_parameters`)."""
+
+    def rows():
+        given = model.calibration_parameters(stage)
+        return [
+            (row["name"], _set_text(row["domain"]))
+            for row in stage.par.list()
+            if row["name"] in given
+        ]
+
+    return _declared_tab(folder, record, key, "calibration", rows)
 
 
 def settings_tab(folder: model.Folder, stage, record: dict | None, key: str | None) -> Tab:

@@ -24,6 +24,9 @@ builder the block denotes, and the conditions the construction assumes.
   construction rules of AMD-SG-008 §3.
 - `policy`: the fold of the policy block, and the systems of candidate
   statements (`CandidateSystem`).
+- `derived_parameters`: the derived parameters of a stage, constants its
+  definitions write from its parameters: the order in which they are
+  evaluated, the check of what each reads, and their values at a calibration.
 - `stage_fold`: the entry points `fold_stage_file` and `fold_stage`, the
   driver, the definitions table and the rows of a forward block.
 - `conditions`: the conditions of a stage, the conditional distribution an

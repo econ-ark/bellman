@@ -76,6 +76,7 @@ hooks:
   - docs/_hooks/obsidian_tags.py  # render standalone Obsidian #tag lines as chips (not <h1>)
   - docs/_hooks/homepage.py       # the custom homepage omits docs controls
   - docs/_hooks/home_model.py     # native diagrams and their fonts for the homepage
+  - docs/_hooks/public_properties.py  # a published page shows no status icon and no tag chips
 
 markdown_extensions:
   - pymdownx.arithmatex:
@@ -106,12 +107,10 @@ markdown_extensions:
 extra_css:
   # Query string is a cache-buster; bump when CSS changes substantially.
   - _stylesheets/extra.css?v=20260930a
-  - _stylesheets/rosetta.css?v=20260622q   # Rosetta Stone registry "Lexicon" styling
   - _stylesheets/bellman.css?v=20261031a
 
 extra_javascript:
   - _javascripts/figure_sequences.js   # the figures' assembly sequences wait until the figure is on screen
-  - _javascripts/rosetta-card-nav.js   # keep the left nav visible + highlighted on Rosetta card pages
 
 nav:
   - Home: index.md
@@ -130,6 +129,17 @@ nav:
     - "Workflow": overview/06-workflow.md
     - "Bellman Workbench": overview/07-workbench.md
     - "Fields, evaluation and methods": overview/08-fields-evaluation-and-methods.md
+
+  - Workbench:
+    - workbench/index.md
+    - Quickstart: workbench/00-quickstart.md
+    - Build a model with Matsya: workbench/01-matsya.md
+    - Open and edit a project: workbench/02-open-and-edit.md
+    - Inspect a model: workbench/03-inspect-a-model.md
+    - Edit equations and inputs: workbench/04-edit-equations.md
+    - Create and connect stages: workbench/05-create-and-connect.md
+    - Manage recipes and variants: workbench/06-recipes-and-variants.md
+    - Share a project and get help: workbench/07-share-and-troubleshoot.md
 
   # ══════════════════════════════════════════════════
   # BELLMAN-SYM — the language in four parts: the user guide (the root
@@ -225,6 +235,7 @@ nav:
       - "YAML Spec": examples/cons-iid/consumption_savings_iid.md
       - "Formal MDP": examples/formal-mdps/cons_savings_iid_mdp.md
     - "Buffer Stock (Normalized)": examples/buffer-stock/buffer_stock.md
+    - "Perfect Foresight (CRRA)": examples/consumption-perfect-foresight-crra/perfect_foresight.md
     - "Housing Owner":
       - "YAML Spec": examples/housing_renting/housing_owner.md
       - "Formal MDP (housing)": examples/housing_renting/housing_choice_mdp.md

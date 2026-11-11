@@ -16,37 +16,57 @@ configuration, `check_bound_values` reads the components at the settings
 (`setting-unvalued`), a keyword's value lies in the domain its row names
 (`method-option-value`), and a grid's bounds are in order and inside the
 coordinate's declared set, its counts at least two and its node sets
-strictly increasing (`grid-bounds`). The domain a grid discretizes is read
-from the stage (`grid_domain`): the coordinates of the function the place
-holds, or the continuation states for a word whose row names that perch.
+strictly increasing (`grid-bounds`). The records of the grid constructors,
+the checks of a grid that read them beside these, and the domain a grid
+discretizes (`grid_domain`) stand in `stage/grids.py`, which the two grid
+checks here call (`check_grid_at_binding`, `check_grid_at_configuration`).
+
+The checks of the data a function representation reads stand in
+`stage/representation_checks.py`, which `check_components` and
+`check_bound_values` call; a grid typed at the Evaluation of a `!node` line
+is checked against the representation typed at the node's line, the two
+entries being one assignment (`representation_checks.assigned_components`).
+At binding, `check_components` also compiles the kernel of each output of a
+builder whose method is `!explicit` (`explicit-solution`), the part of the
+explicit check that reads the kernel compiler, `stage/kernels.py`, which
+the construction's own check (`explicit.check_explicit`) stands below.
 """
 
 from __future__ import annotations
 
 import dataclasses
 import math
-from collections.abc import Mapping
-from typing import NamedTuple
 
-from bellman.fold.block_lines import (
-    blocks_in_file_order,
-    fields_of,
-    header_of,
-    header_wire_sorts,
-    setting_sets,
-)
-from bellman.fold.stage_names import lines_of
+from bellman.fold.block_lines import blocks_of, header_of, setting_sets
+from bellman.fold.stage_names import StageNames
 from bellman.fold.wire_terms import term_nodes
 from bellman.native.identity import Identity
-from bellman.native.records import setting_names, typing_text
+from bellman.native.records import grid_factors, refuse_at_entry, setting_names, typing_text
 from bellman.refusals import ConstructionError
-from bellman.stage.boxes import builder_rows_of
-from bellman.stage.method_table import row_of
+from bellman.stage.grains import construction_table
+from bellman.stage.grids import (
+    SETTING,
+    SPACING,
+    check_grid_at_binding,
+    check_grid_at_configuration,
+    expectation_names,
+    factor_form_of,
+    grid_domain,
+    place_row,
+    point_in_declared_set,
+)
+from bellman.stage.kernels import compile_kernel
+from bellman.stage.method_rows import KEYWORD_DOMAINS
 from bellman.stage.places import components_by_place, typings
+from bellman.stage.representation_checks import (
+    assigned_components,
+    check_sources,
+    check_table_supports,
+)
+from bellman.stage.representations import EXPLICIT, bound_row
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
-from bellman.syntax.vocabulary import CONTINUATION, CONTROL, SHOCK, STATE
-from bellman.typing import sets
+from bellman.syntax.vocabulary import WRITTEN_MARK
 
 # --- the components at binding ---
 
@@ -54,15 +74,99 @@ from bellman.typing import sets
 def check_components(stage):
     """The check of the components typed at every place of `stage` against
     the rows of the catalogue, made where the stage is constructed and
-    where an addition is read into it: the required keywords, and the
-    coordinates and the names of each grid. Each refusal stands at the
-    position of the entry, with the place as its address."""
+    where an addition is read into it: first the compiled kernel of each
+    output of every builder whose method is `!explicit`
+    (`_check_explicit_kernels`); then the required keywords, and the
+    coordinates and the names of each grid, a grid at the Evaluation of a
+    `!node` line read with the representation typed at the node's line
+    (`representation_checks.assigned_components`); then the data source of
+    every function representation (`representation_checks.check_sources`).
+    Each refusal stands at the position of the entry, with the place as its
+    address. A row is the one the version reads
+    (`representations.bound_row`)."""
+    _check_explicit_kernels(stage)
     for place, held, records in _typed_places(stage):
-        row = row_of(held.method.name) if held.method is not None else None
-        if row is not None:
+        row = bound_row(stage, held.method.name) if held.method is not None else None
+        # a generated method, the closed form at an `!explicit` builder's
+        # Evaluation, has no entry and writes no keyword
+        if row is not None and "method" in records:
             _check_keywords(stage, place, held, row, records["method"])
         if held.grid is not None:
-            _check_grid(stage, place, held, row, records["grid"])
+            assigned = assigned_components(stage, place, held)
+            assigned_row = (
+                bound_row(stage, assigned.method.name) if assigned.method is not None else None
+            )
+            _check_grid(stage, place, assigned, assigned_row, records["grid"])
+    check_sources(stage)
+
+
+def _check_explicit_kernels(stage):
+    """The check, where the version is bound, that each output of every
+    builder of `stage` whose method is `!explicit` has an executable
+    compiled kernel (AMD-MT-003 build contract §5): the rows of the
+    operative builder that compute the output from the block's lines are
+    compiled (`kernels.compile_kernel`), and an output that no row computes,
+    or whose row the compiler refuses, is refused under `explicit-solution`
+    at the position of the entry that types the method. The construction
+    has refused the lines an explicit solution excludes before
+    (`explicit.check_explicit`)."""
+    for typing in typings(stage):
+        if typing.component != "method" or typing.place.kind != "builder":
+            continue
+        if typing.value.name != EXPLICIT:
+            continue
+        block, record = typing.place.address, typing.record
+        box = next(held for held in blocks_of(stage) if held.name == block)
+        ctx = StageNames(stage)
+        outputs = tuple(sort.identity for sort in header_of(box).outputs)
+        wires = {ctx.function_wire(identity): identity for identity in outputs}
+        rows = construction_table(stage).by_builder(block)
+        for wire, identity in wires.items():
+            found = [
+                row
+                for row in rows
+                if row.kind in ("Aggregation", "Pullback")
+                and any(_carries(output, wire) for output in row.outputs)
+            ]
+            spelled = identity.field + WRITTEN_MARK.get(identity.perch, "")
+            if not found:
+                refuse_at_entry(
+                    stage,
+                    block,
+                    record,
+                    "explicit-solution",
+                    f"no row of the operative builder {block!r} computes its output {spelled} "
+                    "from the block's lines, so the output has no kernel to compile",
+                    write=f"Write the line `{spelled} = <expression>` in the block {block!r}",
+                    kind="builder",
+                )
+            for row in found:
+                try:
+                    compile_kernel(stage, str(row.identity))
+                except ConstructionError as error:
+                    refuse_at_entry(
+                        stage,
+                        block,
+                        record,
+                        "explicit-solution",
+                        f"the output {spelled} has no executable compiled kernel: the row "
+                        f"{row.identity} is refused under {error.rule}, "
+                        f"{error.message.split('; ')[0]}",
+                        write="Write the output as an expression the kernel compiler writes",
+                        kind="builder",
+                    )
+
+
+def _carries(output, wire):
+    """Whether a row's output is the function wire `wire`, or the result a
+    row names for it."""
+    if output == wire:
+        return True
+    return (
+        isinstance(output, Identity)
+        and getattr(output, "field", None) == wire.field
+        and getattr(output, "mark", None) == "result"
+    )
 
 
 def _typed_places(stage):
@@ -87,9 +191,9 @@ def _check_keywords(stage, place, held, row, record):
     declared = setting_sets(stage)
     for argument in _word_arguments(held.method):
         if isinstance(argument, T.Name) and argument.name not in declared:
-            _refuse(
+            refuse_at_entry(
                 stage,
-                place,
+                place.address,
                 record,
                 "name-in-scope",
                 f"the entry `{typing_text(record)}` reads the setting {argument.name!r}, "
@@ -107,9 +211,9 @@ def _check_keywords(stage, place, held, row, record):
         )
     )
     if missing:
-        _refuse(
+        refuse_at_entry(
             stage,
-            place,
+            place.address,
             record,
             "method-admission",
             f"the entry `{typing_text(record)}` names `!{held.method.name}` without the "
@@ -120,16 +224,19 @@ def _check_keywords(stage, place, held, row, record):
 
 
 def _check_grid(stage, place, held, row, record):
-    """The two rules of the grid note §3 that bind before configuration: a
-    grid at a word that reads none, and a factor that names no coordinate,
+    """The rules of the grid note §3 that bind before configuration: a grid
+    at a word that reads none, and a factor that names no coordinate,
     control or shock of the place, under `grid-coordinate`; a number or an
-    undeclared name among the factors under `grid-setting-declared`. An
-    entry that names no method word binds its grid as the discretized
+    undeclared name among the factors under `grid-setting-declared`; and the
+    checks the records of the grid constructors state, their sites, their
+    required arguments, the base and the fibre of `!Fibred`, the predicate
+    words and the declared points of `!Points` (`grids.check_grid_at_binding`).
+    An entry that names no method word binds its grid as the discretized
     domain of the place, which the handler reads."""
     if row is not None and row.grid is None:
-        _refuse(
+        refuse_at_entry(
             stage,
-            place,
+            place.address,
             record,
             "grid-coordinate",
             f"!{held.method.name} reads no grid, and the place writes the grid "
@@ -137,6 +244,7 @@ def _check_grid(stage, place, held, row, record):
             f"method on the states of a perch and by a handler; remove the grid entry",
             write=f"Remove the grid entry of `{place.address}`",
         )
+    check_grid_at_binding(stage, place, held, row, record)
     for box in place.boxes:
         _check_grid_coordinates(
             stage, place, record, held.grid, box, grid_domain(stage, box, place.block, row)
@@ -146,20 +254,21 @@ def _check_grid(stage, place, held, row, record):
 
 def _check_grid_coordinates(stage, place, record, grid, box, domain):
     """The rule `grid-coordinate` at one box of the place: every factor of
-    the grid names a coordinate of the function the box holds, a control of
-    the stage for a feasible factor, or a shock for a quadrature factor. A
+    the grid, the factors of each Cartesian term it holds (`grid_factors`),
+    names a coordinate of the function the box holds, a control of the
+    stage for a feasible factor, or a shock for a quadrature factor. A
     grid may name a factor for some coordinates of the function and none for
     the others: a coordinate no factor names takes the default, as every
     coordinate does where the place writes no grid entry (decision S7-C17).
     The entry is recorded as written, with the named factors alone."""
     coordinates = ", ".join(domain.states) or "none"
-    for factor in grid.factors:
+    for factor in grid_factors(grid):
         name = factor.coordinate
         if isinstance(factor, T.Feasible):
             if name not in domain.controls:
-                _refuse(
+                refuse_at_entry(
                     stage,
-                    place,
+                    place.address,
                     record,
                     "grid-coordinate",
                     f"the factor {to_source(factor)} of the grid names {name!r} as a control, "
@@ -169,9 +278,9 @@ def _check_grid_coordinates(stage, place, record, grid, box, domain):
                 )
         elif isinstance(factor, T.Listed) and factor.nodes in domain.expectations:
             if name not in domain.shocks:
-                _refuse(
+                refuse_at_entry(
                     stage,
-                    place,
+                    place.address,
                     record,
                     "grid-coordinate",
                     f"the factor {to_source(factor)} of the grid takes the nodes of the "
@@ -182,9 +291,9 @@ def _check_grid_coordinates(stage, place, record, grid, box, domain):
         elif name not in domain.states:
             # the edit is established where the function has one coordinate
             state = next(iter(domain.states)) if len(domain.states) == 1 else None
-            _refuse(
+            refuse_at_entry(
                 stage,
-                place,
+                place.address,
                 record,
                 "grid-coordinate",
                 f"the factor {to_source(factor)} of the grid names {name!r}, which is no "
@@ -214,15 +323,15 @@ def _check_grid_names(stage, place, record, grid):
     expectations = expectation_names(stage)
 
     def refuse(factor, reason, write):
-        _refuse(
+        refuse_at_entry(
             stage,
-            place,
+            place.address,
             record,
             "grid-setting-declared",
             f"the factor {to_source(factor)} of the grid {reason}; {write}",
         )
 
-    for factor in grid.factors:
+    for factor in grid_factors(grid):
         for argument in _factor_arguments(factor):
             if isinstance(argument, T.Literal):
                 refuse(
@@ -257,17 +366,18 @@ def _check_grid_names(stage, place, record, grid):
 
 
 def _factor_arguments(factor):
-    """The arguments of a factor that name a setting or write a number: the
-    bounds and the count of a spaced factor with the arguments of its spacing
-    word, and the count of a feasible factor."""
-    if isinstance(factor, T.Spaced):
-        found = [factor.lower, factor.upper, factor.count]
-        if factor.spacing is not None:
-            found.extend(_word_arguments(factor.spacing))
-        return tuple(found)
-    if isinstance(factor, T.Feasible):
-        return (factor.count,)
-    return ()
+    """The arguments of a factor that name a setting or write a number, read
+    from the record of its form (`grids.factor_form_of`): each part of the
+    kind `setting`, the bounds and the count of a spaced factor and the count
+    of a feasible factor, with the keyword arguments of a spacing word."""
+    found = []
+    for name, option in factor_form_of(factor).arguments.items():
+        value = getattr(factor, name)
+        if option.kind == SETTING:
+            found.append(value)
+        elif option.kind == SPACING and value is not None:
+            found.extend(_word_arguments(value))
+    return tuple(found)
 
 
 def _word_arguments(word):
@@ -284,166 +394,6 @@ def _word_arguments(word):
             yield from _word_arguments(value.word)
 
     return tuple(found for keyword in word.arguments for found in of(keyword.value))
-
-
-def _refuse(stage, place, record, rule, message, *, write=None):
-    """The refusal of a component typed at `place` under `rule`, at the
-    position of the typing record `record`, which its address holds as
-    `<file>:<line>:<column>`, with the place as the address the refusal
-    names and the action `write` where the check establishes the edit."""
-    file, _, column = str(record.address).rpartition(":")
-    file, _, line = file.rpartition(":")
-    positioned = line.isdigit() and column.isdigit()
-    raise ConstructionError(
-        f"stage {stage.name!r}, place {place.address!r}: {message}",
-        stage=stage.name,
-        file=(file or None) if positioned else stage.provenance.get("origin"),
-        line=int(line) if positioned else None,
-        column=int(column) if positioned else None,
-        address=place.address,
-        rule=rule,
-        write=write,
-    )
-
-
-# --- the grid: the discretized domain of a place ---
-
-
-class GridDomain(NamedTuple):
-    """The coordinates a grid at one place may discretize: `states`, the
-    coordinates of the function the place holds, each with its declared set,
-    in declared order, for each of which a grid may name a factor;
-    `controls`, the controls of the stage with their declared sets, for a
-    feasible factor; `shocks`, the shocks of the stage, for a quadrature
-    factor; and `expectations`, the stage-wide names of the expectation
-    operators, `E_ψ_ξ`, whose nodes a quadrature factor takes."""
-
-    states: Mapping
-    controls: Mapping
-    shocks: tuple
-    expectations: frozenset
-
-
-def grid_domain(stage, box, block, row):
-    """The `GridDomain` of the box `box` in the builder `block`, for a word
-    whose row is `row`, None for a place with no method word: the states
-    are those of the continuation perch for a word whose row names it,
-    `!egm`, and otherwise the coordinates of the function the box holds
-    (`place_coordinates`)."""
-    states = (
-        _perch_states(stage, CONTINUATION)
-        if row is not None and row.grid == CONTINUATION
-        else place_coordinates(stage, box, block)
-    )
-    # the controls of the stage, which stand at the decision perch, for a
-    # feasible factor; the shocks of the stage for a quadrature factor
-    declared, _ = fields_of(stage)
-    controls = {}
-    for identity, sort in header_wire_sorts(stage).items():
-        if sort.role == CONTROL:
-            controls.setdefault(identity.field, sort.domain)
-    shocks = tuple(dict.fromkeys(i.field for i, sort in declared.items() if sort.role == SHOCK))
-    return GridDomain(states, controls, shocks, expectation_names(stage))
-
-
-def place_coordinates(stage, box, block):
-    """The coordinates of the function the box `box` holds, each with its
-    declared set, in declared order: the arguments of the retained row at
-    the box, the one Evaluation of the builder where the box is the builder
-    itself, the coordinates of a declared function, and otherwise the states
-    of the perch at which the outputs of the builder `block` stand, the
-    output perch of a forward builder."""
-    row = _place_row(stage, box)
-    declared, _ = fields_of(stage)
-    if row is not None and row.arguments:
-        return {
-            identity.field: declared[identity].domain
-            for identity in row.arguments
-            if identity in declared
-        }
-    definition = stage.definitions.get(box) if isinstance(box, Identity) else None
-    if definition is not None:
-        return _definition_coordinates(stage, definition)
-    return _perch_states(stage, _output_perch(stage, block))
-
-
-def _definition_coordinates(stage, definition, seen=frozenset()):
-    """The coordinates of a declared function with their sets; for a function
-    alias, those of the function its body refers to or differentiates,
-    `𝑑𝑢 := D_{c}(𝑢)`, and none for an alias of another form, such as an
-    inverse, whose argument is no named coordinate."""
-    if definition.coordinates or definition.kind != "function_alias" or not definition.equations:
-        return dict(definition.coordinates)
-    body = definition.equations[0]
-    if isinstance(body, T.Operator) and body.head == "D" and len(body.args) == 1:
-        body = body.args[0]
-    name = body.symbol.name if isinstance(body, T.Sym) and isinstance(body.symbol, T.Constant) else None
-    if name is None or name in seen:
-        return {}
-    referred = next(
-        (
-            d
-            for d in stage.definitions.values()
-            if d.kind in ("function", "function_alias") and d.identity.field == name
-        ),
-        None,
-    )
-    return {} if referred is None else _definition_coordinates(stage, referred, seen | {name})
-
-
-def _place_row(stage, box):
-    """The retained operator row at a box, where there is one: the row whose
-    identity is the box, or the one Evaluation of the builder for a box that
-    is the builder itself; None otherwise, and for a builder whose rows the
-    construction refuses."""
-    block = box if isinstance(box, str) else getattr(box, "block", None)
-    if block is None:
-        return None
-    try:
-        rows = builder_rows_of(stage, block).closed
-    except (KeyError, TypeError, ValueError, ConstructionError):
-        return None
-    found = tuple(row for row in rows if row.identity == box)
-    if len(found) == 1:
-        return found[0]
-    evaluations = tuple(row for row in rows if row.kind == "Evaluation")
-    return evaluations[0] if len(evaluations) == 1 else None
-
-
-def _output_perch(stage, block):
-    """The perch at which the outputs of the builder `block` stand, read
-    from the sort of its first output wire; None for no such builder."""
-    ports = header_wire_sorts(stage)
-    held = next((b for b in blocks_in_file_order(stage) if b.name == block), None)
-    if held is None:
-        return None
-    for wire in header_of(held).outputs:
-        if wire.identity in ports:
-            return wire.identity.perch
-    return None
-
-
-def _perch_states(stage, perch):
-    """The declared states of the perch `perch` with their declared sets, in
-    first-listing order."""
-    declared, _ = fields_of(stage)
-    return {
-        identity.field: declared[identity].domain
-        for identity, sort in header_wire_sorts(stage).items()
-        if identity.perch == perch and sort.role == STATE and identity in declared
-    }
-
-
-def expectation_names(stage):
-    """The stage-wide names of the expectation operators the lines of the
-    stage write, `E_ψ_ξ`, which a quadrature factor names."""
-    return frozenset(
-        occurrence.stage_wide_name
-        for block in blocks_in_file_order(stage)
-        for _, record in lines_of(stage, block)
-        for occurrence in record.operators
-        if occurrence.head == "E"
-    )
 
 
 # --- the keyword arguments at a place ---
@@ -470,7 +420,7 @@ def _integrated_shocks(stage, box):
     otherwise the subscript of the expectation occurrence the box names on
     its line, the expectation of a derivative line, which stands in no row
     of its own (AMD-MB-001 §4.3, D4; decision MB-A17)."""
-    row = _place_row(stage, box)
+    row = place_row(stage, box)
     held = tuple(getattr(shock, "field", shock) for shock in row.integrated) if row else ()
     if row is not None and row.identity == box:
         return held
@@ -506,8 +456,13 @@ def check_bound_values(stage, values):
     `method-option-value`; and a grid whose bounds are out of order or
     outside the coordinate's declared set, whose count is below two or whose
     node set is not strictly increasing, under `grid-bounds` (the grid note
-    §3). A set the stage defines and an expectation operator, which a listed
-    factor may name, need no value."""
+    §3); then the optional grid beside each authored table, whose finite
+    support equals the table's where both are given exactly
+    (`representation_checks.check_table_supports`). A set the stage defines
+    and an expectation operator, which a listed factor may name, need no
+    value. A row is the one the version reads (`representations.bound_row`),
+    so that a family registered or removed after binding leaves the check as
+    the version was bound."""
     expectations = expectation_names(stage)
     defined = {
         d.identity.field
@@ -515,7 +470,7 @@ def check_bound_values(stage, values):
         if d.kind in ("set", "correspondence")
     }
     for place, held, _ in _typed_places(stage):
-        row = row_of(held.method.name) if held.method is not None else None
+        row = bound_row(stage, held.method.name) if held.method is not None else None
         for name in dict.fromkeys(setting_names(held)):
             if name not in values and name not in defined and name not in expectations:
                 named = (
@@ -546,6 +501,7 @@ def check_bound_values(stage, values):
                 _check_grid_bounds(
                     stage, place, held, values, grid_domain(stage, box, place.block, row)
                 )
+    check_table_supports(stage, values)
 
 
 def _valued(argument, values):
@@ -564,21 +520,8 @@ def _valued(argument, values):
     return argument
 
 
-# the domain of a keyword's value as a row names it, each a check that
-# answers the reason a value lies outside it, or None
-_DOMAINS = {
-    "positive integer": lambda value: (
-        None if _positive_integer(value) else f"{value!r} is not a positive integer"
-    ),
-    "positive real": lambda value: (
-        None if _finite_real(value) and value > 0 else f"{value!r} is not a positive real"
-    ),
-    "seed": lambda value: (
-        None if type(value) is int and value >= 0 else f"{value!r} is not a seed"
-    ),
-}
-
-# what to write for a value outside each domain
+# what to write for a value outside each domain of a keyword's value, one
+# entry for each kind of `method_rows.KEYWORD_DOMAINS`
 _WRITE = {
     "positive integer": "write an integer greater than zero",
     "positive real": "write a finite value greater than zero",
@@ -589,9 +532,9 @@ _WRITE = {
 def _check_domain(stage, place, held, name, keyword, value):
     """The refusal of a keyword's value outside the domain its row names,
     under `method-option-value`."""
-    if keyword.kind not in _DOMAINS:
+    if keyword.kind not in KEYWORD_DOMAINS:
         raise RuntimeError(f"unknown keyword domain {keyword.kind!r}")
-    reason = _DOMAINS[keyword.kind](value)
+    reason = KEYWORD_DOMAINS[keyword.kind](value)
     if reason is None:
         return
     raise ConstructionError(
@@ -611,7 +554,10 @@ def _check_grid_bounds(stage, place, held, values, domain):
     set, and the count an integer of at least two; for a listed factor
     valued by the settings a strictly increasing sequence of at least two
     finite reals inside the set; for a feasible factor a count of at least
-    two. A factor on a control or a shock has no declared set to check."""
+    two. A factor on a control or a shock has no declared set to check. The
+    configured points of `!Points` and the requirements the bound values
+    decide are then checked from the records of the grid constructors
+    (`grids.check_grid_at_configuration`)."""
 
     def refuse(factor, reason, write):
         raise ConstructionError(
@@ -628,7 +574,7 @@ def _check_grid_bounds(stage, place, held, values, domain):
     def inside(factor, point, declared):
         if declared is None:
             return
-        member = _point_in_declared_set(stage, point, declared)
+        member = point_in_declared_set(stage, point, declared)
         if member is not True:
             word = "lies outside" if member is False else "is not decidably inside"
             refuse(
@@ -638,7 +584,7 @@ def _check_grid_bounds(stage, place, held, values, domain):
                 "write points inside the declared set",
             )
 
-    for factor in held.grid.factors:
+    for factor in grid_factors(held.grid):
         declared = domain.states.get(factor.coordinate)
         if isinstance(factor, T.Spaced):
             lower, upper, count = (
@@ -676,20 +622,7 @@ def _check_grid_bounds(stage, place, held, values, domain):
             count = _valued(factor.count, values)
             if not _positive_integer(count) or count < 2:
                 refuse(factor, f"has the count {count!r}", "write an integer count of at least two")
-
-
-def _point_in_declared_set(stage, value, declared):
-    """True, False, or None for the membership of a number in a declared
-    set, decided by the set algebra through the sets the stage defines."""
-    definitions = {
-        definition.identity.field: definition.equations[0]
-        for definition in stage.definitions.values()
-        if definition.kind == "set" and definition.equations
-    }
-    point = T.Interval(
-        T.Range(left=T.Closed(), lower=T.Number(value), upper=T.Number(value), right=T.Closed())
-    )
-    return sets.within(point, declared, definitions)
+    check_grid_at_configuration(stage, place, held, values, domain)
 
 
 def _positive_integer(value):

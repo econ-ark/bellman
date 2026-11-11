@@ -1,18 +1,24 @@
 /* Project Bellman — Material for MkDocs
    Ice ground, ultramarine voice, navy ink, one orange piece. No radii. */
 
-@font-face{font-family:"PP Monument Extended";src:url("../_assets/brand/fonts/PPMonumentExtended-Regular.otf") format("opentype");font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:"PP Monument";src:url("../_assets/brand/fonts/PPMonumentNormal-Light.otf") format("opentype");font-weight:300;font-style:normal;font-display:swap}
-@font-face{font-family:"PP Monument";src:url("../_assets/brand/fonts/PPMonumentNormal-Regular.otf") format("opentype");font-weight:400 500;font-style:normal;font-display:swap}
-@font-face{font-family:"PP Monument";src:url("../_assets/brand/fonts/PPMonumentNormal-Black.otf") format("opentype");font-weight:600 900;font-style:normal;font-display:swap}
+/* The four typefaces of the site, self-hosted under the SIL Open Font License (their OFL.txt files stand beside them). */
+@font-face{font-family:"Syne";src:url("../_assets/brand/fonts/Syne-400-800-latin.woff2") format("woff2");font-weight:400 800;font-style:normal;font-display:swap;unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Syne";src:url("../_assets/brand/fonts/Syne-400-800-latin-ext.woff2") format("woff2");font-weight:400 800;font-style:normal;font-display:swap;unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Space Grotesk";src:url("../_assets/brand/fonts/SpaceGrotesk-300-700-latin.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap;unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:"Space Grotesk";src:url("../_assets/brand/fonts/SpaceGrotesk-300-700-latin-ext.woff2") format("woff2");font-weight:300 700;font-style:normal;font-display:swap;unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:"Archivo";src:url("../_assets/brand/fonts/archivo-latin-standard-normal.woff2") format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("../_assets/brand/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("../_assets/brand/fonts/ibm-plex-mono-latin-400-italic.woff2") format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("../_assets/brand/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:"IBM Plex Mono";src:url("../_assets/brand/fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
 
 :root{
   --bl-ultramarine:#214EDA;--bl-ultramarine-dark:#163CB0;--bl-ultramarine-light:#5F86F2;
   --bl-navy:#172A52;--bl-navy-2:#22397A;
   --bl-ice:#EDF7FC;--bl-ice-2:#C5E5F1;--bl-ice-3:#91BED7;
   --bl-periwinkle:#8FA9F5;--bl-slate:#4B5A7A;--bl-orange:#ED762D;
-  --bl-display:"PP Monument Extended","Archivo",Helvetica,Arial,sans-serif;
-  --bl-statement:"PP Monument","Archivo",Helvetica,Arial,sans-serif;
+  --bl-display:"Syne","Archivo",Helvetica,Arial,sans-serif;
+  --bl-statement:"Space Grotesk","Archivo",Helvetica,Arial,sans-serif;
   --md-text-font:"Archivo",Helvetica,Arial,sans-serif;
   --md-code-font:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
 }
@@ -77,7 +83,7 @@
 .md-nav__link--active{font-weight:600;border-inline-start:2px solid currentColor;padding-inline-start:.45rem}
 
 /* Type */
-.md-typeset h1{font-family:var(--bl-display);font-weight:400;font-size:2.4em;line-height:1.02;letter-spacing:-.03em;color:var(--bl-ultramarine);margin:0 0 1em}
+.md-typeset h1{font-family:var(--bl-display);font-weight:600;font-size:2.4em;line-height:1.02;letter-spacing:-.03em;color:var(--bl-ultramarine);margin:0 0 1em}
 .md-typeset h2{font-family:var(--bl-statement);font-weight:400;font-size:1.5em;line-height:1.2;letter-spacing:-.02em;color:var(--bl-navy);border-top:1px solid var(--bl-navy);padding-top:.9em;margin:2.2em 0 .8em}
 .md-typeset h3{font-family:var(--bl-statement);font-weight:400;font-size:1.15em;letter-spacing:-.01em;margin:1.8em 0 .6em}
 .md-typeset h4,.md-typeset h5,.md-typeset h6{font-family:var(--md-code-font);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--bl-slate);font-weight:500}

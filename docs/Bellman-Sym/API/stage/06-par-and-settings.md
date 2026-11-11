@@ -13,7 +13,7 @@ topic: [stage-object]
 # Parameters and settings
 
 > [!summary]
-> `stage.par` answers a table of the parameters of a stage and `stage.settings` a table of its settings; each entry is read by the name the file declares, `stage.par["ρ"]` and `stage.settings["n_a"]`, and neither table can be edited. A parameter is part of the economic problem and is declared in the stage file; a setting is a numerical choice of a method, declared with its set in the methods file and valued by configuration. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, calibrated by `applications/portfolio-choice/declaration/calibration/portfolio.yml`, configured by `applications/portfolio-choice/declaration/settings/cons.yml`, and methodized by `applications/portfolio-choice/declaration/stages/cons/methods.bl`, the methods file beside the stage file, whose declarations fill the settings table's `set` column and whose entries fill its last three columns: the place at which each setting is read, the method there and, where the setting is a bound or a count of that place's grid, the grid's kind.
+> `stage.par` answers a table of the parameters of a stage, the derived parameters the stage defines from them standing after the declared ones, and `stage.settings` a table of its settings; each entry is read by the name the file declares, `stage.par["ρ"]` and `stage.settings["n_a"]`, and neither table can be edited. A parameter is part of the economic problem and is declared in the stage file; a setting is a numerical choice of a method, declared with its set in the methods file and valued by configuration. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, calibrated by `applications/portfolio-choice/declaration/calibration/portfolio.yml`, configured by `applications/portfolio-choice/declaration/settings/cons.yml`, and methodized by `applications/portfolio-choice/declaration/stages/cons/methods.bl`, the methods file beside the stage file, whose declarations fill the settings table's `set` column and whose entries fill its last three columns: the place at which each setting is read, the method there and, where the setting is a bound or a count of that place's grid, the grid's kind. The listings of §1.1 read instead the perfect-foresight stage file, `applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl`, which defines three derived parameters, calibrated by `applications/consumption-perfect-foresight-crra/declaration/calibration/perfect_foresight.yml`.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [The stage](01-the-stage.md): the object `stage` below; [The binding verbs](09-binding-verbs.md): `calibrate` and `configure`, which bind the values these tables read.
@@ -30,7 +30,7 @@ stage = elaborate_stage(load_stage("applications/portfolio-choice/declaration/st
 
 ## 1 The parameters
 
-`stage.par` answers one row per declared parameter, with the set it is declared on, its value or, before calibration, the word `unbound`, and the description the file gives. `stage.par["ρ"]` answers the record of one parameter, keyed by its name as the file declares it, which prints on one line; its `value` is the number the calibration binds. `list()` answers the rows, a record that prints as the table, and `view()` the table as text. Since `calibrate` binds the stage it is called on, `calibrated` below is `stage` itself, now with its parameter's value:
+`stage.par` answers one row per declared parameter, with the set it is declared on, its value or, before calibration, the word `unbound`, and the description the file gives, and then one row per derived parameter (§1.1). `stage.par["ρ"]` answers the record of one parameter, keyed by its name as the file declares it, which prints on one line; its `value` is the number the calibration binds. `list()` answers the rows, a record that prints as the table, and `view()` the table as text. Since `calibrate` binds the stage it is called on, `calibrated` below is `stage` itself, now with its parameter's value:
 
 ```python
 print(stage.par)
@@ -60,6 +60,58 @@ except KeyError as refusal:
 
 ```text
 "stage 'cons': 'rho' is no parameter of the stage; a parameter is read by the name the file declares, and the parameters are ρ"
+```
+
+### 1.1 Derived parameters
+
+A **derived parameter** is a constant of the stage that a definition without arguments writes from the stage's parameters, such as human wealth `h := 1/(1 - Γ/R)`; [Equation parsing rules](../../appendices/12-equation-parsing-rules.md) §2 gives the form, what its definition may read and the order in which the definitions are evaluated. `stage.par` lists the derived parameters after the declared ones, in file order, each with its definition in the column `set` and the description the file gives. Before calibration the value of a derived parameter is `unbound`. After calibration its value is its definition evaluated at the calibration values, computed each time the table is asked for and stored nowhere. The record of one derived parameter prints its definition after `:=`. The consumption stage file defines no derived parameter, so the listings of this section read the perfect-foresight stage file, which defines three from its four parameters: the return patience factor `q`, human wealth `h` and the natural borrowing limit `L`. A methods file may define a derived parameter as well, as the methods file beside that stage file defines the marginal propensity to consume `κ := 1 - q` ([The definitions table](08-definitions.md) §3). A definition in an addition, a methods file read with the stage file ([The binding verbs](09-binding-verbs.md) §3), is read as the stage file's own, and it leaves the table when the addition is removed.
+
+```python
+derived = elaborate_stage(load_stage(
+    "applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl"))
+print(derived.par)
+derived.calibrate(
+    "applications/consumption-perfect-foresight-crra/declaration/calibration/perfect_foresight.yml")
+print(derived.par)
+print(derived.par["h"])
+```
+
+```text
+name  set                      value    describes
+β     (0, 1) @ (0, R^(ρ - 1))  unbound  discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
+ρ     (1, inf)                 unbound  coefficient of relative risk aversion, greater than one
+R     ℝ₊₊                      unbound  gross interest factor
+Γ     (0, R)                   unbound  permanent income growth factor; its upper bound R is the finite human wealth condition
+q     (β*R)^(1/ρ)/R            unbound  the return patience factor; the return impatience condition is q < 1
+h     1/(1 - Γ/R)              unbound  human wealth, the present discounted value of permanent income
+L     1 - h                    unbound  the natural borrowing limit on market resources, above which total wealth m - L is positive
+name  set                      value                describes
+β     (0, 1) @ (0, R^(ρ - 1))  0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
+ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
+R     ℝ₊₊                      1.04                 gross interest factor
+Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
+q     (β*R)^(1/ρ)/R            0.9615384615384615   the return patience factor; the return impatience condition is q < 1
+h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
+L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
+h = 51.999999999999886 := 1/(1 - Γ/R)
+```
+
+The calibration supplies no value for a derived parameter, since its definition gives the value. A calibration source that names a derived parameter is refused under `derived-parameter`, at the definition, and the refused binding leaves the stage as it was; the calibration the stage keeps holds the declared parameters alone. A definition that has no finite real value at the calibration values, such as one that divides by zero there, is refused under the same rule, at that definition ([Refusals](../../reference/refusals.md#derived-parameter)):
+
+```python
+from bellman.refusals import ConstructionError
+
+try:
+    derived.calibrate({"calibration": {"β": 0.9615384615384616, "ρ": 2.0, "R": 1.04, "Γ": 1.02, "h": 50.0}})
+except ConstructionError as refusal:
+    print(refusal)
+print(derived.par["h"])
+```
+
+```text
+address 'applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl:29': stage 'perfect_foresight', derived parameter 'h': the calibration source supplies the value 50.0 for h, which the stage defines as `1/(1 - Γ/R)`; a derived parameter takes its value from its definition at the calibration, and the calibration supplies none (rule derived-parameter)
+  write: Remove h from the calibration source
+h = 51.999999999999886 := 1/(1 - Γ/R)
 ```
 
 ## 2 The settings

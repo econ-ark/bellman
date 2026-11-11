@@ -3574,10 +3574,11 @@ def _occurrence_stage(shown: TrellisShown, key: str):
 def _declared(shown: TrellisShown, key: str) -> list[str]:
     """The names of the parameters the stage `key` declares, which its
     calibration must give, as `creation.StageTemplate.calibration` names a
-    template's: those of its first occurrence in the trellis `shown` holds
-    (`_occurrence_stage`); none for a key no period of it holds (J-I166)."""
+    template's (`model.calibration_parameters`): those of its first
+    occurrence in the trellis `shown` holds (`_occurrence_stage`); none for
+    a key no period of it holds (J-I166)."""
     stage = _occurrence_stage(shown, key)
-    return list(stage.par.keys()) if stage is not None else []
+    return list(model.calibration_parameters(stage)) if stage is not None else []
 
 
 def model_folder_name(stage: Path) -> str:

@@ -45,12 +45,20 @@ from bellman.fold.block_lines import (
 from bellman.fold.stage_names import lines_of
 from bellman.fold.wire_terms import derivative_text, stated_derivative
 from bellman.native.identity import Identity, piece_identity
-from bellman.native.records import Components, typing_text
+from bellman.native.records import Components, entry_position, typing_text
 from bellman.native.versions import kept_answer
 from bellman.refusals import TARGET_NOT_FOUND, ConstructionError, Location, TargetError
 from bellman.stage.grains import construction_table
 from bellman.stage.levels import is_declared_version
-from bellman.stage.method_table import METHOD_TYPES, row_of
+from bellman.stage.method_table import METHOD_TYPES
+from bellman.stage.representations import (
+    CLOSED_FORM,
+    EXPLICIT,
+    bound_family,
+    bound_row,
+    evaluation_of_builder,
+    selected_source,
+)
 from bellman.syntax import terms as T
 from bellman.syntax.lower import file_position
 from bellman.syntax.source import to_source
@@ -298,7 +306,7 @@ def typings(stage, spans=None):
 
 
 def _typings(stage, spans):
-    by_address = {place.address: place for place in inventory(stage)}
+    by_address = places_by_address(stage)
     lenient = is_declared_version(stage)
     resolved = []
     for record in stage.definitions.values():
@@ -332,11 +340,13 @@ def _typings(stage, spans):
 
 def _check_admission(stage, record, place, word, spans, by_address):
     """A method word is one of the catalogue and admits the kind of its
-    place (specification 0.7 §5, "Admission"). The refusal of a word at a
+    place (specification 0.7 §5, "Admission"). The row is the one the
+    version reads (`representations.bound_row`): a representation family's
+    as it stood when the version was bound. The refusal of a word at a
     place its row does not admit offers the place of the same block the row
     admits (`_admitted_neighbour`) where there is one; `by_address` holds the
     places of the stage by their addresses."""
-    row = row_of(word.name)
+    row = bound_row(stage, word.name)
     if row is None:
         _refuse(
             stage,
@@ -392,14 +402,42 @@ def _check_typed_once(stage, resolved, spans):
     """Each component is typed once at each box and object: two entries at
     one place, the whole of an Evaluation beside one of its objects, and an
     operator head beside one of its occurrences are refused naming both
-    (specification 0.7 §4 rule 4; D4; F21, F26)."""
+    (specification 0.7 §4 rule 4; D4; F21, F26). A function representation
+    typed at a `!node` line concerns the function the node computes, which
+    its Evaluation holds, so it is checked under the key of that Evaluation
+    and is refused beside a representation typed at `<node>.evaluate`
+    (AMD-MT-003 build contract §3); every other method at a node keeps the
+    node's key."""
     held = {}
     for typing in resolved:
-        for key in typing.place.keys:
+        for key in _typed_keys(stage, typing):
             first = held.setdefault((typing.component, key), typing)
             if first is typing:
                 continue
             _, written = key
+            if first.place.address != typing.place.address and "node" in (
+                first.place.kind,
+                typing.place.kind,
+            ):
+                node = first.place if first.place.kind == "node" else typing.place
+                _refuse(
+                    stage,
+                    typing.record,
+                    "component-typed-twice",
+                    f"the {typing.component} component is typed twice, by "
+                    f"`{typing_text(first.record)}` at {first.record.address} and by "
+                    f"`{typing_text(typing.record)}` here, at `{first.place.address}` and at "
+                    f"`{typing.place.address}`, which both type the representation of the "
+                    f"function the node `{node.address}` computes, held by its Evaluation "
+                    f"`{node.address}.{EVALUATE}`; a component is typed by one entry; remove one "
+                    f"of the two",
+                    spans=spans,
+                    related=(_entry_location(first.record, spans),),
+                    write=(
+                        f"Remove one of the two entries, `{typing_text(first.record)}` or "
+                        f"`{typing_text(typing.record)}`"
+                    ),
+                )
             # the places that share a key are an operator head's and its
             # occurrences' or an Evaluation's and its objects', so one of the
             # pair names a head; both may be stage-wide places, `E_y_z` beside
@@ -427,6 +465,21 @@ def _check_typed_once(stage, resolved, spans):
                     f"`{typing_text(typing.record)}`"
                 ),
             )
+
+
+def _typed_keys(stage, typing):
+    """The keys under which a typing is checked to be typed once: the keys of
+    its place, and for a function representation typed at a `!node` line
+    the key of the node's Evaluation, `(Identity("Evaluation", address=<node
+    address>), None)`."""
+    place = typing.place
+    if (
+        place.kind == "node"
+        and typing.component == "method"
+        and bound_family(stage, typing.value.name) is not None
+    ):
+        return ((Identity("Evaluation", address=place.address), None),)
+    return place.keys
 
 
 def _block_of_key(stage, pair, key):
@@ -508,21 +561,11 @@ def _entry_position(record, spans):
     of the parse that writes that position (`file_position`), the entry's
     own. The end is None and the address the record's own without the table,
     or where no span writes the position."""
-    file, line, column = _position(record.address)
+    file, line, column = entry_position(record.address)
     for key, span in (spans or {}).items():
         if f"{file_position(span)}:{span.column}" == record.address:
             return file, line, column, span.end_line, span.end_column, key
     return file, line, column, None, None, record.address
-
-
-def _position(address):
-    """The file, the line and the column a typing record's address writes,
-    each None where the address holds no position."""
-    file, _, column = str(address).rpartition(":")
-    file, _, line = file.rpartition(":")
-    if not (line.isdigit() and column.isdigit()):
-        return None, None, None
-    return file or None, int(line), int(column)
 
 
 # --- the components read off the typing entries ---
@@ -531,21 +574,98 @@ def _position(address):
 def components_by_place(stage):
     """The components typed at each place, by the place's address in the
     order of the inventory, as a read-only mapping from address to
-    `Components`; a place with no entry has no row. Kept for the version."""
+    `Components`; a place with no entry has no row. Where the method is a
+    function representation, the record holds the data it reads,
+    `representations.selected_source`; and at the Evaluation of a builder
+    whose method is `!explicit`, where no method is typed, the closed form
+    generated from that entry stands, with the entry's address as its
+    provenance and beside a grid or a handler typed there (AMD-MT-003 build
+    contract §§3, 5), so that removing `!explicit`, or typing a
+    representation there, removes it. The source is selected at the place
+    the typing entries at the address resolve to (`places_by_address`).
+    Kept for the version."""
 
     def compute():
         held = {}
         for typing in typings(stage):
             held.setdefault(typing.place.address, {})[typing.component] = typing.value
+        for address, entry in _generated_closed_forms(stage, held).items():
+            held.setdefault(address, {}).update(
+                method=T.Word(CLOSED_FORM_WORD), generated_from=entry
+            )
+        by_address = places_by_address(stage)
         order = {place.address: n for n, place in enumerate(inventory(stage))}
-        return MappingProxyType(
-            {
-                address: Components(**held[address])
-                for address in sorted(held, key=lambda a: order.get(a, len(order)))
-            }
-        )
+        made = {}
+        for address in sorted(held, key=lambda a: order.get(a, len(order))):
+            components = Components(**held[address])
+            source = (
+                selected_source(stage, by_address[address], components)
+                if address in by_address
+                else None
+            )
+            made[address] = (
+                dataclasses.replace(components, source=source)
+                if source is not None
+                else components
+            )
+        return MappingProxyType(made)
 
     return kept_answer(stage, "components", compute)
+
+
+def places_by_address(stage):
+    """Each place of the inventory of `stage` by its address, in the order of
+    the inventory, as a read-only mapping: the place a typing entry written
+    at that address resolves to. Two places share an address where
+    `evaluate` occurs in a line: `<node>.evaluate` names the occurrences in
+    a `!node` line and the node's Evaluation, and `<block>.evaluate` the
+    occurrences in the block and the Evaluation that closes the builder.
+    The Evaluation, which the inventory lists after those occurrences,
+    stands for the address, since a representation typed there concerns the
+    function the Evaluation holds (AMD-MT-003 build contract §3, the
+    canonical resolution). The resolution of the typing entries (`typings`),
+    the selection of the source and the checks of the representations read
+    this one map."""
+    return MappingProxyType({place.address: place for place in inventory(stage)})
+
+
+def _generated_closed_forms(stage, held):
+    """The closed forms generated at the Evaluation of each builder whose
+    method is `!explicit`, by the address of the Evaluation, each with the
+    address of the entry it is generated from: at an Evaluation where no
+    method is typed, whole or at an object it stores (AMD-MT-003 build
+    contract §5), where `held` maps the address of each typed place to its
+    components by name. A representation typed there overrides the default,
+    and with `!explicit` removed nothing is generated; a grid or a handler
+    typed there stands beside the generated closed form, which refuses the
+    grid."""
+    generated = {}
+    for typing in typings(stage):
+        if typing.component != "method" or typing.place.kind != "builder":
+            continue
+        if typing.value.name != EXPLICIT:
+            continue
+        block = typing.place.address
+        evaluations = [
+            place
+            for place in inventory(stage)
+            if place.block == block and evaluation_of_builder(place)
+        ]
+        if not evaluations or any(
+            "method" in held.get(place.address, {}) for place in evaluations
+        ):
+            continue
+        whole = f"{block}.{EVALUATE}"
+        if any(place.address == whole for place in evaluations):
+            generated[whole] = f"{block}.method"
+    return generated
+
+
+# the method word of the closed form as a stage file writes it,
+# `!closed_form`, which the closed form generated at an `!explicit` builder's
+# Evaluation carries: the family's word `representations.CLOSED_FORM` with
+# its hyphen written as an underscore
+CLOSED_FORM_WORD = CLOSED_FORM.replace("-", "_")
 
 
 def is_methodized(stage):

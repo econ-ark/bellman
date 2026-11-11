@@ -62,3 +62,7 @@ The other photographs and the sculling video come from Wikimedia Commons and are
 - Bmzuckerman. Photograph, CC BY 4.0. [The National Farmers' Bank, Owatonna, Minnesota, by Louis H. Sullivan, 1908](https://commons.wikimedia.org/wiki/File:Louis_H._Sullivan_-_National_Farmer%27s_Bank_Interior_(A),_Owatonna,_MN.jpg)
 - John Shorten. CC BY-SA 2.0. [Glendora Avenue from the air, 2022](https://commons.wikimedia.org/wiki/File:Aerial_View_of_Glendora_Ave_-_geograph.org.uk_-_7187713.jpg)
 - Rudolph A. Furtado. CC0. [A vegetable seller's boat on Dal Lake, Srinagar, 2013](https://commons.wikimedia.org/wiki/File:Vegetable_seller_on_Dal_Lake..JPG)
+
+## 5 Typefaces
+
+The site sets its display line in Syne, its statements and headings in Space Grotesk, its text in Archivo and its code in IBM Plex Mono. All four are published under the SIL Open Font License and served from the site itself, with each family's license text beside its files.

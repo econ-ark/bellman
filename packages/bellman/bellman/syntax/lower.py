@@ -23,15 +23,22 @@ and a handler binding names the program that realizes the operator,
 segments the entry writes and whose one classifier is the `Method` or the
 `Grid` the last segment of the path names, or a `Handler` holding the path
 and the program. The word of the method is kept as written, with its keyword
-arguments, for the catalogue to judge; the grid's kind is `Cartesian` and
-each keyword argument is one factor of it, read by its shape (`_factor`).
+arguments, for the catalogue to judge. The grid is one outer grid word: a
+`Cartesian`, each keyword argument one factor read by its shape (`_factor`);
+a `PointGrid`, the name of declared points after `nodes`, or none for the
+empty grid; or a `Fibred`, a nested grid word after `base` and after
+`fibre`. Each carries the predicate words written after `require`,
+recognized by their shape alone (`_predicate_shaped`); their meaning, and
+every other check of a grid, is judged at binding.
 
 A form the grammar admits and the lowering reads no term from (a computed
 selector, a selection where a name is written, a comprehension binder typed by
-a role word, a condition tail with no declared set, two items under one
-address, a perch mark after a selector, a word no vocabulary holds, a path
-whose last segment names no component, a grid of no kind of the language or
-with a factor of no shape) is
+a role word, a bound written after a comma, several sets in one type that
+no rule reads as one set, two items under one address, a perch mark after a
+selector, a word no vocabulary holds, a path whose last segment names no
+component, a grid of no kind of the language or
+of a kind reserved by name, a grid with a factor of no shape or an argument
+its constructor does not take) is
 refused by `_refusal`: a `ConstructionError` under the rule `syntax`, at the
 range of the item being lowered, whose sentence quotes the author's text and
 whose `write` says what to write, so that the author reads the refusal in the
@@ -49,8 +56,17 @@ from lark import Tree as LarkTree
 from lark.exceptions import VisitError
 
 from bellman.refusals import ConstructionError
-from bellman.syntax.parse import build_parser
-from bellman.syntax.source import to_source
+from bellman.syntax.parse import parse_text
+from bellman.syntax.source import (
+    GRID_WORDS,
+    bound_name,
+    bracket_of,
+    is_infinity,
+    is_interval,
+    is_number,
+    may_hold_infinity,
+    to_source,
+)
 from bellman.syntax.terms import *  # noqa: F401,F403 — generated classes
 from bellman.syntax.vocabulary import (
     ARRIVAL,
@@ -83,7 +99,7 @@ def parse_with_spans(text, filename=None):
     block holds the place of each name the line writes (`_names_written`).
     The parse tree and the identity records from which the table was built
     are discarded on return; nothing is stored on the term."""
-    tree = build_parser().parse(text)
+    tree = parse_text(text)
     lowering = _ToAstWithPositions(filename)
     term = lowering.transform(tree)
     left = unlowered_parse_nodes(term)
@@ -144,6 +160,14 @@ def _refusal(sentence, advice, at=None, rule="syntax"):
         end_line=getattr(at, "end_line", None),
         end_column=getattr(at, "end_column", None),
         write=advice,
+    )
+
+
+def _predicate_shaped(value):
+    """Whether a keyword argument has the shape of the predicate words of a
+    grid's `require`: one `!`-word, or a tuple whose every item is one."""
+    return isinstance(value, Nested) or (
+        isinstance(value, Values) and all(isinstance(item, Nested) for item in value.items)
     )
 
 
@@ -383,19 +407,13 @@ class _DeclaredValue:
     value: object
 
 
-@dataclass(frozen=True)
-class _ConditionTail:
-    """The conditions written after a declaration's typing, `, < 2`, in the
-    order written."""
+class _RetiredBound(NamedTuple):
+    """The bounds a declaration writes after a comma, `γ : ℝ₊, < 2`, the
+    spelling AMD-GRAM-004 retired: each a relation and the term it compares
+    the declared name with, in the order written. The lowering refuses a
+    declaration that carries one."""
 
-    conditions: list
-
-
-class _Condition(NamedTuple):
-    """One condition of a tail: its relation and the bound it compares with."""
-
-    relation: object
-    bound: object
+    bounds: list
 
 
 class _Word(NamedTuple):
@@ -498,15 +516,12 @@ class ToAst(Transformer):
         # holds is refused before a subject that names no field
         classifiers = list(self._classifiers(typing)) if typing is not None else []
         subject = self._subject(head)
-        value = None
-        conds = []
-        for extra in extras:
-            if isinstance(extra, _DeclaredValue):
-                value = extra.value
-            elif isinstance(extra, _ConditionTail):
-                conds = extra.conditions
-        if conds:
-            classifiers = condition_tail_domain(subject, classifiers, conds)
+        value = next((extra.value for extra in extras if isinstance(extra, _DeclaredValue)), None)
+        retired = next((extra for extra in extras if isinstance(extra, _RetiredBound)), None)
+        if retired is not None:
+            components = typing.components if typing is not None else ()
+            raise _retired_bound_refusal(subject, components, retired.bounds)
+        classifiers = intersection_of_sets(subject, classifiers)
         return Declare(
             Declaration(subject, tuple(classifiers), value), self._trailing_annotation(children)
         )
@@ -524,11 +539,11 @@ class ToAst(Transformer):
             f"declare the name, `{name} : …`, and select from it where it is used",
         )
 
-    def condition_tail(self, children):
-        return _ConditionTail(list(children))
-
-    def tail_condition(self, children):
-        return _Condition(relation=RELATION_OF_SYMBOL[str(children[0])](), bound=children[1])
+    def retired_bound(self, children):
+        signs, bounds = children[0::2], children[1::2]
+        return _RetiredBound(
+            [(RELATION_OF_SYMBOL[str(sign)](), bound) for sign, bound in zip(signs, bounds)]
+        )
 
     def tuple_subject(self, children):
         return Subject(tuple(children))
@@ -706,7 +721,7 @@ class ToAst(Transformer):
         the path names and the one `!`-word of the typing supplies."""
         written = to_source(subject)
         component = subject.segments[-1].name
-        if any(isinstance(extra, (_DeclaredValue, _ConditionTail)) for extra in extras):
+        if any(isinstance(extra, (_DeclaredValue, _RetiredBound)) for extra in extras):
             raise _refusal(
                 f"the typing entry of `{written}` carries a value or a condition; a typing "
                 f"entry types a component of an operator and takes neither",
@@ -732,32 +747,142 @@ class ToAst(Transformer):
         name = str(word.token)[1:]
         if component == "method":
             classifier = Method(Word(name, word.arguments))
-        elif name == "Smolyak":
-            raise _refusal(
-                f"the grid component `{written}` is typed by `!Smolyak`, the sparse grid kind, "
-                f"which is reserved by name and not built",
-                f"the one grid kind built is !Cartesian, "
-                f"`{written} : !Cartesian(a=(a_min, a_max, n_a))`",
-                word.token,
-            )
-        elif name != "Cartesian":
-            raise _refusal(
-                f"the grid component `{written}` is typed by `!{name}`, which is no grid "
-                f"kind of the language",
-                f"the grid kind is !Cartesian, `{written} : !Cartesian(a=(a_min, a_max, n_a))`",
-                word.token,
-            )
-        elif not word.arguments:
-            raise _refusal(
-                f"the grid `!Cartesian` of `{written}` names no factor; a grid names one "
-                f"factor per coordinate of the function the place holds",
-                f"write the factors, `{written} : !Cartesian(a=(a_min, a_max, n_a))`",
-                word.token,
-            )
         else:
-            factors = tuple(self._factor(keyword, written) for keyword in word.arguments)
-            classifier = Grid(Cartesian(factors))
+            classifier = Grid(self._grid(name, word.arguments, written, word.token))
         return Typer(Declaration(subject, (classifier,), None))
+
+    # the grid words the language builds, each with the method that reads its
+    # term: the words are those of the printer's table `GRID_WORDS`, by the
+    # term class each method builds; and the words reserved by name for grid
+    # constructors no build implements (AMD-MT-003 build contract §§1-2)
+    _GRIDS = {
+        GRID_WORDS[term]: method
+        for term, method in (
+            (Cartesian, "_cartesian"),
+            (PointGrid, "_points"),
+            (Fibred, "_fibred"),
+        )
+    }
+    _GRID_LIST = ", ".join(f"!{word}" for word in tuple(GRID_WORDS.values())[:-1]) + (
+        f" and !{tuple(GRID_WORDS.values())[-1]}"
+    )
+    _RESERVED_GRIDS = ("TensorUnion", "Image", "Smolyak")
+
+    def _grid(self, name, arguments, written, at=None, where=""):
+        """The grid term of one grid word with its keyword arguments: a
+        `Cartesian`, a `PointGrid` or a `Fibred`, each with the predicate
+        words written after `require`. `written` is the path of the grid
+        component, `at` the token of the outer word, and `where` the words
+        that place a nested grid, ` in the base of !Fibred`, empty for the
+        outer word. A reserved word and a word that is no grid constructor
+        are refused; the meaning of a term is judged at binding
+        (`stage/grids.py`)."""
+        example = f"`{written} : !Cartesian(a=(a_min, a_max, n_a))`"
+        if name in self._RESERVED_GRIDS:
+            raise _refusal(
+                f"the grid component `{written}` is typed{where} by `!{name}`, a grid "
+                f"constructor that is reserved by name and not built",
+                f"the grid constructors built are {self._GRID_LIST}, {example}",
+                at,
+            )
+        if name not in self._GRIDS:
+            raise _refusal(
+                f"the grid component `{written}` is typed{where} by `!{name}`, which is no "
+                f"grid kind of the language",
+                f"the grid kinds are {self._GRID_LIST}, {example}",
+                at,
+            )
+        return getattr(self, self._GRIDS[name])(arguments, written, at, where)
+
+    def _cartesian(self, arguments, written, at, where):
+        """The `Cartesian` of `!Cartesian(...)`: one factor per keyword, read
+        by its shape (`_factor`), and the predicate words of `require`,
+        recognized by their shape alone, so that a coordinate named
+        `require` keeps the forms of a factor. At least one factor is
+        written."""
+        factors, require = [], ()
+        for keyword in arguments:
+            if keyword.key == "require" and _predicate_shaped(keyword.value):
+                require = self._requirements(keyword.value, "Cartesian", written)
+            else:
+                factors.append(self._factor(keyword, written))
+        if not factors:
+            raise _refusal(
+                f"the grid `!Cartesian` of `{written}`{where} names no factor; a grid names "
+                f"at most one factor per coordinate of the function the place holds, and at "
+                f"least one",
+                f"write the factors, `{written} : !Cartesian(a=(a_min, a_max, n_a))`",
+                at,
+            )
+        return Cartesian(tuple(factors), require)
+
+    def _points(self, arguments, written, at, where):
+        """The `PointGrid` of `!Points(nodes=P)`: the name of the declared
+        points and the predicate words of `require`; `!Points` alone is the
+        empty grid."""
+        nodes, require = None, ()
+        for keyword in arguments:
+            if keyword.key == "nodes" and isinstance(keyword.value, Name):
+                nodes = keyword.value.name
+            elif keyword.key == "require" and _predicate_shaped(keyword.value):
+                require = self._requirements(keyword.value, "Points", written)
+            else:
+                raise _refusal(
+                    f"the grid `!Points` of `{written}`{where} writes `{to_source(keyword)}`; "
+                    f"`!Points` takes the name of a declared set of points, `nodes=P`, and the "
+                    f"predicate words its grid satisfies, `require=!Empty`",
+                    f"write `{written} : !Points(nodes=P)` with a declared set of points, or "
+                    f"`!Points` alone for the empty grid",
+                )
+        return PointGrid(nodes, require)
+
+    def _fibred(self, arguments, written, at, where):
+        """The `Fibred` of `!Fibred(base=…, fibre=…)`: the grid of the base
+        states and the grid of the control at each of them, each a nested
+        grid word, and the predicate words of `require`."""
+        held, require = {}, ()
+        for keyword in arguments:
+            if keyword.key in ("base", "fibre") and isinstance(keyword.value, Nested):
+                inner = keyword.value.word
+                held[keyword.key] = self._grid(
+                    inner.name, inner.arguments, written, at, f" in the {keyword.key} of `!Fibred`"
+                )
+            elif keyword.key == "require" and _predicate_shaped(keyword.value):
+                require = self._requirements(keyword.value, "Fibred", written)
+            else:
+                raise _refusal(
+                    f"the grid `!Fibred` of `{written}`{where} writes `{to_source(keyword)}`; "
+                    f"`!Fibred` takes a grid word for its base states, `base=!Points(nodes=B)`, "
+                    f"a grid word for the control at each of them, "
+                    f"`fibre=!Cartesian(c=(Γ_c, n_c))`, and the predicate words its grid "
+                    f"satisfies, `require=!Empty`",
+                    f"write `{written} : !Fibred(base=!Points(nodes=B), "
+                    f"fibre=!Cartesian(c=(Γ_c, n_c)))`",
+                )
+        missing = tuple(name for name in ("base", "fibre") if name not in held)
+        if missing:
+            raise _refusal(
+                f"the grid `!Fibred` of `{written}`{where} names no {' and no '.join(missing)}; "
+                f"a fibred grid pairs each state of its base with the points of its fibre",
+                f"write `{written} : !Fibred(base=!Points(nodes=B), "
+                f"fibre=!Cartesian(c=(Γ_c, n_c)))`",
+                at,
+            )
+        return Fibred(held["base"], held["fibre"], require)
+
+    def _requirements(self, value, word, written):
+        """The predicate words written after `require`, by their names, in
+        written order: one word, `!UniformCartesian`, or a tuple of words.
+        A predicate word takes no arguments."""
+        words = (value,) if isinstance(value, Nested) else value.items
+        for each in words:
+            if each.word.arguments:
+                raise _refusal(
+                    f"the grid `!{word}` of `{written}` requires `{to_source(each)}`, a "
+                    f"predicate word written with arguments; a predicate word takes none",
+                    f"write the word alone, `require=!{each.word.name}`",
+                )
+        return tuple(each.word.name for each in words)
 
     def _factor(self, keyword, written):
         """One factor of a grid, read by the shape of its value: a name is
@@ -1459,30 +1584,235 @@ def _component_text(component):
     return to_source(component)
 
 
-def condition_tail_domain(subject, classifiers, conds):
-    """A declaration's condition tail, `γ : ℝ₊, < 2`, as the comprehension
-    `{γ ∈ ℝ₊ | γ < 2}`: the first declared set of the typing restricted by the
-    conditions, the other components kept. A tail after a typing that
-    declares no set is refused, since a condition restricts a declared set."""
-    stem = subject.coordinates[0].stem
-    rels = [Rel(Sym(Constant(stem)), condition.relation, condition.bound) for condition in conds]
+def intersection_of_sets(subject, classifiers):
+    """The classifiers of a declaration whose type holds several sets,
+    `β : (0,1) @ (0, R^(ρ-1))`, with those sets read as the one set the
+    declared name lies in, their intersection (AMD-GRAM-004 §3; `_one_set`).
+    The one set stands where the first set was written, and the words of
+    the type keep their places. A type with one set, or none, is returned as
+    it is. Several sets that no rule reads as one set are refused
+    (`_several_sets_refusal`)."""
+    sets = [c.space for c in classifiers if isinstance(c, Domain)]
+    if len(sets) < 2:
+        return classifiers
+    refusal = _several_sets_refusal(subject, sets)
+    if refusal is not None:
+        raise refusal
+    declared = Domain(_one_set(subject, sets))
+    return _with_one_set(classifiers, lambda each: isinstance(each, Domain), declared)
+
+
+def _with_one_set(components, is_set, one):
+    """The components of a type with `one` where its first set stood and its
+    other sets left out; the words keep their places. `is_set` tells a set
+    from a word."""
     out = []
-    done = False
-    for c in classifiers:
-        if isinstance(c, Domain) and not done:
-            out.append(Domain(Comprehension(subject, c.space, tuple(rels))))
-            done = True
-        else:
-            out.append(c)
-    if not done:
-        written = ", ".join(f"`{to_source(rel)}`" for rel in rels)
-        raise _refusal(
-            f"the declaration of {stem} writes the condition {written} after a typing that "
-            f"declares no set; a condition tail restricts a declared set, and this "
-            f"declaration declares none",
-            f"write the set before the condition, as in `{stem} : ℝ₊, < 2`, or drop the condition",
-        )
+    for each in components:
+        if not is_set(each):
+            out.append(each)
+        elif one is not None:
+            out.append(one)
+            one = None
     return out
+
+
+def _several_sets_refusal(subject, sets):
+    """The refusal of several sets in one type that no rule reads as one
+    set, or None where `_one_set` reads them: a declaration of more than one
+    name; a name typed inside its parentheses; a set of labels, a product or
+    a set of functions among the sets, which no interval restricts; and two
+    sets that are no intervals."""
+    stem = _subject_text(subject)
+
+    def carried():
+        """What the declaration carries, each set as written; the sets are
+        printed for a refusal alone."""
+        written = ", ".join(f"`{to_source(each)}`" for each in sets[:-1])
+        return f"the declaration of {stem} carries the sets {written} and `{to_source(sets[-1])}`"
+
+    if bound_name(subject) is None:
+        coordinates = subject.coordinates
+        if len(coordinates) == 1 and isinstance(coordinates[0], Coordinate):
+            name = coordinates[0].stem
+            return _refusal(
+                f"{carried()}, and it types {name} inside its parentheses as well; several sets "
+                f"in one type restrict a name that carries no other type",
+                f"write the name without parentheses, with every set and word of its type "
+                f"after one colon, as in `{name} : (0, 1) @ (0, R)`",
+            )
+        return _refusal(
+            f"{carried()}; several sets in one type restrict one declared name, and this "
+            f"declaration declares more than one",
+            "declare each name on its own line, with its own sets",
+        )
+    for each in sets:
+        kind = _UNRESTRICTED_KINDS.get(type(each))
+        if kind is not None:
+            return _refusal(
+                f"{carried()}, and `{to_source(each)}` is {kind}; several sets in one type are "
+                f"one set of numbers and the intervals that bound it",
+                f"write the one set {stem} takes its values in",
+            )
+    other = [each for each in sets if not is_interval(each)]
+    if len(other) > 1:
+        first, second = (to_source(each) for each in other[:2])
+        return _refusal(
+            f"{carried()}, and `{first}` and `{second}` are no intervals; several sets in one "
+            f"type are read as one set restricted by intervals, so that at most one of them "
+            f"is not an interval",
+            f"write one set and each further bound as an interval, as in "
+            f"`{stem} : {first} @ (0, 1)`",
+        )
+    return None
+
+
+# the sets that an interval does not restrict, each by what a refusal calls it
+_UNRESTRICTED_KINDS = {
+    FiniteSet: "a set of labels",
+    Product: "a product",
+    Functions: "a set of functions",
+}
+
+
+def _one_set(subject, sets):
+    """The one set that several sets of one type are kept as, their
+    intersection: a base restricted by conditions on the declared name,
+    `{β ∈ (0,1) | β < R^(ρ-1)}` (AMD-GRAM-004 §3). Each side of the
+    intervals is read on its own (`_side`), so the one set is the same in
+    whatever order the sets are written and however their endpoints are
+    grouped into intervals.
+
+    The base is the set that is no interval. Where every set is an
+    interval, the base is the interval of the first endpoint of each side:
+    the tightest number, else the infinity of that side, else the first
+    formula. Every other endpoint gives one condition, the lower ones before
+    the upper ones, except the infinity of its own side, `-inf` below and
+    `inf` above, which restricts only where it is open and the base may hold
+    it (`source.may_hold_infinity`). Where no condition is left the one set
+    is the base."""
+    intervals = [each for each in sets if is_interval(each)]
+    other = [each for each in sets if not is_interval(each)]
+    lower, upper = _side(intervals, negative=True), _side(intervals, negative=False)
+    if other:
+        base = other[0]
+    else:
+        (low, left), (high, right) = lower.pop(0), upper.pop(0)
+        base = Interval(Range(left, low, high, right))
+    name = bound_name(subject)
+    conditions = []
+    for ends, negative, strict, weak in ((lower, True, Gt, Ge), (upper, False, Lt, Le)):
+        for end, bracket in ends:
+            if is_infinity(end, negative) and not (
+                isinstance(bracket, Open) and may_hold_infinity(base, negative)
+            ):
+                continue
+            relation = weak() if isinstance(bracket, Closed) else strict()
+            conditions.append(Rel(name, relation, end))
+    return Comprehension(subject, base, tuple(conditions)) if conditions else base
+
+
+def _side(intervals, negative):
+    """The endpoints that intervals write on one side, the lower one with
+    `negative`, each with its bracket, in the order `_one_set` reads them:
+    the tightest number, the greatest lower endpoint or the least upper one;
+    where no number is written, the infinity of that side; then every other
+    endpoint, a formula, in the order of its printed text.
+
+    An endpoint written several times stands once, with an open bracket
+    where one of them is open, the stricter of the two. A number that is not
+    the tightest and an infinity beside a number restrict nothing and are
+    left out. The numbers are compared by value and none is printed, so a
+    number that has no spelling, `1e400`, is ordered with the others."""
+    written = [
+        (each.bounds.lower, isinstance(each.bounds.left, Open))
+        if negative
+        else (each.bounds.upper, isinstance(each.bounds.right, Open))
+        for each in intervals
+    ]
+    numbers = [(end, strict) for end, strict in written if is_number(end)]
+    infinities = [(end, strict) for end, strict in written if is_infinity(end, negative)]
+    others = [entry for entry in written if entry not in numbers and entry not in infinities]
+    # a formula written several times is one key, the first in the order of
+    # the text, and is strict where one of them is
+    formulas = {}
+    for end, strict in sorted(others, key=lambda entry: to_source(entry[0])):
+        formulas[end] = formulas.get(end, False) or strict
+    first = []
+    if numbers:
+        values = [_endpoint_value(end) for end, _ in numbers]
+        tightest = max(values) if negative else min(values)
+        equal = [entry for entry, value in zip(numbers, values) if value == tightest]
+        # of several spellings of the tightest number, one that does not
+        # depend on the order written
+        written_once = min((end for end, _ in equal), key=repr)
+        first = [(written_once, any(strict for _, strict in equal))]
+    elif infinities:
+        first = [(infinities[0][0], any(strict for _, strict in infinities))]
+    return [(end, Open() if strict else Closed()) for end, strict in [*first, *formulas.items()]]
+
+
+def _endpoint_value(term):
+    """The value of an endpoint that is a number as written
+    (`source.is_number`)."""
+    return -term.operand.value if isinstance(term, Neg) else term.value
+
+
+def _subject_text(subject):
+    """The subject of a declaration as written: one name, `β` or `V[>]`, or
+    the names of a tuple in parentheses, `(β, R)`."""
+    names = [
+        _subject_text(each.inner) if isinstance(each, Group) else _written_name(each)
+        for each in subject.coordinates
+    ]
+    return names[0] if len(names) == 1 else "(" + ", ".join(names) + ")"
+
+
+def _retired_bound_refusal(subject, components, bounds):
+    """The refusal of a declaration that writes a bound after a comma,
+    `γ : ℝ₊, < 2`, the spelling AMD-GRAM-004 retired; `components` are the
+    components of its type as written. It quotes each bound.
+
+    Where the declaration's sets and one interval for each bound are read as
+    one set (`_one_set`), the refusal gives the type to write: the words in
+    their places and, where the first set stood, that one set as `to_source`
+    writes it, `ℝ₊ @ (-inf, 2)`. The interval of a bound is closed at its
+    infinite end, which restricts no set, so the type declares the set the
+    retired line declared. Elsewhere the refusal says how a bound is
+    written."""
+    name = bound_name(subject)
+    signs = {symbol: sign for sign, symbol in RELATION_OF_SYMBOL.items() if sign.isascii()}
+    written = " and ".join(
+        f"`{signs[type(relation)]} {to_source(bound)}`"
+        if name is None
+        else f"`{to_source(name)} {signs[type(relation)]} {to_source(bound)}`"
+        for relation, bound in bounds
+    )
+    infinity = Sym(Constant("inf"))
+    intervals = [
+        Interval(
+            Range(bracket_of(relation), bound, infinity, Closed())
+            if isinstance(relation, (Gt, Ge))
+            else Range(Closed(), Neg(infinity), bound, bracket_of(relation))
+        )
+        for relation, bound in bounds
+    ]
+    sets = [each for each in components if not isinstance(each, _Word)] + intervals
+    advice = "write each bound as an interval after `@`, as in `γ : ℝ₊ @ (-inf, 2)`"
+    if (
+        name is not None
+        and len(sets) > len(intervals)
+        and _several_sets_refusal(subject, sets) is None
+    ):
+        one = _one_set(subject, sets)
+        typed = _with_one_set(components, lambda each: not isinstance(each, _Word), one)
+        advice = "write `" + " @ ".join(_component_text(each) for each in typed) + "`"
+    return _refusal(
+        f"the declaration of {_subject_text(subject)} writes the "
+        f"{'bound' if len(bounds) == 1 else 'bounds'} {written} after a comma, a spelling the "
+        f"language has retired; a bound on a declared name is an interval written after `@` "
+        f"(AMD-GRAM-004)",
+        advice,
+    )
 
 
 def number_value(tok):

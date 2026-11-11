@@ -20,7 +20,7 @@ z : Rstate
 q : Ystate
 (z, q) ~ MarkovChain(Q, (Rstate, Ystate), z_prev)   :: ["Assumption 2, p. 145: (r_n, y_n) is a real, irreducible, aperiodic, stationary Markov chain on r̄ × ȳ whose transition satisfies Pr(r_n, y_n | r_{n-1}, y_{n-1}) = Pr(r_n, y_n | r_{n-1}), so the parent's return state alone conditions the draw"]
 
-r : ℝ₊₊, >= ρ  :: ["the return that enters the budget, after the capital income tax; Assumption 1 requires it to be at least ρ, which footnote 21 (p. 129) uses to rule out borrowing within the life"]
+r : ℝ₊₊ @ [ρ, inf)  :: ["the return that enters the budget, after the capital income tax; Assumption 1 requires it to be at least ρ, which footnote 21 (p. 129) uses to rule out borrowing within the life"]
 y : ℝ₊₊        :: ["earnings at birth, strictly positive by Assumption 3(i), p. 145"]
 
 𝑢(c : ℝ₊₊) := c^(1-σ)/(1-σ)        :: [id=util]

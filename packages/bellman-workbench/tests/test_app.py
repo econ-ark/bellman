@@ -1996,30 +1996,30 @@ def test_b_the_name_under_the_cursor_is_read_against_the_shown_text(cons, cons_t
 
 def test_b_the_name_view_marks_one_declaration_and_names_the_file_that_sets_the_name():
     """The panel's view of the name under the cursor (specification §3.2):
-    `μ_ξ` of buffer_stock.bl is declared at line 12, column 1, and written
-    again on that line inside its own description; the first occurrence on
-    the declaration's line alone carries the word `declaration`, which
-    carries its definition. The calibration location the test passes,
-    line 7 of `declaration/calibration/portfolio.yml`, is written by hand
-    and sets no `μ_ξ`; it shows how the view names such a location, by its
-    file and line, `given at <file>, line <n>`: the link's own words hold
-    no `calibration`, which names the digest of the status line, though
-    its path may. The boxes `μ_ξ` lists stand under the label `boxes
-    depending on μ_ξ` (unit K, Task 6), each of its two terms carrying its
-    definition."""
+    `μ_ξ` of buffer_stock.bl, a derived parameter, is defined at line 13,
+    column 1, and read again at line 18 by the law of ξ; the first
+    occurrence, on the line of its definition, alone carries the word
+    `declaration`, which carries its definition. The calibration location
+    the test passes, line 7 of `declaration/calibration/portfolio.yml`, is
+    written by hand and sets no `μ_ξ`; it shows how the view names such a
+    location, by its file and line, `given at <file>, line <n>`: the link's
+    own words hold no `calibration`, which names the digest of the status
+    line, though its path may. The boxes `μ_ξ` lists stand under the label
+    `boxes depending on μ_ξ` (unit K, Task 6), each of its two terms
+    carrying its definition."""
     path = "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl"
     text = (ROOT / path).read_text(encoding="utf-8")
     stage = model.elaborate_buffer(text, path).stage
     report = model.name_report(stage, model.collection(stage), text, "μ_ξ")
-    assert report.declaration == 12
-    assert [line for line, _ in report.occurrences[:2]] == [12, 12]
+    assert report.declaration == 13
+    assert [line for line, _ in report.occurrences[:2]] == [13, 18]
     _, rendered = solara.render(
         app.NameView(report, ("declaration/calibration/portfolio.yml", 7)), handle_error=False
     )
     try:
         (listed,) = rendered.find(v.Html, class_="bl-name-occurrences bl-code-small").widgets
         first, *others = listed.children
-        assert first.children[:2] == ["12:1", "  "]
+        assert first.children[:2] == ["13:1", "  "]
         term = first.children[2]
         assert term.children == ["declaration"]
         assert term.attributes["title"] == app.TERMS["declaration"]

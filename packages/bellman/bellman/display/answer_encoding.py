@@ -556,8 +556,8 @@ KINDS = {
     T.Var: "terms.Var",
     T.Variable: "terms.Variable",
     # the typing entries of specification 0.7: the path of a component, the
-    # method word with its keyword arguments, the grid with its factors and
-    # the handler binding
+    # method word with its keyword arguments, the grid as one outer grid word
+    # (AMD-MT-003 build contract §2) and the handler binding
     T.Path: "terms.Path",
     T.Segment: "terms.Segment",
     T.Term: "terms.Term",
@@ -572,6 +572,8 @@ KINDS = {
     T.Values: "terms.Values",
     T.Nested: "terms.Nested",
     T.Cartesian: "terms.Cartesian",
+    T.PointGrid: "terms.PointGrid",
+    T.Fibred: "terms.Fibred",
     T.Spaced: "terms.Spaced",
     T.Listed: "terms.Listed",
     T.Feasible: "terms.Feasible",

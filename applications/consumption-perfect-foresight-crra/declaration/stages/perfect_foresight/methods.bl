@@ -1,0 +1,38 @@
+@methods: perfect_foresight
+# The closed-form solution of the perfect foresight stage, an addition to
+# perfect_foresight.bl, the stage file beside this one (economics.md, "The
+# solution in closed form"). The marginal propensity to consume κ = 1 - q is
+# the method's coefficient and is defined here; the return patience factor q,
+# human wealth h and the natural borrowing limit L = 1 - h are the stage's.
+# Each of the three builders that the closed form solves is typed !explicit,
+# and the lines of its block write its outputs as explicit functions of its
+# own perch's state: the consumption function c = κ(m - L) at the policy
+# builder, the decision value κ^(-ρ) (m - L)^(1-ρ)/(1-ρ) and its marginal at
+# the decision value builder, and the arrival value, the decision value at
+# the resources R*k/Γ + 1 normalized by Γ^(1-ρ), and its marginal at the
+# arrival value builder, whose id arrival_marginal the module reads. At the
+# operative level each line stands in place of the builder's declared line,
+# which stage.declared keeps. !explicit gives the Evaluation of each builder
+# the closed form, !closed_form. The power κ^(-ρ) is defined for every ρ > 1
+# only at κ > 0, which is the return impatience condition q < 1, the upper
+# bound of the discount factor in the stage file: calibrate refuses a
+# calibration outside that bound, and one at which the computed κ is not
+# positive. The functions hold on total wealth
+# m - L > 0, and at the arrival perch on k > L; the application's module
+# refuses an evaluation elsewhere.
+
+κ := 1 - q    :: ["the marginal propensity to consume, one minus the return patience factor"]
+
+[id=policy, policy.method : !explicit] {
+    c = κ*(m - L)                                        :: [id=consumption]
+}
+
+[id=cntn_to_dcsn, cntn_to_dcsn.method : !explicit] {
+    V = κ^(-ρ)*(m - L)^(1-ρ)/(1-ρ)                       :: [id=closed_value]
+    D_{m}V = κ^(-ρ)*(m - L)^(-ρ)                         :: [id=marginal]
+}
+
+[id=dcsn_to_arvl, dcsn_to_arvl.method : !explicit] {
+    V[<] = Γ^(1-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(1-ρ)/(1-ρ)    :: [id=closed_value]
+    D_{k}V[<] = R*Γ^(-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(-ρ)     :: [id=arrival_marginal]
+}

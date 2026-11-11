@@ -42,7 +42,8 @@ from conftest import (BRANCHING, BUNDLES, JOINT_CHOICE, FINITE_STATE, TWO_NODES,
                       emptied_connector_port_cons, emptied_pension, emptied_port_cons,
                       emptied_portfolio, emptied_portfolio_entry,
                       five_mappings_port_cons, graphs_differ,
-                      joint_normal, shock_branching, stage_from_text, two_cons_period, two_nodes)
+                      joint_normal, shock_branching, stage_from_text, two_cons_period, two_nodes,
+                      GRID_VALUES)
 from snapshot.record import recording_path
 
 import bellman
@@ -924,6 +925,49 @@ def test_calibrate_refuses_a_parameter_without_a_value_and_a_value_outside_its_d
         calibrate(copy_native(cons), {})
     with pytest.raises(ValueError, match=r"the value 0.5 lies outside the declared set \[1, inf\).*write a value in \[1, inf\)"):
         calibrate(copy_native(cons), {"ρ": 0.5})
+
+
+def test_a_derived_parameter_is_evaluated_after_those_it_reads_and_its_kernel_text_uses_numpy(
+        derived_parameters):
+    """A derived parameter is evaluated after the derived parameters it reads,
+    whatever their order in the file, and a power whose exponent takes an
+    integer value takes its value at a negative base, although the exponent's
+    declared set holds nonintegers: the one condition the derived parameter
+    owns is established at the value its definition takes; the definitions
+    listing and the stage sheet print each derived parameter by its
+    definition, and its card lists under `Definitions referenced` each
+    parameter its definition reads, a name printed before a superscript
+    exponent, `Γ²`, among them; and a compiled kernel writes a derived
+    parameter through its definition, log and exp as NumPy's functions, with
+    the declared parameters as its arguments (AMD-MT-003, build contract
+    §5)."""
+    stage = derived_parameters.stage(
+        ("h := 1/(1 - Γ/R)", "h := 1/(1 - q)\nq := Γ/R\nz := (-q)^ρ"),
+        ("R_n := R/Γ", "R_n := exp(log(R) - log(Γ))"),
+    )
+    assert list(stage.par)[4:] == ["h", "q", "z", "R_n"]
+    stage.calibrate({"calibration": derived_parameters.calibration})
+    q = 1.02 / 1.04
+    assert stage.par["h"].value == pytest.approx(1 / (1 - q))
+    assert stage.par["z"].value == pytest.approx(q**2)
+    condition, = [item for item in stage.obligations()
+                  if item.entries and str(item.entries[0]).endswith(":derived:z")]
+    assert condition.status == "established"
+    assert condition.evidence == (f"calibration z = {stage.par['z'].value!r}",)
+    assert "DERIVED PARAMETERS 4" in str(stage.definitions.list())
+    assert "derived parameters       4   h := 1/(1 - q), q := Γ/R, z := (-q)^ρ" in str(stage)
+    squared = str(derived_parameters.stage(("h := 1/(1 - Γ/R)", "h := Γ^2"))
+                  .definitions.denote("perfect_foresight:derived:h"))
+    assert "  h  := Γ²\n" in squared
+    assert squared.split("Definitions referenced\n")[1].splitlines()[:-1] == [
+        "  Γ     perfect_foresight:parameter:Γ"]
+    law = stage.builder["arvl", "dcsn"]["Pushforward"]
+    kernel = law.kernel()
+    assert kernel.parameters == ("R", "Γ")
+    assert "    R_n = np.exp(np.log(R) - np.log(Γ))\n" in kernel.python
+    assert law.compile_kernel()(numpy.array([1.0]), *kernel.parameter_values) == pytest.approx(
+        [1.04 / 1.02 + 1]
+    )
 
 
 def test_configure_binds_the_settings_the_attached_methods_name_from_a_file_or_a_mapping(cons_methodized, cons_configured, cons_sources):
@@ -2839,10 +2883,10 @@ def _read_text_014(path):
 def test_a_declared_description_is_kept_and_an_obligation_names_the_function(buffer_stock, cons):
     assert buffer_stock.definitions.denote(
         "buffer_stock:parameter:β").describes == ("discount factor",)
+    # a derived parameter keeps its description as a declared one does
     assert buffer_stock.definitions.denote(
-        "buffer_stock:parameter:μ_ξ").describes == (
-            "log-mean of the positive transitory draw; E[ξ] = 1 requires "
-            "μ_ξ = -log(1 - p_zero) - σ_ξ^2/2",)
+        "buffer_stock:derived:μ_ξ").describes == (
+            "log-mean of the positive transitory draw, at which E[ξ] = 1",)
     selected = stage_from_text(SELECTED_LAW, "selected_law.bl")
     assert selected.definitions.denote(
         "key_selection_reads:distribution:s").describes == (
@@ -3117,7 +3161,9 @@ def test_method_choices_leave_graphs_types_and_equations_unchanged(cons):
     equation: `!egm` on the policy builder with its savings grid, then `!vfi`
     on the backward decision builder, each beside a representation of what
     the decision builder's Evaluation stores; the obligations gain the
-    method's own condition alone."""
+    method's own condition and the representation's `evaluation-domain`, that
+    it is evaluated where its nodes support the function (AMD-MT-003 build
+    contract §§3, 4), alone."""
     for target, solver, representation in (("policy", "egm", "Linear"), ("cntn_to_dcsn", "vfi", "pchip")):
         grid = (
             "a_min : ℝ₊\na_max : ℝ₊\nn_a : ℕ\npolicy.grid : !Cartesian(a=(a_min, a_max, n_a))\n"
@@ -3140,7 +3186,7 @@ def test_method_choices_leave_graphs_types_and_equations_unchanged(cons):
                 w.mathematical_type for w in before.inputs + before.outputs)
         assert [item.condition for item in version.obligations()] == [
             *[item.condition for item in cons.obligations()],
-            *(["egm-eligibility"] if solver == "egm" else [])]
+            *(["egm-eligibility"] if solver == "egm" else []), "evaluation-domain"]
 
 
 def test_the_bindings_return_the_stage_they_bind_with_its_graphs_and_table(cons, cons_sources):
@@ -8481,7 +8527,10 @@ def test_admitted_methods_answers_the_words_a_place_admits_by_its_kind(cons, ten
     assert {"!Linear", "!gauss_hermite"}.isdisjoint(admitted_methods(cons, "arvl_to_dcsn"))
     assert "!egm" in admitted_methods(cons, "policy")
     assert "!vfi" in admitted_methods(cons, "cntn_to_dcsn")
-    assert admitted_methods(cons, "cntn_to_dcsn.evaluate[V]") == ("!Linear", "!pchip")
+    # the representation families of the registry, the closed form among
+    # them (AMD-MT-003 build contract §3)
+    assert admitted_methods(cons, "cntn_to_dcsn.evaluate[V]") == (
+        "!Linear", "!pchip", "!closed_form")
     assert "!gauss_hermite" in admitted_methods(tenure, "E_ε")
     assert "!max" in admitted_methods(tenure, "policy")
     # a line of a branch is a place under its label, and the expectation of
@@ -8504,6 +8553,234 @@ def test_admitted_methods_answers_the_words_a_place_admits_by_its_kind(cons, ten
     assert [row["address"] for row in stage.places()].count("cntn_to_dcsn.marginal.D") == 1
     with pytest.raises(TargetError):
         admitted_methods(cons, "no_such_block")
+
+
+def test_the_registry_of_representation_families_registers_removes_and_refuses_a_taken_word(cons):
+    """`register` adds a family whose row the method table then reads, with
+    the family's typed arguments as its keywords and its places as its
+    admission; `unregister` removes it and refuses a word that names no
+    family; a word another family or another method names, spelled with a
+    hyphen or an underscore, is refused, and so are a record that is no
+    family, a family that samples its own nodes and refuses a grid, a data
+    source outside the four and an argument of a kind configuration does not
+    check. `families()` is a read-only view in registration order
+    (AMD-MT-003 build contract §3)."""
+    from bellman.native.records import MethodOption
+    from bellman.stage import admitted_methods
+    from bellman.stage.representations import RepresentationFamily, families, register, unregister
+
+    record = RepresentationFamily(
+        "kinked",
+        {"n_knots": MethodOption("positive integer", description="The number of knots.")},
+        ("table", "own nodes"), derivatives=(1,), stored="The values at the knots.")
+    assert register(record) is record
+    try:
+        assert list(families())[-1] == "kinked"
+        row = method_types["!kinked"]
+        assert (row.kind, dict(row.keywords), row.admits, row.grid) == (
+            "representation", {"n_knots": record.parameters["n_knots"]}, record.admits, "output")
+        assert "!kinked" in admitted_methods(cons, "cntn_to_dcsn.evaluate")
+        with pytest.raises(ValueError, match="already names a registered"):
+            register(record)
+        with pytest.raises(TypeError):
+            families()["other"] = record
+    finally:
+        assert unregister("kinked") is record
+    assert "!kinked" not in method_types and "!kinked" not in admitted_methods(
+        cons, "cntn_to_dcsn.evaluate")
+    with pytest.raises(KeyError, match="names no registered"):
+        unregister("kinked")
+    with pytest.raises(ValueError, match="names the method !golden_section"):
+        register(RepresentationFamily("golden-section", {}, ("own nodes",), (), "nodes"))
+    with pytest.raises(TypeError):
+        register("Linear")
+    with pytest.raises(ValueError, match="accepts its own nodes reads a grid"):
+        RepresentationFamily("gridless", {}, ("own nodes",), (), "nodes", grid=None)
+    with pytest.raises(ValueError, match="at least one data source"):
+        RepresentationFamily("fitted", {}, ("weights",), (), "weights")
+    with pytest.raises(ValueError, match="configure checks the kinds"):
+        register(RepresentationFamily(
+            "odd", {"shape": MethodOption("matrix")}, ("own nodes",), (), "nodes"))
+
+
+def test_a_table_on_two_coordinates_beside_a_grid_on_them_is_compared_exactly():
+    """An authored table evaluated at a tuple of names, `evaluate(K2, Y2,
+    (m, z))`, beside an optional grid that discretizes those coordinates in
+    that order, a `!Cartesian` grid whatever the order of its factors or a
+    `!Points` grid, is admitted, and configuration compares the two finite
+    supports exactly, the Cartesian support taken in the order of the
+    coordinates: equal supports establish `table-grid-support` and a
+    different support is refused (AMD-MT-003 build contract §§1, 3, 4)."""
+    from bellman.refusals import ConstructionError
+    from conftest import TWO_STATE_GRID_STAGE, stage_from_text
+
+    stage = stage_from_text(TWO_STATE_GRID_STAGE, "grids.bl")
+    table = (
+        "K2 : X2 × X2 × X2 × X2\nY2 : ℝ × ℝ × ℝ × ℝ\n[id=cntn_to_dcsn] {\n"
+        "    W = evaluate(K2, Y2, (m, z))    :: [id=table]\n}\n"
+        "cntn_to_dcsn.table.evaluate.method : !Linear\n"
+    )
+    knots = [[1.0, -1.0], [1.0, 1.0], [2.0, -1.0], [2.0, 1.0]]
+    nodes = {"MN": [1.0, 2.0], "ZN": [-1.0, 1.0]}
+    for grid, declared, settings in (
+        ("!Cartesian(z=ZN, m=MN)", "MN : ℝ × ℝ\nZN : ℝ × ℝ\n", nodes),
+        ("!Points(nodes=P2)", "P2 : X2 × X2 × X2 × X2\n", {"P2": knots[::-1]}),
+    ):
+        bound = copy_native(stage).methodize({
+            "text": f"@methods: grids\n{declared}{table}"
+            f"cntn_to_dcsn.table.evaluate.grid : {grid}\n",
+            "origin": "table.bl",
+        })
+        assert bound.methods["cntn_to_dcsn.table.evaluate"].source == "table"
+        different = copy_native(bound)
+        bound.configure({"settings": {"K2": knots, "Y2": [1.0, 2.0, 3.0, 4.0], **settings}})
+        assert [item.status for item in bound.obligations()
+                if item.condition == "table-grid-support"] == ["established"], grid
+        changed = {name: [*value[:-1], [9.0, 9.0] if name == "P2" else 9.0]
+                   for name, value in settings.items()}
+        with pytest.raises(ConstructionError) as refused:
+            different.configure({"settings": {"K2": knots, "Y2": [1.0, 2.0, 3.0, 4.0], **changed}})
+        assert refused.value.rule == "representation-source"
+        assert "exactly the table's finite support" in refused.value.message
+
+
+def test_a_node_reads_an_authored_table_as_its_data_only_where_the_table_is_its_function():
+    """A `!node` line's head `<node>` and its Evaluation `<node>.evaluate`
+    read one source, selected at the place a typing entry resolves to: the
+    node's Evaluation, and at `<block>.evaluate` the Evaluation that closes
+    the builder, whose representation samples its own grid. Where the line
+    defines its name by an authored table alone, the table is the node's
+    function: the source is `table`, a `!Points` or a `!Cartesian` grid
+    beside it is compared with the table's knots on the coordinates of the
+    node's Evaluation at configuration, also where the representation is
+    typed at the node's line and the grid at its Evaluation, the two entries
+    being one assignment, and the closed form is refused as a family that
+    accepts no table. The methods answer an entry by its address and by the
+    box of the place it resolves to, the node's Evaluation for
+    `<node>.evaluate`. Where the table is one term of the node's expression,
+    the table gives no values of the node's function, which is sampled on
+    its own grid, five points beside a table of three knots (AMD-MT-003
+    build contract §3, case 1 and the canonical resolution)."""
+    from bellman.refusals import ConstructionError
+    from conftest import (
+        PERFECT_FORESIGHT_CALIBRATION,
+        methodized,
+        perfect_foresight_text,
+        stage_from_text,
+    )
+
+    growth ='Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    value = "    V = 𝑢(c) + β*V[>]               :: [id=value]\n"
+    calibration = {**PERFECT_FORESIGHT_CALIBRATION, "K": [0.0, 1.0, 2.0], "Y": [1.0, 2.0, 4.0]}
+    table = "cntn_to_dcsn.table.evaluate"
+
+    def node_stage(lines):
+        return stage_from_text(perfect_foresight_text(
+            (growth, growth + "K : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\n"), (value, lines),
+        ), "perfect_foresight.bl")
+
+    # the line defines the block's output by the table alone
+    whole = node_stage("    V = evaluate(K, Y, m)    :: [id=table, !node]\n")
+    for place in ("cntn_to_dcsn.table", table):
+        assert methodized(whole, f"{place}.method : !Linear\n").methods[place].source == "table"
+    closing = methodized(whole, "cntn_to_dcsn.evaluate.method : !Linear\n")
+    assert closing.methods["cntn_to_dcsn.evaluate"].source == "own nodes"
+    for grid, nodes in (("!Points(nodes=P)", "P"), ("!Cartesian(m=KN)", "KN")):
+        typed = methodized(whole, f"{nodes} : ℝ × ℝ × ℝ\n{table}.method : !Linear\n"
+                                  f"{table}.grid : {grid}\n")
+        assert typed.methods[table].source == "table"
+        assert typed.methods["cntn_to_dcsn.table:Evaluation"] is typed.methods[table]
+        assert "cntn_to_dcsn.table" not in typed.methods
+        typed.calibrate({"calibration": calibration})
+        different = copy_native(typed)
+        typed.configure({"settings": {nodes: [0.0, 1.0, 2.0]}})
+        assert [item.status for item in typed.obligations()
+                if item.condition == "table-grid-support"] == ["established"], grid
+        with pytest.raises(ConstructionError) as refused:
+            different.configure({"settings": {nodes: [0.0, 1.0, 3.0]}})
+        assert refused.value.rule == "representation-source", grid
+        assert "exactly the table's finite support" in refused.value.message
+    # the representation typed at the node's line and the grid at its
+    # Evaluation, one assignment read at the Evaluation
+    split = methodized(whole, f"P : ℝ × ℝ × ℝ\ncntn_to_dcsn.table.method : !Linear\n"
+                              f"{table}.grid : !Points(nodes=P)\n")
+    assert split.methods["cntn_to_dcsn.table"].source == "table"
+    assert str(split.methods["cntn_to_dcsn.table:Evaluation"]) == "!Points(nodes=P)"
+    split.calibrate({"calibration": calibration})
+    different = copy_native(split)
+    split.configure({"settings": {"P": [0.0, 1.0, 2.0]}})
+    assert [item.status for item in split.obligations()
+            if item.condition == "table-grid-support"] == ["established"]
+    with pytest.raises(ConstructionError) as refused:
+        different.configure({"settings": {"P": [0.0, 1.0, 3.0]}})
+    assert (refused.value.rule, refused.value.address) == ("representation-source", table)
+    assert "exactly the table's finite support" in refused.value.message
+    with pytest.raises(ConstructionError) as refused:
+        methodized(whole, f"{table}.method : !closed_form\n")
+    assert refused.value.rule == "representation-source"
+    assert "accepts no table" in refused.value.message
+
+    # the table is one term of the node's expression
+    summand = node_stage("    W = β*V[>] + evaluate(K, Y, m)    :: [id=table, !node]\n"
+                         "    V = 𝑢(c) + W                      :: [id=value]\n")
+    for place in ("cntn_to_dcsn.table", table):
+        held = methodized(summand, f"{place}.method : !Linear\n")
+        assert held.methods[place].source == "own nodes"
+    typed = methodized(summand, f"KN : ℝ × ℝ × ℝ × ℝ × ℝ\n{table}.method : !Linear\n"
+                                f"{table}.grid : !Cartesian(m=KN)\n")
+    typed.calibrate({"calibration": calibration})
+    typed.configure({"settings": {"KN": [0.0, 0.5, 1.0, 1.5, 2.0]}})
+    assert "table-grid-support" not in {item.condition for item in typed.obligations()}
+
+
+def test_the_support_of_a_law_is_decided_at_the_value_of_a_derived_parameter_it_reads():
+    """A law whose argument is a derived parameter has its support decided at
+    the derived parameter's value, which the evidence of an established
+    `law-support` and the refusal of a support outside the declared set both
+    name with the parameters the law reads, the names among the symbols of
+    its term: w, and not the derived parameter r := R - 1, whose name is a
+    letter of the law's printed text (AMD-MT-003 build contract §5)."""
+    from conftest import stage_from_text
+
+    text = (
+        "@stage: t\nΓ : ℝ₊₊\nR : ℝ₊₊\nw := 2*Γ\nr := R - 1\nξ : [0, 2]\n"
+        "ξ ~ TruncatedLogNormal(0, 0.1, 0.5, w)\n"
+        "[id=arvl_to_dcsn, (k : ℝ, ξ) : !arvl -> (m : ℝ) : !dcsn] {\n    m = k + ξ\n}\n"
+    )
+    stage = stage_from_text(text)
+    stage.calibrate({"calibration": {"Γ": 0.9, "R": 1.04}})
+    support, = [item for item in stage.obligations() if item.condition == "law-support"]
+    assert support.status == "established"
+    assert support.evidence[0] == "calibration w = 1.8; the support [0.5, 1.8] lies within [0, 2]"
+    with pytest.raises(ValueError) as refused:
+        stage_from_text(text).calibrate({"calibration": {"Γ": 1.02, "R": 1.04}})
+    assert "calibration w = 2.04 gives the distribution of ξ the support [0.5, 2.04]" in str(
+        refused.value)
+
+
+def test_supports_equal_compares_two_finite_supports_exactly():
+    """`supports_equal` compares two sets of points with no tolerance: each
+    coordinate is converted exactly, so that distinct large integers stay
+    distinct and an integer equals a float only where the float is that
+    integer; the two signed zeros are one point; the order and the
+    repetition of points do not matter; points of different dimensions
+    differ; and a coordinate that is not finite or not real is refused
+    (AMD-MT-003 build contract §4)."""
+    from fractions import Fraction
+
+    from bellman.stage.representations import supports_equal
+
+    assert supports_equal([0.0, 1.0, 2.0], [2, 1, -0.0, 1.0])
+    assert supports_equal([0.1], [numpy.float64(0.1)])
+    assert not supports_equal([0.1], [Fraction(1, 10)])
+    assert not supports_equal([2**60 + 1], [2**60])
+    assert not supports_equal([2**53 + 1], [float(2**53 + 1)])
+    assert supports_equal([numpy.int64(3)], [3.0])
+    assert supports_equal([(0.0, 1.0), (1.0, 2.0)], numpy.array([[1.0, 2.0], [0.0, 1.0]]))
+    assert not supports_equal([(0.0, 1.0)], [0.0]) and supports_equal([], ())
+    for point in (float("nan"), float("-inf"), "1.0", True, 1j):
+        with pytest.raises(ValueError):
+            supports_equal([point], [1.0])
 
 
 @pytest.mark.parametrize("name", ("cons", "port"))
@@ -8681,3 +8958,84 @@ def test_boolean_settings_keep_boolean_membership_separate_from_numbers(cons):
                 stage.configure({"flag": value})
             assert error.value.rule == "setting-outside-set"
             assert "flag" in error.value.message
+
+
+def test_a_grid_whose_feasible_set_reads_a_derived_parameter_is_built_at_its_value(grid_stage):
+    """The fibred grid of example E09 with the feasible set Γ_c(m) = [0, s*m],
+    where s := q/2 is a derived parameter, is built at the value of s the
+    calibration q = 4 gives, s = 2: the pairs (1, 0), (1, 2), (2, 0) and
+    (2, 4), while the stored calibration keeps the declared q alone
+    (AMD-MT-003 build contract §§2, 5; shared contract §8)."""
+    from conftest import GRID_STAGE, GRID_VALUES
+
+    text = GRID_STAGE.replace(
+        "Γ_c(m : Xm) := [0, m]\n", "q : ℝ₊₊\ns := q/2\nΓ_c(m : Xm) := [0, s*m]\n"
+    )
+    stage = grid_stage(
+        "cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : "
+        "!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c)))\n",
+        text=text,
+    )
+    stage.calibrate({"calibration": {"q": 4.0}})
+    stage.configure({"settings": GRID_VALUES})
+    grid = stage.builder["cntn", "dcsn"].kernels().grids["cntn_to_dcsn"]
+    assert (grid.coordinates, grid.points) == (("m", "c"), ((1, 0), (1, 2), (2, 0), (2, 4)))
+    assert dict(stage.bindings.calibration) == {"q": 4.0}
+
+
+def test_kernels_holds_the_realized_grid_of_each_place_of_the_builder_that_types_one(grid_stage):
+    """A builder's `kernels()` holds, under `grids`, the grid each of its
+    places types, constructed at the bound settings: None before a
+    configuration, then a `RealizedGrid` or the `Refusal` that says why the
+    construction cannot establish the grid, each printed on a row of the
+    record and read back equal by the standard pickle (AMD-MT-003 build
+    contract §2)."""
+    import pickle
+
+    from bellman.native.records import Refusal
+
+    stage = grid_stage(
+        "cntn_to_dcsn.method : !vfi\n"
+        "cntn_to_dcsn.grid : !Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c)))\n"
+        "cntn_to_dcsn.evaluate.method : !Linear\n"
+        "cntn_to_dcsn.evaluate.grid : !Cartesian(c=(Γ_c, n_c))\n"
+    )
+    assert stage.builder["cntn", "dcsn"].kernels().grids is None
+    stage.configure(GRID_VALUES)
+    record = stage.builder["cntn", "dcsn"].kernels()
+    joint, family = record.grids["cntn_to_dcsn"], record.grids["cntn_to_dcsn.evaluate"]
+    assert str(joint) == "!Fibred on (m, c), 4 points: (1, 0), (1, 1), (2, 0), (2, 2)"
+    assert isinstance(family, Refusal) and family.diagnostic["rule"] == "grid-requirement"
+    assert "a family of grids of the control c, one at each state" in family.reason
+    assert (family.diagnostic["file"], family.diagnostic["line"]) == ("methods.bl", 12)
+    printed = str(record).splitlines()
+    assert printed[-2] == f"grids        cntn_to_dcsn  {joint}"
+    assert printed[-1].startswith("             cntn_to_dcsn.evaluate  not constructed: stage")
+    back = pickle.loads(pickle.dumps(record.grids))
+    assert back["cntn_to_dcsn"] == joint
+    assert (back["cntn_to_dcsn.evaluate"].reason, back["cntn_to_dcsn.evaluate"].diagnostic) == (
+        family.reason, family.diagnostic)
+    assert stage.builder["dcsn", "cntn"].kernels().grids == {}
+
+
+def test_same_grid_compares_two_finite_supports_exactly_in_a_common_valid_context():
+    """`same_grid` compares the supports of two realized grids as exact
+    rational points, whatever their order and their construction: signed
+    zeros are equal, distinct large integers remain distinct, and a refused
+    grid or two grids on different coordinates admit no comparison."""
+    from bellman.native.records import Refusal
+    from bellman.stage.grids import RealizedGrid, same_grid
+
+    first = RealizedGrid("Points", ("m",), ((0.0,), (1,), (2**53 + 1,)))
+    assert same_grid(first, RealizedGrid("Cartesian", ("m",), ((2**53 + 1,), (-0.0,), (1.0,))))
+    assert not same_grid(first, RealizedGrid("Points", ("m",), ((0,), (1,), (2**53,))))
+    with pytest.raises(ValueError, match="common valid context"):
+        same_grid(first, RealizedGrid("Points", ("z",), ((0,),)))
+    refused = Refusal(
+        reason="no grid",
+        diagnostic={"stage": "t", "address": "b", "rule": "grid-requirement"},
+    )
+    with pytest.raises(ValueError, match="valid in no context"):
+        same_grid(first, refused)
+    with pytest.raises(TypeError):
+        same_grid(first, ((0,), (1,)))

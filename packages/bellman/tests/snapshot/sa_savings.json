@@ -6312,7 +6312,7 @@
    [
     "sa_savings:parameter:η",
     "parameter",
-    "STAGE sa_savings / PARAMETER η\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  η  ∈ {η ∈ (1, ∞) | η > γ}\n──────────────────────────────────────────────────────────────────────────────\nSource  sa_savings.bl\n  6  η : (1,inf), > γ  :: [\"ambiguity aversion\"]\n\nDefinitions referenced\n  γ     sa_savings:parameter:γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    "STAGE sa_savings / PARAMETER η\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  η  ∈ {η ∈ (1, ∞) | η ≥ γ}\n──────────────────────────────────────────────────────────────────────────────\nSource  sa_savings.bl\n  6  η : (1,inf) @ [γ, inf)  :: [\"ambiguity aversion\"]\n\nDefinitions referenced\n  γ     sa_savings:parameter:γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
    ],
    [
     "sa_savings:parameter:κ_1",
@@ -6332,7 +6332,7 @@
    [
     "sa_savings:distribution:ν",
     "distribution",
-    "STAGE sa_savings / DISTRIBUTION ν\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  ν    ~ N(κ_1, σ_ν²)\n  P_ν  = measure on ℝ given by\n           B\n             ↦ ∫_{z ∈ {z ∈ ℝ | κ_1 + (σ_ν²)^(1/2) · z ∈ B}}\n                 [exp(−z²/2)/(2 · pi)^(1/2)] Lebesgue(dz)\n──────────────────────────────────────────────────────────────────────────────\nSource  sa_savings.bl\n  12  ν ~ N(κ_1, σ_ν^2)\n\nDefinitions referenced\n  κ_1   sa_savings:parameter:κ_1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    "STAGE sa_savings / DISTRIBUTION ν\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  ν    ~ N(κ_1, σ_ν²)\n  P_ν  = measure on ℝ given by\n           B\n             ↦ ∫_{z ∈ {z ∈ ℝ | κ_1 + (σ_ν²)^(1/2) · z ∈ B}}\n                 [exp(−z²/2)/(2 · pi)^(1/2)] Lebesgue(dz)\n──────────────────────────────────────────────────────────────────────────────\nSource  sa_savings.bl\n  12  ν ~ N(κ_1, σ_ν^2)\n\nDefinitions referenced\n  κ_1   sa_savings:parameter:κ_1\n  σ_ν   sa_savings:parameter:σ_ν\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
    ],
    [
     "sa_savings:distribution:Ψ",
@@ -6413,7 +6413,7 @@
    "  ───────────────────  ─────   ─────────────────────────────────────────────",
    "  distributions            2   ν, Ψ",
    "  parameters               7   β : (0, 1); ρ : (1, inf); γ : (1, inf);",
-   "                               η : (1, inf) with η > γ; κ_1 : ℝ; σ_ν : ℝ₊;",
+   "                               η : (1, inf) @ [γ, inf); κ_1 : ℝ; σ_ν : ℝ₊;",
    "                               σ_Ψ : ℝ₊",
    "  correspondences          1   Γ : ℝ₊₊ ⇉ ℝ₊₊",
    "  laws of motion           1   a = (m_d - c)*Ψ",

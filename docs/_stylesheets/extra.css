@@ -835,9 +835,8 @@ html:not(.bc-reveal-init) .bc-section[class*="bc-section--net"]::before {
 /* ═══════════════════════════════════════════════════════════════════
    Notebook typography — QuantEcon-inspired
    Notebook (.jupyter-wrapper) typography inherits the site theme fonts
-   (Inter + JetBrains Mono via CSS vars) for consistent branding.
+   (Archivo + IBM Plex Mono via CSS vars) for consistent branding.
    ═══════════════════════════════════════════════════════════════════ */
-@import url("https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,700;1,400&family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Source+Code+Pro:wght@400;500&display=swap");
 
 /* ── Base prose ── */
 .jupyter-wrapper {

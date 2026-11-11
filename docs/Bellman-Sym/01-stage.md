@@ -62,7 +62,7 @@ c : ℝ₊₊ @ !ctrl
 V : ℝ @ !vlu
 ```
 
-A **type** is a list of components joined by `@`. A component is either a set, written in mathematical notation, or a word with the prefix `!`. The components are unordered, so `c : ℝ₊₊ @ !ctrl` and `c : !ctrl @ ℝ₊₊` declare the same type, and a type contains at most one set, one role word and one perch word. The join `@` combines descriptions of one quantity; it never multiplies sets. A quantity valued in a product is declared with `×` inside its set, as `x : ℝ × ℝ`. The prefix is what marks a vocabulary word, so a bare word is always a name and no word is reserved.
+A **type** is a list of components joined by `@`. A component is either a set, written in mathematical notation, or a word with the prefix `!`. The components are unordered, so `c : ℝ₊₊ @ !ctrl` and `c : !ctrl @ ℝ₊₊` declare the same type. A type contains at most one role word and one perch word; it may contain several sets, and the declared name then lies in each of them, as in `β : (0,1) @ (0, R^(ρ-1))` ([Symbols and conventions](reference/symbols-conventions.md) §9.2). The join `@` combines descriptions of one quantity; it never multiplies sets. A quantity valued in a product is declared with `×` inside its set, as `x : ℝ × ℝ`. The prefix is what marks a vocabulary word, so a bare word is always a name and no word is reserved.
 
 | Word | What it says |
 |---|---|
@@ -97,7 +97,7 @@ The fused form `y : ℝ₊₊ ~ LogNormal(…)` is not admitted. The distributio
 
 **Block signatures are typed the same way.** In `[id=arvl_to_dcsn, (b : ℝ₊, y) : !arvl -> (w : ℝ₊₊) : !dcsn]`, the word after each parenthesized side names the perch of every coordinate listed on that side, with two exceptions: a shock listed on a side is an argument of the block's equations and belongs to no perch, and a control is at decision wherever it is listed. A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which the block's output stands is a coordinate of that output, which a line reads without listing it, and a listed state is refused under `header-coordinate`. It lists no marginal value either: a line reads the derivative of a value the header lists by the term `D_{a}V[>]`, and a line of a value builder's block may state the derivative of the value the block writes, `D_{m_d}V = 𝑑𝑢(c)`, with nothing listed for it ([Field equations](03-field-equations.md) §2). A value field the header lists and no line of the block reads is admitted: it is left out of the block's builder, and the elaboration records it as a diagnostic, `the header lists V[>], which no line of the block reads`, in place of a refusal. A name's set is declared at its first occurrence, in the preamble or on a side, and its perch is fixed the first time it appears on a perch-named side, by a perch word in its own type, or by its perch mark. A later occurrence may restate the set or the perch, and the restatement must agree with the declaration; it may not change it. A side may omit its perch word only when the perch of every non-shock coordinate on it is already known, as the portfolio application's policy signature `(V[>]) -> ς` does; a perch is never guessed. [Perch tagging rules](appendices/13-perch-tagging-rules.md) gives the information-set reading of these rules.
 
-**Definitions and binders use the same colon.** A named set is defined with `:=`, as `Xa := ℝ₊` or `Xa := [0, ā]`. A function is defined with typed arguments, `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`, whose `c` is local to the definition and is not the stage's control. Similarly, the binder of a maximization ranges over a feasible set written after a colon, `argmax_{c : Γ(w)}(…)`, with the bare binder `argmax_{c}` when the control's declared set is its feasible set ([Constraints](10-constraints.md)).
+**Definitions and binders use the same colon.** A named set is defined with `:=`, as `Xa := ℝ₊` or `Xa := [0, ā]`. A function is defined with typed arguments, `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`, whose `c` is local to the definition and is not the stage's control. A definition without arguments whose right side is arithmetic in the parameters, `h := 1/(1 - Γ/R)`, defines a derived parameter: calibration computes its value from the definition and refuses a value supplied for it ([Parameters](../wiki/parameters.md)). Similarly, the binder of a maximization ranges over a feasible set written after a colon, `argmax_{c : Γ(w)}(…)`, with the bare binder `argmax_{c}` when the control's declared set is its feasible set ([Constraints](10-constraints.md)).
 
 These sets describe admissible economic values. A numerical grid used to approximate a continuous domain is written separately, in the methods file ([Methodization](04-methodization.md) §3.2).
 
@@ -122,7 +122,7 @@ The file declares the discount factor `β` between zero and one and risk aversio
 For a household choosing among `J` cities, the number of cities can remain a parameter when the stage is written. Declare the city set and the data indexed by it:
 
 ```bl
-J : ℤ, >= 1
+J : ℤ @ [1, inf)
 L_J := {1, …, J}
 δ : L_J → ℝ
 dist : L_J × L_J → ℝ₊

@@ -46,6 +46,7 @@ from bellman.fold.backward import (
     expectation_rows,
     folded_line,
     line_domain,
+    perch_domain,
     pullback_wire,
     pullbacks_in_header_order,
     reduced_term,
@@ -74,6 +75,8 @@ from bellman.fold.wire_terms import (
     right_side,
     statement_core,
     substitute_wires,
+    symbol_occurrences,
+    term_nodes,
     wire_symbol,
     wires_read,
 )
@@ -165,7 +168,9 @@ def fold_policy_block(plan, name, records, dom, cod, obligations, transition=Non
         targets = (
             system.unknowns if system is not None else block.ctx.defined(entry.core, block.name)
         )
-        if _solves(record, entry.core, system, targets, block.cod):
+        if _explicit_output(block, entry.core, targets) and record.role != NODE:
+            pending.append(entry)
+        elif _solves(record, entry.core, system, targets, block.cod):
             _flush(block, acc, pending)
             _output_rows(block, acc, edge, record, system, targets, entries, transition, decision)
         elif _explicit(entry.core, targets) and record.role != NODE:
@@ -261,6 +266,41 @@ def _solves(record, core, system, targets, cod) -> bool:
         or any(o.head == "solve" for o in record.operators)
         or any(target in cod for target in targets)
     )
+
+
+def _explicit_output(block, core, targets) -> bool:
+    """Whether a policy line defines an output of the block as an explicit
+    function of the states of the block's output perch, the parameters, the
+    derived parameters and the local names its other lines define: an
+    equation with one plain name on its left, that output, whose right side
+    applies no operator and reads no value and no field at another perch
+    (AMD-MT-003 build contract §5). A derived parameter is passed over with
+    the functions, among which `StageNames.function_names` holds it.
+    Such a line, the solution of the problem written as an expression,
+    `c = κ*(m - L)`, is one of the adjacent explicit lines whose G is its
+    expression (`_explicit_lines_aggregation`), and not the `Pullback` of
+    an identification, which reads a field at the continuation perch."""
+    ctx = block.ctx
+    if not _explicit(core, targets) or targets[0] not in block.cod:
+        return False
+    if any(isinstance(node, T.Operator) for node in term_nodes(core)):
+        return False
+    for name, side in symbol_occurrences(right_side(core)):
+        if side is not None:
+            return False
+        if name in ctx.function_names or name in ("inf", "∞"):
+            continue
+        local = block.by_spelling.get((name, None))
+        if local is not None and local.role != NODE:
+            defined = defined_field(ctx, block.name, local.core)
+            if defined is None or defined.perch is None:
+                continue
+        identity = ctx.resolve(name, block.name)
+        if identity.kind == "parameter":
+            continue
+        if identity.perch != block.perch_out or ctx.role(identity) in VALUE_ROLES:
+            return False
+    return True
 
 
 def _choice(core):
@@ -583,7 +623,9 @@ def _policy_evaluation(block, rows, decision):
     inputs only, and a pullback of a function a policy line defines after the
     row producing it; then each output of the block the rows produce renamed
     as the result of its row, and one `Evaluation` on the decision states
-    naming the outputs."""
+    naming the outputs. A row that reads no wire, the aggregation of a line
+    that defines an output as an explicit function of the states, stands
+    where the fold placed it."""
     ctx = block.ctx
     rows = _bundled_pullbacks(rows)
     written = {wire for row in rows for wire in row.outputs}
@@ -594,6 +636,7 @@ def _policy_evaluation(block, rows, decision):
             for row in rows
             if row.kind == "Pullback"
             and row.node is None
+            and row.inputs
             and row.inputs[0] in order
             and not any(wire in written for wire in row.inputs)
         ),
@@ -792,7 +835,12 @@ def _explicit_lines_aggregation(block, acc, entries):
     perch-marked fields the lines define are its ordered outputs, each a
     function of the states of its perch; a local name is pending arithmetic,
     folded where it is read. The G reads exactly the functions its terms
-    read and no formal value input. Named by its last line."""
+    read and no formal value input. Named by its last line. The G of a line
+    that defines an output of the block as an explicit function
+    (`_explicit_output`) is written on the states of the output perch alone
+    (`backward.perch_domain`), the coordinates of the Evaluation that names
+    the output, and not on the block's edge, whose coordinates hold the
+    control the line defines."""
     ctx = block.ctx
     by_perch = {}
     for entry in entries:
@@ -802,7 +850,11 @@ def _explicit_lines_aggregation(block, acc, entries):
     for perch, fields in by_perch.items():
         _, first_field = fields[0]
         last_line, _ = fields[-1]
-        domain = line_domain(block, acc, first_field)
+        domain = (
+            perch_domain(block, acc, perch)
+            if perch == block.perch_out
+            else line_domain(block, acc, first_field)
+        )
         last = last_line.address
         env = Slice(last, None, domain)
         maps, outputs, shocks, seen = [], [], set(), set()

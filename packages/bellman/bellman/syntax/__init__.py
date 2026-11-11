@@ -1,8 +1,10 @@
 """The `.bl` text of a stage, the parsed AST it lowers to, the words every
 other folder reads, and the setting of printed text in columns.
 
-- `grammars/`: the Lark grammar of the language, `stage.lark`, and the ASDL
-  listings, the descriptions of its terms from which `terms` and part of
+- `grammars/`: the Lark grammar of the language, `stage.lark`; the rule of
+  the one retired spelling that is still read in order to be refused with
+  the text to write, `retired.lark`; and the ASDL listings, the descriptions
+  of the language's terms from which `terms` and part of
   `typing/typed_expressions.py` are generated.
 - `parse`: the parser, from `.bl` text to a Lark parse tree.
 - `lower`: the lowering of a parse tree to the parsed AST, the abstract

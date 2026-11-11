@@ -57,21 +57,20 @@ assignment_functions: named_set "→" setexpr -> set_functions
 // dyno's metadata line; @stage: <name> designates a stage file
 metadata: _AT NAME ":" METADATA_SCALAR
 
-// declarations: subject : type [<- value] [, <rel> expr ...]
-// the condition tail is the terse comprehension: γ : R+, < 2
-// means γ : { g ∈ R+ : g < 2 }. A tuple subject may carry its
+// declarations: subject : type [<- value]
+// A type may hold several sets, with @ between them, and the declared
+// name lies in each of them: γ : ℝ₊ @ (-inf, 2) means γ : { g ∈ ℝ₊ : g < 2 }
+// (AMD-GRAM-004). A tuple subject may carry its
 // types per coordinate, so the tuple-level typing is optional.
 // The colon binds to the smallest complete object on its left:
 // w, c : T types c alone; (w, c) : T types the tuple as one
 // object, and tuples nest wherever a name may stand. A subject with a
 // dot, `cntn_to_dcsn.evaluate.grid : !Cartesian(…)`, is a typing entry
 // at file level, routed by its path to the operator it names.
-declaration: subject_path typing declared_value? condition_tail? STMT_META?
-    | tuple_subject typing? declared_value? condition_tail? STMT_META?
+declaration: subject_path typing declared_value? STMT_META?
+    | tuple_subject typing? declared_value? STMT_META?
 // a handler binding at file level, `dcsn_to_cntn.handler : "cons-port:transition"`
 file_binding: binding STMT_META?
-condition_tail: ("," tail_condition)+
-tail_condition: RELOP formula
 RELOP: "<=" | ">=" | "≤" | "≥" | "<" | ">"
 ?single_subject: plain_name | bracketed_name
 tuple_subject: "(" coordinate ("," coordinate)* ")"

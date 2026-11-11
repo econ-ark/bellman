@@ -1,0 +1,13 @@
+# The calibration of the perfect foresight stage: the example of Carroll and
+# Lujan Solis, "Consumption Under Perfect Foresight and CRRA Utility" (A Gentle
+# Introduction to Intertemporal Choice), section 4.1, r = ϑ = 0.04, g = 0.02
+# and ρ = 2, written as factors: R = 1 + r, β = 1/(1 + ϑ) and Γ = 1 + g. At
+# these values the return patience factor q = (Rβ)^(1/ρ)/R is 1/1.04, the
+# marginal propensity to consume κ = 1 - q = 0.04/1.04, human wealth h = 52 and
+# the natural borrowing limit L = 1 - h = -51, so a household with no assets,
+# m = 1, consumes twice its permanent income (economics.md, "Calibration").
+calibration:
+  β: 0.9615384615384616
+  ρ: 2.0
+  R: 1.04
+  Γ: 1.02
