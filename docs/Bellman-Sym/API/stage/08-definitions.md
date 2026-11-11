@@ -12,7 +12,7 @@ topic: [stage-object]
 # The definitions table
 
 > [!summary]
-> `stage.definitions` is the read-only table of everything a stage file declares, each name once, and of every line its [blocks](../../01-stage.md#3-builder-blocks) write, in file order. A record is read by its identity as a key, `list()` answers the table grouped by kind and `denote(identity)` the card of one record. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`.
+> `stage.definitions` is the read-only table of everything a stage file declares, each name once, and of every line its [blocks](../../01-stage.md#3-builder-blocks) write, in file order. A record is read by its identity as a key, `list()` answers the table grouped by kind and `denote(identity)` the card of one record. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, except the last, which is printed from the perfect-foresight stage file `applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl` with its methods file `methods.bl`, which defines a derived parameter, and its calibration file.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [The stage](01-the-stage.md): the object `stage` below; [Stage tutorial](../../01-stage.md): the declarations as the file writes them.
@@ -130,7 +130,7 @@ G              cons:G:cntn_to_dcsn, cons:G:dcsn_to_arvl, cons:G:policy
 
 ## 2 One record
 
-A record is read by its identity as a key and has eight attributes, which are attributes and not fields, a field being an economic quantity of the model: `identity`; `kind`, one of `set`, `parameter`, `distribution`, `function`, `function_alias`, `correspondence`, `g`, `G`, `line` and `multiplier`; `coordinates`, the record's named coordinates, each with its declared set where the file declares one; `equations`, which for a law of motion or an aggregator holds the addresses of the block's lines and no copy of their algebra; `tags`, the entries of a line's annotation; `address`, where the file writes the record, the block for a law of motion or an aggregator; `ordinal`, the position of a line among the items of its block's body, counted from 1 with the branches of a branching block counted in turn, which outside a branch is the `n` of an unnamed line's address `<block>.<n>` and is the number a refusal names a line by, and `None` on a record of any other kind; and `categories`, on a set marked `!categories` ([Symbol conventions](../../reference/symbols-conventions.md) §9.2), its category map as one frozen `CategoryCodes` record of the identifier written after the marker, or `None`, and the pairs of a code and its category's name in increasing code order, `CategoryCodes(identifier='household_status', codes=((0, 'newborn'), (1, 'old')))` for the set `HouseholdStatus` of that section, and `None` on every other record.
+A record is read by its identity as a key and has eight attributes, which are attributes and not fields, a field being an economic quantity of the model: `identity`; `kind`, one of `set`, `parameter`, `derived_parameter`, `distribution`, `function`, `function_alias`, `correspondence`, `g`, `G`, `line` and `multiplier`; `coordinates`, the record's named coordinates, each with its declared set where the file declares one; `equations`, which for a law of motion or an aggregator holds the addresses of the block's lines and no copy of their algebra, and for a derived parameter the term of its definition; `tags`, the entries of a line's annotation; `address`, where the file writes the record, the block for a law of motion or an aggregator; `ordinal`, the position of a line among the items of its block's body, counted from 1 with the branches of a branching block counted in turn, which outside a branch is the `n` of an unnamed line's address `<block>.<n>` and is the number a refusal names a line by, and `None` on a record of any other kind; and `categories`, on a set marked `!categories` ([Symbol conventions](../../reference/symbols-conventions.md) §9.2), its category map as one frozen `CategoryCodes` record of the identifier written after the marker, or `None`, and the pairs of a code and its category's name in increasing code order, `CategoryCodes(identifier='household_status', codes=((0, 'newborn'), (1, 'old')))` for the set `HouseholdStatus` of that section, and `None` on every other record.
 
 ```python
 record = stage.definitions["cons:G:cntn_to_dcsn"]
@@ -207,4 +207,33 @@ Definitions referenced
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-A parameter's declaration is a record of this table; its value is not, since calibration binds the values, and [Parameters and settings](06-par-and-settings.md) reads the two together.
+A **derived parameter**, a constant that a definition without arguments writes from the stage's parameters ([Parameters and settings](06-par-and-settings.md) §1.1), is a record of the kind `derived_parameter`, whose identity is `<stage>:derived:<name>`. Its card prints its definition after `:=` and, on a calibrated version, the value the definition takes at the calibration on the row under it, and `list()` prints the same two rows under the heading `DERIVED PARAMETERS`, after the parameters. The listing reads the perfect-foresight stage with the addition `methods.bl` beside it, a methods file whose line `κ := 1 - q` defines the marginal propensity to consume κ from the stage's own derived parameter q, and calibrates the stage:
+
+```python
+derived = elaborate_stage(load_stage(
+    "applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl"))
+derived.methodize(
+    "applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/methods.bl")
+derived.calibrate(
+    "applications/consumption-perfect-foresight-crra/declaration/calibration/perfect_foresight.yml")
+print(derived.definitions.denote("perfect_foresight:derived:κ"))
+```
+
+```text
+STAGE perfect_foresight / DERIVED PARAMETER κ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Defines
+  κ  := 1 − q
+     = 0.03846153846153855
+──────────────────────────────────────────────────────────────────────────────
+Source  methods.bl
+  24  κ := 1 - q
+        :: ["the marginal propensity to consume, one minus the return patience
+        factor"]
+
+Definitions referenced
+  q     perfect_foresight:derived:q
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+A parameter's declaration is a record of this table; its value is not, since calibration binds the values, and [Parameters and settings](06-par-and-settings.md) reads the two together. A derived parameter's value is not a record either: it is computed from the definition at the calibration whenever the card or `stage.par` shows it, and no binding holds it.

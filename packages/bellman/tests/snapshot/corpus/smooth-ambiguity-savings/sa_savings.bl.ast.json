@@ -233,7 +233,7 @@
                     }
                   },
                   "op": {
-                    "__class__": "Gt"
+                    "__class__": "Ge"
                   },
                   "right": {
                     "__class__": "Sym",

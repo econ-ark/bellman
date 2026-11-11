@@ -19,6 +19,11 @@ builder, a sub-builder and a statement. A wire carries its whole type in one
   in their place;
 - the records of a version: `Bindings`, `Components`, `BoundBlock`,
   `MethodOption`, `Metadata` and `Provenance`;
+- a typing entry as the stage writes it, `typing_text`, the position its
+  address holds, `entry_position`, and the refusal placed at that position,
+  `refuse_at_entry`, which the checks of the components, the grids, the
+  representations and the explicit solutions raise and which reads no
+  module of `stage/`;
 - the records of the construction: a block (`BlockData`, `NodeData`,
   `BlockHeader`) and a line (`Line`, `OperatorOccurrence`, `ResolvedName`,
   `ExpressionType`);
@@ -51,7 +56,7 @@ from bellman.native.hypergraphs import (
 )
 from bellman.native.identity import Identity
 from bellman.native.predicates import Predicate
-from bellman.refusals import CONDITIONS
+from bellman.refusals import CONDITIONS, ConstructionError
 from bellman.syntax import terms as T
 from bellman.syntax.layout import WIDTH
 from bellman.syntax.source import to_source
@@ -264,6 +269,7 @@ DEFINITION_KINDS_TABLE = (
     "set",
     "distribution",
     "parameter",
+    "derived_parameter",
     "setting",
     "function",
     "function_alias",
@@ -284,6 +290,7 @@ DEFINITION_KINDS_AT_TOP_LEVEL = (
     "set",
     "distribution",
     "parameter",
+    "derived_parameter",
     "setting",
     "function",
     "function_alias",
@@ -300,6 +307,10 @@ DEFINITION_KIND_WORDS = {
     "set": "set",
     "distribution": "distribution",
     "parameter": "parameter",
+    # a stage constant defined from declared parameters, finite real
+    # constants and earlier such definitions, `h := 1/(1 - Γ/R)` (AMD-MT-003
+    # build contract §5)
+    "derived_parameter": "derived parameter",
     "setting": "setting",
     "function": "function",
     "function_alias": "function alias",
@@ -785,9 +796,12 @@ def checked_assumptions(assumptions):
 @dataclasses.dataclass(frozen=True, eq=False, repr=False)
 class Bindings(Record):
     """This version's `calibration` and `settings` mappings, each None until
-    bound and read-only afterwards, and `blocks`, the rows a solution
-    method's lines add at the operative level, by the builder each opens.
-    Calibration maps parameters
+    bound and read-only afterwards, `blocks`, the rows a solution method's
+    lines add at the operative level, by the builder each opens, and
+    `families`, the record of each representation family the version's
+    typing entries name, by its word, as the record stood when the version
+    was made, so that a later registration or unregistration leaves the
+    meaning of the version as it was. Calibration maps parameters
     to values and configuration maps settings to values; the methods of a
     version are no binding but the components of its signatures, read from
     the typing records of the definitions table. Each binding verb writes a new record into the
@@ -798,6 +812,7 @@ class Bindings(Record):
     calibration: Mapping | None
     settings: Mapping | None
     blocks: Mapping | None = None
+    families: Mapping | None = None
 
     def __post_init__(self):
         # the records hold the rows of the construction, which `freeze` does
@@ -812,6 +827,17 @@ class Bindings(Record):
             raise TypeError(
                 "Bindings.blocks must be a read-only mapping from builder names to "
                 "BoundBlock records"
+            )
+        if self.families is not None and (
+            not isinstance(self.families, MappingProxyType)
+            or not all(
+                isinstance(key, str) and is_frozen_record(item)
+                for key, item in self.families.items()
+            )
+        ):
+            raise TypeError(
+                "Bindings.families must be a read-only mapping from family words to the "
+                "frozen records of the representation families"
             )
         for name in ("calibration", "settings"):
             value = getattr(self, name)
@@ -934,10 +960,12 @@ def setting_names(term):
     the names among the keyword arguments of a method word, at any depth of
     its tuples and nested words; the bounds and the counts of a grid's
     spaced factors, with the arguments of their spacing words, and the count
-    of a feasible factor, where they are names; and the node set of a listed
-    factor, which is a setting a methods file declares, a set the stage
-    defines or an expectation operator, told apart by the reader
-    (specification 0.7 D1, D5)."""
+    of a feasible factor, where they are names; the node set of a listed
+    factor and the declared points of `!Points`, each a setting a methods
+    file declares, a set the stage defines or, for a listed factor, an
+    expectation operator, told apart by the reader; and those of the base
+    and the fibre of `!Fibred` (specification 0.7 D1, D5; AMD-MT-003 build
+    contract §2)."""
     if isinstance(term, Components):
         for held in (term.method, term.grid):
             yield from setting_names(held)
@@ -954,6 +982,12 @@ def setting_names(term):
     elif isinstance(term, T.Cartesian):
         for factor in term.factors:
             yield from setting_names(factor)
+    elif isinstance(term, T.PointGrid):
+        if term.nodes is not None:
+            yield term.nodes
+    elif isinstance(term, T.Fibred):
+        yield from setting_names(term.base)
+        yield from setting_names(term.fibre)
     elif isinstance(term, T.Spaced):
         for argument in (term.lower, term.upper, term.count):
             yield from setting_names(argument)
@@ -962,6 +996,17 @@ def setting_names(term):
         yield from setting_names(term.count)
     elif isinstance(term, T.Listed):
         yield term.nodes
+
+
+def grid_factors(grid):
+    """The factors of every Cartesian term of a grid, in written order: the
+    factors of `!Cartesian`, none of `!Points`, and those of the base of
+    `!Fibred` before those of its fibre."""
+    if isinstance(grid, T.Cartesian):
+        return tuple(grid.factors)
+    if isinstance(grid, T.Fibred):
+        return grid_factors(grid.base) + grid_factors(grid.fibre)
+    return ()
 
 
 def typing_text(record):
@@ -973,35 +1018,87 @@ def typing_text(record):
     value = record.equations[0]
     if isinstance(value, T.Word):
         return f"{subject} : {to_source(T.Method(value))}"
-    if isinstance(value, T.Cartesian):
+    if isinstance(value, T.grid):
         return f"{subject} : {to_source(T.Grid(value))}"
     return f'{subject} : "{value}"'
+
+
+def entry_position(address):
+    """The file, the line and the column a typing record's address writes,
+    `<file>:<line>:<column>`, each None where the address holds no position;
+    `refuse_at_entry` reads it to place a refusal at the entry."""
+    file, _, column = str(address).rpartition(":")
+    file, _, line = file.rpartition(":")
+    if not (line.isdigit() and column.isdigit()):
+        return None, None, None
+    return file or None, int(line), int(column)
+
+
+def refuse_at_entry(stage, address, record, rule, message, *, write=None, kind="place"):
+    """The refusal under `rule` of what the typing record `record` types at
+    `address`, a place of `stage` or, where `kind` is `builder`, a builder:
+    the sentence `message` after the stage and the address, positioned at
+    the `<file>:<line>:<column>` the record's address holds
+    (`entry_position`), and at the stage's file with no line where there is
+    no record or its address holds no position, with the action `write`
+    where the check establishes the edit. The checks of the components, the
+    grids, the representations and the explicit solutions refuse through
+    it."""
+    file, line, column = entry_position(getattr(record, "address", None))
+    raise ConstructionError(
+        f"stage {stage.name!r}, {kind} {address!r}: {message}",
+        stage=stage.name,
+        file=file if line is not None else stage.provenance.get("origin"),
+        line=line,
+        column=column,
+        address=address,
+        rule=rule,
+        write=write,
+    )
 
 
 @dataclasses.dataclass(frozen=True, eq=False, repr=False)
 class Components(Record):
     """The components typed at one place of a stage: `method`, the method component, the
     `Word` of the typing entry `<place>.method : !egm(tol=tol_v)` with its
-    keyword arguments; `grid`, the grid component, the `Cartesian` of
-    `<place>.grid : !Cartesian(a=(a_min, a_max, n_a))`; and `handler`, the
+    keyword arguments; `grid`, the grid component, the one outer grid term of
+    `<place>.grid : !Cartesian(a=(a_min, a_max, n_a))`, `!Points(nodes=P)` or
+    `!Fibred(base=…, fibre=…)`, a `Cartesian`, a `PointGrid` or a `Fibred`;
+    and `handler`, the
     program the binding `<place>.handler : "cons-port:egm"` names, which
     realizes the operator and is no classifier. Each is None where the place
-    carries no entry for it; a place carries at least one. The record is
-    read from the typing records of the definitions table and stored
-    nowhere else (`stage.places`)."""
+    carries no entry for it; a place carries at least one. Where the method
+    is a function representation, `source` is the data it reads, one word of
+    `representations.DATA_SOURCES`, `table`, `pairs`, `expression` or `own
+    nodes`, and None elsewhere; `generated_from` is the address of the entry
+    a generated method comes from, `policy.method` for the closed form at
+    the Evaluation of an `!explicit` builder, and None for an authored one.
+    The record is read from the typing records of the definitions table and
+    stored nowhere else (`stage.places`)."""
 
     method: object = None
     grid: object = None
     handler: str | None = None
+    source: str | None = None
+    generated_from: str | None = None
 
     def __post_init__(self):
         if self.method is not None and not isinstance(self.method, T.Word):
             raise TypeError(f"Components.method must be a method word or None; got {self.method!r}")
-        if self.grid is not None and not isinstance(self.grid, T.Cartesian):
-            raise TypeError(f"Components.grid must be a grid or None; got {self.grid!r}")
+        if self.grid is not None and not isinstance(self.grid, T.grid):
+            raise TypeError(f"Components.grid must be a grid term or None; got {self.grid!r}")
         if self.handler is not None and (not isinstance(self.handler, str) or not self.handler):
             raise TypeError(
                 f"Components.handler must be a program name or None; got {self.handler!r}"
+            )
+        for name in ("source", "generated_from"):
+            value = getattr(self, name)
+            if value is not None and (not isinstance(value, str) or not value):
+                raise TypeError(f"Components.{name} must be a word or None; got {value!r}")
+        if (self.source is not None or self.generated_from is not None) and self.method is None:
+            raise TypeError(
+                "Components.source and Components.generated_from describe a method component, "
+                "and the record holds none"
             )
 
     @property
@@ -1013,10 +1110,14 @@ class Components(Record):
     @property
     def parts(self):
         """The printed parts, in order: the method word with its arguments,
-        the grid and the handler in quotes, each where present."""
+        followed for a generated method by the entry it is generated from,
+        `generated from policy.method`, the grid and the handler in quotes,
+        each where present."""
         parts = []
         if self.method is not None:
             parts.append(to_source(T.Method(self.method)))
+        if self.generated_from is not None:
+            parts.append(f"generated from {self.generated_from}")
         if self.grid is not None:
             parts.append(to_source(T.Grid(self.grid)))
         if self.handler is not None:
@@ -1055,21 +1156,121 @@ class BoundBlock(Record):
     declared_lines: tuple
 
 
+# What leaving an argument out means, one sentence for each kind of omission
+# an argument record names (AMD-MT-003 build contract §7): the refusal of a
+# required argument, an optional omission, a value inferred from the
+# attachment site, and a choice the numerical handler makes. A generated
+# reference entry prints the sentence of each argument's kind.
+OMISSIONS = MappingProxyType(
+    {
+        "refused": "Required: an entry that leaves it out is refused.",
+        "omitted": "Optional: when it is left out, no value is supplied and the core records "
+        "none.",
+        "inferred": "Inferred from the attachment site when it is left out.",
+        "handler": "Optional: when it is left out, the numerical handler chooses.",
+    }
+)
+
+# The sentence a generated reference entry prints for a method or a
+# registered representation family whose argument record is empty; it does
+# not forbid arguments, and the core supplies no type, default or meaning for
+# an unlisted keyword (AMD-MT-003 build contract §7).
+NO_REGISTERED_ARGUMENTS = (
+    "No registered arguments; unlisted keywords are retained for the numerical handler."
+)
+
+
 @dataclasses.dataclass(frozen=True)
 class MethodOption:
-    """One typed option of a method: the kind of value the option
-    takes, whether the method requires it, and the conditions on it. The
-    method table of `stage/method_table.py` declares one for each option of
-    each method it admits, and a bound method's card prints them."""
+    """One typed argument of a method or of a grid constructor: `kind`, the
+    kind of value it takes; `required`, whether an entry must write it;
+    `conditions`, the conditions on it; `description`, one sentence saying
+    what it is; `omission`, what leaving it out means, a key of `OMISSIONS`,
+    which is `refused` for a required argument and `omitted` for another
+    unless the definition names `inferred` or `handler`; and `default`, the
+    value the identified implementation `default_by` supplies when the
+    argument is left out, recorded only where that implementation defines
+    one. The rows of `stage/method_rows.py` declare one for each option of
+    each method they admit, a grid constructor of `stage/grids.py`
+    one for each of its arguments, and a bound method's card prints them."""
 
     kind: str
     required: bool = False
     conditions: tuple = ()
+    description: str = ""
+    omission: str | None = None
+    default: object = None
+    default_by: str | None = None
+
+    def __post_init__(self):
+        omission = self.omission or ("refused" if self.required else "omitted")
+        if omission not in OMISSIONS:
+            raise ValueError(
+                f"MethodOption.omission is one of {', '.join(OMISSIONS)}; got {omission!r}"
+            )
+        if (omission == "refused") != self.required:
+            raise ValueError(
+                "MethodOption.omission is `refused` for a required argument and for no other; "
+                f"got {omission!r} with required={self.required}"
+            )
+        if (self.default is None) != (self.default_by is None):
+            raise ValueError(
+                "MethodOption records a default together with the implementation that "
+                f"defines it; got default={self.default!r}, default_by={self.default_by!r}"
+            )
+        object.__setattr__(self, "omission", omission)
 
     def __str__(self):
         return self.kind + (" (required)" if self.required else "")
 
     __repr__ = __str__
+
+
+@dataclasses.dataclass(frozen=True)
+class TypeParameter:
+    """One parameter that indexes the type of a method or of a grid
+    constructor, such as the domain X of Grid[X]: its `name`, its `meaning`
+    in one sentence, and whether the attachment site supplies it
+    (`inferred`). A type parameter is no source keyword (AMD-MT-003 build
+    contract §7)."""
+
+    name: str
+    meaning: str
+    inferred: bool = True
+
+
+@dataclasses.dataclass(frozen=True)
+class EntryText:
+    """The explanation a method or a grid constructor carries beside its
+    owning definition, which its generated reference entry prints and no
+    second list repeats (AMD-MT-003 build contract §7): `meaning`, one
+    sentence saying what it is; `compatibility`, the grids or data it
+    accepts, the conditions checked once settings have values and the
+    obligations checked before numerical use; `example`, a small declaration
+    as a stage file writes it, and `example_meaning`, its meaning in words;
+    `implementation`, the identified numerical implementation, or the
+    sentence that none is identified, the language's admission being read
+    from the definition itself; `definition`, the link of its formal
+    definition; `type_parameters`, the `TypeParameter` records of its type;
+    `related`, the words of related entries; and `source`, the dotted module
+    that holds the definition, None for the module of the table that holds
+    it."""
+
+    meaning: str
+    compatibility: str
+    example: str
+    example_meaning: str
+    implementation: str
+    definition: str
+    type_parameters: tuple = ()
+    related: tuple = ()
+    source: str | None = None
+
+    def __post_init__(self):
+        object.__setattr__(self, "type_parameters", tuple(self.type_parameters))
+        object.__setattr__(self, "related", tuple(self.related))
+        if not all(isinstance(held, TypeParameter) for held in self.type_parameters):
+            raise TypeError("EntryText.type_parameters holds TypeParameter records")
 
 
 class _ReadOnlyEntries:

@@ -159,7 +159,7 @@ oracle of §6 reads this order from the first column of this table:
 | `native` | `identity`, `predicates`, `frozen`, `hypergraphs`, `labels`, `records`, `versions`, `provenance` | what an identity, a condition, a sort, a box and a stored record are; the stage version that holds them |
 | `distributions` | `families`, `edges`, `conditionals` | what the arguments of a shock family mean; on which edge a shock is drawn; the conditional distribution an expectation selects |
 | `typing` | `sets`, `category_codes`, `ranges`, `typed_expressions`, `line_unknowns`, `declarations`, `context`, `primitive_definitions` | why a declaration is refused; a line's operators, unknowns and type; the algebra of the declared sets; the category codes of a named set; how a formula is written |
-| `fold` | `block_lines`, `wire_terms`, `declared_sets`, `stage_names`, `table`, `value_bundles`, `backward`, `policy`, `stage_fold`, `conditions` | how a stage's blocks and lines are read; how a block's lines become its builder's operator rows; the conditions the construction assumes |
+| `fold` | `block_lines`, `wire_terms`, `declared_sets`, `stage_names`, `table`, `value_bundles`, `backward`, `policy`, `derived_parameters`, `stage_fold`, `conditions` | how a stage's blocks and lines are read; how a block's lines become its builder's operator rows; the conditions the construction assumes; what a derived parameter reads and its value at a calibration |
 | `graphs` | `wire_sorts`, `initial_diagrams`, `builders_graphs` | how the four graphs and their grains are built |
 | `display` | `sheets`, `printed_records`, `cards`, `drawing`, `graphviz_layout` with its Node script `graphviz_layout.mjs`, `answer_encoding`, `encoding_checks`, the schema file | how an answer is set as text, a drawing or JSON; how a drawing is laid out |
 | `stage` | four groups (§4) | how a stage is built, what it answers, how it is printed and how it is bound |
@@ -194,12 +194,17 @@ group:
   directions of an initial diagram; and `encoding`, the JSON document of a
   stage version;
 - **the binding**: `binding_verbs`, the three binding verbs; `method_table`,
-  the catalogue of the methods; `places`, the places of a stage and the
-  components typed at them; `components`, the checks of the components
-  against the catalogue; `levels`, the two levels of a stage and the additions
-  a methods source names; `calibration_requirements`, the check of parameter
-  values against their declared sets; and `sources`, the readers of a
-  calibration or a settings source and the one reader of a YAML file.
+  the catalogue of the methods, and `method_rows`, its rows of the methods
+  that are no representation family; `representations`, the registry of the
+  representation families and the data each representation reads, and
+  `representation_checks`, the checks of those data; `grids`, the grid
+  constructors and the grids they construct; `explicit`, the explicit
+  solution of a builder; `places`, the places of a stage and the components
+  typed at them; `components`, the checks of the components against the
+  catalogue; `levels`, the two levels of a stage and the additions a methods
+  source names; `calibration_requirements`, the check of parameter values
+  against their declared sets; and `sources`, the readers of a calibration
+  or a settings source and the one reader of a YAML file.
 
 The interactive view of a stage in Google's Model Explorer reads these
 queries and the drawing's labels, but it stands in `factory`, as

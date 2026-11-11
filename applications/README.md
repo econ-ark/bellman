@@ -74,6 +74,16 @@ and are left as they are.
   recipes and its solve in `tests/`; and the fixed reference with its
   recorded sources in the earlier YAML form in `reference/legacy/`. Its
   three lessons stand in `tutorials/models/cons-port/`.
+- `consumption-perfect-foresight-crra/` holds the perfect foresight
+  consumption model with CRRA utility, the buffer-stock stage without
+  its income shocks. Its stage file with three derived parameters, the
+  methods file `methods.bl` that solves it in closed form with
+  `!explicit`, the methods file `methods.egm.bl` that solves it by the
+  endogenous grid method and its calibration stand in `declaration/`;
+  the module that binds both methods files and compares the two
+  solutions, with the notebook that shows each step, stands in `code/`.
+  Its documentation page is
+  `docs/examples/consumption-perfect-foresight-crra/perfect_foresight.md`.
 - `portfolio-choice/` — the earlier folder of the same model, written
   the explicit way; superseded by `cons-port/` and marked for deletion
   (AAS, 28 October 2026).

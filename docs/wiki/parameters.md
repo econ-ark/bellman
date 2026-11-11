@@ -22,9 +22,9 @@ type: concept
 
 # Parameters
 
-**Parameters** define the mathematical economic model: for example, discounting, risk aversion, the coefficients of [[operator#Kernels|shock probability distributions]] and scalars that define an economic state domain. A declaration in a `.bl` [[stage|stage file]] supplies a parameter's name and domain. [[calibration|Calibration]] supplies its value through a separate source mapping. A parameter is no [[field]] and no [[semgraph|wire]] of a graph: it is named inside the definitions that use it, and its declaration and value stay open to inspection.
+**Parameters** define the mathematical economic model: for example, discounting, risk aversion, the coefficients of [[operator#Kernels|shock probability distributions]] and scalars that define an economic state domain. A declaration in a `.bl` [[stage|stage file]] supplies a parameter's name and domain. [[calibration|Calibration]] supplies its value through a separate source mapping. A **derived parameter** is instead defined, in the stage file or in a methods file, by a definition without arguments from declared parameters, finite numbers and other derived parameters, without a cycle, `h := 1/(1 - Γ/R)`, with signs, arithmetic, powers, `log` and `exp`; calibration supplies no value for it and refuses one, and its value is its definition evaluated at the calibrated values. A parameter is no [[field]] and no [[semgraph|wire]] of a graph: it is named inside the definitions that use it, and its declaration and value stay open to inspection.
 
-`stage.par` lists the parameters of a [[stage|stage version]], each with its declared set and its bound value or the word `unbound`. `stage.par["ρ"]` answers one parameter's record, read by the name the file declares, and its `value` is the number calibration bound ([Parameters and settings](../Bellman-Sym/API/stage/06-par-and-settings.md) §1).
+`stage.par` lists the parameters of a [[stage|stage version]], each with its declared set and its bound value or the word `unbound`, and after them each derived parameter with its definition and its value at the calibration. `stage.par["ρ"]` answers one parameter's record, read by the name the file declares, and its `value` is the number calibration bound ([Parameters and settings](../Bellman-Sym/API/stage/06-par-and-settings.md) §1).
 
 ## Parameters versus settings
 

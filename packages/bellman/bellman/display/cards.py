@@ -76,6 +76,7 @@ WORDS = {
     "correspondence-address": "CORRESPONDENCE",
     "distribution-address": "DISTRIBUTION",
     "parameter-address": "PARAMETER",
+    "derived-address": "DERIVED PARAMETER",
     "g-address": "LAW OF MOTION",
     "G-address": "VALUE AGGREGATOR",
     # the direction words of the stage card
@@ -1192,9 +1193,11 @@ def _defines_block(names, record):
     `!categories` its category map, `0 ↦ newborn, 1 ↦ old (categories
     household_status)`; a distribution `ψ ~ LogNormal(…)` and, on the line
     under it, its measure at the written parameters, `P_ψ = measure on ℝ
-    given by B ↦ …`; a parameter or a field `ρ ∈ [1, ∞)`."""
+    given by B ↦ …`; a derived parameter `h := 1/(1 − Γ/R)` and, on the line
+    under it, its value at the calibration, `= 52.0`; a parameter or a field
+    `ρ ∈ [1, ∞)`."""
     block = _CardBlock("defines")
-    laws = set()
+    laws, defined = set(), set()
     for denoted in record.denoted:
         identity = denoted.identity
         kind = getattr(identity, "kind", "")
@@ -1216,6 +1219,15 @@ def _defines_block(names, record):
             # and its measure at the written parameters its second
             block.row(symbol, _after("=" if identity in laws else "~", names.rule(held)))
             laws.add(identity)
+        elif kind == "derived":
+            # a derived parameter's definition is its first object, and its
+            # value at the calibration, on the line under it, its second
+            # (AMD-MT-003, build contract §5)
+            if identity in defined:
+                block.row("", _after("=", names.rule(held)))
+            else:
+                block.row(symbol, _after(":=", names.rule(held)))
+                defined.add(identity)
         elif kind in ("parameter", "setting") or (sort and sort[0] in ("scalar", "state")):
             carrier = _carrier_document(names, denoted)
             head = _after("∈", carrier) if carrier is not None else layout.text("")
@@ -2742,16 +2754,20 @@ def _category_map(denoted):
     )
 
 
-# the characters of a printed name: word characters, the perch marks, a prime
-_NAME_CHARACTER = r"[\w≺≻′]"
+# the characters of a printed name: word characters other than the
+# superscript digits, the perch marks and a prime; a superscript digit ends a
+# name, since `format_expression` writes an integer exponent as superscript
+# digits directly after its base, `σ_ξ²`, `c⁻²`
+_NAME_CHARACTER = r"(?:[^\W⁰¹²³⁴⁵⁶⁷⁸⁹]|[≺≻′])"
 
 
 def _stands_in(symbol, text):
     """Whether `symbol` is written in `text`: as a whole run of name
     characters where the symbol is one, `𝑑𝑢` in `Inv(𝑑𝑢)` and not in
     `𝑑𝑢𝑖𝑛𝑣`, nor `A≻` in the abbreviation `A≻,policy`, whose comma and
-    block name continue the run; and as a substring otherwise,
-    `(Ψ, θ)`."""
+    block name continue the run, while `σ_ξ` stands in `σ_ξ²/2`, whose
+    superscript digit is the exponent of a power; and as a substring
+    otherwise, `(Ψ, θ)`."""
     if re.fullmatch(f"{_NAME_CHARACTER}+", symbol):
         return (
             re.search(

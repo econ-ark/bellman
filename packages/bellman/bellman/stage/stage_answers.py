@@ -50,6 +50,7 @@ from bellman.fold.block_lines import (
     unread_inputs_of,
 )
 from bellman.fold.conditions import domain_conditions
+from bellman.fold.derived_parameters import derived_values
 from bellman.fold.stage_names import StageNames, branches_of, lines_of
 from bellman.fold.wire_terms import symbol_occurrences, term_nodes
 from bellman.native import predicates as P
@@ -77,13 +78,14 @@ from bellman.stage.grains import (
 )
 from bellman.native.records import setting_names
 from bellman.stage.levels import is_declared_version, source_texts
-from bellman.stage.method_table import row_of
+from bellman.stage.representation_checks import representation_conditions
+from bellman.stage.representations import bound_row
 from bellman.stage.places import components_by_place, components_of_box
 from bellman.syntax.lower import parse_with_spans
 from bellman.syntax.union import union
 from bellman.stage.term_operations import reference_term, relation_of, tuple_term
 from bellman.syntax import terms as T
-from bellman.syntax.source import to_source
+from bellman.syntax.source import grid_word, to_source
 from bellman.syntax.vocabulary import (
     ARRIVAL,
     CONTINUATION,
@@ -110,12 +112,6 @@ def fields(stage):
 
     See `docs/Bellman-Sym/API/stage/01-the-stage.md` §5."""
     return Fields(*fields_of(stage))
-
-
-def field_role(stage, identity):
-    """The role of a field wire, read from its sort; None for no such wire."""
-    sort = fields(stage).get(identity)
-    return sort.role if sort is not None else None
 
 
 # --- the conditions, in the order they are applied ---
@@ -172,7 +168,12 @@ def _obligations(stage):
         for item in calibration_requirements(stage, stage.bindings.calibration):
             found.setdefault((item.condition, item.entries), item)
     if stage.bindings.calibration is not None:
-        calibration = stage.bindings.calibration
+        # the conditions that read a derived parameter are decided at its
+        # value, as calibration decided them (AMD-MT-003, build contract §5)
+        calibration = {
+            **stage.bindings.calibration,
+            **derived_values(stage, stage.bindings.calibration),
+        }
         decided = calibrated_obligations(stage, found.values(), calibration)
         return calibrated_supports(stage, decided, calibration)
     return tuple(found.values())
@@ -225,7 +226,7 @@ def _symbolic_obligations(stage):
     # at no level and whose cards no binding changes (decision SC-13)
     components = () if is_declared_version(stage) else components_by_place(stage).items()
     for place, held in components:
-        row = row_of(held.method.name) if held.method is not None else None
+        row = bound_row(stage, held.method.name) if held.method is not None else None
         if row is None or row.condition is None or "." in place or "[" in place:
             continue
         entries = (piece_identity(place),)
@@ -238,6 +239,15 @@ def _symbolic_obligations(stage):
                 explanation=METHOD_CONDITIONS[row.condition],
             ),
         )
+    # the conditions each function representation owes, by the data it
+    # reads: that it is evaluated where its data support the represented
+    # function, that a family reading its own nodes at an `!egm` builder's
+    # closing Evaluation is sampled from the selected pairs, and that an
+    # optional grid beside an authored table has the table's finite support
+    # (AMD-MT-003 build contract §§3, 4); not on the declared version
+    if not is_declared_version(stage):
+        for item in representation_conditions(stage):
+            found.setdefault((item.condition, item.entries), item)
     ranges = law_range_evidence(stage)
     for key, item in tuple(found.items()):
         if item.condition == "range-compatibility" and len(item.entries) == 3:
@@ -731,7 +741,7 @@ def value_carries_derivative(stage, value, coordinates):
             for place, held in components_of_box(stage, row.identity):
                 if held.method is None or written not in {obj for _, obj in place.keys}:
                     continue
-                row_of_method = row_of(held.method.name)
+                row_of_method = bound_row(stage, held.method.name)
                 if row_of_method is not None and len(coordinates) in row_of_method.derivatives:
                     return True
     upstream = passed_through(stage, value, coordinates) if value.perch == ARRIVAL else None
@@ -1202,16 +1212,28 @@ class Parameter(NamedTuple):
     word `unbound`, and the author's description `describes`. It prints as
     one line, `ρ = 6.0 : [1, inf)`, or `ρ : [1, inf), unbound`.
 
+    A derived parameter, a constant the stage defines from its parameters,
+    is `derived`: its `domain` holds its definition, its `value` the
+    definition's value at the calibration, and it prints `h = 52.0 := 1/(1 -
+    Γ/R)`, or `h := 1/(1 - Γ/R), unbound` (AMD-MT-003, build contract §5).
+
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §1."""
 
     name: str
     domain: object
     value: object
     describes: str
+    derived: bool = False
 
     def __str__(self):
+        unbound = isinstance(self.value, str) and self.value == UNBOUND
+        if self.derived:
+            defined = f" := {to_source(self.domain)}"
+            if unbound:
+                return f"{self.name}{defined}, {UNBOUND}"
+            return f"{self.name} = {self.value!r}{defined}"
         declared = "" if self.domain is None else f" : {to_source(self.domain)}"
-        if isinstance(self.value, str) and self.value == UNBOUND:
+        if unbound:
             return f"{self.name}{declared}, {UNBOUND}"
         return f"{self.name} = {self.value!r}{declared}"
 
@@ -1223,9 +1245,10 @@ class Setting(NamedTuple):
     `domain`, the set its declaration in the methods file names, None for a
     setting no file declares; its configured `value`, or `unbound` where no
     configuration has valued it; and `readers`, the triples of the place
-    that reads it, the method word there and the kind of the grid where the
-    setting is a bound or a count of a factor of the grid typed at that
-    place, `("policy", "!egm", "!Cartesian")`, the kind empty otherwise,
+    that reads it, the method word there and the outer word of the grid
+    typed at that place where the grid reads the setting, as a bound or a
+    count of one of its factors or as its declared points,
+    `("policy", "!egm", "!Cartesian")`, the word empty otherwise,
     `("dcsn_to_arvl.E_ψ_ξ", "!gauss_hermite", "")`; `readers` is empty for
     a setting no component names. It prints as one line,
     `n_a = 960 : ℕ, read at policy by !egm for its grid !Cartesian`
@@ -1255,8 +1278,11 @@ def parameters_of(stage):
     """Every parameter of the version by the name the file declares, in
     declaration order, each its `Parameter` record: the declaration the
     definitions table holds for it and the value the calibration bound in the
-    version's bindings, which is all a parameter is. Computed at each call and
-    kept nowhere.
+    version's bindings, which is all a parameter is. The derived parameters
+    follow the declared ones in file order, each with its definition and,
+    on a calibrated version, the value its definition takes at the
+    calibration (`derived_values`), which no binding holds (AMD-MT-003, build
+    contract §5). Computed at each call and kept nowhere.
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §1."""
     require_stage(stage)
@@ -1272,6 +1298,18 @@ def parameters_of(stage):
             value=values[name] if values is not None and name in values else UNBOUND,
             describes="; ".join(descriptions(definition)),
         )
+    derived = derived_values(stage, values) if values is not None else {}
+    for definition in stage.definitions.values():
+        if definition.kind != "derived_parameter":
+            continue
+        name = definition.identity.field
+        found[name] = Parameter(
+            name=name,
+            domain=definition.equations[0],
+            value=derived.get(name, UNBOUND),
+            describes="; ".join(descriptions(definition)),
+            derived=True,
+        )
     return found
 
 
@@ -1280,11 +1318,18 @@ def parameter_rows(stage):
     `domain`, `value` and `describes`, the table `stage.par` prints. The
     retained declared set is `domain`, printed under `set`; a missing
     declaration is None. The value is the bound calibration value or
-    `unbound`. The description is the author's text.
+    `unbound`. The description is the author's text. A derived parameter's
+    row follows the declared parameters' rows and holds its definition under
+    `set` and its value at the calibration (AMD-MT-003, build contract §5).
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §1."""
     return Rows(
-        [MappingProxyType(record._asdict()) for record in parameters_of(stage).values()],
+        [
+            MappingProxyType(
+                {key: value for key, value in record._asdict().items() if key != "derived"}
+            )
+            for record in parameters_of(stage).values()
+        ],
         {"domain": "set"},
     )
 
@@ -1347,10 +1392,13 @@ def settings_readers(stage):
 
 
 def _grid_of_setting(held, name):
-    """The kind of the grid typed at a place, `!Cartesian`, where the
-    setting `name` is a bound or a count of one of its factors; the empty
-    text otherwise (specification 0.7 D5)."""
-    return "!Cartesian" if held.grid is not None and name in set(setting_names(held.grid)) else ""
+    """The outer word of the grid typed at a place, `!Cartesian`, `!Points`
+    or `!Fibred`, where the setting `name` is read by the grid, a bound or a
+    count of one of its factors or its declared points; the empty text
+    otherwise (specification 0.7 D5)."""
+    if held.grid is None or name not in set(setting_names(held.grid)):
+        return ""
+    return grid_word(held.grid)
 
 
 def setting_rows(stage):
@@ -1358,8 +1406,9 @@ def setting_rows(stage):
     `stage.settings` prints.
 
     A setting has one read-only row per method reader, with its declared set
-    under `set`, its value or the word `unbound`, and the kind of the grid
-    under `grid` where the setting is a factor of the place's grid. A
+    under `set`, its value or the word `unbound`, and the outer word of the
+    place's grid under `grid` where the grid reads the setting, as a bound or
+    a count of one of its factors or as its declared points. A
     setting with no reader remains in the listing with empty `read at`, `by`
     and `grid` entries.
 

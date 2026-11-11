@@ -6,14 +6,13 @@ Cards and notes in this repo carry Obsidian inline tags on their own line, e.g.
     #rosetta-stone #handler/hark #egm #model_locked
 
 python-markdown treats a leading ``#`` as an ATX heading even without a space, so
-such a line otherwise renders as a large ``<h1>``. This hook rewrites a *tag-only*
-line (outside fenced code) into a small chip row, so the published page shows the
-tags quietly under the title instead of as a giant heading.
+such a line otherwise renders as a large ``<h1>``. This hook leaves a *tag-only*
+line (outside fenced code) out of the rendered page: since 10 November 2026 the
+published pages show no tag chips at all (the website review of that day, §3).
 
 The hook only touches the in-memory Markdown handed to the renderer — the source
 ``.md`` files keep their ``#tags`` verbatim, so they stay Obsidian-friendly
-(per the project's "never strip #tags" rule). Styling lives in
-``docs/_stylesheets/rosetta.css`` (``.obsidian-tags`` / ``.obsidian-tag``).
+(per the project's "never strip #tags" rule).
 
 Registered in ``mkdocs.yml`` under ``hooks:``.
 """
@@ -24,7 +23,6 @@ import re
 _TAG = r"#[A-Za-z_][\w/-]*"
 _TAGLINE = re.compile(rf"^(?:{_TAG})(?:[ \t]+{_TAG})*[ \t]*$")
 _FENCE = re.compile(r"^\s*(```|~~~)")
-_TAG_FIND = re.compile(_TAG)
 
 
 def on_page_markdown(markdown, **kwargs):  # noqa: D401 (MkDocs hook signature)
@@ -38,11 +36,9 @@ def on_page_markdown(markdown, **kwargs):  # noqa: D401 (MkDocs hook signature)
             continue
         stripped = line.strip()
         if not in_fence and stripped and _TAGLINE.match(stripped):
-            chips = "".join(
-                f'<span class="obsidian-tag">{t}</span>'
-                for t in _TAG_FIND.findall(stripped)
-            )
-            out.append(f'<nav class="obsidian-tags" aria-label="tags">{chips}</nav>')
+            # The published page shows no tag chips (AAS, 10 November 2026); the
+            # source file keeps the line, and the renderer never sees it as a heading.
+            continue
         else:
             out.append(line)
     return "\n".join(out)

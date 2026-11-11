@@ -190,7 +190,11 @@ $[0, \infty)$ and $\mathbb R_{++}$ is $(0, \infty)$.
 ### 2.1 Declarations
 
 A declaration is a name, a colon, and a type; a type is a set, a role word
-prefixed by `!`, or a conjunction of both joined by `@` in either order.
+prefixed by `!`, or a conjunction of them, written with `@` between them
+in any order.
+Several sets in one type declare their intersection, as in
+`β : (0,1) @ (0, R^(ρ-1))`
+([Symbols and conventions](../reference/symbols-conventions.md) §9.2).
 
 ```bl
 β : (0,1)

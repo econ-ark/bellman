@@ -4,6 +4,10 @@ The grammar is `grammars/stage.lark`. The parser is LALR and keeps the
 position of every node; its postlex, `NewlinesInsideBrackets`, drops the
 newline tokens inside round and square brackets, so that the declaration of
 a joint distribution written over several lines parses as one declaration.
+`parse_text` reads a text. A text the language does not hold is read once
+more with the rules of `grammars/retired.lark`, the one retired spelling the
+lowering refuses with the text to write; every other such text is refused
+as the language's own parser refuses it.
 
 Beside the parser the module holds what a refusal of a text the parser cannot
 read says in the language's words: `FORMS`, one entry per terminal of the
@@ -20,25 +24,29 @@ import pathlib
 from typing import NamedTuple
 
 from lark import Lark
+from lark.exceptions import UnexpectedInput
 
 _GRAMMAR = pathlib.Path(__file__).parent / "grammars" / "stage.lark"
+_RETIRED = _GRAMMAR.with_name("retired.lark")
 
 
 # --- the parser ---
 
 
-@functools.lru_cache(maxsize=2)
-def build_parser(strict=False):
-    """The parser of `stage.lark`, built once for each value of `strict`:
+@functools.lru_cache(maxsize=4)
+def build_parser(strict=False, retired=False):
+    """The parser of `stage.lark`, built once for each pair of arguments:
     LALR with the contextual lexer, the position of every node kept, an
     absent optional group a `None` child, and `NewlinesInsideBrackets` as
     its postlex. Every option is written, so that a change of a library
     default changes nothing here. The package parses with `strict=False`;
     `strict=True`, which needs `interegular`, is the certificate that the
     grammar has no parser-table conflict and no lexer collision, built by
-    `tests/test_spec07_u1_grammar.py` and not re-checked at every import."""
+    `tests/test_spec07_u1_grammar.py` and not re-checked at every import.
+    With `retired`, the grammar is the language's with the rules of
+    `retired.lark` added, which `parse_text` reads a refused text with."""
     return Lark(
-        _GRAMMAR.read_text(),
+        _GRAMMAR.read_text() + (_RETIRED.read_text() if retired else ""),
         parser="lalr",
         lexer="contextual",
         strict=strict,
@@ -46,6 +54,26 @@ def build_parser(strict=False):
         propagate_positions=True,
         postlex=NewlinesInsideBrackets(),
     )
+
+
+def parse_text(text):
+    """The parse tree of a `.bl` text, read by the parser of the language.
+
+    A text the language's parser refuses is read once more with the retired
+    spelling added (`grammars/retired.lark`). Where that reading succeeds,
+    the text holds a bound after a comma, and its tree is answered for the
+    lowering to refuse with the sets to write. Where it fails as well, the
+    refusal is the language's own, so the retired spelling changes neither
+    the reading of a text of the language nor what a refusal of the parser
+    says."""
+    try:
+        return build_parser().parse(text)
+    except UnexpectedInput:
+        try:
+            return build_parser(retired=True).parse(text)
+        except UnexpectedInput:
+            pass
+        raise
 
 
 class NewlinesInsideBrackets:

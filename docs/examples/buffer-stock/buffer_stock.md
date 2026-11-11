@@ -78,7 +78,7 @@ A single stage per period: the arrival state $k$, the assets carried from the pr
 
 ## Stage File
 
-The stage file, `declaration/stages/buffer_stock/buffer_stock.bl`, states the model: the sets of resources and assets, the parameters with their descriptions, the two shocks and their laws, utility and the set of feasible consumption, the two forward blocks, the two value blocks and the policy block, whose line is the maximization alone.
+The stage file, `declaration/stages/buffer_stock/buffer_stock.bl`, states the model: the sets of resources and assets, the parameters with their descriptions, the log-mean of the positive transitory draw as a derived parameter, the two shocks and their laws, utility and the set of feasible consumption, the two forward blocks, the two value blocks and the policy block, whose line is the maximization alone.
 
 ```bl
 @stage: buffer_stock
@@ -92,8 +92,8 @@ R : ℝ₊₊          :: ["gross interest rate"]
 Γ : ℝ₊₊          :: ["deterministic permanent income growth factor"]
 σ_ψ : ℝ₊         :: ["standard deviation of the log permanent shock"]
 σ_ξ : ℝ₊         :: ["standard deviation of the log transitory shock, conditional on a positive draw"]
-μ_ξ : ℝ          :: ["log-mean of the positive transitory draw; E[ξ] = 1 requires μ_ξ = -log(1 - p_zero) - σ_ξ^2/2"]
 p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
+μ_ξ := -log(1 - p_zero) - σ_ξ^2/2   :: ["log-mean of the positive transitory draw, at which E[ξ] = 1"]
 
 ψ : ℝ₊₊
 ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)
@@ -144,7 +144,7 @@ The stage file states no derivative and no numerical method: the methods file be
 
 ## Methods and Settings
 
-The methods file, `declaration/stages/buffer_stock/methods.bl`, stands beside the stage file and is an addition to it: a `.bl` file read by the same grammar, whose blocks name the stage's blocks by their ids and add to them, and which the package reads together with the stage file before it elaborates the stage ([Methodization](../../Bellman-Sym/04-methodization.md)). The addition names the endogenous grid method, `!egm`, as the policy builder's method, with the exogenous grid of savings, `!Cartesian(a=(a_min, a_max, n_a))`, as its grid, and appends the method's three lines to the policy block: the inverted Euler equation, the grid line that gives the resources at each saving, and the identification of consumption with its candidate. When the stage is solved, the three lines stand in place of the maximization, which remains the stage's statement of the choice. The consumption function is read by linear interpolation at the policy builder's [Evaluation](../../Bellman-Sym/reference/operations.md#evaluation), `policy.evaluate`, between the pairs the method computes. Its representation grid is `!Cartesian(m=(m_min, m_max, m_a))`; `m_a` is its point count. The cash-grid bounds and count are illustrative settings independent of the endogenous cash points. Each value builder gains its derivative line: the envelope condition `D_{m}V = 𝑑𝑢(c)` of the decision value, and the derivative of the arrival value, whose weight $R\,(\Gamma\psi)^{-\rho}$ inside the expectation comes from the factor $R/(\Gamma\psi)$ of the law of motion and the normalization $(\Gamma\psi)^{1-\rho}$ of the value. At the arrival builder the expectation over the two shocks is taken by Gauss–Hermite quadrature, with one node count per shock, and the arrival value and its stated derivative are represented together, named once at that builder's Evaluation, by linear interpolation on the grid of assets, `!Cartesian(k=(k_min, k_max, n_k))`. The eleven settings the entries read are declared at the top of the file with their sets, a count in ℕ and a bound a point of `Xa` or `Xm`; their values stand in the settings file.
+The methods file, `declaration/stages/buffer_stock/methods.bl`, stands beside the stage file and is an addition to it: a `.bl` file read by the same grammar, whose blocks name the stage's blocks by their ids and add to them, and which the package reads together with the stage file before it elaborates the stage ([Methodization](../../Bellman-Sym/04-methodization.md)). The addition names the endogenous grid method, `!egm`, as the policy builder's method, with the exogenous grid of savings, `!Cartesian(a=(a_min, a_max, n_a))`, as its grid, and appends the method's three lines to the policy block: the inverted Euler equation, the grid line that gives the resources at each saving, and the identification of consumption with its candidate. When the stage is solved, the three lines stand in place of the maximization, which remains the stage's statement of the choice. The consumption function is read by linear interpolation at the policy builder's [Evaluation](../../Bellman-Sym/reference/operations.md#evaluation), `policy.evaluate`, between the pairs the method computes; those pairs give its nodes, so the entry writes no grid there, and a grid written there is refused. Each value builder gains its derivative line: the envelope condition `D_{m}V = 𝑑𝑢(c)` of the decision value, and the derivative of the arrival value, whose weight $R\,(\Gamma\psi)^{-\rho}$ inside the expectation comes from the factor $R/(\Gamma\psi)$ of the law of motion and the normalization $(\Gamma\psi)^{1-\rho}$ of the value. At the arrival builder the expectation over the two shocks is taken by Gauss–Hermite quadrature, with one node count per shock, and the arrival value and its stated derivative are represented together, named once at that builder's Evaluation, by linear interpolation on the grid of assets, `!Cartesian(k=(k_min, k_max, n_k))`. The eight settings the entries read are declared at the top of the file with their sets, a count in ℕ and a bound a point of `Xa`; their values stand in the settings file.
 
 ```bl
 @methods: buffer_stock
@@ -156,10 +156,10 @@ The methods file, `declaration/stages/buffer_stock/methods.bl`, stands beside th
 # when the stage is solved, and the maximization remains the stage's
 # statement of the choice. The consumption function is read by linear
 # interpolation at the policy builder's Evaluation, between the pairs the
-# method computes. Its grid names the cash coordinates at which the
-# consumption function is represented. Each value builder gains its
-# derivative line: the envelope condition of the decision value, and the
-# derivative of the arrival value, whose weight R*(Γ*ψ)^(-ρ) inside the
+# method computes, and that Evaluation takes no grid of its own, since the
+# pairs give its nodes. Each value builder gains its derivative line: the
+# envelope condition of the decision value, and the derivative of the
+# arrival value, whose weight R*(Γ*ψ)^(-ρ) inside the
 # expectation comes from the law m = R*k/(Γ*ψ) + ξ and the normalization
 # (Γ*ψ)^(1-ρ) of the value. At the arrival builder the expectation over the
 # two income shocks is taken by Gauss-Hermite quadrature with one node count
@@ -167,10 +167,8 @@ The methods file, `declaration/stages/buffer_stock/methods.bl`, stands beside th
 # arrival value and its derivative are represented together, by linear
 # interpolation on the grid of assets k, named once at that builder's
 # Evaluation. The settings the entries read are declared first, with their
-# sets: a count in ℕ, a bound a point of Xa, the set the stage declares for
-# the savings and the assets, and a cash bound a point of Xm. The cash grid
-# uses illustrative bounds 0.001 to 20 and 960 points, independent of the
-# endogenous cash points. The other settings have the values recorded in
+# sets: a count in ℕ and a bound a point of Xa, the set the stage declares for
+# the savings and the assets. Their values are recorded in
 # declaration/settings/buffer_stock.yml and are those of the HARK solution of
 # this model in the QuantEcon community library
 # (projects/HARK/buffer-stock/tutorial.ipynb, HARK 0.17.1): seven nodes per
@@ -185,15 +183,11 @@ a_max : Xa           :: ["upper bound of the savings grid"]
 n_k : ℕ              :: ["number of points of the asset grid"]
 k_min : Xa           :: ["lower bound of the asset grid"]
 k_max : Xa           :: ["upper bound of the asset grid"]
-m_a : ℕ              :: ["number of points of the cash representation grid"]
-m_min : Xm           :: ["lower bound of the cash representation grid"]
-m_max : Xm           :: ["upper bound of the cash representation grid"]
 n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 
 [id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
-    | policy.evaluate.method : !Linear
-    | policy.evaluate.grid : !Cartesian(m=(m_min, m_max, m_a))] {
+    | policy.evaluate.method : !Linear] {
     c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]
     m[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]
     c[~] = c[>]                     :: [id=cons_choice]
@@ -211,7 +205,7 @@ n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 }
 ```
 
-The settings file, `declaration/settings/buffer_stock.yml`, gives the numbers of quadrature nodes of the two shocks, the exogenous grid of savings, the grid of assets and the cash representation grid:
+The settings file, `declaration/settings/buffer_stock.yml`, gives the numbers of quadrature nodes of the two shocks, the exogenous grid of savings and the grid of assets:
 
 ```yaml
 # The buffer-stock stage's numerical settings: the quadrature nodes of the two
@@ -221,8 +215,7 @@ The settings file, `declaration/settings/buffer_stock.yml`, gives the numbers of
 # of the HARK solution of this model in the QuantEcon community library
 # (projects/HARK/buffer-stock/tutorial.ipynb): seven points per shock, and 960
 # asset points from 0.001 to 20, one grid in that solution for savings and for
-# assets. The separate cash representation grid uses the same illustrative
-# bounds and count; those cash-grid values are not attributed to HARK.
+# assets.
 settings:
   n_ψ_nodes: 7
   n_ξ_nodes: 7
@@ -232,9 +225,6 @@ settings:
   n_k: 960
   k_min: 0.001
   k_max: 20.0
-  m_a: 960
-  m_min: 0.001
-  m_max: 20.0
 ```
 
 The folder holds no recipe, so `load_stage` is given the stage file and its addition together, and `configure` then binds the settings:
@@ -258,9 +248,6 @@ a_max      Xa   20.0   policy                 !egm            !Cartesian
 n_k        ℕ    960    dcsn_to_arvl.evaluate  !Linear         !Cartesian
 k_min      Xa   0.001  dcsn_to_arvl.evaluate  !Linear         !Cartesian
 k_max      Xa   20.0   dcsn_to_arvl.evaluate  !Linear         !Cartesian
-m_a        ℕ    960    policy.evaluate        !Linear         !Cartesian
-m_min      Xm   0.001  policy.evaluate        !Linear         !Cartesian
-m_max      Xm   20.0   policy.evaluate        !Linear         !Cartesian
 n_ψ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
 n_ξ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
 ```
@@ -284,7 +271,32 @@ The normalization weight $(\Gamma\psi)^{-\rho}$ in the marginal-value expectatio
 
 ## Calibration (Baseline)
 
-The application holds no calibration file. A baseline calibration takes `R` = 1.03, `β` = 0.96, `Γ` = 1.03, `ρ` = 2, `σ_ψ` = 0.1, `σ_ξ` = 0.1 and `p_zero` = 0.005; `μ_ξ` follows from `σ_ξ` and `p_zero` by the description the stage file gives it, `μ_ξ = -log(1 - p_zero) - σ_ξ^2/2`, so that the mean of $\xi$ is one. The numerical settings are those of the settings file above.
+The application holds no calibration file. A baseline calibration takes `R` = 1.03, `β` = 0.96, `Γ` = 1.03, `ρ` = 2, `σ_ψ` = 0.1, `σ_ξ` = 0.1 and `p_zero` = 0.005. The numerical settings are those of the settings file above.
+
+The log-mean of the positive transitory draw, `μ_ξ := -log(1 - p_zero) - σ_ξ^2/2`, is a derived parameter: a constant that the stage file defines from its parameters with `:=`, which takes the value of that definition at each calibration. The calibration supplies no value for it, and a calibration that does is refused under [`derived-parameter`](../../Bellman-Sym/reference/refusals.md#derived-parameter). The definition makes the mean of the transitory draw one at every calibration, since the positive draw, `LogNormal(μ_ξ, σ_ξ)`, has mean $\exp(\mu_\xi + \sigma_\xi^2/2)$:
+
+$$
+\mathbb{E}[\xi] = \wp \cdot 0 + (1 - \wp)\, \exp\!\left(\mu_\xi + \tfrac{\sigma_\xi^2}{2}\right) = (1 - \wp)\, \exp\!\left(-\log(1 - \wp)\right) = 1 .
+$$
+
+At $\sigma_\xi = 0$ the positive draw is the point mass at $\exp(\mu_\xi) = 1/(1 - \wp)$, and the declared set $(0, 1)$ of `p_zero` keeps that point finite. `stage.par` lists the derived parameter after the declared ones, with its definition and, once the stage is calibrated, its value:
+
+```python
+calibrated = stage.calibrate({"R": 1.03, "β": 0.96, "Γ": 1.03, "ρ": 2.0, "σ_ψ": 0.1, "σ_ξ": 0.1, "p_zero": 0.005})
+print(calibrated.par)
+```
+
+```text
+name    set                         value                   describes
+β       (0, 1)                      0.96                    discount factor
+ρ       (1, inf)                    2.0                     coefficient of relative risk aversion, greater than one
+R       ℝ₊₊                         1.03                    gross interest rate
+Γ       ℝ₊₊                         1.03                    deterministic permanent income growth factor
+σ_ψ     ℝ₊                          0.1                     standard deviation of the log permanent shock
+σ_ξ     ℝ₊                          0.1                     standard deviation of the log transitory shock, conditional on a positive draw
+p_zero  (0, 1)                      0.005                   probability ℘ of a zero transitory draw
+μ_ξ     -log(1 - p_zero) - σ_ξ^2/2  1.2541823544285312e-05  log-mean of the positive transitory draw, at which E[ξ] = 1
+```
 
 ## Key Features
 

@@ -3,7 +3,7 @@
 β : (0,1) :: ["discount factor"]
 ρ : (1,inf) :: ["1/ρ is the elasticity of intertemporal substitution"]
 γ : (1,inf) :: ["relative risk aversion"]
-η : (1,inf), > γ :: ["ambiguity aversion"]
+η : (1,inf) @ [γ, inf) :: ["ambiguity aversion"]
 κ_1 : ℝ
 σ_ν : ℝ₊
 σ_Ψ : ℝ₊

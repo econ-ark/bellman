@@ -47,7 +47,7 @@ from bellman.syntax.vocabulary import (
     PERCH_WORD,
     VALUE_ROLES,
 )
-from bellman.typing.typed_expressions import UNDECLARED_SET_TEXT, clauses
+from bellman.typing.typed_expressions import UNDECLARED_SET_TEXT
 
 # --- the stage sheet ---
 
@@ -314,6 +314,7 @@ _RECORD_WORDS = {
     "set": "sets",
     "distribution": "distributions",
     "parameter": "parameters",
+    "derived_parameter": "derived parameters",
     "setting": "settings",
     "function": "functions",
     "function_alias": "function aliases",
@@ -351,26 +352,29 @@ def _definition_table(stage):
 def _records_of_kind(stage, kind, items):
     """The records of one kind in file order, as the definitions table of the
     stage sheet prints them (AMD-SG-015 §3), and the separator between two of
-    them: the sets, the parameters and the settings as declared, the plain functions grouped
+    them: the sets, the parameters and the settings as declared, the derived
+    parameters as their definitions write them, the plain functions grouped
     by the set they are defined on, the correspondences as maps between sets,
     the laws of motion and the value aggregators by their rules so that the
     table says what the model is, and the block lines by their addresses.
 
     The records are answered one by one, so that the table breaks between two
     of them and never inside one, a declared set such as `(1, inf)` containing
-    a space (§2). A parameter's declared set is written by `clauses`, and a
-    semicolon separates two parameters, since a comma stands inside one
-    (AMD-SG-019 §5a item 5)."""
+    a space (§2). A parameter's declared set is written as a declaration
+    writes it, a base and its bounds as `(0, 1) @ (0, R)`, and a named set
+    as its definition writes it, with a bar where it has conditions
+    (`_set_source`). A semicolon separates two parameters, since a comma
+    stands inside an interval (AMD-SG-019 §5a item 5)."""
     if kind == "set":
+        return [f"{d.identity.field} := {_set_source(d.equations[0])}" for d in items], ", "
+    if kind == "derived_parameter":
+        # a derived parameter as its definition writes it, `h := 1/(1 - Γ/R)`
+        # (AMD-MT-003, build contract §5)
         return [f"{d.identity.field} := {to_source(d.equations[0])}" for d in items], ", "
     if kind in ("parameter", "setting"):
         return [
             f"{d.identity.field} : "
-            + (
-                clauses(d.identity.field, to_source(d.equations[0]))
-                if d.equations
-                else "no set declared"
-            )
+            + (to_source(d.equations[0]) if d.equations else "no set declared")
             for d in items
         ], "; "
     if kind in ("function", "function_alias"):
@@ -502,9 +506,10 @@ def _declared_text(stage, identity):
 
 def _set_source(declared):
     """The source of a declared set, or None where the declaration names none.
-    A set declared by comprehension is written as a declaration's condition
-    tail, `ℝ, >= 0, <= 1`, which reads as three factors inside a product; the
-    type line writes its body form instead."""
+    A declaration writes a set with conditions as several sets with `@`
+    between them, `ℝ @ [0, 1]`, a spelling that has no place inside a
+    product or after `:=`; the type line and the stage sheet write the set
+    with a bar instead."""
     return (
         None
         if declared is None

@@ -9,8 +9,8 @@ R : ℝ₊₊          :: ["gross interest rate"]
 Γ : ℝ₊₊          :: ["deterministic permanent income growth factor"]
 σ_ψ : ℝ₊         :: ["standard deviation of the log permanent shock"]
 σ_ξ : ℝ₊         :: ["standard deviation of the log transitory shock, conditional on a positive draw"]
-μ_ξ : ℝ          :: ["log-mean of the positive transitory draw; E[ξ] = 1 requires μ_ξ = -log(1 - p_zero) - σ_ξ^2/2"]
 p_zero : (0,1)   :: ["probability ℘ of a zero transitory draw"]
+μ_ξ := -log(1 - p_zero) - σ_ξ^2/2   :: ["log-mean of the positive transitory draw, at which E[ξ] = 1"]
 
 ψ : ℝ₊₊
 ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)

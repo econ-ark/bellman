@@ -51,18 +51,18 @@ The commands install Bellman, the Workbench interface and their Python dependenc
 On **macOS or Linux**:
 
 ```sh
-venv/bin/bellman-workbench applications/portfolio-choice
+venv/bin/bellman-workbench applications/cons-port
 ```
 
 On **Windows**:
 
 ```powershell
-.\venv\Scripts\bellman-workbench.exe applications/portfolio-choice
+.\venv\Scripts\bellman-workbench.exe applications/cons-port
 ```
 
-Your browser opens at [localhost:8765](http://localhost:8765/). The command starts a server on your own computer; keep the terminal open while you work, and press **Ctrl+C** there to stop it. Replace `applications/portfolio-choice` with your own model folder when ready.
+Your browser opens at [localhost:8765](http://localhost:8765/). The command starts a server on your own computer; keep the terminal open while you work, and press **Ctrl+C** there to stop it. Replace `applications/cons-port` with your own model folder when ready.
 
-Choose a `.bl` model file in the file tree to edit it and see its diagram. For example, open `declaration/stages/port/port.bl` in the supplied portfolio model. **Save** writes the edited text to disk. See [Bellman Workbench](07-workbench.md) for the editor, diagrams and other controls.
+Choose a `.bl` model file in the file tree to edit it and see its diagram. **Save** writes the edited text to disk. Follow the [Workbench quickstart](../workbench/00-quickstart.md) to inspect the portfolio stage in the supplied model.
 
 ## 3 Build and install the desktop application
 
@@ -79,7 +79,7 @@ The application and installers are written under `packages/bellman-desktop/src-t
 On first launch:
 
 1. Choose **Settings → Workbench command…** and select the executable inside the environment created in §1: `venv/bin/bellman-workbench` on macOS/Linux, or `venv\Scripts\bellman-workbench.exe` on Windows. Select this file, not the Python executable.
-2. Choose **File → Open Project…** and select your model folder, for example `applications/portfolio-choice`. The folder normally contains `declaration/`; see [Model directory layout](../Bellman-Sym/reference/model-directory-layout.md).
+2. Choose **File → Open Project…** and select your model folder, for example `applications/cons-port`. The folder normally contains `declaration/`; see [Model directory layout](../Bellman-Sym/reference/model-directory-layout.md).
 3. Alternatively, use **File → Open File…** for a `.bl` file or a model recipe, `spec.yml` or `spec.<name>.yml`, which names the files used to assemble a model. Previously opened folders appear under **Recent projects**.
 
 The application starts the Workbench server for you; no terminal command is needed for later launches. Closing a model window stops its server. The editor and diagrams work as described in §2.

@@ -12,7 +12,7 @@ import re
 from dataclasses import fields, is_dataclass
 
 from bellman.syntax.lower import (  # noqa: F401
-    ToAst, parse_annotation, condition_tail_domain, to_json, unlowered_parse_nodes, number_value, RELATION_OF_SYMBOL)
+    ToAst, parse_annotation, to_json, unlowered_parse_nodes, number_value, RELATION_OF_SYMBOL)
 from bellman.syntax.parse import build_parser
 from bellman.syntax.terms import *  # noqa: F401,F403
 

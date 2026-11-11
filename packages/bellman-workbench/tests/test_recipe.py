@@ -1023,10 +1023,12 @@ def test_the_methods_tab_offers_at_each_target_the_tags_the_package_admits_there
     recipe binds it by the addition beside it: the two forward builders, the
     decision builder's Evaluation, which one entry types for the value and
     its stated derivative (D4), and the policy builder, whose row offers
-    `!egm` among the words a builder admits; the Evaluation offers the two
-    bases and nothing else; the forward decision builder, which the addition
-    gives a handler and no word, shows `handler only` and offers the words
-    too, a choice there appending the entry."""
+    `!egm` among the words a builder admits; the Evaluation offers the three
+    base representation families of the registry, `!Linear`, `!pchip` and
+    `!closed_form` (AMD-MT-003 build contract §3), and nothing else; the
+    forward decision builder, which the addition gives a handler and no
+    word, shows `handler only` and offers the words too, a choice there
+    appending the entry."""
     folder = model.open_folder(model_folder)
     found = recipe.find_occurrence(folder, RECIPE, CONS)
     text = Path(found.origin).read_text(encoding="utf-8")
@@ -1042,7 +1044,8 @@ def test_the_methods_tab_offers_at_each_target_the_tags_the_package_admits_there
     shown = {row.target: row.choices for row in tab.rows}
     for target in shown:
         assert shown[target] == admitted_methods(cons.stage, target)
-    assert "!egm" in shown["policy"] and shown["cntn_to_dcsn.evaluate"] == ("!Linear", "!pchip")
+    assert "!egm" in shown["policy"]
+    assert shown["cntn_to_dcsn.evaluate"] == ("!Linear", "!pchip", "!closed_form")
     assert not any("!gauss_hermite" in choices for choices in shown.values())
 
 # the stage files of the pension model of the UX simulation whose Methods

@@ -55,9 +55,11 @@ from bellman.fold.block_lines import (
     block_coordinates,
     blocks_of,
     doc_lines,
+    field_role,
     header_wire_sorts,
     perches_of,
 )
+from bellman.fold.derived_parameters import derived_values
 from bellman.fold.stage_names import StageNames, branches_of
 from bellman.fold.wire_terms import term_nodes
 from bellman.native.identity import Identity, box_identity, piece_identity
@@ -128,7 +130,7 @@ from bellman.stage.kernel_records import aggregator_kernel, kernel_record, law_o
 from bellman.stage.kernels import affine, conditioning, coordinates_of, integrated_shocks
 from bellman.stage.levels import declared_version, is_declared_version, source_texts
 from bellman.stage.places import block_box, components_of_box
-from bellman.stage.stage_answers import descriptions, field_role, fields, obligations, source_spans
+from bellman.stage.stage_answers import descriptions, fields, obligations, source_spans
 from bellman.stage.term_operations import reference_term, tuple_term
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
@@ -345,6 +347,7 @@ _RECORD_STAMP = {
     "set": "SET",
     "distribution": "DISTRIBUTION",
     "parameter": "PARAMETER",
+    "derived_parameter": "DERIVED PARAMETER",
     "setting": "SETTING",
     "function": "FUNCTION",
     "function_alias": "FUNCTION ALIAS",
@@ -1760,7 +1763,9 @@ def _kernel_denoted(stage, definition):
 
 def _declared_denoted(stage, definition):
     """The object a declaration denotes, cited `[§2.1]`: a parameter as a point
-    of its declared set, with its value on a calibrated version; a set as
+    of its declared set, with its value on a calibrated version; a derived
+    parameter as a point of the reals, by its definition and, on a calibrated
+    version, its value; a set as
     written, and a set marked `!categories` also as its category map, the
     `CategoryCodes` its record holds; a function and a function alias as a map
     from its declared sets; a correspondence with `⇉`; a distribution as a
@@ -1785,6 +1790,27 @@ def _declared_denoted(stage, definition):
                 cited="§2.1",
                 identity=identity,
             ),
+        )
+    if kind == "derived_parameter":
+        # a constant of the stage, written roman as a parameter is, a point of
+        # the reals: its definition, and on a calibrated version, as its second
+        # object, the value its definition takes there (AMD-MT-003, build
+        # contract §5)
+        real = T.Named("ℝ")
+        mathematical_type = WireType(("scalar", None, (), T.Product(()), real), real)
+        values = stage.bindings.calibration
+        held = (definition.equations[0],)
+        if values is not None:
+            held += (T.Number(derived_values(stage, values)[name]),)
+        return tuple(
+            Denoted(
+                symbol=name,
+                mathematical_type=mathematical_type,
+                expression=expression,
+                cited="§2.1",
+                identity=identity,
+            )
+            for expression in held
         )
     if kind == "set":
         held = (definition.equations[0],)
@@ -1982,7 +2008,7 @@ def supporting_definitions(stage, answer):
         *getattr(getattr(answer, "kernel", None), "denoted", ()),
     ):
         definition = stage.definitions.get(denoted.identity)
-        if definition is not None and definition.kind == "function_alias":
+        if definition is not None and definition.kind in ("function_alias", "derived_parameter"):
             parts.append(definition.equations)
     found, seen = [], set()
 
@@ -2130,8 +2156,8 @@ def _reached(stage, identity):
     """The `_Reached` of one identity: nothing for an identity the
     definitions table does not hold and for an authored line; for a
     declaration, the objects it denotes, of a distribution the law as written
-    alone, and the terms of a function alias, of each object's expression and
-    of its type. Kept for the version by the
+    alone, and the terms of a function alias and of a derived parameter, of
+    each object's expression and of its type. Kept for the version by the
     identity, a name and an identity spelled alike reaching one record."""
 
     def compute():
@@ -2140,7 +2166,11 @@ def _reached(stage, identity):
         definition = stage.definitions[identity]
         if definition.kind == "line":
             return _Reached((), ())
-        terms = [definition.equations] if definition.kind == "function_alias" else []
+        terms = (
+            [definition.equations]
+            if definition.kind in ("function_alias", "derived_parameter")
+            else []
+        )
         denoted = (
             _kernel_denoted(stage, definition)
             if definition.kind in ("g", "G")

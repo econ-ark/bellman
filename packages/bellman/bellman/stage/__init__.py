@@ -52,6 +52,17 @@ The binding:
   `configure`, with the conditions calibration decides and the checks of the
   options at the settings.
 - `method_table`: the catalogue of the methods, `method_types`.
+- `method_rows`: the rows of the catalogue of the methods that are no
+  representation family, the record of a row and the domains of a keyword's
+  value, which the registry of the representation families reads.
+- `representations`: the registry of the representation families and the
+  data a representation reads at its place.
+- `representation_checks`: the checks of the data a representation reads,
+  at binding and at configuration, and the conditions it owes.
+- `grids`: the records of the grid constructors, their checks and the grids
+  they construct.
+- `explicit`: the explicit solution of a builder, `!explicit`, and the
+  exclusions the construction checks.
 - `places`: the places of a stage, the typing entries resolved to them and
   the components typed at each; the methods a place admits,
   `admitted_methods`.

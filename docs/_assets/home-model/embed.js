@@ -1,5 +1,5 @@
-import {linesForNode} from './source-lines.js?v=20261110p';
-import {sourceParts} from './source-presentation.js?v=20261110s';
+import {linesForNode} from './source-lines.js?v=20261110t';
+import {sourceParts} from './source-presentation.js?v=20261110t';
 
 (() => {
   'use strict';
@@ -21,7 +21,6 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
   const sourceStatus = document.querySelector('#source-status');
   const kind = document.querySelector('#graph-kind');
   const direction = document.querySelector('#graph-direction');
-  const wrap = document.querySelector('#wrap-source');
   const types = document.querySelector('#source-types');
   const notes = document.querySelector('#source-notes');
   const copy = document.querySelector('#copy-source');
@@ -29,20 +28,24 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
   const panes = document.querySelector('.pane-layout');
   const resizer = document.querySelector('#pane-resizer');
   const compact = matchMedia('(max-width:759px)');
+  const bars = [...document.querySelectorAll('.pane-bar')];
   const preferenceKey = 'bellman-home-model-view';
   let preferences = {};
   try { preferences = JSON.parse(sessionStorage.getItem(preferenceKey) || '{}') || {}; } catch (_) {}
-  if (['initial', 'operator'].includes(preferences.kind)) kind.value = preferences.kind;
-  if (['backward', 'forward'].includes(preferences.direction)) direction.value = preferences.direction;
-  if (preferences.wrap === false) {
-    sourcePanel.dataset.wrap = 'false';
-    wrap.setAttribute('aria-pressed', 'false');
+  // The Workbench's select (VSCode Elements) takes its choice as its value
+  // and as the chosen option's `selected`, which holds before the element
+  // is defined.
+  function choose(select, value) {
+    for (const option of select.querySelectorAll('vscode-option')) option.toggleAttribute('selected', option.getAttribute('value') === value);
+    select.value = value;
   }
+  if (['initial', 'operator'].includes(preferences.kind)) choose(kind, preferences.kind);
+  if (['backward', 'forward'].includes(preferences.direction)) choose(direction, preferences.direction);
   types.setAttribute('aria-pressed', String(preferences.types !== false));
   notes.setAttribute('aria-pressed', String(preferences.notes === true));
   function savePreferences() {
     try { sessionStorage.setItem(preferenceKey, JSON.stringify({
-      kind: kind.value, direction: direction.value, wrap: sourcePanel.dataset.wrap === 'true',
+      kind: kind.value, direction: direction.value,
       types: types.getAttribute('aria-pressed') === 'true', notes: notes.getAttribute('aria-pressed') === 'true'
     })); } catch (_) {}
   }
@@ -52,13 +55,35 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
   let chosenTab = document.querySelector('#diagram-tab');
   let collection = null;
   let currentGraph = '';
-  let sourceWidth = 38;
+  // the source pane's share of the frame at first, wide enough at 1440 px for
+  // the pane's name, the file's name and the toggles on one row
+  const sourceShare = .42;
+  let sourceWidth = sourceShare * 100;
   let sourceLines = [];
   let sourceText = [];
   let authoredSource = '';
   let sourceDisplay = null;
   let selectedLines = new Set();
   let lastSelection = null;
+
+  // Each bar keeps one row of 36 px, as the Workbench's graph bar does: where
+  // its items do not fit, it hides the file's name first (data-narrow) and
+  // then its own name (data-crowded), which stays the pane's heading for
+  // assistive technology.
+  function measureBars() {
+    for (const bar of bars) {
+      bar.removeAttribute('data-narrow');
+      bar.removeAttribute('data-crowded');
+      const overflows = () => bar.scrollWidth > bar.clientWidth + 1;
+      if (!overflows()) continue;
+      bar.setAttribute('data-narrow', '');
+      if (!overflows()) continue;
+      bar.setAttribute('data-crowded', '');
+    }
+  }
+  const barResize = new ResizeObserver(measureBars);
+  for (const bar of bars) barResize.observe(bar);
+  if (document.fonts) document.fonts.ready.then(measureBars);
 
   function drawSource() {
     const scroll = document.querySelector('.source-scroll');
@@ -137,6 +162,7 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
     document.title = models[model].title + ' · Project Bellman';
     document.querySelector('#filename').textContent = models[model].file;
     document.querySelector('#filename').title = models[model].file;
+    measureBars();
     fallback.href = '../../examples/' + models[model].example;
     fallback.textContent = 'Read about this model';
   }
@@ -153,10 +179,19 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
     const top = (Math.min(...boxes.map(box => box.top)) - frame.top - current.y) / current.zoom;
     const right = (Math.max(...boxes.map(box => box.right)) - frame.left - current.x) / current.zoom;
     const bottom = (Math.max(...boxes.map(box => box.bottom)) - frame.top - current.y) / current.zoom;
-    const padding = compact.matches ? 16 : 36;
-    const zoom = Math.min(1, (frame.width - padding * 2) / (right - left), (frame.height - padding * 2) / (bottom - top));
+    // The drawing whole, at most at scale 1, in the middle of the pane (AAS,
+    // 11 November 2026). At least 12 px stay free at its left and at its right
+    // and 24 px between the bar and its top. The floating controls and the
+    // 12 px under them are left out of the height in which it is centred, and
+    // 12 px stay free between it and the controls.
+    const controls = document.querySelector('.bl-graph-controls');
+    const edge = 12, head = 24, below = (controls?.offsetHeight || 0) + edge;
+    const width = right - left, height = bottom - top;
+    const zoom = Math.min(1, (frame.width - 2 * edge) / width, (frame.height - head - below - edge) / height);
     if (!Number.isFinite(zoom) || zoom <= 0) return;
-    region.setView({viewport: {x: (frame.width - (right - left) * zoom) / 2 - left * zoom, y: (frame.height - (bottom - top) * zoom) / 2 - top * zoom, zoom}, selection: view.selection});
+    const x = Math.round((frame.width - width * zoom) / 2 - left * zoom);
+    const y = Math.round(Math.max(head, (frame.height - below - height * zoom) / 2) - top * zoom);
+    region.setView({viewport: {x, y, zoom}, selection: view.selection});
   }
   function selectTab(tab, focus = false) {
     chosenTab = tab;
@@ -192,6 +227,7 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
       panel.setAttribute('aria-labelledby', name + (compact.matches ? '-tab' : '-heading'));
     }
     selectTab(chosenTab);
+    measureBars();
     if (!compact.matches && tabs.includes(active)) {
       (active.id === 'diagram-tab' ? kind : document.querySelector('.source-scroll')).focus();
     }
@@ -199,12 +235,6 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
   }
   setPaneLayout();
   compact.addEventListener('change', setPaneLayout);
-  wrap.addEventListener('click', () => {
-    const enabled = sourcePanel.dataset.wrap !== 'true';
-    sourcePanel.dataset.wrap = String(enabled);
-    wrap.setAttribute('aria-pressed', String(enabled));
-    savePreferences();
-  });
   for (const control of [types, notes]) {
     control.addEventListener('click', () => {
       control.setAttribute('aria-pressed', String(control.getAttribute('aria-pressed') !== 'true'));
@@ -248,7 +278,7 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
     if (resizer.hasPointerCapture(event.pointerId)) resizer.releasePointerCapture(event.pointerId);
   });
   resizer.addEventListener('lostpointercapture', () => { delete resizer.dataset.resizing; });
-  resizer.addEventListener('dblclick', () => resizeSource(panes.clientWidth * .38));
+  resizer.addEventListener('dblclick', () => resizeSource(panes.clientWidth * sourceShare));
   resizer.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
@@ -367,6 +397,7 @@ import {sourceParts} from './source-presentation.js?v=20261110s';
     if (!event.persisted) {
       resize.disconnect();
       paneResize.disconnect();
+      barResize.disconnect();
       compact.removeEventListener('change', setPaneLayout);
       region?.unmount();
     }

@@ -163,6 +163,23 @@ def fresh_stage(path):
     return stage_from_text((ROOT / path).read_text(encoding="utf-8"), path)
 
 
+def methodized(stage, *additions):
+    """A copy of `stage` (`copy_native`) methodized in one call of
+    `methodize` by `additions`, in their order. A string is the text of an
+    addition to the stage: it is read after the line `@methods: <the stage's
+    name>`, with the origin `addition-<n>.bl`, n its position among the
+    additions. Any other addition, a mapping holding a text and its origin
+    or the `Path` of a file, is read as it is given."""
+    from bellman.native.hypergraphs import copy_native
+
+    read = [
+        {"text": f"@methods: {stage.name}\n{held}", "origin": f"addition-{n}.bl"}
+        if isinstance(held, str) else held
+        for n, held in enumerate(additions, start=1)
+    ]
+    return copy_native(stage).methodize(read)
+
+
 @pytest.fixture(scope="session")
 def cons():
     return corpus_stage("cons")
@@ -2098,3 +2115,407 @@ def durables_vfi_recipe(tmp_path):
     (registry / recipe).write_text(text.replace(before,
         f"methods: {{all: [stages/adjuster_cons/methods.bl, {addition}]}}"), encoding="utf-8")
     return registry, recipe
+
+
+# --- AMD-MT-003: one labeled section for the fixtures of each unit of the
+# build, so that the units write disjoint lines of this file ---
+
+# --- AMD-MT-003 unit A: grids ---
+
+# The stage of example E09 of the amendment's numerical examples: the state m
+# on Xm, the control c whose feasible set at m is [0, m], and the finite set
+# B = {1, 2} of resources; the tests type the backward decision builder
+# cntn_to_dcsn with !vfi and a grid.
+GRID_STAGE = """@stage: grids
+B := {1, 2}
+Xm := ℝ₊
+Γ_c(m : Xm) := [0, m]
+𝑢(c : ℝ₊) := c
+[id=dcsn_to_cntn, (m : Xm, c : ℝ₊ @ !ctrl) : !dcsn -> (a : ℝ₊) : !cntn] {
+    a = m - c
+}
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + V[>]
+}
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + V[>]) :: [id=optimality]
+}
+"""
+
+# The same choice with a second state z carried to the continuation perch,
+# so that a grid on (m, z) can name a factor for m alone, and the product
+# X2 on which points of two coordinates are declared.
+TWO_STATE_GRID_STAGE = """@stage: grids
+Xm := ℝ₊
+X2 := ℝ × ℝ
+Γ_c(m : Xm) := [0, m]
+𝑢(c : ℝ₊) := c
+[id=dcsn_to_cntn, (m : Xm, z : ℝ, c : ℝ₊ @ !ctrl) : !dcsn -> (a : ℝ₊, z_n : ℝ) : !cntn] {
+    a = m - c
+    z_n = z
+}
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + V[>]
+}
+[id=policy, (V[>]) : !cntn -> (c) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + V[>]) :: [id=optimality]
+}
+"""
+
+# A choice of two controls, c on [0, m] and h on [0, m - c], whose joint
+# feasible set is coupled, in the form of the durables application's
+# adjuster_cons stage.
+TWO_CONTROL_GRID_STAGE = """@stage: grids
+B := {1, 2}
+Xm := ℝ₊
+Γ_c(m : Xm) := [0, m]
+Γ_h(x : ℝ₊) := [0, x]
+𝑢(c : ℝ₊, h : ℝ₊) := c + h
+[id=dcsn_to_cntn, (m : Xm, c : ℝ₊ @ !ctrl, h : ℝ₊ @ !ctrl) : !dcsn -> (a : ℝ₊) : !cntn] {
+    a = m - c - h
+}
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c, h) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c, h) + V[>]
+}
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊ @ !ctrl, h : ℝ₊ @ !ctrl) : !dcsn] {
+    (c, h) = argmax_{c : Γ_c(m), h : Γ_h(m - c)}(𝑢(c, h) + V[>]) :: [id=optimality]
+}
+"""
+
+# the settings the grids of the tests name, declared as a methods file
+# declares them, and their values: two control nodes, m in {1, 2} and z in
+# {-1, 1}
+GRID_SETTINGS = (
+    "n_c : ℕ\nm_lo : ℝ₊\nm_hi : ℝ₊\nn_m : ℕ\nz_lo : ℝ\nz_hi : ℝ\nn_z : ℕ\n"
+)
+GRID_VALUES = {"n_c": 2, "m_lo": 1.0, "m_hi": 2.0, "n_m": 2, "z_lo": -1.0, "z_hi": 1.0, "n_z": 2}
+
+
+@pytest.fixture(scope="session")
+def grid_stage():
+    """`grid_stage(entries, declarations="", text=GRID_STAGE)`: a stage named
+    `grids`, the stage of example E09 unless `text` names another, unioned
+    with a methods file that declares the settings `GRID_SETTINGS`, then
+    `declarations`, then the typing `entries`; elaborated anew at each call,
+    since `configure` and `methodize` bind the stage they are called on."""
+    from bellman.stage import elaborate_stage
+
+    def make(entries, declarations="", text=GRID_STAGE):
+        methods = "@methods: grids\n" + GRID_SETTINGS + declarations + entries
+        return elaborate_stage({
+            "stage": {"text": text, "origin": "grids.bl"}, "calibration": {}, "settings": {},
+            "methods": [{"text": methods, "origin": "methods.bl"}],
+        })
+
+    return make
+
+
+# --- AMD-MT-003 unit B: representations and explicit blocks ---
+
+# the origin of the perfect-foresight stage of the refusal examples, whose
+# consumption function and values are known as expressions
+PERFECT_FORESIGHT_ORIGIN = "perfect_foresight.bl"
+
+
+def perfect_foresight_text(*changes, table=False):
+    """The text of the perfect-foresight stage of the refusal examples, whose
+    derived parameters are h and R_n, with each pair (line as written, line
+    as changed) of `changes` replaced once; with `table`, two parameters `K`
+    and `Y`, three numbers each, and a line of the arrival block that reads
+    them as an authored table, `W = evaluate(K, Y, k)`, at the address
+    `dcsn_to_arvl.table`. The explicit checks, the representation checks and
+    the derived checks read this one stage."""
+    from bellman.refusal_examples import PERFECT_FORESIGHT
+
+    text = PERFECT_FORESIGHT
+    for written, changed in changes:
+        assert text.count(written) == 1, written
+        text = text.replace(written, changed)
+    if not table:
+        return text
+    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    value = "    V[<] = Γ^(1-ρ) * V              :: [id=value]\n"
+    assert text.count(growth) == 1 and text.count(value) == 1
+    return text.replace(
+        growth, growth + "K : ℝ × ℝ × ℝ    :: [\"the knots of the table\"]\n"
+        "Y : ℝ × ℝ × ℝ    :: [\"the values of the table\"]\n"
+    ).replace(value, value + "    W = evaluate(K, Y, k)            :: [id=table]\n")
+
+
+# CDC's calibration of the perfect-foresight stage, r = ϑ = 0.04, g = 0.02
+# and ρ = 2, at which human wealth h = 1/(1 - Γ/R) is 52 and the marginal
+# propensity to consume κ is 0.04/1.04
+PERFECT_FORESIGHT_CALIBRATION = {"β": 1 / 1.04, "ρ": 2.0, "R": 1.04, "Γ": 1.02}
+
+
+@pytest.fixture(scope="session")
+def perfect_foresight():
+    """The symbolic perfect-foresight stage; a test that binds methods on it
+    binds a copy (`copy_native`)."""
+    return stage_from_text(perfect_foresight_text(), PERFECT_FORESIGHT_ORIGIN)
+
+
+@pytest.fixture(scope="session")
+def perfect_foresight_explicit(perfect_foresight):
+    """The perfect-foresight stage with the explicit solution of its policy
+    builder, the addition `EXPLICIT_POLICY` of the refusal examples, read
+    once; a test that binds it further binds a copy."""
+    from bellman.native.hypergraphs import copy_native
+    from bellman.refusal_examples import EXPLICIT_POLICY
+
+    return copy_native(perfect_foresight).methodize(
+        {"text": EXPLICIT_POLICY, "origin": "explicit_policy.bl"})
+
+
+@pytest.fixture
+def nodal_family():
+    """A representation family registered for the duration of one test,
+    `!nodal`, which accepts only its own nodes and so samples a function on
+    its grid, the endogenous grid method's pairs included; removed at the
+    test's end where the test has not removed it."""
+    from bellman.stage.representations import RepresentationFamily, families, register, unregister
+
+    family = register(RepresentationFamily(
+        "nodal", {}, ("own nodes",), derivatives=(),
+        stored="The values at the nodes of its grid."))
+    yield family
+    if "nodal" in families():
+        unregister("nodal")
+
+
+# --- AMD-MT-003 unit C: derived parameters ---
+
+# the methods addition that defines the marginal propensity to consume κ, the
+# method's derived parameter, which stage.par lists once it is read
+DERIVED_ADDITION = {
+    "text": "@methods: perfect_foresight\n"
+    'κ := 1 - (R*β)^(1/ρ)/R   :: ["the marginal propensity to consume"]\n',
+    "origin": "closed_form.bl",
+}
+# the buffer-stock stage and its baseline calibration, which supplies no μ_ξ
+DERIVED_BUFFER_STOCK = "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl"
+DERIVED_BUFFER_STOCK_CALIBRATION = {
+    "R": 1.03, "β": 0.96, "Γ": 1.03, "ρ": 2.0, "σ_ψ": 0.1, "σ_ξ": 0.1, "p_zero": 0.005,
+}
+
+
+def derived_buffer_stock_text(scale="σ_ξ"):
+    """The text of the buffer-stock stage file, which defines the log-mean
+    μ_ξ := -log(1 - p_zero) - σ_ξ^2/2 of the positive transitory draw as a
+    derived parameter, with `scale` the standard deviation of the logarithm
+    of that draw. With `scale="μ_ξ"` it is the temporary variant of
+    implementation §1, whose derived scale is negative where σ_ξ² exceeds
+    −2 log(1 − p_zero)."""
+    text = (ROOT / DERIVED_BUFFER_STOCK).read_text(encoding="utf-8")
+    if scale != "σ_ξ":
+        assert text.count("LogNormal(μ_ξ, σ_ξ)") == 1
+        text = text.replace("LogNormal(μ_ξ, σ_ξ)", f"LogNormal(μ_ξ, {scale})")
+    return text
+
+
+@pytest.fixture(scope="session")
+def derived_parameters():
+    """The fixtures of the derived checks, as one record: `text`, the
+    perfect-foresight stage text of unit B's section, and `stage(*changes)`,
+    a symbolic stage of it made anew with each pair of
+    `perfect_foresight_text` replaced; `origin`, the file name the stage
+    carries; `addition`, the methods addition that defines κ; `calibration`,
+    CDC's calibration; `buffer_stock(scale)`, the symbolic buffer-stock stage
+    of `derived_buffer_stock_text`, made anew; and
+    `buffer_stock_calibration`. Each stage is made at each call, since a
+    binding verb binds the stage it is called on."""
+    return types.SimpleNamespace(
+        text=perfect_foresight_text(),
+        stage=lambda *changes: stage_from_text(
+            perfect_foresight_text(*changes), PERFECT_FORESIGHT_ORIGIN
+        ),
+        origin=PERFECT_FORESIGHT_ORIGIN,
+        addition=DERIVED_ADDITION,
+        calibration=PERFECT_FORESIGHT_CALIBRATION,
+        buffer_stock=lambda scale="σ_ξ": stage_from_text(
+            derived_buffer_stock_text(scale), DERIVED_BUFFER_STOCK
+        ),
+        buffer_stock_calibration=DERIVED_BUFFER_STOCK_CALIBRATION,
+    )
+
+
+# --- AMD-MT-003 unit D: the numerical applications ---
+
+# the numerical module of the perfect-foresight application, which the tests
+# load from its file, since the folder of an application is no package
+PERFECT_FORESIGHT_MODULE = (
+    ROOT / "applications" / "consumption-perfect-foresight-crra" / "code" / "closed_form_check.py"
+)
+# the documented baseline interval of the comparisons, 401 levels of resources
+# from -30 to 50 (implementation §1), and the second calibration of CDC's
+# application, at which human wealth is 1/(1 - 1.01/1.04)
+PERFECT_FORESIGHT_RESOURCES = (-30.0, 50.0, 401)
+PERFECT_FORESIGHT_ALTERNATIVE = {"β": 0.90, "ρ": 2.0, "R": 1.04, "Γ": 1.01}
+# the grid of savings of the near-limit route, from just above the natural
+# borrowing limit L, by these two offsets, with this many points, so that its
+# endogenous grid covers total wealth from about 1e-4 to about 2
+PERFECT_FORESIGHT_NEAR_LIMIT = (1e-4, 2.0, 50)
+
+
+@functools.cache
+def closed_form_check():
+    """The numerical module of the perfect-foresight application, loaded
+    once from its file, so that the tests read the functions the notebook
+    reads."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("closed_form_check", PERFECT_FORESIGHT_MODULE)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture(scope="session")
+def perfect_foresight_solves():
+    """The expensive solves of item 4 and of item 2's preparation, each made
+    once: `check`, the module; `closed` and `alternative`, the closed-form
+    stage at CDC's two calibrations; `resources`, the baseline interval;
+    `comparisons`, the comparison of the gridded route with the closed form
+    on 5, 50 and 500 savings from -40 to 60 at the first calibration, by the
+    count, and `alternative_comparison`, on 50 savings from -33 to 60 at the
+    second; and `near`, the near-limit route's gridded stage, with its route
+    `near_route`."""
+    import numpy as np
+
+    check = closed_form_check()
+    closed = check.closed_form_stage()
+    resources = np.linspace(*PERFECT_FORESIGHT_RESOURCES)
+    alternative = {"calibration": PERFECT_FORESIGHT_ALTERNATIVE}
+    limit = closed.par["L"].value
+    lower, upper, count = PERFECT_FORESIGHT_NEAR_LIMIT
+    near = check.gridded_stage(count, limit + lower, limit + upper)
+    return types.SimpleNamespace(
+        check=check,
+        closed=closed,
+        alternative=check.closed_form_stage(alternative),
+        resources=resources,
+        comparisons={n: check.comparison(n, -40.0, 60.0, resources) for n in (5, 50, 500)},
+        alternative_comparison=check.comparison(50, -33.0, 60.0, resources,
+                                                calibration=alternative),
+        near=near,
+        near_route=check.gridded_route(near),
+    )
+
+
+# --- AMD-MT-003 unit D2: the buffer-stock application ---
+
+# the files of the buffer-stock application beside its stage file
+# `DERIVED_BUFFER_STOCK`, as its README and its example page name them: the
+# methods file, an addition to the stage file; the settings file; and the
+# example page, which quotes the three files
+BUFFER_STOCK_METHODS = "applications/buffer-stock/declaration/stages/buffer_stock/methods.bl"
+BUFFER_STOCK_SETTINGS = "applications/buffer-stock/declaration/settings/buffer_stock.yml"
+BUFFER_STOCK_PAGE = "docs/examples/buffer-stock/buffer_stock.md"
+
+
+@pytest.fixture(scope="session")
+def buffer_stock_application(derived_parameters):
+    """The buffer-stock application, as one record: `stage(calibration)`,
+    the stage `derived_parameters.buffer_stock()` makes of the stage file,
+    with its methods file read into it, calibrated by `calibration` and
+    configured by its settings file, made anew at each call, since a
+    binding verb binds the stage it is called on; `calibration`, the
+    baseline calibration of unit C's section; and `methods`, `settings` and
+    `page`, the methods file, the settings file and the example page, as
+    paths in the repository."""
+
+    def stage(calibration):
+        made = derived_parameters.buffer_stock().methodize(ROOT / BUFFER_STOCK_METHODS)
+        made.calibrate({"calibration": calibration})
+        return made.configure(ROOT / BUFFER_STOCK_SETTINGS)
+
+    return types.SimpleNamespace(
+        stage=stage,
+        calibration=derived_parameters.buffer_stock_calibration,
+        methods=BUFFER_STOCK_METHODS,
+        settings=BUFFER_STOCK_SETTINGS,
+        page=BUFFER_STOCK_PAGE,
+    )
+
+
+# --- AMD-MT-003 unit E: inspection and the generated references ---
+
+# --- AMD-MT-003 unit E1: the stages of the reference's declaration
+# examples ---
+
+# A stage whose arrival value integrates a Markov shock z, drawn from the row
+# of its transition matrix that the arrival state z_pre selects, and a shock
+# d with a finite law of two points, so that the places E_z and E_d, which
+# the declaration examples of !exact_markov, !markov, !markov_expectation and
+# !sum name, stand in it.
+EXAMPLE_SHOCKS = """@stage: example_shocks
+
+β   : (0,1)    :: ["discount factor"]
+ρ_z : [0,1]    :: ["the probability that the Markov state z keeps its value"]
+p_d : [0,1]    :: ["the probability of the second point of the shock d"]
+
+z : ℝ₊₊
+z ~ MarkovChain(((ρ_z, 1 - ρ_z), (1 - ρ_z, ρ_z)), (1, 2), z_pre)\
+    :: ["a Markov state of two points"]
+d : ℝ
+d ~ Bernoulli(p_d)    :: ["a shock with a finite law of two points"]
+
+[id=arvl_to_dcsn, (k : ℝ₊, z_pre : ℝ₊₊, z, d) : !arvl -> (m : ℝ₊) : !dcsn] {
+    m = z*k + d                    :: [id=resources]
+}
+
+[id=dcsn_to_cntn, (m) : !dcsn -> (a : ℝ₊) : !cntn] {
+    a = m                          :: [id=savings]
+}
+
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = β*V[>]                     :: [id=value]
+}
+
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = E_{z}(E_{d}(V))         :: [id=value]
+}
+"""
+# the worker's consumption stage of the retirement-choice application, whose
+# methods file writes the four lines of the endogenous grid method on the
+# policy builder, the last of them an upper envelope, and types that
+# envelope by the fast upper-envelope scan in the part `WORKER_CONS_ENVELOPE`
+WORKER_CONS = "applications/retirement-choice/declaration/stages/worker_cons/worker_cons.bl"
+WORKER_CONS_ENVELOPE = (
+    '\n    | upper_env.method : !FUES(m_bar=m_bar) | upper_env.handler : "dcsmm:EGM_UE"]'
+)
+
+
+@pytest.fixture(scope="session")
+def example_shocks():
+    """The symbolic stage `EXAMPLE_SHOCKS`."""
+    return stage_from_text(EXAMPLE_SHOCKS, "example_shocks.bl")
+
+
+@pytest.fixture(scope="session")
+def worker_cons():
+    """The symbolic stage of the stage file `WORKER_CONS`."""
+    return fresh_stage(WORKER_CONS)
+
+
+@pytest.fixture(scope="session")
+def example_additions():
+    """The additions that precede a declaration example of the reference in
+    the one call of `methodize` on a stage, by the name of the stage's
+    fixture. A call replaces the additions read before, so an example whose
+    place an addition writes is read in the same call as that addition: on
+    `perfect_foresight_explicit`, the explicit solution of the policy
+    builder, whose closing Evaluation the example of !closed_form types; on
+    `worker_cons`, the methods file beside the stage file without the typing
+    of its upper envelope, whose operator the example of !FUES types."""
+    from bellman.refusal_examples import EXPLICIT_POLICY
+
+    methods = ROOT / WORKER_CONS.replace("worker_cons.bl", "methods.bl")
+    text = methods.read_text(encoding="utf-8")
+    assert text.count(WORKER_CONS_ENVELOPE) == 1
+    return {
+        "perfect_foresight_explicit": ({"text": EXPLICIT_POLICY, "origin": "explicit_policy.bl"},),
+        "worker_cons": (
+            {"text": text.replace(WORKER_CONS_ENVELOPE, "]"), "origin": "methods.bl"},
+        ),
+    }

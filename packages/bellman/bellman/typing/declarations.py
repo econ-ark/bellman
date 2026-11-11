@@ -18,11 +18,17 @@ walk read stand after the ninth check, and the tenth step stands last. A
 declaration or statement that breaks a construction rule raises a
 `ConstructionError` where it is met, carrying the rule and the position of the
 item.
+
+`derived_parameter_body` decides which definitions without arguments are
+derived parameters, constants of the stage defined from its parameters
+(AMD-MT-003, build contract §5); the typing walk and the fold read that one
+rule.
 """
 
 from __future__ import annotations
 
 import dataclasses
+import math
 from typing import NamedTuple
 
 from bellman.distributions.edges import DistributionDeclaration, dependency_order, shock_builders
@@ -269,6 +275,167 @@ _STANDARD_FORMS = (
     "a block's body holds its equations and inequalities, the multipliers it "
     "declares and, in a branching block, its labeled nested blocks"
 )
+
+
+# --- the derived parameters (AMD-MT-003, build contract §5) ---
+
+# the functions a derived parameter's definition may call, each with one
+# argument; `typing/primitive_definitions.py` defines both
+DERIVED_PARAMETER_CALLS = ("log", "exp")
+
+
+def derived_parameter_body(body, bodies, defined, active=frozenset()) -> bool:
+    """Whether the right side `body` of a definition without arguments makes
+    the definition a derived parameter, a constant of the stage defined from
+    its parameters, `h := 1/(1 - Γ/R)`: an arithmetic expression, whose
+    outermost form is a number, a sign, a sum, a difference, a product, a
+    quotient, a power, a call of `log` or `exp`, or a name the stage defines
+    as neither a set nor a function. `bodies` holds the right side of each
+    definition without arguments by its name, through which a name such a
+    definition writes is followed to the definition it names; `defined`
+    holds the names of the sets and of the functions and correspondences
+    with arguments; `active` holds the names being followed, a cycle making
+    no derived parameter here, since the dependency order refuses it.
+
+    The typing walk and the fold read this one rule. What a derived
+    parameter's definition reads and calls is checked by
+    `derived_parameter_fault`, and its arithmetic at the calibration; any
+    other right side, a function alias such as `D_{c}(𝑢)` or `Inv(𝑑𝑢)`, a
+    tuple or a call such as `linspace(H_min, H_max, n_H)`, keeps the reading
+    it had without derived parameters."""
+    if isinstance(
+        body, (terms.Number, terms.Neg, terms.Add, terms.Sub, terms.Mul, terms.Div, terms.Pow)
+    ):
+        return True
+    if isinstance(body, terms.Call):
+        return body.fun in DERIVED_PARAMETER_CALLS
+    if isinstance(body, terms.Sym) and isinstance(body.symbol, terms.Constant):
+        name = body.symbol.name
+        if name in defined or name in active:
+            return False
+        if name in bodies:
+            return derived_parameter_body(bodies[name], bodies, defined, active | {name})
+        return True
+    return False
+
+
+# what a derived parameter's definition reads and is formed by, the reason of
+# every refusal of one
+_DERIVED_PARAMETER_FORMS = (
+    "a derived parameter's definition reads declared parameters, finite numbers and other "
+    "derived parameters, and is formed by signs, sums, differences, products, quotients, "
+    "powers and the calls `log` and `exp`, each of one argument"
+)
+
+
+# what a name that no derived parameter's definition may read is, by the kind
+# of that name, in the sentence of the refusal that names it; a name of no
+# kind listed here is a field of the stage
+_UNREADABLE = {
+    "setting": "a setting, which configuration values after calibration",
+    "set": "a set of the stage",
+    "function": "a function of the stage",
+    "correspondence": "a correspondence of the stage",
+    "shock": "a shock of the stage",
+    "multiplier": "a multiplier of the stage",
+}
+
+
+def derived_parameter_fault(name, term, parameters, derived, kinds):
+    """The refusal of the derived parameter `name`, defined as `term`, as the
+    pair of its sentence and its action, or None where the definition reads
+    and writes what a derived parameter's definition admits: names among
+    `parameters`, the declared parameters, and `derived`, the derived
+    parameters; finite numbers; signs, sums, differences, products, quotients
+    and powers; and the calls `log` and `exp` of one argument. `kinds` maps
+    each other name the stage declares to its kind, `setting`, `set`,
+    `function`, `correspondence`, `shock` or `multiplier`, which the sentence
+    that names it states; a name it does not map is a field of the stage. The
+    declaration pass and the fold (`fold.derived_parameters.derived_order`)
+    both read this one check."""
+    meanings = {other: _UNREADABLE[kind] for other, kind in kinds.items()}
+    fault = _derived_parameter_fault(term, parameters, derived, meanings)
+    if fault is None:
+        return None
+    return (
+        f"the derived parameter {name}, defined as `{to_source(term)}`, {fault}; "
+        f"{_DERIVED_PARAMETER_FORMS}",
+        f"Write the definition of {name} from declared parameters, finite numbers and "
+        "derived parameters, with signs, sums, differences, products, quotients, powers, "
+        "log and exp",
+    )
+
+
+def _overflowed(term) -> bool:
+    """Whether `term` holds a number literal beyond the floating-point range,
+    which the lowering reads as an infinite float."""
+    return any(
+        isinstance(node, terms.Number)
+        and isinstance(node.value, float)
+        and not math.isfinite(node.value)
+        for node in nodes(term)
+    )
+
+
+def _derived_parameter_fault(node, parameters, derived, meanings):
+    """The words that say what the first form of `node` a derived parameter's
+    definition does not admit is, in the order of its text, or None."""
+    if isinstance(node, terms.Number):
+        if isinstance(node.value, bool):
+            return f"writes the number {node.value!r}, which is no finite real number"
+        try:
+            finite = math.isfinite(node.value)
+        except OverflowError:
+            # an integer beyond the floating-point range, which the evaluator
+            # of the definitions at calibration, `fold/derived_parameters.py`
+            # `derived_value`, cannot read as a floating-point number
+            return "writes a number that exceeds the largest finite floating-point number"
+        if not finite:
+            return f"writes the number {node.value!r}, which is no finite real number"
+        return None
+    if isinstance(node, terms.Sym):
+        symbol = node.symbol
+        if not isinstance(symbol, terms.Constant):
+            return f"reads the field {to_source(node)}, which is no parameter"
+        if symbol.name in parameters or symbol.name in derived:
+            return None
+        if symbol.name in ("inf", "∞"):
+            return f"reads {symbol.name}, which is no finite number"
+        return f"reads {symbol.name}, {meanings.get(symbol.name, 'a field of the stage')}"
+    if isinstance(node, terms.Neg):
+        parts = (node.operand,)
+    elif isinstance(node, terms.Pow):
+        parts = (node.base, node.exponent)
+    elif isinstance(node, (terms.Add, terms.Sub, terms.Mul, terms.Div)):
+        parts = (node.left, node.right)
+    elif isinstance(node, terms.Call) and node.fun in DERIVED_PARAMETER_CALLS:
+        if len(node.args) != 1:
+            return f"calls {node.fun} with {len(node.args)} arguments, `{to_source(node)}`"
+        parts = node.args
+    elif isinstance(node, terms.Call):
+        return f"calls {node.fun}, `{to_source(node)}`, which is neither log nor exp"
+    else:
+        return f"writes `{to_source(node)}`, a form no derived parameter's definition admits"
+    for part in parts:
+        fault = _derived_parameter_fault(part, parameters, derived, meanings)
+        if fault is not None:
+            return fault
+    return None
+
+
+def derived_parameters_read(term, derived):
+    """The names among `derived`, the derived parameters, that a term reads,
+    each once in the order of its text: the derived parameters a derived
+    parameter's definition is evaluated after."""
+    return tuple(
+        dict.fromkeys(
+            node.symbol.name
+            for node in nodes(term)
+            if isinstance(node, terms.Sym)
+            and isinstance(node.symbol, terms.Constant)
+            and node.symbol.name in derived
+        )
+    )
 
 
 # --- the declaration pass ---
@@ -544,11 +711,14 @@ class Declarations:
                         address,
                         (
                             f"{coordinate_text(coordinate)} in {place} carries two "
-                            f"sets; no construction rule reads their conjunction. "
-                            f"Write the one set the field takes its values in"
+                            f"sets; several sets in one type are read on a declaration of "
+                            f"one name at the top level (AMD-GRAM-004 §3), and a field listed "
+                            f"on a side or in a tuple carries one set"
                         ),
                         write=(
-                            f"Write the one set {coordinate_text(coordinate)} takes its values in"
+                            f"Write the one set {coordinate_text(coordinate)} takes its values "
+                            f"in, or declare {coordinate_text(coordinate)} on its own line at "
+                            f"the top level with its sets"
                         ),
                     )
                 domain, domain_term = to_source(cl.space), cl.space
@@ -708,6 +878,23 @@ class Declarations:
                 )
             typed.append((p.stem, to_source(domains[0].space) if domains else None))
             domain_terms.append((p.stem, domains[0].space if domains else None))
+        if not params and derived_parameter_body(body, {}, set()) and _overflowed(body):
+            # a number literal beyond the floating-point range is read as an
+            # infinite float, which has no spelling and no finite real value;
+            # the derived parameter is refused here, before its body is
+            # printed (AMD-MT-003, build contract §5: nonfinite results)
+            raise self.error(
+                "derived-parameter",
+                address,
+                f"the derived parameter {name} writes a number that exceeds the largest finite "
+                f"floating-point number, so its definition has no finite real value; "
+                f"{_DERIVED_PARAMETER_FORMS}",
+                write=(
+                    f"Write the definition of {name} from declared parameters, finite numbers "
+                    "and derived parameters, with signs, sums, differences, products, "
+                    "quotients, powers, log and exp"
+                ),
+            )
         self.functions[name] = _Definition(
             name=name,
             params=tuple(typed),
@@ -1496,6 +1683,27 @@ class Declarations:
             and body.symbol.name in self.functions
         )
 
+    def defines_a_derived_parameter(self, definition) -> bool:
+        """Whether `definition` is a derived parameter, read by
+        `derived_parameter_body` against the stage's definitions without
+        arguments, its named sets and its functions and correspondences with
+        arguments: a definition without arguments, `h := 1/(1 - Γ/R)`, whose
+        right side is an arithmetic expression (AMD-MT-003, build contract
+        §5)."""
+        if definition.slot != "value" or isinstance(definition.body, terms.setexpr):
+            return False
+        bodies = {
+            name: held.body
+            for name, held in self.functions.items()
+            if held.slot == "value" and not isinstance(held.body, terms.setexpr)
+        }
+        defined = frozenset(self.spaces) | {
+            name for name, held in self.functions.items() if name not in bodies
+        }
+        return derived_parameter_body(
+            definition.body, bodies, defined, frozenset({definition.name})
+        )
+
     def sets_in_scope_text(self) -> str:
         """The sets a typing may name, for a refusal: the named sets the stage
         defines, in definition order, then the sets of the language, each by
@@ -2178,7 +2386,7 @@ class Declarations:
                     "definition-order",
                     self.functions[name].address,
                     (
-                        f"the function definitions form a cycle: {chain}. No "
+                        f"the definitions form a cycle: {chain}. No "
                         f"dependency order exists, so no definition can be "
                         f"expanded; break the cycle"
                     ),
@@ -2198,6 +2406,7 @@ class Declarations:
         for name in self.functions:
             visit(name)
         self.definition_order = tuple(order)
+        self.check_derived_parameters()
         for body, address in self.law_terms:
             self.check_definition_body(
                 _Definition(
@@ -2216,6 +2425,43 @@ class Declarations:
                 self,
                 bound=frozenset(p for p, _ in definition.params),
             )
+
+    def check_derived_parameters(self) -> None:
+        """Each derived parameter's definition reads declared parameters,
+        finite numbers and other derived parameters, and is formed by signs,
+        sums, differences, products, quotients, powers and the calls `log`
+        and `exp` of one argument (`derived_parameter_fault`); any other name,
+        call or form is refused under `derived-parameter` at the definition.
+        The check is made here, before any line is read, since the check of a
+        line follows the definitions it reads into their bodies and would
+        otherwise refuse a derived parameter that reads a field at a line that
+        reads the parameter, under another rule. A cycle among the
+        definitions is refused before it under `definition-order`
+        (AMD-MT-003, build contract §5)."""
+        derived = {
+            name: definition
+            for name, definition in self.functions.items()
+            if self.defines_a_derived_parameter(definition)
+        }
+        if not derived:
+            return
+        kinds = {name: "shock" for name in self.shocks}
+        kinds.update({name: "setting" for name in self.settings()})
+        kinds.update({name: "set" for name in self.spaces})
+        kinds.update({name: "multiplier" for name in self.multipliers})
+        kinds.update(
+            {
+                name: "correspondence" if isinstance(held.body, terms.setexpr) else "function"
+                for name, held in self.functions.items()
+                if name not in derived
+            }
+        )
+        parameters = set(self.parameters())
+        for name, definition in derived.items():
+            refused = derived_parameter_fault(name, definition.body, parameters, derived, kinds)
+            if refused is not None:
+                message, write = refused
+                raise self.error("derived-parameter", definition.address, message, write=write)
 
     def check_definition_body(self, definition) -> list:
         """The defined functions a definition's body mentions, each once, in

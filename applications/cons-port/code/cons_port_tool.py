@@ -145,9 +145,11 @@ def cartesian_points(stage, method):
     """The points of the one-dimensional grid of a bound place, its grid component `!Cartesian(a=(a_min,
     a_max, n_a, !expmult))`: the bounds and the count of its one spaced factor, read against the stage
     occurrence's settings and spaced as the factor's word says (`spaced`). A place that writes no grid, a grid
-    of several factors and a factor that is no spaced triple are refused."""
+    of another constructor, a grid of several factors and a factor that is no
+    spaced triple are refused."""
     grid = method.grid
-    if grid is None or len(grid.factors) != 1 or not isinstance(grid.factors[0], T.Spaced):
+    if (not isinstance(grid, T.Cartesian) or len(grid.factors) != 1
+            or not isinstance(grid.factors[0], T.Spaced)):
         raise ValueError(f"stage {stage.name!r}: the method {method.word} names the grid "
                          f"{None if grid is None else to_source(T.Grid(grid))!s}; this tool reads one spaced factor, "
                          "`!Cartesian(a=(a_min, a_max, n_a))`")
@@ -161,9 +163,11 @@ def cartesian_points(stage, method):
 
 def feasible_count(stage, method):
     """The count of the one feasible factor of a bound place's grid, `!Cartesian(c=(Γ, n_c))`: the number
-    of candidates a search compares on the control's feasible set."""
+    of candidates a search compares on the control's feasible set; a grid of
+    another constructor is refused."""
     grid = method.grid
-    if grid is None or len(grid.factors) != 1 or not isinstance(grid.factors[0], T.Feasible):
+    if (not isinstance(grid, T.Cartesian) or len(grid.factors) != 1
+            or not isinstance(grid.factors[0], T.Feasible)):
         raise ValueError(f"stage {stage.name!r}: the method {method.word} names the grid "
                          f"{None if grid is None else to_source(T.Grid(grid))!s}; this tool reads one feasible factor, "
                          "`!Cartesian(c=(Γ, n_c))`")

@@ -29,9 +29,11 @@ __all__ = (
     "BRANCHING",
     "CORPUS",
     "EXAMPLES",
+    "EXPLICIT_POLICY",
     "Example",
     "corrected",
     "INVERSE_EULER",
+    "PERFECT_FORESIGHT",
     "REGISTRY_FILES",
     "SHOCK_BRANCHING",
     "TWO_NODES",
@@ -172,6 +174,53 @@ _SAVINGS_SETTINGS = """@methods: t
 n_a : ℕ              :: ["number of points of the savings grid"]
 a_min : ℝ₊           :: ["lower bound of the savings grid"]
 a_max : ℝ₊           :: ["upper bound of the savings grid"]
+"""
+
+# The unconstrained perfect-foresight consumption stage with CRRA utility,
+# normalized by permanent income, the buffer-stock stage without its shocks,
+# whose consumption function and values are known as expressions. Human
+# wealth h = 1/(1 - Γ/R) and the interest factor normalized by growth
+# R_n = R/Γ are derived parameters, h read by the feasible set and R_n by the
+# law of motion of resources; with q = (β*R)^(1/ρ)/R and total wealth
+# m - 1 + h, consumption is (1 - q)*(m - 1 + h). The example of
+# `explicit-solution` and the fixtures of the explicit solutions and of the
+# derived parameters read it.
+PERFECT_FORESIGHT = """@stage: perfect_foresight
+Xm := ℝ
+Xa := ℝ
+β : (0,1)        :: ["discount factor"]
+ρ : (1, inf)     :: ["coefficient of relative risk aversion, greater than one"]
+R : ℝ₊₊          :: ["gross interest factor"]
+Γ : ℝ₊₊          :: ["permanent income growth factor"]
+h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
+R_n := R/Γ           :: ["the interest factor normalized by growth"]
+𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)                :: [id=util]
+Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - 1 + h}   :: [id=feasible_consumption]
+[id=arvl_to_dcsn, (k : Xa) : !arvl -> (m : Xm) : !dcsn] {
+    m = R_n*k + 1                   :: [id=market_resources]
+}
+[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {
+    a = m - c                       :: [id=savings]
+}
+[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {
+    V = 𝑢(c) + β*V[>]               :: [id=value]
+}
+[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {
+    V[<] = Γ^(1-ρ) * V              :: [id=value]
+}
+[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]
+}
+"""
+
+# The explicit solution of the policy builder of `PERFECT_FORESIGHT`, an
+# addition whose one line defines consumption by its expression, which stands
+# in place of the maximization at the operative level and reads the derived
+# parameter h.
+EXPLICIT_POLICY = """@methods: perfect_foresight
+[id=policy, policy.method : !explicit] {
+    c = (1 - (R*β)^(1/ρ)/R)*(m - 1 + h)    :: [id=consumption]
+}
 """
 
 # The two-node stage, two shocks integrated by two nodes of one backward
@@ -694,6 +743,37 @@ EXAMPLES = {
             )
         },
     ),
+    # the closed form typed at the Evaluation of a value builder whose method
+    # is no `!explicit`, which supplies no complete authored expression: a
+    # label without its expression supplies no data to the closed form, and
+    # no other case is selected for it (AMD-MT-003 build contract §3)
+    "representation-source": Example(
+        rule="representation-source",
+        corpus="cons",
+        origin=CORPUS["cons"],
+        changes=(
+            ("@stage: cons\n", "@stage: cons\ncntn_to_dcsn.evaluate.method : !closed_form\n"),
+        ),
+        address="cntn_to_dcsn.evaluate",
+        words=("!closed_form", "complete authored expression", "the place supplies none"),
+        write={
+            "changes": (
+                ("@stage: cons\n", "@stage: cons\ncntn_to_dcsn.evaluate.method : !Linear\n"),
+            )
+        },
+    ),
+    # a block of explicit formulas appended under `!egm`, which reads no value
+    # input and so states an explicit solution (AMD-MT-003 build contract §5)
+    "explicit-solution": Example(
+        rule="explicit-solution",
+        text=PERFECT_FORESIGHT,
+        additions=(("methods.bl", EXPLICIT_POLICY.replace("!explicit", "!egm")),),
+        provokes="union",
+        origin="methods.bl",
+        address="policy",
+        words=("builder under !egm", "explicit solution", "type !explicit on the builder"),
+        write={"edits": (("policy.method : !egm", "policy.method : !explicit"),)},
+    ),
     # the grid of `!egm`, which lies on the continuation state `a`, written
     # with a factor for the decision state `m` (the grid note §3); the stage
     # is read with the addition that declares the grid's settings, so that the
@@ -735,6 +815,20 @@ EXAMPLES = {
         address="cntn_to_dcsn.evaluate",
         words=("m_d=(m_min, m_max, n_m)", "10.0", "in order", "write a lower bound"),
         write={"settings": {"settings": {"n_m": 8, "m_min": 1.0, "m_max": 10.0}}},
+    ),
+    # a predicate word written after `require` that names no grid property,
+    # the word of a uniform grid shortened
+    "grid-requirement": Example(
+        rule="grid-requirement",
+        text=_changed(
+            INVERSE_EULER,
+            (_POLICY_HEADER, _egm_with_grid("a=(a_min, a_max, n_a), require=!Uniform")),
+        ),
+        additions=(("methods.bl", _SAVINGS_SETTINGS),),
+        provokes="union",
+        address="policy",
+        words=("!Uniform", "is no predicate word", "!UniformCartesian"),
+        write={"edits": (("require=!Uniform)", "require=!UniformCartesian)"),)},
     ),
     # a setting the methods file declares and the settings source does not
     # value, refused at the declaration's position in the methods file
@@ -965,6 +1059,15 @@ EXAMPLES = {
         address="t.bl:4",
         words=("`(y, z) ~ N((0, 0), ((1, 2), (2, 1)))`", "not positive semidefinite", "-1.0"),
         write={"edits": (("((1, 2), (2, 1))", "((1, 0), (0, 1))"),)},
+    ),
+    # a derived parameter's definition calls a function other than `log` and
+    # `exp`; the declaration pass refuses it at the definition's term address
+    "derived-parameter": Example(
+        rule="derived-parameter",
+        text="@stage: t\nβ : (0,1)\nh := 1/sqrt(1 - β)\n",
+        address="3",
+        words=("the derived parameter h", "`1/sqrt(1 - β)`", "calls sqrt", "neither log nor exp"),
+        write={"edits": (("h := 1/sqrt(1 - β)", "h := 1/(1 - β)^(1/2)"),)},
     ),
     "conditional-not-declared": Example(
         rule="conditional-not-declared",

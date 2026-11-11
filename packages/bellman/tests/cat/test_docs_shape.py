@@ -45,7 +45,7 @@ from pathlib import PurePosixPath
 
 import pytest
 import yaml
-from conftest import ROOT
+from conftest import ROOT, methodized
 from markdown.extensions.toc import slugify
 
 from bellman.distributions.families import FAMILY_ARGUMENTS
@@ -61,8 +61,24 @@ if str(HOOKS) not in sys.path:
 
 # the markers, the table reader and the row anchor of the generator that
 # writes the pages
-from reference_pages import MARKERS, names, table_cells  # noqa: E402
+from reference_pages import MARKERS, methods_table, names, table_cells  # noqa: E402
 from reference_pages import anchor_of as row_anchor  # noqa: E402
+
+from bellman.native.hypergraphs import copy_native  # noqa: E402
+from bellman.native.records import (  # noqa: E402
+    NO_REGISTERED_ARGUMENTS,
+    OMISSIONS,
+    EntryText,
+    MethodOption,
+)
+from bellman.refusals import ConstructionError  # noqa: E402
+from bellman.stage.grids import GRID_CONSTRUCTORS  # noqa: E402
+from bellman.stage.representations import (  # noqa: E402
+    RepresentationFamily,
+    families,
+    register,
+    unregister,
+)
 
 # a folder named `old` under docs/ is passed over wherever the test reads
 # docs/: `.gitignore`'s `**/old/` keeps such a folder outside git, so it
@@ -422,6 +438,56 @@ def table_rows(text):
     return [dict(zip(head, row)) for row in body]
 
 
+# the line that opens an entry of the methods page: its anchor, then, after
+# one empty line, its numbered heading with the word
+ENTRY = re.compile(r'^<a id="([^"]+)"></a>\n\n### \d+\.\d+ `(![^`]+)`$', re.MULTILINE)
+PART = re.compile(r"^\*\*([A-Z][a-z]+(?: [a-z]+)*)\.\*\*", re.MULTILINE)
+
+
+def reference_entries(text):
+    """The entries of the generated part of the methods page, in order, each
+    as (its anchor, its word with the `!`, its parts by label, each part's
+    text from its label to the next label, and the rows of its argument
+    table)."""
+    held = region(text) if MARKERS[0] in text else text
+    found = list(ENTRY.finditer(held))
+    entries = []
+    for number, match in enumerate(found):
+        end = found[number + 1].start() if number + 1 < len(found) else len(held)
+        body = held[match.end():end]
+        body = re.split(r"^## ", body, flags=re.MULTILINE)[0]
+        labels = list(PART.finditer(body))
+        parts = {
+            label.group(1): body[
+                label.end():(labels[index + 1].start() if index + 1 < len(labels) else len(body))
+            ].strip()
+            for index, label in enumerate(labels)
+        }
+        arguments = [
+            cells for cells in map(table_cells, parts.get("Arguments", "").splitlines()) if cells
+        ][1:]
+        entries.append((match.group(1), match.group(2), parts, arguments))
+    return entries
+
+
+def entry_rows(text):
+    """The entries of the methods page as the rows the checks of the
+    catalogues read: the word with its anchor, the places it is bound at,
+    its `denotes` link and its `read from` reference."""
+    rows = []
+    for anchor, word, parts, _ in reference_entries(text):
+        links = parts.get("Links", "").split("; ")
+        rows.append(
+            {
+                "method": f'<a id="{anchor}"></a>`{word}`',
+                "bound at": parts.get("Declaration", ""),
+                "denotes": next((part for part in links if part.startswith("denotes ")), ""),
+                "read from": next((part for part in links if part.startswith("read from ")), ""),
+            }
+        )
+    return rows
+
+
 def slug(heading):
     """The anchor MkDocs gives a heading."""
     return slugify(heading, "-")
@@ -646,7 +712,8 @@ def test_item_3_the_catalogues_relate_the_package_to_appendix_e3():
     stood = Counter()
     for page in REFERENCE_PAGES:
         path = DOCS / page
-        rows = table_rows(path.read_text(encoding="utf-8")) if path.is_file() else None
+        reader = entry_rows if page.endswith("/methods.md") else table_rows
+        rows = reader(path.read_text(encoding="utf-8")) if path.is_file() else None
         if rows is None:
             problems.append(
                 f"{page} holds no table between the markers {MARKERS[0]} and {MARKERS[1]}"
@@ -831,3 +898,295 @@ def test_item_4_no_page_reaches_a_retired_page_and_the_calculus_links_down_only_
             )
     if problems:
         pytest.fail("\n" + reported(problems), pytrace=False)
+
+
+# --- the method and grid reference (AMD-MT-003 build contract §7, item 6) ---
+
+METHODS_PAGE = "docs/Bellman-Sym/reference/methods.md"
+
+
+def _spline(required):
+    """A representation family `!spline` defined in this module, its degree
+    required or optional: one definition, changed between the two."""
+    return RepresentationFamily(
+        "spline",
+        {"degree": MethodOption("positive integer", required=required,
+                                description="The degree of the spline.")},
+        ("own nodes",),
+        derivatives=(),
+        stored="The coefficients of the spline.",
+        text=EntryText(
+            meaning="A spline through the values at the nodes of its grid.",
+            compatibility="Reads its own nodes on the grid of its place.",
+            example="dcsn_to_arvl.evaluate.method : !spline(degree=d)",
+            example_meaning="The value is represented by a spline of degree `d`.",
+            implementation="No numerical implementation is identified.",
+            definition="bellman-calculus/06-Methods.md#5-the-grid-as-the-discretized-domain",
+            source=__name__,
+        ),
+    )
+
+
+def _entry(word):
+    """The generated entry of `word`, read from the generator's output."""
+    held = [entry for entry in reference_entries(methods_table(METHODS_PAGE)) if entry[1] == word]
+    return held[0] if held else None
+
+
+def test_the_method_reference_holds_one_entry_per_registered_method_and_grid_constructor(
+    cons_savings_iid,
+):
+    """The methods page holds one entry for each method of `METHOD_TYPES`,
+    registered representation families included, then one for each grid
+    constructor of `GRID_CONSTRUCTORS`, in the order of those records and
+    no other; each entry's arguments are the record's, by name, kind and
+    omission, an empty record printing the one sentence of the
+    unlisted-keyword policy; its compatibility holds the record's text and
+    names the grid constructors whose sites admit the method's grid; and the
+    entry of each registered representation family holds, after its
+    compatibility, the stored-data sentence of its record in `families()`.
+    A family registered later has its entry, placed among the families,
+    with its own stored-data sentence, and loses it when it is removed; a
+    keyword the record does not list is
+    admitted; and a changed definition, the degree of a family made
+    optional, changes both validation and the generated entry."""
+    page = (ROOT / METHODS_PAGE).read_text(encoding="utf-8")
+    entries = reference_entries(page)
+    assert reference_entries(methods_table(METHODS_PAGE)) == entries
+    assert [word for _, word, _, _ in entries] == (
+        [f"!{word}" for word in METHOD_TYPES] + [f"!{word}" for word in GRID_CONSTRUCTORS])
+    for anchor, word, parts, arguments in entries:
+        method = word[1:] in METHOD_TYPES
+        record = METHOD_TYPES[word[1:]] if method else GRID_CONSTRUCTORS[word[1:]]
+        held = record["keywords"] if method else record.arguments
+        assert anchor == row_anchor(word[1:])
+        forms = ("Factor forms",) if not method and record.forms else ()
+        family = families().get(word[1:]) if method else None
+        stored = ("Stored data",) if family is not None else ()
+        assert list(parts) == ["Declaration", "Type parameters", "Arguments", *forms,
+                               "Compatibility", *stored, "Example", "Availability",
+                               "Links"], word
+        if family is not None:
+            assert " ".join(family.stored.split()) == parts["Stored data"], word
+        if held:
+            assert [row[0].strip("`") for row in arguments] == list(held), word
+            assert [(row[1], row[2]) for row in arguments] == [
+                (option.kind, OMISSIONS[option.omission]) for option in held.values()], word
+        else:
+            assert parts["Arguments"] == NO_REGISTERED_ARGUMENTS, word
+        assert " ".join(record.text.compatibility.split()) in parts["Compatibility"], word
+        if method and record.grid is not None:
+            admitted = [name for name, grid in GRID_CONSTRUCTORS.items()
+                        if record.grid in grid.sites.readers]
+            assert (
+                re.findall(r"\[`!(\w+)`\]\(#", parts["Compatibility"])[:len(admitted)]
+                == admitted
+            )
+        if not method:
+            for form in record.syntax:
+                assert f"`{form}`" in parts["Declaration"], word
+
+    # registration and removal: the family's entry stands after the base
+    # families and before the rows that follow them, and goes with it
+    base = list(families())
+    register(_spline(required=True))
+    try:
+        words = [word for _, word, _, _ in reference_entries(methods_table(METHODS_PAGE))]
+        assert words.index("!spline") == words.index(f"!{base[-1]}") + 1
+        _, _, parts, arguments = _entry("!spline")
+        assert arguments[0][:3] == ["`degree`", "positive integer", OMISSIONS["refused"]]
+        assert parts["Stored data"] == families()["spline"].stored
+        assert (
+            "test_docs_shape.py" in parts["Links"]
+            and "public link unavailable" in parts["Links"]
+        )
+        with pytest.raises(ConstructionError) as refused:
+            methodized(cons_savings_iid, "dcsn_to_arvl.evaluate.method : !spline\n")
+        assert refused.value.rule == "method-admission" and "degree" in refused.value.message
+        # a keyword the record does not list is admitted and retained
+        methodized(cons_savings_iid,
+                   "d : ℤ\ns : ℤ\ndcsn_to_arvl.evaluate.method : !spline(degree=d, smooth=s)\n")
+    finally:
+        unregister("spline")
+    assert _entry("!spline") is None
+
+    # one definition changed: the degree made optional is admitted when it
+    # is left out, and the entry prints the optional omission
+    register(_spline(required=False))
+    try:
+        methodized(cons_savings_iid, "dcsn_to_arvl.evaluate.method : !spline\n")
+        assert _entry("!spline")[3][0][:3] == [
+            "`degree`", "positive integer", OMISSIONS["omitted"]]
+    finally:
+        unregister("spline")
+
+
+# the fragments of the methods page that links may name: the anchor of each
+# method of the earlier table, the section links, and the headings of the
+# earlier layout, which the page retains as anchors
+PRESERVED_FRAGMENTS = (
+    "egm", "vfi", "time-iteration", "explicit", "linear", "pchip", "closed-form",
+    "gauss-hermite", "quadrature", "exact", "exact-markov", "markov", "markov-expectation",
+    "sum", "tauchen", "deterministic", "histogram", "identity", "monte-carlo", "max",
+    "discrete-choice", "golden-section", "scipy-bounded", "root-find", "newton",
+    "analytic-inverse", "fues", "1-reading-the-table", "2-the-table", "3-the-grid",
+)
+# a revision of the development repository, which holds the internal folder
+# and so is no exported revision of the public repository
+PRIVATE_REVISION = "4742e477c627672e3492ee594c034e91a0e0e652"
+
+
+def page_fragments(text):
+    """Every fragment of a page, an `<a id>` anchor or a heading's slug,
+    outside fenced blocks, with repetitions."""
+    held = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
+    anchors = re.findall(r'<a id="([^"]+)"></a>', held)
+    headings = [slug(heading) for heading in re.findall(r"^#{2,6}\s+(.*\S)", held, re.MULTILINE)]
+    return anchors + headings
+
+
+def test_the_method_reference_is_reproducible_and_its_links_and_fragments_resolve():
+    """The methods page is generated reproducibly: two generations agree,
+    `reference_pages.py --check` finds the page as generated, and no
+    revision of the checkout enters it. Its fragments are unique, every
+    preserved fragment stands, every link on the page reaches its anchor or
+    an existing page, and every link of the documentation into the page
+    reaches a fragment it holds. Each source location names a line of the
+    checkout that defines its word; no exported revision holds the
+    definitions, so each entry states its public link unavailable, and a
+    development revision named as exported is refused."""
+    from reference_pages import source_location
+
+    first, second = methods_table(METHODS_PAGE), methods_table(METHODS_PAGE)
+    assert first == second
+    run = subprocess.run(
+        [sys.executable, str(HOOKS / "reference_pages.py"), "--check", "--page", METHODS_PAGE],
+        cwd=str(ROOT), capture_output=True, text=True,
+    )
+    assert run.returncode == 0, run.stdout + run.stderr
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(ROOT), capture_output=True,
+                          text=True).stdout.strip()
+    page = (ROOT / METHODS_PAGE).read_text(encoding="utf-8")
+    assert head and head not in page and head[:12] not in page
+
+    fragments = page_fragments(page)
+    repeated = sorted(fragment for fragment, count in Counter(fragments).items() if count > 1)
+    assert not repeated, f"fragments that stand twice: {repeated}"
+    assert not set(PRESERVED_FRAGMENTS) - set(fragments)
+    problems = []
+    relative = "Bellman-Sym/reference/methods.md"
+    for number, _, _, target in links(page):
+        if target.startswith("#"):
+            if target[1:] not in fragments:
+                problems.append(f"line {number}: {target} reaches no fragment of the page")
+        elif "://" not in target:
+            reached = resolved(relative, target)
+            if reached is None or not (DOCS / reached).is_file():
+                problems.append(f"line {number}: {target} reaches no page")
+    for path in sorted(DOCS.rglob("*.md")):
+        for number, _, _, target in links(path.read_text(encoding="utf-8")):
+            within = path.relative_to(DOCS).as_posix()
+            if "#" in target and resolved(within, target) == relative:
+                if target.split("#", 1)[1] not in fragments:
+                    problems.append(f"{within}:{number}: {target} reaches no fragment")
+    assert not problems, "\n".join(problems)
+
+    for _, word, parts, _ in reference_entries(page):
+        located = re.search(r"source `([^`]+)`, `([^`]+)`, line (\d+); ([^;]+)", parts["Links"])
+        assert located, word
+        module, _, line, public = located.groups()
+        held = (
+            (ROOT / "packages/bellman/bellman" / module).read_text(encoding="utf-8").splitlines()
+        )
+        if word[1:] in GRID_CONSTRUCTORS:
+            assert f"T.{GRID_CONSTRUCTORS[word[1:]].term.__name__}:" in held[int(line) - 1], word
+        else:
+            assert f'"{word[1:]}"' in " ".join(held[int(line) - 1:int(line) + 2]), word
+        assert public.startswith("public link unavailable"), word
+    with pytest.raises(SystemExit, match="no exported revision"):
+        source_location("egm", METHOD_TYPES["egm"], "row", revision=PRIVATE_REVISION)
+
+
+# The shared fixtures on which the entries' declaration examples are
+# executed, in the order tried: an example runs on the first stage whose
+# places it names, read in one call of `methodize` with the additions that
+# `example_additions` names for the stage. The examples name places of
+# several stages, since each shows its method where the applications write
+# it.
+EXAMPLE_STAGES = ("cons_savings_iid", "cons", "port", "tenure", "perfect_foresight",
+                  "buffer_stock", "cons_candidate", "perfect_foresight_explicit",
+                  "example_shocks", "worker_cons")
+
+
+def example_settings(example):
+    """The declarations of the settings an example names, with a valid value
+    of each and, for its first count or keyword, an invalid value and the
+    rule that refuses it: a count in a grid factor below two under
+    `grid-bounds`, and a keyword's value outside its set under
+    `method-option-value`."""
+    keywords = re.findall(r"!\w+\(([^()]*)\)", example)
+    named = [name for group in keywords for name in re.findall(r"=\s*(\w+)", group)]
+    factors = [name.strip() for group in re.findall(r"=\(([^()]*)\)", example)
+               for name in group.split(",")]
+    declarations, values, invalid = [], {}, None
+    for name in dict.fromkeys(named + factors):
+        if name.startswith("n_"):
+            declarations.append(f"{name} : ℕ")
+            values[name] = 3
+            if invalid is None:
+                rule = "method-option-value" if name in named else "grid-bounds"
+                invalid = (name, 0 if rule == "method-option-value" else 1, rule)
+        elif name.endswith(("_min", "_max")):
+            declarations.append(f"{name} : ℝ₊")
+            values[name] = 0.5 if name.endswith("_min") else 5.0
+    if "A_points" in example:
+        declarations.append("A_points : ℝ₊ × ℝ₊ × ℝ₊")
+        values["A_points"] = [0.5, 1.0, 2.0]
+    return declarations, values, invalid
+
+
+def test_every_entry_of_the_method_reference_has_an_example_that_executes(
+    request, grid_stage, example_additions,
+):
+    """Each entry's declaration example, as its record writes it, is
+    methodized on a shared fixture, after the additions that write its place
+    where the stage file does not, through the public steps it needs and
+    configured with valid values of the settings it names; where a count or
+    a keyword restricts a value, a representative invalid value is refused
+    under the rule the entry names. A grid example stands with the method
+    whose grid it writes, and the fibred grid on the stage of its own
+    example. No numerical solve is run."""
+    from conftest import GRID_VALUES
+
+    executed, unexecuted = {}, {}
+    records = [(word, row.text.example) for word, row in METHOD_TYPES.items()]
+    records += [(word, record.text.example) for word, record in GRID_CONSTRUCTORS.items()]
+    for word, example in records:
+        context = {"Cartesian": "policy.method : !egm\n"}.get(word, "")
+        declarations, values, invalid = example_settings(example)
+        if word == "Fibred":
+            stage = grid_stage("cntn_to_dcsn.method : !vfi\n" + example + "\n")
+            stage.configure({"settings": GRID_VALUES})
+            executed[word] = "grids"
+            continue
+        for name in EXAMPLE_STAGES:
+            stage = request.getfixturevalue(name)
+            text = "\n".join([*declarations, context + example]) + "\n"
+            try:
+                bound = methodized(stage, *example_additions.get(name, ()), text)
+            except ConstructionError:
+                continue
+            executed[word] = name
+            break
+        else:
+            unexecuted[word] = example
+            continue
+        if values:
+            copy_native(bound).configure({"settings": values})
+        if invalid is not None:
+            setting, value, rule = invalid
+            with pytest.raises(ConstructionError) as refused:
+                copy_native(bound).configure({"settings": {**values, setting: value}})
+            assert refused.value.rule == rule, (word, refused.value.message)
+    assert not unexecuted, unexecuted
+    assert len(executed) == len(records)

@@ -1094,6 +1094,15 @@ class Diagnostic(NamedTuple):
     revision: str | None = None
 
 
+def calibration_parameters(stage) -> tuple[str, ...]:
+    """The names of the parameters a calibration of `stage` gives, in the
+    order `stage.par` lists them: the declared parameters, and no derived
+    parameter, whose value its definition computes from them and which a
+    calibration that names it is refused for (`stage.par[name].derived`;
+    AMD-MT-003 build contract §5)."""
+    return tuple(name for name in stage.par if not stage.par[name].derived)
+
+
 def sentence(diagnostic: Diagnostic) -> str:
     """The sentence of a diagnostic as the Problems list prints it: the
     message, then the action on a line of its own where the check

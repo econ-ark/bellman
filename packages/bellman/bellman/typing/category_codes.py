@@ -35,7 +35,7 @@ import re
 
 from bellman.native.records import CategoryCodes
 from bellman.syntax import terms as T
-from bellman.syntax.source import comprehension_text, to_source
+from bellman.syntax.source import comprehension_text, condition_text, to_source
 from bellman.syntax.vocabulary import PRIMITIVE_SETS
 
 MARKER = "!categories"
@@ -465,17 +465,10 @@ def _set_text(term) -> str:
         return type(term).__name__
 
 
-# the signs of the relations a comprehension's condition writes
-_SIGNS = {"Lt": "<", "Le": "<=", "Gt": ">", "Ge": ">=", "Eq": "="}
-
-
 def _condition_text(condition) -> str:
     """A condition of a comprehension as `.bl` text, `i >= 0` or `j = 1`."""
     try:
-        if isinstance(condition, T.Rel) and type(condition.op).__name__ in _SIGNS:
-            sign = _SIGNS[type(condition.op).__name__]
-            return f"{to_source(condition.left)} {sign} {to_source(condition.right)}"
-        return to_source(condition)
+        return condition_text(condition)
     except NotImplementedError:
         return type(condition).__name__
 

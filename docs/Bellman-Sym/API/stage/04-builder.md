@@ -12,7 +12,7 @@ topic: [stage-object]
 # A builder
 
 > [!summary]
-> A builder is the operator one [block](../../01-stage.md#3-builder-blocks) denotes, reached from the [perch](../../../wiki/perch.md) its edge leaves, the edge being the step from that perch to the next ([The builders graphs](03-build.md) §2): `stage.dcsn.builder.bwd`, a path that reads the pair of perches the builder joins, `stage.builder["cntn", "dcsn"]`. It answers the operations inside it, its inputs and outputs, its printed record, its drawing and its kernels, and opens to a finer grain by an attribute; an operation inside it is read by its name as a key. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, and §4 from `applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl`.
+> A builder is the operator one [block](../../01-stage.md#3-builder-blocks) denotes, reached from the [perch](../../../wiki/perch.md) its edge leaves, the edge being the step from that perch to the next ([The builders graphs](03-build.md) §2): `stage.dcsn.builder.bwd`, a path that reads the pair of perches the builder joins, `stage.builder["cntn", "dcsn"]`. It answers the operations inside it, its inputs and outputs, its printed record, its drawing and its kernels, and opens to a finer grain by an attribute; an operation inside it is read by its name as a key. Every listing is printed by the package from `applications/portfolio-choice/declaration/stages/cons/cons.bl`, and §4 from `applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl`; §5 binds the calibration and the settings of the portfolio application to the methodized consumption stage.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [The builders graphs](03-build.md): the pairs and the perch paths that reach the builders, and the graphs that hold them.
@@ -308,3 +308,22 @@ Definitions referenced
 ## 5 The kernels of a builder
 
 `kernels()` answers one record of the builder's kernels, from which a numerical operator is built with no stage in hand: each operation in the order it is applied, with its printed kernel and the wires it reads and writes, and, where its kernel is an explicit function, its function with the names of its arguments and outputs, a derivative term the row reads standing among the arguments, `G_policy_InvEuler(V≻, a, D_{a}(V≻); ρ) → c≻` for the candidate line `InvEuler`, or, for a row that states a relation its output satisfies with no explicit side, such as the identification of a policy block, whose `compile_kernel()` is refused under `kernel-target` ([A piece](05-piece.md) §2), its printed relation; then the parameters with their values and the declared sets its operations are read on. The record refers to no stage, so cloudpickle saves it and another process reads it. The endogenous-grid step of the portfolio–consumption application is built from two such records of a specified version by one call of `asva`, the numerical toolkit installed beside the package, `asva.egm(specified.dcsn.builder.policy.kernels(), specified.dcsn.builder.bwd.kernels(), savings, evaluation)`, the caller reading the savings grid and the evaluation grid from the settings. [A piece](05-piece.md) §2 gives one operation's kernel as a function, and the lesson `tutorials/topics/kernels.ipynb` of the repository composes one step of the decision builder from its two kernels, compiles them with Numba and passes the values of a second calibration without compiling again; [Solutions at the perches](../../11-solutions-at-the-perches.md) describes the dictionaries in which a solver keeps what the kernels compute.
+
+`kernels().grids` holds the realized grid of each place within the builder that types a grid, by the address of the place: the grid's points at the bound settings and calibration, a `RealizedGrid` with the word of its outer constructor, its coordinates in their declared order and its finite points in the order they are constructed, a repeated point held once ([Methodization](../../04-methodization.md) §3.2 gives the grid entry). For a sub-builder it holds the places of the sub-builder's own node, and a grid typed at a declared function, outside every builder, stands in the record of no builder. On a version with no bound settings `grids` is `None`, since the counts and the bounds of a grid are settings. Where the construction cannot establish a grid's points and every property the grid requires, the place holds instead the `Refusal` that says why, under the rule [`grid-requirement`](../../reference/refusals.md#grid-requirement) and at the position of the entry, and the record prints it after `not constructed:`. Among the reasons are a coordinate of the place that no factor names; a factor of a feasible control written in `!Cartesian` without `!Fibred`, which is a family of grids, one at each state, and no one grid; and a fibre of two controls, whose joint sampling is unsupported. The construction supplies no default in any of these cases. The listing reads the version `methodized` of §2, calibrated and configured here:
+
+```python
+print(methodized.dcsn.builder.bwd.kernels().grids)
+methodized.calibrate("applications/portfolio-choice/declaration/calibration/portfolio.yml")
+methodized.configure("applications/portfolio-choice/declaration/settings/cons.yml")
+for builder in (methodized.dcsn.builder.policy, methodized.dcsn.builder.bwd):
+    for address, grid in builder.kernels().grids.items():
+        print(f"{address:<22} {grid}")
+```
+
+```text
+None
+policy                 !Cartesian on (a), 800 points: (1e-06,), (0.12515744430538173,), (0.2503138886107635,), …, (100,)
+cntn_to_dcsn.evaluate  !Cartesian on (m_d), 100 points: (0.01,), (0.11090909090909092,), (0.21181818181818182,), …, (10,)
+```
+
+The grid of savings of the endogenous grid method, `!Cartesian(a=(a_min, a_max, n_a))`, is the 800 equally spaced points from `a_min` to `a_max` that the settings give, and the grid of resources at the decision builder's Evaluation, `!Cartesian(m_d=(m_min, m_max, n_m))`, is the 100 equally spaced points from `m_min` to `m_max`; a coordinate prints as an integer where its value is one.

@@ -2327,12 +2327,9 @@ def obligation_entry(entry) -> str:
 
 
 def predicate_text(p) -> str:
-    """The predicate in the glyphs the semgraph documents use. A membership
-    in a declared set with a condition tail is written by `clauses`, so that
-    each clause carries the subject the membership names."""
+    """The predicate in the glyphs the semgraph documents use."""
     if isinstance(p, Member):
-        subject = _term_text(p.subject)
-        return f"{subject} ∈ {clauses(subject, _term_text(p.set))}"
+        return f"{_term_text(p.subject)} ∈ {_term_text(p.set)}"
     if isinstance(p, Compare):
         return f"{_term_text(p.left)} {p.relation} {_term_text(p.right)}"
     if isinstance(p, Not):
@@ -2344,33 +2341,6 @@ def predicate_text(p) -> str:
     if isinstance(p, IsInteger):
         return f"{_term_text(p.operand)} ∈ ℤ"
     raise TypeError(f"not a predicate: {type(p).__name__}")
-
-
-def clauses(name, text):
-    """A declared set with a condition tail written so that every clause
-    carries its subject, `(0, 1) with β < E_Ψ(…)` in place of `(0, 1), <
-    E_Ψ(…)`.
-
-    `with` opens the tail and `and` joins a second clause to the first, so
-    that the word between the set and its conditions is not the word between
-    two parameters: a comma there would separate clauses and parameters
-    alike, and the reader could not tell which of the two a part is. This is
-    the one place a declared set and its conditions are written, and every
-    view that prints them calls it."""
-    parts, depth, start = [], 0, 0
-    for index, letter in enumerate(text):
-        if letter in "([{":
-            depth += 1
-        elif letter in ")]}":
-            depth -= 1
-        elif letter == "," and depth == 0:
-            parts.append(text[start:index].strip())
-            start = index + 1
-    parts.append(text[start:].strip())
-    if len(parts) == 1:
-        return text
-    tail = [f"{name} {part}" if part[:1] in "<>=!" else part for part in parts[1:]]
-    return parts[0] + " with " + " and ".join(tail)
 
 
 def _term_text(term):

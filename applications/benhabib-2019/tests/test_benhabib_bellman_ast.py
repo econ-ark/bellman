@@ -158,7 +158,7 @@ def test_declares_with_domains():
 def test_types_carry_no_law():
     # tau and r_type are parameters of the instance, not shocks: no
     # statement of the file has a Law core, and the two declarations
-    # carry no value or condition tail.
+    # carry no value.
     assert not any(isinstance(it, Statement) and isinstance(it.core, Law)
                    for it in _ITEMS)
     assert _ITEMS[10].declaration.value is None and _ITEMS[11].declaration.value is None

@@ -11,6 +11,8 @@ well, so that the package and its test state one fact one way (AMD-SG-022 §2,
 construction prints its file and its line and column range, or its address when
 it has no position, before the message, and its rule after it.
 """
+import math
+
 import pytest
 
 from bellman.native.hypergraphs import copy_native
@@ -21,7 +23,9 @@ from bellman.refusal_catalogue import catalogue, entry, refusal_of
 from bellman.refusals import (FACTORY_RULES, RULES, TARGET_RULES, ConstructionError, FactoryError,
                               NotConstructed, TargetError)
 from bellman.stage.grains import graph_of
-from conftest import CORPUS, branching, cons_obs_text, corpus_text, shock_branching, stage_from_text
+from conftest import (CORPUS, GRID_STAGE, GRID_VALUES, PERFECT_FORESIGHT_ORIGIN,
+                      TWO_STATE_GRID_STAGE, branching, closed_form_check, cons_obs_text,
+                      corpus_text, perfect_foresight_text, shock_branching, stage_from_text)
 
 # the value line of the branching fixture, after which its tests write a
 # derivative line of the choice value
@@ -799,6 +803,83 @@ def test_a_distribution_call_of_another_number_of_arguments_than_its_family_take
         elaborate_text(CHAIN_STAGE.replace("DECLARATION", admitted))
 
 
+# the refusals of a derived parameter (AMD-MT-003, build contract §5), each the
+# definition of h in the perfect-foresight stage of the derived checks as
+# changed, the calibration that provokes it or None for a refusal at
+# elaboration, and the words its message names; the catalogue's example holds
+# the call of a function other than log and exp
+DERIVED_REFUSALS = [
+    ("a field", "h := 1/(1 - Γ/m)", None, ("the derived parameter h", "reads m, a field")),
+    ("a set", "h := 1/(1 - Γ/R) + Xm", None, ("reads Xm, a set of the stage",)),
+    ("a function", "h := 1 + 𝑢", None, ("reads 𝑢, a function of the stage",)),
+    ("infinity", "h := 1/(1 - Γ/R) + inf", None, ("reads inf, which is no finite number",)),
+    ("a number beyond the floating-point range", "h := 1/(1 - Γ/R) + 1" + "0" * 400, None,
+     ("writes a number that exceeds the largest finite floating-point number",)),
+    ("a decimal number beyond the floating-point range", "h := 1/(1 - Γ/R) + 1e400", None,
+     ("writes a number that exceeds the largest finite floating-point number",
+      "has no finite real value")),
+    ("log of two arguments", "h := log(R, Γ)", None, ("calls log with 2 arguments",)),
+    ("a tuple", "h := 1 + (R, Γ)", None, ("writes `(R, Γ)`, a form no derived parameter",)),
+    ("a value for h", "h := 1/(1 - Γ/R)", {"h": 52.0},
+     ("the calibration source supplies the value 52.0 for h", "`1/(1 - Γ/R)`")),
+    ("a division by zero", "h := 1/(1 - Γ/R)", {"Γ": 1.04},
+     ("the divisor `1 - Γ/R` is 0.0 at Γ = 1.04, R = 1.04", "a division by zero has no value")),
+    ("a nonpositive logarithm", "h := log(1 - Γ/R)", {"Γ": 1.06},
+     ("the argument `1 - Γ/R` of log is", "log is defined at positive numbers alone")),
+    ("a noninteger power of a negative base", "h := (1 - Γ/R)^(1/2)", {"Γ": 1.06},
+     ("which is no integer", "a noninteger exponent requires a positive base")),
+    ("an undefined power of zero", "h := (1 - Γ/R)^(-1)", {"Γ": 1.04},
+     ("has the base 0.0 and the exponent -1.0", "defined for a positive exponent alone")),
+    ("a value beyond the floating-point range", "h := exp(1000*ρ)", {},
+     ("`exp(1000*ρ)` at ρ = 2.0 exceeds the largest finite floating-point number",)),
+    ("a positive argument lost to underflow", "h := log(exp(-1000*ρ))", {},
+     ("is 0.0 by floating-point underflow", "which numeric underflow does not supply")),
+]
+
+
+@pytest.mark.parametrize("case", DERIVED_REFUSALS, ids=lambda case: case[0])
+def test_a_derived_parameter_is_refused_at_its_definition(case, derived_parameters):
+    """A derived parameter's definition that reads a name other than a
+    declared parameter or a derived parameter, that calls a function other
+    than log or exp of one argument or that writes another form is refused
+    under `derived-parameter` where it is written, before any line is read;
+    a calibration that supplies a value for it, or at which its arithmetic has
+    no finite real value, is refused under the same rule at its definition's
+    file position, naming the operation and the numbers it reads."""
+    _, definition, values, words = case
+    with pytest.raises(ConstructionError) as refused:
+        stage = derived_parameters.stage(("h := 1/(1 - Γ/R)", definition))
+        if values is not None:
+            stage.calibrate({"calibration": {**derived_parameters.calibration, **values}})
+    error = refused.value
+    line = next(n for n, text in enumerate(derived_parameters.text.split("\n"), 1)
+                if text.startswith("h :="))
+    if values is None:
+        assert (error.rule, error.file, error.line) == (
+            "derived-parameter", derived_parameters.origin, line
+        )
+    else:
+        assert (error.rule, error.address) == (
+            "derived-parameter", f"{derived_parameters.origin}:{line}"
+        )
+    for word in words:
+        assert word in error.message, (word, error.message)
+    assert error.write
+
+
+def test_a_derived_parameter_that_reads_a_setting_is_refused_in_its_methods_file(
+        derived_parameters):
+    """A setting takes its value at configuration, after the calibration that
+    evaluates a derived parameter, so a definition that reads one is refused
+    under `derived-parameter` in the methods file that writes it."""
+    addition = {"text": "@methods: perfect_foresight\nn_a : ℕ\nκ := n_a/2\n", "origin": "m.bl"}
+    with pytest.raises(ConstructionError) as refused:
+        derived_parameters.stage().methodize(addition)
+    error = refused.value
+    assert (error.rule, error.file, error.line) == ("derived-parameter", "m.bl", 3)
+    assert "reads n_a, a setting" in error.message
+
+
 def test_two_lines_merged_into_one_box_bind_one_method(elaborate_text):
     """A merged box is one operator, so it holds one method (AMD-SG-011 §3);
     the author keeps two methods by keeping the two computations apart with
@@ -1160,8 +1241,16 @@ LOWERING_REFUSALS = [
      ("`x[1]`", "names its shocks by name"), "`x ~ …`"),
     ("a comprehension binder typed by a role word", "Γ(x : ℝ) := {c : !ctrl | c < x}\n", (2, 13),
      ("`{c : !ctrl | c < x}`", "typed by `!ctrl`", "one set"), "`{c : ℝ₊ | …}`"),
-    ("a condition tail after no set", "γ : !shck, < 2\n", (2, 1), ("`γ < 2`", "declares no set"),
-     "`γ : ℝ₊, < 2`"),
+    ("a bound written after a comma", "γ : ℝ₊, < 2\n", (2, 1),
+     ("`γ < 2`", "after a comma", "retired"), "`ℝ₊ @ (-inf, 2)`"),
+    ("two sets of one type that are no intervals", "γ : ℝ₊ @ ℤ\n", (2, 1),
+     ("`ℝ₊`", "`ℤ`", "are no intervals"), "`γ : ℝ₊ @ (0, 1)`"),
+    ("a set of labels with an interval", "γ : {a, b} @ (0, 1)\n", (2, 1),
+     ("`{a, b}`", "a set of labels"), "the one set γ takes its values in"),
+    ("a bound after a comma on two names", "(γ, δ) : ℝ₊ × ℝ₊, < 2\n", (2, 1),
+     ("`< 2`", "after a comma", "retired"), "`γ : ℝ₊ @ (-inf, 2)`"),
+    ("several sets on a declaration of two names", "(γ, δ) : ℝ₊ × ℝ₊ @ (0, 1)\n", (2, 1),
+     ("of (γ, δ) carries", "one declared name"), "each name on its own line"),
     ("two lines under one id",
      "[id=b, (x : ℝ) : !dcsn -> (y : ℝ, w : ℝ) : !dcsn] {\n    y = x :: [id=same]\n    w = x :: [id=same]\n}\n",
      (4, 5), ("'b.same'", "the first at t.bl:3:5"), "another id"),
@@ -1237,6 +1326,28 @@ def test_calibration_refuses_a_parameter_value_making_utility_undefined(cons):
     assert all(word in str(refused.value) for word in ("ρ", "1.0", "1 - ρ = 0"))
 
 
+def test_calibration_decides_a_line_condition_at_the_value_of_a_derived_parameter(
+        derived_parameters):
+    """A parameter-only condition of a line that reads a derived parameter is
+    decided at the value the derived parameter's definition takes, as one that
+    reads a declared parameter is decided at its value (AMD-SG-022 §4;
+    AMD-MT-003, build contract §5): with `z := R - 1.04`, the divisor of
+    `m = k/z + 1` is refused where R = 1.04 makes z zero and established
+    where R = 1.05 does not."""
+    changes = (("R_n := R/Γ", "R_n := R/Γ\nz := R - 1.04"), ("m = R_n*k + 1", "m = k/z + 1"))
+    with pytest.raises(ValueError) as refused:
+        derived_parameters.stage(*changes).calibrate(
+            {"calibration": {**derived_parameters.calibration, "R": 1.04}})
+    assert all(word in str(refused.value) for word in ("z = 0.0", "¬(z = 0)", "false"))
+    stage = derived_parameters.stage(*changes)
+    stage.calibrate({"calibration": {**derived_parameters.calibration, "R": 1.05}})
+    condition, = [item for item in stage.obligations()
+                  if item.condition == "arithmetic-definedness"
+                  and item.entries[0].block == "arvl_to_dcsn"]
+    assert condition.status == "established"
+    assert condition.evidence[0].startswith("calibration z = 0.01")
+
+
 # fourteen runs of `python -m bellman`, each a new process that imports the
 # package, so the test is one of the sweeps
 @pytest.mark.sweep
@@ -1298,3 +1409,319 @@ def test_method_keyword_names_must_be_declared_even_inside_nested_values(cons):
         "origin": "keywords.methods.bl",
     })
     assert "policy.evaluate" in allowed.methods
+
+
+# The grids a record of their constructors does not admit (AMD-MT-003 build
+# contract §2): each case is its name, the stage text, the typing entries and
+# the declarations of the methods file, the settings configured, the rule, the
+# address and the file the refusal names, and the words its message holds. A
+# stage that binds is configured, so that a refusal of the configured values
+# is reached; an entry of a builder methodized by `!egm` stands in the stage
+# text once the addition is unioned with it.
+_FIBRED = "!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c)))"
+_EGM_GRID = (
+    INVERSE_EULER.replace("@stage: t\n", "@stage: grids\nA := {1, 2}\nΓ_c(x : ℝ₊) := [0, x]\n")
+)
+GRID_REFUSALS = [
+    ("fibred at the grid of egm", _EGM_GRID,
+     "policy.method : !egm\n"
+     "policy.grid : !Fibred(base=!Points(nodes=A), fibre=!Cartesian(c=(Γ_c, n_c)))\n",
+     "", {}, "grid-coordinate", ("policy", "grids.bl"),
+     ("on the states of the continuation perch",
+      "a place of any other coordinate domain refuses")),
+    ("fibred at a function of states alone", GRID_STAGE,
+     f"cntn_to_dcsn.evaluate.method : !Linear\ncntn_to_dcsn.evaluate.grid : {_FIBRED}\n",
+     "", {}, "grid-coordinate", ("cntn_to_dcsn.evaluate", "methods.bl"),
+     ("reads a grid on (m)", "constructs pairs on (m, c)")),
+    ("a base of feasible factors", GRID_STAGE,
+     "cntn_to_dcsn.method : !vfi\n"
+     "cntn_to_dcsn.grid : !Fibred(base=!Cartesian(c=(Γ_c, n_c)), "
+     "fibre=!Cartesian(c=(Γ_c, n_c)))\n",
+     "", {}, "grid-coordinate", ("cntn_to_dcsn", "methods.bl"),
+     ("the base of !Fibred is !Points or a !Cartesian term without feasible-control factors",)),
+    ("a fibre of points", GRID_STAGE,
+     "cntn_to_dcsn.method : !vfi\n"
+     "cntn_to_dcsn.grid : !Fibred(base=!Points(nodes=B), fibre=!Points(nodes=B))\n",
+     "", {}, "grid-coordinate", ("cntn_to_dcsn", "methods.bl"),
+     ("the fibre of !Fibred is a !Cartesian term whose factors are feasible-control factors",)),
+    ("a contradictory requirement", GRID_STAGE,
+     "cntn_to_dcsn.method : !vfi\n"
+     "cntn_to_dcsn.grid : !Points(nodes=B, require=(!Cartesian, !NonCartesian))\n",
+     "", {}, "grid-requirement", ("cntn_to_dcsn", "methods.bl"),
+     ("!Cartesian and !NonCartesian", "contradict each other")),
+    ("points no file declares", GRID_STAGE,
+     "cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : !Points(nodes=Z)\n",
+     "", {}, "grid-setting-declared", ("cntn_to_dcsn", "methods.bl"),
+     ("'Z' as its points", "no setting a methods file declares and no set the stage defines")),
+    ("points of one coordinate on two", TWO_STATE_GRID_STAGE,
+     "cntn_to_dcsn.evaluate.method : !Linear\ncntn_to_dcsn.evaluate.grid : !Points(nodes=P)\n",
+     "P : ℝ × ℝ × ℝ\n", {}, "grid-coordinate", ("cntn_to_dcsn.evaluate", "methods.bl"),
+     ("whose points have 1 coordinate each", "the coordinates (m, z)", "`X2 := ℝ × ℝ`")),
+    ("a configured point outside the declared set", GRID_STAGE,
+     "cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : !Points(nodes=Q)\n",
+     "Q : ℝ × ℝ\n", {"Q": [-1.0, 1.0]}, "grid-bounds", ("cntn_to_dcsn", "grids.bl"),
+     ("the point (-1.0,)", "lies outside the declared set Xm")),
+    ("an outer requirement the joint grid does not satisfy", GRID_STAGE,
+     f"cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : {_FIBRED[:-1]}, require=!Cartesian)\n",
+     "", {}, "grid-requirement", ("cntn_to_dcsn", "methods.bl"),
+     ("does not satisfy !Cartesian", "{1, 2} × {0, 1, 2}, holds (1, 2)")),
+    ("an inner requirement a fibre does not satisfy", GRID_STAGE,
+     "cntn_to_dcsn.method : !vfi\ncntn_to_dcsn.grid : "
+     "!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c), require=!NonCartesian))\n",
+     "", {}, "grid-requirement", ("cntn_to_dcsn", "methods.bl"),
+     ("its fibre at the base state m = 1 does not satisfy !NonCartesian",)),
+]
+
+
+@pytest.mark.parametrize("case", GRID_REFUSALS, ids=lambda case: case[0])
+def test_a_grid_the_record_of_its_constructor_does_not_admit_is_refused_under_its_rule(
+        case, grid_stage):
+    _, text, entries, declarations, settings, rule, (address, file), words = case
+    with pytest.raises(ConstructionError) as refused:
+        grid_stage(entries, declarations, text=text).configure({**GRID_VALUES, **settings})
+    error = refused.value
+    assert (error.rule, error.address, error.file) == (rule, address, file), str(error)
+    assert all(word in error.message for word in words), (words, error.message)
+
+
+# the perfect-foresight stage whose arrival block, a forward builder, defines
+# cash on hand by an authored table on a `!node` line; a forward builder closes
+# with no Evaluation and its law of motion is not split at a forward node, so
+# the node's Evaluation has no row of its own, and a grid there discretizes the
+# states of the builder's output perch, (m), while the table is evaluated at k
+FORWARD_NODE = perfect_foresight_text(
+    ("@stage: perfect_foresight\n", "@stage: forward_node\n"),
+    ('Γ : ℝ₊₊          :: ["permanent income growth factor"]\n',
+     'Γ : ℝ₊₊          :: ["permanent income growth factor"]\nK : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\n'),
+    ("    m = R_n*k + 1                   :: [id=market_resources]\n",
+     "    m = evaluate(K, Y, k)           :: [id=market_resources, !node]\n"),
+)
+
+# the refusals of a representation whose place supplies no data its family
+# accepts, of a grid where the family reads none, of a grid beside an authored
+# table that discretizes another coordinate domain than the table's, and of an
+# expression the kernel compiler writes into no function (AMD-MT-003 build
+# contract §3): each case is the addition's entries, the rule, the address the
+# refusal names and words its message holds
+REPRESENTATION_REFUSALS = (
+    # the closed form refuses a representation grid
+    ("perfect_foresight", "n : ℕ\nlo : Xm\nhi : Xm\n[id=policy, policy.method : !explicit "
+     "| policy.evaluate.method : !closed_form "
+     "| policy.evaluate.grid : !Cartesian(m=(lo, hi, n))] {\n"
+     "    c = (1 - (R*β)^(1/ρ)/R)*(m - 1 + 1/(1 - Γ/R))    :: [id=consumption]\n}\n",
+     "grid-coordinate", "policy.evaluate",
+     ("!closed_form reads no grid", "remove the grid entry")),
+    # the closed form at the Evaluation of an !egm builder, which supplies
+    # pairs
+    ("cons_savings_iid", "n_a : ℕ\na_min : ℝ₊\na_max : ℝ₊\n[id=policy, method : !egm "
+     "| policy.grid : !Cartesian(a=(a_min, a_max, n_a)) | evaluate.method : !closed_form] {\n"
+     "    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]\n"
+     "    w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]\n"
+     "    c[~] = c[>]                     :: [id=cons_choice]\n}\n",
+     "representation-source", "policy.evaluate", ("!egm selects policy pairs", "accepts neither")),
+    # a family that reads the pairs of !egm, written with a grid there
+    ("cons_savings_iid", "n_a : ℕ\na_min : ℝ₊\na_max : ℝ₊\nn_w : ℕ\nw_min : ℝ₊\nw_max : ℝ₊\n"
+     "[id=policy, method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a)) "
+     "| evaluate.method : !Linear | evaluate.grid : !Cartesian(w=(w_min, w_max, n_w))] {\n"
+     "    c[>] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[>])       :: [id=InvEuler]\n"
+     "    w[>] = a + c[>]                 :: [id=g_cntn_to_dcsn]\n"
+     "    c[~] = c[>]                     :: [id=cons_choice]\n}\n",
+     "grid-coordinate", "policy.evaluate", ("reads the policy pairs", "the grid of !egm")),
+    # the closed form at a declared function whose expression is a derivative
+    ("cons_savings_iid", "𝑑𝑢.method : !closed_form\n", "representation-source", "𝑑𝑢",
+     ("complete authored expression", "supplies none")),
+    # a grid beside an authored table evaluated at an expression of the place's
+    # coordinate, whose knots are points of that expression and not of the
+    # coordinate the grid discretizes, a !Cartesian grid and a !Points grid
+    ("perfect_foresight", "K : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\nKN : ℝ × ℝ × ℝ\n[id=dcsn_to_arvl] {\n"
+     "    W = evaluate(K, Y, R*k/Γ + 1)    :: [id=table]\n}\n"
+     "dcsn_to_arvl.table.evaluate.method : !Linear\n"
+     "dcsn_to_arvl.table.evaluate.grid : !Cartesian(k=KN)\n",
+     "representation-source", "dcsn_to_arvl.table.evaluate",
+     ("is evaluated at `R*k/Γ + 1`", "!Cartesian(k=KN) discretizes (k)")),
+    ("perfect_foresight", "K : ℝ × ℝ × ℝ\nY : ℝ × ℝ × ℝ\nP : ℝ × ℝ × ℝ\n[id=dcsn_to_arvl] {\n"
+     "    W = evaluate(K, Y, R*k/Γ + 1)    :: [id=table]\n}\n"
+     "dcsn_to_arvl.table.evaluate.method : !Linear\n"
+     "dcsn_to_arvl.table.evaluate.grid : !Points(nodes=P)\n",
+     "representation-source", "dcsn_to_arvl.table.evaluate",
+     ("is evaluated at `R*k/Γ + 1`", "!Points(nodes=P) discretizes (k)")),
+    # a table on two coordinates written at them in another order than the
+    # grid's, whose knots are points in that other order
+    ("grids", "MN : ℝ × ℝ\nZN : ℝ × ℝ\nK2 : X2 × X2 × X2 × X2\nY2 : ℝ × ℝ × ℝ × ℝ\n"
+     "[id=cntn_to_dcsn] {\n    W = evaluate(K2, Y2, (z, m))    :: [id=table]\n}\n"
+     "cntn_to_dcsn.table.evaluate.method : !Linear\n"
+     "cntn_to_dcsn.table.evaluate.grid : !Cartesian(m=MN, z=ZN)\n",
+     "representation-source", "cntn_to_dcsn.table.evaluate",
+     ("is evaluated at `(z, m)`", "discretizes (m, z)", "in the order of the grid's coordinates")),
+    # the closed form at a declared function whose body calls a function no
+    # definition declares, which the kernel compiler writes into no function
+    ("perfect_foresight", "𝑓(x : ℝ₊₊) := log(x)    :: [id=f]\n𝑓.method : !closed_form\n",
+     "representation-source", "𝑓",
+     ("the declared function '𝑓'", "the call `log(x)` names a function no definition")),
+    # the closed form at a declared function whose body calls a correspondence
+    # the stage declares, whose definition is a set and no closed form
+    ("perfect_foresight", "𝑓(x : Xm) := Γ_c(x)    :: [id=f]\n𝑓.method : !closed_form\n",
+     "representation-source", "𝑓",
+     ("the call `Γ_c(x)` names Γ_c", "whose definition is no expression in closed form")),
+    # the closed form typed at a node's line with a grid typed at the node's
+    # Evaluation, the two entries one assignment to the node's function
+    ("perfect_foresight", "n : ℕ\nlo : Xm\nhi : Xm\n[id=cntn_to_dcsn] {\n"
+     "    W = β*V[>]    :: [id=discounted, !node]\n}\n"
+     "cntn_to_dcsn.discounted.method : !closed_form\n"
+     "cntn_to_dcsn.discounted.evaluate.grid : !Cartesian(m=(lo, hi, n))\n",
+     "grid-coordinate", "cntn_to_dcsn.discounted.evaluate", ("!closed_form reads no grid",)),
+    # a grid beside the table of a forward node, which has no Evaluation of its
+    # own: the grid discretizes the states of the output perch, (m)
+    ("forward_node", "P : ℝ × ℝ × ℝ\narvl_to_dcsn.market_resources.evaluate.method : !Linear\n"
+     "arvl_to_dcsn.market_resources.evaluate.grid : !Points(nodes=P)\n",
+     "representation-source", "arvl_to_dcsn.market_resources.evaluate",
+     ("is evaluated at `k`", "!Points(nodes=P) discretizes (m)")),
+)
+
+
+@pytest.mark.parametrize("case", REPRESENTATION_REFUSALS, ids=lambda case: f"{case[2]}:{case[3]}")
+def test_a_representation_whose_place_supplies_no_data_its_family_accepts_is_refused(
+        case, cons_savings_iid, perfect_foresight):
+    """A representation is refused where its family does not accept the data
+    its place supplies or the compiler writes no function of its expression,
+    and a grid is refused where the family reads none, the grid at a node's
+    Evaluation read with the representation typed at the node's line, or
+    where it stands beside an authored table on another coordinate domain or
+    on its coordinates in another order, each refusal positioned at the
+    entry in the addition."""
+    name, entries, rule, address, words = case
+    texts = {"grids": (TWO_STATE_GRID_STAGE, "grids.bl"),
+             "forward_node": (FORWARD_NODE, PERFECT_FORESIGHT_ORIGIN)}
+    stage = (
+        stage_from_text(*texts[name])
+        if name in texts
+        else {"cons_savings_iid": cons_savings_iid, "perfect_foresight": perfect_foresight}[name]
+    )
+    with pytest.raises(ConstructionError) as refused:
+        copy_native(stage).methodize(
+            {"text": f"@methods: {name}\n{entries}", "origin": "entries.bl"}
+        )
+    error = refused.value
+    assert (error.rule, error.address, error.file) == (rule, address, "entries.bl")
+    assert error.line is not None and error.write
+    for word in words:
+        assert word in error.message, (word, error.message)
+
+
+# the refusals of an explicit solution (AMD-MT-003 build contract §5): the
+# lines appended to a builder of the perfect-foresight stage under a method
+# word, or an entry alone, with the rule, the address, the words of the
+# refusal and the line of the addition at which it stands, the line at fault
+# or, where no line is at fault, the typing entry on the second line; None
+# where the refusal is checked where the version is bound
+_SOLVING = "!egm or !time_iteration, whose block reads the continuation value"
+EXPLICIT_REFUSALS = (
+    ("policy.method : !explicit\n", "explicit-solution", "policy",
+     ("no addition appends a line to the block", "`[id=policy, policy.method : !explicit]`"), 2),
+    ("arvl_to_dcsn.method : !explicit\n", "explicit-solution", "arvl_to_dcsn",
+     ("is a forward builder", "policy builder or on a backward value builder"), 2),
+    ("[id=policy, policy.method : !explicit] {\n    c^(-ρ) = β*R*D_{a}V[>]    :: [id=euler]\n}\n",
+     "explicit-solution", "policy", ("`policy.euler`", "states a relation", _SOLVING), 3),
+    ("[id=policy, policy.method : !explicit] {\n"
+     "    c = (β*D_{a}V[>])^(-1/ρ)    :: [id=inverse]\n}\n",
+     "explicit-solution", "policy", ("reads V[>], a value input", _SOLVING), 3),
+    ("[id=cntn_to_dcsn, cntn_to_dcsn.method : !explicit] {\n    V = 𝑢(c)/(1-β)\n}\n",
+     "explicit-solution", "cntn_to_dcsn", ("reads c, a control input", _SOLVING), 3),
+    ("[id=policy, policy.method : !explicit] {\n    κ = 1 - (R*β)^(1/ρ)/R    :: [id=mpc]\n"
+     "    c = argmax_{cp : Γ_c(m)}(κ*𝑢(cp))    :: [id=chosen]\n}\n",
+     "explicit-solution", "policy",
+     ("`policy.chosen`", "applies argmax, an operator", _SOLVING), 4),
+    ("[id=policy, policy.method : !explicit] {\n    c = D_{m}(m^2)    :: [id=slope]\n}\n",
+     "explicit-solution", "policy", ("applies D, an operator", _SOLVING), 3),
+    ("[id=policy, policy.method : !explicit] {\n    c[>] = (1 - (R*β)^(1/ρ)/R)*(a + 1)\n"
+     "    c = c[>]\n}\n",
+     "explicit-solution", "policy", ("defines c[>], a field at another perch", "under !egm"), 3),
+    ("[id=policy, policy.method : !explicit] {\n    κ = 1 - (R*β)^(1/ρ)/R    :: [id=mpc]\n}\n",
+     "explicit-solution", "policy",
+     ("no line the addition appends writes c", "write a line `c = <expression>` in the block"), 2),
+    ("[id=policy, policy.method : !time_iteration] {\n"
+     "    c = (1 - (R*β)^(1/ρ)/R)*(m - 1 + 1/(1 - Γ/R))    :: [id=consumption]\n}\n",
+     "explicit-solution", "policy", ("builder under !time_iteration", "type !explicit"), 2),
+    # an output whose row the kernel compiler refuses, checked where the
+    # version is bound, after the construction's exclusions
+    ("[id=policy, policy.method : !explicit] {\n    c = log(m)    :: [id=consumption]\n}\n",
+     "explicit-solution", "policy", ("has no executable compiled kernel", "under kernel-form"),
+     None),
+)
+
+
+@pytest.mark.parametrize("case", EXPLICIT_REFUSALS, ids=lambda case: case[0].split("\n")[0][:40])
+def test_an_explicit_solution_that_reads_a_value_states_a_relation_or_misses_an_output_is_refused(
+        case, perfect_foresight):
+    """An `!explicit` builder with no block of its id in an addition, a
+    forward builder, a relation, a read of a value input's derivative or of
+    the control at which a value builder's declared lines are read, an
+    operator, a field at another perch, a missing output and an output the
+    kernel compiler writes into no function are refused, and so is a
+    formula-only block under `!time_iteration`, each naming its cause and
+    the method under which such a line is written, at the line at fault or
+    at the typing entry where no line is."""
+    entries, rule, address, words, line = case
+    with pytest.raises(ConstructionError) as refused:
+        copy_native(perfect_foresight).methodize(
+            {"text": "@methods: perfect_foresight\n" + entries, "origin": "explicit.bl"})
+    error = refused.value
+    assert (error.rule, error.address) == (rule, address)
+    if line is not None:
+        assert (error.file, error.line) == ("explicit.bl", line)
+    for word in words:
+        assert word in error.message, (word, error.message)
+
+
+# --- AMD-MT-003 unit D: the refusals of the scalar evaluators ---
+
+# each refusal of the scalar evaluators of the perfect-foresight
+# application's module (build contract §4): the construction, given the
+# module, and the words its message holds
+EVALUATOR_REFUSALS = {
+    "one node": (lambda check: check.Linear([0.0], [1.0]), "at least two nodes"),
+    "a value missing": (lambda check: check.Pchip([0.0, 1.0, 2.0], [1.0, 2.0]),
+                        "one value aligned with each node"),
+    "values on two coordinates": (lambda check: check.Linear([0.0, 1.0], [[1.0, 2.0], [3.0, 4.0]]),
+                                  "one-dimensional"),
+    "nodes out of order": (lambda check: check.Linear([0.0, 2.0, 1.0], [1.0, 2.0, 3.0]),
+                           "strictly increasing"),
+    "a repeated node": (lambda check: check.Pchip([0.0, 1.0, 1.0], [1.0, 2.0, 3.0]),
+                        "neither sorted nor merged"),
+    "a node that is not finite": (lambda check: check.Linear([0.0, math.inf], [1.0, 2.0]),
+                                  "not finite"),
+    "a value that is not finite": (lambda check: check.Pchip([0.0, 1.0], [math.nan, 2.0]),
+                                   "not finite"),
+    "nodes the conversion merges": (lambda check: check.Linear([2**53, 2**53 + 1], [1.0, 2.0]),
+                                    "merges distinct nodes"),
+    "a point outside the nodes": (lambda check: check.Linear([0.0, 1.0], [1.0, 2.0])(1.5),
+                                  "outside the closed node interval"),
+    "a PCHIP extrapolation": (lambda check: check.Pchip([0.0, 1.0, 2.0], [1.0, 2.0, 4.0])(-0.5),
+                              "PCHIP extrapolation is refused"),
+    "a derivative not offered": (
+        lambda check: check.Linear([0.0, 1.0], [1.0, 2.0]).derivative(0.5, 2),
+        "offers the derivatives of orders 1"),
+    "an extension below the limit": (
+        lambda check: check.Linear([0.0, 1.0], [0.5, 1.0]).extend(
+            [-2.0], check.EndpointSecant(-1.0)),
+        "restricted to the economic domain"),
+    "an infeasible extension": (
+        lambda check: check.Linear([0.0, 1.0], [0.1, 2.0]).extend(
+            [-0.5], check.EndpointSecant(-1.0)),
+        "leaves the feasible set"),
+}
+
+
+@pytest.mark.parametrize("case", sorted(EVALUATOR_REFUSALS))
+def test_a_scalar_evaluator_refuses_data_and_points_outside_its_rules(case):
+    """The Linear and PCHIP evaluators of the perfect-foresight application
+    refuse fewer than two nodes, values not aligned one to a node, nodes out
+    of order or repeated, nodes or values that are not finite, a conversion
+    to floating point that merges nodes, a point outside the closed node
+    interval, a PCHIP extrapolation and a derivative order not offered; the
+    endpoint-secant extension refuses a point at or below its limit and a
+    value outside the feasible set. Each message names its condition."""
+    construction, words = EVALUATOR_REFUSALS[case]
+    with pytest.raises(ValueError) as refused:
+        construction(closed_form_check())
+    assert words in str(refused.value), str(refused.value)

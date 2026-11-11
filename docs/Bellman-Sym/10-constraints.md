@@ -39,7 +39,7 @@ Here `q` is one nonnegative triple, and its first two components must sum to `z`
 
 An **occasionally binding constraint** holds with equality at some states and with slack at others: the borrowing limit that binds at low wealth, the irreversibility of investment that binds when capital is abundant, the collateral limit that binds when house prices fall. Its first-order condition is the Kuhn–Tucker condition of §2, which the language writes in one of three spellings (§4).
 
-A fixed bound on a parameter is written in its declaration as a comma-separated condition after the set, `β : ℝ₊₊, < 1` for a discount factor, read as the set of values of the declared name that satisfy the condition; several conditions are separated by commas, as in `x : ℝ, >= 0, <= 1`.
+A fixed bound on a parameter is part of its declared set. A bound is an endpoint of the set, a number as in `β : (0,1)` or a formula of other parameters as in `Γ : (0, R)`. A further bound is a second set written after `@`, and the declared name then lies in both: `β : (0,1) @ (0, R^(ρ-1))` declares a discount factor below one and below `R^(ρ-1)`. Calibration refuses a value outside either set and names the bound it breaks ([Symbols and conventions](reference/symbols-conventions.md) §9.2).
 
 > [!ast]- Abstract grammar: CorrDef
 > ```asdl

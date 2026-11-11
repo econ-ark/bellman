@@ -364,10 +364,18 @@ def _real_in_interval(order, bounds) -> bool:
 class NumberValue(NamedTuple):
     """A retained numeric term read at parameter values: its `value`, an
     integer, a fraction or a float, None where the term is not decided, and
-    `read`, the names of the parameters the reading took a value of."""
+    `read`, the names of the parameters, declared or derived, the reading
+    took a value of."""
 
     value: object
     read: frozenset
+
+
+# the kinds of identity a term refers to a parameter by, whose value the
+# parameter values hold under its name: a declared parameter, and a derived
+# parameter, whose value at a calibration is its definition evaluated there
+# (AMD-MT-003, build contract §5)
+_VALUED_KINDS = ("parameter", "derived")
 
 
 _OPERATIONS = {
@@ -389,14 +397,15 @@ _COMPARISONS = {
 def number_at(term, values) -> NumberValue:
     """The one arithmetic interpretation of a retained numeric term at
     parameter values, `values` a mapping from parameter name to value: a
-    number, a parameter named as written or by its identity, a negation, a
-    sum, a difference, a product, a quotient or a power. An integer and a
-    ratio of integers are read exactly, as an `int` or a `Fraction`; every
-    other arithmetic is in double precision. The value is None where the
-    term is no arithmetic of numbers and valued parameters, where a value is
-    a boolean or not a number, or where the result is not finite. The
-    calibration's predicate reading, the connections' bounds, the entry
-    checks of a collection and the key checks of a selection all read a
+    number, a parameter named as written or by its identity, a derived
+    parameter by its identity, read at the value `values` holds under its
+    name, a negation, a sum, a difference, a product, a quotient or a power.
+    An integer and a ratio of integers are read exactly, as an `int` or a
+    `Fraction`; every other arithmetic is in double precision. The value is
+    None where the term is no arithmetic of numbers and valued parameters,
+    where a value is a boolean or not a number, or where the result is not
+    finite. The calibration's predicate reading, the connections' bounds, the
+    entry checks of a collection and the key checks of a selection all read a
     number through this function and no other."""
     read = frozenset()
     if isinstance(term, T.Number):
@@ -404,10 +413,10 @@ def number_at(term, values) -> NumberValue:
     elif isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
         name = term.symbol.name
         if not isinstance(name, str):
-            # a parameter referred to by identity, as a condition spelled
-            # in a piece's own terms refers to it; a bound variable is no
-            # parameter
-            if getattr(name, "kind", None) != "parameter":
+            # a parameter or a derived parameter referred to by identity, as a
+            # condition spelled in a piece's own terms refers to it; a bound
+            # variable is no parameter
+            if getattr(name, "kind", None) not in _VALUED_KINDS:
                 return NumberValue(None, read)
             name = name.field
         if name not in values:
@@ -450,16 +459,17 @@ def number_at(term, values) -> NumberValue:
 
 def parameters_read(term):
     """The names of the parameters an arithmetic term of numbers and
-    parameters reads, a parameter named as written or by its identity; None
-    where the term holds any other node, a field, a bound variable, a
-    selection or a call."""
+    parameters reads, a parameter named as written or by its identity and a
+    derived parameter by its identity, as `number_at` reads them; None where
+    the term holds any other node, a field, a bound variable, a selection or
+    a call."""
     if isinstance(term, T.Number):
         return frozenset()
     if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
         name = term.symbol.name
         if isinstance(name, str):
             return frozenset((name,))
-        if getattr(name, "kind", None) == "parameter":
+        if getattr(name, "kind", None) in _VALUED_KINDS:
             return frozenset((name.field,))
         return None
     if isinstance(term, T.Neg):

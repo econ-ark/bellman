@@ -139,11 +139,21 @@ class StageNames:
                 if role == "multiplier"
             }
         )
+        # the names a term writes that stand for a definition and for no
+        # wire: the functions, the function aliases and the correspondences,
+        # and the derived parameters, constants the stage defines from its
+        # parameters, which a kernel writes through their definitions
+        # (AMD-MT-003, build contract §5)
         self.functions = {
             d.identity.field: d
             for d in definitions
             if isinstance(d, Definition)
-            and d.kind in ("function", "function_alias", "correspondence")
+            and d.kind in ("function", "function_alias", "correspondence", "derived_parameter")
+        }
+        self.derived = {
+            d.identity.field: d
+            for d in definitions
+            if isinstance(d, Definition) and d.kind == "derived_parameter"
         }
         self.sets = {
             identity: sort.domain
@@ -335,14 +345,21 @@ class StageNames:
 
     def parameters(self, cores):
         """The identities of the parameters the terms name, each once in order
-        of first mention."""
-        out = []
-        for core in cores:
+        of first mention, a derived parameter a term names standing for the
+        parameters its definition reads (AMD-MT-003, build contract §5)."""
+        out, seen, pending = [], set(), list(cores)
+        while pending:
+            core = pending.pop(0)
             for name, side in symbol_occurrences(core):
-                if side is None and name in self.parameter_names:
+                if side is not None:
+                    continue
+                if name in self.parameter_names:
                     identity = Identity("parameter", stage=self.stage_name, field=name)
                     if identity not in out:
                         out.append(identity)
+                elif name in self.derived and name not in seen:
+                    seen.add(name)
+                    pending.append(self.derived[name].equations[0])
         return tuple(out)
 
     def conditions(self, cores, obligations, owner, block=None, local=None):

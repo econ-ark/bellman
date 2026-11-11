@@ -3,7 +3,7 @@
 Plan := {DB, DC}
 
 γ   : (1, inf)     :: ["curvature of utility, equation (1)"]
-ρ   : ℝ, < 1       :: ["substitution parameter between consumption and housing services, equation (1)"]
+ρ   : ℝ @ (-inf, 1) :: ["substitution parameter between consumption and housing services, equation (1)"]
 φ_C : (0,1)        :: ["deposit share of the collateral constraint, equation (11)"]
 
 𝑢(c : ℝ₊₊, S : ℝ₊₊, α : (0,1))   := (((1 - α)*c^ρ + α*S^ρ)^((1 - γ)/ρ) - 1)/(1 - γ)                 :: [id=util]

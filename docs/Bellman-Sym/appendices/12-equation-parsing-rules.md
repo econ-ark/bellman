@@ -71,7 +71,20 @@ A function definition whose body is a set defines a feasibility correspondence. 
 Γ(z : ℝ₊) := {q : ℝ₊ × ℝ₊ × ℝ₊ | q[1] + q[2] = z, q[3] <= z}
 ```
 
-Both conditions hold together on the whole triple; `q[1]` selects its first component and `z` is the correspondence's argument. Equality in a comprehension does not extend the comma-separated comparison tails of parameter declarations, such as `β : ℝ₊₊, < 1`. Parenthesized expression tuples remain distinct from product sets, so a body `(a, b)` still defines a numerical pair. [Constraints](../10-constraints.md#1-three-kinds-of-constraint-and-where-each-is-written) §1 explains how a maximization statement uses the feasible set.
+Both conditions hold together on the whole triple; `q[1]` selects its first component and `z` is the correspondence's argument. Equality is written in a comprehension only: a set that a declaration adds after `@`, as in `β : (0,1) @ (0, R^(ρ-1))`, is an interval. Parenthesized expression tuples remain distinct from product sets, so a body `(a, b)` still defines a numerical pair. [Constraints](../10-constraints.md#1-three-kinds-of-constraint-and-where-each-is-written) §1 explains how a maximization statement uses the feasible set.
+
+A definition without arguments whose right side is arithmetic defines a **derived parameter**, a constant of the stage computed from its parameters. Human wealth relative to permanent income, `h`, and the interest factor normalized by growth, `R_n`, for example, are computed from the gross interest factor `R` and the growth factor `Γ`:
+
+```bl
+R : ℝ₊₊
+Γ : ℝ₊₊
+h := 1/(1 - Γ/R)
+R_n := R/Γ
+```
+
+The outermost form of the right side decides that a definition is a derived parameter: a number, a sign, a sum, a difference, a product, a quotient, a power, a call of `log` or `exp`, or a name the stage defines as neither a set nor a function. Any other right side, such as `D_{c}(𝑢)` or `Inv(𝑑𝑢)` above, keeps its own reading. The definition of a derived parameter reads declared parameters, finite numbers and other derived parameters, and it is formed by signs, sums, differences, products, quotients, powers and the calls `log` and `exp`, each of one argument. Elaboration refuses, under the rule `derived-parameter` and at the definition, a derived parameter whose definition reads any other name, such as a setting, a shock, a field, a set, a function or `inf`, calls any other function, such as `sqrt` in `h := 1/sqrt(1 - Γ/R)`, writes any other form, such as an expectation, or writes a number that is not finite. A cycle among the definitions is refused under the rule `definition-order`.
+
+Calibration supplies no value for a derived parameter, and a calibration source that names one is refused under `derived-parameter`. The value of a derived parameter is its definition evaluated at the calibration values, after the derived parameters it reads, by the rules of real arithmetic. A divisor is not zero. The argument of `log` is positive. A power with an integer exponent is defined at every base except zero, where the exponent must be positive, and a power with a noninteger exponent requires a positive base. Every value is a finite real number, and a number that floating-point arithmetic rounds to zero from a nonzero result does not count as positive. A calibration at which a definition has no value is refused under `derived-parameter`, at that definition, with the operation that fails and the numbers it reads. [Parameters and settings](../API/stage/06-par-and-settings.md) §1.1 shows the derived parameters in `stage.par`, and [Refusals](../reference/refusals.md#derived-parameter) states the rule.
 
 ## 3 Functions and collections
 

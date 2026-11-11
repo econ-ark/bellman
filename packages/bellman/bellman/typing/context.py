@@ -516,6 +516,16 @@ class TypingContext:
                 if source.slot == "value"
                 else "function"
             )
+            if (
+                kind == "function_alias"
+                and not (len(values) == 1 and values[0].kind == "function")
+                and self.declarations.defines_a_derived_parameter(source)
+            ):
+                # `h := 1/(1 - Γ/R)`: a derived parameter, a constant of the
+                # stage that its definition writes from the parameters, read
+                # as the scalar it writes; the fold checks what it reads and
+                # the calibration evaluates it (AMD-MT-003, build contract §5)
+                kind = "derived_parameter"
             if kind == "function_alias" and not (
                 len(values) == 1 and values[0].kind == "function"
             ):
@@ -528,7 +538,9 @@ class TypingContext:
                 written = f"{name!r} writes `{to_source(source.body)}`"
                 forms = (
                     "a definition without arguments defines a set, as `Xa := ℝ₊` does, or a "
-                    "function of the stage, as `𝑑𝑢 := D_{c}(𝑢)` does"
+                    "function of the stage, as `𝑑𝑢 := D_{c}(𝑢)` does, or a derived parameter, "
+                    "arithmetic of parameters and numbers whose only calls are log and exp, as "
+                    "`h := 1/(1 - Γ/R)` does"
                 )
                 raise self.declarations.error(
                     "not-constructed",
@@ -1350,7 +1362,9 @@ class TypingContext:
         kind = self.declarations.declared_as(name)
         if isinstance(symbol, terms.Constant) and kind == "function":
             definition = self._typed_function(name)
-            if (
+            # a derived parameter is read as the scalar its definition
+            # writes, and a function alias as the function it names
+            if definition.kind == "derived_parameter" or (
                 definition.kind == "function_alias"
                 and definition.value_types[0].kind == "function"
             ):

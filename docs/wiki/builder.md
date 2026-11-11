@@ -171,8 +171,10 @@ the composite $\mathbb T$, not any one of its builders.
 `kernels()` on a builder answers one record that refers to no stage: each
 operation in the order of application, with the plain Python function its
 [[operator#Kernels|kernel]] compiles to, or its printed relation where its rule is no explicit
-function, the names of the function's arguments and outputs, and the
-parameters with the values the [[calibration]] binds. A numerical operator is
+function, the names of the function's arguments and outputs, the
+parameters with the values the [[calibration]] binds, and, once the [[settings]]
+are bound, the [[grid]] of each place within the builder that types one,
+constructed at their values. A numerical operator is
 constructed from such records without the stage in hand
 ([A builder](../Bellman-Sym/API/stage/04-builder.md) §5).
 

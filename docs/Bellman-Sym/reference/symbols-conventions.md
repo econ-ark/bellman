@@ -145,6 +145,8 @@ Terminal continuation values are separate boundary data for period zero. A conne
 
 A **parameter** defines the economic problem; a **setting** controls a numerical calculation. A finite menu of housing sizes is a mathematical domain, so changing its endpoints or number of available sizes changes the problem. A grid approximating a continuous housing domain is a numerical choice. A simulation grid need not equal the solution grid.
 
+A **derived parameter** is a constant of the economic problem that a definition without arguments writes from the declared parameters, such as human wealth `h := 1/(1 - Γ/R)`, so that it is a parameter and not a setting ([Equation parsing rules](../appendices/12-equation-parsing-rules.md) §2; [Parameters and settings](../API/stage/06-par-and-settings.md) §1.1).
+
 The meaning map $\Upsilon$ interprets declarations and equations. The representation map Ρ denotes their numerical realization after the required choices and bindings. Lowercase $\rho$ remains available for an economic parameter, such as risk aversion. These names do not assert that interpretation or approximation is invertible, or that different numerical choices commute.
 
 Elaboration keeps the fields, with the interpreted equation bodies and definitions, in the two [initial diagrams](../../wiki/semgraph.md), and derives from them, under explicit assumptions, the two builders graphs, on functions and on measures. The temporary syntax tree and source spans are discarded; a second independently editable function model is not required. See [From source to a formal problem](../09-from-syntax-to-formal-problem-definition.md).
@@ -153,13 +155,13 @@ Elaboration keeps the fields, with the interpreted equation bodies and definitio
 
 ### 9.1 Punctuation
 
-The examples are lines of the stage files under `applications/portfolio-choice/`: `disc.bl`, whose source §1 shows, `cons.bl` and `noport.bl`.
+The examples are lines of the stage files under `applications/portfolio-choice/`: `disc.bl`, whose source §1 shows, `cons.bl` and `noport.bl`; the derived parameter `h` is a line of `perfect_foresight.bl` under `applications/consumption-perfect-foresight-crra/`.
 
 | Spelling | Use | Example |
 |---|---|---|
 | `:` | Declare a type: a domain, a role or an information context. | `β : (0,1)` |
-| `@` | Join the components of a type; their order does not matter. | `c : !ctrl @ ℝ₊₊` |
-| `:=` | Define a named set, which may be written as a comprehension (§9.2), or a function. | `Xa := ℝ₊`; `Xa := [0, ā]`; `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)` |
+| `@` | Join the components of a type; their order does not matter. Several sets in one type declare their intersection (§9.2). | `c : !ctrl @ ℝ₊₊` |
+| `:=` | Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8). | `Xa := ℝ₊`; `Xa := [0, ā]`; `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`; `h := 1/(1 - Γ/R)` |
 | `=` | State an equation inside a block, explicit or implicit. | `V = β*V[>]` |
 | `~` | Give a shock its law, on a line of its own. | `θ ~ LogNormal(μ_θ, σ_θ)` |
 | `->` | Separate the input side of a block's header from its output side. | `(a : Xa) : !arvl -> (a_d : Xa) : !dcsn` |
@@ -183,7 +185,9 @@ A **domain** is the set of values a field or a parameter may take. These set nam
 | `ℝ_{+∞}` | Real numbers with positive infinity adjoined. |
 | `ℝ_{±∞}`, also `ℝ̄` | Real numbers with both infinities adjoined. |
 
-A bare `R`, `N` or `Z` is an ordinary name and not one of these sets; `R` may be the gross return on assets. Define any other named set before using it, `Xa := ℝ₊`. A named set may also be an interval, `Xa := [0, ā]`, `Xa := (0, ā]` or `Xa := [0, ā)`, whose endpoints may name parameters; a field typed `a : Xa` then has the same declared set as `a : [0, ā]`. The open-open form is the exception: after `:=`, `(0, ā)` is read as a pair of values, not as a set, so an open interval is written after the typing colon where it is used, `a : (0, ā)`. An interval writes its endpoints with the usual brackets, `(a,b)`, `(a,b]`, `[a,b)` and `[a,b]`, and an endpoint may be infinite, `ρ : [1, inf)`; a finite set lists its labels, `R_type := {r1, r2, r3, r4, r5}` or, inline, `d : !ctrl @ {work, retire}`; a product uses `×`, `x : ℝ × ℝ`; and a condition after a comma narrows a declared set, `ρ : ℝ₊, > 1`.
+A bare `R`, `N` or `Z` is an ordinary name and not one of these sets; `R` may be the gross return on assets. Define any other named set before using it, `Xa := ℝ₊`. A named set may also be an interval, `Xa := [0, ā]`, `Xa := (0, ā]` or `Xa := [0, ā)`, whose endpoints may name parameters; a field typed `a : Xa` then has the same declared set as `a : [0, ā]`. The open-open form is the exception: after `:=`, `(0, ā)` is read as a pair of values, not as a set, so an open interval is written after the typing colon where it is used, `a : (0, ā)`. An interval writes its endpoints with the usual brackets, `(a,b)`, `(a,b]`, `[a,b)` and `[a,b]`, and an endpoint may be infinite, `ρ : [1, inf)`; a finite set lists its labels, `R_type := {r1, r2, r3, r4, r5}` or, inline, `d : !ctrl @ {work, retire}`; and a product uses `×`, `x : ℝ × ℝ`.
+
+A declaration may write several sets in one type, with `@` between them, and the declared name then lies in each of them: `β : (0,1) @ (0, R^(ρ-1))` declares a discount factor in both intervals, below one and below `R^(ρ-1)`. A bound is written as an interval, whose endpoints may name parameters and whose unbounded side is `-inf` or `inf`: `θ : ℤ @ [1, inf)` declares an integer of at least one. At most one of the sets is written otherwise than as an interval with brackets, and a named set counts as such a set. The sets may be written in any order. Several sets are read on the declaration of one name on its own line; a field listed in a block header carries one set. When values are bound, `calibrate` refuses a value outside any of the sets and names the bound it breaks. A bound that reads a random variable or a derived parameter is not decided: the stage binds, and `stage.obligations()` lists the membership as required.
 
 Adjoining infinity lets a value reach an endpoint; it does not make every operation on such values defined. An expectation needs integrability or an extended-value convention, and infinity minus infinity is undefined. [Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) states the assumptions used for value equations.
 
@@ -196,7 +200,7 @@ A collection is declared with one entry per key, `δ : L_J → ℝ`, or per orde
 Calibration supplies a sequence in index order or a mapping from keys to entries. Integer ranges are ordered from the lower bound to the upper bound; listed sets retain the order in which their members are written. For example, declare:
 
 ```bl
-θ : ℤ, >= 1
+θ : ℤ @ [1, inf)
 S_θ := {0, θ} ⊂ ℤ
 q : S_θ → ℝ₊
 ```

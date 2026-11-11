@@ -176,7 +176,7 @@ it.
 
 | Spelling | Shown in |
 |---|---|
-| a declaration `name : set :: ["…"]`, a named set `X := ℝ₊`, a finite set of labels `{DB, DC}`, a condition after a comma `ρ : ℝ, < 1` | [Symbol conventions](../../docs/Bellman-Sym/reference/symbols-conventions.md) §9 |
+| a declaration `name : set :: ["…"]`, a named set `X := ℝ₊`, a finite set of labels `{DB, DC}`, a bound as a second set written after `@`, `ρ : ℝ @ (-inf, 1)` | [Symbol conventions](../../docs/Bellman-Sym/reference/symbols-conventions.md) §9 |
 | a function `𝑢(c : ℝ₊₊, h : ℝ₊₊) := …` with a state passed as an argument; a correspondence `Γ(x : ℝ₊₊) := (0, x]`, with two arguments `Γ(x : ℝ₊₊, h : ℝ₊) := (0, x + θ*p*h]` | `applications/durables/declaration/stages/keeper_cons/keeper_cons.bl`; [Constraints](../../docs/Bellman-Sym/10-constraints.md) §§1, 5.2 |
 | a shock drawn on the arrival edge, `ε ~ N(0, 1)`; `N(μ, v)` takes the variance | `applications/durables/declaration/stages/tenure/tenure.bl`; [Shock distributions](../../docs/Bellman-Sym/reference/laws.md) §1 |
 | a chain conditioned on the previous state, `DiscreteMarkov(Π, points, z_pre)`; a matrix and a vector as parameters, `Pi : ℝ`, `z_vals : ℝ` | [Shock distributions](../../docs/Bellman-Sym/reference/laws.md) §2; `applications/housing-owner/declaration/stages/housing_choice/housing_choice.bl` |
@@ -567,7 +567,7 @@ values, as the policy line does.
 | continuation | `a_nxt_rt : ℝ₊`, `adc_nxt_rt : ℝ₊`, `π_nxt_rt : [0,1]`, `h_nxt_rt : ℝ₊`, `m_nxt_rt : ℝ₊`, `P_nxt_rt : ℝ₊₊`, `ξ_nxt_rt : ℝ`, `α_nxt_rt : (0,1)`, `β_nxt_rt : (0,1)`, `plan_nxt_rt : Plan` |
 
 The utility and its two marginal utilities, equation (1), with the taste as a
-third argument; the parameter `ρ` is declared `ρ : ℝ, < 1`, and the paper's
+third argument; the parameter `ρ` is declared `ρ : ℝ @ (-inf, 1)`, and the paper's
 estimate is negative:
 
 ```bl

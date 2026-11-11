@@ -1,7 +1,9 @@
 ---
-title: "Appendix D — Kinds, sorts, and types"
+title: Appendix D — Kinds, sorts, and types
 short_title: "Appendix D: Kinds and sorts"
 status: drafted — Phase 1
+central_source_for: the theory and the definitions of the type system that the package implements (AAS, 11 November 2026)
+instruction_for_agents: "Decisions, amendments, specifications, the elaboration and other documents are to be made consistent with this appendix. A decision about types, such as how the declared domains of a parameter intersect, either follows from the definitions, results and formal system of this appendix and of the calculus, or revises this appendix in the same piece of work. Where another document disagrees with this appendix, bring that document into agreement with it, or put the disagreement to AAS."
 tags:
   - bellman-calculus
   - type
@@ -11,7 +13,10 @@ authors:
   - Akshay Shanker
 audience: user
 type: theory
-topic: [calculus]
+topic:
+  - calculus
+  - types
+  - classification
 ---
 
 # Appendix D — Kinds, sorts, and types
@@ -106,11 +111,11 @@ This is a local intersection sort under D7, not an assertion that three arbitrar
 | `Value` | representing value functions | specified function spaces $\mathsf V_p$ on $\mathsf X_p$ |
 | `Policy` | measurable feasible action functions | $\Pi_\Gamma=\{\pi:\mathsf X_\sim\to\mathsf A:\pi\text{ measurable},\ \pi(x)\in\Gamma(x)\}$ |
 | `Dist` | probability measures | $\mathsf M_p$ on $\mathsf X_p$ |
-| `Grid` | the discretized domain of a function an operator stores or evaluates | the finite subsets $G \subset \mathsf X$ of the domain of that function, each with its inclusion $\iota : G \to \mathsf X$; one such subset is the grid component of the operator's signature ([Methods](./06-Methods.md) §5) |
+| `Grid` | the discretized domain of a function an operator stores or evaluates | the finite subsets $G \subset \mathsf X$ of the domain of that function, or, for a grid of feasible pairs of a solution method, of the product of its states and controls, each with its inclusion $\iota : G \to \mathsf X$; one such subset is the grid component of the operator's signature ([Methods](./06-Methods.md) §5) |
 
 Here $\Gamma(x)$ is the feasible action set and $\operatorname{Gr}(\Gamma)$ its set of feasible state–action pairs. The declared field $V[>]$ has a continuation representing function under the state-generated measurability and measurable-domain assumptions in [Fields, functions and types](./04-fields%2C%20functions%20and%20types.md). No separate `V_fn` source declaration is required. A law over population states is distinct from the law of an individual shock. Forward propagation uses the operators $\mathbb M_\prec$ and $\mathbb M_{\succ,\pi}$, under a specified policy.
 
-**The grid is a sort of its own.** The grid component of an operator's signature is typed by the family `Grid`: the carrier of the sort is the set of finite subsets of the domain of the function the operator stores or evaluates, each with its inclusion, and one grid is an element of that carrier. The inclusion is a map in one interpretation and establishes no declared subsort relation between the grid and the state sort (D5). A function stored at the points of a grid is not thereby a member of the value sort $\mathsf V_p$: it becomes one through the interpolant that extends it, the section of [Methods](./06-Methods.md) §5. A discrete domain the model declares, such as a finite set of housing sizes, is a value domain $D_f$ of a field and no grid.
+**The grid is a sort of its own.** The grid component of an operator's signature is typed by the family `Grid`: the carrier of the sort is the set of finite subsets of the domain of the function the operator stores or evaluates, or, for a grid of feasible pairs of a solution method, of the product of its states and controls ([Methods](./06-Methods.md) §5), each with its inclusion, and one grid is an element of that carrier. The inclusion is a map in one interpretation and establishes no declared subsort relation between the grid and the state sort (D5). A function stored at the points of a grid is not thereby a member of the value sort $\mathsf V_p$: it becomes one through the interpolant that extends it, the section of [Methods](./06-Methods.md) §5. A discrete domain the model declares, such as a finite set of housing sizes, is a value domain $D_f$ of a field and no grid.
 
 **Internal functions remain typed.** A utility function, a local function definition, and an intermediate expression retain their parameter and result types when substituted. A bound parameter may be renamed consistently, but its type and scope remain. No separate named sort for “reward function” is required to make $\mathrm u:\mathbb R_{++}\to\mathbb R$ a typed function. The pointwise-kernel description does not settle the unfinished representation of Epstein–Zin certainty equivalents. #todo
 

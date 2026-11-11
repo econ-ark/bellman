@@ -350,7 +350,8 @@ class StageTemplate(NamedTuple):
     proposes; `stage`, the stage file; `model`, the title of its model's
     page, `economics.md` or `README.md` of the application the corpus file
     stands in; `calibration`, the names of the parameters the stage
-    declares, which its calibration must give; `companions`, for each
+    declares, which its calibration must give, and no derived parameter
+    (`model.calibration_parameters`); `companions`, for each
     kind of `KINDS`, the files its application binds it with, in the order
     bound, none for a binding the application leaves to a slot; and
     `origin`, for the template of a stage folder of the disk
@@ -484,7 +485,7 @@ def _corpus_entry(
     the cache's key holds."""
     template_id = f"{source}#{key}"
     try:
-        declared = tuple(elaborate_stage(load_stage(stage)).par.keys())
+        declared = model.calibration_parameters(elaborate_stage(load_stage(stage)))
     except Exception as error:  # a refusal, a disk error or another exception
         return _refused(template_id, key, Path(stage), error)
     return StageTemplate(template_id, key, Path(stage), title, declared, dict(companions))
@@ -607,7 +608,7 @@ def folder_template(path: str) -> StageTemplate:
     companions = {kind: tuple(e for e in sources if kinds[e] == kind) for kind in KINDS}
     in_layout = folder.parent.name == "stages" and folder.parents[1].name == FACTORY_FOLDER
     title = _model_title(folder.parents[2] if in_layout else folder)
-    declared = tuple(elaborate_stage(load_stage(str(stage))).par.keys())
+    declared = model.calibration_parameters(elaborate_stage(load_stage(str(stage))))
     return StageTemplate(path, folder.name, stage, title, declared, companions, path)
 
 

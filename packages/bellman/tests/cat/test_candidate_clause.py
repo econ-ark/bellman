@@ -62,7 +62,9 @@ def test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_a
 
     # spelling A, `cons_kt`: one Aggregation after the Pullback, its rule the
     # clause read at the point, no Where section and no optimality condition;
-    # a representation bound at the Evaluation changes no rule
+    # a representation bound at the Evaluation changes no rule and adds one
+    # condition, that it is evaluated only where its data support the
+    # function (`evaluation-domain`, AMD-MT-003 build contract §§3, 4)
     policy = cons_kt.builder.policy
     assert [str(key) for key in policy.primitives.list()] == ["Pullback", "euler:Aggregation", "Evaluation"]
     printed = "\n".join(section(str(policy), "Operations"))
@@ -75,7 +77,8 @@ def test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_a
     assert [box for box, method in methodized.methods.items() if method.word == "!Linear"] == [
         "policy.evaluate"]
     assert "\n".join(section(str(methodized.builder.policy), "Operations")) == printed
-    assert [item.condition for item in obligations(methodized)] == [item.condition for item in obligations(cons_kt)]
+    assert [item.condition for item in obligations(methodized)] == [
+        *(item.condition for item in obligations(cons_kt)), "evaluation-domain"]
 
     # spelling B, `cons_obs`: typed on the observable set and printed as
     # drawn; its identification quantifies once over the observable set and,

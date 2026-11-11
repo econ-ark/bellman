@@ -179,11 +179,11 @@
   },
   "topics/expectations": {
     "path": "tutorials/topics/expectations.ipynb",
-    "sha256": "8328e8cf490b97b740f830b1392a5d929d67c6edec709e2c6458f938d6bd9e66",
+    "sha256": "d18bc8f95d0dbcd2d75e09a7dc4133e07085c55813801d62d0e5f19209f8aa63",
     "status": "completed",
     "failures": [],
     "inputs": {
-      "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl": "0b1e74130b6c279281db7ac06e0f5ebb2ce2153907883c96e8a60344411d15e4",
+      "applications/smooth-ambiguity-savings/declaration/stages/sa_savings/sa_savings.bl": "49d0a70d49d0b278497530fe7f84619ad96f56c0bedf1262c3812edf546d1e2b",
       "applications/portfolio-choice/declaration/stages/port/port.bl": "5a57b41870fc53e8dbaa461e5a1ec78bee04b125610b5c59d1c16ad964cc1697",
       "tutorials/checkout.py": "b9efad275e0d457a6f53a6004c23d89dfaec62e8aa8bbf557a420b37eb666c2e"
     }

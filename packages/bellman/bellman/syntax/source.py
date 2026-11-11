@@ -10,9 +10,10 @@ are not kept: `**` prints as `^`, the glyph `∞` as `inf`, and the decision
 mark `x[~]` as the bare `x`. Parentheses are the fewest the grammar's
 precedence allows (`grammars/stage.lark`): a sum is a sum of products, a
 product a product of molecules, a power a power of two atoms, and a unary
-minus applies to a product. A comprehension that restricts its bound
-name prints as a declaration tail (`Tau, >= 1, <= 10`). A coupled condition
-prints with its binder and base set, as a correspondence body
+minus applies to a product. A set with conditions that bound its own name
+prints as a declaration writes it, the base and one interval for each bound
+with `@` between them (`Tau @ [1, 10]`). A coupled condition prints with its
+binder and base set, as a correspondence body
 (`{u : ℝ × ℝ | u[1] + u[2] < x}`).
 
 A top-level statement prints as the grammar writes it: a distribution
@@ -29,8 +30,11 @@ a comprehension (`H := {i : ℤ | i >= 0, i <= 1}`), or an expression
 
 The parts of a typing entry print as the entry writes them: the path of a
 component (`policy.evaluate[V[<]].method`), a word with its keyword arguments
-(`!egm(tol=tol_v)`), a grid with its factors (`!Cartesian(a=(a_min, a_max,
-n_a, !expmult))`), and the method or the grid classifier as that word or grid.
+(`!egm(tol=tol_v)`), a grid as its one outer grid word with its arguments
+(`!Cartesian(a=(a_min, a_max, n_a, !expmult))`, `!Points(nodes=P)`,
+`!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c)))`), the
+predicate words after `require` printed last, and the method or the grid
+classifier as that word or grid.
 
 The forms printed are those the corpus under `applications/` uses. A generated
 constructor outside them raises `NotImplementedError` naming the constructor.
@@ -39,9 +43,10 @@ constructor outside them raises `NotImplementedError` naming the constructor.
 from __future__ import annotations
 
 import math
+from itertools import zip_longest
 
 from bellman.syntax import terms as T
-from bellman.syntax.vocabulary import PRIMITIVE_SETS
+from bellman.syntax.vocabulary import EXTENDED_REAL, PRIMITIVE_SETS
 
 # The precedence levels of the grammar's expression ladder, lowest first: a
 # position that requires at least a product parenthesizes a sum, and so on.
@@ -53,10 +58,14 @@ def to_source(term) -> str:
     block statement term.
 
     Lowering the text again (`bellman.syntax.lower.ToAst`) yields a term equal
-    to `term`. A constructor the corpus does not use raises
-    `NotImplementedError` naming it. A statement is the core of a `Statement`
-    item — an `Equation`, `lhs = rhs`; a `Slack`, an equation with its
-    complementary-slackness clause `lhs = rhs ⟂ left <relation> right` or
+    to `term`, for a term the lowering gives. A set with conditions is
+    written as a declaration writes it, several sets with `@` between them,
+    so its text is a type and is read as one after the colon of a
+    declaration (`_intersection_text`). A constructor the corpus does not use
+    raises `NotImplementedError` naming it. A statement is the core of a
+    `Statement` item — an `Equation`, `lhs = rhs`; a `Slack`, an equation
+    with its complementary-slackness clause
+    `lhs = rhs ⟂ left <relation> right` or
     `lhs = rhs ⟂ lower <relation> middle <relation> upper`; a
     `Law`; a `FuncDef`; a `CorrDef`; an `Assignment` — and prints without its
     annotation, which the statement record keeps as tags; `PathAssignment`
@@ -141,10 +150,37 @@ def _argument(value) -> str:
 
 
 def _grid(grid) -> str:
-    """A grid with its factors, `!Cartesian(a=(a_min, a_max, n_a))`."""
-    if not isinstance(grid, T.Cartesian):
-        raise NotImplementedError(f"to_source has no rule for the grid constructor {type(grid).__name__}")
-    return "!Cartesian(" + ", ".join(_factor(factor) for factor in grid.factors) + ")"
+    """A grid as its one outer grid word with its arguments, the predicate
+    words after `require` last: `!Cartesian(a=(a_min, a_max, n_a))`,
+    `!Points(nodes=P)`, `!Points` alone for the empty grid, and
+    `!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c)))`."""
+    if isinstance(grid, T.Cartesian):
+        arguments = [_factor(factor) for factor in grid.factors]
+    elif isinstance(grid, T.PointGrid):
+        arguments = [] if grid.nodes is None else [f"nodes={grid.nodes}"]
+    elif isinstance(grid, T.Fibred):
+        arguments = [f"base={_grid(grid.base)}", f"fibre={_grid(grid.fibre)}"]
+    else:
+        raise NotImplementedError(
+            f"to_source has no rule for the grid constructor {type(grid).__name__}"
+        )
+    if grid.require:
+        words = [f"!{name}" for name in grid.require]
+        arguments.append("require=" + (words[0] if len(words) == 1 else f"({', '.join(words)})"))
+    return grid_word(grid) + (f"({', '.join(arguments)})" if arguments else "")
+
+
+# The source word of each grid constructor, by its term class, in the order
+# Cartesian, Points, Fibred; `!Points` is held by the term PointGrid, since
+# the set expression Points holds that name. The records of the grid
+# constructors, `stage/grids.py`, read their words from this table.
+GRID_WORDS = {T.Cartesian: "Cartesian", T.PointGrid: "Points", T.Fibred: "Fibred"}
+
+
+def grid_word(grid) -> str:
+    """The outer grid word of a grid term as a stage file writes it, with
+    its `!`: `!Cartesian`, `!Points` or `!Fibred`."""
+    return "!" + GRID_WORDS[type(grid)]
 
 
 def _factor(factor) -> str:
@@ -367,9 +403,7 @@ def comprehension_text(comprehension) -> str:
             "over a base set, or whose conditions are not equalities or inequalities, has no "
             "spelling (grammar rule `comprehension`)"
         )
-    conditions = ", ".join(
-        _comparison(cond.left, cond.op, cond.right) for cond in comprehension.conds
-    )
+    conditions = ", ".join(condition_text(cond) for cond in comprehension.conds)
     return "{" + f"{coordinates[0].stem} : {set_text(comprehension.base)} | {conditions}" + "}"
 
 
@@ -388,7 +422,8 @@ def _assignment_value(value) -> str:
     comprehension as `{i : ℤ | i >= 0, i <= 1}` (grammar rule
     `assigned_value`), otherwise an expression. A comprehension is written by
     `comprehension_text`, as a correspondence body is; `set_text` writes it
-    as a declaration's condition tail, which no assignment admits.
+    as a declaration does, as several sets with `@` between them, which no
+    assignment admits.
 
     The spellings the grammar's tokens `BBSET` and `RPLUS` admit are the keys
     of `vocabulary.PRIMITIVE_SETS`, and this test reads that table, so the
@@ -629,52 +664,161 @@ def set_text(set_expression) -> str:
             )
         return " × ".join(_factor_text(factor) for factor in set_expression.factors)
     if isinstance(set_expression, T.Comprehension):
-        return _condition_tail(set_expression)
+        return _intersection_text(set_expression)
     raise NotImplementedError(
         f"to_source has no rule for the set constructor {type(set_expression).__name__}; "
         f"the corpus does not use it"
     )
 
 
+def is_interval(set_expression) -> bool:
+    """Whether a set is an interval written with both brackets, `(0, 1]`."""
+    return isinstance(set_expression, T.Interval) and _bracketed(set_expression.bounds)
+
+
+def _bracketed(bounds) -> bool:
+    """Whether the bounds of an interval carry both brackets."""
+    return isinstance(bounds, T.Range) and bounds.left is not None and bounds.right is not None
+
+
 def _range(bounds) -> str:
-    if not isinstance(bounds, T.Range) or bounds.left is None or bounds.right is None:
+    if not _bracketed(bounds):
         raise NotImplementedError("an interval without both end markers has no spelling")
     left = "[" if isinstance(bounds.left, T.Closed) else "("
     right = "]" if isinstance(bounds.right, T.Closed) else ")"
     return f"{left}{_expr(bounds.lower, _SUM)}, {_expr(bounds.upper, _SUM)}{right}"
 
 
-def _condition_tail(comprehension) -> str:
-    """The condition tail of a declaration, the grammar's spelling of a
-    comprehension: `{x ∈ B : x ≥ 1, x ≤ 10}` is written `B, >= 1, <= 10` after
-    `x :` (rule `declaration`; `condition_tail_domain` in
-    bellman.syntax.lower)."""
-    coordinates = (
-        comprehension.bound.coordinates if isinstance(comprehension.bound, T.Subject) else []
-    )
-    tail_form = (
-        len(coordinates) == 1
-        and isinstance(coordinates[0], T.Coordinate)
-        and coordinates[0].at is None
-        and not coordinates[0].classifiers
-        and comprehension.base is not None
-    )
-    if not tail_form:
+def bound_name(subject):
+    """The name a subject binds, as the term a condition on it writes, where
+    the subject binds one name that carries no type of its own: `β` for `β`,
+    and `V[>]` with its perch mark for `V[>]`. None for a tuple of names and
+    for a name typed inside its parentheses."""
+    coordinates = subject.coordinates if isinstance(subject, T.Subject) else ()
+    if (
+        len(coordinates) != 1
+        or not isinstance(coordinates[0], T.Coordinate)
+        or coordinates[0].classifiers
+    ):
+        return None
+    name = coordinates[0]
+    return T.Sym(T.Constant(name.stem) if name.at is None else T.Variable(name.stem, name.at, 0))
+
+
+def _intersection_text(comprehension) -> str:
+    """A declared set with conditions as a declaration writes it, several
+    sets with `@` between them (AMD-GRAM-004 §3; `intersection_of_sets` in
+    bellman.syntax.lower): `{x ∈ B | x ≥ 1, x ≤ 10}` is written `B @ [1, 10]`
+    after `x :`.
+
+    The base is written first, then one interval for each bound. The lower
+    bounds and the upper bounds are paired in their order. A bound left
+    without a partner is the interval from it to the base's own endpoint on
+    the other side, with the base's bracket; where the base is no interval,
+    to `-inf` or `inf`, with a closed bracket where the base may hold that
+    infinity, since an open one would exclude it. The lowering reads no
+    condition from such an endpoint, and it reads the endpoints of each side
+    whatever intervals hold them, so the text of a set the lowering keeps is
+    read back as the same term. A condition that is no ordered comparison of
+    the bound name with a term has no interval, and the set is then written
+    with a bar by `comprehension_text`."""
+    name = bound_name(comprehension.bound)
+    base = comprehension.base
+    if name is None or base is None:
         raise NotImplementedError(
-            "a Comprehension whose bound is not one bare name over a base set "
-            "has no spelling; the grammar writes a comprehension only as a "
-            "declaration's condition tail"
+            "a Comprehension whose bound is not one name over a base set has no spelling; a "
+            "declaration writes a set with conditions as sets with `@` between them"
         )
-    stem = coordinates[0].stem
-    parts = [set_text(comprehension.base)]
-    for cond in comprehension.conds:
-        bound_name = (
-            isinstance(cond, T.Rel)
-            and isinstance(cond.left, T.Sym)
-            and isinstance(cond.left.symbol, T.Constant)
-            and cond.left.symbol.name == stem
-        )
-        if not bound_name or not _ordered(cond.op):
+    conds = comprehension.conds
+    for cond in conds:
+        if not isinstance(cond, T.Rel) or cond.left != name or not _ordered(cond.op):
             return comprehension_text(comprehension)
-        parts.append(f"{_sign(cond.op)} {_expr(cond.right, _SUM)}")
-    return ", ".join(parts)
+    held = base.bounds if is_interval(base) else None
+    infinity = T.Sym(T.Constant("inf"))
+
+    def free(negative):
+        """The endpoint and the bracket of a side that a bound leaves free."""
+        if held is not None:
+            return (held.lower, held.left) if negative else (held.upper, held.right)
+        bracket = T.Closed() if may_hold_infinity(base, negative) else T.Open()
+        return (T.Neg(infinity) if negative else infinity), bracket
+
+    lower = [(cond.right, bracket_of(cond.op)) for cond in conds if _lower(cond.op)]
+    upper = [(cond.right, bracket_of(cond.op)) for cond in conds if not _lower(cond.op)]
+    parts = [set_text(base)]
+    for low, high in zip_longest(lower, upper):
+        low, left = low or free(negative=True)
+        high, right = high or free(negative=False)
+        parts.append(_range(T.Range(left, low, high, right)))
+    return " @ ".join(parts)
+
+
+def is_infinity(endpoint, negative) -> bool:
+    """Whether an interval's endpoint is `-inf`, with `negative`, or `inf`."""
+    if negative:
+        return isinstance(endpoint, T.Neg) and is_infinity(endpoint.operand, negative=False)
+    return (
+        isinstance(endpoint, T.Sym)
+        and isinstance(endpoint.symbol, T.Constant)
+        and endpoint.symbol.name == "inf"
+    )
+
+
+def may_hold_infinity(set_expression, negative) -> bool:
+    """Whether a set, as it is written, may hold `-inf`, with `negative`, or
+    `inf`. An interval holds it where it is closed at that infinite
+    endpoint, and an extended real set where it reaches that side, `ℝ̄` or
+    `ℝ_{+∞}`. A real set, an integer set, a range of integers and a list of
+    finite numbers hold neither infinity. Every other set may hold it: a set
+    the file names, whose members are not known from its name, and a list
+    with a member that is no finite number as written."""
+    if isinstance(set_expression, T.Interval):
+        if not is_interval(set_expression):
+            return False
+        bounds = set_expression.bounds
+        end, bracket = (bounds.lower, bounds.left) if negative else (bounds.upper, bounds.right)
+        return is_infinity(end, negative) and isinstance(bracket, T.Closed)
+    if isinstance(set_expression, T.Named):
+        primitive = PRIMITIVE_SETS.get(set_expression.name)
+        if primitive is None:
+            return True
+        if primitive.kind != EXTENDED_REAL:
+            return False
+        return primitive.glyph != ("ℝ_{+∞}" if negative else "ℝ_{-∞}")
+    if isinstance(set_expression, T.IntegerRange):
+        return False
+    if isinstance(set_expression, T.Points):
+        return not all(is_number(member) for member in set_expression.members)
+    return True
+
+
+def is_number(term) -> bool:
+    """Whether a term is a number as written, `1` or `-0.5`."""
+    return isinstance(term, T.Number) or (
+        isinstance(term, T.Neg) and isinstance(term.operand, T.Number)
+    )
+
+
+def condition_text(condition) -> str:
+    """One condition of a set as a set with a bar writes it, `x < R` or
+    `x = 5`: an equality or an ordered comparison of two terms."""
+    if not isinstance(condition, T.Rel) or not (
+        _ordered(condition.op) or isinstance(condition.op, T.Eq)
+    ):
+        raise NotImplementedError(
+            f"a condition that is no equality or ordered comparison of two terms, a "
+            f"{type(condition).__name__}, has no spelling in a set with a bar"
+        )
+    return _comparison(condition.left, condition.op, condition.right)
+
+
+def _lower(relation) -> bool:
+    """Whether an ordered comparison `x > b` or `x >= b` bounds its left side
+    from below."""
+    return isinstance(relation, (T.Gt, T.Ge))
+
+
+def bracket_of(relation):
+    """The bracket of the interval endpoint an ordered comparison gives:
+    closed for `>=` and `<=`, open for `>` and `<`."""
+    return T.Closed() if isinstance(relation, (T.Ge, T.Le)) else T.Open()

@@ -8,9 +8,9 @@
   </div>
   <div class="home-features__layout">
     <div class="home-feature-list">
-      <a class="home-feature" href="{{ 'wiki/elaborated_stage/#1-the-complete-typed-statement-of-the-problem' | url }}"><h2>The Bellman language</h2><p>Express economic relationships as a typed semantic ontology.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
-      <a class="home-feature" href="{{ 'wiki/semgraph/' | url }}"><h2>Typed semantics</h2><p>Humans and AI can inspect the quantities, equations and mathematical operations that define the model.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
-      <a class="home-feature" href="{{ 'wiki/rho/' | url }}"><h2>AI-assisted implementation</h2><p>Use explicit model meaning to support code generation and numerical implementation.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+      <a class="home-feature" href="{{ 'wiki/elaborated_stage/#1-the-complete-typed-statement-of-the-problem' | url }}"><h2>Bellman language</h2><p>A syntax that builds complex models from modular, reusable stages. Economists focus on economic relations, not numerical implementation.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+      <a class="home-feature" href="{{ 'wiki/semgraph/' | url }}"><h2>Semantic ontology</h2><p>A categorical type system turns the written model into a typed graph that humans and AI can both read, inspect and verify.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
+      <a class="home-feature" href="{{ 'wiki/rho/' | url }}"><h2>AI interface</h2><p>The model and its numerical methods are declared, not coded. AI can then write the numerical code to an exact specification.</p><span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
     </div>
   </div>
   <div class="home-media__caption">
@@ -23,23 +23,16 @@
 
 <section class="home-applications" id="examples" aria-labelledby="applications-heading">
   <div class="home-section-heading"><h2 id="applications-heading">Applications</h2><a href="{{ 'examples/' | url }}">All examples <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
-  <div class="home-applications__layout">
-    <div class="home-model-choice">
-      <div class="home-model-tabs" hidden role="tablist" aria-label="Example models" aria-orientation="vertical">
-        <button type="button" role="tab" id="model-housing" data-model="housing" aria-controls="home-model-panel" aria-selected="true">Housing<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></button>
-        <button type="button" role="tab" id="model-pensions" data-model="pensions" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Pensions<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></button>
-        <button type="button" role="tab" id="model-buffer-stock" data-model="buffer-stock" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Buffer-stock saving<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></button>
-      </div>
-      <div class="home-model-description" data-model-description="housing"><p>A household chooses whether to keep its home or adjust its housing stock.</p><a href="{{ 'examples/housing-frictions/' | url }}">Read the model <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
-      <div class="home-model-description" data-model-description="pensions" hidden><p>A worker chooses consumption and pension contributions before deciding whether to retire next period.</p><a href="{{ 'examples/pension-retirement/' | url }}">Read the model <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
-      <div class="home-model-description" data-model-description="buffer-stock" hidden><p>A household chooses consumption and saving under permanent and temporary income risk.</p><a href="{{ 'examples/buffer-stock/buffer_stock/' | url }}">Read the model <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a></div>
-      <a class="home-model-workbench" href="{{ 'overview/07-workbench/' | url }}">Workbench guide <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
-      <noscript><p><a href="{{ 'examples/pension-retirement/' | url }}">Pensions</a> and <a href="{{ 'examples/buffer-stock/buffer_stock/' | url }}">Buffer-stock saving</a> are also available in the examples.</p></noscript>
-    </div>
-    <div id="home-model-panel" class="home-model-panel" role="tabpanel" aria-labelledby="model-housing">
-      <iframe id="home-model-frame" src="{{ '_assets/home-model/index.html?model=housing&v=20261110s' | url }}" title="Housing model: interactive diagram and source" loading="lazy"></iframe>
-    </div>
+  <div class="home-model-tabs" hidden role="tablist" aria-label="Example models" aria-orientation="horizontal">
+    <button type="button" role="tab" id="model-housing" data-model="housing" aria-controls="home-model-panel" aria-selected="true">Housing<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-down.svg" %}</span></button>
+    <button type="button" role="tab" id="model-pensions" data-model="pensions" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Pensions<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-down.svg" %}</span></button>
+    <button type="button" role="tab" id="model-buffer-stock" data-model="buffer-stock" aria-controls="home-model-panel" aria-selected="false" tabindex="-1">Buffer-stock saving<span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-down.svg" %}</span></button>
   </div>
+  <div id="home-model-panel" class="home-model-panel" role="tabpanel" aria-labelledby="model-housing">
+    <iframe id="home-model-frame" data-src="{{ '_assets/home-model/index.html?model=housing&v=20261111a' | url }}" title="Housing model: interactive diagram and source"></iframe>
+  </div>
+  <noscript><p class="home-model-noscript"><a href="{{ 'examples/housing-frictions/' | url }}">Housing</a>, <a href="{{ 'examples/pension-retirement/' | url }}">Pensions</a> and <a href="{{ 'examples/buffer-stock/buffer_stock/' | url }}">Buffer-stock saving</a> are available in the examples.</p></noscript>
+  <a class="home-model-workbench" href="{{ 'overview/07-workbench/' | url }}">Workbench guide <span class="home-arrow" aria-hidden="true">{% include ".icons/material/arrow-right.svg" %}</span></a>
 </section>
 
 <section class="home-project" id="project" aria-labelledby="project-heading">

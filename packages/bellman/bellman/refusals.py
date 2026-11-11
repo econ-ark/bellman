@@ -270,6 +270,34 @@ RULES = (
     # keyword the row requires there, one count per shock for a quadrature's
     # nodes.
     "method-admission",
+    # A function representation's family accepts the data its place
+    # supplies, chosen in the order of an authored table, the policy pairs of
+    # an `!egm` builder's closing Evaluation, a complete authored expression
+    # with an explicit kernel, and the family's own nodes; missing data
+    # selects no other case, and an optional grid beside an authored table
+    # discretizes the coordinates at which the table is evaluated, written as
+    # a name or as a tuple of names in the order of the grid's coordinates,
+    # and has exactly its finite support where both are known at
+    # configuration.
+    "representation-source",
+    # An `!explicit` builder is a policy or backward value builder to which
+    # an addition appends lines in a block of the builder's id, `[id=policy,
+    # policy.method : !explicit]`, which stand in place of the declared lines
+    # at the operative level; a builder with no such block is refused. The
+    # lines write every output by `output = expression` on the states of the
+    # builder's own perch, the parameters, the derived parameters and the
+    # names the block introduces, with a compiled kernel for each output: a
+    # line that reads an input of the builder's header, a value input or its
+    # derivative or a control at which a value builder's declared lines are
+    # read, states a relation or applies an operator on its right side is
+    # refused naming `!egm` or `!time_iteration`, a line that defines or reads
+    # a field at another perch, the candidate `c[>]` or the identification
+    # `c = c[>]`, naming `!egm`, and a block that writes no output with the
+    # line `<output> = <expression>` to write; each refusal stands at the line
+    # at fault, and at the typing entry where no line is. A complete block of
+    # such lines under `!egm` or `!time_iteration`, appended by an addition or
+    # written in the stage file, is refused, naming `!explicit`.
+    "explicit-solution",
     # Over the files of a stage, a component is typed once, whether by an
     # absolute or a relative spelling of its path, a name is defined once, or
     # identically in each file, and a line id names one line of a block; the
@@ -294,16 +322,38 @@ RULES = (
     # quadrature factor; a coordinate no factor names takes the default, the
     # product over the coordinates of that function, as every coordinate does
     # where the place writes no grid entry; a method that reads no grid has
-    # none written at its place.
+    # none written at its place, and a representation fitted from the pairs
+    # the endogenous grid method computes has no grid of its own at the
+    # Evaluation of the builder that method solves, since its nodes are the
+    # endogenous points of the pairs. A grid constructor stands only at the
+    # places its record admits, `!Fibred` only where the occurrence's domain
+    # is its base's states followed by its fibre's controls; the base of
+    # `!Fibred` is `!Points` or a `!Cartesian` term on the states, and its
+    # fibre a
+    # `!Cartesian` term of feasible-control factors; each declared point of
+    # `!Points` has one coordinate for each coordinate of the place.
     "grid-coordinate",
     # Every name a factor of a grid writes is a setting the methods file
     # declares, a node set the stage defines or an expectation operator of
-    # the stage; a bound or a count written as a number is refused.
+    # the stage, and the declared points of `!Points` are a setting the
+    # methods file declares or a set the stage defines; a bound or a count
+    # written as a number is refused.
     "grid-setting-declared",
     # At configuration the bounds of a factor are in order and inside the
     # coordinate's declared set, its count is at least two, and a node set
-    # is strictly increasing.
+    # is strictly increasing; each configured point of `!Points` has finite
+    # real coordinates inside the coordinates' declared sets.
     "grid-bounds",
+    # The predicate words a grid writes after `require` are among `!Empty`,
+    # `!Cartesian`, `!NonCartesian` and `!UniformCartesian`, and no two
+    # contradict each other; each holds of the grid wherever the bound values
+    # decide it, an outer requirement of `!Fibred` of the joint grid and one
+    # inside its fibre of each fibre. The numerical construction of a grid
+    # establishes its finite points, a factor for each coordinate, a sampler
+    # for each feasible set and every required property before the grid is
+    # used, and reports what it cannot establish instead of supplying a
+    # default.
+    "grid-requirement",
     # A setting's configured value lies in the set its declaration names.
     "setting-outside-set",
     # Every setting the methods file declares, and every setting a bound
@@ -370,6 +420,13 @@ RULES = (
     # variances and deviations, finite endpoints in order, positive scales,
     # and real arguments that have a number.
     "distribution-domain",
+    # A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared
+    # parameters, finite numbers and other derived parameters, and is formed
+    # by signs, sums, differences, products, quotients, powers and the calls
+    # `log` and `exp` of one argument; the calibration supplies no value for
+    # it, and at the calibration values every operation of its definition is
+    # defined and its value is a finite real number.
+    "derived-parameter",
     # The conditional distribution an expectation needs is a declared
     # conditional, a product of them, or a marginal or conditional of a joint
     # normal declaration whose conditioning block is positive definite.
@@ -764,6 +821,15 @@ CONDITIONS = (
     # (specification 0.6 §4.1 and decision 2)
     "egm-eligibility",
     "marginal-reading",
+    # the conditions a function representation owes (AMD-MT-003 build
+    # contract §§3, 4; `stage/representations.py`): that it is evaluated where
+    # its data support the represented function, that a family reading its
+    # own nodes at an `!egm` builder's closing Evaluation is sampled from the
+    # selected pairs, and that an optional grid beside an authored table has
+    # the table's finite support
+    "evaluation-domain",
+    "pair-reconstruction",
+    "table-grid-support",
 )
 
 

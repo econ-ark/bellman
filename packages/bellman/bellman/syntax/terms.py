@@ -593,9 +593,35 @@ class grid:
 @dataclass(frozen=True, slots=True)
 class Cartesian(grid):
     factors: tuple = ()
+    require: tuple = ()
 
     def __post_init__(self):
-        for slot in ("factors",):
+        for slot in ("factors", "require",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+@dataclass(frozen=True, slots=True)
+class PointGrid(grid):
+    nodes: object = None
+    require: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("require",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+@dataclass(frozen=True, slots=True)
+class Fibred(grid):
+    base: object
+    fibre: object
+    require: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("require",):
             value = getattr(self, slot)
             if type(value) is list:
                 object.__setattr__(self, slot, tuple(value))

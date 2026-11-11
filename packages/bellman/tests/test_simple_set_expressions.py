@@ -177,4 +177,6 @@ def test_item_4_old_forms_and_positioned_refusals_are_preserved():
             error.file == "invalid_set.bl" and error.line is not None and error.column is not None
         )
         if rule == "syntax":
-            assert (error.line, error.column) == (2, 8)
+            # at the comma: nothing follows a declaration's type after a comma
+            # (AMD-GRAM-004)
+            assert (error.line, error.column) == (2, 6)

@@ -17,6 +17,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from bellman.display import sheets
+from bellman.native.records import Refusal
 from bellman.refusals import Diagnostic
 from bellman.syntax import terms as T
 from bellman.syntax.layout import LABEL_COLUMN
@@ -395,12 +396,20 @@ def component_entries(components):
     wires: for each place, as `(address, Components)` pairs, its method, its
     grid and its handler where typed, each as the word of the component and
     its text, the object the place names after it in brackets where the
-    place is one object of an Evaluation, `dcsn_to_arvl.evaluate[V[<]]`."""
+    place is one object of an Evaluation, `dcsn_to_arvl.evaluate[V[<]]`. A
+    generated method is followed by the entry it is generated from,
+    `!closed_form  generated from policy.method` (AMD-MT-003 build contract
+    §5)."""
     entries = []
     for address, held in components:
         suffix = "  " + address[address.index("[") :] if "[" in address else ""
         if held.method is not None:
-            entries.append(("method", sheets.SetsLine(to_source(T.Method(held.method)) + suffix)))
+            text = to_source(T.Method(held.method)) + (
+                f"  generated from {held.generated_from}"
+                if held.generated_from is not None
+                else ""
+            )
+            entries.append(("method", sheets.SetsLine(text + suffix)))
         if held.grid is not None:
             entries.append(("grid", sheets.SetsLine(to_source(T.Grid(held.grid)) + suffix)))
         if held.handler is not None:
@@ -566,7 +575,11 @@ class PieceKernel(
 
 
 class BuilderKernels(
-    namedtuple("BuilderKernels", "builder inputs outputs pieces parameters parameter_values sets")
+    namedtuple(
+        "BuilderKernels",
+        "builder inputs outputs pieces parameters parameter_values sets grids",
+        defaults=(None,),
+    )
 ):
     """What a builder's `kernels()` answers: the record from which a
     numerical operator is constructed with no stage in hand.
@@ -581,7 +594,13 @@ class BuilderKernels(
     values the calibration of the version binds to them, in the same order,
     None on a symbolic version. `sets` pairs each argument of a piece's
     function with the set the stage declares for it, as the file writes it,
-    and then each named set those sets name with its definition.
+    and then each named set those sets name with its definition. `grids` is
+    a read-only mapping from the address of each place within the builder
+    that types a grid to its realized grid at the bound settings, a
+    `RealizedGrid` of `stage/grids.py` with its coordinates and its finite
+    points, or, where the construction cannot establish its points and every
+    property it requires, the `Refusal` that says why; None on a version with
+    no bound settings (AMD-MT-003 build contract §2).
 
     The record holds strings, tuples, numbers and functions made from source
     text in a namespace that holds NumPy alone, and no stage: cloudpickle
@@ -605,6 +624,7 @@ class BuilderKernels(
                 [
                     ("parameters", _parameter_text(self.parameters, self.parameter_values)),
                     ("sets", _sets_text(self)),
+                    *_grids_rows(self.grids),
                 ]
             )
         )
@@ -649,6 +669,18 @@ def _parameter_text(names, values):
     if values is None:
         return f"{', '.join(names)}; no values bound"
     return ", ".join(f"{name} = {value}" for name, value in zip(names, values))
+
+
+def _grids_rows(grids):
+    """The rows of a builder's realized grids under the label `grids`, one
+    per place, each the address and the realized grid or the reason its
+    construction is refused; none where the version binds no settings or no
+    place of the builder types a grid."""
+    rows = []
+    for address, grid in (grids or {}).items():
+        shown = f"not constructed: {grid.reason}" if isinstance(grid, Refusal) else str(grid)
+        rows.append(("grids" if not rows else "", f"{address}  {shown}"))
+    return rows
 
 
 def _sets_text(record):

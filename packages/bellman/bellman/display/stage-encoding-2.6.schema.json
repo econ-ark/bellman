@@ -151,6 +151,7 @@
             "set",
             "distribution",
             "parameter",
+            "derived parameter",
             "setting",
             "function",
             "function alias",
@@ -1225,6 +1226,7 @@
             "terms.Equation",
             "terms.FILE",
             "terms.Feasible",
+            "terms.Fibred",
             "terms.FiniteSet",
             "terms.Functions",
             "terms.Ge",
@@ -1260,6 +1262,7 @@
             "terms.Parameter",
             "terms.Path",
             "terms.PathAssignment",
+            "terms.PointGrid",
             "terms.Points",
             "terms.Pos",
             "terms.Pow",
@@ -2251,7 +2254,11 @@
     "methods.MethodOption": [
       "kind",
       "required",
-      "conditions"
+      "conditions",
+      "description",
+      "omission",
+      "default",
+      "default_by"
     ],
     "records.Wire": [
       "identity",
@@ -2327,7 +2334,17 @@
       "word"
     ],
     "terms.Cartesian": [
-      "factors"
+      "factors",
+      "require"
+    ],
+    "terms.PointGrid": [
+      "nodes",
+      "require"
+    ],
+    "terms.Fibred": [
+      "base",
+      "fibre",
+      "require"
     ],
     "terms.Spaced": [
       "coordinate",
@@ -2351,7 +2368,9 @@
     "records.Components": [
       "method",
       "grid",
-      "handler"
+      "handler",
+      "source",
+      "generated_from"
     ]
   }
 }

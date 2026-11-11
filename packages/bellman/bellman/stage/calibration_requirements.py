@@ -29,8 +29,9 @@ from bellman.fold.block_lines import parameter_sets
 from bellman.native.identity import Identity
 from bellman.native.predicates import And, Compare, IsInteger, Member, Not, Or
 from bellman.native.records import UNDECLARED_SET, Condition
+from bellman.refusals import ConstructionError
 from bellman.syntax import terms as T
-from bellman.syntax.source import to_source
+from bellman.syntax.source import condition_text, to_source
 from bellman.syntax.vocabulary import INTEGER, PRIMITIVE_SETS
 from bellman.typing import sets
 
@@ -46,13 +47,28 @@ def calibration_requirements(stage, values):
     The checker reads the retained set terms of the declared parameter
     domains (a reserved glyph, a named set of the definitions table, an
     interval whose endpoints are numbers or valued parameters, a finite set
-    of labels, an integer range, a listed set of numbers, a product and a
-    set of functions). It does not interpret equations, functions or source
-    strings. Every declared parameter needs a value.
+    of labels, an integer range, a listed set of numbers, a product, a set
+    of functions and a set with conditions, whose conditions compare terms of
+    numbers and valued parameters). It does not interpret equations,
+    functions or source strings. Every declared parameter needs a value. A
+    value for a derived parameter, which its definition gives, is refused
+    under `derived-parameter` at the definition (AMD-MT-003, build contract
+    §5).
+
+    Where a set reads another parameter, as a bound or as an endpoint, a
+    faulty value is refused at its own parameter and not at the parameter
+    whose set reads it, in whatever order the file declares the two
+    (`judged`; AMD-GRAM-004 §4).
     """
     definitions = dict(stage.definitions)
-    requirements = []
-    for name, setexpr in parameter_sets(stage).items():
+    _refuse_derived_values(stage, definitions, values)
+    declared = parameter_sets(stage)
+    # a parameter declared without a set lies in the reals
+    sets_judged = {name: setexpr or T.Named("ℝ") for name, setexpr in declared.items()}
+    undecided = set()
+    for name, status, reason in judged(stage, definitions, sets_judged, values):
+        if status is True:
+            continue
         identity = Identity("parameter", stage=stage.name, field=name)
         # a refusal says where, what happened, why and what to write
         # (AMD-SG-006 §6a)
@@ -60,37 +76,108 @@ def calibration_requirements(stage, values):
             f"stage {stage.name!r}, parameter {name!r} "
             f"(address {_parameter_address(stage, identity)!r})"
         )
-        if name not in values:
+        if status is UNVALUED:
             raise ValueError(
                 f"{where}: the calibration source supplies no value for it; every declared "
                 "parameter is valued when values are bound (AMD-SG-006 §4, "
                 f"rule 8); write `{name}: <value>` in the calibration source"
             )
-        value = values[name]
-        # a parameter declared without a set lies in the reals
-        if setexpr is None:
-            result = _in_primitive_domain("primitive:real", value), ""
-        else:
-            result = membership(stage, definitions, setexpr, value, values)
-        status, reason = result
         if status is False:
-            declared = "ℝ" if setexpr is None else to_source(setexpr)
-            reason = reason or f"the value {value!r} lies outside the declared set {declared}"
-            raise ValueError(
-                f"{where}: {reason}; a parameter's value lies in the set its declaration names "
-                f"(AMD-SG-006 §2, the parameter record); write a value in {declared}"
-            )
-        if status is _UNDECIDED:
-            requirements.append(
-                Condition(
-                    condition="calibration-domain-membership",
-                    entries=(identity, declared_set_reference(stage, setexpr)),
-                    status="required",
-                    explanation=f"The value {value!r} of {name} "
-                    f"must belong to {to_source(setexpr)}.",
-                )
-            )
-    return tuple(requirements)
+            raise ValueError(_outside(where, declared[name], values[name], reason))
+        undecided.add(name)
+    return tuple(
+        Condition(
+            condition="calibration-domain-membership",
+            entries=(
+                Identity("parameter", stage=stage.name, field=name),
+                declared_set_reference(stage, setexpr),
+            ),
+            status="required",
+            explanation=f"The value {values[name]!r} of {name} "
+            f"must belong to {to_source(setexpr)}.",
+        )
+        for name, setexpr in declared.items()
+        if name in undecided
+    )
+
+
+def judged(stage, definitions, declared, values, settled=None):
+    """The membership of each value in its declared set, as `(name, status,
+    reason)` in the order in which a refusal is to be given. `declared` maps
+    each name to its set, None for a name with no set to judge; `values`
+    holds the value of each name; and `settled` holds the values of an
+    earlier binding, the calibration where settings are judged. The status
+    is that of `membership` at all the values, or `UNVALUED` for a name
+    `values` does not hold.
+
+    A set may read another name, as a bound or as an endpoint, `β : (0,1) @
+    (0, R)`, so a value may lie outside its set only because a value it
+    reads is faulty. The faulty names that stand first are therefore those
+    without a value and those whose value lies outside its set also when the
+    other faulty values are left out, in the order of the file: a faulty
+    value is refused at its own name, and not at a name whose set reads it,
+    in whatever order the file declares the two (AMD-GRAM-004 §4). The other
+    names follow in the order of the file, so that where every faulty value
+    reads another, the first of the file is named."""
+    everything = {**(settled or {}), **values}
+
+    def judge(name, at):
+        if name not in values:
+            return UNVALUED, ""
+        if declared[name] is None:
+            return True, ""
+        return membership(stage, definitions, declared[name], values[name], at)
+
+    answers = {name: judge(name, everything) for name in declared}
+    faulty = [
+        name for name, (status, _) in answers.items() if status is False or status is UNVALUED
+    ]
+    first = []
+    for name in faulty:
+        others = {
+            read: value for read, value in everything.items() if read == name or read not in faulty
+        }
+        status, reason = judge(name, others)
+        if status is False or status is UNVALUED:
+            # the reason names what the value breaks by itself
+            answers[name] = (status, reason)
+            first.append(name)
+    return [
+        (name, *answers[name])
+        for name in first + [name for name in declared if name not in first]
+    ]
+
+
+def _outside(where, setexpr, value, reason):
+    """The sentence that refuses a parameter's value outside its declared
+    set: where, why and what to write."""
+    declared = "ℝ" if setexpr is None else to_source(setexpr)
+    reason = reason or f"the value {value!r} lies outside the declared set {declared}"
+    return (
+        f"{where}: {reason}; a parameter's value lies in the set its declaration names "
+        f"(AMD-SG-006 §2, the parameter record); write a value in {declared}"
+    )
+
+
+def _refuse_derived_values(stage, definitions, values):
+    """The refusal of a calibration source that supplies a value for a
+    derived parameter, `h := 1/(1 - Γ/R)`, whose value is its definition
+    evaluated at the calibration: under `derived-parameter`, at the
+    definition, naming the definition."""
+    for definition in definitions.values():
+        name = definition.identity.field
+        if definition.kind != "derived_parameter" or name not in values:
+            continue
+        raise ConstructionError(
+            f"stage {stage.name!r}, derived parameter {name!r}: the calibration source supplies "
+            f"the value {values[name]!r} for {name}, which the stage defines as "
+            f"`{to_source(definition.equations[0])}`; a derived parameter takes its value from "
+            "its definition at the calibration, and the calibration supplies none",
+            stage=stage.name,
+            address=definition.address,
+            rule="derived-parameter",
+            write=f"Remove {name} from the calibration source",
+        )
 
 
 def collection_values(stage, values):
@@ -137,6 +224,9 @@ def _sequenced(setexpr, value, values, set_terms):
 # the answer of a membership the module does not decide
 _UNDECIDED = object()
 
+# the answer for a name the values do not hold
+UNVALUED = object()
+
 
 def declared_set_terms(stage):
     """The sets a stage defines by name, through which the predicates decided
@@ -161,8 +251,10 @@ def membership(stage, definitions, setexpr, value, values, active=frozenset(), p
     a set the file defines through its definition, an interval from its
     endpoints at the values, a finite set of labels from its members, an
     integer range or a listed set from its members at the values, a product
-    entry by entry and a set of functions key by key; an extended real, a set
-    the file does not define and any other form are not decided. `path`
+    entry by entry, a set of functions key by key and a set with conditions
+    from its base and its conditions at the values (`_conditioned`); an
+    extended real, a set the file does not define and any other form are not
+    decided. `path`
     names the keys that lead to the value inside a collection, for the
     reason of a refusal."""
     set_terms = _set_terms(definitions)
@@ -286,7 +378,88 @@ def membership(stage, definitions, setexpr, value, values, active=frozenset(), p
         return _entries(
             stage, definitions, [rest] * len(members), entries, values, active, path, keys=members
         )
+    if isinstance(setexpr, T.Comprehension):
+        return _conditioned(stage, definitions, setexpr, value, values, active, path)
     return _UNDECIDED, ""
+
+
+# the comparison of two numbers that each relation of a condition of a set
+# states; two numbers are equal as `sets.same_number` compares two keys
+_COMPARISON_OF_RELATION = {
+    T.Lt: operator.lt,
+    T.Le: operator.le,
+    T.Eq: sets.same_number,
+    T.Ge: operator.ge,
+    T.Gt: operator.gt,
+}
+
+
+def _conditioned(stage, definitions, setexpr, value, values, active, path):
+    """The membership of a value in a set with conditions, `{x ∈ B | x < b}`:
+    the set that a declaration's several sets are kept as, and the set a
+    definition writes with a bar (AMD-GRAM-004 §4).
+
+    The value lies outside the set where it lies outside the base, or at the
+    first condition that compares two numbers and is false; the reason names
+    the condition and the values it read. It lies in the set where the base
+    and every condition are decided so. The membership is not decided where
+    the base is not, where a condition is not, or where the set binds more
+    than one name.
+
+    The name the set binds is read at the value, also where a parameter has
+    that spelling. A side of a condition is read as an interval's endpoint
+    is: `inf` and `-inf` are the two infinities, and a side that is no
+    finite number otherwise, one that reads a field, an expectation, a
+    derived parameter or a value that is no finite number, leaves the
+    condition undecided. The value itself is read where it is infinite, so
+    that an open infinite endpoint excludes the infinity."""
+    coordinates = setexpr.bound.coordinates if isinstance(setexpr.bound, T.Subject) else ()
+    if (
+        len(coordinates) != 1
+        or not isinstance(coordinates[0], T.Coordinate)
+        or setexpr.base is None
+    ):
+        return _UNDECIDED, ""
+    status, reason = membership(stage, definitions, setexpr.base, value, values, active, path)
+    if status is False:
+        return False, reason
+    undecided = status is _UNDECIDED
+    bound = coordinates[0].stem
+    at_value = {**values, bound: value}
+    for condition in setexpr.conds:
+        compare = _COMPARISON_OF_RELATION.get(type(getattr(condition, "op", None)))
+        if compare is None:
+            undecided = True
+            continue
+        left, right = (
+            (_side_at(side, bound, at_value), sets.number_at(side, at_value).read)
+            for side in (condition.left, condition.right)
+        )
+        if left[0] is None or right[0] is None:
+            undecided = True
+        elif not compare(left[0], right[0]):
+            read = ", ".join(
+                f"{name} = {values[name]!r}"
+                for name in values
+                if name in left[1] | right[1] and name != bound
+            )
+            where = f" at {read}" if read else ""
+            return False, (
+                f"the value{_at(path)} {value!r} does not satisfy the condition "
+                f"{condition_text(condition)} of the declared set{where}"
+            )
+    return (_UNDECIDED, "") if undecided else (True, "")
+
+
+def _side_at(term, bound, values):
+    """The number a side of a condition denotes at the values, None where it
+    is not decided: an interval's endpoint is read so (`_endpoint_at`), and
+    the name the set binds, `bound`, is read also at an infinite value."""
+    if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
+        value = values.get(bound) if term.symbol.name == bound else None
+        if type(value) is float and math.isinf(value):
+            return value
+    return _endpoint_at(term, values, math.inf)
 
 
 def _endpoint_at(term, values, infinity):
