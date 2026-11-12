@@ -113,7 +113,6 @@ from bellman.stage.grains import graph_of, graph_refusal
 from bellman.stage.stage_answers import branches, entry_perch, fields
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
-from bellman.syntax.vocabulary import PRIMITIVE_SETS
 from bellman.typing import category_codes, sets
 
 __all__ = [
@@ -1083,34 +1082,6 @@ class _Types:
         return pair._replace(compatibility=status, reason=reason, basis=basis)
 
 
-def _resolved(term, definitions, active=()):
-    """A set term with each name the stage defines replaced by the set it is
-    defined as, a primitive spelling under its glyph, inside a product or a
-    comprehension's base too; a name the stage does not define stands for
-    itself, and a chain of definitions that returns to a name it has
-    already replaced stops there."""
-    if isinstance(term, T.Space):
-        return _resolved(term.set, definitions, active)
-    if isinstance(term, T.Named):
-        if term.name in PRIMITIVE_SETS:
-            return T.Named(PRIMITIVE_SETS[term.name].glyph)
-        if term.name in definitions and term.name not in active:
-            return _resolved(definitions[term.name], definitions, active + (term.name,))
-        return term
-    if isinstance(term, T.Product):
-        return T.Product(tuple(_resolved(factor, definitions, active) for factor in term.factors))
-    if isinstance(term, T.Comprehension):
-        return dataclasses.replace(term, base=_resolved(term.base, definitions, active))
-    if isinstance(term, T.Functions):
-        return T.Functions(
-            _resolved(term.domain, definitions, active),
-            _resolved(term.codomain, definitions, active),
-        )
-    if isinstance(term, T.Points) and term.superset is not None:
-        return dataclasses.replace(term, superset=_resolved(term.superset, definitions, active))
-    return term
-
-
 def _bounds(term):
     """The names a set term writes as bounds, `a_min` in `[a_min, inf)`:
     every constant symbol inside it but the infinity."""
@@ -1310,8 +1281,8 @@ def _included(
             (),
         )
     inner_text, outer_text = types.text(inner_position), types.text(outer_position)
-    inner = _resolved(inner_term, inner_text.definitions)
-    outer = _resolved(outer_term, outer_text.definitions)
+    inner = sets.resolved(inner_term, inner_text.definitions)
+    outer = sets.resolved(outer_term, outer_text.definitions)
     inner_bounds, outer_bounds = _bounds(inner), _bounds(outer)
     if inner == outer and not inner_bounds:
         return COMPATIBLE, f"{inner_said} and {outer_said} are one set, {to_source(inner)}", ()
@@ -1511,8 +1482,8 @@ def _one_restriction(types, inner_position, inner_term, outer_position, outer_te
     that calls a function or selects an entry included, since the names
     alone do not fix its value."""
     inner_text, outer_text = types.text(inner_position), types.text(outer_position)
-    inner = _resolved(inner_term, inner_text.definitions)
-    if inner != _resolved(outer_term, outer_text.definitions):
+    inner = sets.resolved(inner_term, inner_text.definitions)
+    if inner != sets.resolved(outer_term, outer_text.definitions):
         return None
     names = _condition_names(inner)
     if names is None:
@@ -2087,8 +2058,8 @@ def _result_within(types, source, destination, required, supplied, inverse, dest
     is not established."""
     text_s, text_d = types.text(source), types.text(destination)
     name = str(required.identity)
-    required_set = _resolved(required.domain, text_s.definitions)
-    supplied_set = _resolved(supplied.domain, text_d.definitions)
+    required_set = sets.resolved(required.domain, text_s.definitions)
+    supplied_set = sets.resolved(supplied.domain, text_d.definitions)
     if isinstance(supplied_set, T.Product):
         if not inverse or len(supplied_set.factors) != len(destination_fields):
             return (

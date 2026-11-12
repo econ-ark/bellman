@@ -1,7 +1,7 @@
 @stage: bequest
 
 A : ℝ₊     :: ["weight of the warm-glow bequest"]
-μ : ℝ₊     :: ["curvature of the warm-glow bequest"]
+μ : ℝ₊ \ {1}  :: ["curvature of the warm-glow bequest"]
 β : (0,1)  :: ["discount factor"]
 
 [id=arvl_to_dcsn, (a_pre : ℝ₊) : !arvl -> (a : ℝ₊) : !dcsn] {

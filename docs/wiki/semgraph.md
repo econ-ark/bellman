@@ -93,7 +93,8 @@ builder is read by its own key, `policy`
 | **Backward builders graph** | Operators receiving continuation-value functions and producing objective, decision-value or arrival-value functions, as specified by their definitions. |
 | **Forward builders graph** | Operators receiving finite measures over states and producing the measures induced by transitions, conditional distributions and a supplied policy. |
 
-A [[field]] is a named quantity at its perch, with a declared set. Once
+A [[field]] is a named quantity of a stage with a declared set, at its perch
+unless it is a shock, which belongs to no perch. Once
 shocks are declared, fields may be interpreted as random variables at the
 corresponding information sets. Representing fields as functions requires
 specified representing functions and sufficient state information. **Sufficient** means that

@@ -94,9 +94,13 @@ class Sort(frobenius.Ob):
     a function of the backward builders graph or a measure of the forward
     builders graph; `perch`, the information set the object belongs to
     (`arvl`, `dcsn`, `cntn`; `shck` for a shock, which belongs to none; None
-    for an object made on an edge); `role`, the field's role word (`state`,
-    `control`, `value`, `marginal value`, `shock`) or the role of the value a
-    function carries; `domain`, the immutable retained term of the set the
+    for an object made on an edge); `role`, the role of what the wire carries
+    (on a field wire the field's role, `state`, `control`, `value`, `shock`
+    or `multiplier`, or `alias` for a name a line of a block defines,
+    `parameter` for a parameter a graph lists and `derived` for any other
+    wire a row writes; on a function wire the role of the value the function
+    carries, None where it carries none; `measure` on a measure wire);
+    `domain`, the immutable retained term of the set the
     wire's values lie in, the meet of the sets a field is declared with at
     its sites (a named-set reference, an inline interval or an intersection
     as written), None when no site declares one; and `coordinates`, the
@@ -391,6 +395,11 @@ class Definition:
     a block body has the identity `<stage>:multiplier:<name>`, its one
     coordinate the multiplier with its declared set, its one equation the
     declaration with its clause as written, and the address of its line. A
+    derived parameter, `h := 1/(1 - Γ/R)`, has the identity
+    `<stage>:derived:<name>` and the definition kind `derived_parameter`, its
+    one equation the right side of its definition and, where the definition
+    declares a set, `q : (0,1) := (β*R)^(1/ρ)/R`, its one coordinate the
+    derived parameter with that set (AMD-GRAM-005). A
     typing entry, `policy.method : !egm`, has the identity
     `<stage>:typing:<place>:<component>`, its one equation the method word,
     the grid or the handler's program, its one tag the subject as written,
@@ -1021,6 +1030,14 @@ def typing_text(record):
     if isinstance(value, T.grid):
         return f"{subject} : {to_source(T.Grid(value))}"
     return f'{subject} : "{value}"'
+
+
+def derived_parameter_text(record):
+    """A derived parameter's record as its definition writes it, `h := 1/(1 -
+    Γ/R)`, with the set its definition declares, the record's one coordinate,
+    where it declares one, `q : (0, 1) := (β*R)^(1/ρ)/R`."""
+    declared = "".join(f" : {to_source(held)}" for _, held in record.coordinates)
+    return f"{record.identity.field}{declared} := {to_source(record.equations[0])}"
 
 
 def entry_position(address):

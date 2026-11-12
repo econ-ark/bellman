@@ -457,6 +457,87 @@ def test_a_parameter_two_stages_of_a_period_declare_is_refused_where_their_sets_
     assert refused.value.__notes__ == ["Stage occurrence: periods[0].stages['two_nodes']", "Binding kind: calibration"]
 
 
+def test_two_stages_of_one_period_agree_on_one_union_and_are_refused_on_two(tmp_path):
+    """The refusals of `period-parameter-agreement` where two stages of one
+    period declare one parameter in a union of sets (AMD-GRAM-005 §3). One
+    union, its members written in either order or one of them through a
+    named set, is one set of the period, and a value outside it is refused
+    for the period. Two unions are refused, since the package reads no
+    intersection of them, and so is one text that the two stages read as
+    two sets."""
+    from conftest import SHARED_REGISTRY
+
+    from bellman.refusal_examples import TWO_NODES, write_registry
+    from bellman.trellis import assemble_trellis, elaborate_trellis
+
+    def registry(folder, first, second):
+        """The registry of the two stages that share β, the two-node stage
+        declaring it with the lines `first` and the discounting stage with
+        the lines `second`."""
+        declared, shared = "β : ℝ₊₊\n", "β : (0,1)"
+        discounting = SHARED_REGISTRY["stages/disc/disc.bl"]
+        assert TWO_NODES.count(declared) == 1 and discounting.count(shared) == 1
+        files = {
+            **SHARED_REGISTRY,
+            "stages/two_nodes/two_nodes.bl": TWO_NODES.replace(declared, first + "\n"),
+            "stages/disc/disc.bl": discounting.replace(shared, second),
+        }
+        return write_registry(tmp_path / folder, files)
+
+    # the rule and the address of each refusal below
+    agreement = ("period-parameter-agreement", "periods[0]")
+    # one union, its members written in either order, is one set of the period
+    same = registry("same", "β : (0,1) \\/ (1, inf)", "β : (1, inf) \\/ (0,1)")
+    elaborate_trellis(load_recipe(same, "spec.yml"))
+    bound = assemble_trellis(same, "spec.yml", fill={"β": 0.5}, disc_fill={"β": 0.5})
+    stages = bound["periods"][0]["stages"].values()
+    assert [stage.par["β"].value for stage in stages] == [0.5, 0.5]
+    # a value outside the union is refused for the period, before any
+    # stage binds it
+    with pytest.raises(FactoryError) as refused:
+        assemble_trellis(same, "spec.yml", fill={"β": 1.0}, disc_fill={"β": 1.0})
+    assert (refused.value.rule, refused.value.address) == agreement
+    assert (
+        "the value 1.0 of the parameter 'β', supplied by two_nodes, lies outside the set "
+        "(0, 1) \\/ (1, inf)"
+    ) in refused.value.message
+    # two unions are refused, since the package reads no intersection of them
+    different = registry("different", "β : (0,1) \\/ (1, inf)", "β : (0,1) \\/ (2, inf)")
+    with pytest.raises(FactoryError) as refused:
+        elaborate_trellis(load_recipe(different, "spec.yml"))
+    error = refused.value
+    assert (error.rule, error.address) == agreement
+    assert error.written == "β : (0, 1) \\/ (1, inf) in two_nodes; β : (0, 1) \\/ (2, inf) in disc"
+    assert "reads no intersection" in error.message
+    # a name inside a member is read as the set its own stage defines: a
+    # union one stage writes through a name and the other in full is one set
+    # of the period, and a value outside it is refused for the period
+    named = "Xb := [0,1)\nβ : Xb \\/ (1, inf)"
+    through = registry("through", named, "β : [0,1) \\/ (1, inf)")
+    elaborate_trellis(load_recipe(through, "spec.yml"))
+    with pytest.raises(FactoryError) as refused:
+        assemble_trellis(through, "spec.yml", fill={"β": 1.0}, disc_fill={"β": 1.0})
+    assert (refused.value.rule, refused.value.address) == agreement
+    assert "lies outside the set (1, inf) \\/ [0, 1) that two_nodes" in refused.value.message
+    # one text that two stages read as two sets is refused, each set quoted
+    # as written and as its stage reads it; so is a name that several sets
+    # of one type bound
+    for folder, declared, first, second in (
+        ("renamed", "(1, inf) \\/ Xb", "(1, inf) \\/ [0, 1)", "(1, inf) \\/ [0, 2)"),
+        ("bounded", "Xb @ (0, 5)", "[0, 1) @ (0, 5)", "[0, 2) @ (0, 5)"),
+    ):
+        renamed = registry(folder, f"Xb := [0,1)\nβ : {declared}", f"Xb := [0,2)\nβ : {declared}")
+        with pytest.raises(FactoryError) as refused:
+            elaborate_trellis(load_recipe(renamed, "spec.yml"))
+        error = refused.value
+        assert (error.rule, error.address) == agreement, declared
+        assert error.written == f"β : {declared} in two_nodes; β : {declared} in disc"
+        assert (
+            f"with the sets {declared}, read in two_nodes as {first}, and {declared}, read in "
+            f"disc as {second}, and the package reads no intersection of them"
+        ) in error.message, declared
+
+
 def test_a_method_word_at_a_place_its_row_does_not_admit_and_a_word_no_row_holds_are_refused(cons):
     """A method word typed at a place of a kind its row of the catalogue does
     not admit is refused under `method-admission`, naming the place, its kind

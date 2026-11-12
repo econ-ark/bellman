@@ -124,7 +124,7 @@ $$
 
 The transition operators $P$ are linear on bounded measurable test functions, and on other integrable domains where the formulas are defined. Policy evaluation is affine: it is a linear map plus the fixed reward function. The supremum generally makes optimization nonlinear.
 
-> **Forward builders.** A **pushforward** is the distribution induced by a transition. Write $\mathbb M_\prec$ for the operator taking an arrival law $\mu_\prec$ to the decision law under $m=Rk+y$, and $\mathbb M_{\succ,\pi}$ for the operator taking a decision law $\mu$ to the continuation law under $a=m-\pi(m)$. These operators act on probability measures on their respective state spaces. Their composition is $\mathbb M_\pi=\mathbb M_{\succ,\pi}\circ\mathbb M_\prec$.
+> **Forward builders.** A **pushforward** is the distribution induced by a transition. Write $\mathbb M_\prec$ for the operator taking an arrival law $\mu_\prec$ to the decision law under $m=Rk+y$, and $\mathbb M_{\succ,\pi}$ for the operator taking a decision law $\mu$ to the continuation law under $a=m-\pi(m)$. These operators act on the finite measures on their respective state spaces, of which the probability measures are those of mass one ([Stages and perches](./03-Stages%20and%20perches.md) §1.2). Their composition is $\mathbb M_\pi=\mathbb M_{\succ,\pi}\circ\mathbb M_\prec$.
 
 With $\langle\mu,f\rangle=\int f\,\mathrm d\mu$, the pairing identities for bounded measurable test functions are
 

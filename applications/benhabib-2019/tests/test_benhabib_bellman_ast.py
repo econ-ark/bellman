@@ -19,6 +19,9 @@ deciles; `R_type := {r1, …, r5}`, the return types), lowered to
 Space(FiniteSet(members)); the two parameter families are declared with
 product sets of a fixed count (`wage_fn : ℝ₊ × … × ℝ₊`, ten factors;
 `R_vec : ℝ₊₊ × … × ℝ₊₊`, five), lowered to Domain(Product(factors)); the
+two curvature parameters are declared in a difference of sets
+(`σ : ℝ₊₊ \\ {1}`, `μ : ℝ₊ \\ {1}`), lowered to
+Domain(SetDifference(left, Points([Number(1)]))); the
 instance's types are parameters over those sets (`tau : Tau`,
 `r_type : R_type`), bare declarations with no law, since the source model
 fixes both types within a life (9 Sep 2026, after the ruling that a family
@@ -64,9 +67,9 @@ from stage_types import (             # noqa: E402
     Control, Coordinate, Declaration, Declare, Decision, Div, Domain,
     Equation, FiniteSet, Grid, Handler, Infoset, Interval, Key, KeyValue,
     Law, Marked, Metadata, Method, Mul, Name, Named, Neg, Node, Number,
-    Open, Operator, Path, Pow, Product, Range, Role, Segment, Select,
-    Signature, Space, Spaced, Statement, Sub, Subject, Sym, Typer, Value,
-    Var, Word,
+    Open, Operator, Path, Points, Pow, Product, Range, Role, Segment, Select,
+    SetDifference, Signature, Space, Spaced, Statement, Sub, Subject, Sym,
+    Typer, Value, Var, Word,
 )
 
 _SOURCE = _TESTS.parent / "declaration" / "stages" / "benhabib_bellman" / "benhabib_bellman.bl"
@@ -137,13 +140,17 @@ def test_declare_beta_open_interval():
 
 
 def test_declares_with_domains():
-    # σ, μ, A on ℝ₊; the two families on product sets of a fixed count
-    # (ten ℝ₊ factors for the decile wage schedule, five ℝ₊₊ factors for
-    # the gross returns), so that the source fixes the count the
-    # selections are checked against; the instance's types on their
-    # finite sets.
+    # σ on ℝ₊₊ \ {1} and μ on ℝ₊ \ {1}, each a difference of sets that
+    # excludes the value 1, at which the formula that divides by 1 - σ, or by
+    # 1 - μ in the bequest stage, has no value; A on ℝ₊; the two families on
+    # product sets of a fixed count (ten ℝ₊ factors for the decile wage
+    # schedule, five ℝ₊₊ factors for the gross returns), so that the source
+    # fixes the count the selections are checked against; the instance's
+    # types on their finite sets.
+    one = Points([Number(1)], None)
     expected = [
-        ("σ", Named("ℝ₊")), ("μ", Named("ℝ₊")), ("A", Named("ℝ₊")),
+        ("σ", SetDifference(Named("ℝ₊₊"), one)), ("μ", SetDifference(Named("ℝ₊"), one)),
+        ("A", Named("ℝ₊")),
         ("wage_fn", Product([Named("ℝ₊")] * 10)),
         ("R_vec", Product([Named("ℝ₊₊")] * 5)),
         ("tau", Named("Tau")), ("r_type", Named("R_type")),

@@ -51,7 +51,7 @@ The block identifier `cntn_to_dcsn` provides an address. Renaming it changes ref
 
 ## 2 Fields, functions, and spaces
 
-A **field** is a named quantity at one perch: a state, a control, a shock, or a value. Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A **state function** represents such a quantity using explicit state arguments. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.
+A **field** is a named quantity of a stage: a state, a control, a value or a multiplier ([Constraints](../10-constraints.md) §4.2) at one perch, or a shock, which belongs to no perch (§9.3). Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A **state function** represents such a quantity using explicit state arguments. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.
 
 | Mathematical notation | Object |
 |---|---|
@@ -80,6 +80,8 @@ A **perch** is one of the three information contexts within a stage:
 | Arrival | $\prec$ | `V[<]` | `!arvl` |
 | Decision | $\sim$, usually omitted | `V` or `V[~]` | `!dcsn` |
 | Continuation | $\succ$ | `V[>]` | `!cntn` |
+
+In a block's header a mark agrees with the perch word of its side: the listing `(a[>] : Xa) : !arvl` is refused under [`field-perch`](refusals.md#field-perch). The package reads `a[~]` as the bare name `a`, so the listing `(a[~] : Xa) : !arvl`, which breaks the rule, is read as the arrival field `a`. The package does not yet check this ([Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) §5.3).
 
 When nested information is assumed, the information structure can be written $\mathcal F_\prec\subseteq\mathcal F_\sim\subseteq\mathcal F_\succ$. Stage marks alone do not establish this assumption. These inclusions need not be strict: an identity transition can reveal no additional information. Nor must a list of current state coordinates alone generate all past information. State sufficiency is an assumption used when passing to functions of those coordinates.
 
@@ -145,7 +147,7 @@ Terminal continuation values are separate boundary data for period zero. A conne
 
 A **parameter** defines the economic problem; a **setting** controls a numerical calculation. A finite menu of housing sizes is a mathematical domain, so changing its endpoints or number of available sizes changes the problem. A grid approximating a continuous housing domain is a numerical choice. A simulation grid need not equal the solution grid.
 
-A **derived parameter** is a constant of the economic problem that a definition without arguments writes from the declared parameters, such as human wealth `h := 1/(1 - Γ/R)`, so that it is a parameter and not a setting ([Equation parsing rules](../appendices/12-equation-parsing-rules.md) §2; [Parameters and settings](../API/stage/06-par-and-settings.md) §1.1).
+A **derived parameter** is a constant of the economic problem that a definition without arguments writes from the declared parameters, such as human wealth `h := 1/(1 - Γ/R)`, so that it is a parameter and not a setting ([Equation parsing rules](../appendices/12-equation-parsing-rules.md) §2; [Parameters and settings](../API/stage/06-par-and-settings.md) §1.1). The line that defines a derived parameter may declare the set in which its value lies, `q : (0,1) := (β*R)^(1/ρ)/R`, and calibration then refuses values of the parameters at which the derived value lies outside that set (§9.2).
 
 The meaning map $\Upsilon$ interprets declarations and equations. The representation map Ρ denotes their numerical realization after the required choices and bindings. Lowercase $\rho$ remains available for an economic parameter, such as risk aversion. These names do not assert that interpretation or approximation is invertible, or that different numerical choices commute.
 
@@ -153,15 +155,19 @@ Elaboration keeps the fields, with the interpreted equation bodies and definitio
 
 ## 9 Declarations, domains and type words
 
+The reference page [Types](types.md) lists the role words, the perch words, the reserved sets, the forms of a set expression and the limits on them.
+
 ### 9.1 Punctuation
 
-The examples are lines of the stage files under `applications/portfolio-choice/`: `disc.bl`, whose source §1 shows, `cons.bl` and `noport.bl`; the derived parameter `h` is a line of `perfect_foresight.bl` under `applications/consumption-perfect-foresight-crra/`.
+The examples are lines of the stage files under `applications/portfolio-choice/`: `disc.bl`, whose source §1 shows, `cons.bl` and `noport.bl`; the derived parameter `h` and the definition of `q` that declares its set are lines of `perfect_foresight.bl` under `applications/consumption-perfect-foresight-crra/`. The examples of the union and the difference are written for this table.
 
 | Spelling | Use | Example |
 |---|---|---|
-| `:` | Declare a type: a domain, a role or an information context. | `β : (0,1)` |
-| `@` | Join the components of a type; their order does not matter. Several sets in one type declare their intersection (§9.2). | `c : !ctrl @ ℝ₊₊` |
-| `:=` | Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8). | `Xa := ℝ₊`; `Xa := [0, ā]`; `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`; `h := 1/(1 - Γ/R)` |
+| `:` | Declare a type: a declared set (§9.2) or a role, on a line of its own or on a side of a block's header, and an information context on a side of a block's header only. A declaration on a line of its own that carries a perch word is refused under [`field-perch`](refusals.md#field-perch). | `β : (0,1)`; `(a : Xa) : !arvl` |
+| `@` | Write the components of a type with `@` between them; their order does not matter. Several sets in one type declare their intersection (§9.2). | `c : !ctrl @ ℝ₊₊` |
+| `\/`, also `∪` | Form the union of two sets of numbers, in the declared set of a parameter, a derived parameter or a setting (§9.2). | `ρ : (0,1) \/ (1, inf)` |
+| `\`, also `∖` | Form the difference of two sets of numbers, the members of the first that lie outside the second, in the same places (§9.2). | `ρ : ℝ₊₊ \ {1}` |
+| `:=`, also `<-` | Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8), whose definition may declare its set, `q : (0,1) := (β*R)^(1/ρ)/R`. | `Xa := ℝ₊`; `Xa := [0, ā]`; `𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)`; `h := 1/(1 - Γ/R)` |
 | `=` | State an equation inside a block, explicit or implicit. | `V = β*V[>]` |
 | `~` | Give a shock its law, on a line of its own. | `θ ~ LogNormal(μ_θ, σ_θ)` |
 | `->` | Separate the input side of a block's header from its output side. | `(a : Xa) : !arvl -> (a_d : Xa) : !dcsn` |
@@ -172,7 +178,7 @@ The argument `c` of `𝑢(c : ℝ₊₊)` is local to the definition and declare
 
 ### 9.2 Domains
 
-A **domain** is the set of values a field or a parameter may take. These set names are reserved by the grammar and need no definition line:
+A **domain** is the set of values a field or a parameter may take, also called its **declared set**. These set names are reserved by the grammar and need no definition line:
 
 | Spelling | Set |
 |---|---|
@@ -185,9 +191,13 @@ A **domain** is the set of values a field or a parameter may take. These set nam
 | `ℝ_{+∞}` | Real numbers with positive infinity adjoined. |
 | `ℝ_{±∞}`, also `ℝ̄` | Real numbers with both infinities adjoined. |
 
-A bare `R`, `N` or `Z` is an ordinary name and not one of these sets; `R` may be the gross return on assets. Define any other named set before using it, `Xa := ℝ₊`. A named set may also be an interval, `Xa := [0, ā]`, `Xa := (0, ā]` or `Xa := [0, ā)`, whose endpoints may name parameters; a field typed `a : Xa` then has the same declared set as `a : [0, ā]`. The open-open form is the exception: after `:=`, `(0, ā)` is read as a pair of values, not as a set, so an open interval is written after the typing colon where it is used, `a : (0, ā)`. An interval writes its endpoints with the usual brackets, `(a,b)`, `(a,b]`, `[a,b)` and `[a,b]`, and an endpoint may be infinite, `ρ : [1, inf)`; a finite set lists its labels, `R_type := {r1, r2, r3, r4, r5}` or, inline, `d : !ctrl @ {work, retire}`; and a product uses `×`, `x : ℝ × ℝ`.
+A bare `R`, `N` or `Z` is an ordinary name and not one of these sets; `R` may be the gross return on assets. Define any other named set before using it, `Xa := ℝ₊`. A named set may also be an interval, `Xa := [0, ā]`, `Xa := (0, ā]` or `Xa := [0, ā)`, whose endpoints may name parameters; a field typed `a : Xa` then has the same declared set as `a : [0, ā]`. The same holds where one block header lists the field on `Xa` and another on `[0, ā]`. The package does not yet check this ([Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) §5.3). The open-open form is the exception: after `:=`, `(0, ā)` is read as a pair of values, which is neither a set nor a derived parameter, so the line `Xa := (0, ā)` is refused under [`not-constructed`](refusals.md#not-constructed), even where nothing reads `Xa`. An open interval is written after the typing colon where it is used, `a : (0, ā)`. An interval writes its endpoints with the usual brackets, `(a,b)`, `(a,b]`, `[a,b)` and `[a,b]`, and an endpoint may be infinite, `ρ : [1, inf)`; an interval that holds no number, such as `(2, 1)`, is refused when the file is read. A finite set lists its labels, `R_type := {r1, r2, r3, r4, r5}` or, inline, `d : !ctrl @ {work, retire}`, and a product uses `×`, `x : ℝ × ℝ`.
 
-A declaration may write several sets in one type, with `@` between them, and the declared name then lies in each of them: `β : (0,1) @ (0, R^(ρ-1))` declares a discount factor in both intervals, below one and below `R^(ρ-1)`. A bound is written as an interval, whose endpoints may name parameters and whose unbounded side is `-inf` or `inf`: `θ : ℤ @ [1, inf)` declares an integer of at least one. At most one of the sets is written otherwise than as an interval with brackets, and a named set counts as such a set. The sets may be written in any order. Several sets are read on the declaration of one name on its own line; a field listed in a block header carries one set. When values are bound, `calibrate` refuses a value outside any of the sets and names the bound it breaks. A bound that reads a random variable or a derived parameter is not decided: the stage binds, and `stage.obligations()` lists the membership as required.
+The union of two sets of numbers is written `A \/ B`, also `A ∪ B`, and their difference `A \ B`, also `A ∖ B`: `ρ : (0,1) \/ (1, inf)` declares a parameter in one of the two intervals, and `ρ : ℝ₊₊ \ {1}` a positive parameter other than one. A value lies in a union when it lies in at least one member, and in a difference when it lies in the left set and outside the right. The product `×` is read before the two signs and the arrow `→` after them, and the two signs are read from left to right. The package prints them as `\/` and `\`. A union and a difference are read in the declared set of a parameter, of a derived parameter and of a setting. They are refused in the set of a field, of a shock and of a function's argument, and they are not read after `:=`. A difference whose left side lies within its right side, as in `(0,1) \ ℝ₊`, holds no number and is refused under [`readable-form`](refusals.md#readable-form) when the file is read, where the package can decide the inclusion. A difference that is a member of a union is not judged.
+
+A declaration may write several sets in one type, with `@` between them, and the declared name then lies in each of them, so that the sets declare their intersection: `β : (0,1) @ (0, R^(ρ-1))` declares a discount factor in both intervals, below one and below `R^(ρ-1)`. A bound is written as an interval, whose endpoints may name parameters and derived parameters and whose unbounded side is `-inf` or `inf`: `θ : ℤ @ [1, inf)` declares an integer of at least one. A parameter's or a setting's set that names a field is refused, and an undeclared name there is refused under [`name-in-scope`](refusals.md#name-in-scope); a shock inside an expectation over that shock is still read where its law reads no field, as in the bound `(0, E_{Ψ}(Ψ^(1-γ)))`. At most one of the sets is written otherwise than as an interval with brackets, and a named set counts as such a set; a second such set is refused under [`syntax`](refusals.md#syntax). The sets may be written in any order, and two equal sets are read as one. Two intervals of numbers with no number in common, such as `(0,1) @ (2,3)`, are refused under `syntax`. Several sets are read on the declaration of one name on a line of its own only; on a field's listing in a block header they are refused under [`readable-form`](refusals.md#readable-form).
+
+When values are bound, `calibrate` refuses a value outside any of the sets and names the bound it breaks. A value bound to a name declared on an extended real, `ℝ_{-∞}`, `ℝ_{+∞}` or `ℝ_{±∞}`, must lie in that set. The package does not yet check this ([Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) §5.3). A bound that reads a derived parameter is judged once calibration has computed the derived value from the declared values. The value of a derived parameter whose definition declares a set is judged against that set in the same step, and calibration refuses a value outside it with a sentence that names the parameter, its definition, the set and the values read. A bound whose arithmetic has no value at the calibration, such as `1/(R-2)` at `R = 2`, refuses the calibration. A bound that holds an expectation over a shock, or that calls a function other than `log` and `exp`, such as a function the file defines, is not decided: the stage binds, and `stage.obligations()` lists the membership as required.
 
 Adjoining infinity lets a value reach an endpoint; it does not make every operation on such values defined. An expectation needs integrability or an extended-value convention, and infinity minus infinity is undefined. [Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) states the assumptions used for value equations.
 
@@ -195,7 +205,7 @@ Adjoining infinity lets a value reach an endpoint; it does not make every operat
 
 A finite set of integer keys lists them, `{0, 1}`, or names the set its members lie in when a member names a parameter, `S_θ := {0, θ} ⊂ ℤ`, with `θ` integer-valued. An integer range whose bounds may name parameters, `L_J := {1, …, J}`, with `…` or `...` between the commas, holds every integer from the first bound to the second, including both bounds. The bounds and the listed members must be integers; their conditions are retained until calibration if they depend on parameters. A value such as `3.0` is integer-valued and identifies the same key as `3`, without rounding another integer to it. Separately listed keys must be distinct. A bare `{a, b}` continues to list two labels.
 
-A collection is declared with one entry per key, `δ : L_J → ℝ`, or per ordered pair, `dist : L_J × L_J → ℝ₊`. The admitted index sets are integer ranges, listed integer keys, finite label sets, and products of these sets. Selection uses a name declared on the corresponding index set: `δ[j]` selects the entry at `j : L_J`, and `dist[j][i]` the entry at the pair of keys. An integer literal in brackets denotes a position, so use a declared key name to select from an indexed collection. Numerical keys must be integer-valued; the entries they identify, such as wages, distances and shock outcomes, may be real-valued. Separate indices of a finite shock distribution may identify equal numerical outcomes.
+A collection is declared with one entry per key, `δ : L_J → ℝ`, or per ordered pair, `dist : L_J × L_J → ℝ₊`. The admitted index sets are integer ranges, listed integer keys, finite label sets, and products of these sets. Selection uses a name declared on the corresponding index set: `δ[j]` selects the entry at `j : L_J`, and `dist[j][i]` the entry at the pair of keys. An integer literal in brackets denotes a position, and a collection on an index set is not selected by a position: `δ[1]` is refused under [`family-selection`](refusals.md#family-selection), although 1 is a key of `L_J`. Select with a name declared on the index set, `δ[j]` with `j : L_J`. Numerical keys must be integer-valued; the entries they identify, such as wages, distances and shock outcomes, may be real-valued. Separate indices of a finite shock distribution may identify equal numerical outcomes.
 
 Calibration supplies a sequence in index order or a mapping from keys to entries. Integer ranges are ordered from the lower bound to the upper bound; listed sets retain the order in which their members are written. For example, declare:
 
@@ -248,11 +258,15 @@ A **type word** is a word after `!` that gives a field its role or its informati
 |---|---|
 | `!state` | A state field. |
 | `!ctrl` | A control, chosen with the information of the decision perch. |
-| `!shck` | A shock, whose law and timing are declared separately. |
+| `!shck` | A shock, whose law and timing are declared separately. A shock belongs to no perch: it is drawn on the edge between two perches, and a perch word or a mark `[<]` or `[>]` written on a shock is refused under [`field-perch`](refusals.md#field-perch). |
 | `!vlu` | A value field. |
 | `!arvl`, `!dcsn`, `!cntn` | The arrival, decision and continuation perches of §3. |
 
-Removing a word can change the problem: without `!ctrl`, `c` is no longer chosen. A parameter needs no word; `β : (0,1)` declares one. A type restated elsewhere in the file must agree with the first statement, and a word written on a side of a block's header follows the rules for roles: a shock listed as an argument is not thereby observed on that side, and a control listed beside continuation values remains a decision control ([Perch tagging rules](../appendices/13-perch-tagging-rules.md) §2).
+Removing a word can change the problem: without `!ctrl`, `c` is no longer chosen. A parameter needs no word: a name declared with a set on a line of its own, which no block header lists, is a parameter, as `β : (0,1)` is, and a line of a block that writes it is refused under [`parameter-or-field`](refusals.md#parameter-or-field).
+
+A name is declared on a line of its own at most once ([`declared-once`](refusals.md#declared-once)), and a role restated in a block header must agree with the first statement ([`one-name-one-meaning`](refusals.md#one-name-one-meaning)). A set restated in a block header need not equal the first. The field lies in each of the sets written for it, so that they declare their intersection, as several sets in one type do (§9.2), and these sets must have a member in common. The package does not yet check this, except between a block that writes the field and a block that reads it ([Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) §5.3). The set written by the block that writes a field must also lie in the set written by each block that reads it; where the package can compare the two sets, a field that breaks this is refused under [`set-mismatch`](refusals.md#set-mismatch). The package does not yet check this where it cannot compare the two sets, as with `[0, ā]` written and `[0, 1]` read, since the endpoint `ā` names a parameter ([Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) §5.3).
+
+A word written on a side of a block's header follows the rules for roles: a shock listed as an argument is not thereby observed on that side, and a control listed beside continuation values remains a decision control ([Perch tagging rules](../appendices/13-perch-tagging-rules.md) §2).
 
 Two marks go in a line's annotation, `:: [id=value, !node]`, and a third in the annotation of a named set, `:: [!categories household_status, newborn=0, old=1]`:
 
@@ -279,7 +293,7 @@ No mark is a role of a field, and `!node` and `!doc` together have no specified 
 | `S_θ := {0, θ} ⊂ ℤ` | A finite set of integer keys in authored order, with integer membership and distinctness checked at calibration when they depend on parameters. |
 | `δ : L_J → ℝ` | One parameter whose value is a collection with one entry, in `ℝ`, per member of `L_J`. |
 | `(x, y)` | An ordered tuple. |
-| `(x, y) : S` | Two fields constrained together by the set `S`. |
+| `(x, y) : S` | Two names declared together, read where `S` is a product with one factor for each name, written out or named, `S := ℝ₊ × [0, 1]`; each name then lies in its own factor, `x` in `ℝ₊` and `y` in `[0, 1]`. Any other `S`, such as a set that couples the two names, is refused under [`readable-form`](refusals.md#readable-form); a constraint that couples two controls is written in the feasible set of the maximization statement ([Constraints](../10-constraints.md) §1). |
 | `x : ℝ × ℝ` | One field whose values lie in a product set. |
 | `𝑞(x)` | A declared function applied to an argument. |
 

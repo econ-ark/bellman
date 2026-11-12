@@ -9039,3 +9039,179 @@ def test_same_grid_compares_two_finite_supports_exactly_in_a_common_valid_contex
         same_grid(first, refused)
     with pytest.raises(TypeError):
         same_grid(first, ((0,), (1,)))
+
+
+def test_the_set_algebra_decides_a_union_and_a_difference_and_leaves_the_rest_open():
+    """The answers of the set algebra for a union `A \\/ B` and a difference
+    `A \\ B` of sets of numbers (AMD-GRAM-005): whether one set lies in
+    another (`sets.within`), whether a number lies in a set at parameter
+    values (`predicate_value`), whether the set of a key lies in an index
+    set (`sets.index_within`), whether the members are numbers
+    (`sets.numeric`), and the term with the names inside it replaced
+    (`sets.resolved`). An answer None is one the terms leave open."""
+    from bellman.native.predicates import Member
+    from bellman.stage.calibration_requirements import predicate_value
+    from bellman.typing import sets
+
+    def lowered(written):
+        term, _ = parse_with_spans(f"β : {written}\n", "t.bl")
+        (domain,) = [c for c in term.items[-1].declaration.classifiers if isinstance(c, T.Domain)]
+        return domain.space
+
+    def lies_within(inner, outer):
+        return sets.within(lowered(inner), lowered(outer), {})
+
+    # a union lies in a set exactly when each of its members does
+    assert lies_within("(0,1) \\/ (1, 2)", "(0, 2)") is True
+    assert lies_within("(0,1) \\/ (1, 3)", "(0, 2)") is False
+    # a set lies in a union when it lies in one member; (0, 2) lies in
+    # (0, 1] \/ (1, 2) and in neither member, so that inclusion is left open
+    assert lies_within("(0, 1)", "(0, 1] \\/ (1, 2)") is True
+    assert lies_within("(0, 2)", "(0, 1] \\/ (1, 2)") is None
+    # a difference lies in a set its left side lies in and is left open
+    # otherwise; a set that does not lie in the left side lies in no difference
+    assert lies_within("ℝ₊₊ \\ {1}", "ℝ₊") is True
+    assert lies_within("ℝ \\ (-inf, 0]", "ℝ₊₊") is None
+    assert lies_within("(0, 2)", "(0, 1) \\ {5}") is False
+    assert lies_within("(0, 1)", "ℝ₊₊ \\ {5}") is None
+    # one number lies in a union where one member holds it and outside where
+    # none does, and in a difference where the left side holds it and the
+    # right side does not; a part that is not decided leaves the answer open
+    for number, declared, answer in (
+        ("[0, 0]", "(-1, 0] \\/ (0, 1)", True),
+        ("[0, 0]", "(-1, 0) \\/ (0, 1)", False),
+        ("[2, 2]", "(0, 1) \\/ {2}", True),
+        ("[0, 0]", "(0, R) \\/ (2, 3)", None),
+        ("[1, 1]", "ℝ \\ {0}", True),
+        ("[0, 0]", "ℝ \\ {0}", False),
+        ("[5, 5]", "(0, 1) \\ {0}", False),
+        ("[1, 1]", "ℝ \\ (0, R)", None),
+    ):
+        assert lies_within(number, declared) is answer, (number, declared)
+
+    def holds(number, declared, at):
+        return predicate_value(Member(T.Number(number), lowered(declared)), at).value
+
+    # a membership condition read at parameter values decides one number
+    # by the same rule, a range of integers by its members at the values
+    for number, declared, at, answer in (
+        (0.5, "(0, 1) \\/ {1, …, J}", {}, True),
+        (5, "(0, 1) \\/ {1, …, J}", {"J": 5}, True),
+        (7, "(0, 1) \\/ {1, …, J}", {"J": 5}, False),
+        (7, "(0, 1) \\/ {1, …, J}", {}, None),
+        (6, "(0, 9) \\ {1, …, J}", {"J": 5}, True),
+        (5, "(0, 9) \\ {1, …, J}", {"J": 5}, False),
+        (6, "(0, 9) \\ {1, …, J}", {}, None),
+        (10, "(0, 9) \\ {1, …, J}", {}, False),
+    ):
+        assert holds(number, declared, at) is answer, (number, declared, at)
+    # the set of a key lies in an index set where each member of a union
+    # does and where the left side of a difference does; a set that is no
+    # index set, less the members of an index set, lies in none; a
+    # difference taken from a union or from another difference is left open
+    index = lowered("{1, …, 5}")
+    for declared, answer in (
+        ("{1, 2} \\/ {5}", True),
+        ("{1, 2} \\/ {7}", False),
+        ("{1, …, 5} \\ {3}", True),
+        ("ℝ \\ {0}", False),
+        ("ℕ \\ {9}", False),
+        ("(0, 9) \\ {3}", False),
+        ("{1, 2} \\/ {7} \\ {7}", None),
+        ("{1, …, 9} \\ {6} \\ {7, 8, 9}", None),
+        ("ℕ \\ (5, inf)", None),
+    ):
+        assert sets.index_within(lowered(declared), index, {}) is answer, declared
+    # the members of a union are numbers where those of every member are,
+    # and the members of a difference where those of its left side are; a
+    # part that names a set of labels gives no answer False, since the
+    # declaration is refused where it is typed
+    labels = {"Xl": lowered("{low, high}")}
+    for declared, answer in (
+        ("(0,1) \\/ (1, inf)", True),
+        ("ℝ₊₊ \\ {1}", True),
+        ("(2, 3) \\ Xl", True),
+        ("Xl \\/ (2, 3)", None),
+        ("Xl \\ {1}", None),
+    ):
+        assert sets.numeric(lowered(declared), labels) is answer, declared
+    # a name inside a member or a side is replaced by the set the stage
+    # defines it as, and the union is kept in its one form: a member equal
+    # to another after the replacement is held once
+    named = {"Xb": lowered("[0,1)")}
+    assert sets.resolved(lowered("Xb \\/ (1, inf)"), named) == lowered("[0,1) \\/ (1, inf)")
+    assert sets.resolved(lowered("Xb \\/ [0,1) \\/ (1, inf)"), named) == lowered(
+        "[0,1) \\/ (1, inf)"
+    )
+    assert sets.resolved(lowered("ℝ₊₊ \\ Xb"), named) == lowered("ℝ₊₊ \\ [0,1)")
+    assert sets.resolved(lowered("{1, …, 2} → Xb \\/ (1, 2)"), named) == lowered(
+        "{1, …, 2} → [0,1) \\/ (1, 2)"
+    )
+
+
+def _with_a_union_and_a_difference():
+    """The text of the consumption stage whose policy block declares a
+    multiplier, with ρ declared in a union and a parameter σ in a
+    difference."""
+    text, written = corpus_text("cons_obs"), "ρ : [1, inf)\n"
+    assert text.count(written) == 1
+    return text.replace(written, "ρ : (0,1) \\/ (1, inf)\nσ : ℝ₊₊ \\ {1}\n")
+
+
+def test_a_stage_with_a_union_and_a_difference_is_encoded_validated_and_decoded(
+    encoding_validator,
+):
+    """The encoding of a stage with one parameter declared in a union and
+    one in a difference (AMD-GRAM-005 §3) validates against the schema's
+    file and by the reader `validate_encoding`, and writes each of the two
+    sets as a term of a definition and as a node of an answer. The parsed
+    term of the stage text is decoded to the term the lowering built."""
+    from bellman.display.encoding_checks import validate_encoding
+
+    text = _with_a_union_and_a_difference()
+    document = json.loads(json.dumps(stage_from_text(text, "cons_obs.bl").encoding()))
+    encoding_validator.validate(document)
+    validate_encoding(document)
+    # each set is written as a term of a definition and as a node of an answer
+    written = json.dumps(document, ensure_ascii=False)
+    for constructor in ("SetUnion", "SetDifference"):
+        assert f'"__class__": "{constructor}"' in written
+        assert f'"node": "terms.{constructor}"' in written
+    # the parsed term is decoded to the term the lowering built
+    term, _ = parse_with_spans(text, "cons_obs.bl")
+    assert from_json(json.loads(json.dumps(to_json(term)))) == term
+
+
+def test_the_cards_and_the_parameter_table_print_a_union_and_a_difference():
+    """A parameter's record and the stage's sheet print a union and a
+    difference (AMD-GRAM-005 §3) with the signs that a file writes, `\\/`
+    and `\\`, and a card prints them with `∪` and `∖`. On a card an operand
+    that is itself a union or a difference stands in parentheses, and so
+    does a listed set with the set its members lie in."""
+    from conftest import PrintedStage
+
+    stage = stage_from_text(_with_a_union_and_a_difference(), "cons_obs.bl")
+    assert str(stage.par["ρ"]) == "ρ : (0, 1) \\/ (1, inf), unbound"
+    assert str(stage.par["σ"]) == "σ : ℝ₊₊ \\ {1}, unbound"
+    assert "ρ : (0, 1) \\/ (1, inf)" in stage.view() and "σ : ℝ₊₊ \\ {1}" in stage.view()
+    # a card writes the two signs as mathematics writes them
+    cards = {title: text for title, text, _ in PrintedStage(stage).cards}
+    assert "ρ  ∈ (0, 1) ∪ (1, ∞)" in cards["cons_obs:parameter:ρ"]
+    assert "σ  ∈ ℝ₊₊ ∖ {1}" in cards["cons_obs:parameter:σ"]
+    # no card of the stage names a constructor in place of a set
+    constructors = ("SetUnion", "SetDifference")
+    assert [title for title, text in cards.items() if any(c in text for c in constructors)] == []
+    # an operand that is itself a union or a difference stands in
+    # parentheses, and so does a listed set with the set its members lie in,
+    # whose `⊂` would otherwise be read as a claim about the whole set
+    shown = {
+        "ℝ \\ {0} \\/ {5}": "(ℝ ∖ {0}) ∪ {5}",
+        "(0,1) \\/ (2,3) \\ {5}": "((0, 1) ∪ (2, 3)) ∖ {5}",
+        "{1, …, 2} → (0,1) \\/ (1, 2)": "{1, …, 2} → (0, 1) ∪ (1, 2)",
+        "ℝ \\ {θ} ⊂ (0, 1)": "ℝ ∖ ({θ} ⊂ (0, 1))",
+        "{θ} ⊂ (0, 1) \\/ (2, 3)": "(2, 3) ∪ ({θ} ⊂ (0, 1))",
+    }
+    for written, printed in shown.items():
+        term, _ = parse_with_spans(f"β : {written}\n", "t.bl")
+        (domain,) = [c for c in term.items[-1].declaration.classifiers if isinstance(c, T.Domain)]
+        assert S.format_expression(domain.space) == printed, written

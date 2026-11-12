@@ -3139,7 +3139,9 @@ def _resolved_derivative(ctx, term, owner, block, local, *, active):
     defined = ctx.functions.get(argument.symbol.name) if isinstance(argument, T.Sym) else None
     if defined is not None:
         domain = definition_type(ctx.stage_object, defined).sort[3]
-        if len(defined.coordinates) != 1:
+        # a derived parameter is a constant: the one coordinate its record
+        # may hold is the set its definition declares and no argument
+        if defined.kind == "derived_parameter" or len(defined.coordinates) != 1:
             return S.Unresolved(owner, "differentiated function coordinate")
     variable = bound_variable(owner, name, domain, 200)
     unit = bound_variable(owner, "unit", T.Product(()), 201)

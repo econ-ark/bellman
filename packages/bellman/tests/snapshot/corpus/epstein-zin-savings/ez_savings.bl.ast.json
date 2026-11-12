@@ -25,123 +25,24 @@
           {
             "__class__": "Domain",
             "space": {
-              "__class__": "Comprehension",
-              "bound": {
-                "__class__": "Subject",
-                "coordinates": [
-                  {
-                    "__class__": "Coordinate",
-                    "stem": "β",
-                    "at": null,
-                    "classifiers": []
-                  }
-                ]
-              },
-              "base": {
-                "__class__": "Interval",
-                "bounds": {
-                  "__class__": "Range",
-                  "left": {
-                    "__class__": "Open"
-                  },
-                  "lower": {
-                    "__class__": "Number",
-                    "value": 0
-                  },
-                  "upper": {
-                    "__class__": "Number",
-                    "value": 1
-                  },
-                  "right": {
-                    "__class__": "Open"
-                  }
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 0
+                },
+                "upper": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "right": {
+                  "__class__": "Open"
                 }
-              },
-              "conds": [
-                {
-                  "__class__": "Rel",
-                  "left": {
-                    "__class__": "Sym",
-                    "symbol": {
-                      "__class__": "Constant",
-                      "name": "β"
-                    }
-                  },
-                  "op": {
-                    "__class__": "Lt"
-                  },
-                  "right": {
-                    "__class__": "Pow",
-                    "base": {
-                      "__class__": "Operator",
-                      "head": "E",
-                      "subs": [
-                        {
-                          "__class__": "Var",
-                          "name": "Ψ"
-                        }
-                      ],
-                      "args": [
-                        {
-                          "__class__": "Pow",
-                          "base": {
-                            "__class__": "Sym",
-                            "symbol": {
-                              "__class__": "Constant",
-                              "name": "Ψ"
-                            }
-                          },
-                          "exponent": {
-                            "__class__": "Sub",
-                            "left": {
-                              "__class__": "Number",
-                              "value": 1
-                            },
-                            "right": {
-                              "__class__": "Sym",
-                              "symbol": {
-                                "__class__": "Constant",
-                                "name": "γ"
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    },
-                    "exponent": {
-                      "__class__": "Div",
-                      "left": {
-                        "__class__": "Sub",
-                        "left": {
-                          "__class__": "Sym",
-                          "symbol": {
-                            "__class__": "Constant",
-                            "name": "ρ"
-                          }
-                        },
-                        "right": {
-                          "__class__": "Number",
-                          "value": 1
-                        }
-                      },
-                      "right": {
-                        "__class__": "Sub",
-                        "left": {
-                          "__class__": "Number",
-                          "value": 1
-                        },
-                        "right": {
-                          "__class__": "Sym",
-                          "symbol": {
-                            "__class__": "Constant",
-                            "name": "γ"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
+              }
             }
           }
         ],
@@ -152,7 +53,7 @@
         "entries": [
           {
             "__class__": "Tag",
-            "tag": "\"discount factor; the bound is the restriction under which an optimal plan exists\""
+            "tag": "\"discount factor\""
           }
         ]
       }
@@ -176,8 +77,21 @@
           {
             "__class__": "Domain",
             "space": {
-              "__class__": "Named",
-              "name": "ℝ₊₊"
+              "__class__": "SetDifference",
+              "left": {
+                "__class__": "Named",
+                "name": "ℝ₊₊"
+              },
+              "right": {
+                "__class__": "Points",
+                "members": [
+                  {
+                    "__class__": "Number",
+                    "value": 1
+                  }
+                ],
+                "superset": null
+              }
             }
           }
         ],
@@ -212,8 +126,21 @@
           {
             "__class__": "Domain",
             "space": {
-              "__class__": "Named",
-              "name": "ℝ₊₊"
+              "__class__": "SetDifference",
+              "left": {
+                "__class__": "Named",
+                "name": "ℝ₊₊"
+              },
+              "right": {
+                "__class__": "Points",
+                "members": [
+                  {
+                    "__class__": "Number",
+                    "value": 1
+                  }
+                ],
+                "superset": null
+              }
             }
           }
         ],
@@ -284,6 +211,155 @@
         "value": null
       },
       "annot": null
+    },
+    {
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "q",
+              "at": null,
+              "classifiers": []
+            }
+          ]
+        },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 0
+                },
+                "upper": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "right": {
+                  "__class__": "Open"
+                }
+              }
+            }
+          }
+        ],
+        "value": {
+          "__class__": "Pow",
+          "base": {
+            "__class__": "Mul",
+            "left": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "β"
+              }
+            },
+            "right": {
+              "__class__": "Call",
+              "fun": "exp",
+              "args": [
+                {
+                  "__class__": "Mul",
+                  "left": {
+                    "__class__": "Sub",
+                    "left": {
+                      "__class__": "Number",
+                      "value": 1
+                    },
+                    "right": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "ρ"
+                      }
+                    }
+                  },
+                  "right": {
+                    "__class__": "Add",
+                    "left": {
+                      "__class__": "Sym",
+                      "symbol": {
+                        "__class__": "Constant",
+                        "name": "μ_Ψ"
+                      }
+                    },
+                    "right": {
+                      "__class__": "Div",
+                      "left": {
+                        "__class__": "Mul",
+                        "left": {
+                          "__class__": "Sub",
+                          "left": {
+                            "__class__": "Number",
+                            "value": 1
+                          },
+                          "right": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "γ"
+                            }
+                          }
+                        },
+                        "right": {
+                          "__class__": "Pow",
+                          "base": {
+                            "__class__": "Sym",
+                            "symbol": {
+                              "__class__": "Constant",
+                              "name": "σ_Ψ"
+                            }
+                          },
+                          "exponent": {
+                            "__class__": "Number",
+                            "value": 2
+                          }
+                        }
+                      },
+                      "right": {
+                        "__class__": "Number",
+                        "value": 2
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "exponent": {
+            "__class__": "Div",
+            "left": {
+              "__class__": "Number",
+              "value": 1
+            },
+            "right": {
+              "__class__": "Sym",
+              "symbol": {
+                "__class__": "Constant",
+                "name": "ρ"
+              }
+            }
+          }
+        }
+      },
+      "annot": {
+        "__class__": "Annotation",
+        "entries": [
+          {
+            "__class__": "Tag",
+            "tag": "\"return patience factor (β*R)^(1/ρ)/R at R = exp(μ_Ψ + (1-γ)*σ_Ψ^2/2), the certainty-equivalent return E_{Ψ}(Ψ^(1-γ))^(1/(1-γ)) of the lognormal return; q < 1, equivalently β < E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ)), is the restriction under which an optimal plan exists\""
+          }
+        ]
+      }
     },
     {
       "__class__": "Declare",

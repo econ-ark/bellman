@@ -188,6 +188,8 @@ nav:
       - "Forms": Bellman-Sym/reference/forms.md
       - "Methods": Bellman-Sym/reference/methods.md
       - "Refusals": Bellman-Sym/reference/refusals.md
+      - "Rules and their code": Bellman-Sym/reference/rules.md
+      - "Types": Bellman-Sym/reference/types.md
       - "Symbol conventions": Bellman-Sym/reference/symbols-conventions.md
       - "Model directory layout": Bellman-Sym/reference/model-directory-layout.md
 

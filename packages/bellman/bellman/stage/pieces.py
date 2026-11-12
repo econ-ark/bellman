@@ -1497,8 +1497,9 @@ class Parameters(_NamedRecords):
 
     def list(self):
         """The parameters as a table, one row each with `name`, `domain`,
-        `value` and `describes`: the declared set, printed under `set`, and the
-        bound value or the word `unbound`.
+        `value`, `describes` and `definition`: the declared set, printed under
+        `set`, the bound value or the word `unbound`, and the definition of a
+        derived parameter, printed under `set` after the set and ` := `.
 
         See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §1."""
         return parameter_rows(self.version)

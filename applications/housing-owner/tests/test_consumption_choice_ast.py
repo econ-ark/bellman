@@ -74,8 +74,9 @@ from stage_types import (             # noqa: E402
     Constant, Continuation, Control, Coordinate, CorrDef, Declaration,
     Declare, Decision, Div, Domain, Equation, Grid, In, Infoset, Interval,
     KeyValue, Marked, Metadata, Method, Mul, Name, Named, Neg, Node, Number,
-    Open, Operator, Path, Pow, Range, Role, Segment, Shock, Signature, Space,
-    Spaced, Statement, Sub, Subject, Tag, Typer, Value, Var, Word,
+    Open, Operator, Path, Points, Pow, Range, Role, Segment, SetDifference,
+    Shock, Signature, Space, Spaced, Statement, Sub, Subject, Tag, Typer,
+    Value, Var, Word,
 )
 
 _SOURCE = _TESTS.parent / "declaration" / "stages" / "consumption_choice" / "consumption_choice.bl"
@@ -137,14 +138,16 @@ def test_space_assignments():
 def test_parameter_declarations():
     # The eight parameters of the source YAML, in order, each a bare
     # declaration line wrapped in the provisional Declare item. β and
-    # θ carry open intervals; n_H carries ℕ (the source writes Z+). Every
+    # θ carry open intervals; γ carries the difference ℝ₊ \ {1}, which
+    # excludes the value 1, at which the formulas that divide by 1 - γ have
+    # no value; ι carries ℝ₊₊; n_H carries ℕ (the source writes Z+). Every
     # parameter but β is written with a description, which stands on the
     # Declare item's annotation slot.
     open_unit = Domain(Interval(Range(Open(), Number(0), Number(1),
                                       Open())))
     expected = [
         ("β", open_unit, None),
-        ("γ", Domain(Named("ℝ₊")),
+        ("γ", Domain(SetDifference(Named("ℝ₊"), Points([Number(1)], None))),
          "curvature of the constant-relative-risk-aversion transform of"
          " the aggregate"),
         ("θ", open_unit,
@@ -152,7 +155,7 @@ def test_parameter_declarations():
          " services"),
         ("κ", Domain(Named("ℝ₊")),
          "housing services per unit of the housing stock"),
-        ("ι", Domain(Named("ℝ₊")),
+        ("ι", Domain(Named("ℝ₊₊")),
          "constant in housing services, which keeps utility finite at zero"
          " housing"),
         ("n_H", Domain(Named("ℕ")), "Number of housing types"),

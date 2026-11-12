@@ -32,7 +32,12 @@ from bellman.fold.stage_names import StageNames
 from bellman.fold.wire_terms import term_nodes
 from bellman.native.identity import Identity
 from bellman.native.labels import italic, wire_spelling
-from bellman.native.records import DEFINITION_KINDS_TABLE, method_lines, typing_text
+from bellman.native.records import (
+    DEFINITION_KINDS_TABLE,
+    derived_parameter_text,
+    method_lines,
+    typing_text,
+)
 from bellman.native.versions import kept_answer, stored
 from bellman.stage.boxes import builder_rows_of
 from bellman.stage.builder_pairs import DIRECTION_WORDS
@@ -369,8 +374,9 @@ def _records_of_kind(stage, kind, items):
         return [f"{d.identity.field} := {_set_source(d.equations[0])}" for d in items], ", "
     if kind == "derived_parameter":
         # a derived parameter as its definition writes it, `h := 1/(1 - Γ/R)`
-        # (AMD-MT-003, build contract §5)
-        return [f"{d.identity.field} := {to_source(d.equations[0])}" for d in items], ", "
+        # (AMD-MT-003, build contract §5), with the set the definition
+        # declares, `q : (0, 1) := (β*R)^(1/ρ)/R`
+        return [derived_parameter_text(d) for d in items], ", "
     if kind in ("parameter", "setting"):
         return [
             f"{d.identity.field} : "

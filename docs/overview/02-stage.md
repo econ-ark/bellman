@@ -19,7 +19,7 @@ type: overview
 #stage
 
 > [!summary]
-> We use a simple buffer-stock model to introduce the structure of a stage, a self-contained decision problem with three perches corresponding to the information sets at arrival, decision and continuation. Its economic quantities are fields, classified by perch, role and domain, and related across perches by two laws of motion and a value aggregator. The stage file states this theoretical model alone, as a **symbolic stage**.
+> We use a simple buffer-stock model to introduce the structure of a stage, a self-contained decision problem with three perches corresponding to the information sets at arrival, decision and continuation. Its economic quantities are fields, classified by role, by declared set and, except for shocks, by perch, and related across perches by two laws of motion and a value aggregator. The stage file states this theoretical model alone, as a **symbolic stage**.
 
 A **stage** is a self-contained decision problem whose description uses no information or notation from elsewhere in the model. It can be viewed as a description of a **Bellman operator**, expressed through objects typed according to the **Bellman calculus**, Project Bellman’s type system. These types are general enough to represent any Bellman operator of a recursive decision process.
 
@@ -50,13 +50,13 @@ The perch indices are `<` ($\prec$) for arrival, `>` ($\succ$) for continuation 
 
 The economic quantities of a stage—assets `b`, income `y`, resources `m`, consumption `c`, savings `a` and the value at each perch—are called **fields**. A field appears in stage equations much as a variable does in a paper, but the term makes its mathematical classification explicit. In conventional notation, a *variable* may be a number, a vector, a random variable, a realization or a function of the state, with the distinction left to context.[^1]
 
-For a stage file to determine a Bellman problem, each object must instead have a well-defined type. A field is classified by its **perch**, its **role**—state, control, shock, value or marginal value—and the **domain** of its values. Its type supplies the necessary and sufficient information to construct the stage’s [semantic graph](../wiki/semgraph.md) and kernels.
+For a stage file to determine a Bellman problem, each object must instead have a well-defined type. A field is classified by its **role**, which is state, control, shock, value or the multiplier of a constraint ([Constraints](../Bellman-Sym/10-constraints.md) §4.2), by its **declared set**, the set in which its values lie, and, unless it is a shock, by its **perch**. Its type states this classification. Together with the stage’s equations, which state the kernels (§1.3), the types of the fields determine the stage’s [semantic graph](../wiki/semgraph.md).
 
-In the buffer-stock model, the value field is written `V[<]` at arrival, `V` at decision and `V[>]` at continuation. Parameters such as `β` and `R`, by contrast, are not fields: they are declared with their domains and receive values at [calibration](../wiki/calibration.md).
+In the buffer-stock model, the value field is written `V[<]` at arrival, `V` at decision and `V[>]` at continuation. Parameters such as `β` and `R`, by contrast, are not fields: they are declared with their sets and receive values at [calibration](../wiki/calibration.md).
 
 The table summarizes the fields of the example.
 
-| Field | Perch | Role | Domain |
+| Field | Perch | Role | Declared set |
 |---|---|---|---|
 | `b`, assets | arrival | state | $\mathbb R_+$ |
 | `y`, income | drawn between arrival and decision | shock (lognormal) | $\mathbb R_{++}$ |

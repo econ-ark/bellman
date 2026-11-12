@@ -144,7 +144,8 @@ def _declared_set(term, ctx, block, local, active=()):
     binder or a parameter of a function inside that function's body, which for
     a field is the meet its sort holds and for a bound variable the binder's
     set; for a derived parameter, the reals, since its value at a calibration
-    is a finite real number (AMD-MT-003, build contract §5); and, for the bare
+    is a finite real number (AMD-MT-003, build contract §5), whatever set its
+    definition declares; and, for the bare
     name an alias line of the block writes, the set of that line's body
     (AMD-SG-017 §4). A field under a perch mark, `c[>]`, has
     the declared set of its own listing and borrows none, since whether a
@@ -163,7 +164,8 @@ def _declared_set(term, ctx, block, local, active=()):
         if isinstance(symbol, T.Constant) and symbol.name in ctx.derived:
             # a derived parameter's value is a finite real number, which the
             # calibration establishes or refuses (AMD-MT-003, build contract
-            # §5)
+            # §5); the set its definition declares is judged there as well
+            # and settles no condition of a line here
             return REAL
         if isinstance(symbol, T.Constant) and symbol.name not in active:
             body = ctx.alias_body(symbol.name, block)

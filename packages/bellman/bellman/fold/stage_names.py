@@ -150,6 +150,11 @@ class StageNames:
             if isinstance(d, Definition)
             and d.kind in ("function", "function_alias", "correspondence", "derived_parameter")
         }
+        # the set a derived parameter's definition declares, the one
+        # coordinate of its record, is not among `sets` below: the fold reads
+        # a derived parameter as a real number (`declared_sets._declared_set`)
+        # and calibration judges the set at the value the definition takes
+        # (`calibration_requirements`)
         self.derived = {
             d.identity.field: d
             for d in definitions

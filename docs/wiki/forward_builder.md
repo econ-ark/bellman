@@ -33,10 +33,10 @@ For a measurable map $h$, its pushforward $h_\#$ gives the distribution of $h$ a
 
 $$
 M_\pi=g_\#\circ L_\kappa\circ(j_\pi)_\#:
-\operatorname{Prob}(X)\to\operatorname{Prob}(Y).
+\mathsf M(X)\to\mathsf M(Y),
 $$
 
-This uses a conditional joint distribution. A product of state and shock marginals is justified only by the declared independence assumptions. Transition guards must hold under the joint distribution; dropping infeasible probability mass would change the model. If a policy is only an implicit relation, the construction needs a valid selected policy: the decision push-forward is the operator at that policy, one operator for each policy, and reads the policy on no [[semgraph|wire]].
+where $\mathsf M(S)$ is the set of finite measures on a measurable space $S$. The operator $M_\pi$ preserves mass, so it sends probability measures to probability measures. The construction uses a conditional joint distribution. A product of state and shock marginals is justified only by the declared independence assumptions. Transition guards must hold under the joint distribution; dropping infeasible probability mass would change the model. If a policy is only an implicit relation, the construction needs a valid selected policy: the decision push-forward is the operator at that policy, one operator for each policy, and reads the policy on no [[semgraph|wire]].
 
 ## Transition pairing
 

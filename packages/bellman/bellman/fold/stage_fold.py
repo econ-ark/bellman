@@ -94,7 +94,11 @@ from bellman.typing.category_codes import (
     reserved_entries,
 )
 from bellman.syntax.union import is_typing_entry
-from bellman.typing.declarations import TOP_LEVEL, derived_parameter_body
+from bellman.typing.declarations import (
+    TOP_LEVEL,
+    derived_parameter_body,
+    derived_parameter_declaration,
+)
 from bellman.typing.line_unknowns import selection_positions
 from bellman.typing.sets import defined, index_factors
 
@@ -231,7 +235,9 @@ def _derived_definedness(definition):
     is established wherever the definition has a value, and a definition
     without one has been refused under `derived-parameter` at that
     definition before any obligation is read (AMD-MT-003, build contract
-    §5)."""
+    §5). The set a definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is no
+    part of this obligation: calibration judges the value against it with
+    the declared sets of the parameters (`calibration_requirements`)."""
     name = definition.identity.field
     return (
         "arithmetic-definedness",
@@ -799,7 +805,8 @@ def _classifier_value(classifier):
 
 def _declared_definitions(term, ctx, spans):
     """The records of the file's top-level declarations and statements, in
-    file order: a multiplier or the parameters a declaration names, and a set,
+    file order: a multiplier, a derived parameter with its declared set or
+    the parameters a declaration names, and a set,
     a derived parameter, a function alias, a function, a correspondence or a
     distribution a statement defines. The marker `!categories` on any item but
     a top-level named set is refused where it is written
@@ -827,9 +834,14 @@ def _derived_parameters(term):
     arguments whose right side `derived_parameter_body` reads as an
     arithmetic expression, against the right side of every definition without
     arguments, the named sets and the functions and correspondences with
-    arguments (AMD-MT-003, build contract §5)."""
+    arguments (AMD-MT-003, build contract §5). A declaration that carries a
+    value, `q : (0,1) := (β*R)^(1/ρ)/R`, is a definition without arguments
+    here, as the declaration pass reads it."""
     bodies, defined = {}, set()
     for _, item in item_addresses(term):
+        typed = _typed_derived_parameter(item)
+        if typed is not None:
+            bodies[typed[0]] = item.declaration.value
         if not isinstance(item, T.Statement):
             continue
         core = item.core
@@ -847,10 +859,41 @@ def _derived_parameters(term):
     )
 
 
+def _typed_derived_parameter(item):
+    """The name and the declared set of an item that defines a derived
+    parameter with a declared set, `q : (0,1) := (β*R)^(1/ρ)/R`, as
+    `derived_parameter_declaration` reads its declaration; None for any other
+    item."""
+    if (
+        isinstance(item, T.Declare)
+        and isinstance(item.declaration, T.Declaration)
+        and item.declaration.value is not None
+    ):
+        return derived_parameter_declaration(item.declaration)
+    return None
+
+
 def _declaration_definitions(item, ctx, address, written):
     """The records a declaration makes: the multiplier of a bound declared in
-    a block body, or a record for each parameter or setting the declaration
+    a block body, the derived parameter of a declaration that carries a
+    value, or a record for each parameter or setting the declaration
     names."""
+    typed = _typed_derived_parameter(item)
+    if typed is not None:
+        # the record of `q := e` with one coordinate, the derived parameter
+        # with the set its definition declares, as a multiplier's record
+        # holds the multiplier with its declared set (AMD-GRAM-005)
+        name, declared = typed
+        return (
+            Definition(
+                Identity("derived", stage=ctx.stage_name, field=name),
+                kind="derived_parameter",
+                coordinates=((name, declared),),
+                equations=(item.declaration.value,),
+                tags=_declared_tags(item.annot),
+                address=written,
+            ),
+        )
     if isinstance(item.declaration, T.Complementary):
         # the multiplier of a bound declared in a block body: the record
         # holds the declaration with its clause as written, its declared

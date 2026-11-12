@@ -1213,9 +1213,13 @@ class Parameter(NamedTuple):
     one line, `ρ = 6.0 : [1, inf)`, or `ρ : [1, inf), unbound`.
 
     A derived parameter, a constant the stage defines from its parameters,
-    is `derived`: its `domain` holds its definition, its `value` the
-    definition's value at the calibration, and it prints `h = 52.0 := 1/(1 -
-    Γ/R)`, or `h := 1/(1 - Γ/R), unbound` (AMD-MT-003, build contract §5).
+    is `derived`: its `definition` holds the right side of its definition,
+    None on a declared parameter, its `value` the definition's value at the
+    calibration, and it prints `h = 52.0 := 1/(1 - Γ/R)`, or `h := 1/(1 -
+    Γ/R), unbound` (AMD-MT-003, build contract §5). Its `domain` is the set
+    its definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`, printed before the
+    definition, `q = 0.96 : (0, 1) := (β*R)^(1/ρ)/R`, and None where the
+    definition declares none (AMD-GRAM-005).
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §1."""
 
@@ -1224,16 +1228,13 @@ class Parameter(NamedTuple):
     value: object
     describes: str
     derived: bool = False
+    definition: object = None
 
     def __str__(self):
-        unbound = isinstance(self.value, str) and self.value == UNBOUND
-        if self.derived:
-            defined = f" := {to_source(self.domain)}"
-            if unbound:
-                return f"{self.name}{defined}, {UNBOUND}"
-            return f"{self.name} = {self.value!r}{defined}"
         declared = "" if self.domain is None else f" : {to_source(self.domain)}"
-        if unbound:
+        if self.derived:
+            declared += f" := {to_source(self.definition)}"
+        if isinstance(self.value, str) and self.value == UNBOUND:
             return f"{self.name}{declared}, {UNBOUND}"
         return f"{self.name} = {self.value!r}{declared}"
 
@@ -1279,10 +1280,11 @@ def parameters_of(stage):
     declaration order, each its `Parameter` record: the declaration the
     definitions table holds for it and the value the calibration bound in the
     version's bindings, which is all a parameter is. The derived parameters
-    follow the declared ones in file order, each with its definition and,
-    on a calibrated version, the value its definition takes at the
-    calibration (`derived_values`), which no binding holds (AMD-MT-003, build
-    contract §5). Computed at each call and kept nowhere.
+    follow the declared ones in file order, each with its definition, the
+    set its definition declares, the one coordinate of its record, where it
+    declares one, and, on a calibrated version, the value its definition
+    takes at the calibration (`derived_values`), which no binding holds
+    (AMD-MT-003, build contract §5). Computed at each call and kept nowhere.
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §1."""
     require_stage(stage)
@@ -1305,22 +1307,28 @@ def parameters_of(stage):
         name = definition.identity.field
         found[name] = Parameter(
             name=name,
-            domain=definition.equations[0],
+            domain=definition.coordinates[0][1] if definition.coordinates else None,
             value=derived.get(name, UNBOUND),
             describes="; ".join(descriptions(definition)),
             derived=True,
+            definition=definition.equations[0],
         )
     return found
 
 
 def parameter_rows(stage):
     """The parameters in declaration order, as read-only rows with `name`,
-    `domain`, `value` and `describes`, the table `stage.par` prints. The
-    retained declared set is `domain`, printed under `set`; a missing
+    `domain`, `value`, `describes` and `definition`, the table `stage.par`
+    prints. A row holds what the parameter's record holds under each key.
+    The retained declared set is `domain`, printed under `set`; a missing
     declaration is None. The value is the bound calibration value or
     `unbound`. The description is the author's text. A derived parameter's
-    row follows the declared parameters' rows and holds its definition under
-    `set` and its value at the calibration (AMD-MT-003, build contract §5).
+    row follows the declared parameters' rows and holds its value at the
+    calibration and, under `definition`, the right side of its definition,
+    None on a declared parameter's row (AMD-MT-003, build contract §5). The
+    table prints the definition under `set`: after the set the definition
+    declares and ` := `, `(0, 1) := (β*R)^(1/ρ)/R`, and alone where the
+    definition declares no set (AMD-GRAM-005).
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §1."""
     return Rows(
@@ -1331,6 +1339,7 @@ def parameter_rows(stage):
             for record in parameters_of(stage).values()
         ],
         {"domain": "set"},
+        joined={"definition": ("domain", " := ")},
     )
 
 

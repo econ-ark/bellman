@@ -40,7 +40,7 @@ from bellman.native.identity import Identity
 from bellman.native.records import ExpressionType, ResolvedName, Sort, construction_typing_table
 from bellman.refusals import NotConstructed
 from bellman.syntax import terms
-from bellman.syntax.source import to_source
+from bellman.syntax.source import comprehension_text, to_source
 from bellman.syntax.vocabulary import (
     CONTINUATION,
     DECISION,
@@ -52,6 +52,7 @@ from bellman.syntax.vocabulary import (
     WRITTEN_MARK,
 )
 from bellman.typing import sets
+from bellman.typing.declarations import TOP_LEVEL
 from bellman.typing.line_unknowns import derivative_left_side
 from bellman.typing.line_unknowns import (
     CALL_OPERATORS,
@@ -186,6 +187,10 @@ class TypingContext:
                     continue
                 domain_id = f"{identity}:domain-site:{index}"
                 address, _ = field.sites[index]
+                if address == TOP_LEVEL:
+                    # a site at the top level is typed at the address of the
+                    # field's declaration, where a refusal of its set stands
+                    address = declarations.scalars[field.stem].address
                 self.pending_domains[domain_id] = (term, address, ("domain", identity, index), ())
                 self.domain_terms[domain_id] = term
                 sites.append(domain_id)
@@ -213,6 +218,12 @@ class TypingContext:
                     role="parameter",
                     perch=None,
                 )
+        for name, definition in declarations.functions.items():
+            if definition.declared_set is not None:
+                # the set a derived parameter's definition declares, `q :
+                # (0,1) := (β*R)^(1/ρ)/R`, is typed with the declared sets of
+                # the stage, as a parameter's set is
+                self._domain(definition.declared_set, definition.address, ("domain", name))
         for name in declarations.shocks:
             identity = Identity("field", stage=declarations.stage, perch=SHCK, field=name)
             if identity not in self.inputs:
@@ -901,6 +912,20 @@ class TypingContext:
             if domain is not None:
                 self._domain(domain, address, position + ("subs", i, "set"), local=domain_local)
             if expr.head == "E":
+                if name not in self.declarations.law_of:
+                    # an expectation in a declared set, `β : (0, E_{w}(w^2))`,
+                    # is refused here in the words the declaration pass uses
+                    # for one on a line or in a definition
+                    raise self.declarations.error(
+                        "not-constructed",
+                        address,
+                        f"the expectation over {name!r} needs a declared distribution",
+                        error_class=NotConstructed,
+                        write=(
+                            f"Declare the distribution of {name}, `{name} ~ …`, or write the "
+                            f"set without the expectation over {name}"
+                        ),
+                    )
                 law = self._typed_distribution(name)
                 if template.identity not in law.subjects:
                     # the binder resolves to a name already bound where the
@@ -1142,6 +1167,7 @@ class TypingContext:
         if isinstance(setexpr, terms.Named):
             return _Typed((), (value,))
         if isinstance(setexpr, terms.Interval) and isinstance(setexpr.bounds, terms.Range):
+            _refuse_literal_faults(self.declarations, setexpr, address)
             bounds = setexpr.bounds
             args = tuple(
                 self._typed_expression(
@@ -1286,6 +1312,52 @@ class TypingContext:
             )
             self._domain(setexpr.base, address, position + ("base",), local=local)
             return _Typed(context, (value,))
+        if isinstance(setexpr, (terms.SetUnion, terms.SetDifference)):
+            # refuses a member or a side that names a set of labels, a
+            # product or a set of functions
+            union = isinstance(setexpr, terms.SetUnion)
+            parts = (
+                tuple((("members", i), member) for i, member in enumerate(setexpr.members))
+                if union
+                else ((("left",), setexpr.left), (("right",), setexpr.right))
+            )
+            definitions = self.declarations.space_terms
+            for step, part in parts:
+                kind = sets.kind_without_numbers(part, definitions)
+                if kind is None:
+                    continue
+                whole, place = ("union", "member") if union else ("difference", f"{step[0]} side")
+                is_what = f"which is {kind}"
+                if isinstance(part, terms.Named) and part.name in definitions:
+                    defined = definitions[part.name]
+                    conditioned = isinstance(defined, terms.Comprehension)
+                    printed = comprehension_text(defined) if conditioned else to_source(defined)
+                    is_what = f"which the file defines as `{printed}`, {kind}"
+                raise self.declarations.error(
+                    "readable-form",
+                    address,
+                    (
+                        f"the {whole} `{to_source(setexpr)}` has the {place} `{to_source(part)}`, "
+                        f"{is_what}; a union and a difference are formed among sets of numbers"
+                    ),
+                    write=(
+                        "Write a set of numbers on each side of the sign: an interval, a "
+                        "reserved set, a list of integers, `{1, 2}`, or a named set of numbers"
+                    ),
+                )
+            # each member and each side is typed as a set of its own
+            args = tuple(
+                self._typed_set_expression(
+                    part, address=address, position=position + step, local=local
+                )
+                for step, part in parts
+            )
+            if not union and "members" not in position:
+                # a difference holds a number; one inside a union, whose
+                # position holds the step `members`, is not judged, since
+                # another member of the union may hold a number
+                _refuse_literal_faults(self.declarations, setexpr, address)
+            return _Typed(_merge(arg.inputs for arg in args), (value,))
         raise self.declarations.error(
             "readable-form",
             address,
@@ -2005,13 +2077,34 @@ def _refuse_literal_faults(declarations, setexpr, address):
     conditions, a bound that is no integer, an empty range, two members that
     are one number or a member outside the set the members lie in, is refused
     under `readable-form` where it is typed; a condition that reads a
-    parameter is recorded by the fold and decided at calibration."""
-    for fault in sets.literal_faults(setexpr, to_source):
+    parameter is recorded by the fold and decided at calibration. An interval
+    whose written endpoints leave it no number, `(2, 1)` or `[1, 1)`, is
+    refused under the same rule, and so is a difference whose left side lies
+    within its right side, `(0, 1) \\ ℝ₊`."""
+    interval = isinstance(setexpr, terms.Interval)
+    difference = isinstance(setexpr, terms.SetDifference)
+    for fault in sets.literal_faults(setexpr, to_source, declarations.space_terms):
         raise declarations.error(
             "readable-form",
             address,
             (
-                f"the set {to_source(setexpr)} {fault}; a range has integer bounds in order, "
-                "and a listed set has distinct integer members in the set it names"
+                f"the set {to_source(setexpr)} {fault}; "
+                + (
+                    "an interval of numbers holds at least one number, so its lower endpoint "
+                    "is below its upper endpoint, or equal to it where both ends are closed"
+                    if interval
+                    else "a difference holds at least one number, so its left side holds a "
+                    "number that its right side does not hold"
+                    if difference
+                    else "a range has integer bounds in order, and a listed set has distinct "
+                    "integer members in the set it names"
+                )
+            ),
+            write=(
+                "Write the smaller endpoint first, or `[x, x]` for the set of the one number x"
+                if interval
+                else "Write a left side that holds a number outside the right side"
+                if difference
+                else None
             ),
         )

@@ -24,10 +24,10 @@ that stage without the shocks'. The growth factor's set is the interval
 finite human wealth condition, and `calibrate`, which decides an interval
 whose endpoints are parameters, refuses a growth factor at or above the
 interest factor, naming the set. The discount factor's type holds two sets,
-`(0,1)` and `(0, R^(ρ-1))` with `@` between them, and the discount factor
-lies in both: the second bound is the return impatience condition, q < 1
-written for β, and `calibrate` refuses a discount factor at or above it,
-naming the condition.
+`ℝ₊₊` and `(0, R^(ρ-1))` with `@` between them, and the discount factor
+lies in both: the upper bound of the second set is the return impatience
+condition, q < 1 written for β, and `calibrate` refuses a discount factor at
+or above it, naming the condition.
 The set `(1, inf)` of the coefficient of relative risk aversion refuses
 ρ = 1, logarithmic utility, which needs another utility.
 
@@ -35,7 +35,7 @@ The set `(1, inf)` of the coefficient of relative risk aversion refuses
 Xm := ℝ
 Xa := ℝ
 
-β : (0,1) @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
+β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
 ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
 R : ℝ₊₊                    :: ["gross interest factor"]
 Γ : (0, R)                 :: ["permanent income growth factor; its upper bound R is the finite human wealth condition"]
@@ -50,10 +50,13 @@ and the natural borrowing limit `L = 1 - h`, above which total wealth `m - L`
 is positive. `stage.par` lists them after the four declared parameters with
 their definitions and, once a calibration is bound, their values: 1/1.04, 52
 and -51 at the folder's calibration. A calibration source that names one of
-them is refused.
+them is refused. The definition of `q` declares the set `(0,1)`, the return
+impatience condition written for `q` itself: `calibrate` computes `q` from
+the calibration and refuses a value outside the set, naming `q`, its
+definition and the values of β, ρ and R.
 
 ```bl
-q := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
+q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
 h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
 L := 1 - h           :: ["the natural borrowing limit on market resources, above which total wealth m - L is positive"]
 ```

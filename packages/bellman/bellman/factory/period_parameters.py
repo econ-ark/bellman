@@ -109,7 +109,7 @@ def shared_parameters(stages, address="periods[?]", file=None):
             ("setting", setting_sets(stage)),
         ):
             for name, setterm in declarations.items():
-                resolved = T.Named("ℝ") if setterm is None else sets.defined(setterm, definitions)
+                resolved = T.Named("ℝ") if setterm is None else sets.resolved(setterm, definitions)
                 written = "ℝ" if setterm is None else to_source(setterm)
                 declared.setdefault(name, []).append(_Declaration(key, stage, resolved, written))
                 kinds.setdefault(name, set()).add(kind)
@@ -183,8 +183,15 @@ def _stages(sites):
 
 
 def _sets(sites):
-    """The sets of the declarations `sites` in words, as written."""
-    return " and ".join(site.written for site in sites)
+    """The sets of the declarations `sites` in words, each as written; a set
+    that reads a name its stage defines is followed by the set the stage
+    reads it as, since two stages may define one name as two sets."""
+    read = [to_source(site.resolved) for site in sites]
+    words = [
+        site.written if text == site.written else f"{site.written}, read in {site.key} as {text}"
+        for site, text in zip(sites, read)
+    ]
+    return (" and " if words == [site.written for site in sites] else ", and ").join(words)
 
 
 def _declaration_address(stage, name):
@@ -352,7 +359,7 @@ def _declared_set(stage, name, word):
     the reals where it names none."""
     declarations = parameter_sets(stage) if word == "parameter" else setting_sets(stage)
     setterm = declarations.get(name)
-    return T.Named("ℝ") if setterm is None else sets.defined(setterm, _set_definitions(stage))
+    return T.Named("ℝ") if setterm is None else sets.resolved(setterm, _set_definitions(stage))
 
 
 def _outside(value, declared):

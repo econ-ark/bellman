@@ -17,7 +17,7 @@ type: reference
 # Appendix E.3 — Operators
 
 > [!summary]
-> This catalogue lists mathematical operations and their input and output types. It distinguishes transition expectation, reward-bearing evaluation and optimizing selection, and records the conditions needed for each operation. §4 names the eight operations a builder is composed of by the kinds under which the package prints them.
+> This catalogue lists mathematical operations and their input and output sorts. It distinguishes transition expectation, reward-bearing evaluation and optimizing selection, and records the conditions needed for each operation. §4 names the eight operations a builder is composed of by the operation kinds under which the package prints them.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [Functions](./functions.md) describes the model functions used by these operators.
@@ -25,15 +25,15 @@ type: reference
 > **Formal account** — [Operator algebra](../APPX-F-OPERATOR-ALGEBRA.md) qualifies composition, copying and numerical approximation.
 > **See also** — [Methods](../06-Methods.md) discusses numerical procedures.
 
-An **operator** maps objects in a declared domain to a declared codomain. Its **rank** lists its input and output sorts. In a first-order signature, operators can be operation symbols without an additional carrier of operator-valued data; they are nevertheless typed. Whether a builder is primitive or a named composite depends on the chosen signature.
+An **operator** maps objects in a specified domain, such as a space of functions or of measures, to objects in a specified codomain. Its **rank** lists its input and output sorts ([Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) §3). In a first-order signature, operators can be operation symbols without an additional carrier of operator-valued data; they nevertheless have ranks. Whether a builder is primitive or a named composite depends on the chosen signature.
 
-At perch $p$, $\mathsf X_p$ is the state space, $\mathsf V_p$ a chosen value-function space, and $\mathsf M_p$ the probability measures on $\mathsf X_p$. Let $\mathsf L$ be the scalar value domain, $\Gamma(x)$ the feasible actions, $\mathsf Q_\Gamma$ the choice-value functions on $\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}$, and $\Pi_\Gamma$ the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.
+At perch $p$, $\mathsf X_p$ is the state space, $\mathsf V_p$ a chosen value-function space, and $\mathsf M_p$ the finite measures on $\mathsf X_p$, of which the probability measures are those of mass one. Let $\mathsf L$ be the declared set of the scalar value fields, $\Gamma(x)$ the feasible actions, $\mathsf Q_\Gamma$ the choice-value functions on $\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}$, and $\Pi_\Gamma$ the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.
 
 <a id="structural-morphisms-category-plumbing"></a>
 
 ## 1. Structural operations
 
-These operations describe composition of inputs and alternatives. They do not alone prove that a software graph has a categorical universal property. Here $s,t$ denote types, $I$ the one-point type, $\otimes$ a product in the deterministic interpretation, and $\bigsqcup$ a labeled disjoint union.
+These operations describe composition of inputs and alternatives. They do not alone prove that a software graph has a categorical universal property. Here $s,t$ denote sorts, $I$ the one-point sort, $\otimes$ a product in the deterministic interpretation, and $\bigsqcup$ a labeled disjoint union.
 
 | Operation | Rank | Role |
 |---|---|---|
@@ -43,8 +43,8 @@ These operations describe composition of inputs and alternatives. They do not al
 | $\iota_j$ | $\mathsf X_j\to\bigsqcup_k\mathsf X_k$ | identify an alternative by its label |
 | $[f_j]_j$ | $\bigsqcup_j\mathsf X_j\to\mathsf Y$ | apply the corresponding $f_j$ to a labeled input |
 | $\operatorname{codiag}$ | $\bigsqcup_j\mathsf X\to\mathsf X$ | discard a label when all alternatives share the same state space |
-| Connector | compatible boundary types | identify or rename fields between stages |
-| Inter-period connector | compatible boundary types | identify or rename fields between periods |
+| Connector | boundary fields, each written on a set inside the set on which it is read ([Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) §5) | identify or rename fields between stages |
+| Inter-period connector | boundary fields, each written on a set inside the set on which it is read | identify or rename fields between periods |
 
 A nonidentity state transformation must be authored explicitly; a connector renaming does not define it. Copying is available in the probability-kernel interpretation, but a general stochastic map need not preserve it. [Operator algebra](../APPX-F-OPERATOR-ALGEBRA.md) §§2–3 gives the distinction.
 
@@ -60,7 +60,7 @@ A nonidentity state transformation must be authored explicitly; a connector rena
 | $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$ | $\mathsf V_\succ\to\mathsf V_\prec$ | optimizing stage evaluation |
 | $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$ | $\mathsf V_\succ\to\mathsf V_\prec$ | fixed-policy stage evaluation |
 
-These are mathematical names, not prescribed YAML stage keys. Stage equations are `.bl`; current block and method-place forms belong to Bellman-SYM's pages on field equations and methodization.
+These are mathematical names, not prescribed block identifiers. Stage equations are `.bl`; current block and method-place forms belong to Bellman-SYM's pages on field equations and methodization.
 
 <a id="forward-builders-measure-side"></a>
 
@@ -68,8 +68,8 @@ These are mathematical names, not prescribed YAML stage keys. Stage equations ar
 
 | Forward operator | Rank | Induced by |
 |---|---|---|
-| $\mathbb M_\prec$ | $\mathsf M_\prec\to\mathsf M_\sim$ | arrival transition and conditional shock law |
-| $\mathbb M_{\succ,\pi}$ | $\mathsf M_\sim\to\mathsf M_\succ$ | decision transition, conditional shock law and policy |
+| $\mathbb M_\prec$ | $\mathsf M_\prec\to\mathsf M_\sim$ | arrival law of motion and conditional shock law |
+| $\mathbb M_{\succ,\pi}$ | $\mathsf M_\sim\to\mathsf M_\succ$ | decision law of motion, conditional shock law and policy |
 | $\mathbb M_\pi=\mathbb M_{\succ,\pi}\circ\mathbb M_\prec$ | $\mathsf M_\prec\to\mathsf M_\succ$ | composed stage transition |
 
 The corresponding undiscounted expectations $P_\prec$, $P_{\succ,\pi}$ and $P_\pi=P_\prec\circ P_{\succ,\pi}$ act in the reverse direction on test functions. With $\langle\mu,f\rangle=\int f\,d\mu$,
@@ -108,7 +108,7 @@ that is, $(\mathbb T_\succ v)(x)=(B_\succ v)\bigl(x,s(B_\succ v)(x)\bigr)=\max_{
 
 **Domains and assumptions.** $\Pi_\Gamma$ holds the measurable maps $\pi$ from $\mathsf X_\sim$ to the action space with $\pi(x)\in\Gamma(x)$ at every state, and $\mathsf Q_\Gamma$ holds functions on $\operatorname{Gr}(\Gamma)$ measurable for the σ-algebra that the product σ-algebra induces on it. Then $x\mapsto(x,\pi(x))$ is measurable for every $\pi\in\Pi_\Gamma$, so $\iota^{*}(Q,\pi)$ is a measurable function, and $\mathsf V_\sim$ is chosen to contain these functions. The maximizing set is nonempty, for example, when the action space is finite, $\Gamma(x)$ is nonempty at every state, and for each action the states at which it is feasible form a measurable set on which $Q(\cdot,a)$ is measurable (Sargent and Stachurski 2026, *Dynamic Programming*, vol. 2, Lemma 7.1.1), or when the state and action spaces are metric spaces with their Borel σ-algebras, the action space is separable, $\Gamma$ is nonempty, compact-valued and continuous, and $Q$ is continuous on $\operatorname{Gr}(\Gamma)$ (ibid., Lemma 7.1.2 and Theorem A.3.3). These conditions are sufficient and are not part of the definitions: the factorization states what $\mathbb T_\succ$ is on the domain of the named selection, and asserts nothing about which continuation functions lie in that domain.
 
-In the display, $\iota^{*}$ inserts a policy into a choice-value function, as the table defines. The first column of the table names the **kind** of each operation, the name under which the package lists it among the operations of a builder; the last column links to the reference row that states which lines of a stage form an operation of that kind. $B_\succ$ has no kind: a builder lists it as the operations it is composed of.
+In the display, $\iota^{*}$ inserts a policy into a choice-value function, as the table defines. The first column of the table names the **operation kind** of each operation, the name under which the package lists it among the operations of a builder; the last column links to the reference row that states which lines of a stage form an operation of that kind. $B_\succ$ has no operation kind: a builder lists it as the operations it is composed of.
 
 | Kind | Operation | Domain and codomain | Meaning | Reference |
 |---|---|---|---|---|
@@ -133,7 +133,7 @@ The **conditional distribution** $\mu$ of a shock with values in $\mathsf Z$, gi
 
 The value of a function at a point and a numerical interpolation of that function are different descriptions: a numerical routine may interpolate internally, and representing a function on a grid adds no operation to this catalogue.
 
-For an invertible transformation $\varphi$ on the relevant value domain, a certainty equivalent may take the form $R_z^\varphi=\varphi^{-1}\circ\mathbb E_z\circ\varphi$ when the integrals and inverse are defined. It reduces to expectation for $\varphi=\mathrm{id}$. This formula does not make every recursive preference a single local integrand; that extension remains unfinished. #todo
+For an invertible transformation $\varphi$ on the declared set of the value field, a certainty equivalent may take the form $R_z^\varphi=\varphi^{-1}\circ\mathbb E_z\circ\varphi$ when the integrals and inverse are defined. It reduces to expectation for $\varphi=\mathrm{id}$. This formula does not make every recursive preference a single local integrand; that extension remains unfinished. #todo
 
 A vector shock can be integrated sequentially with its conditional laws, under the conditions for iterated integration. Replacing those laws by independent marginals requires independence; the tower property does not supply it. Intermediate numerical integrations do not introduce new information perches by themselves.
 
@@ -177,7 +177,7 @@ Envelope selection belongs to a numerical method and is not an operation a stage
 | Linear solution | compatible $(A,b)$ → selected solution of $Ax=b$ | uniqueness or a specified solution rule |
 
 > [!note] Derivatives and names
-> A derivative operation and a name given to a function are distinct. Differentiation of a declared function in one of its formal coordinates yields a function, and the derivative term on a value field, `D_{a}V[>]`, yields the derivative of that value; naming a function defines nothing further, and no field stands for a derivative. [Functions](./functions.md) describes their types.
+> A derivative operation and a name given to a function are distinct. Differentiation of a declared function in one of its formal coordinates yields a function, and the derivative term on a value field, `D_{a}V[>]`, yields the derivative of that value; naming a function defines nothing further, and no field stands for a derivative. [Functions](./functions.md) lists their domains and codomains.
 
 > [!note] Iterated transitions
 > Stationary distributions are fixed points of probability propagation; tail behavior is an asymptotic property. They require further assumptions and analysis beyond a one-step transition or finite branch operation. This catalogue does not prohibit defining a solver operator for them.

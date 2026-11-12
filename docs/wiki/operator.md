@@ -31,7 +31,7 @@ type: concept
 
 # Operator
 
-An **operation symbol** names an operation in a [[signature]] and has a declared input/output type, or [[rank]]. Its interpretation is a mathematical map on the chosen domains. For example, the [[builder|pullback]] maps a continuation function to its composition with the law of motion.
+An **operation symbol** names an operation in a [[signature]] and has a [[rank]], its input sorts and its output sort ([Kinds and sorts](../bellman-calculus/APPX-D-KINDS-AND-SORTS.md) §3). Its interpretation is a mathematical map on the chosen domains. For example, the [[builder|pullback]] maps a continuation function to its composition with the law of motion.
 
 The symbol and its interpretation are distinct. A first-order signature can treat an operation solely as a symbol without introducing operator-valued data. This is a choice of signature, not a claim that a mathematical operator can never be a function or an element of a function space. In a specified category, a typed operation may be represented as a morphism.
 
@@ -45,7 +45,7 @@ The [operator catalogue](../bellman-calculus/catalogues/operators.md) lists the 
 
 ## The operations of a builder
 
-In a [[stage]], an operator is what a box of the backward or the forward builders graph denotes, and inside a [[builder]] the word means a **primitive operator**, the finest box. Each primitive operator is of one kind, the name under which the package lists it among the operations of a builder: `Pullback`, `Aggregation`, `Expectation`, `Evaluation` and [`Argmax`](../Bellman-Sym/reference/operations.md#argmax) in the backward builders graph, and `Pushforward` and `DistributionExtension` in the forward one ([operations](../Bellman-Sym/reference/operations.md) §2; [Operators](../bellman-calculus/catalogues/operators.md) §4). A relation, the rule of an `Aggregation` or a `Pullback` whose output is among its own unknowns, is no kind of its own. The package's table also defines `PolicyInsertion`, the insertion of a policy into a choice-value function, which no stage of the applications forms as a row of its own: at a policy the insertion is part of the indexed pullback or push-forward. The builder is the operator of a whole [block](../Bellman-Sym/01-stage.md#3-builder-blocks), and a [[sub_builder|sub-builder]] is the one box inside a builder that is not primitive.
+In a [[stage]], an operator is what a box of the backward or the forward builders graph denotes, and inside a [[builder]] the word means a **primitive operator**, the finest box. Each primitive operator is of one operation kind, the name under which the package lists it among the operations of a builder: `Pullback`, `Aggregation`, `Expectation`, `Evaluation` and [`Argmax`](../Bellman-Sym/reference/operations.md#argmax) in the backward builders graph, and `Pushforward` and `DistributionExtension` in the forward one ([operations](../Bellman-Sym/reference/operations.md) §2; [Operators](../bellman-calculus/catalogues/operators.md) §4). A relation, the rule of an `Aggregation` or a `Pullback` whose output is among its own unknowns, is no operation kind of its own. The package's table also defines `PolicyInsertion`, the insertion of a policy into a choice-value function, which no stage of the applications forms as a row of its own: at a policy the insertion is part of the indexed pullback or push-forward. The builder is the operator of a whole [block](../Bellman-Sym/01-stage.md#3-builder-blocks), and a [[sub_builder|sub-builder]] is the one box inside a builder that is not primitive.
 
 ## Kernels
 

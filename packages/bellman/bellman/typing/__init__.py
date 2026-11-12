@@ -27,6 +27,9 @@ the typed expressions with their notation.
 - `primitive_definitions`: the definitions of the primitive operations,
   stated once, which the typed defining expressions, the carrier expressions
   and the stage encoding read.
+- `type_table`: the objects of a stage with the type each declaration
+  writes, the forms of a set expression and the limits of the language on a
+  type, three tables from which the reference page of the types is printed.
 
 The refusal of a stage file that cannot be constructed, with the rules it
 names, stands at the root, in `bellman.refusals`.

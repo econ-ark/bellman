@@ -35,7 +35,7 @@ Its domain is a chosen class of continuation functions for which the required ch
 
 ## Stage factorization
 
-In the staged reading, write $\mathbb T_\succ$ for optimizing continuation-to-decision evaluation and $\mathbb T_\prec$ for decision-to-arrival aggregation; in a [[stage]] these are the decision and the arrival [[builder|builders]]. Then
+In the staged reading, write $\mathbb T_\succ$ for optimizing continuation-to-decision evaluation and $\mathbb T_\prec$ for decision-to-arrival aggregation. In a [[stage]], $\mathbb T_\prec$ is the arrival [[builder]], and the decision builder is the [[builder|builder at a policy]] $\mathbb T_{\succ,\pi}$. The optimizing decision builder $\mathbb T_\succ$ is the image of no edge ([Kinds and sorts](../bellman-calculus/APPX-D-KINDS-AND-SORTS.md) §6). Then
 
 $$
 \mathbb T=\mathbb T_\prec\circ\mathbb T_\succ,

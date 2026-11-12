@@ -25,9 +25,9 @@ topic: [calculus]
 > **Builds on** — [Illustrative example](./02-Illustrative%20example.md) gives the consumption–savings factorization.
 > **Used by** — [Fields, functions and types](./04-fields,%20functions%20and%20types.md) develops the fields and functions at each perch; Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the representation and binding conditions for written equations; [Stages](../Bellman-Sym/01-stage.md) and [Field equations](../Bellman-Sym/03-field-equations.md) give the `.bl` syntax of the stage defined here.
 
-The [illustrative example](./02-Illustrative%20example.md) separates the optimizing decision builder $\mathbb T_\succ$ from the fixed-policy builder $\mathbb T_{\succ,\pi}$. With arrival builder $\mathbb T_\prec$, their stage compositions are $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$ and $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$. A **builder** specifies how a value function at one perch determines a value function at an earlier perch.
+The [illustrative example](./02-Illustrative%20example.md) separates the optimizing decision builder $\mathbb T_\succ$ from the fixed-policy builder $\mathbb T_{\succ,\pi}$. With arrival builder $\mathbb T_\prec$, their stage compositions are $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$ and $\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}$. A **builder** is the operator of one edge of the stage, or one of the two operators that are the image of no edge, the policy builder and the optimizing decision builder ([Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6): a backward builder specifies how a value function at one perch determines a value function at an earlier perch, and a forward builder how a measure at one perch determines a measure at the next. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 derives the builders $\mathbb T_\prec$ and $\mathbb T_{\succ,\pi}$, and the forward builders of §1.2 below, as the images of the transitions of a stage under its models, where a transition is a law of motion with its shock law.
 
-Section 1 defines the stage's mathematical data and operator types; §2 defines the operators, and §3 states their information requirements. Authored stage declarations and equations use the `.bl` stage syntax of [Bellman-SYM](../wiki/sym.md). The mathematical tuple below describes their interpretation, not a second source file or a retained parsing object.
+Section 1 defines the stage's mathematical data and the inputs and outputs of its operators; §2 defines the operators, and §3 states their information requirements. Authored stage declarations and equations use the `.bl` stage syntax of [Bellman-SYM](../wiki/sym.md). The mathematical tuple below describes their interpretation at one calibration at which the stage is well posed ([Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §§4 and 6), not a second source file or a retained parsing object.
 
 ## 1. The general stage
 
@@ -78,10 +78,10 @@ A stage constitutes one self-contained decision episode, and its **perches** can
 
 > Operationally, the sequence of events in the stage runs as follows. Given an initial arrival state $x_{\prec}$, the agent draws an *observable* shock $z_{\zeta} \in \mathsf{Z}_{\zeta}$, and the state transitions to the decision state $x_{\sim} = g_{\prec}(x_{\prec}, z_{\zeta})$. Given a value function $v_\succ$, the agent then selects a feasible action $a \in \Gamma(x_{\sim})$ by applying some criterion to the decision-perch value the backward kernel $G_\succ$ returns — the continuation value carried back to the decision perch, with the post-decision shock integrated out ($\S 2$). Once the action is taken and the unobserved shock is realized, the state transitions to $x_{\succ} = g_{\succ}(x_{\sim}, a, z_{\eta})$.
 
-Which shocks are present pins down the stage's timing, and there are possible configurations:
+Which shocks are present pins down the stage's timing, and there are four possible cases:
 #ambiguity #perch
 
-| Configuration      | pre-decision $\zeta$ | post-decision $\eta$ | reading                                                                             |
+| Case               | pre-decision $\zeta$ | post-decision $\eta$ | reading                                                                             |
 | ------------------ | -------------------- | -------------------- | ----------------------------------------------------------------------------------- |
 | pre-decision only  | present              | —                    | observe the shock, then a deterministic choice-to-exit move (the buffer-stock case) |
 | post-decision only | —                    | present              | choose first, then the shock resolves                                               |
@@ -97,7 +97,7 @@ Which shocks are present pins down the stage's timing, and there are possible co
 > - **Transitions.** $g_\prec(k, y) = R\,k + y$; $g_\succ(m, c) = m - c$, deterministic because its shock slot is trivial, so its derived kernel is a point mass.
 > - **Backward kernels.** $G_\succ(w, m, c) = u(c) + \beta\, w$ — the expected-utility (affine) kernel of the note above, with nothing integrated since the post-decision edge is deterministic — and $G_\prec(w, k, y) = w$, the identity kernel whose operator integrates the income draw over $\mu_\zeta$.
 >
-> The sequence of events: arrive holding $k$; observe $y$; have decision state $m = g_\prec(k, y) = R\,k + y$; choose $c \in \Gamma(m)$; exit with the continuation state $a = g_\succ(m, c) = m - c$, which the next stage receives as its arrival state. This is the pre-decision-only configuration of the table above.
+> The sequence of events: arrive holding $k$; observe $y$; have decision state $m = g_\prec(k, y) = R\,k + y$; choose $c \in \Gamma(m)$; exit with the continuation state $a = g_\succ(m, c) = m - c$, which the next stage receives as its arrival state. This is the pre-decision-only case of the table above.
 
 > [!note] Relationship to standard MDP
 > A standard Markov decision process describes the next-state distribution with a single kernel $\mathrm{P}(\cdot \mid x, a)$, resolved after the choice, with value
@@ -113,7 +113,7 @@ Which shocks are present pins down the stage's timing, and there are possible co
 > Two devices make this timing visible. The **perch indices** name arrival, decision and continuation as the nested filtration of $\S 3$; and because the pre-decision shock is observed before the action, the choice falls on a state already carrying the within-period information, with the continuation perch the **post-decision state** of approximate dynamic programming when the post-decision shock is trivial (Powell 2011). #check-details
 ### 1.2 Wiring the stage
 
-The Bellman calculus stage records compositions through the input and output types of its operators. First, note that intuitively, to use the stage to solve, we read it as an *operator*: hand it a continuation value, and it returns an arrival value,
+The Bellman calculus stage records compositions through the inputs and outputs of its operators. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 collects them in the operator signature of the stage, whose sorts name the spaces of value functions and of measures defined below and the set of policies, and whose symbols are the builders. First, note that intuitively, to use the stage to solve, we read it as an *operator*: hand it a continuation value, and it returns an arrival value,
 
 $$
 \mathbb{T}_{\pi}\;\colon\; v_\succ \longmapsto v_\prec,
@@ -121,7 +121,7 @@ $$
 
 a *continuation value in, arrival value out* contract that does not refer to the stage's internals nor any of the details of the syntactic declarations. The stages represented here have this input–output form; what changes between applications is the **state space** at each perch, the form of the transitions and their shock distributions, the feasibility correspondence, and the methods used to realize the builders.
 
-**Backward types wiring** For each perch $m \in \{\prec, \sim, \succ\}$ we now add one additional kind of object: the *value functions at perch $m$*, simply written $\mathsf{V}_m$. We can think of these as the space of $\mathsf{L}$-valued functions on $\mathsf{X}_m$, so that evaluating a value function at a state, $v(x) \in \mathsf{L}$, is ordinary function application. The chosen function domains must make the declared operations well-defined and closed under their compositions. Boundedness, continuity, integrability, and equivalence-class conventions are additional mathematical choices, not consequences of a value-domain declaration. The backward builders are named operations between value kinds,
+**Backward spaces and wiring** For each perch $m \in \{\prec, \sim, \succ\}$ we now add one additional space: the *value functions at perch $m$*, simply written $\mathsf{V}_m$. We can think of these as the space of $\mathsf{L}$-valued functions on $\mathsf{X}_m$, so that evaluating a value function at a state, $v(x) \in \mathsf{L}$, is ordinary function application. The chosen function domains must make the declared operations well-defined and closed under their compositions. Boundedness, continuity, integrability, and equivalence-class conventions are additional mathematical choices, not consequences of the declared set of a value field. The backward builders are named operations between these spaces,
 
 $$
 \mathbb{T}_{\succ,\pi} \;\colon\; \mathsf{V}_\succ \to \mathsf{V}_\sim,
@@ -129,9 +129,9 @@ $$
 \mathbb{T}_{\prec} \;\colon\; \mathsf{V}_\sim \to \mathsf{V}_\prec.
 $$
 
-The subscript $\pi$ means that the policy is fixed: $\mathbb T_{\succ,\pi}$ is one operator for each $\pi \in \Pi_\Gamma$, and the family $\pi \mapsto \mathbb T_{\succ,\pi}$ is a map $\Pi_\Gamma \to [\mathsf V_\succ \to \mathsf V_\sim]$, which currying, the correspondence between a map of two arguments and a map of the first argument alone whose value is a map of the second, identifies with a map $\Pi_\Gamma \times \mathsf V_\succ \to \mathsf V_\sim$ in the category of sets, the value kinds being sets of functions. The policy is therefore not an input of the value kind and not an argument of the operator at a policy: it names the member of the family, and the semantic graph records it so, the operator at a policy answering the inputs and outputs of that member and the policy typed where the stage text defines it, on the output of the policy builder (see [Operators and builders](./05-Operators%20and%20builders.md) §6). The optimizing builder has the same function-space types but is denoted $\mathbb T_\succ$, without $\pi$. Its stage composite is $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$. The undiscounted expectation operators $P_\prec$, $P_{\succ,\pi}$, and $P_\pi$ are defined separately in §2; only these have the plain distribution pairing.
+The subscript $\pi$ means that the policy is fixed: $\mathbb T_{\succ,\pi}$ is one operator for each $\pi \in \Pi_\Gamma$, and the family $\pi \mapsto \mathbb T_{\succ,\pi}$ is a map $\Pi_\Gamma \to [\mathsf V_\succ \to \mathsf V_\sim]$, which currying, the correspondence between a map of two arguments and a map of the first argument alone whose value is a map of the second, identifies with a map $\Pi_\Gamma \times \mathsf V_\succ \to \mathsf V_\sim$ in the category of sets, the spaces $\mathsf V_\succ$ and $\mathsf V_\sim$ being sets of functions. The policy is therefore not an input in a space of value functions and not an argument of the operator at a policy: it names the member of the family, and the semantic graph records it so, the operator at a policy answering the inputs and outputs of that member and the policy typed where the stage text defines it, on the output of the policy builder (see [Operators and builders](./05-Operators%20and%20builders.md) §6). The optimizing builder has the same input and output spaces but is denoted $\mathbb T_\succ$, without $\pi$. Its stage composite is $\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ$. The undiscounted expectation operators $P_\prec$, $P_{\succ,\pi}$, and $P_\pi$ are defined separately in §2; only these have the plain distribution pairing.
 
-**Forward types and wiring** The forward direction gets the same treatment: adjoin at each perch one further kind $\mathsf{M}_m$, the finite measures over perch-$m$ states. A finite measure is specified by its integrals: for $f$ a measurable real-valued function integrable under $\mu$ on $\mathsf{X}_m$,
+**Forward spaces and wiring** The forward direction gets the same treatment: adjoin at each perch one further space $\mathsf{M}_m$, the finite measures over perch-$m$ states. A finite measure is specified by its integrals: for $f$ a measurable real-valued function integrable under $\mu$ on $\mathsf{X}_m$,
 
 $$
 \langle \mu,\, f \rangle_m \;=\; \int_{\mathsf{X}_m} f\; d\mu \;\in\; \bar{\mathbb{R}},
@@ -139,7 +139,7 @@ $$
 
 Bounded measurable test functions suffice to identify a finite measure: taking indicators of measurable sets recovers its values on measurable sets. A probability distribution is a finite measure of total mass one. The integral is finite for bounded measurable functions. Nonnegative or one-sided-integrable functions may also be used with extended values, provided that no subsequent expression forms an undefined difference of infinities. Finite collections of simulated states and histograms define empirical or discrete finite measures; normalization makes them probability distributions. Their accuracy as approximations to another measure is a numerical question. #check-details
 
-The **forward builders** are named operations between distribution kinds,
+The **forward builders** are named operations between these spaces of measures,
 
 $$
 \mathbb{M}_\prec \;\colon\; \mathsf{M}_\prec \to \mathsf{M}_\sim,
@@ -147,7 +147,7 @@ $$
 \mathbb{M}_{\succ,\pi} \;\colon\; \mathsf{M}_\sim \to \mathsf{M}_\succ,
 $$
 
-the single family letter $\mathbb{M}$ naming both forward edge push-forwards, with the perch subscript marking the edge. The subscript $\pi$ on $\mathbb{M}_{\succ,\pi}$ records a need the transition itself imposes: $g_\succ(x, a, \eta)$ takes an action argument, and pushing a distribution through it requires a *policy function* $\pi$. The arrival push-forward $\mathbb{M}_\prec$ has no policy argument. As on the backward side, $\mathbb M_{\succ,\pi}$ is one push-forward for each $\pi \in \Pi_\Gamma$, and the family $\pi \mapsto \mathbb M_{\succ,\pi}$ is a map $\Pi_\Gamma \to [\mathsf M_\sim \to \mathsf M_\succ]$; the policy is not an input of the distribution kind and not an argument of the push-forward at a policy, and the semantic graph records the push-forward at a policy with the measure it reads and the measure it writes.
+the single family letter $\mathbb{M}$ naming both forward edge push-forwards, with the perch subscript marking the edge. The subscript $\pi$ on $\mathbb{M}_{\succ,\pi}$ records a need the transition itself imposes: $g_\succ(x, a, \eta)$ takes an action argument, and pushing a distribution through it requires a *policy function* $\pi$. The arrival push-forward $\mathbb{M}_\prec$ has no policy argument. As on the backward side, $\mathbb M_{\succ,\pi}$ is one push-forward for each $\pi \in \Pi_\Gamma$, and the family $\pi \mapsto \mathbb M_{\succ,\pi}$ is a map $\Pi_\Gamma \to [\mathsf M_\sim \to \mathsf M_\succ]$; the policy is not an input in a space of measures and not an argument of the push-forward at a policy, and the semantic graph records the push-forward at a policy with the measure it reads and the measure it writes.
 
 ### 1.3 The stage as a graph
 
@@ -165,13 +165,13 @@ Solid arrows run forward, in the direction agents move (the transitions $g_\prec
 ## 2. Mathematical elaboration
 #foundations
 
-The operator types in §1.2 distinguish continuation, decision, and arrival functions. We now define their action. A pointwise aggregator $G$ combines a continuation value with current state, action, and shock arguments. Integrating that expression gives a choice value, and a policy selects an action at each state. The transition, conditional distribution and aggregator at that policy define the fixed-policy builder. A supremum over all feasible actions gives the optimizing decision operator.
+The input and output spaces in §1.2 distinguish continuation, decision, and arrival functions. We now define their action. A pointwise aggregator $G$ combines a continuation value with current state, action, and shock arguments. Integrating that expression gives a choice value, and a policy selects an action at each state. The transition, conditional distribution and aggregator at that policy define the fixed-policy builder. A supremum over all feasible actions gives the optimizing decision operator.
 
 <a id="the-induced-aggregator-read-on-fields-primary"></a>
 
 ### 2.1 Conditional choice values
 
-A **field** is a random variable measurable with respect to the information at its perch. On a probability space $(\Omega,\Sigma,\mathbb P)$, let $\mathrm X=\mathrm X_\sim$ be a decision state and $\mathrm A$ a feasible action measurable at decision information $\mathcal F_\sim$. A continuation field $V_\succ$ is measurable at continuation information $\mathcal F_\succ$; this alone does not place it in $L^2$, the space of square-integrable random variables. If the following local payoff is integrable, its conditional expectation is
+A **field** is a random quantity that a stage declares ([Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §5). A field other than a shock is a random variable measurable with respect to the information at its perch, and a shock belongs to no perch. On a probability space $(\Omega,\Sigma,\mathbb P)$, let $\mathrm X=\mathrm X_\sim$ be a decision state and $\mathrm A$ a feasible action measurable at decision information $\mathcal F_\sim$. A continuation field $V_\succ$ is measurable at continuation information $\mathcal F_\succ$; this alone does not place it in $L^2$, the space of square-integrable random variables. If the following local payoff is integrable, its conditional expectation is
 
 $$
 \mathrm Q=\mathbb E[G_\succ(\mathrm V_\succ,\mathrm X,\mathrm A,\eta)\mid\mathcal F_\sim].
@@ -185,7 +185,7 @@ This defines $\mathrm Q$ along the specified random state and action, up to almo
 
 Suppose $\mathrm X_\succ=g_\succ(\mathrm X,\mathrm A,\eta)$ and the continuation field has a specified measurable representative $\mathrm V_\succ=v_\succ(\mathrm X_\succ)$ almost surely. This representation requires a version of the field measurable with respect to $\sigma(X_\succ)$: a random variable agreeing with the field almost surely. Measurability with respect to $\mathcal F_\succ$ alone does not ensure such a version. Here $\sigma(X_\succ)$ denotes the information generated by the state. The state must also determine the conditional shock law and the payoff arguments used below. Bellman-SYM's Appendix C, §1.2 and rules R5–R7, states these requirements.
 
-For policy comparisons, specify $v_\succ$ and the transition and shock law pointwise on their declared domains. For each continuation function in the chosen domain, require the following absolute integral to be finite at every feasible pair. Define the induced **choice-value aggregator** on every $(x,a)\in\operatorname{Gr}(\Gamma)$ by
+For policy comparisons, specify $v_\succ$ and the transition and shock law pointwise on their stated domains. For each continuation function in the chosen domain, require the following absolute integral to be finite at every feasible pair. Define the induced **choice-value aggregator** on every $(x,a)\in\operatorname{Gr}(\Gamma)$ by
 
 $$
 B_\succ(x,a,v_\succ)
@@ -293,7 +293,7 @@ $$
 \mathrm V_\sim=\mathrm Q.
 $$
 
-Here $\mathrm A$ is a specified feasible decision action, $\mathrm W$ is the discounted continuation field, and the conditional expectation defines the decision value. The individual expressions have different roles: pointwise scaling, expectation, and assignment. The `.bl` declarations and named blocks that express such equations are described in Bellman-SYM's Field equations page. Their operator decomposition is developed in [Operators and builders](./05-Operators%20and%20builders.md). #todo The earlier request to explain how numerical methods target intermediate operations remains open; current authoring rules are defined in the syntax documentation.
+Here $\mathrm A$ is a specified feasible decision action, $\mathrm W$ is the discounted continuation field, and the conditional expectation defines the decision value. The individual expressions have different roles: pointwise scaling, expectation, and assignment. The `.bl` declarations and named blocks that express such equations are described in Bellman-SYM's Field equations page. Their operator decomposition is developed in [Operators and builders](./05-Operators%20and%20builders.md). #todo [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 and [Methods](./06-Methods.md) §§1 and 4 state how a numerical method targets an intermediate operation: the operation is one operator of the stage, and an entry of a methods file writes the method on its name. An account of the expressions above in those terms remains open; current authoring rules are defined in the syntax documentation.
 
 > [!note]- Remark — where the expectation sits (the two forms)
 > A pre-decision shock is observed before choice, while a post-decision shock is not. Moving a physical shock between those information sets changes the decision problem. The [illustrative example](./02-Illustrative%20example.md) instead changes the boundary of the recursion while preserving when income is observed: it forms the next arrival expectation as a continuation function before the current choice. Such factorization must retain the relevant state and conditional law. With nonlinear aggregation the order of evaluation also matters; expectation may not be moved through it without an argument. [Semi-conjugacy](./10-semi-conjugacy.md) discusses alternative recursions. The post-decision terminology depends on the timing convention.[^postdec]
@@ -355,7 +355,7 @@ The identities follow by integrating the same transition first conditionally on 
 
 The continuation-to-decision builder combines simpler operators: pullback along the law of motion, expectation, reward aggregation, and, for optimization, selection. **Pullback along the law of motion** evaluates a continuation function at the state the transition determines. With additive expected utility and constant discount, the induced choice value is the expected reward plus the discounted expected continuation value (§2). Selection chooses a policy; that policy indexes the pullback, aggregation or conditional distribution of the fixed-policy builder. Exact Evaluation remains an identity on its function or feasible-policy set and makes no selection. An attained supremum is obtained only if the policy is a maximizer.
 
-A **handler** is a numerical routine attached to an operator. A maximizing search and a first-order inversion may implement the same selection when their mathematical assumptions hold; they are not interchangeable without those assumptions. [Operators and builders](./05-Operators%20and%20builders.md) develops the decomposition, and [Fields, functions and types](./04-fields,%20functions%20and%20types.md) states the types of its inputs and outputs. The mathematical stage signature is described in [Appendix C](./APPX-C-STAGE-TERM.md).
+A **handler** is a numerical routine attached to an operator. A maximizing search and a first-order inversion may implement the same selection when their mathematical assumptions hold; they are not interchangeable without those assumptions. [Operators and builders](./05-Operators%20and%20builders.md) develops the decomposition, and [Fields, functions and types](./04-fields,%20functions%20and%20types.md) states the inputs and outputs of its operations. The mathematical stage signature is described in [Appendix C](./APPX-C-STAGE-TERM.md).
 
 ## 3. An information view
 
@@ -375,7 +375,7 @@ Thus the arrival/decision/continuation split is not three times on a clock nor d
 >
 > In a history-based construction, observed pre-decision shocks enlarge arrival information, and post-decision shocks enlarge decision information. A deterministic measurable policy action adds no information to the decision state on which it depends. Randomized policies require their additional randomization and its timing to be specified. #check-details-aas
 
-In the surface syntax the perches are tagged `[<]`, *unmarked*, and `[>]`; an arrival variable is written `m[<]`, a decision variable `m`, a continuation variable `a[>]`. The tags say what is known where: `m[<]` asserts "$m$ is settled on arrival," a declared control `c` is chosen at decision information, `a[>]` asserts "$a$ is determined by the time we continue."
+In the surface syntax a perch is written as a perch word after a side of a block header, `!arvl`, `!dcsn` or `!cntn`, or as a mark on a name, `[<]`, `[~]` or `[>]`, where the decision mark is usually omitted; with marks, an arrival variable is written `m[<]`, a decision variable `m`, a continuation variable `a[>]`. The tags say what is known where: `m[<]` asserts "$m$ is settled on arrival," a declared control `c` is chosen at decision information, `a[>]` asserts "$a$ is determined by the time we continue."
 
 [Next → 04. Fields, functions and types](./04-fields,%20functions%20and%20types.md)
 

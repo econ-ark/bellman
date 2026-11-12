@@ -783,6 +783,23 @@ class Functions(setexpr):
     codomain: object
 
 
+@dataclass(frozen=True, slots=True)
+class SetUnion(setexpr):
+    members: tuple = ()
+
+    def __post_init__(self):
+        for slot in ("members",):
+            value = getattr(self, slot)
+            if type(value) is list:
+                object.__setattr__(self, slot, tuple(value))
+
+
+@dataclass(frozen=True, slots=True)
+class SetDifference(setexpr):
+    left: object
+    right: object
+
+
 class cond:
     __slots__ = ()
 

@@ -51,6 +51,16 @@ setexpr = Named(identifier name)
         | Functions(setexpr domain, setexpr codomain)
                                               -- I_J → ℝ₊: the functions from
                                               -- an index set to an entry set
+        | SetUnion(setexpr* members)          -- A \/ B: the numbers that lie in
+                                              -- at least one member; each
+                                              -- member is held once, a
+                                              -- difference first and the others
+                                              -- in the order of their printed
+                                              -- text, a number that equals an
+                                              -- integer read as that integer
+        | SetDifference(setexpr left, setexpr right)
+                                              -- A \ B: the numbers of the left
+                                              -- set that the right one lacks
 
 cond  = Rel(expr left, relop op, expr right)
       | Between(expr lower, relop lo, expr middle, relop hi, expr upper)

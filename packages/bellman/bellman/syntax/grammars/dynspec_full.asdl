@@ -131,6 +131,8 @@ module dynspec
           | IntegerRange(expr lower, expr upper)   -- {0, …, J}
           | Points(expr* members, setexpr? superset) -- {0, 1}; {0, θ} ⊂ ℝ
           | Functions(setexpr domain, setexpr codomain) -- I_J → ℝ₊
+          | SetUnion(setexpr* members)             -- A \/ B
+          | SetDifference(setexpr left, setexpr right) -- A \ B
 
   cond  = Rel(expr left, relop op, expr right)
         | Between(expr lower, relop lo, expr middle, relop hi, expr upper)

@@ -33,6 +33,7 @@ from bellman.syntax.vocabulary import (
     VALUE_ROLES,
     WRITTEN_MARK,
 )
+from bellman.syntax.walk import children
 from bellman.typing import sets
 from bellman.typing.typed_expressions import substitute
 
@@ -1231,9 +1232,10 @@ def named_sets(term) -> list:
     """The names of the sets a set term reads, each once, in the order
     written: a bare name, `Foo`; the factors of a product, `Xm × Foo`; the
     base of a comprehension, `{i : Foo | i >= 0}`; the superset of listed
-    points, `{0, θ} ⊂ Foo`; and the domain and the codomain of a set of
-    functions. The endpoints of an interval and the members of a finite set
-    are no sets, and a term that is no set term reads none."""
+    points, `{0, θ} ⊂ Foo`; the domain and the codomain of a set of
+    functions; the members of a union, `Foo \\/ (0, 1)`; and the two sides of
+    a difference. The endpoints of an interval and the members of a finite
+    set are no sets, and a term that is no set term reads none."""
     found = []
 
     def visit(t):
@@ -1252,8 +1254,69 @@ def named_sets(term) -> list:
         elif isinstance(t, terms.Functions):
             visit(t.domain)
             visit(t.codomain)
+        elif isinstance(t, terms.SetUnion):
+            for member in t.members:
+                visit(member)
+        elif isinstance(t, terms.SetDifference):
+            visit(t.left)
+            visit(t.right)
 
     visit(term)
+    return found
+
+
+def names_read_in_set(term, bound=(), heads=None) -> list:
+    """The bare names a set term reads as numbers, each once, in the order
+    written: a name in an endpoint of an interval, `(0, R)`, in a bound of a
+    range, in a member of a listed set or in a condition of a comprehension.
+    A name that the binder of a comprehension or a subscript of an operator
+    binds is no read, and `inf` is a number word. `bound` holds the names
+    bound where the term stands. The names of the sets the term reads are
+    those of `named_sets`.
+
+    `heads` holds the heads of the operators whose subscripts bind a name,
+    and every operator's subscripts bind where it is None. With `("E",)` the
+    subscript of an expectation alone binds, so the name a derivative is
+    taken in, `D_{y}(y^2)`, is read."""
+    found = []
+
+    def visit(node, bound):
+        if isinstance(node, terms.Sym):
+            symbol = node.symbol
+            if (
+                isinstance(symbol, terms.Constant)
+                and symbol.name != "inf"
+                and symbol.name not in bound
+                and symbol.name not in found
+            ):
+                found.append(symbol.name)
+        elif isinstance(node, terms.Comprehension):
+            visit(node.base, bound)
+            binders = bound | {
+                c.stem
+                for c in getattr(node.bound, "coordinates", ())
+                if isinstance(c, terms.Coordinate)
+            }
+            for condition in node.conds:
+                visit(condition, binders)
+        elif isinstance(node, terms.Operator):
+            binds = heads is None or node.head in heads
+            names = set(bound)
+            for sub in node.subs:
+                if isinstance(sub, terms.In):
+                    # a binder is in scope in the sets of the binders after it
+                    visit(sub.set, frozenset(names))
+                    if binds:
+                        names.add(sub.var)
+                elif isinstance(sub, terms.Var) and binds:
+                    names.add(sub.name)
+            for argument in node.args:
+                visit(argument, frozenset(names))
+        else:
+            for child in children(node):
+                visit(child, bound)
+
+    visit(term, frozenset(bound))
     return found
 
 
@@ -1266,9 +1329,9 @@ def spelling_text(spelling) -> str:
 
 
 def role_word(kind) -> str | None:
-    """The role a role constructor names: "state", "control", "value",
-    "marginal value", "shock"; None for a constructor no word of the lowering's
-    vocabulary produces (`Parameter`)."""
+    """The role a role constructor names: "state", "control", "value" or
+    "shock"; None for a constructor no word of the lowering's vocabulary
+    produces, `Parameter` or a `Value` of an order above zero."""
     if isinstance(kind, terms.Control):
         return CONTROL
     if isinstance(kind, terms.Value):

@@ -33,11 +33,11 @@ topic: [calculus]
 
 ## 1. Signatures and operator types
 
-A stage has a mathematical many-sorted signature, together with model data and an interpretation. Its **sorts** name domains of values, functions or distributions, while **operation symbols** have ranks $\omega:s_1\times\cdots\times s_n\to s$. In a categorical presentation, objects represent these types and a **morphism** is a typed operation between them. A signature alone does not supply categorical products or coproducts.
+A stage has two mathematical many-sorted signatures, together with model data and an interpretation. The **sorts** of its state signature name state spaces, and those of its operator signature name spaces of value functions, spaces of measures and the set of policies. The **operation symbols** of a signature have ranks $\omega:s_1\times\cdots\times s_n\to s$. In a categorical presentation, objects represent these sorts and a **morphism** is a typed operation between them. A signature alone does not supply categorical products or coproducts.
 
-At perch $p$, write $\mathsf V_p$ for a chosen value-function space on state space $\mathsf X_p$, and $\mathsf M_p$ for probability measures on that state space. Let $\mathsf L$ be the scalar value domain, $\Gamma(x)$ the feasible actions, $\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}$, and $\mathsf Q_\Gamma$ a chosen space of measurable choice-value functions on those pairs. The spaces must satisfy the closure and integrability requirements of the displayed operations.
+At perch $p$, write $\mathsf V_p$ for a chosen value-function space on state space $\mathsf X_p$, and $\mathsf M_p$ for the finite measures on that state space, of which the probability measures are those of mass one ([Stages and perches](./03-Stages%20and%20perches.md) §1.2). Let $\mathsf L$ be the value line, the declared set of a value field, $\Gamma(x)$ the feasible actions, $\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}$, and $\mathsf Q_\Gamma$ a chosen space of measurable choice-value functions on those pairs. The spaces must satisfy the closure and integrability requirements of the displayed operations.
 
-Operators have domain and codomain types. A first-order signature can treat them solely as operation symbols, without declaring an additional carrier of operator-valued data. This is a choice of signature, not a claim that functions can never be elements of a function space. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) states the local typing conventions.
+Operators have domain sorts and a codomain sort, which together form the operator's rank. A first-order signature can treat them solely as operation symbols, without declaring an additional carrier of operator-valued data. This is a choice of signature, not a claim that functions can never be elements of a function space. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §3, D1, defines the signature and the rank, and §6 there gives the two signatures of a stage.
 
 <a id="f2-the-operator-category"></a>
 
@@ -157,7 +157,7 @@ $$
 \longrightarrow\text{package computation}.
 $$
 
-Calibration fixes parameter values in the model. Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A **reference approximation** is the numerical map defined by that procedure and its settings, independently of one implementation. A **handler** is the package routine intended to compute it. Equations and stages are authored in `.bl`; methods, settings and calibration remain YAML, as Bellman-SYM's rules for [methodization](../wiki/methodization.md) describe.
+Calibration fixes parameter values in the model, at one point of their admissible set ([Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §4). Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A **reference approximation** is the numerical map defined by that procedure and its settings, independently of one implementation. A **handler** is the package routine intended to compute it. Equations and stages are authored in `.bl`, and so are the methods, in a methods file that declares the settings they read; the calibration and the values of the settings are YAML, as Bellman-SYM's rules for [methodization](../wiki/methodization.md) describe.
 
 ### 6.1 Conditions on realization
 
@@ -176,7 +176,7 @@ Nested endogenous-grid methods and candidate-envelope methods may use different 
 
 ## 7. Types and identities
 
-An operator's mathematical type is its domain and codomain. Its declared name identifies an occurrence or definition in the source; equal denotations need not collapse distinct authored names, and equal names in different contexts need not identify one operation. Locally bound functions retain typed parameters and results. A numerical method record additionally states the representation and settings used by its handler.
+An operator's mathematical type is its rank, its domain and codomain. Its declared name identifies an occurrence or definition in the source; equal denotations need not collapse distinct authored names, and equal names in different contexts need not identify one operation. Locally bound functions retain typed arguments and results. A numerical method record additionally states the representation and settings used by its handler.
 
 For a differentiable scalar function on a product domain, the gradient collects partial derivatives:
 
@@ -190,7 +190,7 @@ The result has one component per coordinate, on the common domain where those de
 
 ## 8. Model data and induced operations
 
-The transitions $\mathrm g_\prec,\mathrm g_\succ$, local aggregators $\mathrm G_\prec,\mathrm G_\succ$, feasibility correspondence $\Gamma$, and shock laws are model data. A coarse signature may use them as parameters defining its builder interpretations. A finer signature may expose the functions as typed operations or values in declared function spaces. The distinction depends on the chosen signature; it is not an absolute division between functions that may and may not be operators.
+The transitions $\mathrm g_\prec,\mathrm g_\succ$, local aggregators $\mathrm G_\prec,\mathrm G_\succ$, feasibility correspondence $\Gamma$, and shock laws are model data. A coarse signature may use them only as the data that define its builders' interpretations. A finer signature may expose the functions as typed operations or values in chosen function spaces. The distinction depends on the chosen signature; it is not an absolute division between functions that may and may not be operators.
 
 Transition expectations require measurable transitions and conditional laws. Value evaluation requires integrable local payoffs on its stated domain. Optimization additionally needs an appropriate objective, feasible actions, and selection conditions when a policy is required. A general recursive preference cannot be inferred from one pointwise integrand if it uses additional normalization or a different order of expectation and aggregation. The extension to such preferences remains unfinished. #todo
 

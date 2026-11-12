@@ -1077,6 +1077,25 @@ def test_item_3_explicit_outputs_compile_and_derived_parameters_reach_every_chec
 # the calibration at which the normalized discount factor βΓ^(1-ρ) is 1.8,
 # above one, and the closed form still holds (implementation §2)
 NORMALIZED_DISCOUNT_ABOVE_ONE = {"β": 0.9, "ρ": 2.0, "R": 1.04, "Γ": 0.5}
+# a discount factor one rounding step below its bound R^(ρ-1) = 0.9, at which
+# q = (βR)^(1/ρ)/R computes to one
+ROUNDING = {"calibration": {"β": 0.8999999999999999, "ρ": 2.0, "R": 0.9, "Γ": 0.81}}
+
+
+def _bound_without_the_set_of_q(check, methods, settings):
+    """The perfect-foresight stage of the committed text with the definition
+    of q as the file wrote it until 12 November 2026, without its declared
+    set (0,1), bound as the application's module binds the stage file: the
+    methods file `methods`, the calibration `ROUNDING` and the settings
+    `settings`."""
+    written = check.source(check.STAGE)
+    declared = "q : (0,1) := "
+    assert written["text"].count(declared) == 1
+    stage = stage_from_text(written["text"].replace(declared, "q := "), written["origin"])
+    stage.methodize(check.source(methods))
+    stage.calibrate(ROUNDING)
+    stage.configure({"settings": settings})
+    return stage
 
 
 def test_item_4_the_perfect_foresight_routes_meet_every_identity_bound_and_refusal(request):
@@ -1239,7 +1258,7 @@ def test_item_4_the_perfect_foresight_routes_meet_every_identity_bound_and_refus
         ({"Γ": 1.06}, "(0, R)"),
         ({"β": 0.99, "ρ": 2.0, "R": 0.9, "Γ": 0.85}, "the condition β < R^(ρ - 1)"),
         ({"ρ": 1.0}, "(1, inf)"),
-        ({"β": math.nan}, "(0, 1)"),
+        ({"β": math.nan}, "ℝ₊₊"),
         ({"R": math.inf}, "ℝ₊₊"),
         ({"Γ": math.nan}, "(0, R)"),
     ):
@@ -1250,14 +1269,30 @@ def test_item_4_the_perfect_foresight_routes_meet_every_identity_bound_and_refus
         check.gridded_stage(
             5, -10.0, 60.0, {"calibration": {"β": 0.99, "ρ": 2.0, "R": 0.9, "Γ": 0.85}}
         )
-    # one rounding step below the bound R^(ρ-1) the discount factor binds and
-    # q computes to one: the route's own check refuses it, and the closed
-    # form refuses it by κ > 0
-    rounding = {"calibration": {"β": 0.8999999999999999, "ρ": 2.0, "R": 0.9, "Γ": 0.81}}
+    # one rounding step below the bound R^(ρ-1) the discount factor lies in
+    # its own set and q computes to one: calibration refuses the value of q
+    # by the set (0,1) that its definition declares, under each methods
+    # file, and names the values of the parameters the definition reads
+    for bind in (
+        lambda: check.gridded_stage(5, -10.0, 60.0, ROUNDING),
+        lambda: check.closed_form_stage(ROUNDING),
+    ):
+        with pytest.raises(ValueError) as refused:
+            bind()
+        words = (
+            "derived parameter 'q'",
+            "the value 1.0 of q",
+            "lies outside the declared set (0, 1) at β = 0.8999999999999999, ρ = 2.0, R = 0.9",
+        )
+        assert all(word in str(refused.value) for word in words), str(refused.value)
+    # where the definition of q declares no set, that calibration binds under
+    # the gridded methods file: the route's own check refuses it, and the
+    # closed form refuses it by κ > 0
+    grid = {"n_a": 5, "a_min": -10.0, "a_max": 60.0}
     with pytest.raises(ValueError, match=r"return impatience condition q < 1"):
-        check.gridded_route(check.gridded_stage(5, -10.0, 60.0, rounding))
+        check.gridded_route(_bound_without_the_set_of_q(check, check.GRIDDED_METHODS, grid))
     with pytest.raises(ValueError, match=r"κ > 0"):
-        check.closed_form_stage(rounding)
+        _bound_without_the_set_of_q(check, check.METHODS, {})
     # a grid of savings from -40 starts below the natural borrowing limit of
     # the second calibration, L = 1 - 1/(1 - 1.01/1.04), about -33.7
     with pytest.raises(ValueError, match="at or below the natural borrowing limit"):

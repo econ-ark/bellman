@@ -34,7 +34,9 @@ every other check of a grid, is judged at binding.
 A form the grammar admits and the lowering reads no term from (a computed
 selector, a selection where a name is written, a comprehension binder typed by
 a role word, a bound written after a comma, several sets in one type that
-no rule reads as one set, two items under one address, a perch mark after a
+no rule reads as one set, a union or a difference with a side that is no set
+of numbers, a type inside the parentheses of the subject of a law, two items
+under one address, a perch mark after a
 selector, a word no vocabulary holds, a path whose last segment names no
 component, a grid of no kind of the language or
 of a kind reserved by name, a grid with a factor of no shape or an argument
@@ -66,6 +68,7 @@ from bellman.syntax.source import (
     is_number,
     may_hold_infinity,
     to_source,
+    union_of,
 )
 from bellman.syntax.terms import *  # noqa: F401,F403 — generated classes
 from bellman.syntax.vocabulary import (
@@ -590,6 +593,16 @@ class ToAst(Transformer):
         if isinstance(subject, str):
             subjects = [subject]
         elif isinstance(subject, Subject):
+            typed = _typed_names(subject)
+            if typed:
+                names = _subject_text(subject)
+                raise _refusal(
+                    f"the distribution is declared for {names}, and its subject types "
+                    f"{' and '.join(typed)} inside the parentheses; a `~` line names its "
+                    f"shocks, and the type of a shock is read from the shock's own declaration",
+                    f"write the names alone, `{names} ~ …`, and the type of each shock on a "
+                    f"line of its own, as in `{typed[0]} : ℝ`",
+                )
             subjects = stems(subject)
         elif isinstance(subject, Sym) and isinstance(subject.symbol, Constant):
             subjects = [subject.symbol.name]  # y[~] ~ law
@@ -1168,6 +1181,20 @@ class ToAst(Transformer):
         domain, codomain = children
         return Functions(domain, codomain)
 
+    def set_union(self, children):
+        """`A \\/ B`, the union of two sets of numbers, kept in the one form
+        of `union_of`."""
+        left, right = children
+        _refuse_side_without_numbers("\\/", left, right)
+        return union_of((left, right))
+
+    def set_difference(self, children):
+        """`A \\ B`, the difference of two sets of numbers, its sides as
+        written."""
+        left, right = children
+        _refuse_side_without_numbers("\\", left, right)
+        return SetDifference(left, right)
+
     # the equations and the expression ladder
     def equality(self, children):
         return Equation(*children)
@@ -1483,6 +1510,14 @@ class _ToAstWithPositions(ToAst):
         return self._keep_part(super().set_product(children), meta)
 
     @v_args(meta=True)
+    def set_union(self, meta, children):
+        return self._keep_part(super().set_union(children), meta)
+
+    @v_args(meta=True)
+    def set_difference(self, meta, children):
+        return self._keep_part(super().set_difference(children), meta)
+
+    @v_args(meta=True)
     def interval_open_open(self, meta, children):
         return self._keep_part(super().interval_open_open(children), meta)
 
@@ -1620,8 +1655,13 @@ def _several_sets_refusal(subject, sets):
     """The refusal of several sets in one type that no rule reads as one
     set, or None where `_one_set` reads them: a declaration of more than one
     name; a name typed inside its parentheses; a set of labels, a product or
-    a set of functions among the sets, which no interval restricts; and two
-    sets that are no intervals."""
+    a set of functions among the sets, which no interval restricts; two
+    sets that are no intervals; and intervals that have no number in common,
+    `(0,1) @ (2,3)` or `(0,1) @ (1/2, 1/3)`, which their endpoints that are
+    number literals decide (`_number_literal`). Sets that are equal terms
+    count once, so that `ℝ₊₊ @ ℝ₊₊` is the one set `ℝ₊₊`. They count once
+    before any other rule is read, so `(a, b) : ℝ₊₊ @ ℝ₊₊` declares both
+    names in `ℝ₊₊`."""
     stem = _subject_text(subject)
 
     def carried():
@@ -1630,6 +1670,9 @@ def _several_sets_refusal(subject, sets):
         written = ", ".join(f"`{to_source(each)}`" for each in sets[:-1])
         return f"the declaration of {stem} carries the sets {written} and `{to_source(sets[-1])}`"
 
+    distinct = list(dict.fromkeys(sets))
+    if len(distinct) < 2:
+        return None
     if bound_name(subject) is None:
         coordinates = subject.coordinates
         if len(coordinates) == 1 and isinstance(coordinates[0], Coordinate):
@@ -1645,7 +1688,7 @@ def _several_sets_refusal(subject, sets):
             f"declaration declares more than one",
             "declare each name on its own line, with its own sets",
         )
-    for each in sets:
+    for each in distinct:
         kind = _UNRESTRICTED_KINDS.get(type(each))
         if kind is not None:
             return _refusal(
@@ -1653,7 +1696,7 @@ def _several_sets_refusal(subject, sets):
                 f"one set of numbers and the intervals that bound it",
                 f"write the one set {stem} takes its values in",
             )
-    other = [each for each in sets if not is_interval(each)]
+    other = [each for each in distinct if not is_interval(each)]
     if len(other) > 1:
         first, second = (to_source(each) for each in other[:2])
         return _refusal(
@@ -1663,6 +1706,33 @@ def _several_sets_refusal(subject, sets):
             f"write one set and each further bound as an interval, as in "
             f"`{stem} : {first} @ (0, 1)`",
         )
+    # the greatest lower endpoint and the least upper endpoint of the
+    # intervals, each among the endpoints that are number literals, `2` or
+    # `1/3`; of two equal endpoints, `0.5` and `1/2`, the open one
+    intervals = [each for each in distinct if is_interval(each)]
+    lowers, uppers = (
+        [entry for entry in _side(intervals, negative) if _number_literal(entry[0])]
+        for negative in (True, False)
+    )
+    if lowers and uppers:
+        low, left = max(
+            lowers, key=lambda entry: (_endpoint_value(entry[0]), isinstance(entry[1], Open))
+        )
+        high, right = min(
+            uppers, key=lambda entry: (_endpoint_value(entry[0]), isinstance(entry[1], Closed))
+        )
+        lower, upper = _endpoint_value(low), _endpoint_value(high)
+        attained = isinstance(left, Closed) and isinstance(right, Closed)
+        if lower > upper or (lower == upper and not attained):
+            above = "at least" if isinstance(left, Closed) else "above"
+            below = "at most" if isinstance(right, Closed) else "below"
+            return _refusal(
+                f"{carried()}, which have no number in common: no number is {above} "
+                f"{to_source(low)} and {below} {to_source(high)}; several sets in one type "
+                f"are read as the one set of the values that lie in each of them",
+                f"write sets that have a number in common, or the one set {stem} takes its "
+                f"values in",
+            )
     return None
 
 
@@ -1672,6 +1742,28 @@ _UNRESTRICTED_KINDS = {
     Product: "a product",
     Functions: "a set of functions",
 }
+
+
+def _refuse_side_without_numbers(sign, left, right):
+    """Refuses a union, written with the sign `\\/`, or a difference, written
+    with `\\`, one of whose two sides is a set of labels, a product or a set
+    of functions: a union and a difference are formed among sets of numbers.
+    A side that is a name is admitted here; the typing walk refuses one that
+    names no set of numbers (`typing.context`). The sentence quotes the two
+    sides in their printed form and says which one holds no number: a member
+    of the union, or the left or the right side of the difference."""
+    union = sign == "\\/"
+    for place, side in (("left side", left), ("right side", right)):
+        kind = _UNRESTRICTED_KINDS.get(type(side))
+        if kind is not None:
+            whole, place = ("union", "member") if union else ("difference", place)
+            raise _refusal(
+                f"the {whole} `{to_source(left)} {sign} {to_source(right)}` has the {place} "
+                f"`{to_source(side)}`, which is {kind}; a union and a difference are formed "
+                f"among sets of numbers",
+                "write a set of numbers on each side of the sign: an interval, a reserved set, "
+                "a list of integers, `{1, 2}`, or a named set of numbers",
+            )
 
 
 def _one_set(subject, sets):
@@ -1752,9 +1844,15 @@ def _side(intervals, negative):
 
 
 def _endpoint_value(term):
-    """The value of an endpoint that is a number as written
-    (`source.is_number`)."""
-    return -term.operand.value if isinstance(term, Neg) else term.value
+    """The value of an endpoint that is a number literal (`_number_literal`):
+    a number as written, or a ratio of two integers, each with or without a
+    sign. A ratio is valued in floating-point arithmetic, as a decimal is,
+    so that `1/10` and `0.1` are one number."""
+    if isinstance(term, Neg):
+        return -_endpoint_value(term.operand)
+    if isinstance(term, Div):
+        return term.left.value / term.right.value
+    return term.value
 
 
 def _subject_text(subject):
@@ -1765,6 +1863,21 @@ def _subject_text(subject):
         for each in subject.coordinates
     ]
     return names[0] if len(names) == 1 else "(" + ", ".join(names) + ")"
+
+
+def _typed_names(subject):
+    """The coordinates of a subject that carry a type inside its
+    parentheses, `y` of `(y : ℝ, z)`, each by its name as written, a tuple
+    inside the tuple by its names in parentheses."""
+    found = []
+    for each in subject.coordinates:
+        if isinstance(each, Group):
+            if each.classifiers:
+                found.append(_subject_text(each.inner))
+            found.extend(_typed_names(each.inner))
+        elif each.classifiers:
+            found.append(_written_name(each))
+    return found
 
 
 def _retired_bound_refusal(subject, components, bounds):
@@ -1824,8 +1937,9 @@ def number_value(tok):
 
 
 def _number_literal(term):
-    """Whether a member of a brace list is a number written as a literal, with
-    or without a sign: an integer, a decimal, or a ratio of two integers."""
+    """Whether a member of a brace list, or an endpoint of an interval, is a
+    number written as a literal, with or without a sign: an integer, a
+    decimal, or a ratio of two integers."""
     if isinstance(term, Neg):
         term = term.operand
     if isinstance(term, Number):

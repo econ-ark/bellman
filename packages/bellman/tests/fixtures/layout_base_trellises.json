@@ -1,8 +1,8 @@
 {
  "applications/benhabib-2019/declaration/spec.yml": {
   "*": "8ac3d4bce7b1a9f5e2219f71fab1990701f8ce2340067ab848a8ceb7aa41f89f",
-  "benhabib_bellman": "5fd526ec8e81bce3eafc7401b177b4d709abb589322f4aa139c0930a4852ee36",
-  "bequest": "0f4a8e74a1406c17f1602f3f2dcbb4c972f86ef1488966878eff35edc6ac383a"
+  "benhabib_bellman": "55e8b74f47df1cbd2982ee21fbe52250190b9468ee8f3ba4204fa7ccfd5e076c",
+  "bequest": "0e88151861156ac58e5ee07c79ffe5c9ba0c69c02bd2924d0bae4094061396db"
  },
  "applications/durables/declaration/spec.two-stages.yml": {
   "*": "9253d12cf3f0c5e0bd9690f598b9e93c47e196b3c808589b800a308d523caed8",

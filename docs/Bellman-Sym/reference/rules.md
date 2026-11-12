@@ -1,0 +1,311 @@
+---
+title: Rules and their code
+tags:
+  - docs/reference
+audience: user
+type: reference
+---
+
+# Rules and their code
+
+> [!summary]
+> [Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md) states the rules by which the equations of a [stage file](../../wiki/stage.md) determine the objects of the [Bellman calculus](../../bellman-calculus/index.md). This page lists each rule in one sentence, beside the functions of the package that carry it out and check it, the refusals that the package raises when a file breaks it, and a test that exercises it. It then names the section of the appendix that lists the rules that the package does not yet check, and it lists the refusal rules that other pages state. Every table is printed from the package's own table of the rules, so the page names the code as it stands.
+
+> [!info]- Relationship with other documents
+> **Builds on** — [Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md): the rules themselves, each with its statement and its assumptions; [Refusals](refusals.md): every refusal rule, with the smallest example that breaks it.
+> **See also** — [Methodization](../04-methodization.md), [A piece](../API/stage/05-piece.md) and [The factory API](../API/factory/index.md): three of the pages that state the rules of §5.
+
+## 1 Reading the tables
+
+§2 and §3 keep the numbers of Appendix C. §2 holds one table for each of its sections 2.1 to 2.5, which state the syntax of a stage file and the context in which its lines are read. §3 holds one table for each of its rules R1 to R12. A row states one rule in one sentence, and the appendix states the rule in full.
+
+A **refusal** is the package's answer to a file that it does not read: it says where the fault is, what stands there, why it is refused and what to write instead, and it names the rule that the file breaks ([Refusals](refusals.md) §1). The columns of a table are these.
+
+- **implemented by** names the functions that carry the rule out when the package reads a stage file.
+- **checked by** names the functions that refuse a file that breaks the rule.
+- **refusals** names the rules under which those functions refuse, each linked to its entry on the Refusals page.
+- **test** names one test of the package that exercises the rule, by its file and its function, with the case in brackets where the function has several.
+
+A dash in a column means that the row names nothing there. A rule with a dash under **checked by** is carried out by the package, and no file is refused under it. A checking function with a dash under **refusals** refuses without naming a rule, as `calibrate` refuses a value outside its declared set. A function whose name begins with an underscore is internal to its module.
+
+§4 names the place that lists the rules that the language has and the package does not yet check: §5.3 of Appendix C, whose table gives for each rule what the package does today and the smallest text that shows it. That table is printed from the package's own tables, as this page is, so each of those rules stands once on the site.
+
+§5 lists the refusal rules of the rules that other pages state, such as the rules of a [methods file](../04-methodization.md), each beside the page that states it.
+
+<!-- Everything between the two markers below, with its headings, is written by docs/_hooks/reference_pages.py from the tables `SEMANTIC_RULES` and `RULES_STATED_ELSEWHERE` of the package (`packages/bellman/bellman/semantic_rules.py`); change the tables and run the script, never this part of the page by hand. -->
+<!-- reference-table -->
+
+Each function below is named by its module, as a path under `packages/bellman/bellman/`, and its qualified name. A public link to each definition is unavailable until an exported revision holds it.
+
+## 2 Syntax and the typing context
+
+### 2.1 Declarations
+
+The rules of Appendix C [§2.1](../appendices/14-appendix-c-syntax-to-semantics.md#21-declarations).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A declaration is a name, a colon and a type, and the type is a set, a role word or both, written with `@` between them in either order. | `syntax/lower.py`: `ToAst.declaration`<br>`typing/declarations.py`: `Declarations.read_declaration`, `Declarations.classify` | `factory/elaboration.py`: `_syntax_refusal`<br>`typing/declarations.py`: `Declarations.read_declaration`, `Declarations.classify` | [`syntax`](refusals.md#syntax), [`readable-form`](refusals.md#readable-form), [`one-name-one-meaning`](refusals.md#one-name-one-meaning), [`field-perch`](refusals.md#field-perch) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[readable-form]` |
+| A name, a named set, a function and the law of a shock are each declared once. | — | `typing/declarations.py`: `Declarations.read_declaration`, `Declarations.read_space`, `Declarations.read_definition`, `Declarations.read_distribution` | [`declared-once`](refusals.md#declared-once) | — |
+| Several sets in the type of one name declared at the top level declare their intersection, and at most one of them is no interval. | `syntax/lower.py`: `intersection_of_sets`, `_one_set`<br>`stage/calibration_requirements.py`: `_conditioned` | `syntax/lower.py`: `_several_sets_refusal`<br>`typing/declarations.py`: `Declarations.classify` | [`syntax`](refusals.md#syntax), [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_refusals.py`<br>`test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written[two sets of one type that are no intervals]` |
+| The several sets in the type of one name have a number in common, which the package decides from the endpoints that are numbers or ratios of two integers, `1/3`. | — | `syntax/lower.py`: `_several_sets_refusal` | [`syntax`](refusals.md#syntax) | `packages/bellman/tests/test_amd_gram_005.py`<br>`test_item_5_the_corrections_hold` |
+| A name declared at the top level is a parameter where no block header lists it and a field where one does, and no line writes a parameter. | `typing/declarations.py`: `Declarations.roles`, `Declarations.parameters` | `typing/declarations.py`: `Declarations.roles`, `Declarations.check_writes_no_parameter` | [`parameter-or-field`](refusals.md#parameter-or-field) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[parameter-or-field]` |
+| The value that a calibration gives a parameter lies in the set that the parameter's declaration names. | `stage/calibration_requirements.py`: `membership` | `stage/calibration_requirements.py`: `calibration_requirements` | — | `packages/bellman/tests/test_behaviour.py`<br>`test_calibrate_refuses_a_parameter_without_a_value_and_a_value_outside_its_declared_set` |
+| A declared function binds its formal arguments, and its body reads its arguments, the names its operators bind and the names the stage declares. | `typing/declarations.py`: `Declarations.read_definition`, `Declarations.resolve_definitions`<br>`fold/stage_fold.py`: `_statement_definitions` | `typing/declarations.py`: `Declarations.check_definition_body`, `Declarations.check_definition_name`, `Declarations.check_definition_call`, `Declarations.resolve_definitions` | [`name-in-scope`](refusals.md#name-in-scope), [`definition-order`](refusals.md#definition-order) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[definition-order]` |
+| A named set may be a comprehension, whose bound name is local to the definition, and every set that a typing names is defined. | `syntax/lower.py`: `ToAst.assignment`<br>`typing/declarations.py`: `Declarations.read_space` | `typing/declarations.py`: `Declarations.check_set_names` | [`name-in-scope`](refusals.md#name-in-scope) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[name-in-scope]` |
+| A set marked `!categories` is a comprehension over ℤ or ℕ bounded by integers, and its annotation gives each member one category name. | `typing/category_codes.py`: `category_codes`, `describe` | `fold/stage_fold.py`: `_set_categories`, `_coded_field_sites` | [`category-codes`](refusals.md#category-codes) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[category-codes]` |
+| A category name is no term of the file, and arithmetic reads the integer codes. | `stage/kernels.py`: `compile_kernel` | `typing/declarations.py`: `Declarations.check_names_in_scope` | [`name-in-scope`](refusals.md#name-in-scope) | `packages/bellman/tests/test_category_codes.py`<br>`test_item_3_kernels_read_through_the_denoted_map_keep_their_outcomes_under_a_full_recoding` |
+| A law statement gives its shock, or the shocks of a tuple subject jointly, one law. | `typing/declarations.py`: `Declarations.read_distribution`<br>`distributions/edges.py`: `distribution_declarations`, `joint_distribution` | `typing/declarations.py`: `Declarations.read_distribution` | [`declared-once`](refusals.md#declared-once), [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_behaviour.py`<br>`test_a_partial_expectation_uses_the_joint_normal_conditional_and_the_outer_one_the_marginal` |
+| Separate law statements on one edge declare the product of their conditional laws, each given its parent shocks, and the product is recorded as a condition. | `distributions/edges.py`: `dependency_order`, `joint_distribution`, `factorization_obligation`<br>`fold/stage_fold.py`: `_distribution_obligations` | `distributions/edges.py`: `dependency_order` | [`distribution-dependency`](refusals.md#distribution-dependency) | `packages/bellman/tests/test_behaviour.py`<br>`test_separate_declarations_are_a_product_and_a_hierarchy_states_no_independence_of_its_children` |
+| A declared name holds no colon and is none of the words `result`, `declared` and `merged`, which the identities of the stage's objects reserve. | `native/identity.py`: `refuse_colliding_name` | `typing/declarations.py`: `Declarations.check_identity_collisions` | [`identity-collision`](refusals.md#identity-collision) | `packages/bellman/tests/test_refusals.py`<br>`test_a_name_that_would_collide_with_the_spelling_of_an_identity_is_refused_where_it_is_written` |
+| The set of a parameter, of a setting or of a derived parameter reads parameters, derived parameters, named sets and numbers, and no field; a shock is read inside an expectation over it where its law reads no field. | `typing/declarations.py`: `Declarations.field_read_in_set` | `typing/declarations.py`: `Declarations.check_parameter_sets` | [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_amd_gram_005.py`<br>`test_item_5_the_corrections_hold` |
+| Each endpoint of a parameter's set has a value at the calibration; a bound whose arithmetic has no value there refuses the calibration. | `stage/calibration_requirements.py`: `_bound_at` | `stage/calibration_requirements.py`: `judged` | — | `packages/bellman/tests/test_amd_gram_005.py`<br>`test_item_5_the_corrections_hold` |
+| An interval of numbers holds at least one number. | `typing/sets.py`: `literal_faults` | `typing/context.py`: `_refuse_literal_faults` | [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_amd_gram_005.py`<br>`test_item_5_the_corrections_hold` |
+| A difference of sets holds at least one number: one whose left side lies within its right side, `(0,1) \ ℝ₊`, is refused where the package's rules of inclusion decide it, and a difference inside a union is not judged. | `typing/sets.py`: `literal_faults`, `within` | `typing/context.py`: `_refuse_literal_faults` | [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_amd_gram_005.py`<br>`test_item_5_the_corrections_hold` |
+
+### 2.2 Blocks and their headers
+
+The rules of Appendix C [§2.2](../appendices/14-appendix-c-syntax-to-semantics.md#22-blocks-and-their-headers).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A block is a bracketed header, with one id and one signature, followed by its statements. | `typing/declarations.py`: `Declarations.read_block`, `Declarations.block_header`, `Declarations.read_body_statement` | `factory/elaboration.py`: `_syntax_refusal`<br>`typing/declarations.py`: `Declarations.block_header`, `Declarations.read_body_statement` | [`syntax`](refusals.md#syntax), [`readable-form`](refusals.md#readable-form), [`not-constructed`](refusals.md#not-constructed) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[syntax]` |
+| The id of a block names one block. | — | `syntax/lower.py`: `parse_with_spans`<br>`typing/declarations.py`: `Declarations.check_block_id` | [`syntax`](refusals.md#syntax), [`declared-once`](refusals.md#declared-once) | `packages/bellman/tests/sym/test_stage_source_spans.py`<br>`test_addresses_follow_authored_identifiers_and_item_positions` |
+| The perch word after a side places the coordinates that the side lists, and a mark `[<]` or `[>]` on a listing agrees with it. | `typing/declarations.py`: `Declarations.read_side`, `Declarations.perch_of`, `Declarations.perch_of_mark` | `typing/declarations.py`: `Declarations.perch_of`, `Declarations.explicit_perch`, `Declarations.read_side` | [`field-perch`](refusals.md#field-perch), [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[field-perch]` |
+| A side omits its perch word only where each coordinate it lists that is no shock is placed by a mark, by its own perch word or as a control. | `typing/declarations.py`: `Declarations.side_perch`, `Declarations.perches_of_side` | `typing/declarations.py`: `Declarations.fields_and_header_sides` | [`field-perch`](refusals.md#field-perch) | — |
+| A shock listed on a side is an argument of the edge and stands at no perch. | `typing/declarations.py`: `Declarations.shock_perch`, `Declarations.note_shock` | `typing/declarations.py`: `Declarations.shock_perch` | [`field-perch`](refusals.md#field-perch) | `packages/bellman/tests/test_behaviour.py`<br>`test_a_kernel_line_names_the_edge_that_draws_the_shocks` |
+| A control stands at the decision perch wherever a header lists it. | `typing/declarations.py`: `Declarations.control_perch`, `Declarations.perches_of_side` | `typing/declarations.py`: `Declarations.control_perch` | [`field-perch`](refusals.md#field-perch) | `packages/bellman/tests/test_refusals.py`<br>`test_a_control_listed_at_a_perch_that_is_neither_the_decision_perch_nor_its_side_s_is_refused` |
+| A derivative line states the derivative of the value that its block writes, once for each derivative term, and adds no field and no output. | `typing/line_unknowns.py`: `derivative_left_side`<br>`fold/backward.py`: `stated_derivatives` | `typing/declarations.py`: `Declarations.check_stated_once` | [`defined-once`](refusals.md#defined-once) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[defined-once]` |
+
+### 2.3 Statements and annotations
+
+The rules of Appendix C [§2.3](../appendices/14-appendix-c-syntax-to-semantics.md#23-statements-and-annotations).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A statement is an equation or an inequality with an optional annotation, and an id in the annotation names one line of its block. | `typing/line_unknowns.py`: `annotation_entries`, `statement_id` | `syntax/lower.py`: `parse_with_spans`<br>`typing/declarations.py`: `Declarations.check_line_id`<br>`typing/line_unknowns.py`: `annotation_entries` | [`syntax`](refusals.md#syntax), [`declared-once`](refusals.md#declared-once), [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_refusals.py`<br>`test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written[two lines under one id]` |
+| A statement marked `!doc` defines no equation of its block, and the binder of a documentary maximization declares the feasible set of its control. | `stage/construction.py`: `_line_role`<br>`fold/block_lines.py`: `doc_lines`<br>`stage/carriers.py`: `_maximisations`<br>`fold/stage_fold.py`: `_selected_controls` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_the_doc_line_forms_no_piece_and_is_held_on_the_builder` |
+| A statement marked `!node` is an authored node, which carries an id and forms an operator of its own. | `stage/construction.py`: `_statement_records`<br>`fold/backward.py`: `sub_builder_rows` | `stage/construction.py`: `_line_role` | [`declared-once`](refusals.md#declared-once) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[declared-once]` |
+| The marker `!categories` is written only in the annotation of a named set. | `typing/category_codes.py`: `reserved_entries` | `fold/stage_fold.py`: `_misplaced_marker` | [`category-codes`](refusals.md#category-codes) | `packages/bellman/tests/test_category_codes.py`<br>`test_item_2_category_codes_refuses_each_invalid_form_and_unmarked_sets_keep_their_meaning` |
+| A clause after `⟂` carries one bound, written with the bounded quantity first, or, after an equation, two bounds in ascending order. | `typing/declarations.py`: `Declarations.clause_reads` | `typing/declarations.py`: `Declarations.clause_reads` | [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_refusals.py`<br>`test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_refused_under_its_rule` |
+| A multiplier is declared in the body of a block, once, by a name marked `[>]`, one set and a clause with one bound. | `typing/declarations.py`: `Declarations.read_multiplier` | `typing/declarations.py`: `Declarations.read_multiplier` | [`multiplier-declaration`](refusals.md#multiplier-declaration), [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_refusals.py`<br>`test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_refused_under_its_rule` |
+
+### 2.4 Forming the context
+
+The rules of Appendix C [§2.4](../appendices/14-appendix-c-syntax-to-semantics.md#24-forming-the-context).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| The context is formed from every declaration and every block side before any statement is read. | `typing/declarations.py`: `Declarations.read`, `Declarations.fields_and_header_sides`<br>`stage/construction.py`: `stage_fields` | — | — | — |
+| The declared set of a field is the intersection of the sets written for it at its declaration and at its listings. | `stage/construction.py`: `_field_sorts`<br>`typing/sets.py`: `meet` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_fields_carry_the_meet_of_the_sets_a_field_is_declared_with` |
+| The set on which a block writes a field lies in the set on which each other block reads it. | `typing/sets.py`: `within` | `fold/declared_sets.py`: `check_declared_sets` | [`set-mismatch`](refusals.md#set-mismatch) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[set-mismatch]` |
+| A field has one perch, and a name has one role and one meaning: a field, a function, a named set, a shock or a parameter. | `typing/declarations.py`: `Declarations.roles`, `Declarations.declared_as` | `typing/declarations.py`: `Declarations.explicit_perch`, `Declarations.note_role`, `Declarations.check_names`, `Declarations.check_one_meaning` | [`field-perch`](refusals.md#field-perch), [`one-name-one-meaning`](refusals.md#one-name-one-meaning) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[one-name-one-meaning]` |
+| A bare name that a line reads and the file declares nowhere is refused and is no parameter, and a call to a function that the file does not declare is read as external and recorded as a condition. | `typing/declarations.py`: `Declarations.parameters`<br>`fold/wire_terms.py`: `external_calls` | `typing/declarations.py`: `Declarations.check_names_in_scope` | [`name-in-scope`](refusals.md#name-in-scope) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[name-in-scope]` |
+
+### 2.5 Binders, free names, and bound names
+
+The rules of Appendix C [§2.5](../appendices/14-appendix-c-syntax-to-semantics.md#25-binders-free-names-and-bound-names).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| An expectation `E_{y}` integrates over a shock that has a declared law. | `typing/context.py`: `TypingContext._typed_operator`<br>`typing/line_unknowns.py`: `_references` | `typing/line_unknowns.py`: `_references`<br>`typing/declarations.py`: `Declarations.check_expectation_subjects` | [`not-constructed`](refusals.md#not-constructed) | — |
+| The subscript of `argmax` or `solve` names the controls or the unknowns that its line determines, in the order of the line's left side. | `fold/policy.py`: `_chosen`, `_substitute_arguments` | `fold/policy.py`: `_chosen`<br>`typing/context.py`: `TypingContext._typed_line` | [`not-constructed`](refusals.md#not-constructed), [`well-typed`](refusals.md#well-typed) | `packages/bellman/tests/test_behaviour.py`<br>`test_joint_control_spellings_preserve_the_objective_and_order` |
+| A subscript binds each name once, and a name under nested operators is bound by the innermost. | `typing/context.py`: `TypingContext._subscript`, `TypingContext._input_named` | `typing/context.py`: `TypingContext._subscript` | [`declared-once`](refusals.md#declared-once) | `packages/bellman/tests/test_refusals.py`<br>`test_a_fault_the_typing_walk_finds_is_refused_where_it_is_found[a binder named twice]` |
+| A derivative `D_{c}(𝑢)` of a function names one of its formal arguments, a scalar one. | `typing/context.py`: `TypingContext._binder_input` | `typing/context.py`: `TypingContext._typed_operator`, `TypingContext._check_derivative_binder` | [`derivative-one-name`](refusals.md#derivative-one-name), [`derivative-scalar-coordinate`](refusals.md#derivative-scalar-coordinate) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[derivative-one-name]` |
+| The expansion of a function puts the terms it is applied to for its formal arguments and captures no bound name. | `typing/typed_expressions.py`: `substitute`, `renamed_bound` | — | — | `packages/bellman/tests/test_continuous_distributions.py`<br>`test_item_5_existing_families_mixtures_factorization_and_unknown_providers_keep_their_meaning` |
+
+## 3 The rules
+
+### R1 Blocks and their headers
+
+The rules of Appendix C [R1](../appendices/14-appendix-c-syntax-to-semantics.md#r1-blocks-and-their-headers).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| The kind of a block, a forward transition, a backward value block or a policy block, follows from its header and the roles of its outputs and never from its id. | `fold/block_lines.py`: `block_direction`<br>`typing/declarations.py`: `Declarations.block_is_backward`, `Declarations.backward_perches`<br>`stage/builder_pairs.py`: `builder_pairs` | — | — | `packages/bellman/tests/cat/test_builder_pairs.py`<br>`test_a_builder_is_read_by_the_perches_it_joins_whatever_its_block_id` |
+| A line of a backward value block acts on a value input that its header lists. | `fold/backward.py`: `backward_block` | `fold/backward.py`: `_formal`, `check_value_roles` | [`value-input-role`](refusals.md#value-input-role) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[value-input-role]` |
+| A backward header lists the value fields that its block reads and writes and the controls at which its lines are read, and no state. | `typing/declarations.py`: `Declarations.state_perch`, `Declarations.header_without` | `typing/declarations.py`: `Declarations.check_header_coordinate` | [`header-coordinate`](refusals.md#header-coordinate) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[header-coordinate]` |
+| A forward header lists every field that the lines of its block read and no earlier line defines, and a backward header every value field and every control that its lines read. | `typing/line_unknowns.py`: `listed_identity` | `typing/declarations.py`: `Declarations.check_names_in_scope` | [`signature-complete`](refusals.md#signature-complete) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[signature-complete]` |
+| A backward line reads a state of its input perch or of a later perch only through the law of motion: under an expectation over the shock of the edge, or on a candidate line. | `typing/line_unknowns.py`: `perch_of_spelling`<br>`typing/declarations.py`: `Declarations.continuation_policy_candidate` | `typing/declarations.py`: `Declarations.check_input_perch_state` | [`input-perch-state`](refusals.md#input-perch-state) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[input-perch-state]` |
+| A statement defines an output, names an alias, is documentation or is an authored node, and an operative equation defines each name once in its block. | `stage/construction.py`: `_statement_records`, `_line_role` | `typing/declarations.py`: `Declarations.check_defined_once` | [`defined-once`](refusals.md#defined-once) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[defined-once]` |
+| The stage reads the continuation values and the arrival state and writes the arrival values and the continuation state, and every field is produced and consumed. | `stage/construction.py`: `_stage_hypergraph` | `stage/construction.py`: `_check_fields_produced_and_consumed` | [`stage-boundary`](refusals.md#stage-boundary) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[stage-boundary]` |
+| A statement of its block determines every output that a header lists, and a policy block that writes a candidate determines its control by the line that identifies the two. | `stage/construction.py`: `_output_equations` | `stage/construction.py`: `_check_block_outputs`, `_refuse_circular_outputs` | [`output-defined`](refusals.md#output-defined) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[output-defined]` |
+| One block writes a field between two perches. | — | `typing/declarations.py`: `Declarations.check_one_builder_per_output` | [`one-builder-per-output`](refusals.md#one-builder-per-output) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[one-builder-per-output]` |
+| A multiplier is a coordinate of the functions that its block defines at the continuation perch, and no header lists it. | `fold/backward.py`: `perch_domain` | `typing/declarations.py`: `Declarations.check_multipliers_unlisted` | [`multiplier-declaration`](refusals.md#multiplier-declaration) | `packages/bellman/tests/test_behaviour.py`<br>`test_a_multiplier_is_a_coordinate_of_its_block_alone_and_no_wire` |
+
+### R2 Ordered statements and substitution
+
+The rules of Appendix C [R2](../appendices/14-appendix-c-syntax-to-semantics.md#r2-ordered-statements-and-substitution).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| The explicit definitions of a block are read in dependency order, and an alias is in scope below the line that defines it. | `stage/construction.py`: `_output_equations` | `typing/declarations.py`: `Declarations.check_names_in_scope`<br>`stage/construction.py`: `_refuse_circular_outputs` | [`name-in-scope`](refusals.md#name-in-scope), [`output-defined`](refusals.md#output-defined) | `packages/bellman/tests/test_behaviour.py`<br>`test_sequential_transition_outputs_and_target_states_compile` |
+| An alias, or a line marked `!node`, is read through its defining expression, with the shocks and the controls on which that expression depends. | `typing/line_unknowns.py`: `free_names_with_shocks`, `mentions_after_aliases` | `typing/declarations.py`: `Declarations.check_forward_reading` | [`shock-observed`](refusals.md#shock-observed) | `packages/bellman/tests/test_behaviour.py`<br>`test_policy_expectations_in_aliases_keep_their_integrand_and_are_shared_by_reference` |
+| An explicit statement is solved for a name that occurs in it once and affinely, with a coefficient that is not zero on the declared sets. | `typing/ranges.py`: `solved_for`, `law_solved_for` | — | — | `packages/bellman/tests/test_refusals.py`<br>`test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_decision_state` |
+
+### R3 Product outputs
+
+The rules of Appendix C [R3](../appendices/14-appendix-c-syntax-to-semantics.md#r3-product-outputs).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| An output side with several coordinates is a tuple of fields, each defined by its own statement. | `typing/declarations.py`: `Declarations.read_side`<br>`fold/stage_fold.py`: `law_of_motion_equations`<br>`stage/defining_expressions.py`: `law_outputs_rule` | `stage/construction.py`: `_check_block_outputs` | [`output-defined`](refusals.md#output-defined) | `packages/bellman/tests/test_behaviour.py`<br>`test_sequential_transition_outputs_and_target_states_compile` |
+| A tuple left side names the outputs that one `argmax` or one `solve` determines together. | `typing/line_unknowns.py`: `outputs_and_unknowns` | `typing/line_unknowns.py`: `outputs_and_unknowns` | [`not-constructed`](refusals.md#not-constructed), [`declared-once`](refusals.md#declared-once) | `packages/bellman/tests/test_behaviour.py`<br>`test_joint_control_spellings_preserve_the_objective_and_order` |
+| A tuple of names typed on a product declares one field for each factor, and a name typed on a product is one field whose coordinates a selection reads. | `typing/line_unknowns.py`: `group_coordinates`<br>`typing/context.py`: `TypingContext._selected_type` | `typing/line_unknowns.py`: `group_coordinates` | [`readable-form`](refusals.md#readable-form) | `packages/bellman/tests/test_finite_indexed_data.py`<br>`test_item_5_labels_and_positions_keep_their_meaning_and_a_fractional_position_is_refused` |
+| A selection takes a member of a family by a position within the family or by a key of a finite set with as many members. | `typing/context.py`: `TypingContext._selected_type`<br>`typing/sets.py`: `index_within` | `typing/line_unknowns.py`: `_check_family_selection`<br>`typing/context.py`: `TypingContext._typed_selection` | [`family-selection`](refusals.md#family-selection) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[family-selection]` |
+
+### R4 Scope, binding, and information
+
+The rules of Appendix C [R4](../appendices/14-appendix-c-syntax-to-semantics.md#r4-scope-binding-and-information).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A perch mark names the perch of a field and binds no name. | `typing/line_unknowns.py`: `perch_of_spelling`, `listed_identity`, `free_names` | — | — | — |
+| A line reads a field of a later perch, on its right side and in its clause, only inside an expectation over each shock drawn on the edges between the two perches. | `typing/declarations.py`: `Declarations.shock_edge`<br>`typing/line_unknowns.py`: `free_names_with_shocks` | `typing/declarations.py`: `Declarations.check_known_at_perch`, `Declarations.check_shock_observed`, `Declarations.check_forward_reading` | [`shock-observed`](refusals.md#shock-observed) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[shock-observed]` |
+
+### R5 Fields to functions
+
+The rules of Appendix C [R5](../appendices/14-appendix-c-syntax-to-semantics.md#r5-fields-to-functions).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A field is represented by a function on the declared sets of the state coordinates of its perch. | `stage/carriers.py`: `_wire_type`, `coordinate_domain` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_a_backward_value_builder_reads_a_decision_state_as_a_coordinate_of_its_kernel` |
+| A value line composes each value input with the law of motion of the edge across which it is read, and its kernel keeps the control as an argument. | `fold/backward.py`: `backward_block`, `pullback_wire`, `aggregation_row` | `typing/declarations.py`: `Declarations.block_between` | [`forward-composite`](refusals.md#forward-composite) | `packages/bellman/tests/test_behaviour.py`<br>`test_policy_objective_retains_transition_integrand_and_control` |
+| A decision state read at the continuation perch is supplied by a coordinate line, `m_d[>] = a + c[>]`, and no other field of an earlier perch is read at a later one. | `fold/policy.py`: `_coordinate_wires`, `_explicit_lines_aggregation` | `typing/declarations.py`: `Declarations.check_forward_reading` | [`forward-composite`](refusals.md#forward-composite) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[forward-composite]` |
+| A shock that a line reaches through the law of motion stays an argument until the expectation that the line writes integrates it, and no expectation is inserted. | `fold/backward.py`: `expectation_rows`, `pullback_wire` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_a_shock_stays_active_through_a_sibling_input_a_constant_is_extended_and_every_path_is_integrated` |
+
+### R6 Well-formedness
+
+The rules of Appendix C [R6](../appendices/14-appendix-c-syntax-to-semantics.md#r6-well-formedness).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A function is applied to arguments in the declared sets of its formal arguments: the inclusion is recorded as a condition of the stage, and no call is refused for it. | `fold/conditions.py`: `domain_conditions`, `_call_conditions` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_named_function_conditions_are_recorded_once_on_the_function` |
+| A divisor written as a number is not zero, and a division that the declared sets do not decide is recorded as a condition. | `fold/declared_sets.py`: `definedness_obligation` | `fold/declared_sets.py`: `_nonzero_divisor` | [`divisor-nonzero`](refusals.md#divisor-nonzero) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[divisor-nonzero]` |
+| An analytic assumption is recorded as a condition of the stage and is not verified, and a condition that the parameters alone decide is judged at the calibration. | `stage/stage_answers.py`: `obligations`, `_symbolic_obligations` | `stage/binding_verbs.py`: `calibrated_obligations` | — | `packages/bellman/tests/test_behaviour.py`<br>`test_calibration_reports_evidence_and_preserves_pending_conditions` |
+
+### R7 The operations a line writes
+
+The rules of Appendix C [R7](../appendices/14-appendix-c-syntax-to-semantics.md#r7-the-operations-a-line-writes).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| The operator of a block is composed of the operations that its lines write: pullbacks, aggregations, expectations, maximizations and evaluations. | `fold/backward.py`: `aggregation_row`<br>`fold/policy.py`: `fold_policy_block`<br>`fold/stage_fold.py`: `block_rows_of`<br>`fold/value_bundles.py`: `primitive_grain_rows` | — | — | `packages/bellman/tests/cat/test_policy_kinds.py`<br>`test_item_1_no_output_of_a_core_application_names_a_retired_kind_and_each_operative_argmax_line_forms_an_argmax_row` |
+| Arithmetic and calls act pointwise on values of the kinds they take, and a function is applied to as many arguments as it declares. | `fold/backward.py`: `reduced_term`<br>`typing/context.py`: `TypingContext._typed_call` | `typing/line_unknowns.py`: `_check_call`<br>`typing/context.py`: `TypingContext._numeric_arguments`, `TypingContext._called_definition` | [`well-typed`](refusals.md#well-typed), [`definition-order`](refusals.md#definition-order) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[well-typed]` |
+| `D_{c}(𝑢)` denotes the derivative of a declared function and `Inv(𝑑𝑢)` the inverse of one, and the inverse is recorded as a condition. | `typing/declarations.py`: `Declarations.defines_a_function`<br>`typing/primitive_definitions.py`: `_derivative`, `_inverse`<br>`fold/conditions.py`: `_call_conditions` | `typing/declarations.py`: `Declarations.check_definition_operator`<br>`typing/context.py`: `TypingContext._typed_call` | [`definition-order`](refusals.md#definition-order), [`well-typed`](refusals.md#well-typed) | `packages/bellman/tests/test_refusals.py`<br>`test_a_fault_the_typing_walk_finds_is_refused_where_it_is_found[Inv of a number]` |
+| An expectation integrates shocks drawn on the edge of its block, under the conditional law that it selects from the joint law of that edge: a declared conditional, a product of declared conditionals, or a marginal or a conditional of a joint normal law. | `fold/backward.py`: `expectation_rows`, `_selected_conditional`<br>`distributions/conditionals.py`: `conditioning_shocks` | `distributions/conditionals.py`: `select_conditional`, `check_conditioning_covariance` | [`conditional-not-declared`](refusals.md#conditional-not-declared), [`distribution-edge`](refusals.md#distribution-edge) | `packages/bellman/tests/test_refusals.py`<br>`test_the_reversed_order_of_the_expectations_is_refused_naming_the_undeclared_conditional` |
+| A line does not read a shock again beside a term whose expectation has integrated it. | `fold/backward.py`: `_history_after` | `fold/backward.py`: `_join` | [`shock-reintroduced`](refusals.md#shock-reintroduced) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[shock-reintroduced]` |
+| A block output depends on no shock, and every shock of the edge is integrated on each path to it. | — | `fold/backward.py`: `check_output_shocks` | [`shock-observed`](refusals.md#shock-observed) | `packages/bellman/tests/test_behaviour.py`<br>`test_a_shock_stays_active_through_a_sibling_input_a_constant_is_extended_and_every_path_is_integrated` |
+| A maximization on a line not marked `!doc` forms an `Argmax` operation whose output is the set of maximizing policies, and the closing `Evaluation` selects no member of it. | `fold/policy.py`: `_output_rows`, `_objective`, `_policy_evaluation`<br>`typing/primitive_definitions.py`: `_argmax` | `fold/policy.py`: `_chosen` | [`not-constructed`](refusals.md#not-constructed) | `packages/bellman/tests/cat/test_policy_kinds.py`<br>`test_item_2_cons_argmax_prints_its_property_under_the_argmax_row_as_no_row_no_address_and_no_method_place` |
+| A feasibility correspondence is a product of sets or a product restricted by conditions, and a call `Γ(x)` puts `x` for its formal argument. | `stage/defining_expressions.py`: `definition_expression`<br>`stage/carriers.py`: `choice_sets`, `_feasible_domain` | — | — | `packages/bellman/tests/test_simple_set_expressions.py`<br>`test_item_2_joint_feasibility_retains_all_coordinates_and_conditions` |
+| `solve_{c}(r_1, …, r_k)` forms one `Aggregation` operation whose rule holds the residuals and whose unknowns are the outputs of its line. | `fold/policy.py`: `_output_rows`, `_relation_row` | `fold/policy.py`: `_chosen` | [`not-constructed`](refusals.md#not-constructed) | `packages/bellman/tests/test_behaviour.py`<br>`test_a_law_with_several_outputs_names_them_and_a_joint_solve_is_headed_by_its_unknowns` |
+| An authored `evaluate(knots, values, x)` reads a table, which a representation typed at its place makes a function between the knots. | `typing/context.py`: `TypingContext._typed_call`<br>`stage/representations.py`: `_holds_authored_table`, `_node_table` | `stage/representation_checks.py`: `check_sources` | [`representation-source`](refusals.md#representation-source) | `packages/bellman/tests/test_behaviour.py`<br>`test_a_node_reads_an_authored_table_as_its_data_only_where_the_table_is_its_function` |
+| A method is typed at a block, at a line marked `!node` or at an occurrence of an operation, and changes neither the graph nor what the block denotes. | `stage/places.py`: `inventory`<br>`fold/backward.py`: `sub_builder_rows` | `stage/places.py`: `_check_admission` | [`method-admission`](refusals.md#method-admission) | `packages/bellman/tests/test_behaviour.py`<br>`test_method_choices_leave_graphs_types_and_equations_unchanged` |
+
+### R8 Evaluation and policy
+
+The rules of Appendix C [R8](../appendices/14-appendix-c-syntax-to-semantics.md#r8-evaluation-and-policy).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A value builder is the operator at a policy: the decision value is the choice value read at the policy. | `fold/backward.py`: `backward_block`, `_policies`<br>`stage/denotations.py`: `_policy_denoted` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_the_law_at_the_policy_is_written_out_and_the_builder_is_at_the_policy` |
+| A candidate line of a policy block writes, under the continuation mark, a control or a state of the decision perch, and a later line of the block reads each candidate. | `fold/policy.py`: `_explicit_lines_aggregation` | `typing/declarations.py`: `Declarations.check_candidate_coordinate`, `Declarations.check_candidates_read` | [`candidate-coordinate`](refusals.md#candidate-coordinate), [`candidate-read`](refusals.md#candidate-read) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[candidate-read]` |
+| The derivative of a value is no field: a line reads it by the term `D_{a}V[>]`, in a state coordinate of the perch at which the value is read. | `stage/defining_expressions.py`: `_resolved_derivative`<br>`typing/primitive_definitions.py`: `_derivative`<br>`stage/stage_answers.py`: `derivative_reads` | `typing/context.py`: `TypingContext._check_derivative_binder`<br>`syntax/lower.py`: `ToAst._classifier_of_word` | [`derivative-coordinate`](refusals.md#derivative-coordinate), [`marginal-role-retired`](refusals.md#marginal-role-retired) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[derivative-coordinate]` |
+| A derivative line, in the stage file or in a block of the methods file that names the builder's block, is recorded at the builder's `Evaluation` with the condition `marginal-reading`, and nothing is differentiated. | `fold/backward.py`: `stated_derivatives`<br>`stage/levels.py`: `operative_level`<br>`stage/stage_answers.py`: `_symbolic_obligations` | — | — | `packages/bellman/tests/test_amd_mb_001.py`<br>`test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_policy_reads_the_value` |
+| The lines of a solution method typed on the policy builder are the rows of the operative builder, the declared builder keeps the maximization, and the endogenous grid method records the condition `egm-eligibility`. | `stage/levels.py`: `operative_level`, `construct`, `declared_version` | `stage/levels.py`: `_refuse_formula_only` | [`explicit-solution`](refusals.md#explicit-solution) | `packages/bellman/tests/test_behaviour.py`<br>`test_a_quadrature_adds_no_condition_and_a_solution_method_adds_its_own` |
+
+### R9 The forward reading
+
+The rules of Appendix C [R9](../appendices/14-appendix-c-syntax-to-semantics.md#r9-the-forward-reading).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| The forward builders are read from the transition blocks, the law statements and the policy, which enters the edge from the decision perch alone, and from no value. | `fold/stage_fold.py`: `block_rows_of`, `_forward_edges`<br>`stage/denotations.py`: `_policy_denoted`<br>`graphs/builders_graphs.py`: `_forward_inputs_outputs` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_forward_measure_expressions_reference_the_supplied_policy` |
+| Each edge extends the measure by the law of each shock drawn on it, a parent before its children, and pushes it forward through the law of motion to the joint law of the output coordinates. | `distributions/edges.py`: `joint_distribution`, `dependency_order`<br>`fold/block_lines.py`: `shock_edges`<br>`fold/stage_fold.py`: `block_rows_of` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_a_kernel_line_names_the_edge_that_draws_the_shocks` |
+| Each shock is drawn on the edge of one forward builder, and law statements that read one another are drawn on one edge. | `distributions/edges.py`: `drawn_edges` | `distributions/edges.py`: `shock_builders` | [`distribution-edge`](refusals.md#distribution-edge) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[distribution-edge]` |
+| A law reads its parent shocks and the coordinates of the perch at which its edge begins. | `distributions/edges.py`: `distribution_declarations`<br>`fold/stage_fold.py`: `_forward_edges` | `typing/declarations.py`: `Declarations.check_forward_reading` | [`forward-composite`](refusals.md#forward-composite), [`shock-observed`](refusals.md#shock-observed) | `packages/bellman/tests/test_behaviour.py`<br>`test_decision_and_conditional_kernels_reference_the_supplied_policy_function` |
+| A branching block writes one measure for each label, routed by the policy or by the drawn label, and the law of a label shock gives one probability to each label. | `fold/stage_fold.py`: `_branches`, `block_rows_of` | `typing/declarations.py`: `Declarations.check_draw` | [`branch-law`](refusals.md#branch-law) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[branch-law]` |
+
+### R10 Implicit equations
+
+The rules of Appendix C [R10](../appendices/14-appendix-c-syntax-to-semantics.md#r10-implicit-equations).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A statement that defines an output and reads it again through a transition is an implicit statement, and a block holds one for each output. | `stage/construction.py`: `_is_implicit`, `_implicit_occurrence`<br>`fold/stage_names.py`: `occurrences_of` | `stage/construction.py`: `_refuse_second_implicit` | [`one-implicit-statement`](refusals.md#one-implicit-statement) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[one-implicit-statement]` |
+| An equation whose left side is neither a name nor a tuple of names is a candidate statement; the candidate statements that share a candidate form one system, with as many statements as unknowns. | `typing/line_unknowns.py`: `candidates_of_statement`, `systems_by_shared_candidate`<br>`fold/policy.py`: `candidate_systems`<br>`stage/construction.py`: `_system_solves` | `fold/policy.py`: `_check_system` | [`not-constructed`](refusals.md#not-constructed) | `packages/bellman/tests/test_refusals.py`<br>`test_a_system_with_fewer_statements_than_unknowns_is_refused` |
+| A candidate statement with no candidate, and an inequality whose left side is no name, are retained as relations that no operation realizes. | `fold/policy.py`: `_forms_no_row`<br>`fold/wire_terms.py`: `names_no_field`<br>`fold/backward.py`: `retained_relations` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_relations_types_and_definitions_keep_non_snapshot_semantics` |
+| A system forms one `Aggregation` operation of the policy builder, whose rule reads each statement at the decision state, with each continuation value on its right side composed with the law of motion at the policy. | `fold/policy.py`: `_output_rows`, `_relation_row`, `_residual_inputs`, `_value_wires` | — | — | `packages/bellman/tests/cat/test_candidate_clause.py`<br>`test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_answers_the_relation_over_the_admitted_pairs` |
+| A clause pairs the residual of its line with the slack of its bound: the residual is zero where the bound is slack, nonnegative where a lower bound binds and nonpositive where an upper bound binds. | `stage/term_operations.py`: `kuhn_tucker`, `slack`, `residual`<br>`typing/ranges.py`: `clause_regions` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_kuhn_tucker_states_the_sign_table_of_each_bound` |
+| The identification `c = c[>]` states, at the continuation perch, that the policy at the value of the coordinate line equals the candidate, over the pairs that the candidate line admits. | `fold/policy.py`: `_output_rows`<br>`stage/defining_expressions.py`: `_identification_wires`, `_admitted_values`, `_grid_rules` | — | — | `packages/bellman/tests/test_behaviour.py`<br>`test_inverse_euler_lines_form_one_policy_kernel_on_the_saving_grid_and_the_identification_remains_a_relation` |
+| The coordinate line agrees with the law of motion solved for the decision coordinate at the candidates. | `stage/construction.py`: `_law_lines`<br>`typing/ranges.py`: `law_solved_for`, `compare_terms` | `stage/construction.py`: `_check_grid_lines` | [`grid-line-consistency`](refusals.md#grid-line-consistency) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[grid-line-consistency]` |
+| The bound of a declared multiplier names continuation states, multipliers of its block, parameters, numbers and `inf`, and the functions of its block at the continuation perch stand on the observable set that the bound gives. | `stage/carriers.py`: `observable_restriction`, `coordinate_domain` | `typing/declarations.py`: `Declarations.check_bound_names` | [`multiplier-declaration`](refusals.md#multiplier-declaration) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[multiplier-declaration]` |
+
+### R11 Sub-transitions and the placement of expectations
+
+The rules of Appendix C [R11](../appendices/14-appendix-c-syntax-to-semantics.md#r11-sub-transitions-and-the-placement-of-expectations).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| The statements of a transition compose into one law of motion that keeps its shock arguments, and none of them holds an expectation. | `fold/stage_fold.py`: `law_of_motion_equations` | `fold/stage_fold.py`: `_law_definitions` | [`transition-without-expectation`](refusals.md#transition-without-expectation) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[transition-without-expectation]` |
+| An expectation stands where its line writes it, nested expectations are kept apart, and a nonlinear transformation is read in its written order, by the operators that the language holds. | `fold/backward.py`: `expectation_rows`, `reduced_term` | `typing/line_unknowns.py`: `_references` | [`not-constructed`](refusals.md#not-constructed) | `packages/bellman/tests/test_behaviour.py`<br>`test_compiled_kernels_with_analytic_expectation_inputs_reproduce_ce_amb_and_the_ces_value` |
+
+### R12 Envelopes
+
+The rules of Appendix C [R12](../appendices/14-appendix-c-syntax-to-semantics.md#r12-envelopes).
+
+| rule | implemented by | checked by | refusals | test |
+|---|---|---|---|---|
+| A branching block holds one nested block for each label of its label coordinate, at least two, in the order of the label set. | `typing/declarations.py`: `Declarations.read_branch`<br>`fold/stage_fold.py`: `_branches` | `typing/declarations.py`: `Declarations.check_branch_form`, `Declarations.read_branch`, `Declarations.check_branches` | [`branch-form`](refusals.md#branch-form), [`branch-labels`](refusals.md#branch-labels), [`not-constructed`](refusals.md#not-constructed) | `packages/bellman/tests/test_refusals.py`<br>`test_a_malformed_branching_block_is_refused_under_its_rule` |
+| The value line selects by one tuple indexed by the label, the policy maximizes over the same tuple, and each continuation value stands at the position of its branch. | `typing/context.py`: `TypingContext._typed_selection`<br>`typing/line_unknowns.py`: `selection_tuples`, `selection_positions` | `typing/declarations.py`: `Declarations.check_branch_selection`, `Declarations.check_positions` | [`branch-tuple-mismatch`](refusals.md#branch-tuple-mismatch), [`branch-value-position`](refusals.md#branch-value-position) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[branch-tuple-mismatch]` |
+| An authored `upper_env` names the candidates that it compares, and a value candidate is written only where an `upper_env` of the block reads it. | `typing/declarations.py`: `Declarations.envelope_reads`<br>`typing/context.py`: `TypingContext._typed_call` | `typing/declarations.py`: `Declarations.check_candidate_coordinate` | [`candidate-coordinate`](refusals.md#candidate-coordinate) | `packages/bellman/tests/test_refusals.py`<br>`test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[candidate-coordinate]` |
+
+## 4 Rules that the package does not yet check
+
+[Appendix C](../appendices/14-appendix-c-syntax-to-semantics.md#53-open-points) §5.3 lists the rules that the language has and that the package does not yet check, each with what the package does today and the smallest text that shows it. That table is printed from the package's tables of the rules, as this page is, and a test of the package runs each text.
+
+## 5 Rules that other pages state
+
+Each of these refusal rules belongs to a rule that the page named beside it states.
+
+| refusal rule | stated on |
+|---|---|
+| [`stage-name`](refusals.md#stage-name) | [Symbol conventions](symbols-conventions.md) |
+| [`derived-parameter`](refusals.md#derived-parameter) | [Equation parsing rules](../appendices/12-equation-parsing-rules.md) |
+| [`distribution-domain`](refusals.md#distribution-domain) | [Shock distributions](laws.md) |
+| [`method-admission`](refusals.md#method-admission) | [Methodization](../04-methodization.md) |
+| [`no-method-for-derivative`](refusals.md#no-method-for-derivative) | [Methodization](../04-methodization.md) |
+| [`component-typed-twice`](refusals.md#component-typed-twice) | [Methodization](../04-methodization.md) |
+| [`method-option-value`](refusals.md#method-option-value) | [Methodization](../04-methodization.md) |
+| [`representation-source`](refusals.md#representation-source) | [Methodization](../04-methodization.md) |
+| [`explicit-solution`](refusals.md#explicit-solution) | [Methodization](../04-methodization.md) |
+| [`declared-twice`](refusals.md#declared-twice) | [Methodization](../04-methodization.md) |
+| [`label-not-in-parent`](refusals.md#label-not-in-parent) | [Methodization](../04-methodization.md) |
+| [`type-conflict`](refusals.md#type-conflict) | [Methodization](../04-methodization.md) |
+| [`metadata-mismatch`](refusals.md#metadata-mismatch) | [Methodization](../04-methodization.md) |
+| [`grid-coordinate`](refusals.md#grid-coordinate) | [Methodization](../04-methodization.md) |
+| [`grid-setting-declared`](refusals.md#grid-setting-declared) | [Methodization](../04-methodization.md) |
+| [`grid-bounds`](refusals.md#grid-bounds) | [Methodization](../04-methodization.md) |
+| [`grid-requirement`](refusals.md#grid-requirement) | [Methodization](../04-methodization.md) |
+| [`setting-outside-set`](refusals.md#setting-outside-set) | [Methodization](../04-methodization.md) |
+| [`setting-unvalued`](refusals.md#setting-unvalued) | [Methodization](../04-methodization.md) |
+| [`kernel-form`](refusals.md#kernel-form) | [A piece](../API/stage/05-piece.md) |
+| [`kernel-target`](refusals.md#kernel-target) | [A piece](../API/stage/05-piece.md) |
+| [`target-not-found`](refusals.md#target-not-found) | [Refusals](refusals.md) |
+| [`target-ambiguous`](refusals.md#target-ambiguous) | [Refusals](refusals.md) |
+| [`target-version`](refusals.md#target-version) | [Refusals](refusals.md) |
+| [`recipe-shape`](refusals.md#recipe-shape) | [The factory API](../API/factory/index.md) |
+| [`recipe-source`](refusals.md#recipe-source) | [The factory API](../API/factory/index.md) |
+| [`recipe-slot-unknown`](refusals.md#recipe-slot-unknown) | [The factory API](../API/factory/index.md) |
+| [`recipe-template-agreement`](refusals.md#recipe-template-agreement) | [The factory API](../API/factory/index.md) |
+| [`slot-value-not-a-mapping`](refusals.md#slot-value-not-a-mapping) | [The factory API](../API/factory/index.md) |
+| [`fill-names-nothing`](refusals.md#fill-names-nothing) | [The factory API](../API/factory/index.md) |
+| [`fill-mixes-kinds`](refusals.md#fill-mixes-kinds) | [The factory API](../API/factory/index.md) |
+| [`trellis-file-shape`](refusals.md#trellis-file-shape) | [The factory API](../API/factory/index.md) |
+| [`record-shape`](refusals.md#record-shape) | [The factory API](../API/factory/index.md) |
+| [`period-join-cycle`](refusals.md#period-join-cycle) | [The factory API](../API/factory/index.md) |
+| [`connector-names-no-field`](refusals.md#connector-names-no-field) | [The factory API](../API/factory/index.md) |
+| [`period-parameter-agreement`](refusals.md#period-parameter-agreement) | [The factory API](../API/factory/index.md) |
+| [`readable-file`](refusals.md#readable-file) | [The factory API](../API/factory/index.md) |
+
+<!-- /reference-table -->

@@ -7,10 +7,10 @@ Y  := ℕ
 
 
 β     : (0,1)
-γ     : ℝ₊ ::["curvature of the constant-relative-risk-aversion transform of the aggregate"]
+γ     : ℝ₊ \ {1} ::["curvature of the constant-relative-risk-aversion transform of the aggregate"]
 θ     : (0,1) ::["Cobb-Douglas weight on consumption; 1-θ is the weight on housing services"]
 κ     : ℝ₊ ::["housing services per unit of the housing stock"]
-ι     : ℝ₊ ::["constant in housing services, which keeps utility finite at zero housing"]
+ι     : ℝ₊₊ ::["constant in housing services, which keeps utility finite at zero housing"]
 n_H   : ℕ ::["Number of housing types"]
 H_min : ℝ₊ ::["Minimum housing size"]
 H_max : ℝ₊ ::["Maximum housing size"]

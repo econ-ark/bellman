@@ -165,7 +165,7 @@ refused, with the condition named:
 | Condition | How it is stated | Where it is refused |
 |---|---|---|
 | $\Gamma < R$ | the declared set of the growth factor, `Γ : (0, R)` | `calibrate`, which decides an interval whose endpoints are parameters |
-| $q < 1$ | the declared set of the discount factor, `β : (0,1) @ (0, R^(ρ-1))`, whose upper bound $R^{\rho-1}$ is the condition written for $\beta$ | `calibrate`, under each methods file; a discount factor one rounding step below the bound, at which $q$ computes to one, is refused by the condition $\kappa > 0$ of the closed form and by the endogenous grid route of the module |
+| $q < 1$ | the declared set of the discount factor, `β : ℝ₊₊ @ (0, R^(ρ-1))`, whose upper bound $R^{\rho-1}$ is the condition written for $\beta$, and the set that the definition of the return patience factor declares, `q : (0,1) := (β*R)^(1/ρ)/R` | `calibrate`, under each methods file; a discount factor one rounding step below the bound, at which $q$ computes to one, is refused by the set of $q$ |
 | $\rho > 1$ | the declared set `ρ : (1, inf)` | `calibrate` |
 | finite parameters | the declared sets of the four parameters | `calibrate` |
 | $m > L$, and $k > L$ at the arrival perch | the domain of each function of the closed form | the module, at each evaluation |

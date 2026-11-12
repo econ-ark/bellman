@@ -34,7 +34,7 @@ A perch is one of the stage's three information sets; a field is a named quantit
 ## Declarations
 
 ```bl
-σ : ℝ₊₊          :: ["relative risk aversion; the utility formula requires σ different from 1"]
+σ : ℝ₊₊ \ {1}    :: ["relative risk aversion; the utility formula requires σ different from 1"]
 δ : [0,1]        :: ["depreciation rate of capital"]
 ν : [0,1]        :: ["degree of decreasing returns of the entrepreneurial technology"]
 f : [0,1]        :: ["fraction of working capital an entrepreneur keeps when he defaults"]
@@ -94,7 +94,7 @@ The third statement chooses between repaying and defaulting at the chosen pair. 
 ## Elaboration
 
 ```text
-applications/cagetti-denardi-2006/declaration/stages/young_entrepreneur/young_entrepreneur.bl:22:1-33:2: block 'dcsn_to_cntn' lists the controls 'k', 'c', 'd' beside its branches; this version of the package constructs a branching block whose branches state equations alone and whose label coordinate is its one control, or a shock over a finite set in a stage that chooses nothing (docs/Bellman-Sym/05-branching.md) (address 'dcsn_to_cntn'; rule not-constructed)
+applications/cagetti-denardi-2006/declaration/stages/young_entrepreneur/young_entrepreneur.bl:22:1-33:2: block 'dcsn_to_cntn' lists the controls 'k', 'c', 'd' beside its branches; the construction reads a branching block whose branches state equations alone and whose label coordinate is its one control, or a shock over a finite set in a stage that chooses nothing, and reads no other form of a branching block; the declarations and the other blocks of the stage are read, and no builder of the stage is drawn while this block keeps this form (address 'dcsn_to_cntn'; rule not-constructed)
 ```
 
 No view is constructed. The first missing construct is a branching block that lists continuous controls beside its label. Scratch copies of 14 September 2026, before branching was constructed, found the refusals that follow it:

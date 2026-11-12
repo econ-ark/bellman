@@ -24,7 +24,7 @@ type: concept
 
 # Methodization
 
-**Methodization** binds numerical methods to the operators of a [[stage]]. A [[methods|method]] names a technique and is a component of the [[signature]] of the [[operator]] it serves, written as a typing of the operator's name; a [[handler]] identifies the routine that performs it; the [[settings]] are the values the methods read. None supplies a missing model equation or proves that a computed policy is optimal.
+**Methodization** binds numerical methods to the operators of a [[stage]]. A [[methods|method]] names a technique and is a label on the [[operator]] it serves, beside the operator's [[signature|inputs and outputs]], written as a typing of the operator's name; a [[handler]] identifies the routine that performs it; the [[settings]] are the declared names whose values the methods read. None supplies a missing model equation or proves that a computed policy is optimal.
 
 The methods of a stage are written in its methods file, the [[addition]] to the stage file: a `.bl` file read by the stage grammar and unioned with the stage file before elaboration. The buffer-stock addition binds the endogenous grid method on the policy [[builder]], with the method's grid of savings, and piecewise linear interpolation on the Evaluation that stores the policy:
 
@@ -47,7 +47,7 @@ The method stands on the policy builder, `policy`: the block of the addition nam
 
 ## Where a method stands
 
-A method type states the kinds of operator it admits and the keyword arguments it reads ([method types](../Bellman-Sym/reference/methods.md)). A place is an operator `stage.places()` lists: a whole builder; the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that closes a builder, where a representation of what it stores stands; a line marked `!node` or any other [[statement]] with an id; a function the [[stage|stage file]] defines; or one occurrence of an operator inside a line. The path written before `.method` names it:
+A method type states the kinds of place it admits and the keyword arguments it reads ([method types](../Bellman-Sym/reference/methods.md)). A place is what `stage.places()` lists: a whole builder; the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that closes a builder, where a representation of what it stores stands; a line marked `!node` or any other [[statement]] with an id; a function the [[stage|stage file]] defines; or one occurrence of an operator inside a line. The path written before `.method` names it:
 
 | Path | Place |
 |---|---|
@@ -62,6 +62,6 @@ A method type states the kinds of operator it admits and the keyword arguments i
 
 ## Specification contract
 
-The stage verb `stage.methodize` reads its additions into the stage, which is elaborated anew from the union, so that the stage carries the method and grid components and the handlers the additions type. In a [[trellis]], `elaborate_trellis` reads at every position the additions the [[wiki/spec_factory|recipe]] names for the [[stage|stage occurrence]], in order, with the stage text, and `methodize_trellis` binds nothing more. A component typed by two files with different content is refused, an unknown method word and an unresolved path are refused, and a method at an operator of a kind it does not admit is refused naming the place.
+The stage verb `stage.methodize` reads its additions into the stage, which is elaborated anew from the union, so that the stage carries the method and grid components and the handlers the additions type. In a [[trellis]], `elaborate_trellis` reads at every position the additions the [[wiki/spec_factory|recipe]] names for the [[stage|stage occurrence]], in order, with the stage text, and `methodize_trellis` binds nothing more. A component typed by two files with different content is refused, an unknown method word and an unresolved path are refused, and a method at a place of a kind it does not admit is refused naming the place.
 
 The entry [[specified_stage|specified stage]] states the order of the bindings. The [[wiki/spec_factory|specification factory]] states how the recipe combines its sources, and it creates no mathematical object. Whether a handler can carry a method out requires checks of the implementation in addition to the declared contract. See [Methodization](../Bellman-Sym/04-methodization.md) and [Stage functions](../Bellman-Sym/API/factory/stage-factory.md).

@@ -537,6 +537,8 @@ KINDS = {
     T.Residual: "terms.Residual",
     T.Role: "terms.Role",
     T.Select: "terms.Select",
+    T.SetDifference: "terms.SetDifference",
+    T.SetUnion: "terms.SetUnion",
     T.Shock: "terms.Shock",
     T.Signature: "terms.Signature",
     T.Slack: "terms.Slack",

@@ -46,6 +46,7 @@ from bellman.native.versions import StageVersion, bind_in_place, rebuild_in_plac
 from bellman.refusals import ConstructionError, Location
 from bellman.stage.calibration_requirements import (
     UNVALUED,
+    UNVALUED_BOUND,
     calibration_requirements,
     collection_values,
     declared_set_terms,
@@ -77,12 +78,14 @@ from bellman.typing.typed_expressions import predicate_text
 def calibrate(stage, calibration_source: Union[str, Path, dict]):
     """The stage itself, with values for all declared parameters.
 
-    The source must supply each parameter in its declared set. Extra names
-    are not bound. Retained parameter-only conditions are decided at those
-    values: false conditions refuse; true conditions are established with the
-    values as evidence; undecided conditions remain required. The source is
-    recorded in provenance; a later calibration replaces the earlier one, and
-    a refused calibration leaves the stage as it was.
+    The source must supply each parameter in its declared set, and at those
+    values each derived parameter must lie in the set its definition
+    declares. Extra names are not bound. Retained parameter-only conditions
+    are decided at those values: false conditions refuse; true conditions are
+    established with the values as evidence; undecided conditions remain
+    required. The source is recorded in provenance; a later calibration
+    replaces the earlier one, and a refused calibration leaves the stage as
+    it was.
 
     See `docs/Bellman-Sym/API/stage/09-binding-verbs.md` §2."""
     return calibrated_version(stage, calibration_source)
@@ -134,8 +137,9 @@ def calibrated_version(stage, calibration_source):
             "stage elaborate_stage and make_stage return"
         )
     values = load_calibration(calibration_source)
-    # refuses a missing value, a value outside its declared set and a value
-    # for a derived parameter
+    # refuses a missing value, a value outside its declared set, a value for
+    # a derived parameter, a derived parameter's definition without a value
+    # and a derived value outside the set its definition declares
     calibration_requirements(stage, values)
     # a collection given as a mapping is bound as the sequence of its entries
     # in the order of the members of its index set at the values, so that a
@@ -281,15 +285,24 @@ def _check_declared_settings(stage, values, files):
     file (`settings_key_positions`) under the role `rejected setting`, and
     an unvalued setting carries each file under the role `settings source`.
     The membership is decided as a parameter's is
-    (`calibration_requirements`), at the calibration bound and the values
-    given, and a faulty value is refused at its own setting, not at a
-    setting whose set reads it (`judged`); a membership the set algebra does
-    not decide is admitted."""
+    (`calibration_requirements`), at the calibration bound, the derived
+    parameters' values at it (`derived_values`) and the values given, and a
+    faulty value is refused at its own setting, not at a setting whose set
+    reads it (`judged`); a membership the set algebra does not decide is
+    admitted. A declared set of which a bound has no value at those values,
+    `tol : (0, 1/(n - 2))` at n = 2, is no set there, so the setting's value
+    lies in none. It is refused under `setting-outside-set`, the one rule on
+    a setting's declared set, with the bound, the values it reads and the
+    operation that fails. The refusal carries the key of each setting that
+    the bound reads under the role `rejected setting`."""
     definitions = dict(stage.definitions)
     declared = setting_sets(stage)
-    memberships = judged(stage, definitions, declared, values, settled=stage.bindings.calibration)
+    settled = stage.bindings.calibration
+    if settled is not None:
+        settled = {**settled, **derived_values(stage, settled)}
+    memberships = judged(stage, definitions, declared, values, settled=settled)
     for name, status, reason in memberships:
-        if status is not UNVALUED and status is not False:
+        if status is not UNVALUED and status is not False and status is not UNVALUED_BOUND:
             continue
         definition = definitions[Identity("setting", stage=stage.name, field=name)]
         file, _, line = definition.address.rpartition(":")
@@ -307,6 +320,18 @@ def _check_declared_settings(stage, values, files):
                 f"settings are bound; write `{name}: <value>` in the settings source",
                 rule="setting-unvalued",
                 related=tuple(Location("settings source", file=path) for path in files),
+                **position,
+            )
+        if status is UNVALUED_BOUND:
+            keys = settings_key_positions(files)
+            raise ConstructionError(
+                f"stage {stage.name!r}, setting {name!r}: {reason}",
+                rule="setting-outside-set",
+                related=tuple(
+                    Location("rejected setting", *keys[read], address=read)
+                    for read in reason.read
+                    if read in keys
+                ),
                 **position,
             )
         written = to_source(declared[name])

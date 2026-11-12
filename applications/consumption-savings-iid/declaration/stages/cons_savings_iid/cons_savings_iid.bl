@@ -3,7 +3,7 @@
 Y := ℝ₊
 
 β : ℝ₊₊ :: ["discount factor must be a strictly positive number"] 
-γ : ℝ₊ :: ["Relative risk aversion must be greater than 1"]
+γ : (1, inf) :: ["Relative risk aversion must be greater than 1"]
 R : ℝ₊₊
 μ_y : ℝ
 σ_y : ℝ₊

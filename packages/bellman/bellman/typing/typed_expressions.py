@@ -1330,6 +1330,8 @@ _SETS = (
     T.IntegerRange,
     T.Points,
     T.Functions,
+    T.SetUnion,
+    T.SetDifference,
 )
 _PREDICATES = (P.Member, P.Compare, P.Complementarity, P.Not, P.And, P.Or, P.IsInteger)
 
@@ -1810,7 +1812,8 @@ def _applications_document(expression, names):
 
 def _sets_document(expression, names):
     """The document of a set written as a space, a product, an interval, a
-    finite set or a comprehension, and its level."""
+    finite set, a set of functions, a union, a difference or a
+    comprehension, and its level."""
     if isinstance(expression, T.Space):
         return _document_and_level(expression.set, names)
     if isinstance(expression, T.Product):
@@ -1867,6 +1870,27 @@ def _sets_document(expression, names):
                 _document_at(expression.domain, names, PRODUCT),
                 " → ",
                 _document_at(expression.codomain, names, PRODUCT - 1),
+            ),
+            PRODUCT - 1,
+        )
+    if isinstance(expression, (T.SetUnion, T.SetDifference)):
+        # `A ∪ B` and `A ∖ B` bind looser than the product; an operand that
+        # is itself a union, a difference or a set of functions stands in
+        # parentheses, so that the text is read one way
+        union = isinstance(expression, T.SetUnion)
+        operands = expression.members if union else (expression.left, expression.right)
+
+        def operand_level(operand):
+            # a listed set with the set its members lie in, `{θ} ⊂ (0, 1)`,
+            # stands in parentheses too: its `⊂` would otherwise be read as
+            # a claim about the whole union or difference
+            listed = isinstance(operand, T.Points) and operand.superset is not None
+            return PRODUCT + 1 if listed else PRODUCT
+
+        return _Printed(
+            _joined(
+                (_document_at(operand, names, operand_level(operand)) for operand in operands),
+                "∪" if union else "∖",
             ),
             PRODUCT - 1,
         )

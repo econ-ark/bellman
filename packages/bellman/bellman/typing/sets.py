@@ -26,6 +26,25 @@ holds, so `[-inf, inf)` is not within ℝ, while ℝ is within `[-inf, inf)`. Tw
 sets that are the same term, after each name is replaced by the set the stage
 defines it as, are one set.
 
+**A union and a difference.** `within` reads a union `A ∪ B` and a difference
+`A ∖ B` of sets of numbers by rules that are sound, and exact only where that
+is said. `A ∪ B` lies in D exactly when A and B both do, where no member is
+an empty interval: `within` answers for an empty interval, `(5, 5)`, by its
+endpoints, as lying in no set they lie outside, and a union with such a
+member has that answer. D lies in `A ∪ B` if it lies in A or in B; `(0, 2)`
+lies in `(0, 1] ∪ (1, 2)` and in neither member, so no other answer is given
+for a set of more than one number. `A ∖ B` lies in D if A does. D lies in
+`A ∖ B` only if it lies in A. One number is decided exactly: it lies in a
+union where one member holds it and outside where none does, and in a
+difference where the left side holds it and the right side does not. `meet`
+and `endpoints` read neither form. A union or a difference is no index set
+of a collection. As the set of a key, `index_within` reads it by the rules
+of `within` for a union and a difference that lie in another set, with one
+answer more: a set that is no index set, less the members of an index set,
+lies in no index set, as that set alone lies in none. `resolved` replaces
+the names inside the members and the sides, and keeps a union in its one
+form.
+
 **Undecided forms.** Every other form is undecided: a product, a finite
 set, a comprehension over a base with conditions, a set defined by a grid
 constructor such as `linspace`, an interval with a symbolic endpoint, an
@@ -54,6 +73,7 @@ exactly, and no tolerance is applied.
 
 from __future__ import annotations
 
+import dataclasses
 import math
 import operator
 from fractions import Fraction
@@ -61,6 +81,7 @@ from typing import NamedTuple
 
 from bellman.native.predicates import And, Compare, IsInteger, Member, Not
 from bellman.syntax import terms as T
+from bellman.syntax.source import union_of
 from bellman.syntax.vocabulary import INTEGER, PRIMITIVE_SETS, REAL, Primitive
 
 
@@ -88,6 +109,11 @@ def numeric(setterm, definitions) -> bool | None:
     factor is, and is undecided where one factor is undecided: an obligation
     recorded where a set is undecided is the safer answer. A tuple of set terms
     — the sets declared for one field at its sites — is read by the same rule.
+    A union is numeric where every member is, and a difference where its left
+    side is, whose members alone it holds; neither is ever answered False,
+    since a union or a difference with a part that holds no number is refused
+    where its declaration is typed (`typing.context`), and that refusal names
+    the part.
     """
 
     def decide(setterm, active):
@@ -114,9 +140,41 @@ def numeric(setterm, definitions) -> bool | None:
             factors = setterm.factors if isinstance(setterm, T.Product) else setterm
             answers = [decide(factor, active) for factor in factors]
             return False if False in answers else True if all(answers) else None
+        if isinstance(setterm, T.SetUnion):
+            members = [decide(member, active) for member in setterm.members]
+            return True if all(answer is True for answer in members) else None
+        if isinstance(setterm, T.SetDifference):
+            return True if decide(setterm.left, active) is True else None
         return None
 
     return decide(setterm, ())
+
+
+def kind_without_numbers(setterm, definitions) -> str | None:
+    """What a set term that holds no single real number is, in the words of a
+    refusal: `a set of labels`, `a product` or `a set of functions`, or a
+    set with conditions on one of the three. None for every other set term.
+    A name is read through the set that `definitions` holds for it, and a
+    set with conditions through its base."""
+    seen = set()
+    conditioned = False
+    while True:
+        named = isinstance(setterm, T.Named) and setterm.name in definitions
+        if named and setterm.name not in seen:
+            seen.add(setterm.name)
+            setterm = definitions[setterm.name]
+        elif isinstance(setterm, T.Comprehension):
+            conditioned = True
+            setterm = setterm.base
+        else:
+            break
+    if isinstance(setterm, T.FiniteSet):
+        kind = "a set of labels" if any(isinstance(m, str) for m in setterm.members) else None
+    else:
+        kind = {T.Product: "a product", T.Functions: "a set of functions"}.get(type(setterm))
+    if kind is None or not conditioned:
+        return kind
+    return f"a set with conditions on {kind}"
 
 
 class Bounds(NamedTuple):
@@ -195,14 +253,25 @@ def meet(setterms) -> object | None:
 def within(inner, outer, definitions) -> bool | None:
     """Whether the set `inner` lies in the set `outer`: True, False, or None
     where the pair is not one the table decides. `definitions` are the sets the
-    stage defines by name, through which each name is resolved first."""
+    stage defines by name, through which each name is resolved first. A union
+    and a difference are read by the rules the module docstring states, on
+    either side."""
     a, b = defined(inner, definitions), defined(outer, definitions)
     if a == b:
         return True
+    if isinstance(a, T.SetUnion):
+        # a union lies in a set exactly when each member does
+        answers = [within(member, b, definitions) for member in a.members]
+        return False if False in answers else True if all(answers) else None
+    if isinstance(a, T.SetDifference):
+        # a difference lies in a set its left side lies in
+        return True if within(a.left, b, definitions) is True else None
     if isinstance(a, (T.IntegerRange, T.Points, T.FiniteSet)) or isinstance(
         b, (T.IntegerRange, T.Points, T.FiniteSet)
     ):
         return _finite_within(a, b, definitions)
+    if isinstance(b, (T.SetUnion, T.SetDifference)):
+        return _within_operation(a, b, definitions)
     left, right = primitive_of(a), primitive_of(b)
     inner_real = left.order if left is not None and left.kind == REAL else None
     outer_real = right.order if right is not None and right.kind == REAL else None
@@ -225,6 +294,51 @@ def within(inner, outer, definitions) -> bool | None:
     if inner_real is not None and outer_bounds is not None:
         return _real_in_interval(inner_real, outer_bounds)
     return None
+
+
+def _within_operation(a, b, definitions):
+    """`within` where `b` is a union or a difference and `a` is neither.
+
+    A set lies in a union if it lies in one member, and in a difference only
+    if it lies in the left side; the membership of the one number of a
+    degenerate closed interval, `[0, 0]`, is decided in each part
+    (`_number_within`), which decides it in the whole."""
+    bounds = endpoints(a) if isinstance(a, T.Interval) else None
+    number = (
+        bounds is not None
+        and bounds.lower == bounds.upper
+        and bounds.lower_closed
+        and bounds.upper_closed
+    )
+    part = _number_within if number else within
+    if isinstance(b, T.SetUnion):
+        answers = [part(a, member, definitions) for member in b.members]
+        if True in answers:
+            return True
+        return False if number and all(answer is False for answer in answers) else None
+    left = part(a, b.left, definitions)
+    if left is False:
+        return False
+    if not number:
+        return None
+    right = part(a, b.right, definitions)
+    if right is True:
+        return False
+    return True if left is True and right is False else None
+
+
+def _number_within(point, outer, definitions):
+    """`within` for the degenerate closed interval `point`, `[v, v]`, with
+    one decision more: where `outer` is a range of integers or a listed set
+    whose written members are integers, the number lies in it exactly when
+    it is one of them."""
+    answer = within(point, outer, definitions)
+    listed = defined(outer, definitions)
+    if answer is None and isinstance(listed, (T.IntegerRange, T.Points)):
+        members = finite_members(listed, {}, definitions)
+        if members is not None:
+            return key_position(members, endpoints(point).lower) is not None
+    return answer
 
 
 _INF = math.inf
@@ -314,6 +428,49 @@ def defined(setterm, definitions):
     ):
         seen.add(setterm.name)
         setterm = definitions[setterm.name]
+    return setterm
+
+
+def resolved(setterm, definitions, active=()):
+    """A set term with each name the stage defines replaced by the set it is
+    defined as, and a primitive spelling by its glyph: the term itself, a
+    factor of a product, the base of a set with conditions, the domain and
+    the codomain of a set of functions, the set listed members lie in, a
+    member of a union and a side of a difference. A union is kept in its one
+    form (`union_of`), so that two unions that are one set after their names
+    are replaced are one term. A name the stage does not define stands for
+    itself, and a chain of definitions that returns to a name it has already
+    replaced stops there."""
+    if isinstance(setterm, T.Space):
+        return resolved(setterm.set, definitions, active)
+    if isinstance(setterm, T.Named):
+        if setterm.name in PRIMITIVE_SETS:
+            return T.Named(PRIMITIVE_SETS[setterm.name].glyph)
+        if setterm.name in definitions and setterm.name not in active:
+            return resolved(definitions[setterm.name], definitions, active + (setterm.name,))
+        return setterm
+    if isinstance(setterm, T.Product):
+        return T.Product(
+            tuple(resolved(factor, definitions, active) for factor in setterm.factors)
+        )
+    if isinstance(setterm, T.Comprehension):
+        return dataclasses.replace(setterm, base=resolved(setterm.base, definitions, active))
+    if isinstance(setterm, T.Functions):
+        return T.Functions(
+            resolved(setterm.domain, definitions, active),
+            resolved(setterm.codomain, definitions, active),
+        )
+    if isinstance(setterm, T.Points) and setterm.superset is not None:
+        return dataclasses.replace(
+            setterm, superset=resolved(setterm.superset, definitions, active)
+        )
+    if isinstance(setterm, T.SetUnion):
+        return union_of(resolved(member, definitions, active) for member in setterm.members)
+    if isinstance(setterm, T.SetDifference):
+        return T.SetDifference(
+            resolved(setterm.left, definitions, active),
+            resolved(setterm.right, definitions, active),
+        )
     return setterm
 
 
@@ -625,7 +782,13 @@ def index_within(inner, outer, definitions):
     other; two ranges are compared bound by bound where each pair of bounds
     is two numbers or one term, `{1, …, J}` within `{0, …, J}` by 0 ≤ 1 and
     J = J; two listed sets or two sets of labels by their members, a member
-    that is a term by the same term and a number by `same_number`."""
+    that is a term by the same term and a number by `same_number`. A union
+    lies in an index set exactly when each member does. A difference lies in
+    one its left side lies in. A difference whose left side is no index set,
+    no union and no difference, and whose right side is an index set, lies in
+    none, as its left side alone lies in none: `ℝ \\ {0}` holds infinitely
+    many numbers. Every other difference is not decided: `{1, 2} \\/ {7}
+    \\ {7}` is `{1, 2}`."""
     a, b = defined(inner, definitions), defined(outer, definitions)
     if isinstance(a, T.Space):
         a = defined(a.set, definitions)
@@ -633,6 +796,18 @@ def index_within(inner, outer, definitions):
         b = defined(b.set, definitions)
     if a == b:
         return True
+    if isinstance(a, T.SetUnion):
+        # a union lies in an index set exactly when each member does
+        answers = [index_within(member, b, definitions) for member in a.members]
+        return False if False in answers else True if all(answers) else None
+    if isinstance(a, T.SetDifference):
+        if index_within(a.left, b, definitions) is True:
+            return True
+        left = defined(a.left, definitions)
+        beyond = not is_index_set(left, definitions) and is_index_set(a.right, definitions)
+        if beyond and not isinstance(left, (T.SetUnion, T.SetDifference)):
+            return False
+        return None
     if not is_index_set(a, definitions):
         # a key declared on ℕ, on an interval or on a set the stage does not
         # define is not within a finite index set
@@ -763,14 +938,30 @@ def finite_set_conditions(setterm):
     return tuple(found)
 
 
-def literal_faults(setterm, printer) -> tuple:
+def literal_faults(setterm, printer, definitions) -> tuple:
     """The faults of a finite index set that its written numbers decide
     before any parameter has a value, each as a clause of a refusal printed
     with `printer`: a literal bound that is no integer, a lower bound written
     above the upper, a member that is no integer, two members written as one
     number, and a member written outside the set the members lie in. A fault
-    that reads a parameter is not among them; it is decided at calibration."""
+    that reads a parameter is not among them; it is decided at calibration.
+
+    An interval has one such fault: endpoints written so that it holds no
+    number, the lower above the upper, `(2, 1)`, or the two equal with an
+    open end, `[1, 1)`. The interval `[1, 1]` holds the number 1.
+
+    A difference has one such fault: a left side that lies within the right
+    side, `(0, 1) \\ ℝ₊`, so that the difference holds no number. `within`
+    decides it, with each name read as the set that `definitions`, the named
+    sets of the stage, holds for it; a difference that `within` does not
+    decide has no fault."""
     faults = []
+    if isinstance(setterm, T.SetDifference):
+        if within(setterm.left, setterm.right, definitions) is True:
+            faults.append(
+                f"has the left side {printer(setterm.left)} within the right side "
+                f"{printer(setterm.right)}, so it is empty"
+            )
     if isinstance(setterm, T.IntegerRange):
         lower, upper = number_at(setterm.lower, {}).value, number_at(setterm.upper, {}).value
         for bound, value in ((setterm.lower, lower), (setterm.upper, upper)):
@@ -808,7 +999,43 @@ def literal_faults(setterm, printer) -> tuple:
                     faults.append(
                         f"lists {printer(member)}, which lies outside {printer(setterm.superset)}"
                     )
+    if isinstance(setterm, T.Interval) and isinstance(setterm.bounds, T.Range):
+        bounds = setterm.bounds
+        lower, upper = (
+            _in_double_precision(_written_endpoint(end)) for end in (bounds.lower, bounds.upper)
+        )
+        open_end = isinstance(bounds.left, T.Open) or isinstance(bounds.right, T.Open)
+        if lower is not None and upper is not None and lower > upper:
+            faults.append(
+                f"has the lower endpoint {printer(bounds.lower)} above the upper endpoint "
+                f"{printer(bounds.upper)}, so it is empty"
+            )
+        elif lower is not None and lower == upper and open_end:
+            faults.append(
+                f"has the lower endpoint {printer(bounds.lower)} equal to the upper endpoint "
+                f"{printer(bounds.upper)} and an open end, so it is empty"
+            )
     return tuple(faults)
+
+
+def _in_double_precision(value):
+    """A written endpoint in double precision, in which a decimal is held, so
+    that a decimal and a ratio of two integers that write one number, `0.1`
+    and `1/10`, compare equal. An integer too large for double precision is
+    kept as it is, and None stays None."""
+    try:
+        return None if value is None else float(value)
+    except OverflowError:
+        return value
+
+
+def _written_endpoint(expr):
+    """The number an interval endpoint denotes where its written numbers
+    alone decide it: a number, arithmetic of numbers, infinity or the
+    negation of infinity. None for an endpoint that reads a name, and for
+    arithmetic of numbers that has no value, `1/0`."""
+    value = _endpoint_value(expr)
+    return number_at(expr, {}).value if value is None else value
 
 
 def _conjunction(predicates):

@@ -38,6 +38,28 @@ prose of the page is kept and no table is edited by hand:
   `refusals.py`, `VOCABULARIES` of `refusal_catalogue.py`, one table per
   vocabulary, each rule with the operation that refuses under it and the
   claim its comment states, as the catalogue answers them;
+- `reference/rules.md`: the rows of `SEMANTIC_RULES`
+  (`bellman/semantic_rules.py`), one table for each of the sections 2.1 to
+  2.5 and of the rules R1 to R12 of the syntax-to-semantics appendix under
+  the appendix's own headings, each rule with the functions that implement
+  it and check it, its refusals and a test; then a sentence that links the
+  table of the rules that the package does not yet check, which the
+  appendix holds; then the refusal rules of `RULES_STATED_ELSEWHERE` with
+  the pages that state them; this part of the page holds its section
+  headings;
+- `appendices/14-appendix-c-syntax-to-semantics.md`: the table of its
+  section 5.3, one row for each rule that the package does not yet check,
+  from the rows of `SEMANTIC_RULES` with `checked` false and from
+  `UNCHECKED_ELSEWHERE`: the sections that the rule concerns, the rule and
+  the other pages that state it; what the package does today; and the
+  smallest text that shows it;
+- `reference/types.md`: six tables, each under its heading: the objects of
+  a stage, from `OBJECTS` (`typing/type_table.py`); the role words, the
+  perch words with their marks and the reserved sets, from `ROLE_WORD`,
+  `PERCH_WORD`, `WRITTEN_MARK` and `PRIMITIVE_SETS`
+  (`syntax/vocabulary.py`); the forms of a set expression, from
+  `SET_FORMS`; and the limits of the language on a type, from `LIMITS`,
+  each with a line that breaks it and the rule of its refusal;
 - `API/index.md`: every public name of `bellman.stage`, `bellman.period` and
   `bellman.trellis`, in one table per namespace, then the stage object. The
   functions of `bellman.stage` are printed on the corpus stage `cons`, those
@@ -76,13 +98,15 @@ Run from the repository root with the project interpreter:
 
 The first rewrites every table; `--check` reports the tables that differ and
 writes nothing. `--page` names one page. `--source-ref` names the exported
-revision of `econ-ark/bellman` at which the methods page links each
-definition, `EXPORTED_REVISION` by default; the generator refuses a revision
-whose file does not hold the definition, and without a revision each entry
-shows the definition's location in the checkout with its public link stated
-unavailable. The release that exports the definitions sets
-`EXPORTED_REVISION` and regenerates the methods page, the script and the
-page committed together, so that `--check` agrees with the page. Every page
+revision of `econ-ark/bellman` at which the methods page and the rules page
+link each definition, `EXPORTED_REVISION` by default; the generator refuses
+a revision whose file does not hold the definition, and without a revision
+each entry of the methods page shows the definition's location in the
+checkout with its public link stated unavailable, and the rules page names
+each function by its module and its qualified name and states the public
+links unavailable once. The release that exports the definitions sets
+`EXPORTED_REVISION` and regenerates the two pages, the script and the pages
+committed together, so that `--check` agrees with the pages. Every page
 is written or checked through `settle` of `stage_object_page.py`, the one
 printer of the pages the package prints.
 """
@@ -202,6 +226,13 @@ from bellman.distributions.families import FAMILY_ARGUMENTS  # noqa: E402
 from bellman.fold.table import KINDS  # noqa: E402
 from bellman.refusal_catalogue import VOCABULARIES, claims, operation  # noqa: E402
 from bellman.refusals import METHOD_CONDITIONS, ConstructionError, FactoryError  # noqa: E402
+from bellman.semantic_rules import (  # noqa: E402
+    APPENDIX,
+    RULES_STATED_ELSEWHERE,
+    SEMANTIC_RULES,
+    UNCHECKED_ELSEWHERE,
+    resolve,
+)
 from bellman.stage import elaborated, pieces  # noqa: E402
 from bellman.stage.builder_pairs import DIRECTION_WORDS  # noqa: E402
 from bellman.display.cards import grid_sentence  # noqa: E402
@@ -212,10 +243,19 @@ from bellman.stage.representations import families as registered_families  # noq
 from bellman.syntax import terms as T  # noqa: E402
 from bellman.syntax.lower import parse_with_spans  # noqa: E402
 from bellman.syntax.source import to_source  # noqa: E402
+from bellman.syntax.vocabulary import (  # noqa: E402
+    MULTIPLIER,
+    PERCH_WORD,
+    PERCHES,
+    PRIMITIVE_SETS,
+    ROLE_WORD,
+    WRITTEN_MARK,
+)
 from bellman.syntax.walk import nodes  # noqa: E402
 from bellman.typing import primitive_definitions  # noqa: E402
 from bellman.typing.line_unknowns import BOUND_OPERATORS, OPERATOR_MEANINGS  # noqa: E402
 from bellman.typing.primitive_definitions import PRIMITIVE_DEFINITIONS  # noqa: E402
+from bellman.typing.type_table import LIMITS, OBJECTS, SET_FORMS, WITH_A_SET  # noqa: E402
 from bellman.typing.typed_expressions import format_expression  # noqa: E402
 
 # the package the script imports, whose sources it reads
@@ -232,6 +272,9 @@ LAWS = "docs/Bellman-Sym/reference/laws.md"
 FORMS = "docs/Bellman-Sym/reference/forms.md"
 METHODS = "docs/Bellman-Sym/reference/methods.md"
 REFUSALS = "docs/Bellman-Sym/reference/refusals.md"
+RULES_PAGE = "docs/Bellman-Sym/reference/rules.md"
+APPENDIX_PAGE = "docs/" + APPENDIX
+TYPES_PAGE = "docs/Bellman-Sym/reference/types.md"
 API_INDEX = "docs/Bellman-Sym/API/index.md"
 
 # the corpus stage of the API index and its three binding files, the files
@@ -916,12 +959,12 @@ def forms_table(page):
 # GRID_CONSTRUCTORS ---
 
 # The revision of the public repository `econ-ark/bellman` whose files hold
-# the definitions the methods page links. No exported revision holds the
-# definitions of this build, so the page shows each definition's location in
-# the checkout and states its public link unavailable; the release that
-# exports them names its revision here, or with `--source-ref`, and the
-# generator then links each definition at the line that revision holds,
-# refusing a revision that does not hold it.
+# the definitions the methods page and the rules page link. No exported
+# revision holds the definitions of this build, so the methods page shows
+# each definition's location in the checkout and both pages state the public
+# links unavailable; the release that exports them names its revision here,
+# or with `--source-ref`, and the generator then links each definition at
+# the line that revision holds, refusing a revision that does not hold it.
 EXPORTED_REVISION = None
 
 # the folder of the package's modules from the repository's root, which a
@@ -1423,6 +1466,500 @@ def refusals_table(page):
     # a table ends with its own newline, so one more leaves one blank line
     # between a table and the next heading
     return "\n".join(f"{heading}\n\n{held}" for heading, held in sections)
+
+
+# --- the rules of the language and their code: SEMANTIC_RULES ---
+
+# a heading of the appendix `APPENDIX`: a second-level heading with its
+# number, `## 3 The rules`, or the heading of one of its sections 2.1 to 2.5
+# or of one of its rules R1 to R12, `### R1 Blocks and their headers`
+APPENDIX_HEADING = re.compile(r"^(##|###) (\d+|2\.\d+|R\d+) (.+?)\s*$")
+
+
+@dataclasses.dataclass(frozen=True)
+class AppendixSection:
+    """One section 2.1 to 2.5 or one rule R1 to R12 of the appendix: its
+    number or label, its title, and the number and the title of the
+    second-level heading it stands under."""
+
+    label: str
+    title: str
+    part: str
+    part_title: str
+
+    @property
+    def cited(self):
+        """The section as a sentence cites it: `§2.1`, or `R1` for a rule."""
+        return self.label if self.label.startswith("R") else f"§{self.label}"
+
+    @property
+    def anchor(self):
+        """The anchor MkDocs gives the section's heading."""
+        return slugify(f"{self.label} {self.title}", "-")
+
+
+@functools.cache
+def appendix_sections():
+    """The sections 2.1 to 2.5 and the rules R1 to R12 of the appendix, in
+    page order, read from its headings outside fenced blocks."""
+    text = (ROOT / "docs" / APPENDIX).read_text(encoding="utf-8")
+    sections, part, fenced = [], None, False
+    for line in text.splitlines():
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        found = None if fenced else APPENDIX_HEADING.match(line)
+        if found is None:
+            continue
+        level, label, title = found.groups()
+        if level == "##":
+            part = (label, title)
+        elif part is not None:
+            sections.append(AppendixSection(label, title, *part))
+    return tuple(sections)
+
+
+def definition_line(source, qualified):
+    """The line of the statement that defines `qualified`, a function, a
+    method or a class by its dotted name, in the module text `source`; None
+    where the text holds no such definition."""
+    body, found = ast.parse(source).body, None
+    for part in qualified.split("."):
+        defined = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+        found = next(
+            (node for node in body if isinstance(node, defined) and node.name == part), None
+        )
+        if found is None:
+            return None
+        body = found.body
+    return found.lineno
+
+
+@functools.cache
+def exported_module(revision, module):
+    """The text of a module at an exported revision, read once in a run."""
+    return exported_source(revision, module)
+
+
+def function_cell(names, revision):
+    """The cell of the functions a row names, each written
+    `module:qualified.name`: the functions of one module on one line, after
+    the module's path in the package, in the order of first mention, and a
+    dash where the row names none. A name the package does not hold is
+    refused. With an exported revision, each name links to its definition at
+    the line that revision holds, and a revision that does not hold the
+    definition is refused."""
+    by_module = {}
+    for name in names:
+        dotted, _, qualified = name.partition(":")
+        try:
+            resolve(name)
+        except (ImportError, AttributeError) as error:
+            raise SystemExit(
+                f"a row of SEMANTIC_RULES names {name}, which the package does not hold: {error}"
+            )
+        module = module_path(dotted)
+        shown = code(qualified)
+        if revision is not None:
+            held = exported_module(revision, module)
+            line = definition_line(held, qualified) if held is not None else None
+            if line is None:
+                raise SystemExit(
+                    f"the exported revision {revision} holds no definition of {qualified} in "
+                    f"{module}; name a revision that holds it, or none"
+                )
+            shown = f"[{shown}]({SOURCE.format(ref=revision, path=module, line=line)})"
+        by_module.setdefault(module.removeprefix(PACKAGE_FOLDER), []).append(shown)
+    lines = [f"{code(module)}: {', '.join(shown)}" for module, shown in by_module.items()]
+    return "<br>".join(lines) or NONE
+
+
+def refusal_links(page, rules):
+    """The refusal rules of a row, each linked to its entry on the Refusals
+    page, whose anchor is the rule's name; a dash where the row names none."""
+    target = posixpath.relpath(REFUSALS, posixpath.dirname(page))
+    return ", ".join(f"[{code(rule)}]({target}#{rule})" for rule in rules) or NONE
+
+
+def page_link(page, path):
+    """A link from `page` to the page at `path` under `docs/`, shown by that
+    page's title, the text of its first-level heading."""
+    for line in (ROOT / "docs" / path).read_text(encoding="utf-8").splitlines():
+        if line.startswith("# "):
+            target = posixpath.relpath("docs/" + path, posixpath.dirname(page))
+            return f"[{prose(line[2:].strip())}]({target})"
+    raise SystemExit(f"docs/{path} holds no first-level heading")
+
+
+def named_test_cell(test):
+    """The test a row names, its file above its function and case; a dash
+    where the row names none."""
+    if test is None:
+        return NONE
+    file, _, function = test.partition("::")
+    return f"{code(file)}<br>{code(function)}"
+
+
+def section_link(page, section):
+    """A link from `page` to a section or a rule of the appendix, shown as a
+    sentence cites it."""
+    target = posixpath.relpath("docs/" + APPENDIX, posixpath.dirname(page))
+    return f"[{section.cited}]({target}#{section.anchor})"
+
+
+# a numbered heading of the third level of the appendix, with its number and
+# its title: `### 1.1 Stages, perches, and fields`, `### R6 Well-formedness`
+APPENDIX_NUMBERED = re.compile(r"^### (\d+\.\d+|R\d+) (.+?)\s*$")
+
+
+@functools.cache
+def appendix_numbers():
+    """The title of every numbered section of the third level of the
+    appendix, by its number, in page order, with the number of the section
+    that holds the opening marker of the printed table under the key None.
+    The headings are read outside fenced blocks, and an appendix whose
+    numbered sections hold no opening marker is refused."""
+    titles, label, fenced, marked = {}, None, False, None
+    for line in (ROOT / "docs" / APPENDIX).read_text(encoding="utf-8").splitlines():
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+            continue
+        found = None if fenced else APPENDIX_NUMBERED.match(line)
+        if found is not None:
+            label = found.group(1)
+            titles[label] = found.group(2)
+        elif line.strip() == MARKERS[0]:
+            marked = label
+    if marked is None:
+        raise SystemExit(
+            f"no numbered section of docs/{APPENDIX} holds the marker {MARKERS[0]} of the "
+            "table of the rules that the package does not yet check"
+        )
+    return {**titles, None: marked}
+
+
+def cited(label):
+    """A section of the appendix as a sentence cites it: `§2.1`, or `R1` for
+    a rule."""
+    return label if label.startswith("R") else f"§{label}"
+
+
+def texts_cell(example):
+    """The cell of the example of a rule not yet checked, a line of the
+    example to a line of the cell: each line as one code span, and an empty
+    line of the cell where an empty line stands between two texts."""
+    lines = example.strip("\n").split("\n")
+    return "<br>".join(code(line) if line.strip() else "" for line in lines)
+
+
+def unchecked_rules_table(page):
+    """The table of the section of the appendix that lists the rules the
+    package does not yet check, printed from the rows of `SEMANTIC_RULES`
+    with `checked` false and from `UNCHECKED_ELSEWHERE`
+    (`bellman/semantic_rules.py`). The first cell of a row holds the
+    sections of the appendix that the rule concerns, in page order, the
+    rule, and after `See also` the other pages that state it, each linked
+    with its section; the second holds what the package does today; and the
+    third the example (`texts_cell`). The rows stand in the order of the
+    first section each names, and the rows that begin with one section in
+    the order of the tables. A section that the appendix does not hold is
+    refused."""
+    order = [label for label in appendix_numbers() if label is not None]
+    rows = [row for row in SEMANTIC_RULES if not row.checked] + list(UNCHECKED_ELSEWHERE)
+    for row in rows:
+        unknown = [label for label in row.sections if label not in order]
+        if unknown:
+            raise SystemExit(
+                f"a rule not yet checked names the section {unknown[0]}, which docs/{APPENDIX} "
+                f"does not hold: {row.item}"
+            )
+
+    def placed(row):
+        """The sections a row names, in page order."""
+        return sorted(row.sections, key=order.index)
+
+    def first(row):
+        """The place of a row: that of the first section it names, and the
+        end of the table for a row that names none."""
+        return order.index(placed(row)[0]) if row.sections else len(order)
+
+    def rule_cell(row):
+        sections = ", ".join(cited(label) for label in placed(row))
+        pages = joined(f"{page_link(page, path)} §{section}" for path, section in row.see_also)
+        return (
+            (f"{sections}. " if sections else "")
+            + prose(row.item)
+            + (f" See also {pages}." if pages else "")
+        )
+
+    return table(
+        ("Rule", "What the package does today", "Smallest text"),
+        [
+            (rule_cell(row), prose(row.package_today), texts_cell(row.example))
+            for row in sorted(rows, key=first)
+        ],
+    )
+
+
+def rules_table(page, source_ref=EXPORTED_REVISION):
+    """The generated part of the rules page, printed from `SEMANTIC_RULES`
+    and `RULES_STATED_ELSEWHERE` of `bellman/semantic_rules.py`: a sentence
+    on how a function is named and linked; then, under the numbers and the
+    titles of the appendix's own headings, one table for each of its
+    sections 2.1 to 2.5 and of its rules R1 to R12, with one row for each
+    rule the package checks or carries out, its functions, its refusals and
+    a test; then a sentence that links the section of the appendix whose
+    table lists the rules that the package does not yet check
+    (`unchecked_rules_table`), so that each of those rules is printed once;
+    then one table of the refusal rules that other pages state. A row whose
+    section the appendix does not hold is refused."""
+    sections = appendix_sections()
+    known = {section.label for section in sections}
+    for row in SEMANTIC_RULES:
+        if row.section not in known:
+            raise SystemExit(
+                f"a row of SEMANTIC_RULES names the section {row.section}, which docs/{APPENDIX} "
+                "does not hold"
+            )
+    named = (
+        "Each function below is named by its module, as a path under "
+        f"{code(PACKAGE_FOLDER)}, and its qualified name"
+    )
+    if source_ref is None:
+        parts = [
+            f"{named}. A public link to each definition is unavailable until an exported "
+            "revision holds it."
+        ]
+    else:
+        parts = [
+            f"{named}, which links to its definition in the public repository at the "
+            f"exported revision {code(source_ref[:12])}."
+        ]
+    head = ("rule", "implemented by", "checked by", "refusals", "test")
+    part = None
+    for section in sections:
+        if section.part != part:
+            part = section.part
+            parts += ["", f"## {section.part} {section.part_title}"]
+        rows = [
+            (
+                prose(row.item),
+                function_cell(row.implements, source_ref),
+                function_cell(row.checks, source_ref),
+                refusal_links(page, row.refusals),
+                named_test_cell(row.test),
+            )
+            for row in SEMANTIC_RULES
+            if row.section == section.label and row.checked
+        ]
+        parts += [
+            "",
+            f"### {section.label} {section.title}",
+            "",
+            f"The rules of Appendix C {section_link(page, section)}.",
+            "",
+            table(head, rows).rstrip(),
+        ]
+    stated = [
+        (refusal_links(page, (rule,)), page_link(page, path))
+        for rule, path in RULES_STATED_ELSEWHERE.items()
+    ]
+    number = int(part) + 1
+    titles = appendix_numbers()
+    listed = titles[None]
+    appendix = posixpath.relpath("docs/" + APPENDIX, posixpath.dirname(page))
+    anchor = slugify(f"{listed} {titles[listed]}", "-")
+    parts += [
+        "",
+        f"## {number} Rules that the package does not yet check",
+        "",
+        f"[Appendix C]({appendix}#{anchor}) §{listed} lists the rules that the language has "
+        "and that the package does not yet check, each with what the package does today and "
+        "the smallest text that shows it. That table is printed from the package's tables of "
+        "the rules, as this page is, and a test of the package runs each text.",
+        "",
+        f"## {number + 1} Rules that other pages state",
+        "",
+        "Each of these refusal rules belongs to a rule that the page named beside it states.",
+        "",
+        table(("refusal rule", "stated on"), stated).rstrip(),
+    ]
+    return "\n".join(parts) + "\n"
+
+
+# --- the types: OBJECTS, SET_FORMS and LIMITS, with the vocabulary ---
+
+# the field name on which the table of the perches shows each mark
+MARKED_NAME = "V"
+
+
+def record_cell(name):
+    """The cell of the record a row of `OBJECTS` names, written
+    `module:qualified.name`: the class after its module's path in the
+    package. A name the package does not hold is refused."""
+    dotted, _, qualified = name.partition(":")
+    try:
+        resolve(name)
+    except (ImportError, AttributeError) as error:
+        raise SystemExit(
+            f"a row of OBJECTS names {name}, which the package does not hold: {error}"
+        )
+    return f"{code(module_path(dotted).removeprefix(PACKAGE_FOLDER))}: {code(qualified)}"
+
+
+def interval_of(bounds):
+    """The interval of a reserved set of real numbers as a file writes one,
+    from its endpoints (lower, lower closed, upper, upper closed)."""
+    lower, lower_closed, upper, upper_closed = bounds
+    infinities = {float("-inf"): "-inf", float("inf"): "inf"}
+    left, right = "[" if lower_closed else "(", "]" if upper_closed else ")"
+    return f"{left}{infinities.get(lower, lower)}, {infinities.get(upper, upper)}{right}"
+
+
+def reserved_set_rows():
+    """One row for each reserved set of `PRIMITIVE_SETS`, in the order the
+    table first names it: the set by its glyph, its other spellings, the
+    kind of its numbers and, for a set of real numbers, its interval."""
+    held_by_glyph = {}
+    for spelling, held in PRIMITIVE_SETS.items():
+        held_by_glyph.setdefault(held.glyph, (held, []))[1].append(spelling)
+    return [
+        (
+            code(glyph),
+            ", ".join(code(spelling) for spelling in spellings if spelling != glyph) or NONE,
+            held.kind,
+            code(interval_of(held.bounds)) if held.bounds is not None else NONE,
+        )
+        for glyph, (held, spellings) in held_by_glyph.items()
+    ]
+
+
+def read_in_cell(row):
+    """The objects in whose type a form of `SET_FORMS` is read, each linked
+    to its row of the objects, or one phrase where the form is read in the
+    type of every object of `WITH_A_SET`. A name outside `WITH_A_SET` is
+    refused."""
+    beside = [name for name in row.read_in if name not in WITH_A_SET]
+    if beside:
+        raise SystemExit(
+            f"the row {row.constructor} of SET_FORMS names {', '.join(beside)}, which "
+            "WITH_A_SET does not hold"
+        )
+    if set(row.read_in) == set(WITH_A_SET):
+        return "every object that is declared with a set"
+    return joined(f"[{name}](#{anchor_of(name)})" for name in row.read_in)
+
+
+def types_table(page):
+    """The six tables of the types page, each under its heading: the objects
+    of a stage, one row for each row of `OBJECTS`
+    (`bellman/typing/type_table.py`), with its line above the name of the
+    file that holds it; the role words of `ROLE_WORD` and the role
+    `MULTIPLIER`, which has none (`bellman/syntax/vocabulary.py`); the perch
+    words of `PERCHES` and `PERCH_WORD` with the marks of `WRITTEN_MARK`,
+    each shown on the name `MARKED_NAME`; the reserved sets of
+    `PRIMITIVE_SETS` (`reserved_set_rows`); the forms of a set expression,
+    one row for each row of `SET_FORMS`; and the limits of the language on
+    a type, one row for each row of `LIMITS`, its rule linked to its entry
+    on the Refusals page. A row of the objects is anchored by its name and
+    a row of the forms by its constructor."""
+    files = list(dict.fromkeys(row.file for row in OBJECTS))
+    objects = [
+        (
+            anchored(row.name, row.name),
+            prose(row.denotes),
+            f"{code(row.line)}<br>in {code(posixpath.basename(row.file))}",
+            prose(row.written),
+            record_cell(row.record),
+            code(row.read_by),
+        )
+        for row in OBJECTS
+    ]
+    roles = [(role, code("!" + word)) for role, word in ROLE_WORD.items()]
+    roles.append((MULTIPLIER, NONE))
+    perches = [
+        (
+            PERCH_WORD[perch],
+            code("!" + perch),
+            code(MARKED_NAME + WRITTEN_MARK[perch])
+            if WRITTEN_MARK[perch]
+            else f"none: {code(MARKED_NAME)}",
+        )
+        for perch in PERCHES
+    ]
+    forms = [
+        (
+            anchored(row.constructor, code(row.constructor)),
+            code(row.example),
+            prose(row.denotes),
+            read_in_cell(row),
+        )
+        for row in SET_FORMS
+    ]
+    limits = [
+        (prose(row.limit), code(row.line), refusal_links(page, (row.rule,))) for row in LIMITS
+    ]
+    sections = (
+        (
+            "Objects of a stage",
+            "Each line stands in a file of the repository and is quoted without its "
+            "annotation, the part of a line after `::`. The files are "
+            f"{joined(code(file) for file in files)}. A record is named by its module, as a "
+            f"path under {code(PACKAGE_FOLDER)}, and its class. The expression in the last "
+            "column is written for the stage that the file states; where the line stands in a "
+            "methods file, the stage has that methods file read.",
+            ("object", "what it is", "declared by", "type written", "record", "read by"),
+            objects,
+        ),
+        (
+            "Role words",
+            "A role word follows `!` among the components of a type, as in `c : ℝ₊₊ @ !ctrl`. "
+            "A field that carries no role word is a state, and the subject of a line that "
+            "states a law with `~` is a shock. A multiplier takes no role word: a line inside "
+            "a block declares it together with its clause, as `μ[>] : ℝ₊ ⟂ a >= 0` does "
+            f"({page_link(page, 'Bellman-Sym/10-constraints.md')} §4.2).",
+            ("role", "word"),
+            roles,
+        ),
+        (
+            "Perch words and marks",
+            "A perch word follows `!` after a side of a block header, as in "
+            "`(k : Xa) : !arvl`. A mark is written directly after a name and states the perch "
+            "of that one field. A name at the decision perch is written without a mark, and "
+            f"{code(MARKED_NAME + '[~]')} is read as {code(MARKED_NAME)}.",
+            ("perch", "word", "mark on a name"),
+            perches,
+        ),
+        (
+            "Reserved sets",
+            "The grammar reserves these names, and a file writes one without defining it. "
+            f"{page_link(page, 'Bellman-Sym/reference/symbols-conventions.md')} §9.2 says "
+            "what each set holds.",
+            ("set", "also written", "kind of number", "interval"),
+            reserved_set_rows(),
+        ),
+        (
+            "Forms of a set expression",
+            "The last column names the objects of §2.1 in whose type the package reads the "
+            "form. A field is taken there as a block header lists it, and §2.6 states what a "
+            "declaration on a line of its own reads.",
+            ("constructor", "written", "what it holds", "read in the type of"),
+            forms,
+        ),
+        (
+            "Limits on a type",
+            "The package refuses each line below, in a stage file that holds no other "
+            "declaration, under the rule beside it.",
+            ("limit", "a line that breaks it", "refusal"),
+            limits,
+        ),
+    )
+    # a table ends with its own newline, so one more leaves one blank line
+    # between a table and the next heading
+    return "\n".join(
+        f"### 2.{number} {title}\n\n{sentence}\n\n{table(head, rows)}"
+        for number, (title, sentence, head, rows) in enumerate(sections, start=1)
+    )
 
 
 # --- the index of the API ---
@@ -2477,6 +3014,9 @@ TABLES = {
     FORMS: forms_table,
     METHODS: methods_table,
     REFUSALS: refusals_table,
+    RULES_PAGE: rules_table,
+    APPENDIX_PAGE: unchecked_rules_table,
+    TYPES_PAGE: types_table,
     API_INDEX: api_table,
 }
 
@@ -2529,13 +3069,17 @@ def main():
         default=EXPORTED_REVISION,
         help=(
             "the exported revision of econ-ark/bellman, held by this repository, at which the "
-            "methods page links each definition; without one, each public link is stated "
-            "unavailable"
+            "methods page and the rules page link each definition; without one, each public "
+            "link is stated unavailable"
         ),
     )
     arguments = parser.parse_args()
     os.chdir(ROOT)
-    tables = {**TABLES, METHODS: functools.partial(methods_table, source_ref=arguments.source_ref)}
+    tables = {
+        **TABLES,
+        METHODS: functools.partial(methods_table, source_ref=arguments.source_ref),
+        RULES_PAGE: functools.partial(rules_table, source_ref=arguments.source_ref),
+    }
     status = [
         write_page(page, tables[page], arguments.check) for page in (arguments.page or TABLES)
     ]

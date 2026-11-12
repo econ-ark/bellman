@@ -1,10 +1,11 @@
 @stage: ez_savings
 
-β : (0,1) @ (0, E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ)))  :: ["discount factor; the bound is the restriction under which an optimal plan exists"]
-ρ : ℝ₊₊   :: ["1/ρ is the elasticity of intertemporal substitution; ρ differs from 1"]
-γ : ℝ₊₊   :: ["relative risk aversion; γ differs from 1"]
+β : (0,1)  :: ["discount factor"]
+ρ : ℝ₊₊ \ {1}   :: ["1/ρ is the elasticity of intertemporal substitution; ρ differs from 1"]
+γ : ℝ₊₊ \ {1}   :: ["relative risk aversion; γ differs from 1"]
 μ_Ψ : ℝ
 σ_Ψ : ℝ₊
+q : (0,1) := (β*exp((1-ρ)*(μ_Ψ + (1-γ)*σ_Ψ^2/2)))^(1/ρ)  :: ["return patience factor (β*R)^(1/ρ)/R at R = exp(μ_Ψ + (1-γ)*σ_Ψ^2/2), the certainty-equivalent return E_{Ψ}(Ψ^(1-γ))^(1/(1-γ)) of the lognormal return; q < 1, equivalently β < E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ)), is the restriction under which an optimal plan exists"]
 
 Ψ : ℝ₊₊
 Ψ ~ LogNormal(μ_Ψ, σ_Ψ)

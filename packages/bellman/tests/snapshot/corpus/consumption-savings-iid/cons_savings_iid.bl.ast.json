@@ -79,8 +79,27 @@
           {
             "__class__": "Domain",
             "space": {
-              "__class__": "Named",
-              "name": "ℝ₊"
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "upper": {
+                  "__class__": "Sym",
+                  "symbol": {
+                    "__class__": "Constant",
+                    "name": "inf"
+                  }
+                },
+                "right": {
+                  "__class__": "Open"
+                }
+              }
             }
           }
         ],

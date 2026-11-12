@@ -916,9 +916,11 @@ def gridded_route(stage, tolerance=1e-12, iterations=10_000, initial=None):
     the feasible set, and where `iterations` iterations end without the
     largest change of the consumption function falling below `tolerance`.
     The stage file declares the return impatience condition as the upper
-    bound of the discount factor, and `calibrate` refuses a discount factor
-    at or above it; the route checks q all the same, since a discount factor
-    one rounding step below the bound binds with q computed as one.
+    bound of the discount factor and as the set (0, 1) of q, and `calibrate`
+    refuses a calibration that breaks either; the route checks q all the
+    same, since it reads q from the stage it is given, and under a
+    definition of q without that set a discount factor one rounding step
+    below the bound binds with q computed as one.
 
     Returns the pairs of the fixed point, `knots` and `consumption`, their
     Linear evaluator `policy`, the number of iterations, the last change,

@@ -170,8 +170,10 @@ RULES = (
     # A name is one of a field, a function, a named space, a shock or a
     # parameter, and is not the name of a numerical operator.
     "one-name-one-meaning",
-    # A top-level scalar declaration is a parameter; only a shock is
-    # both declared at the top level and listed on the side of a block.
+    # A name that a stage file declares at the top level is a field where a
+    # block header lists it; where none does, it is a parameter unless it has
+    # a law or the word `!shck`, and a parameter carries no role word. No line
+    # of a block writes a parameter, a derived parameter or a setting.
     "parameter-or-field",
     # Every listed field has one perch, fixed by its side's perch word, its
     # mark, or its role, and the three must agree.
@@ -425,7 +427,9 @@ RULES = (
     # by signs, sums, differences, products, quotients, powers and the calls
     # `log` and `exp` of one argument; the calibration supplies no value for
     # it, and at the calibration values every operation of its definition is
-    # defined and its value is a finite real number.
+    # defined and its value is a finite real number. The set a definition
+    # declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is a set of numbers and reads
+    # no setting.
     "derived-parameter",
     # The conditional distribution an expectation needs is a declared
     # conditional, a product of them, or a marginal or conditional of a joint

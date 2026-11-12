@@ -1222,9 +1222,16 @@ def _defines_block(names, record):
         elif kind == "derived":
             # a derived parameter's definition is its first object, and its
             # value at the calibration, on the line under it, its second
-            # (AMD-MT-003, build contract §5)
+            # (AMD-MT-003, build contract §5); the set its definition
+            # declares stands before the definition, as a parameter's set
+            # stands before its value, and the reals, the set of a derived
+            # parameter whose definition declares none, are not printed
             if identity in defined:
                 block.row("", _after("=", names.rule(held)))
+            elif denoted.type != "ℝ":
+                carrier = _carrier_document(names, denoted)
+                block.row(symbol, layout.concat(_after("∈", carrier), ",  := ", names.rule(held)))
+                defined.add(identity)
             else:
                 block.row(symbol, _after(":=", names.rule(held)))
                 defined.add(identity)

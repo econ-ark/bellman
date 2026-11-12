@@ -20,7 +20,7 @@ type: concept
 
 # Symbolic stage
 
-A **symbolic stage** is the constructed [[stage]] before numerical methods, [[settings]] and [[calibration]] values are attached. It is what `elaborate_stage(load_stage(path))` returns for one stage file, and what `elaborate_trellis` places at every position of a [[trellis]]. It does not mean that the stage retains a parser tree or has no interpreted mathematical equations.
+A **symbolic stage** is the constructed [[stage]] before numerical methods, [[settings]] and [[calibration]] values are attached, the version that [Kinds and sorts](../bellman-calculus/APPX-D-KINDS-AND-SORTS.md) §6 calls the stage as constructed. It is what `elaborate_stage(load_stage(path))` returns for one stage file, and what `elaborate_trellis` places at every position of a [[trellis]]. It does not mean that the stage retains a parser tree or has no interpreted mathematical equations.
 
 `load_stage(path)` reads a `.bl` stage file into a source record, and `elaborate_stage(record)` parses and checks it and returns a stage containing its [[semgraph]] (semantic graph). On the symbolic stage `stage.methods` and `stage.settings` are empty, `stage.par` lists every [[parameters|parameter]] as `unbound`, and `repr(stage)` prints `ElaboratedStage('cons', symbolic)` for the consumption stage. Typed [[field|fields]], equations and definitions describe the problem, with parameter names still symbolic. Further functional interpretation requires its stated assumptions; construction is not a numerical solution.
 

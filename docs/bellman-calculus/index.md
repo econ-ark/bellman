@@ -17,7 +17,7 @@ topic: [calculus]
 > The Bellman calculus describes staged recursive decision problems through their states, information, equations and composed operators. These pages explain the mathematical interpretation, with one buffer-stock running example and explicitly unfinished chapters on composition.
 
 > [!info]- Relationship with other documents
-> **Used by** — [Bellman-SYM](../Bellman-Sym/index.md) documents the `.bl` stage source and supporting YAML whose meaning these pages state; Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the interpretation rules and their assumptions.
+> **Used by** — [Bellman-SYM](../Bellman-Sym/index.md) documents the `.bl` stage files and methods files and the supporting YAML whose meaning these pages state; Bellman-SYM's [Appendix C](../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) states the interpretation rules and their assumptions.
 > **See also** — [Concept wiki](../wiki/index.md) provides linked definitions.
 
 <a id="what-this-documentation-is-for"></a>
@@ -39,7 +39,7 @@ Start with [Introduction](./01-Introduction%20to%20T-calculus.md) and the [buffe
 | [Introduction](./01-Introduction%20to%20T-calculus.md) | Source, mathematical interpretation and numerical computation. |
 | [Illustrative example](./02-Illustrative%20example.md) | The buffer-stock Bellman equation and staged factorization. |
 | [Stages and perches](./03-Stages%20and%20perches.md) | Information, sufficient states, conditional laws and stage operators. |
-| [Fields, functions and types](./04-fields,%20functions%20and%20types.md) | Random quantities, value domains, representative functions and binding. |
+| [Fields, functions and types](./04-fields,%20functions%20and%20types.md) | Random quantities, declared sets, representative functions and binding. |
 | [Operators and builders](./05-Operators%20and%20builders.md) | Unfinished notes on transition expectation, evaluation, selection and implicit relations. |
 | [Methods](./06-Methods.md) | The signature of an operator with its method and grid components, composition over the field component, the grid as a retract, the handler, the two erasures and the two levels of a stage. |
 | [Stage composition](./07-stage-composition.md) | Unfinished notes on compatible joins within periods. |
@@ -56,11 +56,11 @@ Start with [Introduction](./01-Introduction%20to%20T-calculus.md) and the [buffe
 | [Appendix A — Semantics](./APPX-A-SEMANTICS.md) | Source interpretation, retained equations and numerical attachments. |
 | [Appendix B — Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) | Ground/free terms, specified interpretations and exact refinement. |
 | [Appendix C — The stage term](./APPX-C-STAGE-TERM.md) | Typed builder symbols and compatible stage compositions. |
-| [Appendix D — Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) | Declared type order, interpreted inclusion and local classification conventions. |
+| [Appendix D — Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) | The type system on one account: kinds and sorts, the sort a written type names, the admissible sets of the parameters and of the settings, and the signatures, models and versions of a stage. |
 | [Appendix F — Operator algebra](./APPX-F-OPERATOR-ALGEBRA.md) | Composition, transition pairing, branching and numerical obligations. |
-| [Appendix G — Functional programming](./APPX-G-FUNCTIONAL-PROGRAMMING.md) | Primitive objects, typed expressions, stages, calibration and methodization functors, and numerical realization. |
+| [Appendix G — Functional programming](./APPX-G-FUNCTIONAL-PROGRAMMING.md) | Primitive objects, typed expressions, stages, the calibration, methodization and configuration functors, and numerical realization. |
 | [Catalogue index](./catalogues/index.md) | Field, function, operator and parameter/settings inventories. |
-| [Fields](./catalogues/fields.md) | Field declarations, value domains and representatives. |
+| [Fields](./catalogues/fields.md) | Field declarations, declared sets and representatives. |
 | [Functions](./catalogues/functions.md) | Typed functions and their mathematical roles. |
-| [Operators](./catalogues/operators.md) | Operations and their input/output types. |
+| [Operators](./catalogues/operators.md) | Operations and their input and output sorts. |
 | [Parameters and settings](./catalogues/parameters-settings.md) | Economic model inputs and numerical choices. |

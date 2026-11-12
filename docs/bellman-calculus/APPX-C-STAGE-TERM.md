@@ -29,9 +29,9 @@ topic: [calculus]
 
 ## 1. The stage signature
 
-A **many-sorted signature** $\Sigma=(S,\Omega)$ consists of sort names $S$ and operator symbols $\Omega$. Each symbol has a **rank**, its ordered input sorts and output sort, written $\mathrm{op}:s_1\times\cdots\times s_n\to s$. The signature declares names and ranks; an **algebra** assigns a carrier set to each sort and a function of the specified rank to each operator. A declared subsort requires compatible carrier inclusion, but inclusion in one interpretation does not establish a declared subsort relation. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) distinguishes these notions.
+A **many-sorted signature** $\Sigma=(S,\Omega)$ has sort names $S$ and operator symbols $\Omega$, each symbol with a **rank**, its ordered input sorts and output sort, written $\mathrm{op}:s_1\times\cdots\times s_n\to s$. An **algebra** assigns a carrier set to each sort and a function of its rank to each symbol. No order between sorts is declared: one sort lies below another when its condition implies the other's in every stage and at every assignment of values to the parameters, so that the carriers are included. An inclusion of carriers in one interpretation does not establish that order. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §3 gives these definitions in D1 and D2, and the derived order in D5.
 
-The stage tuple of [Stages and perches](./03-Stages%20and%20perches.md) §1 supplies mathematical data for the interpretation: state spaces, feasible actions, shock laws, transitions and local payoff maps. It is not the list of sort names. Writing $\mathsf L$ for the scalar value domain, $\operatorname{Gr}(\Gamma)$ for feasible state–action pairs, and $\mathsf Z_\eta,\mathsf Z_\zeta$ for post- and pre-decision shock spaces, the pointwise aggregators have types
+The stage tuple of [Stages and perches](./03-Stages%20and%20perches.md) §1 supplies mathematical data for the interpretation: state spaces, feasible actions, shock laws, transitions and local payoff maps. It is not the list of sort names. Writing $\mathsf L$ for the value line, the declared set of a value field, $\operatorname{Gr}(\Gamma)$ for feasible state–action pairs, and $\mathsf Z_\eta,\mathsf Z_\zeta$ for post- and pre-decision shock spaces, the pointwise aggregators have types
 
 $$
 \mathrm G_\succ:\mathsf L\times\operatorname{Gr}(\Gamma)\times\mathsf Z_\eta\to\mathsf L,
@@ -51,7 +51,7 @@ $$
 \prec\;\xrightarrow{e_\prec}\;\sim\;\xrightarrow{e_\succ}\;\succ.
 $$
 
-The indices stand for arrival, decision and continuation information sets. State spaces are assigned to these indices; the indices are not themselves state spaces. The path generates a free category of paths once identities and composition are included. This is a different construction from a many-sorted term algebra, and neither says the bare graph is initial in an unspecified category.
+The indices stand for arrival, decision and continuation information sets. State spaces are assigned to these indices; the indices are not themselves state spaces. The path generates a free category of paths once identities and composition are included. This is a different construction from a many-sorted term algebra, to which §4 relates it, and neither says the bare graph is initial in an unspecified category.
 
 The coarse stage signature uses value-function and distribution sort names:
 
@@ -60,7 +60,7 @@ S=\{\mathsf V_p:p\in\{\prec,\sim,\succ\}\}
 \cup\{\mathsf M_p:p\in\{\prec,\sim,\succ\}\}.
 $$
 
-An interpretation assigns chosen value-function spaces on each state space and spaces of probability measures on the corresponding state spaces, with the closure and integrability conditions needed by its operations. A random value field has a representative in the value-function space only under the state-generated measurability conditions in [Fields, functions and types](./04-fields,%20functions%20and%20types.md); it is not that function itself.
+An interpretation assigns chosen value-function spaces on each state space and the spaces of finite measures on the corresponding state spaces, of which the probability measures are those of mass one, with the closure and integrability conditions needed by its operations. A random value field has a representative in the value-function space only under the state-generated measurability conditions in [Fields, functions and types](./04-fields,%20functions%20and%20types.md); it is not that function itself.
 
 | Operator symbol | Rank | Interpretation |
 |---|---|---|
@@ -72,15 +72,17 @@ An interpretation assigns chosen value-function spaces on each state space and s
 
 The policy-indexed rows have one symbol for each supplied policy. A finer signature can instead include a policy sort and policy as an explicit argument. In this coarse signature the pairing and function application are not additional symbols. They remain available when defining its target interpretation; mathematical properties can be stated without adding an authored name for every expression.
 
+[Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 calls this signature, together with a sort of policies and the policy builder from $\mathsf V_\succ$ to that sort, the **operator signature** of a stage. It obtains the operator signature from the stage's state signature, whose sorts are the state sorts of the perches and whose symbols are the transitions, each a law of motion with its shock law. The sorts here name the carriers, and the builder symbols of the table other than the optimizing $\mathbb T_\succ$ name the images, that two models, one in value functions and one in measures, give the declaration graph of the stage. The vertices of that graph are the states of the three perches, and its edges are typed by the transitions.
+
 <a id="c3-why-state-spaces-are-not-sorts"></a>
 
 ## 3. Coarse and fine signatures
 
-State, action and shock sorts are omitted from this coarse signature because none of its displayed ranks uses them. That is a choice of abstraction, not a ban on unused sorts in a signature or a claim that state domains lack types. The underlying state, action and shock spaces enter the target operations. A finer signature can include them when it displays pullback along the law of motion, scalar aggregation, or selection explicitly; [Operators and builders](./05-Operators%20and%20builders.md) gives those types.
+State, action and shock sorts are omitted from this coarse signature because none of its displayed ranks uses them. That is a choice of abstraction, not a ban on unused sorts in a signature or a claim that no sort names a state space: the state sorts of the state signature (§2) name the state spaces of the perches. The underlying state, action and shock spaces enter the target operations. A finer signature can include them when it displays pullback along the law of motion, scalar aggregation, or selection explicitly; [Operators and builders](./05-Operators%20and%20builders.md) gives the ranks of these operations.
 
 The mathematical signature is not a replacement for the concrete stage grammar. Stage equations are authored in `.bl`; arithmetic, binders and equation bodies are parsed. In the specified construction, interpretation maps the temporary abstract syntax tree into equations, definitions and typed graph connections. Scope and substitution use the declared context. The syntax tree and its source spans are not retained as the stage's mathematical representation. Distinct stage occurrences have fresh objects and bindings even if their common module text is parsed once.
 
-Periods, trellises, connectors, methods, settings, calibration and specification recipes remain YAML. A mathematical composition expression does not assert a new stored whole-trellis graph. Bellman-SYM's factory API and its Period Syntax page describe the application representation.
+Periods, trellises, connectors, specification recipes, the calibration and the values of the settings remain YAML. The methods are written in a methods file, a `.bl` file that also declares the settings they read. A mathematical composition expression does not assert a new stored whole-trellis graph. Bellman-SYM's factory API and its Period Syntax page describe the application representation.
 
 <a id="c4-two-terms-one-path"></a>
 
@@ -104,4 +106,4 @@ $$
 
 for bounded measurable $f$, or whenever the evaluations are absolutely integrable. [Stages and perches](./03-Stages%20and%20perches.md) defines these expectations. Rewards, discounting and selection require their own interpretation.
 
-A ground term has a unique evaluation once the signature's target operations are fixed. A term with free continuation or distribution inputs also requires their assignment; [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) §2 states the free-algebra result. The relation between this term account and a complete categorical presentation of the indexing path remains to be developed. #todo
+A ground term has a unique evaluation once the signature's target operations are fixed. A term with free continuation or distribution inputs also requires their assignment; [Initial-algebra semantics](./APPX-B-INITIAL-ALGEBRA.md) §2 states the free-algebra result. [Kinds and sorts](./APPX-D-KINDS-AND-SORTS.md) §6 supplies the relation between this term account and the indexing path for symbols with one input. The path, with the state of each perch at its index, is the declaration graph of the stage. The model in measures, which that section calls the model of laws, is a functor out of the free category of that graph. The model in value functions, which it calls the backward model, is a functor out of the opposite of that category, in which every arrow is reversed. The sorts of §2 and the builder symbols of its table other than the optimizing $\mathbb T_\succ$ name the carriers and the images that these two models give the graph. For symbols with several inputs, as in a finer signature with pairing, the relation remains to be developed in that form. #todo

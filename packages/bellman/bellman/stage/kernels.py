@@ -50,6 +50,7 @@ from bellman.fold.wire_terms import (
 from bellman.native.identity import Identity
 from bellman.native.labels import function_field, wire_spelling
 from bellman.native.provenance import package_version, source_file
+from bellman.native.records import derived_parameter_text
 from bellman.native.versions import kept_answer
 from bellman.refusals import ConstructionError, construction_error
 from bellman.stage.boxes import operator_target, origins, row_at, rows_of
@@ -1009,8 +1010,10 @@ def _python_text(stage, box, spec):
             "; ".join(f"{python} is {written}" for python, written in renamed)
             or "as in the stage file"
         ),
+        # each derived parameter the kernel writes, as its definition writes
+        # it, with the set the definition declares
         *(
-            f"# derived parameter: {name} := {to_source(held.equations[0])}"
+            f"# derived parameter: {derived_parameter_text(held)}"
             for name, held in writer.ctx.derived.items()
             if name in writer.derived
         ),

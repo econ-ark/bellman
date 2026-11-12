@@ -116,7 +116,7 @@ The two period definitions of the preceding page leave different fields at their
 | Consumption, discounting, investment | `{k_next: k}` | `{m_next: m}` | Positive resources, $(0,\infty)$. |
 | Investment, consumption, discounting | `{m_next: m}` | `{k_next: k}` | Nonnegative capital, $[0,\infty)$. |
 
-For the first definition, `port.m_next` of period `h+1` supplies `cons.m` of period `h`. For the second, `disc.k_next` supplies `port.k`. Each pairing requires compatible declared sets and the author's economic justification for the quantity, units and information. Use the matching within-period and inter-period choices together; reversing a stage list does not move a boundary.
+For the first definition, `port.m_next` of period `h+1` supplies `cons.m` of period `h`. For the second, `disc.k_next` supplies `port.k`. Each pairing requires [compatible declared sets](06-period.md#2-connectors), the outgoing field's set contained in the incoming field's, and the author's economic justification for the quantity, units and information. Use the matching within-period and inter-period choices together; reversing a stage list does not move a boundary.
 
 The **terminal continuation value** is the value function that a stage of the terminal period reads after its decisions. Keep its input explicit: declare `V[>]` in the backward block's input header, including when the terminal payoff is given in closed form. You supply the function on the declared continuation-state domain. It may be identically zero, as in the durables model's bequest stage, but death, exit or the end of the horizon does not set it to zero automatically. A zero value does not require removing the continuation-state fields.
 

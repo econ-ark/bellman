@@ -32,7 +32,7 @@ Xm := ℝ₊₊
 Y  := ℝ₊₊        :: ["working ability; the positive reals stand in for its finite grid, whose number of points is a numerical choice"]
 Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
 
-σ : ℝ₊₊          :: ["relative risk aversion; the utility formula requires σ different from 1"]
+σ : ℝ₊₊ \ {1}    :: ["relative risk aversion; the utility formula requires σ different from 1"]
 r : (-1, inf)    :: ["risk-free interest rate, a price fixed by the stationary equilibrium"]
 w : ℝ₊₊          :: ["wage rate, a price fixed by the stationary equilibrium"]
 τ : [0,1)        :: ["proportional payroll tax financing social security, fixed by the government budget"]
@@ -41,7 +41,7 @@ w : ℝ₊₊          :: ["wage rate, a price fixed by the stationary equilibri
 Γ(x : ℝ₊₊) := (0, x]                 :: [id=feasible]
 ```
 
-The interest rate, the wage and the tax are declared parameters. Their values are set by the stationary equilibrium of the economy (Section III.F of the paper), which no stage states; `economics.md`, Section 7, states what of it the stages cannot write. The utility formula is undefined at $\sigma=1$, which the declared set does not exclude. Cash on hand is positive because the wage, ability and after-tax share are positive.
+The interest rate, the wage and the tax are declared parameters. Their values are set by the stationary equilibrium of the economy (Section III.F of the paper), which no stage states; `economics.md`, Section 7, states what of it the stages cannot write. The utility formula is undefined at $\sigma=1$, which the declared set `ℝ₊₊ \ {1}` excludes. Cash on hand is positive because the wage, ability and after-tax share are positive.
 
 ## Blocks and equations
 

@@ -20,7 +20,14 @@ each of its acceptance items that the snapshot does not carry, named
    a faulty value at its own parameter, in whatever order the file declares
    the parameters.
 5. The stage files that wrote a bound after a comma hold the sets they held,
-   and every recorded calibration of them binds.
+   and every recorded calibration of them binds. The Epstein–Zin stage file
+   has since stated its restriction on a derived parameter, whose value
+   calibration computes; the test reads the bound the file held from its
+   text with the declaration of β replaced, and binds the file itself at
+   its recorded calibrations with no open requirement. The perfect-foresight
+   stage file has since declared its discount factor on ℝ₊₊ with the same
+   bound; the test reads the set the file held in the same way, and the set
+   the file holds now.
 
 Item 6, the views, is carried by the snapshot: the view of a stage prints a
 declared set as a declaration writes it.
@@ -31,10 +38,13 @@ import math
 
 import pytest
 from conftest import (
+    CORPUS,
     CORPUS_CALIBRATIONS,
     PERFECT_FORESIGHT_CALIBRATION,
     ROOT,
     SA_SAVINGS_CALIBRATIONS,
+    SECOND_CALIBRATIONS,
+    corpus_text,
     fresh_stage,
     methodized,
     stage_from_text,
@@ -51,6 +61,33 @@ PERFECT_FORESIGHT_FOLDER = (
     "applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight"
 )
 MEMBERSHIP = "calibration-domain-membership"
+# the declaration of the discount factor that the Epstein–Zin stage file held
+# until 11 November 2026; its bound reads an expectation, which no
+# calibration decides
+EZ_BOUNDED_DISCOUNT_FACTOR = "β : (0,1) @ (0, E_{Ψ}(Ψ^(1-γ))^((ρ-1)/(1-γ)))"
+# the declaration of the discount factor that the perfect-foresight stage
+# file held until 11 November 2026; the file now writes the same bound on
+# the base ℝ₊₊
+PF_BOUNDED_DISCOUNT_FACTOR = "β : (0,1) @ (0, R^(ρ-1))"
+
+
+def _perfect_foresight_with_the_set_it_held():
+    """The perfect-foresight stage of the committed text, the declaration of
+    β replaced by `PF_BOUNDED_DISCOUNT_FACTOR`."""
+    path = f"{PERFECT_FORESIGHT_FOLDER}/perfect_foresight.bl"
+    text = (ROOT / path).read_text(encoding="utf-8")
+    (written,) = [row for row in text.split("\n") if row.startswith("β : ")]
+    return stage_from_text(text.replace(written, PF_BOUNDED_DISCOUNT_FACTOR), path)
+
+
+def _ez_savings_with_the_bound_it_held():
+    """The Epstein–Zin stage of the committed text, the declaration of β
+    replaced by `EZ_BOUNDED_DISCOUNT_FACTOR`."""
+    text = corpus_text("ez_savings")
+    (written,) = [row for row in text.split("\n") if row.startswith("β : ")]
+    return stage_from_text(
+        text.replace(written, EZ_BOUNDED_DISCOUNT_FACTOR), CORPUS["ez_savings"]
+    )
 
 
 def _two_nodes(declaration):
@@ -220,7 +257,15 @@ def test_item_2_the_kept_set_is_one_in_any_order_and_is_read_back_from_its_print
     for first, second in itertools.combinations(intervals + others, 2):
         if first in others and second in others:
             continue
-        kept = _lowered(f"β : {first} @ {second}")
+        try:
+            kept = _lowered(f"β : {first} @ {second}")
+        except ConstructionError as refused:
+            # two sets whose numbers leave no number in common are refused,
+            # in either order (AMD-GRAM-005)
+            assert "no number in common" in refused.message, f"`{first} @ {second}`"
+            with pytest.raises(ConstructionError, match="no number in common"):
+                _lowered(f"β : {second} @ {first}")
+            continue
         written = f"`{first} @ {second}`, kept as `{to_source(kept)}`"
         assert _lowered(f"β : {second} @ {first}") == kept, written
         assert _lowered(f"β : {to_source(kept)}") == kept, written
@@ -306,10 +351,11 @@ def test_item_4_calibration_decides_the_membership_of_a_value_in_a_set_with_cond
         # the return impatience condition fails: q = (βR)^(1/ρ)/R is 1.05
         with pytest.raises(ValueError) as refused:
             copy_native(bound).calibrate(impatient)
-        words = ("parameter 'β'", "0.99", "(0, 1) @ (0, R^(ρ - 1))", "β < R^(ρ - 1)", "R = 0.9")
+        words = ("parameter 'β'", "0.99", "ℝ₊₊ @ (0, R^(ρ - 1))", "β < R^(ρ - 1)", "R = 0.9")
         assert all(word in str(refused.value) for word in words), str(refused.value)
-        with pytest.raises(ValueError, match=r"outside the declared set \(0, 1\)"):
-            copy_native(bound).calibrate({**PERFECT_FORESIGHT_CALIBRATION, "β": 1.5})
+        # a value outside the base of the two sets is refused by the base
+        with pytest.raises(ValueError, match=r"outside the declared set ℝ₊₊"):
+            copy_native(bound).calibrate({**PERFECT_FORESIGHT_CALIBRATION, "β": -0.5})
         # a return factor below one at which the condition holds: q = 0.97
         for values in (PERFECT_FORESIGHT_CALIBRATION, {**impatient, "β": 0.85}):
             assert _open_memberships(copy_native(bound).calibrate(values)) == []
@@ -413,14 +459,22 @@ def test_item_5_the_rewritten_stage_files_hold_the_sets_they_held(ez_savings, sa
     perfect_foresight = fresh_stage(f"{PERFECT_FORESIGHT_FOLDER}/perfect_foresight.bl")
     # the corpus stage that bounds the return r, a field, below by ρ is read
     fresh_stage("packages/bellman/tests/corpus/benhabib-bisin-zhu-2011/generation.bl")
+    bounded = _ez_savings_with_the_bound_it_held()
     held = {
-        "β of the perfect-foresight stage": (
-            perfect_foresight.par["β"].domain,
+        "β of the perfect-foresight stage, as its file declared it": (
+            _perfect_foresight_with_the_set_it_held().par["β"].domain,
             "(0, 1)",
             ["β < R^(ρ - 1)"],
         ),
-        "β of the Epstein–Zin stage": (
-            ez_savings.par["β"].domain,
+        # the file now writes the base ℝ₊₊, a set not written as an interval,
+        # so each endpoint of the interval (0, R^(ρ-1)) is a condition
+        "β of the perfect-foresight stage": (
+            perfect_foresight.par["β"].domain,
+            "ℝ₊₊",
+            ["β > 0", "β < R^(ρ - 1)"],
+        ),
+        "β of the Epstein–Zin stage, as its file bounded it": (
+            bounded.par["β"].domain,
             "(0, 1)",
             ["β < E_{Ψ}(Ψ^(1 - γ))^((ρ - 1)/(1 - γ))"],
         ),
@@ -433,7 +487,23 @@ def test_item_5_the_rewritten_stage_files_hold_the_sets_they_held(ez_savings, sa
         assert [to_source(condition) for condition in declared.conds] == conditions, name
     for values in SA_SAVINGS_CALIBRATIONS:
         assert _open_memberships(copy_native(sa_savings).calibrate(values)) == []
-    # the bound of the Epstein–Zin discount factor reads an expectation, so
-    # its membership stays the one open requirement of the calibration
-    calibrated = copy_native(ez_savings).calibrate(CORPUS_CALIBRATIONS["ez_savings"])
-    assert len(_open_memberships(calibrated)) == 1
+    # the bound the Epstein–Zin discount factor held reads an expectation, so
+    # its membership stays the one open requirement of the calibration, while
+    # its base is decided
+    values = CORPUS_CALIBRATIONS["ez_savings"]
+    assert len(_open_memberships(copy_native(bounded).calibrate(values))) == 1
+    with pytest.raises(ValueError, match=r"parameter 'β' .*outside the declared set \(0, 1\)"):
+        copy_native(bounded).calibrate({**values, "β": 1.5})
+    # the stage file states the same restriction on the derived parameter q,
+    # whose value calibration computes: each recorded calibration binds with
+    # no open requirement, and a discount factor that violates the
+    # restriction is refused at q
+    for recorded, q in (
+        (CORPUS_CALIBRATIONS["ez_savings"], 0.9896430095876418),
+        (SECOND_CALIBRATIONS["ez_savings"], 0.9844751256509318),
+    ):
+        calibrated = copy_native(ez_savings).calibrate(recorded)
+        assert calibrated.par["q"].value == pytest.approx(q)
+        assert _open_memberships(calibrated) == []
+    with pytest.raises(ValueError, match="derived parameter 'q'"):
+        copy_native(ez_savings).calibrate({**values, "β": 0.99})

@@ -368,15 +368,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "finite-real-arithmetic",
     [
      "policy.optimality",
@@ -678,15 +669,6 @@
    "Evaluation of 𝑐"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "finite-real-arithmetic",
     [
@@ -1062,15 +1044,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "finite-real-arithmetic",
     [
      "policy.optimality",
@@ -1444,15 +1417,6 @@
    "Evaluation of 𝑐"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "finite-real-arithmetic",
     [
@@ -1828,15 +1792,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "finite-real-arithmetic",
     [
      "policy.optimality",
@@ -2191,15 +2146,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "distribution-weights-are-a-probability-vector",
     [
      "cons_savings_iid:distribution:y"
@@ -2335,15 +2281,6 @@
    "Push-forward through 𝑔 at 𝑐"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "distribution-weights-are-a-probability-vector",
     [
@@ -2490,15 +2427,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "distribution-weights-are-a-probability-vector",
     [
      "cons_savings_iid:distribution:y"
@@ -2644,15 +2572,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "distribution-weights-are-a-probability-vector",
     [
      "cons_savings_iid:distribution:y"
@@ -2797,15 +2716,6 @@
    "Push-forward through 𝑔 at 𝑐"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "distribution-weights-are-a-probability-vector",
     [
@@ -3106,15 +3016,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "finite-real-arithmetic",
     [
      "policy.optimality",
@@ -3295,15 +3196,6 @@
    "policy.optimality"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "finite-real-arithmetic",
     [
@@ -3488,15 +3380,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "finite-real-arithmetic",
     [
      "policy.optimality",
@@ -3680,15 +3563,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "finite-real-arithmetic",
     [
      "policy.optimality",
@@ -3871,15 +3745,6 @@
    "policy.optimality"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "finite-real-arithmetic",
     [
@@ -4161,15 +4026,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "distribution-weights-are-a-probability-vector",
     [
      "cons_savings_iid:distribution:y"
@@ -4290,15 +4146,6 @@
    "dcsn_to_cntn.1"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "distribution-weights-are-a-probability-vector",
     [
@@ -4421,15 +4268,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "distribution-weights-are-a-probability-vector",
     [
      "cons_savings_iid:distribution:y"
@@ -4551,15 +4389,6 @@
   ],
   "obligations": [
    [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
-   [
     "distribution-weights-are-a-probability-vector",
     [
      "cons_savings_iid:distribution:y"
@@ -4680,15 +4509,6 @@
    "dcsn_to_cntn.1"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "distribution-weights-are-a-probability-vector",
     [
@@ -4813,7 +4633,6 @@
    "Conditions",
    "  cntn_to_dcsn:Aggregation  𝑉(w) ∈ ℝ",
    "  dcsn_to_arvl:Aggregation  𝑉≺(b) ∈ ℝ",
-   "  𝑢                         ¬(1 − γ = 0)",
    "──────────────────────────────────────────────────────────────────────────────",
    "Source  cons_savings_iid.bl",
    "  13  y ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_y, σ_y)))",
@@ -4828,8 +4647,6 @@
    "        :: [id=optimality]",
    "",
    "Definitions referenced",
-   "  γ     cons_savings_iid:parameter:γ",
-   "  𝑢     cons_savings_iid:function:𝑢",
    "  Γ     cons_savings_iid:correspondence:Γ",
    "",
    "File",
@@ -4860,7 +4677,7 @@
    [
     "cons_savings_iid:parameter:γ",
     "parameter",
-    "STAGE cons_savings_iid / PARAMETER γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  γ  ∈ ℝ₊\n──────────────────────────────────────────────────────────────────────────────\nSource  cons_savings_iid.bl\n  6  γ : ℝ₊  :: [\"Relative risk aversion must be greater than 1\"]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    "STAGE cons_savings_iid / PARAMETER γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  γ  ∈ (1, ∞)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons_savings_iid.bl\n  6  γ : (1, inf)  :: [\"Relative risk aversion must be greater than 1\"]\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
    ],
    [
     "cons_savings_iid:parameter:R",
@@ -4890,7 +4707,7 @@
    [
     "cons_savings_iid:function:𝑢",
     "function",
-    "STAGE cons_savings_iid / FUNCTION 𝑢\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝑢  : ℝ₊₊ → ℝ,  c ↦ c^(1 − γ)/(1 − γ)\n\nConditions\n  ¬(1 − γ = 0)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons_savings_iid.bl\n  15  𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ)  :: [id=util]\n\nDefinitions referenced\n  γ     cons_savings_iid:parameter:γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    "STAGE cons_savings_iid / FUNCTION 𝑢\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDefines\n  𝑢  : ℝ₊₊ → (−∞, 0),  c ↦ c^(1 − γ)/(1 − γ)\n──────────────────────────────────────────────────────────────────────────────\nSource  cons_savings_iid.bl\n  15  𝑢(c : ℝ₊₊) := c^(1-γ)/(1-γ)  :: [id=util]\n\nDefinitions referenced\n  γ     cons_savings_iid:parameter:γ\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
    ],
    [
     "cons_savings_iid:function:𝑑𝑢",
@@ -4988,8 +4805,8 @@
    "  ───────────────────  ─────   ─────────────────────────────────────────────",
    "  sets                     1   Y := ℝ₊",
    "  distributions            1   y",
-   "  parameters               6   β : ℝ₊₊; γ : ℝ₊; R : ℝ₊₊; μ_y : ℝ; σ_y : ℝ₊;",
-   "                               p_zero : (0, 1)",
+   "  parameters               6   β : ℝ₊₊; γ : (1, inf); R : ℝ₊₊; μ_y : ℝ;",
+   "                               σ_y : ℝ₊; p_zero : (0, 1)",
    "  functions                1   𝑢 on ℝ₊₊",
    "  function aliases         2   𝑑𝑢, 𝑑𝑢𝑖𝑛𝑣",
    "  correspondences          1   Γ : ℝ₊ ⇉ ℝ₊₊",
@@ -5016,15 +4833,6 @@
    "  policy     ∼ c  ←  ≻ V≻"
   ],
   "obligations": [
-   [
-    "arithmetic-definedness",
-    [
-     "cons_savings_iid:function:𝑢",
-     "¬(1 - γ = 0)"
-    ],
-    "required",
-    "The divisor 1 - γ at cons_savings_iid:function:𝑢 must be nonzero."
-   ],
    [
     "finite-real-arithmetic",
     [

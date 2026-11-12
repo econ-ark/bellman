@@ -6,15 +6,18 @@ function body, the right side of a statement, a declared domain — as `.bl`
 text that lowers back to an equal term. The text is for display: nothing in
 the package parses it again, and the elaboration reads the terms. The form is
 normalized. Whitespace and the choice among spellings the grammar treats alike
-are not kept: `**` prints as `^`, the glyph `∞` as `inf`, and the decision
-mark `x[~]` as the bare `x`. Parentheses are the fewest the grammar's
-precedence allows (`grammars/stage.lark`): a sum is a sum of products, a
-product a product of molecules, a power a power of two atoms, and a unary
-minus applies to a product. A set with conditions that bound its own name
+are not kept: `**` prints as `^`, the glyph `∞` as `inf`, the signs `∪` and
+`∖` as `\\/` and `\\`, and the decision mark `x[~]` as the bare `x`.
+Parentheses are the fewest the grammar's precedence allows
+(`grammars/stage.lark`): a sum is a sum of products, a product a product of
+molecules, a power a power of two atoms, and a unary minus applies to a
+product. A set with conditions that bound its own name
 prints as a declaration writes it, the base and one interval for each bound
 with `@` between them (`Tau @ [1, 10]`). A coupled condition prints with its
 binder and base set, as a correspondence body
-(`{u : ℝ × ℝ | u[1] + u[2] < x}`).
+(`{u : ℝ × ℝ | u[1] + u[2] < x}`). A union prints with `\\/` between its
+members and a difference with `\\` between its two sides
+(`(0, 1) \\/ (1, inf)`, `ℝ₊₊ \\ {1}`).
 
 A top-level statement prints as the grammar writes it: a distribution
 declaration as its subject or tuple of subjects, a tilde, and the family call
@@ -42,6 +45,7 @@ constructor outside them raises `NotImplementedError` naming the constructor.
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from itertools import zip_longest
 
@@ -612,12 +616,31 @@ def _selector(sel) -> str:
 
 def _factor_text(set_expression) -> str:
     """The text of a set standing as a factor of a product or as the set the
-    members of a listed set lie in: a set of functions has no spelling at that
-    place, since the arrow binds looser than the product."""
-    if isinstance(set_expression, T.Functions):
+    members of a listed set lie in: a set of functions, a union and a
+    difference have no spelling at that place, since the arrow and the two
+    signs bind looser than the product and parentheses do not group sets."""
+    if isinstance(set_expression, (T.Functions, T.SetUnion, T.SetDifference)):
         raise NotImplementedError(
-            "a Functions set has no spelling as a factor of a product or as the set listed "
-            "members lie in: the arrow binds looser than the product"
+            f"a {type(set_expression).__name__} set has no spelling as a factor of a product "
+            f"or as the set listed members lie in: the arrow, `\\/` and `\\` bind looser than "
+            f"the product"
+        )
+    return set_text(set_expression)
+
+
+def _operand_text(set_expression, first) -> str:
+    """The text of a member of a union or of a side of a difference. The two
+    signs are read from left to right and parentheses do not group sets, so
+    a union or a difference has a spelling as an operand only where it
+    stands `first`, and a set of functions has none: the arrow binds looser
+    than the two signs."""
+    nested = isinstance(set_expression, (T.SetUnion, T.SetDifference)) and not first
+    if nested or isinstance(set_expression, T.Functions):
+        raise NotImplementedError(
+            f"a {type(set_expression).__name__} set has no spelling as "
+            + ("an operand" if not nested else "a later operand")
+            + " of `\\/` or `\\`: the two signs are read from left to right, and the arrow "
+            "binds looser than they do"
         )
     return set_text(set_expression)
 
@@ -665,6 +688,19 @@ def set_text(set_expression) -> str:
         return " × ".join(_factor_text(factor) for factor in set_expression.factors)
     if isinstance(set_expression, T.Comprehension):
         return _intersection_text(set_expression)
+    if isinstance(set_expression, T.SetUnion):
+        members = set_expression.members
+        if len(members) < 2 or any(isinstance(member, T.SetUnion) for member in members):
+            raise NotImplementedError(
+                "a SetUnion of fewer than two members, or with a SetUnion as a member, has no "
+                "spelling: the lowering writes one flat SetUnion"
+            )
+        return " \\/ ".join(
+            _operand_text(member, first=place == 0) for place, member in enumerate(members)
+        )
+    if isinstance(set_expression, T.SetDifference):
+        left = _operand_text(set_expression.left, first=True)
+        return f"{left} \\ {_operand_text(set_expression.right, first=False)}"
     raise NotImplementedError(
         f"to_source has no rule for the set constructor {type(set_expression).__name__}; "
         f"the corpus does not use it"
@@ -769,9 +805,10 @@ def may_hold_infinity(set_expression, negative) -> bool:
     `inf`. An interval holds it where it is closed at that infinite
     endpoint, and an extended real set where it reaches that side, `ℝ̄` or
     `ℝ_{+∞}`. A real set, an integer set, a range of integers and a list of
-    finite numbers hold neither infinity. Every other set may hold it: a set
-    the file names, whose members are not known from its name, and a list
-    with a member that is no finite number as written."""
+    finite numbers hold neither infinity. A union may hold it where one of
+    its members may, and a difference where its left side may. Every other
+    set may hold it: a set the file names, whose members are not known from
+    its name, and a list with a member that is no finite number as written."""
     if isinstance(set_expression, T.Interval):
         if not is_interval(set_expression):
             return False
@@ -789,7 +826,65 @@ def may_hold_infinity(set_expression, negative) -> bool:
         return False
     if isinstance(set_expression, T.Points):
         return not all(is_number(member) for member in set_expression.members)
+    if isinstance(set_expression, T.SetUnion):
+        return any(may_hold_infinity(member, negative) for member in set_expression.members)
+    if isinstance(set_expression, T.SetDifference):
+        return may_hold_infinity(set_expression.left, negative)
     return True
+
+
+def union_of(members):
+    """The union of the sets `members`, in the one form a union is kept in,
+    so that `A \\/ B` and `B \\/ A` are one term. A member that is a union
+    gives its members, so that no member is a union. A member equal to an
+    earlier one is left out, and a union left with one member is that
+    member. A difference stands first: the two signs are read from left to
+    right, so `A \\ B \\/ C` is the union of `A \\ B` with C, and a
+    difference written anywhere else would be read as another set. The other
+    members follow in the order of their printed text (`_printed_order`)."""
+    flat = [
+        each
+        for member in members
+        for each in (member.members if isinstance(member, T.SetUnion) else (member,))
+    ]
+    distinct = list(dict.fromkeys(flat))
+    if len(distinct) == 1:
+        return distinct[0]
+    first = [member for member in distinct if isinstance(member, T.SetDifference)]
+    others = [member for member in distinct if not isinstance(member, T.SetDifference)]
+    return T.SetUnion(tuple(first + sorted(others, key=_printed_order)))
+
+
+def _printed_order(setterm):
+    """The key that orders the members of a union: the printed text of a
+    member, each number that equals an integer written as that integer, so
+    that two equal members, `(0, 2)` and `(0, 2.0)`, have one key. Where the
+    member holds a number that has no spelling, `1e400`, the key is the text
+    of its constructors."""
+    plain = _with_integers(setterm)
+    try:
+        return to_source(plain), repr(plain)
+    except NotImplementedError:
+        return repr(plain), repr(plain)
+
+
+def _with_integers(value):
+    """A term, or a value a term holds, with each float that equals an
+    integer replaced by that integer: `Number(2.0)` becomes `Number(2)`,
+    which is an equal term."""
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, tuple):
+        return tuple(_with_integers(item) for item in value)
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return dataclasses.replace(
+            value,
+            **{
+                field.name: _with_integers(getattr(value, field.name))
+                for field in dataclasses.fields(value)
+            },
+        )
+    return value
 
 
 def is_number(term) -> bool:

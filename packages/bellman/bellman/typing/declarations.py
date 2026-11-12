@@ -22,7 +22,13 @@ item.
 `derived_parameter_body` decides which definitions without arguments are
 derived parameters, constants of the stage defined from its parameters
 (AMD-MT-003, build contract §5); the typing walk and the fold read that one
-rule.
+rule. `derived_parameter_declaration` reads a declaration that carries a
+value, `q : (0,1) := (β*R)^(1/ρ)/R`, as such a definition with the set its
+value lies in (AMD-GRAM-005). A union `A \\/ B` and a difference `A \\ B` of
+sets are read in the set of a parameter, of a derived parameter and of a
+setting; in every other set the pass refuses them, where it classifies a
+listed field (`classify`) and after the file is read
+(`check_unions_and_differences`).
 """
 
 from __future__ import annotations
@@ -41,8 +47,8 @@ from bellman.native.identity import (
 )
 from bellman.refusals import ConstructionError, NotConstructed, construction_error, location
 from bellman.syntax import terms
-from bellman.syntax.source import to_source
-from bellman.syntax.walk import nodes
+from bellman.syntax.source import comprehension_text, is_infinity, to_source
+from bellman.syntax.walk import children, nodes
 from bellman.syntax.vocabulary import (
     ARRIVAL,
     CONTINUATION,
@@ -87,6 +93,7 @@ from bellman.typing.line_unknowns import (
     listed_identity,
     named_sets,
     names_fields,
+    names_read_in_set,
     occurrence_paths,
     outputs_and_unknowns,
     perch_of_spelling,
@@ -187,6 +194,20 @@ class _Classified(NamedTuple):
     perch: str | None
 
 
+class _SetSite(NamedTuple):
+    """One set of the file that is no parameter's, no derived parameter's
+    and no setting's: the address of the item that writes it; the set term,
+    None where the item writes none; the words that begin a refusal, up to
+    the set it quotes; why the set is the set of a field, None for a field
+    a header lists; and whether the set is written after `:=`."""
+
+    address: str
+    term: object
+    subject: str
+    reason: str | None
+    defined: bool = False
+
+
 class _SidePerches(NamedTuple):
     """The perch words of a block's input side and its output side."""
 
@@ -239,7 +260,9 @@ class _Definition:
     are (name, printed set) pairs; `body` the body term; `slot` the term
     field that holds the body (`body` or `value`), the first step of an
     occurrence's position; `references` the defined functions the body
-    mentions, filled by `resolve_definitions`."""
+    mentions, filled by `resolve_definitions`; `declared_set` the set term a
+    derived parameter's definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`,
+    None for every other definition."""
 
     name: str
     params: tuple
@@ -250,6 +273,7 @@ class _Definition:
     operators: tuple = ()
     references: tuple = ()
     domains: tuple = ()
+    declared_set: object = None
 
 
 # The kind a stage without branches carries; the other kind is "branching".
@@ -317,6 +341,46 @@ def derived_parameter_body(body, bodies, defined, active=frozenset()) -> bool:
             return derived_parameter_body(bodies[name], bodies, defined, active | {name})
         return True
     return False
+
+
+def declared_definition(declaration):
+    """The name and the set of a declaration that carries a value and has
+    the shape of a definition with a declared set, `q : (0,1) := e`, as a
+    pair; None for any other declaration that carries a value. The shape:
+    one bare name, typed by sets alone, which the lowering keeps as one set;
+    and a value that reads at least one name other than `inf`. A value that
+    reads no such name, `ρ : ℝ := 2` or `ρ : ℝ := inf`, is a number, which
+    the calibration supplies."""
+    coordinates, classifiers = declaration.subject.coordinates, declaration.classifiers
+    if len(coordinates) != 1 or len(classifiers) != 1:
+        return None
+    coordinate, classifier = coordinates[0], classifiers[0]
+    if (
+        not isinstance(coordinate, terms.Coordinate)
+        or coordinate.at is not None
+        or coordinate.classifiers
+        or not isinstance(classifier, terms.Domain)
+        or not any(
+            isinstance(node, terms.Sym) and not is_infinity(node, negative=False)
+            for node in nodes(declaration.value)
+        )
+    ):
+        return None
+    return coordinate.stem, classifier.space
+
+
+def derived_parameter_declaration(declaration):
+    """The name and the set of a declaration that carries a value in the form
+    of a derived parameter's definition with a declared set, `q : (0,1) :=
+    (β*R)^(1/ρ)/R`, as a pair; None for any other declaration that carries a
+    value. The form: the shape `declared_definition` reads, and a value whose
+    outermost form `derived_parameter_body` reads as an arithmetic
+    expression. The declaration pass and the fold read this one rule
+    (AMD-GRAM-005)."""
+    typed = declared_definition(declaration)
+    if typed is None or not derived_parameter_body(declaration.value, {}, frozenset()):
+        return None
+    return typed
 
 
 # what a derived parameter's definition reads and is formed by, the reason of
@@ -519,6 +583,125 @@ class Declarations:
                     ),
                 )
         self.check_multipliers_unlisted()
+        self.check_declared_definitions()
+        self.check_unions_and_differences()
+
+    def check_unions_and_differences(self) -> None:
+        """A union and a difference of sets are written in the set of a
+        parameter, of a derived parameter and of a setting alone. `classify`
+        refuses them on a field a block header lists and on a top-level name
+        that carries a role word or a perch word. This check refuses them in
+        the sets it can place only once the whole file is read: of a
+        top-level name that is a shock or a field, of a multiplier, of an
+        argument of a function or a correspondence, of a named set and of a
+        correspondence's body. The textually first such set is refused."""
+        admitted = set(self.parameters()) | set(self.settings())
+        sites = []
+        for name, declaration in self.scalars.items():
+            if name in admitted:
+                continue
+            sites.append(
+                _SetSite(
+                    declaration.address,
+                    declaration.domain_term,
+                    f"{name} at the top level is declared in the set",
+                    f"{name} has a distribution, which makes it a shock, a field of the stage"
+                    if name in self.law_of
+                    else f"a block header lists {name}, which makes it a field",
+                )
+            )
+        for multiplier in self.multipliers.values():
+            written = f"{multiplier.stem}[>]"
+            sites.append(
+                _SetSite(
+                    multiplier.address,
+                    multiplier.domain_term,
+                    f"the multiplier {written} in block {multiplier.block!r} is declared in "
+                    "the set",
+                    "a multiplier is a field of the continuation perch",
+                )
+            )
+        for name, definition in self.functions.items():
+            correspondence = isinstance(definition.body, terms.setexpr)
+            kind = "correspondence" if correspondence else "function"
+            sites.extend(
+                _SetSite(
+                    definition.address,
+                    term,
+                    f"the argument {stem} of the {kind} {name} is declared in the set",
+                    f"an argument of a {kind} takes the values of fields",
+                )
+                for stem, term in definition.domains
+            )
+            if correspondence:
+                sites.append(
+                    _SetSite(
+                        definition.address,
+                        definition.body,
+                        f"the correspondence {name} is defined as",
+                        "a correspondence restricts a control, which is a field",
+                        defined=True,
+                    )
+                )
+        sites.extend(
+            _SetSite(
+                address,
+                self.space_terms[name],
+                f"the set {name} is defined as",
+                "a named set may type a field",
+                defined=True,
+            )
+            for name, address in self.spaces.items()
+        )
+        for site in sorted(sites, key=lambda site: self.order[site.address]):
+            self.refuse_union_or_difference(site)
+
+    def refuse_union_or_difference(self, site) -> None:
+        """Refuses the set of `site`, a `_SetSite`, where it holds a union
+        or a difference, under `readable-form` at the site's address; a set
+        that holds neither is passed over. The sentence quotes the set as
+        its place writes it, a set with conditions with a bar after `:=`.
+        The advice names a set to write in place of the outermost union or
+        difference: the set a difference removes numbers from, or one set
+        that holds every member of a union."""
+        operations = [
+            node
+            for node in nodes(site.term)
+            if isinstance(node, (terms.SetUnion, terms.SetDifference))
+        ]
+        if not operations:
+            return
+        held = [
+            word
+            for form, word in ((terms.SetUnion, "a union"), (terms.SetDifference, "a difference"))
+            if any(isinstance(node, form) for node in operations)
+        ]
+        with_bar = site.defined and isinstance(site.term, terms.Comprehension)
+        printed = comprehension_text(site.term) if with_bar else to_source(site.term)
+        outermost = first = operations[0]
+        while isinstance(first, terms.SetDifference):
+            first = first.left
+        if isinstance(first, terms.SetUnion):
+            place = "its place" if first is outermost else f"place of `{to_source(outermost)}`"
+            write = (
+                f"Write one set that holds every member of `{to_source(first)}`, an interval "
+                f"or a listed set, in {place}"
+            )
+        else:
+            side = "left side" if first is outermost.left else "first set"
+            write = f"Write the {side}, `{to_source(first)}`, in place of `{to_source(outermost)}`"
+        raise self.error(
+            "readable-form",
+            site.address,
+            (
+                f"{site.subject} `{printed}`, which holds {' and '.join(held)}; a union and a "
+                f"difference are written in the set of a parameter, of a derived parameter or "
+                f"of a setting alone, since the set of a field is read by the grids and the "
+                f"connections, which read no union and no difference"
+                + (f", and {site.reason}" if site.reason else "")
+            ),
+            write=write,
+        )
 
     def check_multipliers_unlisted(self) -> None:
         """No header lists a multiplier: a multiplier a block body declares
@@ -617,30 +800,25 @@ class Declarations:
             # 0.7 §4)
             return
         if declaration.value is not None:
-            names = ", ".join(coordinate_text(c) for c in declaration.subject.coordinates)
-            domains = [c for c in declaration.classifiers if isinstance(c, terms.Domain)]
-            declared = to_source(domains[0].space) if len(domains) == 1 else "<set>"
-            value = to_source(declaration.value)
-            one = len(declaration.subject.coordinates) == 1
-            raise self.error(
-                "readable-form",
-                address,
-                (
-                    f"the declaration of {names} carries the value {value}; a stage file "
-                    f"declares the set a name lies in, `{names} : {declared}`, and the "
-                    + (
-                        f"calibration file supplies its value, `{names}: {value}`"
-                        if one
-                        else "calibration file supplies the value of each name"
-                    )
-                ),
-                write=(
-                    f"Write `{names} : {declared}` here, and `{names}: {value}` in the "
-                    f"calibration file"
-                    if one
-                    else None
-                ),
-            )
+            typed = derived_parameter_declaration(declaration)
+            if typed is None:
+                names = ", ".join(coordinate_text(c) for c in declaration.subject.coordinates)
+                domains = [c for c in declaration.classifiers if isinstance(c, terms.Domain)]
+                raise self.declared_value_refusal(
+                    names,
+                    to_source(domains[0].space) if len(domains) == 1 else "<set>",
+                    to_source(declaration.value),
+                    address,
+                    one=len(declaration.subject.coordinates) == 1,
+                    defined=declared_definition(declaration) is not None,
+                )
+            # `q : (0,1) := (β*R)^(1/ρ)/R`: the definition of a derived
+            # parameter with the set its value lies in, read as `q := …` is;
+            # the name is no parameter, so it is absent from `scalars`
+            name, declared = typed
+            self.read_definition(name, [], declaration.value, "value", address)
+            self.functions[name].declared_set = declared
+            return
         subject = declaration.subject
         if declaration.classifiers and len(subject.coordinates) != 1:
             subject = terms.Subject((terms.Group(subject, declaration.classifiers),))
@@ -698,9 +876,96 @@ class Declarations:
             if role == SHOCK:
                 self.note_shock(c.stem, address, place)
 
+    def declared_value_refusal(self, names, declared, value, address, one=True, defined=False):
+        """The refusal, under `readable-form`, of a declaration that carries
+        a value and defines no derived parameter: the declaration of `names`
+        with the printed set `declared` and the printed `value`, of `one`
+        name or of several. The sentence advises writing the value in the
+        calibration file, which supplies numbers. With `defined`, the
+        declaration has the shape of a definition with a declared set
+        (`declared_definition`), `q : (0,1) := max(β, R)`, and the sentence
+        states instead the forms a derived parameter's definition takes."""
+        if defined:
+            return self.error(
+                "readable-form",
+                address,
+                (
+                    f"the declaration of {names} carries the value {value}, which defines no "
+                    f"derived parameter; a declaration that carries a value defines one, and "
+                    f"{_DERIVED_PARAMETER_FORMS}"
+                ),
+                write=(
+                    f"Write the value of {names} from declared parameters, finite numbers and "
+                    "derived parameters, with signs, sums, differences, products, quotients, "
+                    "powers, log and exp"
+                ),
+            )
+        return self.error(
+            "readable-form",
+            address,
+            (
+                f"the declaration of {names} carries the value {value}; a stage file "
+                f"declares the set a name lies in, `{names} : {declared}`, and the "
+                + (
+                    f"calibration file supplies its value, `{names}: {value}`"
+                    if one
+                    else "calibration file supplies the value of each name"
+                )
+            ),
+            write=(
+                f"Write `{names} : {declared}` here, and `{names}: {value}` in the "
+                f"calibration file"
+                if one
+                else None
+            ),
+        )
+
+    def check_declared_definitions(self) -> None:
+        """A declaration that carries a value must define a derived
+        parameter. One whose value is a function or a set the stage defines,
+        `q : (0,1) := 𝑢`, is refused under `readable-form`. The check runs
+        after every definition is read, since a value that is one name is
+        read through that name's definition (`defines_a_derived_parameter`).
+        Definitions that name each other in a cycle are left to
+        `resolve_definitions`, which refuses a cycle under
+        `definition-order`."""
+        for definition in self.functions.values():
+            if (
+                definition.declared_set is None
+                or self.defines_a_derived_parameter(definition)
+                or self.names_a_cycle(definition)
+            ):
+                continue
+            raise self.declared_value_refusal(
+                definition.name,
+                to_source(definition.declared_set),
+                definition.printed,
+                definition.address,
+                defined=True,
+            )
+
+    def names_a_cycle(self, definition) -> bool:
+        """Whether the right side of `definition` is one name that leads,
+        through definitions whose right sides are one name each, back to a
+        name already followed: `q := p` beside `p := q`."""
+        followed = {definition.name}
+        body = definition.body
+        while isinstance(body, terms.Sym) and isinstance(body.symbol, terms.Constant):
+            name = body.symbol.name
+            if name in followed:
+                return True
+            held = self.functions.get(name)
+            if held is None or held.slot != "value":
+                return False
+            followed.add(name)
+            body = held.body
+        return False
+
     def classify(self, classifiers, coordinate, address, block_id=None):
         """The role word, printed domain, domain term, and own perch word of
-        one typed coordinate."""
+        one typed coordinate. A union or a difference in the set of a field
+        a header lists, or of a top-level name that carries a role word or
+        a perch word, is refused (`refuse_union_or_difference`)."""
         role = domain = domain_term = perch = None
         place = f"block {block_id!r}" if block_id else "the top level"
         for cl in classifiers:
@@ -744,9 +1009,25 @@ class Declarations:
                     )
                 role = word
             elif isinstance(cl, terms.Infoset):
-                perch = self.perch_token(
+                word = self.perch_token(
                     cl.side, address, f"{coordinate_text(coordinate)} in {place}"
                 )
+                if perch is not None and perch != word:
+                    where = f"in block {block_id!r}" if block_id else "at the top level"
+                    raise self.error(
+                        "field-perch",
+                        address,
+                        (
+                            f"{coordinate_text(coordinate)} {where} carries two perch "
+                            f"words, `!{perch}` and `!{word}`; a field is at one perch, so its "
+                            f"type holds one perch word at most"
+                        ),
+                        write=(
+                            f"Remove `!{perch}` or `!{word}` from the type of "
+                            f"{coordinate_text(coordinate)}"
+                        ),
+                    )
+                perch = word
             else:
                 raise self.error(
                     "readable-form",
@@ -757,6 +1038,21 @@ class Declarations:
                         f"word, and a perch word"
                     ),
                 )
+        if domain_term is not None and (block_id or role is not None or perch is not None):
+            # refuses a union or a difference in the set of a field a header
+            # lists, and in the set of a top-level name whose role word or
+            # perch word makes it a field
+            written = coordinate_text(coordinate)
+            where = f"in block {block_id!r}" if block_id else "at the top level"
+            word = perch if role is None else ROLE_WORD.get(role, role)
+            self.refuse_union_or_difference(
+                _SetSite(
+                    address,
+                    domain_term,
+                    f"{written} {where} is declared in the set",
+                    None if block_id else f"the word `!{word}` belongs to a field",
+                )
+            )
         return _Classified(role=role, domain=domain, domain_term=domain_term, perch=perch)
 
     def perch_token(self, side, address, what: str) -> str:
@@ -1541,7 +1837,7 @@ class Declarations:
         declaration whose name no block header lists is a parameter, a
         number that calibration binds. The conflict is a declaration that
         says "field" while no block header lists the name: a role word
-        (`!ctrl`, `!vlu`, `!mrgnvl`) belongs to a field, and a field is a
+        (`!state`, `!ctrl`, `!vlu`) belongs to a field, and a field is a
         name a block reads or writes, so the file must either list the name
         on a side or drop the role word and leave it a parameter (`roles`,
         below). One ambiguity remains: a shock declared without its
@@ -1588,7 +1884,8 @@ class Declarations:
         """Every set a typing names is a named set the stage defines or a set
         of the language: the set of a top-level declaration, `n_m : Foo`, of
         a header coordinate, `c : Foo`, of a function's argument,
-        `𝑑𝑢(c : Foo)`, of a multiplier, `μ[>] : Foo`, and a set the definition
+        `𝑑𝑢(c : Foo)`, of a derived parameter's definition, `q : Foo := β*R`,
+        of a multiplier, `μ[>] : Foo`, and a set the definition
         of a named set reads, `Xq := Xm × Foo`. A name that is neither is
         refused under `name-in-scope` with the sets in scope, as a bare name
         a line mentions is (F35 of the case studies of specification 0.7); a
@@ -1597,9 +1894,19 @@ class Declarations:
         defines may be defined after the typing that names it. An assignment
         whose right side is no function of the stage, `XH := linspace(H_min,
         H_max, n_H)`, is refused by the typing walk under `not-constructed`,
-        and a typing that names it is left to that refusal."""
+        and a typing that names it is left to that refusal.
+
+        Every name such a set reads as a number, in an endpoint, a bound, a
+        member or a condition, `ψ : (0, n)`, must be a name the stage
+        declares (`names_read_in_set`); a name it does not declare is refused
+        under `name-in-scope` with the names in scope. The set of a
+        function's argument may read the arguments written before it.
+
+        Last, the set of a parameter, of a setting and of a derived
+        parameter is refused where it reads a field
+        (`check_parameter_sets`)."""
         sites = [
-            (declaration.domain_term, declaration.address, f"the declaration of {name!r}")
+            (declaration.domain_term, declaration.address, f"the declaration of {name!r}", ())
             for name, declaration in self.scalars.items()
         ]
         sites.extend(
@@ -1607,16 +1914,27 @@ class Declarations:
                 listing.domain_term,
                 listing.address,
                 f"the header of block {listing.block_id!r}, which types {listing.text}",
+                (),
             )
             for listing in self.listings
         )
         sites.extend(
-            (term, definition.address, f"the argument {stem!r} of the function {definition.name!r}")
+            (
+                term,
+                definition.address,
+                f"the argument {stem!r} of the function {definition.name!r}",
+                tuple(earlier for earlier, _ in definition.domains[:place]),
+            )
             for definition in self.functions.values()
-            for stem, term in definition.domains
+            for place, (stem, term) in enumerate(definition.domains)
         )
         sites.extend(
-            (self.space_terms[name], address, f"the definition of the set {name!r}")
+            (definition.declared_set, definition.address, f"the declaration of {name!r}", ())
+            for name, definition in self.functions.items()
+            if definition.declared_set is not None
+        )
+        sites.extend(
+            (self.space_terms[name], address, f"the definition of the set {name!r}", ())
             for name, address in self.spaces.items()
         )
         sites.extend(
@@ -1624,10 +1942,24 @@ class Declarations:
                 multiplier.domain_term,
                 multiplier.address,
                 f"the declaration of the multiplier {multiplier.stem!r}",
+                (),
             )
             for multiplier in self.multipliers.values()
         )
-        for term, address, what in sites:
+        for term, address, what, bound in sites:
+            for name in names_read_in_set(term, bound):
+                if self.declared_as(name) is None:
+                    in_scope = self.names_in_scope_text(bound)
+                    raise self.error(
+                        "name-in-scope",
+                        address,
+                        (
+                            f"{what} reads the name {name!r}, which the stage does not "
+                            f"declare, in the set `{to_source(term)}`. Declare {name!r} at the "
+                            f"top level, or write one of the names in scope here: {in_scope}"
+                        ),
+                        write=f"Write one of the names in scope here: {in_scope}",
+                    )
             for name in named_sets(term):
                 if name in self.spaces or name in PRIMITIVE_SETS:
                     continue
@@ -1660,6 +1992,141 @@ class Declarations:
                     ),
                     write=f"Write one of the sets in scope here: {self.sets_in_scope_text()}",
                 )
+        self.check_parameter_sets()
+
+    def check_parameter_sets(self) -> None:
+        """The set of a parameter, of a setting and of a derived parameter
+        reads no field: `κ : (0, m)` with m a state is refused under
+        `readable-form`, the rule of an integer range that reads a field
+        (`_refuse_non_parameter_terms` of `typing.context`). Calibration
+        judges a parameter's value and a derived parameter's against the
+        set, and configuration a setting's, before any field has a value. The
+        set therefore names parameters, derived parameters, named sets and
+        numbers, and a setting's set settings as well.
+
+        A field is refused where the set names it, `(0, m)`, where the set
+        writes it with a perch mark, `(0, V[>])`, and where a named set that
+        the declaration names reads it, `κ : Xb` with `Xb := [0, m]`. The
+        refusal then quotes the definition of the named set as an assignment
+        writes it and names its position. A shock is refused as a field is,
+        except under an expectation over it, `β : (0, E_{Ψ}(Ψ^(1 - γ)))`:
+        the expectation binds the shock (`names_read_in_set`), and its value
+        is a number at each calibration where the law of the shock reads no
+        field (`field_read_in_set`)."""
+        parameters, settings = self.parameters(), self.settings()
+        sites = [
+            (
+                name,
+                "setting" if name in settings else "parameter",
+                declaration.domain_term,
+                declaration.address,
+            )
+            for name, declaration in self.scalars.items()
+            if name in parameters or name in settings
+        ]
+        sites.extend(
+            (name, "derived parameter", definition.declared_set, definition.address)
+            for name, definition in self.functions.items()
+            if definition.declared_set is not None
+        )
+        for name, kind, term, address in sites:
+            # the set the declaration writes, then each named set it reads
+            for named, setterm in [(None, term)] + self.defined_sets_read(term):
+                read, shock = self.field_read_in_set(setterm)
+                if read is None:
+                    continue
+                where, related = f"`{to_source(setterm)}`", ()
+                if named is not None:
+                    # a definition writes a set with conditions with a bar
+                    bar = isinstance(setterm, terms.Comprehension)
+                    written = comprehension_text(setterm) if bar else to_source(setterm)
+                    defined = self.spaces[named]
+                    where = f"`{named}`, which is defined at {self.where(defined)} as `{written}`"
+                    related = (self.location(defined),)
+                names = "settings, " if kind == "setting" else ""
+                names += "parameters, derived parameters"
+                binding = "configuration" if kind == "setting" else "calibration"
+                sets_named = "named sets" if named is None else "named sets that read no field"
+                raise self.error(
+                    "readable-form",
+                    address,
+                    (
+                        f"the declaration of {name!r} reads {read} in the set {where}; a "
+                        f"{kind}'s set names {names}, named sets and numbers; {binding} judges "
+                        f"the value of {name} against that set before any field has a value"
+                    ),
+                    related=related,
+                    write=(
+                        f"Write the set of {name!r} from numbers, {names} and {sets_named}"
+                        + (f", or read {shock} inside `E_{{{shock}}}(…)`" if shock else "")
+                    ),
+                )
+
+    def defined_sets_read(self, term) -> list:
+        """The named sets of the stage that a set term reads, by itself or
+        through the definition of another named set, each once with its
+        definition, in the order they are reached."""
+        found, pending = {}, list(named_sets(term))
+        while pending:
+            name = pending.pop(0)
+            if name in self.space_terms and name not in found:
+                found[name] = self.space_terms[name]
+                pending.extend(named_sets(found[name]))
+        return list(found.items())
+
+    def field_read_in_set(self, term, integrated=frozenset(), followed=()) -> tuple:
+        """The first field a set term reads as a number, as the pair of the
+        words that name it in a refusal and, for a shock, its name; `(None,
+        None)` where the term reads none. A name that the binder of a
+        comprehension or the subscript of an expectation binds is no read
+        (`names_read_in_set`), so a shock under an expectation over it is
+        none. The subscript of a derivative binds no name, so the shock a
+        derivative is taken in, `D_{y}(y^2)`, is read. The subscript of an
+        argmax or of a solve binds its name: the typing of the set refuses
+        either operator in a bound. A field written with a perch mark,
+        `V[>]`, is one whether or not the stage lists a field at that perch.
+        A field that is no shock and that the subscript of an expectation
+        names, `E_{m}(m^2)`, is one too: an expectation is taken over shocks.
+
+        An expectation reads the law of each shock it integrates, at the
+        place where it stands. Under `y ~ N(k_d, 1)` the bound `E_{y}(y^2)`
+        reads the state k_d, and the words name the law it is read through.
+        A shock that the law reads is bound where an expectation integrates
+        it too, `E_{y,z}(y*z)` under `y ~ N(z, 1)`. `integrated` holds the
+        names integrated where the term stands. `followed` holds the shocks
+        whose laws are being read, so that each law is read once."""
+        for name in names_read_in_set(term, integrated, heads=("E", "argmax", "solve")):
+            declared = self.declared_as(name)
+            if declared == "shock":
+                outside = "a shock of the stage, outside an expectation over it,"
+                return f"the name {name!r}, {outside}", name
+            if declared == "field":
+                return f"the name {name!r}, a field of the stage,", None
+        for node in nodes(term):
+            if isinstance(node, terms.Sym) and not isinstance(node.symbol, terms.Constant):
+                return f"the field `{to_source(node)}`", None
+
+        def expectations(node, bound):
+            # each expectation with the names integrated where it stands
+            if isinstance(node, terms.Operator) and node.head == "E":
+                bound = bound | {subscript_binder(sub) for sub in node.subs}
+                yield node, bound
+            for child in children(node):
+                yield from expectations(child, bound)
+
+        for expectation, bound in expectations(term, frozenset(integrated)):
+            for name in map(subscript_binder, expectation.subs):
+                if self.declared_as(name) == "field":
+                    return f"the name {name!r}, a field of the stage,", None
+                at = self.law_of.get(name)
+                law = next((body for body, site in self.law_terms if site == at), None)
+                if law is None or name in followed:
+                    continue
+                read, shock = self.field_read_in_set(law, bound, followed + (name,))
+                if read is not None:
+                    through = f"through the law `{to_source(law)}` of the shock {name!r},"
+                    return f"{read} {through}", shock
+        return None, None
 
     def defines_a_function(self, definition) -> bool:
         """Whether the typing walk reads `definition` as a function or a
@@ -2141,26 +2608,38 @@ class Declarations:
                     roles.get(output.stem) in VALUE_ROLES
                     for output in self.side_entries(listing.block_id, OUTPUT)
                 )
-                unmarked = (
-                    f"list the field without its mark, `{listing.stem}`, and write "
-                    f"`{listing.stem}` in place of `{listing.text}` on the lines of the block"
-                )
                 side_word = f"write `: !{explicit}` on the {listing.side} side"
+                if listing.mark is None:
+                    # the field's own perch word places it, and the field is
+                    # written bare on the lines of the block
+                    placed = f"the perch word `!{explicit}` on {listing.text}"
+                    agrees = "a field's own perch word agrees with the perch word of its side"
+                    advice = f"remove `!{explicit}` from the listing of {listing.stem}"
+                    write = (
+                        f"Remove `!{explicit}` from the listing of {listing.stem} in block "
+                        f"{listing.block_id!r}"
+                    )
+                else:
+                    placed = f"the mark on {listing.text}"
+                    agrees = "a mark agrees with the perch word of its side"
+                    advice = (
+                        f"list the field without its mark, `{listing.stem}`, and write "
+                        f"`{listing.stem}` in place of `{listing.text}` on the lines of the block"
+                    )
+                    write = (
+                        f"List {listing.stem} without its mark and write `{listing.stem}` in "
+                        f"place of `{listing.text}` on the lines of block {listing.block_id!r}"
+                    )
                 raise self.error(
                     "field-perch",
                     listing.address,
                     (
-                        f"the mark on {listing.text} places the field at the "
+                        f"{placed} places the field at the "
                         f"{explicit} perch, and the {listing.side} side of block "
                         f"{listing.block_id!r} is marked `: !{listing.side_perch}`; "
-                        f"a mark agrees with the perch word of its side: {unmarked}"
-                        + (f", or {side_word}" if writes_values else "")
+                        f"{agrees}: {advice}" + (f", or {side_word}" if writes_values else "")
                     ),
-                    write=(
-                        f"List {listing.stem} without its mark and write `{listing.stem}` in "
-                        f"place of `{listing.text}` on the lines of block {listing.block_id!r}"
-                        + (f", or {side_word}" if writes_values else "")
-                    ),
+                    write=write + (f", or {side_word}" if writes_values else ""),
                 )
             return explicit
         return listing.side_perch
@@ -2437,7 +2916,11 @@ class Declarations:
         otherwise refuse a derived parameter that reads a field at a line that
         reads the parameter, under another rule. A cycle among the
         definitions is refused before it under `definition-order`
-        (AMD-MT-003, build contract §5)."""
+        (AMD-MT-003, build contract §5).
+
+        The set a definition declares, `q : (0,1) := β*R`, is refused under
+        the same rule where it holds no number or reads a setting
+        (`declared_set_fault`; AMD-GRAM-005)."""
         derived = {
             name: definition
             for name, definition in self.functions.items()
@@ -2459,9 +2942,41 @@ class Declarations:
         parameters = set(self.parameters())
         for name, definition in derived.items():
             refused = derived_parameter_fault(name, definition.body, parameters, derived, kinds)
+            if refused is None and definition.declared_set is not None:
+                refused = self.declared_set_fault(name, definition.declared_set, kinds)
             if refused is not None:
                 message, write = refused
                 raise self.error("derived-parameter", definition.address, message, write=write)
+
+    def declared_set_fault(self, name, declared, kinds):
+        """The refusal of the set `declared` that the definition of the
+        derived parameter `name` declares, as the pair of its sentence and
+        its action, or None. A set of labels, a product and a set of
+        functions hold no single real number, which a derived parameter's
+        value is. A set that reads a setting cannot be judged at calibration,
+        since configuration gives a setting its value afterwards. `kinds`
+        maps a setting of the stage to the word `setting`, as
+        `derived_parameter_fault` reads it."""
+        written = to_source(declared)
+        if sets.kind_without_numbers(declared, self.space_terms) is not None:
+            return (
+                f"the derived parameter {name} declares the set `{written}`; a derived "
+                f"parameter's value is one finite real number, which lies in no set of labels, "
+                f"no product and no set of functions",
+                f"Write a set of numbers for {name}, as in `{name} : (0, 1) := …`, or write the "
+                f"definition without a set",
+            )
+        for read in names_read_in_set(declared):
+            if kinds.get(read) == "setting":
+                return (
+                    f"the derived parameter {name} declares the set `{written}`, which reads "
+                    f"{read}, {_UNREADABLE['setting']}; calibration judges the value of {name} "
+                    f"against that set before any setting has a value, so the set must read no "
+                    f"setting",
+                    f"Write the set of {name} from numbers, declared parameters and derived "
+                    f"parameters",
+                )
+        return None
 
     def check_definition_body(self, definition) -> list:
         """The defined functions a definition's body mentions, each once, in
@@ -3166,6 +3681,7 @@ class Declarations:
                 and DOC not in marks
                 and names_fields(equation.lhs)
             ):
+                self.check_writes_no_parameter(block_id, left_fields, address)
                 self.check_defined_once(block_id, left_fields, address, definitions)
             if len(left_fields) > 1 and any(
                 listed_identity(lhs, out_listings, self) is None for lhs in left_fields
@@ -3266,6 +3782,56 @@ class Declarations:
                 write=f"Give this line an id other than {written_id!r}",
             )
         ids[address] = ordinal
+
+    def check_writes_no_parameter(self, block_id, left_fields, address) -> None:
+        """An operative equation writes no parameter, no setting and no
+        derived parameter. A name that a top-level declaration declares and
+        no block header lists is a number that a binding supplies, and a
+        derived parameter is a number that its definition gives. An equation
+        that writes either is refused under `parameter-or-field`, naming the
+        declaration or the definition."""
+        fields = self.field_names()
+        for lhs in left_fields:
+            name = lhs.stem
+            if name in fields or name in self.shocks:
+                continue
+            declared, defined = self.scalars.get(name), self.functions.get(name)
+            if declared is not None:
+                first = declared.address
+                kind, bound = (
+                    ("parameter", "the calibration")
+                    if self.in_stage_file(first)
+                    else ("setting", "the configuration")
+                )
+                what = (
+                    f"{name} is declared at the top level at {self.where(first)}, and no "
+                    f"block header lists it; a name so declared is a {kind}, a number that "
+                    f"{bound} binds"
+                )
+                removed = f"the top-level declaration of {name}"
+            elif defined is not None and self.defines_a_derived_parameter(defined):
+                first, kind = defined.address, "derived parameter"
+                what = (
+                    f"{name} is a derived parameter, defined at {self.where(first)}, a number "
+                    f"that its definition gives at the calibration"
+                )
+                removed = f"the definition of {name}"
+            else:
+                continue
+            advice = (
+                f"Remove {removed}, or write on the left side of this line a name that no "
+                f"top-level line declares or defines"
+            )
+            raise self.error(
+                "parameter-or-field",
+                address,
+                (
+                    f"this line of block {block_id!r} writes {spelling_text(lhs)}; {what}, "
+                    f"and a {kind} is written by no line. {advice}"
+                ),
+                related=(self.location(first),),
+                write=advice,
+            )
 
     def check_defined_once(self, block_id, left_fields, address, definitions) -> None:
         """An operative equation defines each field of its left side once in

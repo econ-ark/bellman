@@ -16,15 +16,15 @@ type: reference
 # Appendix E.1 — Field types
 
 > [!summary]
-> A field is a named random variable with a declared value domain, role, and information context. This catalogue lists the domains and fields in the buffer-stock example. The value domain is distinct from a space of random variables and from a representing function's domain.
+> A field is a named random variable with a declared set, a role and, unless it is a shock, a perch. This catalogue lists the domains and fields in the buffer-stock example. The declared set is distinct from a space of random variables and from a representing function's domain.
 
 > [!info]- Relationship with other documents
 > **Builds on** — [Fields, functions and types](../04-fields,%20functions%20and%20types.md) states the field-to-function representation conditions.
-> **Formal account** — [Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) distinguishes classifier declarations from their interpretations.
+> **Formal account** — [Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) §5 classifies fields by role, perch and declared set.
 > **Used by** — Bellman-SYM's [Appendix C](../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md) gives the `.bl` rules that declare these fields.
 > **See also** — [Function types](./functions.md) lists the representing functions.
 
-A **field** at perch $p$ is a random variable measurable with respect to the information set $\mathcal F_p$. A declaration specifies its **value domain**, the set in which its realized values lie, and its role. The source declares types with a colon and combines type components with `@`; §2 of Bellman-SYM's Appendix C gives the `.bl` rules. Shock declarations require their transition timing and law, rather than an inferred native perch.
+A **field** at perch $p$ is a random variable measurable with respect to the information set $\mathcal F_p$. A declaration states its role and its **declared set**, the set in which its realized values lie ([Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) §5); the headings of this page call that set a value domain. A file writes a field's type after a colon: a role word, a perch word, sets, or several of these with `@` between them. [Kinds and sorts](../APPX-D-KINDS-AND-SORTS.md) §3 states the sort that such a type names, and §2 of Bellman-SYM's Appendix C gives the `.bl` rules. Shock declarations require their transition timing and law, rather than an inferred native perch.
 
 <a id="carriers-the-object-sorts-a-field-can-inhabit"></a>
 
@@ -35,9 +35,9 @@ A **field** at perch $p$ is a random variable measurable with respect to the inf
 | $\mathsf X_\prec,\mathsf X_\sim,\mathsf X_\succ$ | arrival, decision, continuation states | spaces of declared state vectors |
 | $\mathsf A$ | actions | action domain, with feasible actions $a\in\Gamma(x)$ at decision state $x$ |
 | $\mathsf Z_\zeta,\mathsf Z_\eta$ | shock realizations | pre- and post-decision shock spaces with specified conditional laws |
-| $\mathsf L$ | values | a stated value domain, such as $\mathbb R$ or extended reals where all operations are defined |
+| $\mathsf L$ | values | the declared set of a value field, such as $\mathbb R$ or extended reals where all operations are defined |
 
-These are domains for realized coordinates and vectors. The field itself belongs to a space of measurable random variables. A real value domain does not imply finite expectation or finite second moment; expectations and derivatives require their separate assumptions. Unbounded utility does not by itself require infinite values or determine a suitable value-function space.
+These are domains for realized coordinates and vectors. The field itself belongs to a space of measurable random variables. A declared set of real numbers does not imply finite expectation or finite second moment; expectations and derivatives require their separate assumptions. Unbounded utility does not by itself require infinite values or determine a suitable value-function space.
 
 <a id="field-types-buffer-stock"></a>
 
@@ -45,7 +45,7 @@ These are domains for realized coordinates and vectors. The field itself belongs
 
 Here $k$ is arrival assets, $y$ is income, $m$ is resources, $c$ is consumption, and $a$ is assets after consumption.
 
-| Field | Perch or transition | Role | Value domain |
+| Field | Perch or transition | Role | Declared set |
 |---|---|---|---|
 | $k$ | arrival | state | $\mathbb R_+$ |
 | $y$ | arrival to decision | shock | $\mathsf Z_\zeta\subseteq\mathbb R_{++}$ |
@@ -56,4 +56,4 @@ Here $k$ is arrival assets, $y$ is income, $m$ is resources, $c$ is consumption,
 
 The derivative of a value is no field and has no role. It is read by the derivative term `D_{a}V[>]`, the derivative operator applied to the declared continuation value in the continuation coordinate `a`, and a derivative line of the builder that writes a value states what that derivative equals. The derivative operator `D_{x}` and a chosen function name such as `𝑑𝑢` are different objects, and neither the term nor a derivative line proves differentiability or positivity.
 
-A perch's state space uses its declared **state coordinates**, not all fields known there. With no joint restriction it is their product; the buffer-stock example has one state coordinate at each perch. If the continuation field is measurable with respect to $\sigma(X_\succ)$, the information generated by the continuation state, it has a measurable representative $V_\succ=\mathrm v_\succ(X_\succ)$ almost surely. Its realization is a value, and $\mathrm v_\succ$ is the function listed in [Function types](./functions.md). Local utility functions and intermediate definitions also retain their argument and result types.
+A perch's state space uses its declared **state coordinates**, not all fields known there. With no joint restriction it is their product; the buffer-stock example has one state coordinate at each perch. If the continuation field is measurable with respect to $\sigma(X_\succ)$, the information generated by the continuation state, it has a measurable representative $V_\succ=\mathrm v_\succ(X_\succ)$ almost surely. Its realization is a value, and $\mathrm v_\succ$ is the function listed in [Function types](./functions.md). Local utility functions and intermediate definitions also retain the sets of their arguments and results.

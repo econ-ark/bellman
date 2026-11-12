@@ -12,15 +12,10 @@ topic: [applications]
 > quote selected lines from the working copy beside this page. When that
 > file changes, these excerpts and their explanations must change with it.
 
-> [!warning]
-> Bellman-SYM cannot yet parse and check the adjacent `.bl` file. It
-> contains proposed syntax; the discussion below identifies each
-> unresolved line where it appears.
-
 ## Declarations
 
 The first line names the stage. `Y := ℝ₊` defines the set of possible
-income values. A declaration is a name, a colon, and a type: `γ : ℝ₊`
+income values. A declaration is a name, a colon, and a type: `γ : (1, inf)`
 introduces a parameter and states its allowed values. Its numerical value is supplied separately.
 
 ```bl
@@ -28,24 +23,24 @@ introduces a parameter and states its allowed values. Its numerical value is sup
 
 Y := ℝ₊
 
-β : (0,1) # this is beta.
-γ : ℝ₊
+β : ℝ₊₊ :: ["discount factor must be a strictly positive number"]
+γ : (1, inf) :: ["Relative risk aversion must be greater than 1"]
 R : ℝ₊₊
 μ_y : ℝ
 σ_y : ℝ₊
-p_zero : [0,1)
+p_zero : (0,1)
 ```
 
-The working copy states `β : (0,1)`, the usual restriction for a discount
-factor, matching the committed ancestors and the formal MDP. An earlier
-draft wrote `β : ℝ₊₊`, which permits `β ≥ 1`; under that declaration the
-standard guarantee that repeated Bellman updates converge to a unique value
-function no longer follows.
+The file states `β : ℝ₊₊`: the discount factor is a strictly positive
+number, as its description says. This declaration permits `β ≥ 1`, and
+under it the standard guarantee that repeated Bellman updates converge to a
+unique value function does not follow. The usual restriction for a discount
+factor is `β : (0,1)`.
 
 The tilde line assigns the distribution of income `y`. Income is
 zero with probability `p_zero`; otherwise it follows the lognormal law
-with parameters `μ_y` and `σ_y`. When `p_zero > 0`, future income has no
-strictly positive lower bound. The **natural borrowing limit**—the most
+with parameters `μ_y` and `σ_y`. Since `p_zero : (0,1)` makes that
+probability positive, future income has no strictly positive lower bound. The **natural borrowing limit**—the most
 the household can borrow while remaining able to repay along the
 lowest-income path—is therefore zero.
 
@@ -76,8 +71,9 @@ although that check is not implemented yet.
 
 The displayed constant-relative-risk-aversion (CRRA) formula is undefined
 at `γ = 1`, while at `γ = 0` its derivative is constant and has no inverse.
-The declaration `γ : ℝ₊` currently admits both values; it must eventually
-exclude them or supply the corresponding special cases.
+The declaration `γ : (1, inf)` excludes both values: it admits a relative
+risk aversion greater than 1 alone, as its description says, and calibration
+refuses a value outside that set.
 
 ## Transitions and value equations
 

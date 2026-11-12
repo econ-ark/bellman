@@ -128,6 +128,10 @@ FORMS = {
     "_PERP": "⟂",
     "__ANON_1": "->",
     "__ANON_0": "×",
+    # the signs of a union and of a difference of sets as a refusal prints
+    # them; the grammar also admits `∪` and `∖`
+    "_UNION": "\\/",
+    "_DIFFERENCE": "\\",
     # the arithmetic of an expression
     "PLUS": "+",
     "MINUS": "-",

@@ -1764,8 +1764,9 @@ def _kernel_denoted(stage, definition):
 def _declared_denoted(stage, definition):
     """The object a declaration denotes, cited `[§2.1]`: a parameter as a point
     of its declared set, with its value on a calibrated version; a derived
-    parameter as a point of the reals, by its definition and, on a calibrated
-    version, its value; a set as
+    parameter as a point of the set its definition declares, the reals where
+    it declares none, by its definition and, on a calibrated version, its
+    value; a set as
     written, and a set marked `!categories` also as its category map, the
     `CategoryCodes` its record holds; a function and a function alias as a map
     from its declared sets; a correspondence with `⇉`; a distribution as a
@@ -1795,9 +1796,14 @@ def _declared_denoted(stage, definition):
         # a constant of the stage, written roman as a parameter is, a point of
         # the reals: its definition, and on a calibrated version, as its second
         # object, the value its definition takes there (AMD-MT-003, build
-        # contract §5)
-        real = T.Named("ℝ")
-        mathematical_type = WireType(("scalar", None, (), T.Product(()), real), real)
+        # contract §5); where its definition declares a set, its record's one
+        # coordinate, a point of that set, as a parameter is of its own
+        declared = (
+            declared_set_term(StageNames(stage), definition.coordinates[0][1], identity)
+            if definition.coordinates
+            else T.Named("ℝ")
+        )
+        mathematical_type = WireType(("scalar", None, (), T.Product(()), declared), declared)
         values = stage.bindings.calibration
         held = (definition.equations[0],)
         if values is not None:

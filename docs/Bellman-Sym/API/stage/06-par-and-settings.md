@@ -64,7 +64,7 @@ except KeyError as refusal:
 
 ### 1.1 Derived parameters
 
-A **derived parameter** is a constant of the stage that a definition without arguments writes from the stage's parameters, such as human wealth `h := 1/(1 - Γ/R)`; [Equation parsing rules](../../appendices/12-equation-parsing-rules.md) §2 gives the form, what its definition may read and the order in which the definitions are evaluated. `stage.par` lists the derived parameters after the declared ones, in file order, each with its definition in the column `set` and the description the file gives. Before calibration the value of a derived parameter is `unbound`. After calibration its value is its definition evaluated at the calibration values, computed each time the table is asked for and stored nowhere. The record of one derived parameter prints its definition after `:=`. The consumption stage file defines no derived parameter, so the listings of this section read the perfect-foresight stage file, which defines three from its four parameters: the return patience factor `q`, human wealth `h` and the natural borrowing limit `L`. A methods file may define a derived parameter as well, as the methods file beside that stage file defines the marginal propensity to consume `κ := 1 - q` ([The definitions table](08-definitions.md) §3). A definition in an addition, a methods file read with the stage file ([The binding verbs](09-binding-verbs.md) §3), is read as the stage file's own, and it leaves the table when the addition is removed.
+A **derived parameter** is a constant of the stage that a definition without arguments writes from the stage's parameters, such as human wealth `h := 1/(1 - Γ/R)`; [Equation parsing rules](../../appendices/12-equation-parsing-rules.md) §2 gives the form, what its definition may read and the order in which the definitions are evaluated. `stage.par` lists the derived parameters after the declared ones, in file order, each with its definition in the column `set` and the description the file gives; where the definition declares the set in which its value lies, as that of `q` below declares `(0,1)`, the set stands before `:=` and the definition after it. Before calibration the value of a derived parameter is `unbound`. After calibration its value is its definition evaluated at the calibration values, computed each time the table is asked for and stored nowhere. The record of one derived parameter prints its definition after `:=`. The consumption stage file defines no derived parameter, so the listings of this section read the perfect-foresight stage file, which defines three from its four parameters: the return patience factor `q`, human wealth `h` and the natural borrowing limit `L`. A methods file may define a derived parameter as well, as the methods file beside that stage file defines the marginal propensity to consume `κ := 1 - q` ([The definitions table](08-definitions.md) §3). A definition in an addition, a methods file read with the stage file ([The binding verbs](09-binding-verbs.md) §3), is read as the stage file's own, and it leaves the table when the addition is removed.
 
 ```python
 derived = elaborate_stage(load_stage(
@@ -78,19 +78,19 @@ print(derived.par["h"])
 
 ```text
 name  set                      value    describes
-β     (0, 1) @ (0, R^(ρ - 1))  unbound  discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
+β     ℝ₊₊ @ (0, R^(ρ - 1))     unbound  discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
 ρ     (1, inf)                 unbound  coefficient of relative risk aversion, greater than one
 R     ℝ₊₊                      unbound  gross interest factor
 Γ     (0, R)                   unbound  permanent income growth factor; its upper bound R is the finite human wealth condition
-q     (β*R)^(1/ρ)/R            unbound  the return patience factor; the return impatience condition is q < 1
+q     (0, 1) := (β*R)^(1/ρ)/R  unbound  the return patience factor; the return impatience condition is q < 1
 h     1/(1 - Γ/R)              unbound  human wealth, the present discounted value of permanent income
 L     1 - h                    unbound  the natural borrowing limit on market resources, above which total wealth m - L is positive
 name  set                      value                describes
-β     (0, 1) @ (0, R^(ρ - 1))  0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
+β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
 ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
 R     ℝ₊₊                      1.04                 gross interest factor
 Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
-q     (β*R)^(1/ρ)/R            0.9615384615384615   the return patience factor; the return impatience condition is q < 1
+q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q < 1
 h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
 L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
 h = 51.999999999999886 := 1/(1 - Γ/R)

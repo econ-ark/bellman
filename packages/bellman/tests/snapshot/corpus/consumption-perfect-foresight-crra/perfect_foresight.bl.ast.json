@@ -74,26 +74,27 @@
                 ]
               },
               "base": {
-                "__class__": "Interval",
-                "bounds": {
-                  "__class__": "Range",
-                  "left": {
-                    "__class__": "Open"
-                  },
-                  "lower": {
-                    "__class__": "Number",
-                    "value": 0
-                  },
-                  "upper": {
-                    "__class__": "Number",
-                    "value": 1
-                  },
-                  "right": {
-                    "__class__": "Open"
-                  }
-                }
+                "__class__": "Named",
+                "name": "ℝ₊₊"
               },
               "conds": [
+                {
+                  "__class__": "Rel",
+                  "left": {
+                    "__class__": "Sym",
+                    "symbol": {
+                      "__class__": "Constant",
+                      "name": "β"
+                    }
+                  },
+                  "op": {
+                    "__class__": "Gt"
+                  },
+                  "right": {
+                    "__class__": "Number",
+                    "value": 0
+                  }
+                },
                 {
                   "__class__": "Rel",
                   "left": {
@@ -294,13 +295,45 @@
       }
     },
     {
-      "__class__": "Statement",
-      "core": {
-        "__class__": "Assignment",
-        "target": {
-          "__class__": "Constant",
-          "name": "q"
+      "__class__": "Declare",
+      "declaration": {
+        "__class__": "Declaration",
+        "subject": {
+          "__class__": "Subject",
+          "coordinates": [
+            {
+              "__class__": "Coordinate",
+              "stem": "q",
+              "at": null,
+              "classifiers": []
+            }
+          ]
         },
+        "classifiers": [
+          {
+            "__class__": "Domain",
+            "space": {
+              "__class__": "Interval",
+              "bounds": {
+                "__class__": "Range",
+                "left": {
+                  "__class__": "Open"
+                },
+                "lower": {
+                  "__class__": "Number",
+                  "value": 0
+                },
+                "upper": {
+                  "__class__": "Number",
+                  "value": 1
+                },
+                "right": {
+                  "__class__": "Open"
+                }
+              }
+            }
+          }
+        ],
         "value": {
           "__class__": "Div",
           "left": {

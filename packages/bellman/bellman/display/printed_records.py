@@ -149,21 +149,37 @@ class Methods(_PrintedMapping):
 class Rows(tuple):
     """A tuple of read-only rows displayed as a table, with retained terms
     written as source. `heads` may supply a displayed heading different from
-    the key: a parameter's `domain` key prints under `set`.
+    the key: a parameter's `domain` key prints under `set`. `joined` names
+    each key that has no column of its own, with the key whose column prints
+    it and the sign written between the two cells: a derived parameter's
+    `definition` prints under `set`, after the set and ` := `, and alone
+    where the row holds no set.
 
     See `docs/Bellman-Sym/API/stage/06-par-and-settings.md` §§1-2."""
 
-    def __new__(cls, rows, heads=None):
+    def __new__(cls, rows, heads=None, joined=None):
         made = super().__new__(cls, rows)
         made._heads = dict(heads or {})
+        made._joined = dict(joined or {})
         return made
+
+    def _printed(self, row, key):
+        """The cell a row prints in the column of `key`: its own cell, then
+        the cell of each key joined to that column, after the sign where
+        both cells hold text."""
+        text = _cell(row[key])
+        for other, (column, sign) in self._joined.items():
+            joined = _cell(row[other]) if column == key else ""
+            if joined:
+                text = f"{text}{sign}{joined}" if text else joined
+        return text
 
     def __str__(self):
         if not self:
             return "none"
-        keys = list(self[0])
+        keys = [key for key in self[0] if key not in self._joined]
         heads = [self._heads.get(key, key) for key in keys]
-        cells = [[_cell(row[key]) for key in keys] for row in self]
+        cells = [[self._printed(row, key) for key in keys] for row in self]
         widths = [
             max([len(head)] + [len(row[index]) for row in cells])
             for index, head in enumerate(heads)

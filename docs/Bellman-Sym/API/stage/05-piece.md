@@ -152,7 +152,7 @@ print(aggregation.kernel().python)
 ```text
 1.5
 2.0
-# bellman kernel of cons, cntn_to_dcsn:Aggregation; cons.bl sha256 e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667; bellman 0.1.6
+# bellman kernel of cons, cntn_to_dcsn:Aggregation; cons.bl sha256 e60110b0b964ce482812c558922bc7aa6eaaf14421e2e162b9f87cc7b120a667; bellman 0.1.7
 # 𝐺 of cntn_to_dcsn: 𝐺(V≻, m_d, c) = 𝑢(c) + V≻
 # output V; unused m_d
 # parameters: ρ ∈ [1, inf)

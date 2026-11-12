@@ -1,5 +1,6 @@
 """The check of parameter values against the declared sets of the parameter
-definitions.
+definitions, and of each derived parameter's value against the set its
+definition declares.
 
 The membership of a value in a declared set is decided from the one table of
 the primitive sets, `vocabulary.PRIMITIVE_SETS`, and the endpoints `sets.py`
@@ -26,6 +27,8 @@ import operator
 from collections.abc import Mapping, Sequence
 
 from bellman.fold.block_lines import parameter_sets
+from bellman.fold.derived_parameters import derived_value, derived_values
+from bellman.fold.stage_names import StageNames
 from bellman.native.identity import Identity
 from bellman.native.predicates import And, Compare, IsInteger, Member, Not, Or
 from bellman.native.records import UNDECLARED_SET, Condition
@@ -34,6 +37,7 @@ from bellman.syntax import terms as T
 from bellman.syntax.source import condition_text, to_source
 from bellman.syntax.vocabulary import INTEGER, PRIMITIVE_SETS
 from bellman.typing import sets
+from bellman.typing.declarations import derived_parameter_fault, derived_parameters_read
 
 # --- the check of the parameter values against their declared sets ---
 
@@ -48,48 +52,60 @@ def calibration_requirements(stage, values):
     domains (a reserved glyph, a named set of the definitions table, an
     interval whose endpoints are numbers or valued parameters, a finite set
     of labels, an integer range, a listed set of numbers, a product, a set
-    of functions and a set with conditions, whose conditions compare terms of
-    numbers and valued parameters). It does not interpret equations,
-    functions or source strings. Every declared parameter needs a value. A
-    value for a derived parameter, which its definition gives, is refused
-    under `derived-parameter` at the definition (AMD-MT-003, build contract
-    §5).
+    of functions, a union, a difference and a set with conditions, whose
+    conditions compare terms of numbers and valued parameters). It does not
+    interpret equations, functions or source strings. Every declared
+    parameter needs a value. A value for a derived parameter, which its
+    definition gives, is refused under `derived-parameter` at the definition
+    (AMD-MT-003, build contract §5).
 
     Where a set reads another parameter, as a bound or as an endpoint, a
     faulty value is refused at its own parameter and not at the parameter
     whose set reads it, in whatever order the file declares the two
     (`judged`; AMD-GRAM-004 §4).
+
+    The values are judged in three steps. The declared values are judged
+    first, so that a fault they decide alone is refused at its own
+    parameter. The derived parameters are then valued (`derived_values`),
+    which refuses a definition that has no value. Last, at the declared and
+    the derived values together, the set each derived parameter's definition
+    declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is judged with every membership
+    the declared values left undecided, such as a bound that reads a derived
+    parameter; a derived value outside its set is refused as a parameter's
+    is, naming the definition and the values it reads (AMD-GRAM-005).
+
+    In each step a set of which a bound has no value at the values, `β : (0,
+    1/(R - 2))` at R = 2, is refused at its own name, with the bound, the
+    values it reads and the operation that fails. A bound is valued as a
+    derived parameter's definition is, so it may call `log` and `exp`
+    (`_bound_at`). A bound that reads a name without a value yet, or an
+    expectation, leaves the membership undecided.
     """
     definitions = dict(stage.definitions)
     _refuse_derived_values(stage, definitions, values)
-    declared = parameter_sets(stage)
     # a parameter declared without a set lies in the reals
-    sets_judged = {name: setexpr or T.Named("ℝ") for name, setexpr in declared.items()}
-    undecided = set()
-    for name, status, reason in judged(stage, definitions, sets_judged, values):
-        if status is True:
-            continue
-        identity = Identity("parameter", stage=stage.name, field=name)
-        # a refusal says where, what happened, why and what to write
-        # (AMD-SG-006 §6a)
-        where = (
-            f"stage {stage.name!r}, parameter {name!r} "
-            f"(address {_parameter_address(stage, identity)!r})"
-        )
-        if status is UNVALUED:
-            raise ValueError(
-                f"{where}: the calibration source supplies no value for it; every declared "
-                "parameter is valued when values are bound (AMD-SG-006 §4, "
-                f"rule 8); write `{name}: <value>` in the calibration source"
-            )
-        if status is False:
-            raise ValueError(_outside(where, declared[name], values[name], reason))
-        undecided.add(name)
+    declared = {name: setexpr or T.Named("ℝ") for name, setexpr in parameter_sets(stage).items()}
+    undecided = _undecided(stage, definitions, declared, values)
+    derived = derived_values(stage, values)
+    if derived:
+        # in the order of the file: the set a derived parameter's definition
+        # declares, its record's one coordinate, and the set of each
+        # parameter whose membership the declared values left undecided
+        declared = {
+            d.identity.field: d.coordinates[0][1]
+            if d.kind == "derived_parameter"
+            else declared[d.identity.field]
+            for d in definitions.values()
+            if (d.kind == "derived_parameter" and d.coordinates)
+            or (d.kind == "parameter" and d.identity.field in undecided)
+        }
+        values = {**values, **derived}
+        undecided = _undecided(stage, definitions, declared, values)
     return tuple(
         Condition(
             condition="calibration-domain-membership",
             entries=(
-                Identity("parameter", stage=stage.name, field=name),
+                _judged_identity(stage, definitions, name),
                 declared_set_reference(stage, setexpr),
             ),
             status="required",
@@ -101,12 +117,55 @@ def calibration_requirements(stage, values):
     )
 
 
+def _undecided(stage, definitions, declared, values):
+    """The names of `declared`, each a parameter or a derived parameter with
+    its set, whose membership is not decided at `values`. A name that has no
+    value, a value outside its set and a set with a bound that has no value
+    at `values` are refused, a faulty value at its own name (`judged`)."""
+    undecided = set()
+    for name, status, reason in judged(stage, definitions, declared, values):
+        if status is True:
+            continue
+        identity = _judged_identity(stage, definitions, name)
+        kind = "derived parameter" if identity.kind == "derived" else "parameter"
+        # a refusal says where, what happened, why and what to write
+        # (AMD-SG-006 §6a)
+        where = (
+            f"stage {stage.name!r}, {kind} {name!r} "
+            f"(address {_parameter_address(stage, identity)!r})"
+        )
+        if status is UNVALUED:
+            raise ValueError(
+                f"{where}: the calibration source supplies no value for it; every declared "
+                "parameter is valued when values are bound (AMD-SG-006 §4, "
+                f"rule 8); write `{name}: <value>` in the calibration source"
+            )
+        if status is UNVALUED_BOUND:
+            raise ValueError(f"{where}: {reason}")
+        if status is False and identity.kind == "derived":
+            raise ValueError(_derived_outside(stage, where, definitions, identity, values, reason))
+        if status is False:
+            raise ValueError(_outside(where, declared[name], values[name], reason))
+        undecided.add(name)
+    return undecided
+
+
+def _judged_identity(stage, definitions, name):
+    """The identity of a name whose value is judged: a derived parameter's
+    where the stage defines one of that name, a parameter's otherwise."""
+    derived = Identity("derived", stage=stage.name, field=name)
+    if derived in definitions:
+        return derived
+    return Identity("parameter", stage=stage.name, field=name)
+
+
 def judged(stage, definitions, declared, values, settled=None):
     """The membership of each value in its declared set, as `(name, status,
     reason)` in the order in which a refusal is to be given. `declared` maps
     each name to its set, None for a name with no set to judge; `values`
     holds the value of each name; and `settled` holds the values of an
-    earlier binding, the calibration where settings are judged. The status
+    earlier binding, the calibration and the derived parameters' values at
+    it where settings are judged. The status
     is that of `membership` at all the values, or `UNVALUED` for a name
     `values` does not hold.
 
@@ -118,27 +177,36 @@ def judged(stage, definitions, declared, values, settled=None):
     value is refused at its own name, and not at a name whose set reads it,
     in whatever order the file declares the two (AMD-GRAM-004 §4). The other
     names follow in the order of the file, so that where every faulty value
-    reads another, the first of the file is named."""
+    reads another, the first of the file is named.
+
+    A name whose set has a bound without a value at the values, `β : (0,
+    1/(R - 2))` at R = 2, has the status `UNVALUED_BOUND`, with the reason
+    that names the bound and the values it reads. It is a faulty name, and
+    is ordered as the others are."""
     everything = {**(settled or {}), **values}
+
+    def faulty_status(status):
+        return status is False or status is UNVALUED or status is UNVALUED_BOUND
 
     def judge(name, at):
         if name not in values:
             return UNVALUED, ""
         if declared[name] is None:
             return True, ""
-        return membership(stage, definitions, declared[name], values[name], at)
+        try:
+            return membership(stage, definitions, declared[name], values[name], at)
+        except _UnvaluedBound as fault:
+            return UNVALUED_BOUND, _bound_reason(stage, definitions, declared[name], fault, at)
 
     answers = {name: judge(name, everything) for name in declared}
-    faulty = [
-        name for name, (status, _) in answers.items() if status is False or status is UNVALUED
-    ]
+    faulty = [name for name, (status, _) in answers.items() if faulty_status(status)]
     first = []
     for name in faulty:
         others = {
             read: value for read, value in everything.items() if read == name or read not in faulty
         }
         status, reason = judge(name, others)
-        if status is False or status is UNVALUED:
+        if faulty_status(status):
             # the reason names what the value breaks by itself
             answers[name] = (status, reason)
             first.append(name)
@@ -156,6 +224,60 @@ def _outside(where, setexpr, value, reason):
     return (
         f"{where}: {reason}; a parameter's value lies in the set its declaration names "
         f"(AMD-SG-006 §2, the parameter record); write a value in {declared}"
+    )
+
+
+def _derived_outside(stage, where, definitions, identity, values, reason):
+    """The sentence that refuses a derived parameter's value outside the set
+    its definition declares: where, the value its definition takes, why and
+    what to write. It names the declared parameters that the definition and
+    the set read, directly or through other derived parameters, in the order
+    of the file, since the calibration supplies their values alone. Where
+    `reason`, the answer of `membership`, names a part of the set that the
+    value breaks, a condition, the base or the members, the reason follows.
+    Otherwise each derived parameter the set reads follows with its value,
+    at which a bound of the set is read."""
+    definition = definitions[identity]
+    name, term = identity.field, definition.equations[0]
+    setexpr = definition.coordinates[0][1]
+    declared = to_source(setexpr)
+    names = StageNames(stage)
+    named = {held.field for held in names.parameters((term, setexpr))}
+    read = [parameter for parameter in parameter_sets(stage) if parameter in named]
+    at = ", ".join(f"{parameter} = {values[parameter]!r}" for parameter in read)
+    listed = " and ".join(", ".join(read).rsplit(", ", 1))
+    if reason and reason != f"the value {values[name]!r} lies outside the declared set {declared}":
+        detail = f": {reason}"
+    else:
+        others = [
+            _valued(stage, definitions, other, values[other])
+            for other in derived_parameters_read(setexpr, names.derived)
+            if other != name
+        ]
+        detail = f", where {', '.join(others)}" if others else ""
+    return (
+        f"{where}: the value {values[name]!r} of {name}, which the stage defines as "
+        f"`{to_source(term)}`, lies outside the declared set {declared}"
+        + (f" at {at}" if read else "")
+        + detail
+        + "; a derived parameter's value lies in the set its definition declares; write "
+        + (
+            f"values of {listed} at which {name} lies in {declared}"
+            if read
+            else f"a definition of {name} whose value lies in {declared}"
+        )
+    )
+
+
+def _valued(stage, definitions, name, value):
+    """A name with the value a refusal reads it at, `R = 1.04`. A derived
+    parameter is followed by its definition, `q = 0.96 (the derived
+    parameter q := β*R)`, since no calibration source supplies its value."""
+    derived = definitions.get(Identity("derived", stage=stage.name, field=name))
+    if derived is None:
+        return f"{name} = {value!r}"
+    return (
+        f"{name} = {value!r} (the derived parameter {name} := {to_source(derived.equations[0])})"
     )
 
 
@@ -227,6 +349,57 @@ _UNDECIDED = object()
 # the answer for a name the values do not hold
 UNVALUED = object()
 
+# the answer of `judged` for a name whose declared set has a bound without a
+# value at the values
+UNVALUED_BOUND = object()
+
+
+class _UnvaluedBound(ValueError):
+    """A bound of a declared set that has no value at the values it is read
+    at, although every name it reads has a number there. `bound` is the
+    bound's term. `reason` is the sentence that names the operation that
+    fails, as the evaluator of a derived parameter's definition words it
+    (`derived_value`). `membership` raises it, and `judged` answers it as
+    the status `UNVALUED_BOUND`."""
+
+    def __init__(self, bound, reason):
+        super().__init__(reason)
+        self.bound, self.reason = bound, reason
+
+
+class _BoundReason(str):
+    """The sentence that refuses a declared set of which a bound has no
+    value, with `read`, the names that bound reads, in the order of its
+    text. The check of the settings relates its refusal to the key of each
+    of them (`binding_verbs`)."""
+
+    def __new__(cls, sentence, read):
+        reason = super().__new__(cls, sentence)
+        reason.read = tuple(read)
+        return reason
+
+
+def _bound_reason(stage, definitions, setexpr, fault, values):
+    """The reason that refuses the declared set `setexpr`, of which the
+    bound of `fault` has no value at `values`: the bound as the file writes
+    it, the value of each name it reads, the operation that fails
+    (`fault.reason`), why and what to write. A derived parameter is followed
+    by its definition (`_valued`). A bound that reads no name, `1/0`, has no
+    value at any values, and the advice is another bound."""
+    written = to_source(fault.bound)
+    read = derived_parameters_read(fault.bound, values)
+    at = ", ".join(_valued(stage, definitions, name, values[name]) for name in read)
+    advice = "another bound"
+    if at:
+        advice = f"values at which `{written}` has a value, or {advice}"
+    return _BoundReason(
+        f"the bound `{written}` of the declared set {to_source(setexpr)} has no value"
+        + (f" at {at}" if at else "")
+        + f": {fault.reason}; a declared set is defined at the values only where each of its "
+        f"bounds has a value; write {advice}",
+        read,
+    )
+
 
 def declared_set_terms(stage):
     """The sets a stage defines by name, through which the predicates decided
@@ -252,11 +425,26 @@ def membership(stage, definitions, setexpr, value, values, active=frozenset(), p
     endpoints at the values, a finite set of labels from its members, an
     integer range or a listed set from its members at the values, a product
     entry by entry, a set of functions key by key and a set with conditions
-    from its base and its conditions at the values (`_conditioned`); an
+    from its base and its conditions at the values (`_conditioned`). A value
+    lies in a union where it lies in one member and outside it where it lies
+    outside every member; it lies in a difference where it lies in the left
+    side and outside the right side, and outside it where it lies outside
+    the left side or in the right side; the reason of either refusal names
+    the whole set, and a part that is not decided leaves the whole
+    undecided where the other parts do not decide it. An
     extended real, a set the file does not define and any other form are not
+    decided. `values` holds the value of each name an endpoint or a side of
+    a condition may read: the declared parameters' and, where the caller has
+    computed them, the derived parameters' (`calibration_requirements`); an
+    endpoint or a side that reads a name `values` does not hold is not
     decided. `path`
     names the keys that lead to the value inside a collection, for the
-    reason of a refusal."""
+    reason of a refusal.
+
+    A bound whose arithmetic has no value at `values`, although every name it
+    reads has a number there, `1/(R - 2)` at R = 2, gives none of the three
+    answers: the set is no set at those values, and `_UnvaluedBound` is
+    raised (`_bound_at`), which `judged` answers as `UNVALUED_BOUND`."""
     set_terms = _set_terms(definitions)
     at = _at(path)
 
@@ -380,6 +568,22 @@ def membership(stage, definitions, setexpr, value, values, active=frozenset(), p
         )
     if isinstance(setexpr, T.Comprehension):
         return _conditioned(stage, definitions, setexpr, value, values, active, path)
+    if isinstance(setexpr, (T.SetUnion, T.SetDifference)):
+        union = isinstance(setexpr, T.SetUnion)
+        parts = setexpr.members if union else (setexpr.left, setexpr.right)
+        answers = [
+            membership(stage, definitions, part, value, values, active, path)[0]
+            for part in parts
+        ]
+        if union:
+            held = True in answers
+            excluded = all(answer is False for answer in answers)
+        else:
+            held = answers[0] is True and answers[1] is False
+            excluded = answers[0] is False or answers[1] is True
+        if excluded:
+            return outside(to_source(setexpr))
+        return (True, "") if held else (_UNDECIDED, "")
     return _UNDECIDED, ""
 
 
@@ -409,10 +613,16 @@ def _conditioned(stage, definitions, setexpr, value, values, active, path):
     The name the set binds is read at the value, also where a parameter has
     that spelling. A side of a condition is read as an interval's endpoint
     is: `inf` and `-inf` are the two infinities, and a side that is no
-    finite number otherwise, one that reads a field, an expectation, a
-    derived parameter or a value that is no finite number, leaves the
-    condition undecided. The value itself is read where it is infinite, so
-    that an open infinite endpoint excludes the infinity."""
+    finite number otherwise, one that reads a field, an expectation, a name
+    `values` does not hold or a value that is no finite number, leaves the
+    condition undecided. A derived parameter is read at its value where
+    `values` holds it, which it does once the derived values are computed
+    (`calibration_requirements`). The value itself is read where it is
+    infinite, so that an open infinite endpoint excludes the infinity.
+
+    A side that does not read the name the set binds is a bound of the set.
+    Where its arithmetic has no value at the values, although every name it
+    reads has a number there, `_UnvaluedBound` is raised (`_side_at`)."""
     coordinates = setexpr.bound.coordinates if isinstance(setexpr.bound, T.Subject) else ()
     if (
         len(coordinates) != 1
@@ -439,7 +649,7 @@ def _conditioned(stage, definitions, setexpr, value, values, active, path):
             undecided = True
         elif not compare(left[0], right[0]):
             read = ", ".join(
-                f"{name} = {values[name]!r}"
+                _valued(stage, definitions, name, values[name])
                 for name in values
                 if name in left[1] | right[1] and name != bound
             )
@@ -454,12 +664,17 @@ def _conditioned(stage, definitions, setexpr, value, values, active, path):
 def _side_at(term, bound, values):
     """The number a side of a condition denotes at the values, None where it
     is not decided: an interval's endpoint is read so (`_endpoint_at`), and
-    the name the set binds, `bound`, is read also at an infinite value."""
+    the name the set binds, `bound`, is read also at an infinite value. A
+    side that does not read `bound` is a bound of the set, and is read as
+    one (`_bound_at`). A side that reads `bound`, also inside a call,
+    `log(x)`, is none."""
     if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
         value = values.get(bound) if term.symbol.name == bound else None
         if type(value) is float and math.isinf(value):
             return value
-    return _endpoint_at(term, values, math.inf)
+    if derived_parameters_read(term, (bound,)):
+        return _endpoint_at(term, values, math.inf)
+    return _bound_at(term, values, math.inf)
 
 
 def _endpoint_at(term, values, infinity):
@@ -472,6 +687,34 @@ def _endpoint_at(term, values, infinity):
     if isinstance(term, T.Neg) and _endpoint_at(term.operand, values, infinity) == abs(infinity):
         return -abs(infinity)
     return sets.number_at(term, values).value
+
+
+def _bound_at(term, values, infinity):
+    """The number a bound of a declared set denotes at the values. It is
+    read as an interval endpoint is (`_endpoint_at`). A bound that this
+    reading does not value is valued as a derived parameter's definition is
+    (`derived_value`), so that a bound may call `log` and `exp`, `(0,
+    exp((ρ - 1)*μ))`.
+
+    The answer is None where the bound is not decided: a name it reads has
+    no number yet, or it holds an expectation or another form that no
+    derived parameter's definition admits (`derived_parameter_fault`). A
+    value that is no finite number, an infinite value of a parameter
+    declared on the extended reals, is no number here, so a bound that
+    reads one is not decided either. A bound that has no value at the
+    numbers raises `_UnvaluedBound` with the evaluator's reason: a division
+    by zero, a negative base under a fractional power, `log` of a number
+    that is not positive, or a result beyond the floating-point numbers."""
+    value = _endpoint_at(term, values, infinity)
+    if value is not None:
+        return value
+    numbers = {name: held for name, held in values.items() if sets.is_number(held)}
+    if derived_parameter_fault("", term, numbers, (), {}) is not None:
+        return None
+    try:
+        return derived_value(term, numbers)
+    except ValueError as fault:
+        raise _UnvaluedBound(term, str(fault)) from None
 
 
 def _entries(
@@ -524,13 +767,14 @@ def _listed(members):
 def _valued_endpoints(setexpr, values):
     """The bounds of an interval whose endpoints name parameters, read at the
     values through the one arithmetic interpretation; None where an endpoint
-    is not decided."""
+    is not decided. An endpoint whose arithmetic has no value at the values
+    raises `_UnvaluedBound` (`_bound_at`)."""
     bounds = setexpr.bounds
     if not isinstance(bounds, T.Range) or bounds.left is None or bounds.right is None:
         return None
     lower, upper = (
-        _endpoint_at(bounds.lower, values, -math.inf),
-        _endpoint_at(bounds.upper, values, math.inf),
+        _bound_at(bounds.lower, values, -math.inf),
+        _bound_at(bounds.upper, values, math.inf),
     )
     if lower is None or upper is None:
         return None
@@ -614,9 +858,11 @@ def predicate_value(predicate, values, set_terms=None):
     Two numbers are compared through doubles where either is one, as
     `typing.sets.same_number` compares two keys. The inclusion `A ⊆ B` of two
     finite index sets and the membership of a number in one are decided from
-    their members at the values. A term whose parameters all have values and
-    which still denotes no number there, a boolean, an infinite or an
-    undefined value, makes its predicate false.
+    their members at the values, and the membership of a number in a union
+    or a difference from its membership in each part (`_number_in`). A term
+    whose parameters all have values and which still denotes no number
+    there, a boolean, an infinite or an undefined value, makes its predicate
+    false.
     """
     set_terms = set_terms or {}
     if isinstance(predicate, Not):
@@ -661,42 +907,64 @@ def predicate_value(predicate, values, set_terms=None):
         return PredicateValue(sets.integer_valued(operand.value), operand.read)
     if isinstance(predicate, Member):
         subject = sets.number_at(predicate.subject, values)
-        value = subject.value
-        if value is None:
+        if subject.value is None:
             invalid = sets.invalid_number(predicate.subject, values)
             return PredicateValue(False if invalid else None, subject.read)
-        declared = sets.defined(predicate.set, set_terms)
-        if isinstance(declared, T.Space):
-            declared = sets.defined(declared.set, set_terms)
-        if isinstance(declared, (T.IntegerRange, T.Points, T.FiniteSet)):
-            members = sets.finite_members(declared, values, set_terms)
-            if members is None:
-                return PredicateValue(None, subject.read)
-            return PredicateValue(sets.key_position(members, value) is not None, subject.read)
-        primitive = sets.primitive_of(declared)
-        if primitive is not None and primitive.kind == INTEGER:
-            return PredicateValue(
-                sets.integer_valued(value) and (primitive.order == 0 or value > 0), subject.read
-            )
-        # a ratio is written as its double, the number the interval reads
-        point_value = value if isinstance(value, (int, float)) else float(value)
-        point = T.Interval(
-            T.Range(
-                left=T.Closed(),
-                lower=T.Number(point_value),
-                upper=T.Number(point_value),
-                right=T.Closed(),
-            )
+        return PredicateValue(
+            _number_in(subject.value, predicate.set, values, set_terms), subject.read
         )
-        return PredicateValue(sets.within(point, declared, set_terms), subject.read)
     return PredicateValue(None, frozenset())
 
 
+def _number_in(value, setterm, values, set_terms):
+    """Whether a number lies in a retained set at the values: True, False, or
+    None where it is not decided. A finite index set is read from its members
+    at the values, an integer set from the number itself, and every other set
+    by the set algebra, the number written as the interval of one point. A
+    number lies in a union where one member holds it and outside it where no
+    member does; it lies in a difference where the left side holds it and the
+    right side does not, and outside it where the left side does not hold it
+    or the right side does."""
+    declared = sets.defined(setterm, set_terms)
+    if isinstance(declared, T.Space):
+        declared = sets.defined(declared.set, set_terms)
+    if isinstance(declared, T.SetUnion):
+        answers = [_number_in(value, member, values, set_terms) for member in declared.members]
+        if True in answers:
+            return True
+        return False if all(answer is False for answer in answers) else None
+    if isinstance(declared, T.SetDifference):
+        left = _number_in(value, declared.left, values, set_terms)
+        right = _number_in(value, declared.right, values, set_terms)
+        if left is False or right is True:
+            return False
+        return True if left is True and right is False else None
+    if isinstance(declared, (T.IntegerRange, T.Points, T.FiniteSet)):
+        members = sets.finite_members(declared, values, set_terms)
+        return None if members is None else sets.key_position(members, value) is not None
+    primitive = sets.primitive_of(declared)
+    if primitive is not None and primitive.kind == INTEGER:
+        return sets.integer_valued(value) and (primitive.order == 0 or value > 0)
+    # a ratio is written as its double, the number the interval reads
+    point_value = value if isinstance(value, (int, float)) else float(value)
+    point = T.Interval(
+        T.Range(
+            left=T.Closed(),
+            lower=T.Number(point_value),
+            upper=T.Number(point_value),
+            right=T.Closed(),
+        )
+    )
+    return sets.within(point, declared, set_terms)
+
+
 def _inclusion_value(predicate, values, set_terms):
-    """The reading of `A ⊆ B` for two finite index sets at the values: True
-    where every member of A is a member of B, False where one is not, None
-    where the members of either are not decided."""
-    inner = sets.finite_members(predicate.left, values, set_terms)
+    """The reading of `A ⊆ B` at the values, for B a finite index set and A
+    the set of a key, a finite index set or a union or a difference of
+    finite sets (`_key_members`): True where every member of A is a member
+    of B, False where one is not, None where the members of either are not
+    decided."""
+    inner = _key_members(predicate.left, values, set_terms)
     outer = sets.finite_members(predicate.right, values, set_terms)
     read = frozenset()
     for term in (predicate.left, predicate.right):
@@ -709,11 +977,44 @@ def _inclusion_value(predicate, values, set_terms):
     )
 
 
+def _key_members(setterm, values, set_terms):
+    """The members of the set of a key at the values, where they are
+    finitely many and decided: those of a finite index set
+    (`sets.finite_members`); of a union, the members of each member; and of
+    a difference, the members of its left side that its right side does not
+    hold (`_number_in`). None where the members of a part are not decided,
+    or the membership of one of them in a right side."""
+    declared = sets.defined(setterm, set_terms)
+    if isinstance(declared, T.Space):
+        declared = sets.defined(declared.set, set_terms)
+    if isinstance(declared, T.SetUnion):
+        parts = [_key_members(member, values, set_terms) for member in declared.members]
+        if any(part is None for part in parts):
+            return None
+        return tuple(member for part in parts for member in part)
+    if isinstance(declared, T.SetDifference):
+        left = _key_members(declared.left, values, set_terms)
+        if left is None:
+            return None
+        removed = [_number_in(member, declared.right, values, set_terms) for member in left]
+        if any(answer is None for answer in removed):
+            return None
+        return tuple(member for member, gone in zip(left, removed) if not gone)
+    return sets.finite_members(declared, values, set_terms)
+
+
 def _bound_terms(setterm):
-    """The retained terms a finite index set reads numbers from: the bounds
-    of a range, the members of a listed set."""
+    """The retained terms a set reads numbers from: the bounds of a range,
+    the members of a listed set, the ends of an interval, and the terms of
+    each member of a union and of each side of a difference."""
     if isinstance(setterm, T.IntegerRange):
         return (setterm.lower, setterm.upper)
     if isinstance(setterm, T.Points):
         return tuple(setterm.members)
+    if isinstance(setterm, T.Interval) and isinstance(setterm.bounds, T.Range):
+        return (setterm.bounds.lower, setterm.bounds.upper)
+    if isinstance(setterm, T.SetUnion):
+        return tuple(bound for member in setterm.members for bound in _bound_terms(member))
+    if isinstance(setterm, T.SetDifference):
+        return _bound_terms(setterm.left) + _bound_terms(setterm.right)
     return ()

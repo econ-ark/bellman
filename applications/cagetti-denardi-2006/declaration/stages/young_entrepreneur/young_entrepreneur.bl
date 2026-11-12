@@ -4,7 +4,7 @@ Xa := ℝ₊
 Y  := ℝ₊₊        :: ["working ability; the positive reals stand in for its finite grid, whose number of points is a numerical choice"]
 Θ  := ℝ₊         :: ["entrepreneurial ability; the nonnegative reals stand in for its two levels, 0 and θ_e"]
 
-σ : ℝ₊₊          :: ["relative risk aversion; the utility formula requires σ different from 1"]
+σ : ℝ₊₊ \ {1}    :: ["relative risk aversion; the utility formula requires σ different from 1"]
 δ : [0,1]        :: ["depreciation rate of capital"]
 ν : [0,1]        :: ["degree of decreasing returns of the entrepreneurial technology"]
 f : [0,1]        :: ["fraction of working capital an entrepreneur keeps when he defaults"]

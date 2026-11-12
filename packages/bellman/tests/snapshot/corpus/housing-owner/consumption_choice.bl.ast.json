@@ -161,8 +161,21 @@
           {
             "__class__": "Domain",
             "space": {
-              "__class__": "Named",
-              "name": "ℝ₊"
+              "__class__": "SetDifference",
+              "left": {
+                "__class__": "Named",
+                "name": "ℝ₊"
+              },
+              "right": {
+                "__class__": "Points",
+                "members": [
+                  {
+                    "__class__": "Number",
+                    "value": 1
+                  }
+                ],
+                "superset": null
+              }
             }
           }
         ],
@@ -286,7 +299,7 @@
             "__class__": "Domain",
             "space": {
               "__class__": "Named",
-              "name": "ℝ₊"
+              "name": "ℝ₊₊"
             }
           }
         ],

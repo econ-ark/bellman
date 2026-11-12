@@ -20,14 +20,17 @@
 Xm := ℝ
 Xa := ℝ
 
-β : (0,1) @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
+β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
 ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
 R : ℝ₊₊                    :: ["gross interest factor"]
 Γ : (0, R)                 :: ["permanent income growth factor; its upper bound R is the finite human wealth condition"]
 
-q := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
+q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
 h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
 L := 1 - h           :: ["the natural borrowing limit on market resources, above which total wealth m - L is positive"]
+
+# q needs to be fixed as a condition. 
+# 12 November 2026: the definition of q above now carries the set (0,1), which calibration holds.
 
 𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
 

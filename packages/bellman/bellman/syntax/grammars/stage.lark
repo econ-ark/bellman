@@ -9,8 +9,8 @@
 // components, each a set expression or a !-marked vocabulary word
 // (one token class — which words are admitted, and what each may
 // type, is the vocabulary's ruling, checked after parsing); the
-// tilde assigns a law on its own line; := defines; <- is written by
-// calibration.
+// tilde assigns a law on its own line; := defines, and <- is a second
+// spelling of :=.
 //
 // The typing entries of a methods file (4 November 2026): a typing entry
 // types a component of an operator by the path of the component,
@@ -30,7 +30,9 @@ file: _NL? file_item (_NL file_item)* _NL?
 // comprehension body to the Comprehension of a correspondence body. The
 // open-open interval body is unreachable here ((a, b) reads as a tuple), as
 // in `function_body`; write an open interval after the typing colon where it
-// is used.
+// is used. A union or a difference of sets, `(0,1) \/ (1, inf)`, is no value
+// of a named set: it is written after a typing colon, in the set of a
+// parameter, of a derived parameter or of a setting (rule `setexpr`).
 assignment: plain_name _ASSIGN assigned_value STMT_META?
 ?assigned_value: RPLUS -> reserved_set_name
       | BBSET -> reserved_set_name
@@ -89,7 +91,9 @@ _ASSIGN.2: "<-" | ":="
 ?subject_segment: plain_name | plain_name ("[" selector "]")+ -> bracketed_name
 ?selector: PMARK | plain_name | NUMBER | bracketed_name | operator_call
 
-// the law statement: y ~ N(μ, σ); a joint law takes a tuple subject
+// the law statement: y ~ N(μ, σ); a joint law takes a tuple subject, whose
+// coordinates are names alone: the lowering refuses a type written inside
+// its parentheses
 law: subject_path "~" formula STMT_META?
    | tuple_subject "~" formula STMT_META?
 
@@ -190,8 +194,20 @@ keyword: plain_name "=" argument
     | "(" argument ("," argument)+ ")" -> argument_tuple
     | word_type -> argument_word
 
-?setexpr: set_product_level
-    | set_product_level "→" setexpr   -> set_functions
+// a set expression after a typing colon. A union, `A \/ B`, and a
+// difference, `A \ B`, of sets of numbers stand at one level and are read
+// from left to right: `A \ B \/ C` is the union of `A \ B` with C. The
+// product × binds before the two signs and the arrow → after them, so
+// that `I → A \/ B` is the functions from I into the union. Parentheses
+// do not group sets. `∪` is a second spelling of `\/`, and `∖` (U+2216) of
+// `\`. The two signs are read in the set of a parameter, of a derived
+// parameter and of a setting; in every other set the declaration pass
+// refuses them (AMD-GRAM-005).
+?setexpr: set_union_level
+    | set_union_level "→" setexpr   -> set_functions
+?set_union_level: set_product_level
+    | set_union_level _UNION set_product_level      -> set_union
+    | set_union_level _DIFFERENCE set_product_level -> set_difference
 ?set_product_level: set_atom
     | set_product_level "×" set_atom  -> set_product
 ?set_atom: named_set
@@ -279,6 +295,9 @@ operator_call: plain_name "{" operator_subscript ("," operator_subscript)* "}" "
 
 // terminals
 _AT: "@"
+// the two signs of a set expression, each with its second spelling
+_UNION: "\\/" | "∪"
+_DIFFERENCE: "\\" | "∖"
 _COLON: ":"
 // the glyph twin of the name `inf`: lowers to the same constant
 INFTY: "∞"

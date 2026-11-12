@@ -6,7 +6,10 @@ definition reads declared parameters, finite numbers and other derived
 parameters, and it is formed by signs, sums, differences, products,
 quotients, powers and the two calls `log` and `exp`. The calibration supplies
 no value for it: its value is its definition evaluated at the values the
-calibration binds, after the derived parameters it reads. Which definitions
+calibration binds, after the derived parameters it reads. A definition may
+declare the set its value lies in, `q : (0,1) := (β*R)^(1/ρ)/R`, which the
+calibration judges at that value (`stage.calibration_requirements`;
+AMD-GRAM-005). Which definitions
 are derived parameters is decided by the outermost form of the right side
 (`typing.declarations.derived_parameter_body`), so that the typing walk and
 the fold read one rule; this module checks what a derived parameter's
@@ -61,7 +64,9 @@ def derived_order(definitions, spans=None):
     """The derived parameters of a definitions table, the records of kind
     `derived_parameter`, in an order in which each follows the derived
     parameters it reads, file order otherwise. `definitions` holds the
-    records of the table, as a mapping by identity or as a sequence.
+    records of the table, as a mapping by identity or as a sequence. The set
+    a definition declares, its record's one coordinate, orders nothing: it
+    is judged after every derived parameter has its value.
 
     Refused under `derived-parameter`, at the definition: a name its
     definition reads that is neither a declared parameter nor a derived

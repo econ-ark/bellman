@@ -1274,6 +1274,8 @@
             "terms.Role",
             "terms.Segment",
             "terms.Select",
+            "terms.SetDifference",
+            "terms.SetUnion",
             "terms.Shock",
             "terms.Signature",
             "terms.Slack",
@@ -1894,6 +1896,13 @@
     "terms.Functions": [
       "domain",
       "codomain"
+    ],
+    "terms.SetUnion": [
+      "members"
+    ],
+    "terms.SetDifference": [
+      "left",
+      "right"
     ],
     "terms.Rel": [
       "left",

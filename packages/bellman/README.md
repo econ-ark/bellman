@@ -158,7 +158,7 @@ oracle of §6 reads this order from the first column of this table:
 | `syntax` | `grammars/`, `parse`, `lower`, `union`, `terms`, `decode`, `source`, `vocabulary`, `layout`, `walk` | why a text is refused as ill-formed; how a stage file and its additions are unioned on their terms; the words of the language; how text is set in 78 columns; how a term is walked |
 | `native` | `identity`, `predicates`, `frozen`, `hypergraphs`, `labels`, `records`, `versions`, `provenance` | what an identity, a condition, a sort, a box and a stored record are; the stage version that holds them |
 | `distributions` | `families`, `edges`, `conditionals` | what the arguments of a shock family mean; on which edge a shock is drawn; the conditional distribution an expectation selects |
-| `typing` | `sets`, `category_codes`, `ranges`, `typed_expressions`, `line_unknowns`, `declarations`, `context`, `primitive_definitions` | why a declaration is refused; a line's operators, unknowns and type; the algebra of the declared sets; the category codes of a named set; how a formula is written |
+| `typing` | `sets`, `category_codes`, `ranges`, `typed_expressions`, `line_unknowns`, `declarations`, `context`, `primitive_definitions`, `type_table` | why a declaration is refused; a line's operators, unknowns and type; the algebra of the declared sets; the category codes of a named set; how a formula is written; which objects a stage has, which forms a set is written in and which limits the language sets on a type |
 | `fold` | `block_lines`, `wire_terms`, `declared_sets`, `stage_names`, `table`, `value_bundles`, `backward`, `policy`, `derived_parameters`, `stage_fold`, `conditions` | how a stage's blocks and lines are read; how a block's lines become its builder's operator rows; the conditions the construction assumes; what a derived parameter reads and its value at a calibration |
 | `graphs` | `wire_sorts`, `initial_diagrams`, `builders_graphs` | how the four graphs and their grains are built |
 | `display` | `sheets`, `printed_records`, `cards`, `drawing`, `graphviz_layout` with its Node script `graphviz_layout.mjs`, `answer_encoding`, `encoding_checks`, the schema file | how an answer is set as text, a drawing or JSON; how a drawing is laid out |
@@ -166,7 +166,7 @@ oracle of §6 reads this order from the first column of this table:
 | `factory` | `loading`, `recipe`, `file_entries`, `elaboration`, `trellis`, `joins`, `trellis_drawings`, `model_explorer` | how files become records, stages and trellises; the joins of a period; the drawings of a period and of a trellis; the interactive view of a stage or a trellis in Google's Model Explorer; the entries of a model's YAML files read and replaced as text |
 | `period` | `__init__` alone: the table of the public names of a period (§1) | what a user imports for a period |
 | `trellis` | `__init__` alone: the table of the public names of a trellis and of the factory route (§1) | what a user imports for a trellis |
-| the root | `__init__`, `__main__`, `refusals`, `refusal_catalogue`, `refusal_examples`, `dossier` | that the root exports nothing (§1); what a refusal carries; the catalogue of refusals and the dossier of a stage |
+| the root | `__init__`, `__main__`, `refusals`, `refusal_catalogue`, `refusal_examples`, `semantic_rules`, `dossier` | that the root exports nothing (§1); what a refusal carries; the catalogue of refusals; which functions implement and check each rule of the language; the dossier of a stage |
 
 The four graphs of a stage are its two **initial diagrams**, one backward and
 one forward, whose boxes are the blocks and whose wires are the fields the
@@ -282,8 +282,8 @@ The eleven folders stand in the order `syntax`, `native`, `distributions`,
 own folder, from the folders before it, and from `bellman/refusals.py`, which
 holds the refusal classes and the names of the rules and conditions and
 imports nothing of the package: the one exception. The root's other modules,
-`__init__`, `__main__`, `dossier`, `refusal_catalogue` and `refusal_examples`,
-stand above every folder. No module imports inside a function, and none reads
+`__init__`, `__main__`, `dossier`, `refusal_catalogue`, `refusal_examples`
+and `semantic_rules`, stand above every folder. No module imports inside a function, and none reads
 another's private name. `tests/tools/local_imports.py` checks the rule: it
 counts the imports inside functions and classes, prints the cycles among the
 modules, and prints each import that reads a later folder or the root, reading

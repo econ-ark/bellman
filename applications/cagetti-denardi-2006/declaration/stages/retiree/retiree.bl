@@ -3,7 +3,7 @@
 Xa := ℝ₊
 Xm := ℝ₊₊
 
-σ : ℝ₊₊          :: ["relative risk aversion; the utility formula requires σ different from 1"]
+σ : ℝ₊₊ \ {1}    :: ["relative risk aversion; the utility formula requires σ different from 1"]
 r : (-1, inf)    :: ["risk-free interest rate, a price fixed by the stationary equilibrium"]
 p : ℝ₊₊          :: ["pension and social security payment, 40 percent of average yearly income net of taxes"]
 

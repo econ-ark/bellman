@@ -31,10 +31,11 @@ type: concept
 
 A **builder** is the [[operator]] a block of a [[stage]] [[semantics|denotes]]. The block is
 the authored text of the `.bl` file; the builder is what that text means,
-and the two words are kept apart. The calculus defines a builder as a named
-composition of operators constituting a stage's input-to-output interface
+and the two words are kept apart. The calculus defines a backward builder as
+a named composition of operators that maps the value functions at one perch
+to those at the preceding perch
 ([Operators and builders](../bellman-calculus/05-Operators%20and%20builders.md) §6).
-In the [[semgraph]] it is one box at the builder [[semgraph|grain]], a `Builder` bubble
+In the [[semgraph]] a builder is one box at the builder [[semgraph|grain]], a `Builder` bubble
 whose name is the block's identifier, and opening the bubble shows the operators
 it composes. A builder is reached from the stage by the ordered pair of
 perches it joins, the key the package resolves whatever the block's
@@ -56,12 +57,14 @@ pair of perches its builder joins or, for the policy builder, the key
 `"policy"`: `stage.dcsn.builder.bwd` is `stage.builder["cntn", "dcsn"]`.
 
 The two directions act on different objects. A [[backward_builder|backward builder]] carries
-value functions backward: $\mathbb T_\succ$ on the decision edge,
-$\mathbb T_\prec$ on the arrival edge, composing into the stage operator
-$\mathbb T = \mathbb T_\prec \circ \mathbb T_\succ$, with
-$\mathbb T_{\succ,\pi}$ the **builder at a policy**, one operator for each
-policy, whose signature is its inputs and its outputs and which is wired to
-the policy builder at no level. A
+value functions backward: $\mathbb T_{\succ,\pi}$, the **builder at a policy**,
+on the decision edge, one operator for each policy, whose signature is its
+inputs and its outputs and which is wired to the policy builder at no level,
+and $\mathbb T_\prec$ on the arrival edge, composing into
+$\mathbb T_\pi = \mathbb T_\prec \circ \mathbb T_{\succ,\pi}$. The optimizing
+decision builder $\mathbb T_\succ$ is the image of no transition, and the
+[[bellman_operator|Bellman operator]] is
+$\mathbb T = \mathbb T_\prec \circ \mathbb T_\succ$. A
 [[forward_builder|forward builder]] transports probability measures along the same declared
 transitions, $\mathbb M_\prec$ and $\mathbb M_{\succ,\pi}$, composing into
 $\mathbb M_\pi = \mathbb M_{\succ,\pi} \circ \mathbb M_\prec$. The policy

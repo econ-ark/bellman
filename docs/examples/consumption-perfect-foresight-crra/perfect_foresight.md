@@ -131,14 +131,17 @@ The stage file, `declaration/stages/perfect_foresight/perfect_foresight.bl`, sta
 Xm := ℝ
 Xa := ℝ
 
-β : (0,1) @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
+β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1"]
 ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
 R : ℝ₊₊                    :: ["gross interest factor"]
 Γ : (0, R)                 :: ["permanent income growth factor; its upper bound R is the finite human wealth condition"]
 
-q := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
+q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q < 1"]
 h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
 L := 1 - h           :: ["the natural borrowing limit on market resources, above which total wealth m - L is positive"]
+
+# q needs to be fixed as a condition. 
+# 12 November 2026: the definition of q above now carries the set (0,1), which calibration holds.
 
 𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
 
@@ -171,7 +174,7 @@ The arrival block `arvl_to_dcsn` writes $m = Rk/\Gamma + 1$: the return $R$ on t
 
 ### 6.2 Derived parameters
 
-The lines `q := …`, `h := …` and `L := …` define three **derived parameters**, constants that the stage defines from its parameters and that the calibration does not supply: the return patience factor $q$, human wealth $h$ and the natural borrowing limit $L$. Their definitions follow the rule [`derived-parameter`](../../Bellman-Sym/reference/refusals.md#derived-parameter), and a calibration that names one of them is refused. `stage.par` lists them after the four declared parameters, with their definitions and, once a calibration is bound, their values (§7.3). The declared set of the growth factor, `Γ : (0, R)`, is an interval whose upper endpoint is the interest factor: the bound is the finite human wealth condition, and `calibrate` refuses a growth factor at or above the interest factor, naming the set (§11).
+The lines `q : (0,1) := …`, `h := …` and `L := …` define three **derived parameters**, constants that the stage defines from its parameters and that the calibration does not supply: the return patience factor $q$, human wealth $h$ and the natural borrowing limit $L$. Their definitions follow the rule [`derived-parameter`](../../Bellman-Sym/reference/refusals.md#derived-parameter), and a calibration that names one of them is refused. The definition of $q$ declares the set `(0,1)` in which its value lies, which is the return impatience condition, and `calibrate` refuses a calibration at which the value of $q$ lies outside that set (§11). `stage.par` lists them after the four declared parameters, with their definitions and, once a calibration is bound, their values (§7.3). The declared set of the growth factor, `Γ : (0, R)`, is an interval whose upper endpoint is the interest factor: the bound is the finite human wealth condition, and `calibrate` refuses a growth factor at or above the interest factor, naming the set (§11).
 
 ### 6.3 Builders
 
@@ -291,17 +294,17 @@ print(stage.par)
 
 ```text
 name  set                      value                describes
-β     (0, 1) @ (0, R^(ρ - 1))  0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
+β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q < 1
 ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
 R     ℝ₊₊                      1.04                 gross interest factor
 Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
-q     (β*R)^(1/ρ)/R            0.9615384615384615   the return patience factor; the return impatience condition is q < 1
+q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q < 1
 h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
 L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
 κ     1 - q                    0.03846153846153855  the marginal propensity to consume, one minus the return patience factor
 ```
 
-`stage.par` lists the four declared parameters with their sets and values, then the three derived parameters of the stage file and the coefficient `κ` of the methods file, each with its definition in place of a set and its value at the calibration: $q = 1/1.04$, $h = 52$, $L = -51$ and $\kappa = 0.04/1.04$, evaluated in floating point. `stage.methods` lists the three builders typed `!explicit` and the closed form of each builder's Evaluation, generated from the builder's method entry:
+`stage.par` lists the four declared parameters with their sets and values, then the three derived parameters of the stage file and the coefficient `κ` of the methods file, each with its definition in the column of the sets, after the declared set `(0, 1)` in the row of `q`, and its value at the calibration: $q = 1/1.04$, $h = 52$, $L = -51$ and $\kappa = 0.04/1.04$, evaluated in floating point. `stage.methods` lists the three builders typed `!explicit` and the closed form of each builder's Evaluation, generated from the builder's method entry:
 
 ```python
 print(stage.methods)
@@ -335,7 +338,7 @@ The model is stationary: every period holds the one stage with the same paramete
 5. **Arrival marginal** (the derivative line of `dcsn_to_arvl`): $dV^{<}(k) = R\,\Gamma^{-\rho}\, dV(Rk/\Gamma + 1)$, which is the next iteration's continuation marginal value at $k = a$.
 6. **Iterate** until convergence.
 
-Calibration refuses a calibration at which $q \ge 1$, by the declared set of the discount factor. The module refuses a return patience factor that computes to one or more, a grid of savings that starts at or below $L$, an intermediate value that is not finite, an extrapolation that leaves the feasible set and an iteration that reaches its limit without converging. The consumption function is linear in $m$, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook `code/closed-form-and-grid.ipynb` shows each step and each comparison.
+Calibration refuses a calibration at which $q \ge 1$, by the declared set of the discount factor and by the set that the definition of $q$ declares. The module refuses a return patience factor that computes to one or more, a grid of savings that starts at or below $L$, an intermediate value that is not finite, an extrapolation that leaves the feasible set and an iteration that reaches its limit without converging. The consumption function is linear in $m$, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook `code/closed-form-and-grid.ipynb` shows each step and each comparison.
 
 ## 10 Calibration
 
@@ -381,7 +384,7 @@ The closed form needs neither the growth impatience condition nor a normalized d
 | Condition | How it is stated | Where it is refused |
 |---|---|---|
 | $\Gamma < R$ | the declared set of the growth factor, `Γ : (0, R)` | `calibrate` |
-| $q < 1$ | the declared set of the discount factor, `β : (0,1) @ (0, R^(ρ-1))`, whose upper bound $R^{\rho-1}$ is the condition written for $\beta$ | `calibrate`, under each methods file |
+| $q < 1$ | the declared set of the discount factor, `β : ℝ₊₊ @ (0, R^(ρ-1))`, whose upper bound $R^{\rho-1}$ is the condition written for $\beta$, and the set that the definition of the return patience factor declares, `q : (0,1) := (β*R)^(1/ρ)/R` | `calibrate`, under each methods file |
 | $\rho > 1$ | the declared set `ρ : (1, inf)` | `calibrate` |
 | finite parameters | the declared sets of the four parameters | `calibrate` |
 | $m > L$, and $k > L$ at the arrival perch | the domain of each function of the closed form | the module, at each evaluation |
