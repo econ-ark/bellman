@@ -149,6 +149,7 @@ from bellman.period import (  # noqa: E402
     computable_together,
     diagram_period,
     forward_order,
+    forward_record,
     period_joins,
 )
 from bellman.stage import (  # noqa: E402
@@ -2515,6 +2516,15 @@ FUNCTION_EXAMPLES = {
     "period.computable_together": (
         "computable_together(periods[0])",
         lambda: computable_together(trellis_periods()[0]),
+    ),
+    "period.forward_record": (
+        "forward_record(periods[1], mapping, to=periods[0])",
+        lambda: forward_record(
+            trellis_periods()[1],
+            elaborated_trellis()["inter_connectors"][0],
+            to=trellis_periods()[0],
+            address="periods[1]",
+        ),
     ),
     "trellis.inter_period_joins": (
         "inter_period_joins(mapping, periods[1], periods[0])",

@@ -1,7 +1,9 @@
 """The public names of a period, `bellman.period`: the joins of a period and
 the orders they determine, `period_joins`, `forward_order`, `backward_order`
-and `computable_together`, and `diagram_period`, which draws one period of a
-trellis. `_EXPORTS` maps each name to the module that defines it, which is
+and `computable_together`, `diagram_period`, which draws one period of a
+trellis, and `forward_record` with its records `ForwardRecord`, `ForwardStep`,
+`ForwardShock` and `ForwardControl`: what each forward builder of a period
+needs and gives, as plain data. `_EXPORTS` maps each name to the module that defines it, which is
 imported when the name is first used; the modules stand in `bellman.factory`,
 and this package holds the table and nothing else (`packages/bellman/README.md`
 §1 and §6).
@@ -15,6 +17,11 @@ _EXPORTS = {
     "backward_order": "bellman.factory.joins",
     "computable_together": "bellman.factory.joins",
     "diagram_period": "bellman.factory.trellis_drawings",
+    "forward_record": "bellman.factory.forward_record",
+    "ForwardRecord": "bellman.factory.forward_record",
+    "ForwardStep": "bellman.factory.forward_record",
+    "ForwardShock": "bellman.factory.forward_record",
+    "ForwardControl": "bellman.factory.forward_record",
 }
 
 __all__ = list(_EXPORTS)

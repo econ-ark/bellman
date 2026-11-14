@@ -65,6 +65,7 @@ import semgraph`.
 |---|---|
 | read the joins of a period and the orders they determine | `period_joins`, `computable_together`, `forward_order`, `backward_order` |
 | draw one period of a trellis | `diagram_period` |
+| answer the forward record of a period, what each of its forward builders needs and gives as plain data, with or without the inter-period mapping that joins it to the period that follows or to itself | `forward_record`; `ForwardRecord`, `ForwardStep`, `ForwardShock`, `ForwardControl` |
 
 `from bellman.trellis import …`
 
