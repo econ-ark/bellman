@@ -45,6 +45,21 @@ assignment: plain_name _ASSIGN assigned_value STMT_META?
       | "[" formula "," formula ")" -> interval_closed_open
       | "[" formula "," formula "]" -> interval_closed_closed
       | formula
+      | conditional
+// A definition by cases, `a : ℝ_{+∞} := if Γ < R then 1/(R - Γ) else inf`:
+// the right side of a derived parameter's definition is the first branch
+// where the test holds and the second otherwise, and the branch not chosen
+// is not evaluated. A branch is a formula or a further conditional, so that
+// three cases are written `if a < 0 then -1 else if a = 0 then 0 else 1`.
+// The form stands as the whole right side after `:=`, in a definition
+// without a declared set (rule `assigned_value`) and in one that declares a
+// set (rule `declared_value`), and inside no formula. `if`, `then` and
+// `else` are words of the language: the lowering refuses each of them
+// wherever the parser reads it as a name (AMD-GRAM-006).
+conditional: _IF condition _THEN _branch _ELSE _branch
+_branch: formula | conditional
+?condition: formula RELOP formula -> comprehension_condition
+    | formula "=" formula -> comprehension_equality
 // A named fixed product uses the existing set term. Keeping its first
 // factor outside the interval rule preserves (a, b) as an expression tuple.
 // A set of functions after `:=`, `Q := L_J → ℝ₊`, names its domain first.
@@ -77,7 +92,9 @@ RELOP: "<=" | ">=" | "≤" | "≥" | "<" | ">"
 ?single_subject: plain_name | bracketed_name
 tuple_subject: "(" coordinate ("," coordinate)* ")"
 coordinate: bracketed_name typing? | plain_name typing? | tuple_subject typing?
-declared_value: _ASSIGN formula
+// the value a declaration carries, `q : (0,1) := (β*R)^(1/ρ)/R`: a formula,
+// or a definition by cases, `q : (0, 3) := if β < R then 1 else 2`
+declared_value: _ASSIGN (formula | conditional)
 _ASSIGN.2: "<-" | ":="
 
 // the subject of a declaration, of a law, of a bare side and of a typing
@@ -294,6 +311,10 @@ operator_call: plain_name "{" operator_subscript ("," operator_subscript)* "}" "
 !plain_name: NAME -> name
 
 // terminals
+// the three words of a conditional, each a whole word
+_IF.5: /if(?!\w)/
+_THEN.5: /then(?!\w)/
+_ELSE.5: /else(?!\w)/
 _AT: "@"
 // the two signs of a set expression, each with its second spelling
 _UNION: "\\/" | "∪"

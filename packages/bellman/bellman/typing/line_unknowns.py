@@ -111,6 +111,11 @@ def occurrence_paths(expr, path, *, slack=False, declarations=None, address=None
                 visit(item, path + ("items", i))
         elif isinstance(e, terms.Select):
             visit(e.family, path + ("family",))
+        elif isinstance(e, terms.Conditional):
+            visit(e.test.left, path + ("test", "left"))
+            visit(e.test.right, path + ("test", "right"))
+            visit(e.then, path + ("then",))
+            visit(e.otherwise, path + ("otherwise",))
         elif isinstance(e, terms.Interval) and isinstance(e.bounds, terms.Range):
             visit(e.bounds.lower, path + ("bounds", "lower"))
             visit(e.bounds.upper, path + ("bounds", "upper"))
@@ -180,11 +185,13 @@ def unreadable_form_refusal(declarations, address, message) -> NotConstructed:
 
 
 def check_selections_and_calls(
-    expr, address, declarations, local_domains=None, *, local_values=None
+    expr, address, declarations, local_domains=None, *, local_values=None, language_calls=()
 ) -> None:
     """The check of every selection from a family and of every call in an
     expression, under the local typed names: a selection is checked by
-    `_check_family_selection` and a call by `_check_call`."""
+    `_check_family_selection` and a call by `_check_call`. `language_calls`
+    names the functions of the language that the expression calls, `log`,
+    `exp`, `min` and `max` in a derived parameter's definition."""
     local_values = {} if local_values is None else local_values
 
     def visit(e, local):
@@ -194,7 +201,7 @@ def check_selections_and_calls(
                 e, local, address=address, declarations=declarations, local_values=local_values
             )
         elif isinstance(e, terms.Call):
-            _check_call(e, local, address, declarations)
+            _check_call(e, local, address, declarations, language_calls)
             for arg in e.args:
                 visit(arg, local)
         elif isinstance(e, terms.Operator):
@@ -420,10 +427,18 @@ def _coordinate_sets(value, declarations):
     return value if isinstance(value, tuple) else None
 
 
-def _check_call(call, local, address, declarations) -> None:
+def _check_call(call, local, address, declarations, language_calls=()) -> None:
     """A call names a function, not a declared value or a name its operator
     binds, and gives a function defined with a body as many arguments as its
-    definition declares; otherwise it is refused under `definition-order`."""
+    definition declares; otherwise it is refused under `definition-order`.
+
+    `language_calls` names the functions of the language that the expression
+    calls, `log`, `exp`, `min` and `max` in a derived parameter's
+    definition. A call of one of them is no call of the stage's function of
+    that name, so its arguments are not counted against that function's:
+    the check of the derived parameters refuses the call under
+    `derived-parameter`, whatever number of arguments the stage's function
+    takes (`declarations.derived_parameter_fault`)."""
     definition = declarations.callable_definition(call.fun)
     declared = declarations.declared_as(call.fun)
     if declared not in (None, "function") or call.fun in local:
@@ -435,6 +450,7 @@ def _check_call(call, local, address, declarations) -> None:
     if (
         definition is not None
         and definition.slot == "body"
+        and call.fun not in language_calls
         and len(call.args) != len(definition.params)
     ):
         raise declarations.error(
@@ -769,6 +785,10 @@ def _references(expr, address, declarations, bound, *, aliases, contexts):
             return out
         if isinstance(e, terms.Tuple):
             return sum((child(item) for item in e.items), [])
+        if isinstance(e, terms.Conditional):
+            return sum(
+                (child(part) for part in (e.test.left, e.test.right, e.then, e.otherwise)), []
+            )
         if isinstance(e, terms.Select):
             out = child(e.family)
             if isinstance(e.sel, terms.Key):

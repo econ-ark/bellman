@@ -7,12 +7,12 @@ tags:
 - method
 - type
 wiki_status: budding
-last_reviewed: '2026-11-05'
-reviewed_by: Claude (Fable), session of 5 November 2026, at AAS's request; written from the decisions of 4 November 2026 on methods as components of the signature, checked against the Bellman calculus page on methods, and revised after one adversarial review round
+last_reviewed: '2026-11-14'
+reviewed_by: Claude (Fable), session of 5 November 2026, at AAS's request; written from the decisions of 4 November 2026 on methods as components of the signature, checked against the Bellman calculus page on methods, and revised after one adversarial review round. Revised by Claude (Fable), session of 14 November 2026, for AAS's ruling of that day that a method's entry writes no number
 sources:
 - path: docs/bellman-calculus/06-Methods.md
   class: canonical
-  date: '2026-11-05'
+  date: '2026-11-14'
 - path: docs/Bellman-Sym/reference/methods.md
   class: canonical
   date: '2026-11-05'
@@ -40,7 +40,7 @@ type: concept
 
 A method types an operator and nothing else: not a [[field]], which is a quantity and not a computation, and not a side of a block header, the inputs before the arrow or the outputs after it, whose [[perch]] word types the states and the values listed on it. The entry is written in the methods file, an [[addition]] to the stage file, inside the bracket of the block that holds the operator, `[id=policy, policy.method : !egm | evaluate.method : !Linear] { … }`, the block's own method in the first group and each inner operator's in a group opened by `|`; or at file level with the full path, `dcsn_to_arvl.evaluate.method : !Linear`. The places that admit a method are those `stage.places()` lists: a builder; the [Evaluation](../Bellman-Sym/reference/operations.md#evaluation) that stores the builder's result, named by what it evaluates where the value and its stated derivative are represented apart, `evaluate[V[<]].method` and `evaluate[D_{k}V[<]].method`; an operator of a line, such as the expectation `E_ψ_ξ` or the maximization `argmax`; a line marked `!node`, a computation inside a block that the author names so that a method can stand on it; and a declared function. The derivative operator `D` admits no method.
 
-Which methods an operator admits depends on its operation kind, the name under which the package lists the operation, such as `Expectation` or `Evaluation`. The methods admitted at one operation kind form one set ([Methods](../bellman-calculus/06-Methods.md) §4), and the catalogue [Method types](../Bellman-Sym/reference/methods.md) lists each word with the kinds of place it admits and the keywords the package reads. A further keyword is read by the [[handler]] that computes the method. A method takes keyword arguments only, each valued by the name of a declared setting, a number, a quoted string or a word with its own arguments; a numerical choice that is to be configured is written as a declared setting's name, and no value is part of a signature.
+Which methods an operator admits depends on its operation kind, the name under which the package lists the operation, such as `Expectation` or `Evaluation`. The methods admitted at one operation kind form one set ([Methods](../bellman-calculus/06-Methods.md) §4), and the catalogue [Method types](../Bellman-Sym/reference/methods.md) lists each word with the kinds of place it admits and the keywords the package reads. A further keyword is read by the [[handler]] that computes the method. A method takes keyword arguments only, each valued by the name of a declared setting, a quoted string or a word with its own arguments. Its entry writes no number: every number that a method reads is a declared setting, which the entry names and the settings file values, and no value is part of a signature.
 
 ## 2 What a method does to the stage
 

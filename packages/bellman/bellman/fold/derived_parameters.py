@@ -4,12 +4,16 @@ A derived parameter is a constant of the stage that a definition without
 arguments writes from the stage's parameters, `h := 1/(1 - Γ/R)`. Its
 definition reads declared parameters, finite numbers and other derived
 parameters, and it is formed by signs, sums, differences, products,
-quotients, powers and the two calls `log` and `exp`. The calibration supplies
-no value for it: its value is its definition evaluated at the values the
-calibration binds, after the derived parameters it reads. A definition may
+quotients, powers, the two calls `log` and `exp` of one argument and the two
+calls `min` and `max` of one argument or more; its right side may be a
+conditional, `if test then a else b`, a definition by cases. The calibration
+supplies no value for it: its value is its definition evaluated at the values
+the calibration binds, after the derived parameters it reads. A definition may
 declare the set its value lies in, `q : (0,1) := (β*R)^(1/ρ)/R`, which the
 calibration judges at that value (`stage.calibration_requirements`;
-AMD-GRAM-005). Which definitions
+AMD-GRAM-005). A branch of a definition by cases written `inf` or `-inf`
+needs a declared set that holds that infinity, `h : ℝ_{+∞} := if Γ < R then
+1/(1 - Γ/R) else inf` (AMD-GRAM-006). Which definitions
 are derived parameters is decided by the outermost form of the right side
 (`typing.declarations.derived_parameter_body`), so that the typing walk and
 the fold read one rule; this module checks what a derived parameter's
@@ -18,13 +22,22 @@ definition reads and evaluates it.
 - `derived_order` answers the derived parameters of a definitions table, each
   after those it reads, and refuses at elaboration a definition that reads a
   name other than a declared parameter or a derived parameter, that calls a
-  function other than `log` or `exp`, that writes any other form, or that
-  reaches itself through the derived parameters it reads.
+  function other than `log`, `exp`, `min` or `max`, that calls one of the
+  four where the stage defines a function of that name, that writes any
+  other form, that writes an infinite branch its declared set cannot hold,
+  or that reaches itself through the derived parameters it reads.
 - `derived_value` evaluates one definition's term at numbers by the rules of
   real arithmetic: a divisor is not zero; the argument of `log` is positive;
   a power with an integer exponent is defined at every base but zero, where
   the exponent is positive; a power with a noninteger exponent requires a
-  positive base; and every value is a finite real number. A value that a
+  positive base; `min` and `max` are the least and the greatest of their
+  arguments, every one of which has a value; and every value is a finite
+  real number. A definition by cases, `if test then a else b`, takes the
+  value of the branch its test chooses, and the other branch is not
+  evaluated; a branch written `inf` or `-inf` gives that infinity, the one
+  value of a derived parameter that is no finite real number, as the float
+  `inf` or `-inf`. No arithmetic of infinities is defined: a term that
+  reads a name valued at an infinity has no value. A value that a
   floating-point operation rounds to zero satisfies no requirement of a
   positive number.
 - `derived_values` answers the value of every derived parameter of a stage at
@@ -38,20 +51,24 @@ from __future__ import annotations
 
 import math
 import numbers
+import operator
 from collections.abc import Mapping
 from typing import NamedTuple
 
 from bellman.refusals import construction_error
 from bellman.syntax import terms as T
 from bellman.syntax.lower import span_at
-from bellman.syntax.source import to_source
+from bellman.syntax.source import condition_text, to_source
 from bellman.typing.declarations import (
-    DERIVED_PARAMETER_CALLS,
+    DERIVED_PARAMETER_EXTREMA,
+    derived_parameter_call,
     derived_parameter_fault,
     derived_parameters_read,
+    infinite_branch_fault,
+    infinity,
 )
 
-__all__ = ("derived_order", "derived_value", "derived_values")
+__all__ = ("derived_order", "derived_value", "derived_value_of", "derived_values")
 
 # the rule of every refusal this module makes
 _RULE = "derived-parameter"
@@ -65,15 +82,20 @@ def derived_order(definitions, spans=None):
     `derived_parameter`, in an order in which each follows the derived
     parameters it reads, file order otherwise. `definitions` holds the
     records of the table, as a mapping by identity or as a sequence. The set
-    a definition declares, its record's one coordinate, orders nothing: it
-    is judged after every derived parameter has its value.
+    a definition declares, its record's one coordinate, orders nothing here:
+    `calibration_requirements` judges it, before a definition that reads the
+    derived parameter is evaluated.
 
     Refused under `derived-parameter`, at the definition: a name its
     definition reads that is neither a declared parameter nor a derived
     parameter, such as a setting, a shock, a field, a set, a function or
-    `inf`; a call of a function other than `log` or `exp`, or of either with
-    other than one argument; any other form, such as an expectation or a
-    selection; a number that is not finite (`derived_parameter_fault`); and a
+    `inf` anywhere but as a whole branch of a conditional; a call of a
+    function other than `log`, `exp`, `min` or `max`, of `log` or `exp` with
+    other than one argument, or of one of the four where the stage defines a
+    function of that name; any other form, such as an expectation or a
+    selection; a number that is not finite (`derived_parameter_fault`); a
+    branch written `inf` or `-inf` in a definition whose declared set cannot
+    hold that infinity (`infinite_branch_fault`); and a
     cycle among the derived parameters. The declaration pass makes the same
     check before any line is read and refuses a cycle among the definitions
     under `definition-order`, so that on a stage under construction these
@@ -86,10 +108,16 @@ def derived_order(definitions, spans=None):
         return ()
     parameters = {d.identity.field for d in records if d.kind == "parameter"}
     kinds = _kinds(records)
+    named_sets = {
+        d.identity.field: d.equations[0] for d in records if d.kind == "set" and d.equations
+    }
     for name, definition in derived.items():
-        refused = derived_parameter_fault(
-            name, definition.equations[0], parameters, derived, kinds
-        )
+        term = definition.equations[0]
+        # the set the definition declares, its record's one coordinate
+        declared = definition.coordinates[0][1] if definition.coordinates else None
+        refused = derived_parameter_fault(name, term, parameters, derived, kinds)
+        if refused is None:
+            refused = infinite_branch_fault(name, term, declared, named_sets)
         if refused is not None:
             raise _refusal(definition, *refused, spans)
     order, done, active = [], set(), []
@@ -179,18 +207,37 @@ def derived_value(term, values):
     divisor is not zero; the argument of `log` is positive; a power with an
     integer exponent is defined at every base except zero, where its exponent
     is positive; a power with a noninteger exponent requires a positive base;
-    and the value of every operation is a finite real number. A number that
-    a floating-point operation rounds to zero from a nonzero result satisfies
-    no requirement of a positive number. A term that breaks one of these
-    rules, that reads a name `values` does not bind or binds to a value that
-    is no finite real number, or that holds another form, raises a
-    `ValueError` whose sentence names the operation and the numbers."""
+    `min` and `max` are the least and the greatest of their arguments, each
+    of which is evaluated; and the value of every operation is a finite real
+    number. A conditional takes the value of the branch its test chooses and
+    evaluates no other; a branch written `inf` or `-inf` gives that infinity,
+    so the float may be infinite for a definition by cases alone. A name that
+    `values` binds to an infinity has no finite value, so that a term that
+    reads one, in arithmetic, in a call, in a test or alone, has none. A
+    number that a floating-point operation rounds to zero from a nonzero
+    result satisfies no requirement of a positive number. A term that breaks
+    one of these rules, that reads a name `values` does not bind or binds to
+    a value that is no finite real number, or that holds another form,
+    raises a `ValueError` whose sentence names the operation and the
+    numbers."""
     return _evaluated(term, values).number
+
+
+# the comparison each relation of a test makes
+_COMPARISONS = {
+    T.Lt: operator.lt,
+    T.Le: operator.le,
+    T.Eq: operator.eq,
+    T.Ge: operator.ge,
+    T.Gt: operator.gt,
+}
 
 
 def _evaluated(term, values):
     """The `_Value` of a term at the numbers, refused as `derived_value`
     refuses."""
+    if isinstance(term, T.Conditional):
+        return _conditional(term, values)
     if isinstance(term, T.Number):
         return _Value(_finite(term.value, f"the number {term.value!r}"))
     if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
@@ -207,9 +254,34 @@ def _evaluated(term, values):
     if isinstance(term, T.Pow):
         base, exponent = _evaluated(term.base, values), _evaluated(term.exponent, values)
         return _power(term, base, exponent, values)
-    if isinstance(term, T.Call) and term.fun in DERIVED_PARAMETER_CALLS and len(term.args) == 1:
+    if derived_parameter_call(term):
+        if term.fun in DERIVED_PARAMETER_EXTREMA:
+            return _extremum(term, tuple(_evaluated(one, values) for one in term.args))
         return _elementary(term, _evaluated(term.args[0], values), values)
     raise _Undefined(f"`{to_source(term)}` is no form a derived parameter's definition admits")
+
+
+def _conditional(term, values):
+    """The value of a definition by cases: the two sides of its test are
+    evaluated and compared, and the branch the test chooses is evaluated
+    alone. A branch written `inf` or `-inf` gives that infinity. A side that
+    floating point rounded to zero from a nonzero result decides no
+    comparison, and the definition then has no value."""
+    test = term.test
+    left, right = _evaluated(test.left, values), _evaluated(test.right, values)
+    for side, value in ((test.left, left), (test.right, right)):
+        if value.underflowed and value.number == 0:
+            raise _Undefined(
+                f"the test `{condition_text(test)}` reads `{to_source(side)}`, which is 0.0 by "
+                f"floating-point underflow{_at(side, values)}, and such a zero decides no "
+                "comparison"
+            )
+    holds = _COMPARISONS[type(test.op)](left.number, right.number)
+    branch = term.then if holds else term.otherwise
+    infinite = infinity(branch)
+    if infinite is not None:
+        return _Value(infinite)
+    return _evaluated(branch, values)
 
 
 def _arithmetic(term, left, right, values):
@@ -283,6 +355,18 @@ def _elementary(term, argument, values):
     return _Value(number, number == 0)
 
 
+def _extremum(term, arguments):
+    """The value of `min` or `max`: the least or the greatest of the
+    arguments' numbers. It is a zero by underflow where an argument that
+    equals it is one, since the result that floating point rounded to zero
+    may be the least or the greatest."""
+    number = (min if term.fun == "min" else max)(argument.number for argument in arguments)
+    return _Value(
+        number,
+        any(argument.underflowed for argument in arguments if argument.number == number),
+    )
+
+
 def _result(number, term, values):
     """The value of one operation where it is a finite real number, refused
     otherwise."""
@@ -345,6 +429,9 @@ def _nodes(term):
     elif isinstance(term, T.Call):
         for argument in term.args:
             yield from _nodes(argument)
+    elif isinstance(term, T.Conditional):
+        for part in (term.test.left, term.test.right, term.then, term.otherwise):
+            yield from _nodes(part)
 
 
 # --- the values of a stage's derived parameters at a calibration ---
@@ -363,23 +450,33 @@ def derived_values(stage, values):
     order = derived_order(stage.definitions)
     found = {}
     for definition in order:
-        name, term = definition.identity.field, definition.equations[0]
-        try:
-            found[name] = derived_value(term, {**values, **found})
-        except _Undefined as fault:
-            raise construction_error(
-                f"with the calibration values, the derived parameter {name}, defined as "
-                f"`{to_source(term)}`, has no value: {fault}; a derived parameter's value is "
-                "its definition evaluated at the calibration, a finite real number",
-                stage=stage.name,
-                address=definition.address,
-                span=None,
-                rule=_RULE,
-                write=f"Write parameter values at which the definition of {name} has a finite "
-                "real value",
-            ) from None
+        found[definition.identity.field] = derived_value_of(stage, definition, {**values, **found})
     return {
         d.identity.field: found[d.identity.field]
         for d in stage.definitions.values()
         if d.kind == "derived_parameter"
     }
+
+
+def derived_value_of(stage, definition, values):
+    """The value of one derived parameter, the record `definition` of the
+    stage's table, at `values`, which holds the number of each declared
+    parameter and of each derived parameter its definition reads. A
+    definition that has no value at the numbers is refused under
+    `derived-parameter` at that definition, naming the operation that fails
+    and the numbers it reads."""
+    name, term = definition.identity.field, definition.equations[0]
+    try:
+        return derived_value(term, values)
+    except _Undefined as fault:
+        raise construction_error(
+            f"with the calibration values, the derived parameter {name}, defined as "
+            f"`{to_source(term)}`, has no value: {fault}; a derived parameter's value is "
+            "its definition evaluated at the calibration, a finite real number or the "
+            "infinity that a branch of a definition by cases writes",
+            stage=stage.name,
+            address=definition.address,
+            span=None,
+            rule=_RULE,
+            write=f"Write parameter values at which the definition of {name} has a value",
+        ) from None

@@ -43,7 +43,7 @@ Every folder keeps the files the language reads in its subfolder
 ├── code/               the model's programs
 ├── results/            what the programs write; git ignores it
 ├── tests/              the model's tests
-└── reference/          the papers the model rests on, as PDF files
+└── reference/          README.md, a note that cites the papers kept for reference; their PDF files are not kept here
 ```
 
 A folder holds the parts its model has. The documentation page

@@ -20,6 +20,17 @@ parameter and the key or ordered pair. A value of a parameter declared on an
 integer range or a listed set of numbers is one member of the set at the
 values. The members, the counts and the key positions are those of
 `typing.sets`, which the connections and the compiled selections read too.
+
+An infinite value has one reading (AMD-GRAM-006; AAS, 12 November 2026). An
+endpoint of an interval, or a side of a condition, that is the bare name of
+a parameter or of a derived parameter valued at `inf` or `-inf` is read as
+that infinity, whatever supplies the value (`_endpoint_at`). No arithmetic
+of infinities is defined, so a bound that computes with such a name, or
+with the written infinity, `2*inf`, has no value, and its set is refused as
+a set with a bound that divides by zero is (`_bound_at`). A finite number
+lies in every set of extended reals, and an infinity lies in a set exactly
+where the set holds it; `membership` and `predicate_value`, the two
+procedures that judge a membership, give that one answer (`_infinity_in`).
 """
 
 import math
@@ -27,15 +38,16 @@ import operator
 from collections.abc import Mapping, Sequence
 
 from bellman.fold.block_lines import parameter_sets
-from bellman.fold.derived_parameters import derived_value, derived_values
+from bellman.fold.derived_parameters import derived_order, derived_value, derived_value_of
 from bellman.fold.stage_names import StageNames
 from bellman.native.identity import Identity
 from bellman.native.predicates import And, Compare, IsInteger, Member, Not, Or
 from bellman.native.records import UNDECLARED_SET, Condition
 from bellman.refusals import ConstructionError
 from bellman.syntax import terms as T
-from bellman.syntax.source import condition_text, to_source
-from bellman.syntax.vocabulary import INTEGER, PRIMITIVE_SETS
+from bellman.syntax.source import condition_text, is_infinity, may_hold_infinity, to_source
+from bellman.syntax.vocabulary import EXTENDED_REAL, INTEGER, PRIMITIVE_SETS
+from bellman.syntax.walk import nodes
 from bellman.typing import sets
 from bellman.typing.declarations import derived_parameter_fault, derived_parameters_read
 
@@ -66,39 +78,36 @@ def calibration_requirements(stage, values):
 
     The values are judged in three steps. The declared values are judged
     first, so that a fault they decide alone is refused at its own
-    parameter. The derived parameters are then valued (`derived_values`),
-    which refuses a definition that has no value. Last, at the declared and
-    the derived values together, the set each derived parameter's definition
-    declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is judged with every membership
-    the declared values left undecided, such as a bound that reads a derived
-    parameter; a derived value outside its set is refused as a parameter's
-    is, naming the definition and the values it reads (AMD-GRAM-005).
+    parameter. The derived parameters are then valued (`_derived_values`),
+    which refuses a definition that has no value; before a definition is
+    evaluated, each value it reads is judged against its own declared set,
+    with the values that set reads, so that a value outside its set is
+    refused at its own name, and not at a definition that computes with it
+    or at a name whose set reads it. Last, at the declared and the derived
+    values together, the set each derived parameter's definition declares,
+    `q : (0,1) := (β*R)^(1/ρ)/R`, is judged with every membership the
+    earlier steps left undecided, such as a bound that reads a derived
+    parameter whose own definition reads the bounded parameter; a derived
+    value outside its set is refused as a parameter's is, naming the
+    definition and the values it reads (AMD-GRAM-005).
 
     In each step a set of which a bound has no value at the values, `β : (0,
     1/(R - 2))` at R = 2, is refused at its own name, with the bound, the
     values it reads and the operation that fails. A bound is valued as a
-    derived parameter's definition is, so it may call `log` and `exp`
-    (`_bound_at`). A bound that reads a name without a value yet, or an
-    expectation, leaves the membership undecided.
+    derived parameter's definition is, so it may call `log`, `exp`, `min` and
+    `max` (`_bound_at`), and one that computes with a name valued at an
+    infinity, or with the written `inf`, has no value. A bound that reads a
+    name without a value yet, or an expectation, leaves the membership
+    undecided.
     """
     definitions = dict(stage.definitions)
     _refuse_derived_values(stage, definitions, values)
     # a parameter declared without a set lies in the reals
     declared = {name: setexpr or T.Named("ℝ") for name, setexpr in parameter_sets(stage).items()}
     undecided = _undecided(stage, definitions, declared, values)
-    derived = derived_values(stage, values)
+    derived = _derived_values(stage, definitions, declared, undecided, values)
     if derived:
-        # in the order of the file: the set a derived parameter's definition
-        # declares, its record's one coordinate, and the set of each
-        # parameter whose membership the declared values left undecided
-        declared = {
-            d.identity.field: d.coordinates[0][1]
-            if d.kind == "derived_parameter"
-            else declared[d.identity.field]
-            for d in definitions.values()
-            if (d.kind == "derived_parameter" and d.coordinates)
-            or (d.kind == "parameter" and d.identity.field in undecided)
-        }
+        declared = _sets_to_judge(definitions, declared, undecided)
         values = {**values, **derived}
         undecided = _undecided(stage, definitions, declared, values)
     return tuple(
@@ -117,13 +126,162 @@ def calibration_requirements(stage, values):
     )
 
 
-def _undecided(stage, definitions, declared, values):
+def _sets_to_judge(definitions, declared, undecided):
+    """The sets that the declared values do not decide, by name and in the
+    order of the file: the set a derived parameter's definition declares,
+    its record's one coordinate, and the set of each parameter whose
+    membership the declared values left undecided, the names of
+    `undecided`."""
+    return {
+        d.identity.field: d.coordinates[0][1]
+        if d.kind == "derived_parameter"
+        else declared[d.identity.field]
+        for d in definitions.values()
+        if (d.kind == "derived_parameter" and d.coordinates)
+        or (d.kind == "parameter" and d.identity.field in undecided)
+    }
+
+
+def _derived_values(stage, definitions, declared, undecided, values):
+    """The value of each derived parameter of the stage at the calibration
+    values `values`, by name and in file order, as `derived_values` answers
+    them, with each value judged against its own declared set before a
+    definition that reads it is evaluated (CDC, 12 November 2026).
+
+    A definition may compute with a value only where the value lies in its
+    set: `μ := log(s)` has a value where `s` is positive, which the set of
+    `s`, or of a parameter `s` is defined from, states. So before a
+    definition is evaluated, each name it reads is judged: a declared
+    parameter whose membership the declared values left undecided, the
+    names of `undecided`, since its set reads a derived parameter, and a
+    derived parameter whose definition declares a set. Where the set of
+    such a name reads a derived parameter, that one is valued first. A
+    value outside its set is refused there, at its own name, as `_undecided`
+    refuses it, and the definition that reads it is not evaluated.
+
+    The names that the set of such a name reads are judged with it, and
+    those that their sets read, a set written by name being read through
+    its definition (AAS's review, 13 November 2026). `judged` refuses a
+    faulty value at its own name, and not at a name whose set reads it,
+    among the names it is given (AMD-GRAM-004 §4). So with `x : (0, b)`,
+    `y : (x, c)` and a definition that reads `y` alone, a value of `x`
+    outside `(0, b)` is refused at `x`, and not at `y`, which lies outside
+    `(x, c)` only at the faulty `x`; and a derived value outside the set
+    its definition declares is refused at that definition, and not at a
+    parameter whose set reads it.
+
+    Before a definition a value is refused only where it lies outside its
+    set by itself, and of several such values judged together the first of
+    the file is named. Values that lie outside their sets only at the value
+    of each other, or of a name whose own membership is not yet decided,
+    are left for the judgment that follows the last definition, which has
+    every value before it and names a value faulty by itself where there is
+    one (`judged`, `by_itself`).
+
+    A membership that cannot be decided yet is left for the judgment that
+    follows the last definition: that of a name whose set reads the derived
+    parameter being valued, or a derived parameter whose value needs it, so
+    that the two read each other, and one that `membership` does not
+    decide. The definitions are evaluated in the order `derived_order`
+    answers, except that a derived parameter a set reads is valued before
+    the definition that waits for that set, where its value needs no
+    derived parameter that is being valued: no definition is evaluated
+    before a derived parameter it reads has its value. Every order gives
+    each definition the same value."""
+    order = derived_order(stage.definitions)
+    by_name = {definition.identity.field: definition for definition in order}
+    # the sets still to be judged, by name and in the order of the file
+    open_sets = _sets_to_judge(definitions, declared, undecided)
+    names = {*declared, *by_name}
+    set_terms = _set_terms(definitions)
+    # the derived parameters that the value of each one needs, itself among
+    # them; `order` lists each after those its definition reads
+    needs = {}
+    for name, definition in by_name.items():
+        own = derived_parameters_read(definition.equations[0], by_name)
+        needs[name] = {name}.union(*(needs[other] for other in own))
+    found, active = {}, set()
+
+    def read_by(setexpr):
+        # the names a set reads, also through the sets the file defines by
+        # name, as `membership` reads them; each named set is read once
+        read, seen, pending = [], set(), [setexpr]
+        while pending:
+            term = pending.pop()
+            read.extend(derived_parameters_read(term, names))
+            for node in nodes(term):
+                named = isinstance(node, T.Named) and node.name in set_terms
+                if named and node.name not in seen:
+                    seen.add(node.name)
+                    pending.append(set_terms[node.name])
+        return read
+
+    def judge(read):
+        # the names of `read` whose sets are still to be judged and that
+        # have a value, in the order of the file, in which `judged` names
+        # the first of several faulty values. Only a value that lies
+        # outside its set by itself is refused here; a value that lies
+        # outside its set only at the value of a name that is faulty or
+        # not yet decided waits for the judgment that follows the last
+        # definition, where every value is present
+        at = {**values, **found}
+        group = {
+            name: setexpr for name, setexpr in open_sets.items() if name in read and name in at
+        }
+        if group:
+            still = _undecided(stage, definitions, group, at, by_itself=True)
+            for name in group:
+                if name not in still:
+                    del open_sets[name]
+
+    def value(name):
+        if name in found:
+            return
+        active.add(name)
+        # the names the definition reads and, with each whose set is still
+        # to be judged, the names that set reads, and so on: `judged`
+        # refuses a faulty value at its own name, and not at a name whose
+        # set reads it, among the names it is given (AMD-GRAM-004 §4)
+        read = list(derived_parameters_read(by_name[name].equations[0], names))
+        for other in read:  # the list grows while it is read
+            if other in open_sets:
+                for more in read_by(open_sets[other]):
+                    if more not in read:
+                        read.append(more)
+            # a derived parameter is valued before it is read or judged. One
+            # that a set reads waits where its value needs a derived
+            # parameter that is being valued, and that set is judged later;
+            # one that the definition reads needs none, since the
+            # definitions form no cycle (`derived_order`)
+            if other in by_name and not needs[other] & active:
+                value(other)
+        judge(read)
+        found[name] = derived_value_of(stage, by_name[name], {**values, **found})
+        active.discard(name)
+
+    for definition in order:
+        value(definition.identity.field)
+    return {
+        d.identity.field: found[d.identity.field]
+        for d in stage.definitions.values()
+        if d.kind == "derived_parameter"
+    }
+
+
+def _undecided(stage, definitions, declared, values, by_itself=False):
     """The names of `declared`, each a parameter or a derived parameter with
     its set, whose membership is not decided at `values`. A name that has no
     value, a value outside its set and a set with a bound that has no value
-    at `values` are refused, a faulty value at its own name (`judged`)."""
+    at `values` are refused, a faulty value at its own name (`judged`).
+
+    With `by_itself`, a value that lies outside its set only where another
+    faulty value of `declared` is read is not refused: its name is answered
+    among the undecided. A caller that judges some of the values before the
+    others are present refuses in this way only a value that is faulty by
+    itself, and leaves the others for a judgment of all the values
+    (`_derived_values`)."""
     undecided = set()
-    for name, status, reason in judged(stage, definitions, declared, values):
+    for name, status, reason in judged(stage, definitions, declared, values, by_itself=by_itself):
         if status is True:
             continue
         identity = _judged_identity(stage, definitions, name)
@@ -159,7 +317,7 @@ def _judged_identity(stage, definitions, name):
     return Identity("parameter", stage=stage.name, field=name)
 
 
-def judged(stage, definitions, declared, values, settled=None):
+def judged(stage, definitions, declared, values, settled=None, by_itself=False):
     """The membership of each value in its declared set, as `(name, status,
     reason)` in the order in which a refusal is to be given. `declared` maps
     each name to its set, None for a name with no set to judge; `values`
@@ -177,13 +335,26 @@ def judged(stage, definitions, declared, values, settled=None):
     value is refused at its own name, and not at a name whose set reads it,
     in whatever order the file declares the two (AMD-GRAM-004 §4). The other
     names follow in the order of the file, so that where every faulty value
-    reads another, the first of the file is named.
+    reads another, the first of the file is named. With `by_itself`, a
+    faulty value is judged again with the values of the names that are not
+    decided left out as well, since one of them may prove faulty where more
+    values are present, and a faulty name that does not then stand first is
+    answered as not decided: its value lies outside its set only where the
+    value of such a name is read.
 
     A name whose set has a bound without a value at the values, `β : (0,
     1/(R - 2))` at R = 2, has the status `UNVALUED_BOUND`, with the reason
     that names the bound and the values it reads. It is a faulty name, and
-    is ordered as the others are."""
+    is ordered as the others are. So is a name whose set has a bound that
+    computes with the written infinity, `(0, 2*inf)`, except in a stage that
+    declares a name `inf`: there a bound reads that name where it has a
+    value, as before, and the membership is not decided where it has none."""
     everything = {**(settled or {}), **values}
+    declares_inf = any(identity.field == "inf" for identity in definitions)
+    # a key `inf` of a calibration source or of a settings source is no name
+    # of a stage that declares none, so it gives the written infinity no value
+    if not declares_inf:
+        everything.pop("inf", None)
 
     def faulty_status(status):
         return status is False or status is UNVALUED or status is UNVALUED_BOUND
@@ -196,20 +367,34 @@ def judged(stage, definitions, declared, values, settled=None):
         try:
             return membership(stage, definitions, declared[name], values[name], at)
         except _UnvaluedBound as fault:
+            if fault.at_no_values and declares_inf:
+                return _UNDECIDED, ""
             return UNVALUED_BOUND, _bound_reason(stage, definitions, declared[name], fault, at)
 
     answers = {name: judge(name, everything) for name in declared}
     faulty = [name for name, (status, _) in answers.items() if faulty_status(status)]
+    # the names whose values are left out when a faulty value is judged
+    # again: the faulty ones and, with `by_itself`, those not decided, each
+    # of which may prove faulty where more values are present
+    doubtful = faulty
+    if by_itself:
+        doubtful = [name for name, (status, _) in answers.items() if status is not True]
     first = []
     for name in faulty:
         others = {
-            read: value for read, value in everything.items() if read == name or read not in faulty
+            read: value
+            for read, value in everything.items()
+            if read == name or read not in doubtful
         }
         status, reason = judge(name, others)
         if faulty_status(status):
             # the reason names what the value breaks by itself
             answers[name] = (status, reason)
             first.append(name)
+    if by_itself:
+        for name in faulty:
+            if name not in first:
+                answers[name] = (_UNDECIDED, "")
     return [
         (name, *answers[name])
         for name in first + [name for name in declared if name not in first]
@@ -236,7 +421,9 @@ def _derived_outside(stage, where, definitions, identity, values, reason):
     `reason`, the answer of `membership`, names a part of the set that the
     value breaks, a condition, the base or the members, the reason follows.
     Otherwise each derived parameter the set reads follows with its value,
-    at which a bound of the set is read."""
+    at which a bound of the set is read, where `values` holds it: a value
+    refused before every definition is evaluated is refused at the values
+    present (`_derived_values`)."""
     definition = definitions[identity]
     name, term = identity.field, definition.equations[0]
     setexpr = definition.coordinates[0][1]
@@ -252,7 +439,7 @@ def _derived_outside(stage, where, definitions, identity, values, reason):
         others = [
             _valued(stage, definitions, other, values[other])
             for other in derived_parameters_read(setexpr, names.derived)
-            if other != name
+            if other != name and other in values
         ]
         detail = f", where {', '.join(others)}" if others else ""
     return (
@@ -359,12 +546,13 @@ class _UnvaluedBound(ValueError):
     at, although every name it reads has a number there. `bound` is the
     bound's term. `reason` is the sentence that names the operation that
     fails, as the evaluator of a derived parameter's definition words it
-    (`derived_value`). `membership` raises it, and `judged` answers it as
-    the status `UNVALUED_BOUND`."""
+    (`derived_value`). `at_no_values` is true for a bound that has a value
+    at no values, since it computes with the written infinity. `membership`
+    raises it, and `judged` answers it as the status `UNVALUED_BOUND`."""
 
-    def __init__(self, bound, reason):
+    def __init__(self, bound, reason, at_no_values=False):
         super().__init__(reason)
-        self.bound, self.reason = bound, reason
+        self.bound, self.reason, self.at_no_values = bound, reason, at_no_values
 
 
 class _BoundReason(str):
@@ -384,10 +572,11 @@ def _bound_reason(stage, definitions, setexpr, fault, values):
     bound of `fault` has no value at `values`: the bound as the file writes
     it, the value of each name it reads, the operation that fails
     (`fault.reason`), why and what to write. A derived parameter is followed
-    by its definition (`_valued`). A bound that reads no name, `1/0`, has no
-    value at any values, and the advice is another bound."""
+    by its definition (`_valued`). A bound that reads no name, `1/0`, and a
+    bound that computes with the written infinity, `2*inf*R`, have no value
+    at any values: no value is named, and the advice is another bound."""
     written = to_source(fault.bound)
-    read = derived_parameters_read(fault.bound, values)
+    read = () if fault.at_no_values else derived_parameters_read(fault.bound, values)
     at = ", ".join(_valued(stage, definitions, name, values[name]) for name in read)
     advice = "another bound"
     if at:
@@ -431,15 +620,17 @@ def membership(stage, definitions, setexpr, value, values, active=frozenset(), p
     side and outside the right side, and outside it where it lies outside
     the left side or in the right side; the reason of either refusal names
     the whole set, and a part that is not decided leaves the whole
-    undecided where the other parts do not decide it. An
-    extended real, a set the file does not define and any other form are not
-    decided. `values` holds the value of each name an endpoint or a side of
-    a condition may read: the declared parameters' and, where the caller has
-    computed them, the derived parameters' (`calibration_requirements`); an
-    endpoint or a side that reads a name `values` does not hold is not
-    decided. `path`
-    names the keys that lead to the value inside a collection, for the
-    reason of a refusal.
+    undecided where the other parts do not decide it. A set of extended
+    reals holds every finite number and the infinities of the sides it
+    reaches, `inf` for `ℝ_{+∞}`, `-inf` for `ℝ_{-∞}` and both for `ℝ̄`; a
+    value there that is no number is not decided. A set the file does not
+    define and any other form are not decided. `values` holds the value of
+    each name an endpoint or a side of a condition may read: the declared
+    parameters' and, where the caller has computed them, the derived
+    parameters' (`calibration_requirements`); an endpoint or a side that
+    reads a name `values` does not hold is not decided. `path` names the
+    keys that lead to the value inside a collection, for the reason of a
+    refusal.
 
     A bound whose arithmetic has no value at `values`, although every name it
     reads has a number there, `1/(R - 2)` at R = 2, gives none of the three
@@ -458,8 +649,16 @@ def membership(stage, definitions, setexpr, value, values, active=frozenset(), p
     if isinstance(setexpr, T.Named):
         primitive = PRIMITIVE_SETS.get(setexpr.name)
         if primitive is not None:
-            # an extended real carries no domain, so its membership is a
-            # membership the module does not decide
+            if primitive.kind == EXTENDED_REAL:
+                # a finite number lies in every set of extended reals, and
+                # an infinity in those that reach its side; the membership
+                # of a value that is no number is not decided
+                if _is_finite(value):
+                    return True, ""
+                if not _is_infinity(value):
+                    return _UNDECIDED, ""
+                held = may_hold_infinity(setexpr, negative=value < 0)
+                return (True, "") if held else outside(setexpr.name)
             if primitive.domain is None:
                 return _UNDECIDED, ""
             answer = _in_primitive_domain(primitive.domain, value)
@@ -612,17 +811,19 @@ def _conditioned(stage, definitions, setexpr, value, values, active, path):
 
     The name the set binds is read at the value, also where a parameter has
     that spelling. A side of a condition is read as an interval's endpoint
-    is: `inf` and `-inf` are the two infinities, and a side that is no
-    finite number otherwise, one that reads a field, an expectation, a name
-    `values` does not hold or a value that is no finite number, leaves the
-    condition undecided. A derived parameter is read at its value where
+    is: `inf`, `-inf` and a bare name valued at an infinity are the two
+    infinities, and a side that is no finite number otherwise, one that
+    reads a field, an expectation or a name `values` does not hold, leaves
+    the condition undecided. A derived parameter is read at its value where
     `values` holds it, which it does once the derived values are computed
     (`calibration_requirements`). The value itself is read where it is
     infinite, so that an open infinite endpoint excludes the infinity.
 
     A side that does not read the name the set binds is a bound of the set.
     Where its arithmetic has no value at the values, although every name it
-    reads has a number there, `_UnvaluedBound` is raised (`_side_at`)."""
+    reads has a value there, `_UnvaluedBound` is raised (`_side_at`). The
+    sentence of a condition that is false gives the value of each name its
+    two sides read, a name inside a call of `min` or `max` among them."""
     coordinates = setexpr.bound.coordinates if isinstance(setexpr.bound, T.Subject) else ()
     if (
         len(coordinates) != 1
@@ -633,58 +834,96 @@ def _conditioned(stage, definitions, setexpr, value, values, active, path):
     status, reason = membership(stage, definitions, setexpr.base, value, values, active, path)
     if status is False:
         return False, reason
-    undecided = status is _UNDECIDED
     bound = coordinates[0].stem
     at_value = {**values, bound: value}
+    failed, undecided = _conditions_at(setexpr, bound, at_value)
+    if failed is not None:
+        named = derived_parameters_read(failed.left, values) + derived_parameters_read(
+            failed.right, values
+        )
+        read = ", ".join(
+            _valued(stage, definitions, name, values[name])
+            for name in values
+            if name in named and name != bound
+        )
+        where = f" at {read}" if read else ""
+        return False, (
+            f"the value{_at(path)} {value!r} does not satisfy the condition "
+            f"{condition_text(failed)} of the declared set{where}"
+        )
+    return (_UNDECIDED, "") if undecided or status is _UNDECIDED else (True, "")
+
+
+def _conditions_at(setexpr, bound, at_value):
+    """The conditions of a set with conditions read at `at_value`, which
+    holds the value judged under the name the set binds, `bound`: as a pair,
+    the first condition that compares two numbers and is false, or None
+    where none is, and whether a condition before it is not decided.
+    `membership` and `predicate_value` both read the conditions through
+    this function."""
+    undecided = False
     for condition in setexpr.conds:
         compare = _COMPARISON_OF_RELATION.get(type(getattr(condition, "op", None)))
         if compare is None:
             undecided = True
             continue
         left, right = (
-            (_side_at(side, bound, at_value), sets.number_at(side, at_value).read)
-            for side in (condition.left, condition.right)
+            _side_at(side, bound, at_value) for side in (condition.left, condition.right)
         )
-        if left[0] is None or right[0] is None:
+        if left is None or right is None:
             undecided = True
-        elif not compare(left[0], right[0]):
-            read = ", ".join(
-                _valued(stage, definitions, name, values[name])
-                for name in values
-                if name in left[1] | right[1] and name != bound
-            )
-            where = f" at {read}" if read else ""
-            return False, (
-                f"the value{_at(path)} {value!r} does not satisfy the condition "
-                f"{condition_text(condition)} of the declared set{where}"
-            )
-    return (_UNDECIDED, "") if undecided else (True, "")
+        elif not compare(left, right):
+            return condition, undecided
+    return None, undecided
 
 
 def _side_at(term, bound, values):
     """The number a side of a condition denotes at the values, None where it
-    is not decided: an interval's endpoint is read so (`_endpoint_at`), and
-    the name the set binds, `bound`, is read also at an infinite value. A
-    side that does not read `bound` is a bound of the set, and is read as
-    one (`_bound_at`). A side that reads `bound`, also inside a call,
-    `log(x)`, is none."""
-    if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
-        value = values.get(bound) if term.symbol.name == bound else None
-        if type(value) is float and math.isinf(value):
-            return value
+    is not decided. A side that reads `bound`, the name the set binds, is
+    read as an interval's endpoint is (`_endpoint_at`), which reads the bare
+    name also at an infinite value; a side that reads it inside arithmetic or
+    a call, `log(x)`, has no number there and is not decided. A side that
+    does not read `bound` is a bound of the set, and is read as one
+    (`_bound_at`)."""
     if derived_parameters_read(term, (bound,)):
         return _endpoint_at(term, values, math.inf)
     return _bound_at(term, values, math.inf)
 
 
+def _is_infinity(value):
+    """Whether a value is the float `inf` or `-inf`."""
+    return type(value) is float and math.isinf(value)
+
+
+def _infinite_value(term, values):
+    """The infinity that a bare name is valued at, `inf` or `-inf`: `term`
+    is the name of a parameter or of a derived parameter, written bare or
+    referred to by its identity, and `values` holds an infinite float for
+    it. None for any other term and any other value. The value is read so
+    whatever supplies it, a calibration for a parameter declared on a set
+    that holds the infinity or a branch of a definition by cases
+    (AMD-GRAM-006; AAS, 12 November 2026)."""
+    if not (isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant)):
+        return None
+    for name in sets.parameters_read(term) or ():
+        if _is_infinity(values.get(name)):
+            return values[name]
+    return None
+
+
 def _endpoint_at(term, values, infinity):
     """The number an interval endpoint denotes at the values: `infinity` for
-    the constant `inf` or its negation, else the term's number, None where it
-    is not decided."""
-    if isinstance(term, T.Sym) and isinstance(term.symbol, T.Constant):
-        if term.symbol.name == "inf":
-            return abs(infinity)
-    if isinstance(term, T.Neg) and _endpoint_at(term.operand, values, infinity) == abs(infinity):
+    the constant `inf` and its negation for `-inf`, the infinity a bare name
+    is valued at (`_infinite_value`), else the term's number, None where it
+    is not decided. The negation of a name valued at an infinity is no
+    endpoint read here: it computes with the infinity, and `_bound_at`
+    answers that it has no value."""
+    named = _infinite_value(term, values)
+    if named is not None:
+        return named
+    if is_infinity(term, negative=False):
+        return abs(infinity)
+    if is_infinity(term, negative=True):
         return -abs(infinity)
     return sets.number_at(term, values).value
 
@@ -693,28 +932,47 @@ def _bound_at(term, values, infinity):
     """The number a bound of a declared set denotes at the values. It is
     read as an interval endpoint is (`_endpoint_at`). A bound that this
     reading does not value is valued as a derived parameter's definition is
-    (`derived_value`), so that a bound may call `log` and `exp`, `(0,
-    exp((ρ - 1)*μ))`.
+    (`derived_value`), so that a bound may call `log`, `exp`, `min` and
+    `max`, `(0, exp((ρ - 1)*μ))`.
 
     The answer is None where the bound is not decided: a name it reads has
-    no number yet, or it holds an expectation or another form that no
+    no value yet, or it holds an expectation or another form that no
     derived parameter's definition admits (`derived_parameter_fault`). A
-    value that is no finite number, an infinite value of a parameter
-    declared on the extended reals, is no number here, so a bound that
-    reads one is not decided either. A bound that has no value at the
-    numbers raises `_UnvaluedBound` with the evaluator's reason: a division
-    by zero, a negative base under a fractional power, `log` of a number
-    that is not positive, or a result beyond the floating-point numbers."""
+    bound that has no value at the values raises `_UnvaluedBound` with the
+    evaluator's reason: a division by zero, a negative base under a
+    fractional power, `log` of a number that is not positive, a result
+    beyond the floating-point numbers, or arithmetic, a call or a sign that
+    reads a name valued at an infinity, since no arithmetic of infinities
+    is defined (AMD-GRAM-006).
+
+    A bound that computes with the written infinity, `2*inf` or `max(inf,
+    1)`, has one answer with the same bound written with a name valued at an
+    infinity: it has no value, at any values, and raises `_UnvaluedBound`
+    where every name it reads has a value and its other forms are those that
+    a derived parameter's definition admits."""
     value = _endpoint_at(term, values, infinity)
     if value is not None:
         return value
-    numbers = {name: held for name, held in values.items() if sets.is_number(held)}
-    if derived_parameter_fault("", term, numbers, (), {}) is not None:
+    valued = {
+        name: held for name, held in values.items() if sets.is_number(held) or _is_infinity(held)
+    }
+    if derived_parameter_fault("", term, valued, (), {}) is not None:
+        # the written infinity is the one form that no definition admits
+        # here: read as a name valued at an infinity, the bound has no fault
+        if (
+            "inf" not in valued
+            and derived_parameter_fault("", term, {**valued, "inf": math.inf}, (), {}) is None
+        ):
+            raise _UnvaluedBound(term, _COMPUTES_WITH_THE_INFINITY, at_no_values=True)
         return None
     try:
-        return derived_value(term, numbers)
+        return derived_value(term, valued)
     except ValueError as fault:
         raise _UnvaluedBound(term, str(fault)) from None
+
+
+# why a bound that computes with the written infinity has no value
+_COMPUTES_WITH_THE_INFINITY = "it computes with `inf`, and no arithmetic of infinities is defined"
 
 
 def _entries(
@@ -859,10 +1117,12 @@ def predicate_value(predicate, values, set_terms=None):
     `typing.sets.same_number` compares two keys. The inclusion `A ⊆ B` of two
     finite index sets and the membership of a number in one are decided from
     their members at the values, and the membership of a number in a union
-    or a difference from its membership in each part (`_number_in`). A term
-    whose parameters all have values and which still denotes no number
-    there, a boolean, an infinite or an undefined value, makes its predicate
-    false.
+    or a difference from its membership in each part (`_number_in`). The
+    membership of a bare name valued at an infinity is decided by whether
+    the set holds that infinity (`_infinity_in`), as `membership` decides
+    it. Every other term whose parameters all have values and which still
+    denotes no number there, a boolean, an undefined value or arithmetic
+    that reads an infinite value, makes its predicate false.
     """
     set_terms = set_terms or {}
     if isinstance(predicate, Not):
@@ -906,6 +1166,16 @@ def predicate_value(predicate, values, set_terms=None):
             return PredicateValue(False if invalid else None, operand.read)
         return PredicateValue(sets.integer_valued(operand.value), operand.read)
     if isinstance(predicate, Member):
+        infinite = _infinite_value(predicate.subject, values)
+        if infinite is not None:
+            # a name valued at an infinity lies in a set exactly where the
+            # set holds that infinity; a set of which a bound has no value
+            # at the values decides nothing here
+            try:
+                held = _infinity_in(infinite, predicate.set, values, set_terms)
+            except _UnvaluedBound:
+                held = None
+            return PredicateValue(held, sets.parameters_read(predicate.subject))
         subject = sets.number_at(predicate.subject, values)
         if subject.value is None:
             invalid = sets.invalid_number(predicate.subject, values)
@@ -914,6 +1184,78 @@ def predicate_value(predicate, values, set_terms=None):
             _number_in(subject.value, predicate.set, values, set_terms), subject.read
         )
     return PredicateValue(None, frozenset())
+
+
+def _infinity_in(infinite, setterm, values, set_terms, active=frozenset()):
+    """Whether a set holds the infinity `infinite`, `inf` or `-inf`, at the
+    values: True, False, or None where it is not decided. The answer is the
+    one `membership` gives for that value, form by form (AMD-GRAM-006). A
+    set of extended reals holds the infinity of each side it reaches, and a
+    real set and an integer set none. A set the stage defines is read
+    through its definition, and a name it does not define is not decided.
+    An interval is read from its endpoints at the values, where an endpoint
+    that is a bare name valued at an infinity is that infinity
+    (`_valued_endpoints`). A union holds it where one member does, and a
+    difference where the left side does and the right side does not. A set
+    with conditions holds it where its base does and every condition holds
+    at it (`_conditions_at`). A set of labels, a product and a list or a
+    range of finite numbers hold no infinity. `set_terms` are the sets the
+    stage defines by name, and `active` the names being read."""
+    if isinstance(setterm, T.Space):
+        return _infinity_in(infinite, setterm.set, values, set_terms, active)
+    if isinstance(setterm, T.Named):
+        if setterm.name in PRIMITIVE_SETS:
+            return may_hold_infinity(setterm, negative=infinite < 0)
+        if setterm.name in active or setterm.name not in set_terms:
+            return None
+        defined = set_terms[setterm.name]
+        return _infinity_in(infinite, defined, values, set_terms, active | {setterm.name})
+    if isinstance(setterm, T.Interval):
+        bounds = sets.endpoints(setterm) or _valued_endpoints(setterm, values)
+        if bounds is None:
+            return None
+        lower, lower_closed, upper, upper_closed = bounds
+        above = infinite >= lower if lower_closed else infinite > lower
+        below = infinite <= upper if upper_closed else infinite < upper
+        return above and below
+    if isinstance(setterm, (T.SetUnion, T.SetDifference)):
+        union = isinstance(setterm, T.SetUnion)
+        parts = setterm.members if union else (setterm.left, setterm.right)
+        answers = [_infinity_in(infinite, part, values, set_terms, active) for part in parts]
+        if union:
+            held = True in answers
+            excluded = all(answer is False for answer in answers)
+        else:
+            held = answers[0] is True and answers[1] is False
+            excluded = answers[0] is False or answers[1] is True
+        return False if excluded else True if held else None
+    if isinstance(setterm, T.Comprehension):
+        coordinates = setterm.bound.coordinates if isinstance(setterm.bound, T.Subject) else ()
+        if (
+            len(coordinates) != 1
+            or not isinstance(coordinates[0], T.Coordinate)
+            or setterm.base is None
+        ):
+            return None
+        held = _infinity_in(infinite, setterm.base, values, set_terms, active)
+        if held is False:
+            return False
+        bound = coordinates[0].stem
+        failed, undecided = _conditions_at(setterm, bound, {**values, bound: infinite})
+        if failed is not None:
+            return False
+        return None if undecided else held
+    if isinstance(setterm, (T.IntegerRange, T.Points)):
+        # the members of a range or of a list are finite numbers, where
+        # they are decided
+        members = sets.finite_members(setterm, values, set_terms)
+        return None if members is None else False
+    if isinstance(setterm, T.Functions):
+        first, _ = sets.index_sets(setterm, set_terms)
+        return None if sets.finite_members(first, values, set_terms) is None else False
+    if isinstance(setterm, (T.FiniteSet, T.Product)):
+        return False
+    return None
 
 
 def _number_in(value, setterm, values, set_terms):
@@ -945,6 +1287,9 @@ def _number_in(value, setterm, values, set_terms):
     primitive = sets.primitive_of(declared)
     if primitive is not None and primitive.kind == INTEGER:
         return sets.integer_valued(value) and (primitive.order == 0 or value > 0)
+    if primitive is not None and primitive.kind == EXTENDED_REAL:
+        # every extended real set holds every finite real number
+        return True
     # a ratio is written as its double, the number the interval reads
     point_value = value if isinstance(value, (int, float)) else float(value)
     point = T.Interval(

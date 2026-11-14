@@ -1213,6 +1213,7 @@
             "terms.Cartesian",
             "terms.Closed",
             "terms.Complementary",
+            "terms.Conditional",
             "terms.Constant",
             "terms.Continuation",
             "terms.Control",
@@ -1804,6 +1805,11 @@
     ],
     "terms.Space": [
       "set"
+    ],
+    "terms.Conditional": [
+      "test",
+      "then",
+      "otherwise"
     ],
     "terms.Pos": [
       "at"

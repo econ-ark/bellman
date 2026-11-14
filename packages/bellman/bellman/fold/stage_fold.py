@@ -189,10 +189,11 @@ def _construction_table(stage, ctx, definitions) -> ConstructionTable:
 def _definition_obligations(ctx, definitions, obligations):
     """The conditions of the body of every function and correspondence; for
     each derived parameter, only where the declared sets leave its
-    definition open or the definition calls log or exp, the one obligation
-    that its value is a finite real number (`_derived_definedness`); and an
-    obligation for each external callable a distribution declaration
-    names."""
+    definition open, the definition calls log, exp, min or max or it is
+    written by cases, the one obligation that its value is a finite real
+    number, or a finite real number or an infinity that its declared set
+    may hold (`_derived_definedness`); and an obligation for each external
+    callable a distribution declaration names."""
     for d in definitions:
         if d.kind in ("function", "correspondence"):
             ctx.conditions(
@@ -200,15 +201,24 @@ def _definition_obligations(ctx, definitions, obligations):
             )
         elif d.kind == "derived_parameter":
             # the conditions of the definition's arithmetic are read only to
-            # learn whether the declared sets leave one open, as a call of log
-            # or exp always does; none of them is recorded, so that a clause
-            # drawn from the declared sets alone, such as a positive base for
-            # a power whose exponent's set holds a noninteger, refuses no
-            # value the definition takes (AMD-MT-003, build contract §5)
+            # learn whether the declared sets leave one open, as a call of
+            # log, exp, min or max always does; none of them is recorded, so
+            # that a clause drawn from the declared sets alone, such as a
+            # positive base for a power whose exponent's set holds a
+            # noninteger, refuses no value the definition takes (AMD-MT-003,
+            # build contract §5)
             held = []
             ctx.conditions((d.equations[0],), held, d.identity)
-            if held or external_calls(d.equations[0], ctx.function_names):
-                obligations.append(_derived_definedness(d))
+            # a definition by cases owns the obligation too: which branch is
+            # evaluated is known at the calibration alone
+            if (
+                held
+                or external_calls(d.equations[0], ctx.function_names)
+                or isinstance(d.equations[0], T.Conditional)
+            ):
+                obligations.append(
+                    _derived_definedness(d, ctx.derived_extended_reals.get(d.identity.field))
+                )
         elif d.kind == "distribution":
             for call in external_calls(d.equations[0].law, ctx.function_names, distributions=True):
                 # the place is the record's identity, as it is on every other
@@ -225,7 +235,7 @@ def _definition_obligations(ctx, definitions, obligations):
                 )
 
 
-def _derived_definedness(definition):
+def _derived_definedness(definition, extended=None):
     """The obligation a derived parameter owns, `h ∈ ℝ`: its value is a
     finite real number, which states every condition of its definition's
     arithmetic and calls at once. It is `arithmetic-definedness` on the
@@ -237,8 +247,28 @@ def _derived_definedness(definition):
     definition before any obligation is read (AMD-MT-003, build contract
     §5). The set a definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is no
     part of this obligation: calibration judges the value against it with
-    the declared sets of the parameters (`calibration_requirements`)."""
+    the declared sets of the parameters (`calibration_requirements`).
+
+    `extended` is None for a derived parameter whose declared set holds no
+    infinity. For one whose declared set may hold an infinity, it is the set
+    of extended reals of the sides that the declared set may hold
+    (`StageNames.derived_extended_reals`): `ℝ_{+∞}` for `h : ℝ_{+∞} := if Γ
+    < R then 1/(1 - Γ/R) else inf` and for `h : (0, T] := 1/(1 - Γ/R)`,
+    `ℝ_{-∞}` where the set may hold `-inf` alone, and `ℝ̄` where it may hold
+    both. The value of such a derived parameter may be an infinity, so the
+    obligation states `h ∈ ℝ_{+∞}`: the value is a finite real number or
+    that infinity. The declared set is no part of the obligation here
+    either, so a calibration that the check of the declared set admitted
+    establishes it (AMD-GRAM-006)."""
     name = definition.identity.field
+    if extended is not None:
+        return (
+            "arithmetic-definedness",
+            (definition.identity, Member(T.Sym(T.Constant(name)), extended)),
+            f"The derived parameter {name}, defined as `{to_source(definition.equations[0])}`, "
+            f"must have a value in {to_source(extended)} at the calibration.",
+            (),
+        )
     return (
         "arithmetic-definedness",
         (definition.identity, Member(T.Sym(T.Constant(name)), REAL)),

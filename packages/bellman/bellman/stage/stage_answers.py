@@ -783,7 +783,9 @@ def passed_through(stage, value, coordinates):
     none that way: the builder that writes `value` reads one value of the
     perch before, and each of its lines, the Pullback and the Evaluation
     apart, is an identity, an expectation or a scaling by parameters of that
-    value, `V[<] = V`, `V[<] = E_{y}V`, `V = β*V[>]`; and the forward block
+    value, `V[<] = V`, `V[<] = E_{y}V`, `V = β*V[>]`, a line that writes
+    another field of the builder, `Θ[<] = Θ`, being no line of `value` and
+    disregarded; and the forward block
     between the two perches carries each coordinate by an identity line,
     `a_d = a` or `a[>] = a_d`, so that the derivative in a coordinate of the
     value's perch is, up to the scaling, the derivative of the value read in
@@ -816,10 +818,19 @@ def passed_through(stage, value, coordinates):
     }
     parameters = set(parameter_sets(stage))
     written, read = f"{value.field}{WRITTEN_MARK[value.perch]}", None
+    # the written spellings of the other fields the builder writes, `Θ[<]`
+    # beside `V[<]`
+    others = {
+        f"{sort.identity.field}{WRITTEN_MARK.get(sort.identity.perch, '')}"
+        for sort in header_of(writer).outputs
+    } - {written}
     for row in table.by_builder(writer.name):
         if row.kind in ("Evaluation", "Pullback"):
             continue
         for equation in row.equations:
+            # a line that writes another field is no line of `value`
+            if isinstance(equation, T.Equation) and to_source(equation.lhs) in others:
+                continue
             if not isinstance(equation, T.Equation) or to_source(equation.lhs) != written:
                 return None
             read = _passed_value(equation.rhs, values, parameters)

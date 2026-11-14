@@ -73,7 +73,7 @@ where:
 
 ## 4 Files
 
-The application folder holds each stage file with its methods file and its note in the stage's folder, the settings file of the consumption stage's exogenous grid of savings, the paper the model follows and the structural tests. The methods file of the consumption stage types the policy builder with the endogenous grid method and its grid of savings and writes the method's lines; the methods file of the housing stage appends the derivative lines of its two values and types no method:
+The application folder holds each stage file with its methods file and its note in the stage's folder, the settings file of the consumption stage's exogenous grid of savings, a note that cites the paper the model follows and the structural tests. The methods file of the consumption stage types the policy builder with the endogenous grid method and its grid of savings and writes the method's lines; the methods file of the housing stage appends the derivative lines of its two values and types no method:
 
 ```
 applications/housing-owner/
@@ -83,7 +83,7 @@ applications/housing-owner/
 │   └── stages/
 │       ├── housing_choice/        housing_choice.bl  methods.bl  housing_choice.md
 │       └── consumption_choice/    consumption_choice.bl  methods.bl  consumption_choice.md
-├── reference/                     fella-2014.pdf
+├── reference/                     README.md
 └── tests/                         test_housing_choice_ast.py  test_consumption_choice_ast.py
 ```
 

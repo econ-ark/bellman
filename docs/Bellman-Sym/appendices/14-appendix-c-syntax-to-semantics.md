@@ -252,6 +252,60 @@ calibration supplies that number. The set that a definition declares is a
 set of numbers, and any other set there is refused under
 `derived-parameter`.
 
+The definition of a derived parameter may call `log` and `exp`, each of one
+argument, and `min` and `max`, each of one argument or more; a call of any
+other function, or of `log` or `exp` with several arguments, is refused
+under `derived-parameter`, or under `not-constructed` where a call of
+another function is the whole right side. The definition may also be
+written by cases, with or without a declared set:
+`h := if Γ < R then 1/(1 - Γ/R) else 0` and
+`q : (0, 3) := if β < R then 1 else 2` are both read
+([Equation parsing rules](12-equation-parsing-rules.md) §2 gives the forms
+of the test and of the branches). The conditional `if … then … else …`
+stands as the whole right side of a definition without arguments or as a
+branch of another conditional. Inside a formula, in a function's body, in a
+line of a block and as an endpoint of a set it is refused under `syntax`.
+The words `if`, `then` and `else` are no names: a file that writes one of
+them as a name, in a declaration, a definition, a binder, a block header or
+a formula, is refused under `syntax`. The package does not yet refuse one
+written as the id of a line's annotation, `:: [id=if]` (§5.3). In a derived
+parameter's definition `log`, `exp`, `min` and `max` are the functions of
+the language, and a definition that calls one of them where the stage
+defines a function of that name is refused under `derived-parameter`. A
+test reads what a branch reads, parameters, derived parameters and finite
+numbers: a set, a field or a function written there is refused under
+`derived-parameter`, and a label of a finite set under `well-typed`, as a
+label in arithmetic is.
+
+The value of a derived parameter is its definition evaluated at the
+calibration. For a definition by cases it is the branch that the test
+chooses, and the other branch is not evaluated, so that the value of `h`
+above is 0 at `Γ = R`. A branch written `inf` or `-inf` gives that
+infinity, and no arithmetic of infinities is defined: a definition that
+reads a name valued at an infinity where it is evaluated, in a formula, a
+call or a test, as the branch that its test chooses or as its whole right
+side, has no value, and the calibration is refused under
+`derived-parameter` at that definition. A branch written `inf` or `-inf`
+is admitted only in a definition whose declared set can hold that
+infinity, as `ℝ_{+∞}`, `ℝ̄` and `(0, inf]` hold `inf`. A definition whose
+declared set cannot hold it is refused under `derived-parameter` when the
+file is read. The set ℝ, the declared set of a definition that writes none,
+holds no infinity, so `h := if Γ < R then 1/(1 - Γ/R) else inf` is refused
+and `h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf` is read. Whether a
+set can hold the infinity is judged from its form, also for several sets in
+one type and for a named set written with a bar: `ℝ̄ @ (0, inf]` can hold
+`inf`, and `ℝ̄ @ (0, inf)`, `ℝ_{+∞} @ (0, 100]` and `{x : ℝ̄ | x < 100}`,
+which exclude it by an open endpoint, by an endpoint that is a number and
+by a condition, cannot. A condition `x <= e` excludes `inf` only where `e`
+is a number, so `ℝ_{+∞} @ (0, 2*100]` is read and calibration refuses its
+infinite value, while `(0, 2*100]` is refused when the file is read. A
+union can hold an infinity that one of its members can hold. A difference
+is judged by its left side alone, so a definition on `ℝ̄ \ [0, inf]` is
+read, and calibration refuses its infinite value. Where the answer depends
+on a calibrated value, as for `(0, T]`, the file is read, and calibration
+holds the value, finite or infinite, to the declared set, as it holds the
+value of every definition that declares a set.
+
 The declared set of a parameter may be a union or a difference of sets of
 numbers. `ρ : (0,1) \/ (1, inf)` declares that `ρ` lies in one of the two
 intervals, and `ρ : ℝ₊₊ \ {1}` that `ρ` is positive and is not 1;
@@ -274,9 +328,23 @@ at least one number, so `(2, 1)` is refused under `readable-form` when the
 file is read. A difference holds at least one number as well. One whose left
 side lies within its right side, as in `(0,1) \ ℝ₊`, is refused under
 `readable-form` when the file is read, where the package can decide the
-inclusion. A difference that is a member of a union is not judged. A bound
-of a parameter's set whose arithmetic has no value at the calibration,
-`1/(R-2)` at `R = 2`, refuses the calibration.
+inclusion. A difference that is a member of a union is not judged.
+
+An endpoint of an interval, or a side of a condition after the bar of a
+comprehension, `{x : ℝ | x < T}`, that is the bare name of a parameter or
+of a derived parameter valued at an infinity is read as that infinity,
+whatever supplies the value. With `T : ℝ̄` calibrated at `inf`, the set
+`[0, T)` is $[0, \infty)$, and so is the set of `debt : ℝ₊ @ [0, h)` where
+the definition of `h` above, declared on `ℝ_{+∞}`, gives `h` the value
+`inf`. A bound of a parameter's set may call `log`, `exp`, `min` and `max`,
+which calibration evaluates as in a derived parameter's definition. A bound
+that calls another function is not decided, also where it computes with an
+infinity: calibration binds the value, and `stage.obligations()` lists its
+membership in the set as required. A bound that calibration evaluates and
+whose arithmetic has no value at the calibration, `1/(R-2)` at `R = 2`,
+refuses the calibration, and so does one that computes with a name valued
+at an infinity, as `2*T` and `-T` do at `T = inf`, or with the written
+infinity, as `2*inf` does at every calibration.
 
 A declared function binds its formal arguments: the `c` in the body of `𝑢`
 is the function's own variable and not the control `c` of the stage (R4). The
@@ -2619,9 +2687,10 @@ its §2 and how a card is read in its §5.
 | §1.2, R4. A value line defines a function of the state at its perch, so outside an expectation it reads no shock that this state does not determine. | A shock that the header of a backward block lists, and that is drawn on an earlier edge or on no edge, is read as known on the lines of the block. The line is read, the rule that the card prints for the value function keeps the shock free, here `𝑉(m) = 𝑉≻(𝑔≻(m)) + y`, and no condition records the reading. | `@stage: t`<br>`y : ℝ`<br>`y ~ N(0, 1)`<br>`[id=dcsn_to_cntn, (m : ℝ) : !dcsn -> (a : ℝ) : !cntn] { a = m }`<br>`[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, y) : !cntn -> (V : ℝ @ !vlu) : !dcsn] { V = V[>] + y }` |
 | §1.5, R10, §4.2, §4.4, §4.5. A derivative term on a line, `D_{a}V[>]` or `D_{w}V`, denotes the derivative of the value function that it names in the named coordinate, read at the point of the line: at the continuation coordinate on a candidate line, and at the image of the law of motion on a line of an earlier perch. | The rule that the package records for such a line applies the derivative to a map whose body does not read the variable that the map binds. On a line of an earlier perch the body is the value composed with the law of motion, and the derivative is read at a point that the rule leaves free: the rule of the text applies the derivative to the map `(a, unit) ↦ 𝑉≻(𝑔≻(m, 𝑐(m)))` at the point `(a≻, ())`. On a candidate line the body reads the line's own coordinate of the same name, so that the rule prints as the intended derivative. | `@stage: t`<br>`𝑑𝑢(c : ℝ₊₊) := c^(-2)`<br>`[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - c }`<br>`[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] { 𝑑𝑢(c) = D_{a}V[>] ⟂ m - c >= 0 }` |
 | §2.1. The several sets in the type of one name have a number in common, also where one of them is a reserved set, a named set, a list of integers, a union or a difference, and where an endpoint of an interval is a formula. See also [Symbol conventions](../reference/symbols-conventions.md) §9.2, [Stages](../01-stage.md) §2 and [Types](../reference/types.md) §2.6. | The package compares the intervals of the type alone, by those of their endpoints that are numbers or ratios of two integers. A set of another form and an endpoint that is a formula enter no comparison. The package reads both texts, and `calibrate` then refuses every value given for `β`. | `@stage: t`<br>`β : ℝ₊₊ @ (-2,-1)`<br><br>`@stage: t`<br>`β : (0,1) @ (2*1, 3)` |
-| §2.1. The value bound to a parameter lies in its declared set, also where that set is a set of extended reals, `ℝ̄`, `ℝ_{-∞}`, `ℝ_{+∞}` or `ℝ_{±∞}`. See also [Symbol conventions](../reference/symbols-conventions.md) §9.2 and [The binding verbs](../API/stage/09-binding-verbs.md) §2. | `calibrate` decides no membership in a set of extended reals. It binds any value there, including a string, the floating-point value NaN (not a number), and the infinity that the set excludes, and `stage.obligations()` lists the membership as the condition `calibration-domain-membership`, which stays required. In an interval whose bound is an expectation over a shock, such as `(0, E_{y}(y))`, it binds any number in the same way. | `@stage: t`<br>`x : ℝ_{-∞}`<br>`stage.calibrate({"x": float("inf")})` |
+| §2.1. The value bound to a parameter lies in its declared set, also where that set is a set of extended reals, `ℝ̄`, `ℝ_{-∞}`, `ℝ_{+∞}` or `ℝ_{±∞}`. See also [Symbol conventions](../reference/symbols-conventions.md) §9.2 and [The binding verbs](../API/stage/09-binding-verbs.md) §2. | `calibrate` decides the membership of a number in a set of extended reals: a finite number lies in every such set, and an infinity in the sets that hold it, so that `inf` is refused for `ℝ_{-∞}`. A value that is no number, a string or the floating-point value NaN (not a number), is still bound there, and `stage.obligations()` lists its membership as the condition `calibration-domain-membership`, which stays required. In an interval whose bound is an expectation over a shock, such as `(0, E_{y}(y))`, it binds any number in the same way. | `@stage: t`<br>`x : ℝ_{-∞}`<br>`stage.calibrate({"x": float("nan")})` |
 | §2.1, §2.5, R7. In `D_{c}(𝑢)` the subscript names a formal argument of the function that is differentiated. See also [Equation parsing rules](12-equation-parsing-rules.md) §5. | A subscript that names no formal argument of the function is read without a refusal: the text is read, although `𝑢` has the one argument `c` and the file declares no `x`. | `@stage: t`<br>`𝑢(c : ℝ₊₊) := c^2`<br>`𝑑𝑢 := D_{x}(𝑢)` |
 | §2.1. The law of a shock gives probability only to values in the declared set of the shock, so a normal law of positive variance is not declared on a strictly positive set. See also [Equation parsing rules](12-equation-parsing-rules.md) §4. | The package reads the stage and records the requirement as the condition `law-support`, which `stage.obligations()` lists as required. Calibration decides the condition for a truncated lognormal law, and leaves it required for a normal, a lognormal and a uniform law. | `@stage: t`<br>`y : ℝ₊₊`<br>`y ~ N(0, 1)`<br>`[id=arvl_to_dcsn, (k : ℝ, y) : !arvl -> (m : ℝ) : !dcsn] { m = k + y }` |
+| §2.1, §2.3. The words `if`, `then` and `else` are no names also as the id of a line's annotation, `:: [id=if]`, as they are none as the id of a block. | The package reads a line annotated `:: [id=if]` and gives the line the place `arvl_to_dcsn.if`. A methods file cannot address that place: the entry `arvl_to_dcsn.if.method : …` is refused under `syntax`, with the sentence that `if` is no name. The id of a block, `[id=if, …]`, is refused under `syntax`. | `@stage: t`<br>`[id=arvl_to_dcsn, (k : ℝ) : !arvl -> (m : ℝ) : !dcsn] {`<br>`m = k :: [id=if]`<br>`}` |
 | §2.2, §2.4. Where one block writes a field and another reads it, the set written lies in the set read. See also [Symbol conventions](../reference/symbols-conventions.md) §9.3, [Stages](../01-stage.md) §2 and [Perch tagging rules](13-perch-tagging-rules.md) §2. | The package refuses under `set-mismatch` only an inclusion that it decides to fail. Where it cannot decide the inclusion, as with an endpoint that names a parameter, it reads the stage, records no condition, leaves the field with no declared set, and binds a calibration at which the inclusion fails, as the first text shows at `ā = 5`. Where the block that writes a control also holds a line marked `!doc` with the control on its left side, it compares no sets for the control: the second text is read, and without its `!doc` line it is refused under `set-mismatch`. | `@stage: t`<br>`ā : ℝ₊₊`<br>`[id=arvl_to_dcsn, (x : ℝ) : !arvl -> (y : [0, ā]) : !dcsn] { y = x }`<br>`[id=dcsn_to_cntn, (y : [0, 1]) : !dcsn -> (w : ℝ) : !cntn] { w = y }`<br>`stage.calibrate({"ā": 5.0})`<br><br>`@stage: t`<br>`[id=dcsn_to_cntn, (m : ℝ₊, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : ℝ) : !cntn] { a = m - c }`<br>`[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊ @ !ctrl) : !dcsn] {`<br>`c = m/2 :: [id=half, !doc]`<br>`c = argmax_{cp}(cp + V[>])`<br>`}` |
 | §2.3, R1, R10. A clause after `⟂` and the declaration of a multiplier are written in a policy block and in no other block. | The package reads both in a block of any kind. A clause after a line of a value block or of a forward block is read and enters no rule and no condition of the builder. A multiplier declared there is recorded as a multiplier at the continuation perch, no observable set is formed, and a value line that reads it keeps it free in its rule: for the text the card prints `𝑉(m) = 𝑐(m) + 𝑉≻(𝑔≻(m, 𝑐(m))) + ν≻`. | `@stage: t`<br>`[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - c }`<br>`[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {`<br>`ν[>] : ℝ₊ ⟂ a >= 0`<br>`V = c + V[>] + ν[>] ⟂ m - c >= 0`<br>`}` |
 | §2.4. The declared set of a name is the intersection of the sets written for it. See also [Symbol conventions](../reference/symbols-conventions.md) §9.2 and [Perch tagging rules](13-perch-tagging-rules.md) §2. | The package computes the intersection of sets that are written identically, of the sets `ℝ`, `ℝ₊` and `ℝ₊₊`, and of intervals whose endpoints are numbers or infinity. For other sets, such as a named set beside the set that defines it, or an interval with an endpoint that names a parameter, it records the field with no set and refuses nothing, and the stage loses the condition `range-compatibility` of the line that writes the field. | `@stage: t`<br>`Xp := ℝ₊`<br>`[id=arvl_to_dcsn, (x : ℝ) : !arvl -> (y : Xp) : !dcsn] { y = x }`<br>`[id=dcsn_to_cntn, (y : ℝ₊) : !dcsn -> (w : ℝ) : !cntn] { w = y }` |
@@ -2649,7 +2718,7 @@ its §2 and how a card is read in its §5.
 | R10. The bound of a clause is written with `>=` or `<=`. | A clause with one bound and a strict sign is read as the clause with the weak sign: the card prints the sign as written, and the Kuhn–Tucker conditions that the package forms from the clause are those of the weak sign. A strict sign in a clause with two bounds is refused under `readable-form`. | `@stage: t`<br>`𝑑𝑢(c : ℝ₊₊) := c^(-2)`<br>`[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - c }`<br>`[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] { 𝑑𝑢(c) = D_{a}V[>] ⟂ m - c > 0 }` |
 | R12. An authored `upper_env` denotes the upper envelope of R12: at each decision state, the control of a candidate that attains the greatest candidate value. | The package holds no definition of `upper_env` and checks none of its arguments. The line is read with no value candidate among its arguments, as in the text, and with one argument or four, and a method such as `!FUES` is typed at `policy.upper_env`. The rule of the line prints `UNRESOLVED[upper_env; mathematical definition]`, and `stage.obligations()` lists `external-callable-signature-and-provider` for `upper_env`. | `@stage: t`<br>`𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/2)`<br>`[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -> (a : ℝ₊) : !cntn] { a = m - c }`<br>`[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {`<br>`c[>] = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[>])`<br>`m[>] = a + c[>]`<br>`c = upper_env(m[>], c[>])`<br>`}` |
 | §5.2. A setting bound before a calibration lies in its declared set at the values that the calibration binds, a calibration that replaces an earlier one included. See also [Methodization](../04-methodization.md) §7 and [The binding verbs](../API/stage/09-binding-verbs.md) §3. | `configure` admits a value whose set names a parameter while no calibration is bound, and `calibrate` judges no setting bound before it. The value stays bound outside its set until a later `configure` refuses it under `setting-outside-set`. In the order `calibrate`, `methodize`, `configure`, the call of `configure` refuses the same value. | `@stage: t`<br>`R : ℝ₊₊`<br>`[id=arvl_to_dcsn, (k : ℝ) : !arvl -> (m : ℝ) : !dcsn] { m = R*k }`<br>`@methods: t`<br>`tol_s : (0, R)`<br>`arvl_to_dcsn.method : !deterministic`<br>`stage.methodize(methods).configure({"tol_s": 5.0}).calibrate({"R": 1.04})` |
-| §5.2. A bound of a grid lies inside the declared set of its coordinate, read at the calibrated value of each parameter that the set names. See also [Methodization](../04-methodization.md) §3.2 and [Settings](../../wiki/settings.md) §2. | `configure` decides the membership from the sets that the stage defines, without the calibration. On a coordinate whose set names a parameter it refuses every bound under `grid-bounds`, as not decidably inside the declared set, also a bound that lies inside the set at the calibrated value, as in the text. | `@stage: t`<br>`Xk := [k_lo, inf)`<br>`k_lo : ℝ`<br>`[id=arvl_to_dcsn, (k : Xk) : !arvl -> (m : ℝ) : !dcsn] { m = k }`<br>`[id=dcsn_to_arvl, (V : ℝ @ !vlu) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] { V[<] = V }`<br>`@methods: t`<br>`n_k : ℕ`<br>`k_min : ℝ`<br>`k_max : ℝ`<br>`dcsn_to_arvl.evaluate.method : !Linear`<br>`dcsn_to_arvl.evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))`<br>`stage.calibrate({"k_lo": 0.0}).methodize(methods).configure({"n_k": 5, "k_min": 1.0, "k_max": 2.0})` |
+| §5.2. A bound of a grid lies inside the declared set of its coordinate, read at the calibrated value of each parameter that the set names. See also [Methodization](../04-methodization.md) §3.2 and [Settings](../../wiki/settings.md) §2. | `configure` decides the membership at the calibration that is bound, and refuses a bound outside the set there under `grid-bounds`. `calibrate` judges no bound of a grid again, so a calibration that replaces an earlier one leaves a bound outside the set of its coordinate, as in the text. Before a calibration is bound, `configure` refuses every bound on a coordinate whose set names a parameter, as not decidably inside the declared set. | `@stage: t`<br>`Xk := [k_lo, inf)`<br>`k_lo : ℝ`<br>`[id=arvl_to_dcsn, (k : Xk) : !arvl -> (m : ℝ) : !dcsn] { m = k }`<br>`[id=dcsn_to_arvl, (V : ℝ @ !vlu) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] { V[<] = V }`<br>`@methods: t`<br>`n_k : ℕ`<br>`k_min : ℝ`<br>`k_max : ℝ`<br>`dcsn_to_arvl.evaluate.method : !Linear`<br>`dcsn_to_arvl.evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))`<br>`stage.calibrate({"k_lo": 0.0}).methodize(methods).configure({"n_k": 5, "k_min": 1.0, "k_max": 2.0}).calibrate({"k_lo": 1.5})` |
 
 <!-- /reference-table -->
 

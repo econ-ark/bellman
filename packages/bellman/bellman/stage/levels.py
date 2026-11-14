@@ -127,7 +127,7 @@ def construct(cls, term, spans):
         if word == "explicit":
             check_addition(declared, block, _rows_of(term, files, block, rows))
     operative = _operative_tree(term, spans, files, rows)
-    reading = cls(**stage_fields(*operative))
+    reading = cls(**stage_fields(*operative, replaced=rows))
     _check_solutions(reading, methods, operative[1])
     table = construction_table(reading)
     blocks = MappingProxyType(

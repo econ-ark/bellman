@@ -58,7 +58,7 @@ from lark import Tree as LarkTree
 from lark.exceptions import VisitError
 
 from bellman.refusals import ConstructionError
-from bellman.syntax.parse import parse_text
+from bellman.syntax.parse import CASE_WORDS, CASE_WORDS_ARE_NO_NAMES, parse_text
 from bellman.syntax.source import (
     GRID_WORDS,
     bound_name,
@@ -650,6 +650,13 @@ class ToAst(Transformer):
 
     def comprehension_equality(self, children):
         return Rel(children[0], Eq(), children[1])
+
+    def conditional(self, children):
+        """A definition by cases, `if test then a else b`: the test, a
+        comparison of two formulas, and the two branches, each a formula or
+        a further conditional."""
+        test, then, otherwise = children
+        return Conditional(test, then, otherwise)
 
     # statements and blocks
     def block(self, children):
@@ -1307,7 +1314,18 @@ class ToAst(Transformer):
         return Call(children[0], tuple(children[1:]))
 
     def name(self, children):
-        return str(children[0])
+        """A name as its text. `if`, `then` and `else` are words of the
+        language and no names: one that the parser read as a name, in a
+        declaration, a definition, a binder, a header or a formula, is
+        refused where it is written (AMD-GRAM-006)."""
+        word = str(children[0])
+        if word in CASE_WORDS:
+            raise _refusal(
+                f"the file writes `{word}` as a name; {CASE_WORDS_ARE_NO_NAMES}",
+                f"Write another name in place of `{word}`",
+                children[0],
+            )
+        return word
 
 
 # --- the transformer that keeps the position of each item ---

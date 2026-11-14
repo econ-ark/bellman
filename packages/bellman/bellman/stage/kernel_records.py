@@ -352,8 +352,10 @@ def derivative_kernel(stage, evaluation, entry, aggregation):
     the shocks under `integrated`, so that a quadrature method bound at the
     line's expectation applies to the piece as to the value's expectation.
     Nothing is differentiated: the right side of the line is the rule. `entry`
-    is one entry of the Evaluation row's `derivatives`."""
-    coordinate, term, address, source = entry
+    is one entry of the Evaluation row's `derivatives`, and the output is
+    named for the value the entry's line names, `D_{m}L` for `D_{m}L = 0` in
+    a block that writes `V` and `L`."""
+    coordinate, term, address, source, value = entry
     base = aggregator_kernel(stage, aggregation)
     ctx = StageNames(stage)
     block = evaluation.builder
@@ -402,9 +404,7 @@ def derivative_kernel(stage, evaluation, entry, aggregation):
         keys = [key for key in base_keys if key in read] + integrated + derivative_keys
     else:
         keys = base_keys + derivative_keys
-    output = f"D_{{{coordinate.field}}}" + "".join(
-        f"{o.field}{WRITTEN_MARK.get(o.perch, '')}" for o in evaluation.outputs[:1]
-    )
+    output = f"D_{{{coordinate.field}}}{value.field}{WRITTEN_MARK.get(value.perch, '')}"
     displayed = (_displayed(rule, shown, ctx, block),)
     reads = (read,)
     title = f"derivative of {block} stated at {address}"

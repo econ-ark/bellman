@@ -517,10 +517,13 @@ def stated_derivatives(block, acc, outputs):
     Evaluation that writes the value records them (AMD-MB-001 §4.3, D4): for
     each line whose left side is a derivative term of one of `outputs`, the
     identity of the coordinate its subscript names among the states of the
-    perch of the outputs, the right-side term, the line's address and its
-    source. The reading of each line is the obligation `marginal-reading`,
-    listed and checked by nothing. A line whose subscript names no state of
-    that perch is left as written, for the typing to refuse."""
+    perch of the outputs, the right-side term, the line's address, its
+    source, and the function wire of the output its left side names, `V` of
+    `D_{m_d}V`, so that a block that writes several values records the line
+    on that value alone. The reading of each line is the obligation
+    `marginal-reading`, listed and checked by nothing. A line whose subscript
+    names no state of that perch is left as written, for the typing to
+    refuse."""
     # the written spelling of each output, `V` at the decision perch, `V[<]` at
     # the arrival perch, which the line's left side names
     spellings = {
@@ -536,7 +539,8 @@ def stated_derivatives(block, acc, outputs):
         coordinate = next((s for s in block.states_out if s.field == parts[1]), None)
         if coordinate is None:
             continue
-        found.append((coordinate, parts[2], address, to_source(core)))
+        value = block.ctx.function_wire(spellings[parts[0]])
+        found.append((coordinate, parts[2], address, to_source(core), value))
         acc.obligations.append(
             (
                 "marginal-reading",

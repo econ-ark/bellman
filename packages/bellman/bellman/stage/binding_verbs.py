@@ -28,7 +28,10 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from traceback import clear_frames
 from typing import Union
+
+from lark.exceptions import LarkError
 
 from bellman.distributions.families import law_support
 from bellman.fold.block_lines import parameter_sets, setting_sets
@@ -66,6 +69,7 @@ from bellman.stage.levels import (
 from bellman.stage.places import typings
 from bellman.stage.sources import load_calibration, load_settings, settings_key_positions
 from bellman.syntax.lower import parse_with_spans
+from bellman.syntax.parse import syntax_refusal
 from bellman.syntax.union import union
 from bellman.syntax import terms as T
 from bellman.syntax.source import to_source
@@ -160,6 +164,19 @@ def calibrated_version(stage, calibration_source):
     )
 
 
+def _parsed_file(text, origin):
+    """The parsed file of the stage text or of an addition, with its span
+    table. A text the parser or the lowering cannot read is refused as
+    `elaborate_stage` refuses it: under the rule `syntax` in its own file,
+    with the marked line and the advice (`syntax.parse.syntax_refusal`)."""
+    try:
+        return parse_with_spans(text, filename=origin)
+    except (LarkError, ConstructionError) as error:
+        refusal = syntax_refusal(error, text, origin)
+        clear_frames(error.__traceback__)
+    raise refusal from None
+
+
 def methodized_version(stage, additions):
     """`stage` with the additions read into it in place, the version
     `methodize` returns: the stage file's text, which the provenance holds,
@@ -181,8 +198,8 @@ def methodized_version(stage, additions):
             "its file with elaborate_stage(load_stage(path))"
         )
     unioned = union(
-        parse_with_spans(text, filename=origin),
-        [parse_with_spans(held, filename=where) for held, where in read],
+        _parsed_file(text, origin),
+        [_parsed_file(held, where) for held, where in read],
     )
     fresh = type(stage)(**construct(type(stage), unioned.term, unioned.spans))
     typings(fresh, unioned.spans)

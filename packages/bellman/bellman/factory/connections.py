@@ -28,20 +28,25 @@ name: the set the continuation use writes lies in the set the arrival use
 reads where the two resolved terms are one term, or where the package
 decides the pair, a real set, an integer set or an interval with numeric
 endpoints against another (`typing.sets.within`), or products of such sets
-coordinate by coordinate. A bound written as a parameter name is one bound
+coordinate by coordinate. A set written with one condition that compares
+the name it binds with a bound, `{x : ℝ | x > 0}`, is decided as the
+interval with that bound, `(0, inf)`, within the set that the condition
+restricts (`_one_bound`). A bound written as a parameter name is one bound
 on both sides where the two stages stand in one period, since a parameter
 name names one parameter of the period (§2.3); the same spelling in two
 periods names two parameters and proves nothing, and the comparison is
 then made at the values the effective bindings supply, the result naming
-the bindings it read. A set with category codes
+the bindings it read. A bound that names a derived parameter is read at
+the value its definition takes at those bindings. A set with category codes
 (`typing.category_codes.coded_meaning`: a set marked `!categories`, a
 restriction of one, or a product with such a coordinate) is compared by its
 codes, read before any name is resolved: the pair is compatible only where
 each code the writing set may hold is a member of the reading set and
 stands there for the same category, coordinate by coordinate, and a set with
 codes and a set without them are incompatible. Every other
-comparison, a comprehension, a finite set or a bound without a value among
-them, is **not established**: it is never accepted by optimism. An
+comparison, a set with several conditions or with a condition of another
+form, a finite set or a bound without a value among them, is **not
+established**: it is never accepted by optimism. An
 authored pair that is incompatible or not established stands among the
 pairs with its reason and a diagnostic, and certifies no complete route.
 
@@ -106,13 +111,14 @@ from types import MappingProxyType
 from typing import NamedTuple
 
 from bellman.fold.block_lines import parameter_sets
+from bellman.fold.derived_parameters import derived_order, derived_value
 from bellman.native.provenance import source_description
 from bellman.native.versions import StageVersion
 from bellman.refusals import Diagnostic, FactoryError, written_kind
 from bellman.stage.grains import graph_of, graph_refusal
 from bellman.stage.stage_answers import branches, entry_perch, fields
 from bellman.syntax import terms as T
-from bellman.syntax.source import to_source
+from bellman.syntax.source import bound_name, bracket_of, to_source
 from bellman.typing import category_codes, sets
 
 __all__ = [
@@ -1015,6 +1021,7 @@ class _Types:
         self.calibrations = calibrations or {}
         self.bindings = _bindings(calibrations)
         self._texts = {}
+        self._derived = {}
 
     def stage(self, position):
         h, key = position
@@ -1033,14 +1040,37 @@ class _Types:
         """The declared set of a use, a retained term or None."""
         return self.domains.get((use.h, use.key, use.perch, use.field))
 
+    def derived(self, position):
+        """The value of each derived parameter of the stage at `position`
+        at the effective calibration there, by name: each definition
+        evaluated by `derived_value` after the derived parameters it reads
+        (`derived_order`), as `derived_values` evaluates them at a
+        calibration. A definition that has no value at the calibration, one
+        that reads a parameter the calibration does not bind among them,
+        gives its name no value and is refused nowhere."""
+        if position not in self._derived:
+            mapping, found = self.calibrations.get(position) or {}, {}
+            for definition in derived_order(self.stage(position).definitions):
+                try:
+                    found[definition.identity.field] = derived_value(
+                        definition.equations[0], {**mapping, **found}
+                    )
+                except ValueError:
+                    continue
+            self._derived[position] = found
+        return self._derived[position]
+
     def values(self, position, names):
         """The finite numbers the effective calibration at `position`
-        supplies for the parameter `names`, and the basis, `((h, key,
-        digest),)` where a value was read, else `()`; a value that is no
-        finite number is no value."""
+        supplies for the parameter `names`, a derived parameter read at the
+        value its definition takes at that calibration (`derived`), and the
+        basis, `((h, key, digest),)` where a value was read, else `()`; a
+        value that is no finite number is no value."""
         mapping = self.calibrations.get(position)
         if not mapping:
             return {}, ()
+        if any(name not in mapping for name in names):
+            mapping = {**self.derived(position), **mapping}
         found = {
             name: mapping[name]
             for name in names
@@ -1084,20 +1114,27 @@ class _Types:
 
 def _bounds(term):
     """The names a set term writes as bounds, `a_min` in `[a_min, inf)`:
-    every constant symbol inside it but the infinity."""
+    every constant symbol inside it but the infinity and, inside a set with
+    conditions, the name that the set binds, the `x` of `{x : ℝ | x >
+    a_min}`, which is the variable of the conditions."""
     found = set()
 
-    def walk(value):
+    def walk(value, bound=frozenset()):
         if isinstance(value, T.Sym) and isinstance(value.symbol, T.Constant):
-            if isinstance(value.symbol.name, str) and value.symbol.name != "inf":
-                found.add(value.symbol.name)
+            name = value.symbol.name
+            if isinstance(name, str) and name != "inf" and name not in bound:
+                found.add(name)
             return
+        if isinstance(value, T.Comprehension) and isinstance(value.bound, T.Subject):
+            bound = bound | {
+                c.stem for c in value.bound.coordinates if isinstance(c, T.Coordinate)
+            }
         if dataclasses.is_dataclass(value) and not isinstance(value, type):
             for field in dataclasses.fields(value):
-                walk(getattr(value, field.name))
+                walk(getattr(value, field.name), bound)
         elif isinstance(value, tuple):
             for item in value:
-                walk(item)
+                walk(item, bound)
 
     walk(term)
     return frozenset(found)
@@ -1145,12 +1182,16 @@ def _within(inner, outer, inner_values=None, outer_values=None):
     of the reading set, and two sets of functions, where a field valued in
     functions on an index set connects only when the two index sets have the
     same members in the same order, since an array passed unchanged would
-    exchange values at keys otherwise, and the entry sets are included; None
-    otherwise, a comprehension or a product against a scalar set among the
-    undecided, unless the two are one term."""
+    exchange values at keys otherwise, and the entry sets are included. A
+    set with one condition that compares the name it binds with a bound is
+    decided as the interval it denotes at the values (`_one_bound`). None
+    otherwise, a set with other conditions or a product against a scalar set
+    among the undecided, unless the two are one term whose conditions read
+    numbers and names alone (`_conditions_in_names`)."""
     inner_values, outer_values = inner_values or {}, outer_values or {}
-    if inner == outer and inner_values == outer_values:
+    if inner == outer and inner_values == outer_values and _conditions_in_names(inner):
         return True
+    inner, outer = _one_bound(inner, inner_values), _one_bound(outer, outer_values)
     if isinstance(inner, T.Product) and isinstance(outer, T.Product):
         if len(inner.factors) != len(outer.factors):
             return False
@@ -1189,6 +1230,72 @@ def _within(inner, outer, inner_values=None, outer_values=None):
         _evaluated(_valued(outer, outer_values)),
         {},
     )
+
+
+def _conditions_in_names(term):
+    """Whether each condition of each set with conditions inside a set term
+    compares two terms written in numbers and names
+    (`sets.parameters_read`), so that two uses of the term are one set where
+    each name has one value. False where a condition calls a function,
+    selects an entry or has another form: the function may read a parameter
+    that has another value at the other use, so the term alone does not fix
+    the members that the condition admits."""
+    if isinstance(term, T.Comprehension) and not all(
+        isinstance(condition, T.Rel)
+        and sets.parameters_read(condition.left) is not None
+        and sets.parameters_read(condition.right) is not None
+        for condition in term.conds
+    ):
+        return False
+    if dataclasses.is_dataclass(term) and not isinstance(term, type):
+        return all(
+            _conditions_in_names(getattr(term, field.name)) for field in dataclasses.fields(term)
+        )
+    if isinstance(term, tuple):
+        return all(_conditions_in_names(item) for item in term)
+    return True
+
+
+def _one_bound(term, values=None):
+    """The set that a set with one condition denotes at the parameter values
+    `values`, where the condition compares the name that the set binds with
+    a bound that is a number at the values, and the set that it restricts is
+    a real set or an interval with numeric endpoints: `{x : ℝ | x > a_min}`
+    at `a_min = 0` is `(0, inf)`, and `{x : ℝ₊ | x < 5}` is `[0, 5)`, the
+    members of the restricted set that lie in the interval from the bound
+    (`typing.sets.meet`). Every other term is answered as it is: a set with
+    several conditions, a condition of another form, a bound without a
+    value, a restricted set of another form, and a set that holds no
+    number."""
+    if not isinstance(term, T.Comprehension) or term.base is None or len(term.conds) != 1:
+        return term
+    name, (condition,) = bound_name(term.bound), term.conds
+    if (
+        name is None
+        or not isinstance(condition, T.Rel)
+        or not isinstance(condition.op, (T.Gt, T.Ge, T.Lt, T.Le))
+    ):
+        return term
+    below = isinstance(condition.op, (T.Gt, T.Ge))
+    if condition.left == name:
+        bound = condition.right
+    elif condition.right == name:
+        # `0 < x` bounds the name as `x > 0` does
+        bound, below = condition.left, not below
+    else:
+        return term
+    values = values or {}
+    bound, bracket = _evaluated(_valued(bound, values)), bracket_of(condition.op)
+    infinity = T.Sym(T.Constant("inf"))
+    interval = T.Interval(
+        T.Range(bracket, bound, infinity, T.Open())
+        if below
+        else T.Range(T.Open(), T.Neg(infinity), bound, bracket)
+    )
+    met = sets.meet((_evaluated(_valued(term.base, values)), interval))
+    if met is None:
+        return term
+    return interval if sets.endpoints(met) == sets.endpoints(interval) else met
 
 
 def _domain_members(functions, values):
@@ -1272,8 +1379,13 @@ def _included(
     stages of one period declare, one parameter of the period each (§2.3);
     the same spelling in two periods proves nothing. A term that writes a
     bound is otherwise compared at the values the effective bindings
-    supply, and the result names them; without a value the comparison is
-    not established. Terms without bounds are decided by `_within`."""
+    supply, a derived parameter at the value of its definition there
+    (`_Types.derived`), and the result names them; without a value the
+    comparison is not established. The name that a set with conditions
+    binds is no bound (`_bounds`), and a term with a condition that calls a
+    function or selects an entry is one set with no other use of it
+    (`_conditions_in_names`). Terms without bounds are decided by
+    `_within`."""
     if inner_term is None or outer_term is None:
         return (
             NOT_ESTABLISHED,
@@ -1284,10 +1396,11 @@ def _included(
     inner = sets.resolved(inner_term, inner_text.definitions)
     outer = sets.resolved(outer_term, outer_text.definitions)
     inner_bounds, outer_bounds = _bounds(inner), _bounds(outer)
-    if inner == outer and not inner_bounds:
+    one_term = inner == outer and _conditions_in_names(inner)
+    if one_term and not inner_bounds:
         return COMPATIBLE, f"{inner_said} and {outer_said} are one set, {to_source(inner)}", ()
     if (
-        inner == outer
+        one_term
         and inner_position[0] == outer_position[0]
         and inner_bounds <= inner_text.parameters
         and inner_bounds <= outer_text.parameters
@@ -1333,11 +1446,12 @@ def _included(
             for name, value in sorted(values.items())
         )
         compared = ""
-        if isinstance(inner, (T.Interval, T.Named)) and isinstance(
-            outer, (T.Interval, T.Named)
+        inner_read, outer_read = _one_bound(inner, inner_values), _one_bound(outer, outer_values)
+        if isinstance(inner_read, (T.Interval, T.Named)) and isinstance(
+            outer_read, (T.Interval, T.Named)
         ):
-            inner_at = _evaluated(_valued(inner, inner_values))
-            outer_at = _evaluated(_valued(outer, outer_values))
+            inner_at = _evaluated(_valued(inner_read, inner_values))
+            outer_at = _evaluated(_valued(outer_read, outer_values))
             compared = f": {to_source(inner_at)} against {to_source(outer_at)}"
         return (
             _status(decided),

@@ -122,7 +122,11 @@ OBJECTS = (
         file=_STAGE_FILE,
         written=(
             "No type on this line. A definition may declare a set before `:=`, "
-            "`q : (0,1) := (β*R)^(1/ρ)/R`, and calibration holds the value to that set."
+            "`q : (0,1) := (β*R)^(1/ρ)/R`, and calibration holds the value to that set. The "
+            "declared set is the set written there, or `ℝ` where none is written; a definition "
+            "by cases that writes the branch `inf` or `-inf` declares a set that can hold that "
+            "infinity, as its form decides, as in "
+            "`h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf`."
         ),
         record=_DEFINITION,
         read_by='stage.par["h"]',
@@ -243,8 +247,8 @@ class SetForm:
 
 # The objects whose declaration writes a set, by their names in `OBJECTS`.
 WITH_A_SET = ("field", "shock", "parameter", "derived parameter", "setting", "function")
-# Every one of them but the derived parameter, whose value is one real
-# number and lies in no set of labels, no product and no set of functions.
+# Every one of them but the derived parameter, whose value is one number
+# and lies in no set of labels, no product and no set of functions.
 _BUT_THE_DERIVED_PARAMETER = tuple(name for name in WITH_A_SET if name != "derived parameter")
 # Those that one name declares on a line of its own, where several sets in
 # one type are read. A field is taken as a block header lists it.
@@ -268,7 +272,9 @@ SET_FORMS = (
         denotes=(
             "The real numbers between two endpoints, where a round bracket leaves its endpoint "
             "out and a square bracket includes it; an endpoint may read parameters, and `-inf` "
-            "or `inf` leaves a side unbounded."
+            "or `inf` leaves a side unbounded; an endpoint that is the bare name of a parameter "
+            "or of a derived parameter which the calibration values at an infinity is read as "
+            "that infinity."
         ),
         read_in=WITH_A_SET,
     ),
@@ -428,5 +434,41 @@ LIMITS = (
         ),
         line="ρ : ℝ := 2",
         rule="readable-form",
+    ),
+    Limit(
+        limit=(
+            "A conditional, `if … then … else …`, stands as the whole right side of a "
+            "definition without arguments or as a branch of another conditional, and inside no "
+            "formula, no function's body, no line of a block and no endpoint of a set."
+        ),
+        line="x : (0, if 1 < 2 then 1 else 2)",
+        rule="syntax",
+    ),
+    Limit(
+        limit=(
+            "In a derived parameter's definition `inf` and `-inf` stand only as a whole branch "
+            "of a definition by cases; a definition that reads a name valued at an infinity "
+            "where it is evaluated, in a formula, a call or a test, as the branch that its test "
+            "chooses or as its whole right side, has no value at that calibration, and neither "
+            "has a bound of a declared set that computes with such a name; a bound that "
+            "computes with the written `inf`, `(0, 2*inf)`, has none at any calibration; a "
+            "bound that calls a function other than `log`, `exp`, `min` and `max` is not "
+            "decided, whatever it computes with."
+        ),
+        line="x := 2*inf",
+        rule="derived-parameter",
+    ),
+    Limit(
+        limit="The words `if`, `then` and `else` are words of the language and no names.",
+        line="if : ℝ₊₊",
+        rule="syntax",
+    ),
+    Limit(
+        limit=(
+            "A branch written `inf` or `-inf` stands in a definition whose declared set can hold "
+            "that infinity, and the set `ℝ` of a definition that declares none holds neither."
+        ),
+        line="h := if 1 < 2 then 1 else inf",
+        rule="derived-parameter",
     ),
 )

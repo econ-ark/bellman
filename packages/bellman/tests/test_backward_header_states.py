@@ -182,7 +182,7 @@ def test_item_4_a_state_of_the_input_perch_read_directly_is_refused(elaborate_te
         elaborate_text(replaced(text_of("port"), value, "V        = E_{Ψ,θ}(V[>]) + m_next                   :: [id=value]"),
                        "port.bl")
     assert (refused.value.rule, refused.value.address) == ("shock-observed", "cntn_to_dcsn.value")
-    assert "mentions m_next" in refused.value.message and "E_{Ψ}" in refused.value.message
+    assert "mentions m_next" in refused.value.message and "E_{Ψ,θ}" in refused.value.message
 
     with pytest.raises(ConstructionError) as refused:
         elaborate_text(replaced(text_of("port"), value,

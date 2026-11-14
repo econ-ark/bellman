@@ -4,6 +4,11 @@
 entry     += Typer(typer typing)              -- the attachment
 index     += At(perch)                        -- placement open
 expr      += Space(setexpr set)               -- injection
+expr      += Conditional(cond test, expr then, expr otherwise)
+                                              -- if test then … else …: the right side
+                                              -- of a derived parameter's definition, or
+                                              -- a branch of one; the branch the test
+                                              -- does not choose is not evaluated
 stmt      += CorrDef(identifier name, coordinate* params,
                      setexpr body)            -- Γ(x) := {…}
 stmt      += Slack(stmt core, cond bound)     -- core ⟂ bound: complementary

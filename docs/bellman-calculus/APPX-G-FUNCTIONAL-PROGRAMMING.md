@@ -264,7 +264,7 @@ $$
  E_y\longmapsto E_y^{\mathrm{GH}(n)}.
 $$
 
-Here $\mathrm{GH}$ denotes the Gauss–Hermite quadrature family and $n$ is its node-count setting. The tag retains expectation as its mathematical target. The node count does not become an additional economic input of that expectation, and numerical representation can still use a different carrier, such as sampled values on a grid. Where an operator stores a function, the grid it stores it on is the second component of its label, written by its own entry, and no setting of the method ([Methods](./06-Methods.md) §5).
+Here $\mathrm{GH}$ denotes the Gauss–Hermite quadrature family and $n$ is its node-count setting. The tag writes the name $n$ and never a number, since a method's entry holds no number ([Methods](./06-Methods.md) §4). The tag retains expectation as its mathematical target. The node count does not become an additional economic input of that expectation, and numerical representation can still use a different carrier, such as sampled values on a grid. Where an operator stores a function, the grid it stores it on is the second component of its label, written by its own entry, and no setting of the method ([Methods](./06-Methods.md) §5).
 
 Two erasures are defined. The **erasure of the labels** $U_m : \Sigma_m \to \Sigma$ forgets the method and grid components of every morphism, is the identity on sorts, and preserves the underlying operation, its equations and its economic inputs. Then
 

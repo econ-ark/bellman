@@ -193,6 +193,9 @@ _REFUSALS = "packages/bellman/tests/test_refusals.py::"
 _BEHAVIOUR = "packages/bellman/tests/test_behaviour.py::"
 # The test that holds the corrections to the checks of a declared set.
 _CORRECTIONS = "packages/bellman/tests/test_amd_gram_005.py::test_item_5_the_corrections_hold"
+# The acceptance file of `min`, `max` and a definition by cases in a derived
+# parameter, whose tests the rows write after it.
+_BY_CASES = "packages/bellman/tests/test_amd_gram_006.py::"
 
 SEMANTIC_RULES = (
     # --- 2.1 Declarations ---
@@ -208,7 +211,7 @@ SEMANTIC_RULES = (
             "bellman.typing.declarations:Declarations.classify",
         ),
         checks=(
-            "bellman.factory.elaboration:_syntax_refusal",
+            "bellman.syntax.parse:syntax_refusal",
             "bellman.typing.declarations:Declarations.read_declaration",
             "bellman.typing.declarations:Declarations.classify",
         ),
@@ -423,6 +426,194 @@ SEMANTIC_RULES = (
     ),
     SemanticRule(
         section="2.1",
+        item=(
+            "The set that a derived parameter's definition declares is a set of numbers that "
+            "reads no setting, a definition that declares a set reads at least one parameter or "
+            "derived parameter, by cases as otherwise, and no separate declaration of the name "
+            "stands beside its definition."
+        ),
+        implements=(
+            "bellman.typing.declarations:declared_definition",
+            "bellman.typing.declarations:derived_parameter_declaration",
+        ),
+        checks=(
+            "bellman.typing.declarations:Declarations.check_names",
+            "bellman.typing.declarations:Declarations.read_declaration",
+            "bellman.typing.declarations:Declarations.declared_value_refusal",
+            "bellman.typing.declarations:Declarations.check_derived_parameters",
+            "bellman.typing.declarations:Declarations.declared_set_fault",
+        ),
+        refusals=("one-name-one-meaning", "readable-form", "derived-parameter"),
+        test=(
+            "packages/bellman/tests/test_amd_gram_005.py::"
+            "test_item_3_a_derived_parameter_may_carry_a_declared_set"
+        ),
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "A derived parameter's definition may call `log` and `exp`, each of one argument, "
+            "and `min` and `max`, each of one argument or more, and a call of any other "
+            "function, or of one of the four with another number of arguments, is refused."
+        ),
+        implements=(
+            "bellman.typing.declarations:derived_parameter_call",
+            "bellman.typing.declarations:derived_parameter_body",
+            "bellman.fold.derived_parameters:derived_value",
+        ),
+        checks=(
+            "bellman.syntax.parse:syntax_refusal",
+            "bellman.typing.declarations:derived_parameter_fault",
+            "bellman.typing.declarations:Declarations.check_derived_parameters",
+            "bellman.typing.context:TypingContext._typed_function",
+        ),
+        refusals=("derived-parameter", "not-constructed", "syntax"),
+        test=f"{_BY_CASES}test_item_1_a_derived_parameter_calls_min_and_max_and_is_defined_by_cases",
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "A derived parameter's definition may be written by cases, `if test then a else b`, "
+            "with or without a declared set; the conditional stands as the whole right side of "
+            "the definition or as a branch of another conditional, and inside a formula, in a "
+            "function's body, in a line of a block or as an endpoint of a set it is refused."
+        ),
+        implements=(
+            "bellman.syntax.lower:ToAst.conditional",
+            "bellman.syntax.lower:ToAst.declared_value",
+            "bellman.typing.declarations:derived_parameter_body",
+            "bellman.typing.declarations:derived_parameter_declaration",
+        ),
+        checks=(
+            "bellman.syntax.parse:syntax_refusal",
+            "bellman.typing.declarations:derived_parameter_fault",
+        ),
+        refusals=("syntax",),
+        test=(
+            f"{_REFUSALS}test_a_conditional_stands_as_the_whole_right_side_of_a_definition_and_"
+            "nowhere_else"
+        ),
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "The words `if`, `then` and `else` are no names, and a file that writes one of them "
+            "as a name, in a declaration, a definition, a binder, a block header or a formula, "
+            "is refused."
+        ),
+        implements=("bellman.syntax.lower:ToAst.name",),
+        checks=("bellman.syntax.lower:ToAst.name", "bellman.syntax.parse:syntax_refusal"),
+        refusals=("syntax",),
+        test=f"{_REFUSALS}test_the_three_words_of_a_definition_by_cases_are_no_names",
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "In a derived parameter's definition `log`, `exp`, `min` and `max` are the functions "
+            "of the language, and a definition that calls one of them where the stage defines a "
+            "function of that name is refused."
+        ),
+        checks=(
+            "bellman.typing.declarations:derived_parameter_fault",
+            "bellman.typing.declarations:Declarations.check_derived_parameters",
+        ),
+        refusals=("derived-parameter",),
+        test=(
+            f"{_REFUSALS}test_a_derived_parameter_is_refused_at_its_definition"
+            "[a call of min where the stage defines min]"
+        ),
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "The test of a definition by cases reads what a branch reads, parameters, derived "
+            "parameters and finite numbers: a set, a field or a function there is refused, and "
+            "so is a label of a finite set, as it is in arithmetic."
+        ),
+        implements=("bellman.typing.context:TypingContext._typed_expression",),
+        checks=(
+            "bellman.typing.context:TypingContext._numeric_arguments",
+            "bellman.typing.declarations:derived_parameter_fault",
+        ),
+        refusals=("well-typed", "derived-parameter"),
+        test=(
+            f"{_REFUSALS}test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_"
+            "in_arithmetic"
+        ),
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "A derived parameter's value is its definition evaluated at the calibration, which "
+            "for a definition by cases is the branch that its test chooses, the other branch not "
+            "evaluated, and a branch written `inf` or `-inf` gives that infinity; a definition "
+            "that reads a name valued at an infinity where it is evaluated, in a formula, a call "
+            "or a test, as the branch that its test chooses or as its whole right side, has no "
+            "value, and the calibration is refused at that definition."
+        ),
+        implements=(
+            "bellman.fold.derived_parameters:derived_value",
+            "bellman.fold.derived_parameters:_conditional",
+        ),
+        checks=("bellman.fold.derived_parameters:derived_values",),
+        refusals=("derived-parameter",),
+        test=f"{_BY_CASES}test_item_2_the_value_is_the_branch_the_test_chooses",
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "A branch written `inf` or `-inf` is admitted only in a definition whose declared "
+            "set can hold that infinity, as the form of the set decides, and the set ℝ of a "
+            "definition that declares none holds neither; calibration holds the value, finite "
+            "or infinite, to the declared set."
+        ),
+        implements=(
+            "bellman.typing.declarations:infinities_written",
+            "bellman.syntax.source:may_hold_infinity",
+        ),
+        checks=(
+            "bellman.typing.declarations:infinite_branch_fault",
+            "bellman.typing.declarations:Declarations.check_derived_parameters",
+            "bellman.fold.derived_parameters:derived_order",
+            "bellman.stage.calibration_requirements:calibration_requirements",
+        ),
+        refusals=("derived-parameter",),
+        test=f"{_BY_CASES}test_item_3_an_infinite_branch_needs_a_declared_set_that_holds_it",
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "An endpoint of an interval, or a side of a condition of a set, that is the bare "
+            "name of a parameter or of a derived parameter valued at an infinity is read as that "
+            "infinity."
+        ),
+        implements=(
+            "bellman.stage.calibration_requirements:_infinite_value",
+            "bellman.stage.calibration_requirements:_endpoint_at",
+            "bellman.stage.calibration_requirements:_side_at",
+            "bellman.stage.calibration_requirements:_infinity_in",
+        ),
+        checks=(
+            "bellman.stage.calibration_requirements:membership",
+            "bellman.stage.calibration_requirements:predicate_value",
+        ),
+        test=f"{_BY_CASES}test_item_4_one_reading_of_an_infinite_value",
+    ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "A bound of a declared set may call `log`, `exp`, `min` and `max`, which calibration "
+            "evaluates as in a derived parameter's definition, and a bound that computes with a "
+            "name valued at an infinity, or with the written `inf`, has no value and refuses the "
+            "calibration; a bound that calls another function is not decided, whatever it "
+            "computes with."
+        ),
+        implements=("bellman.stage.calibration_requirements:_bound_at",),
+        checks=("bellman.stage.calibration_requirements:judged",),
+        test=f"{_BY_CASES}test_item_4_one_reading_of_an_infinite_value",
+    ),
+    SemanticRule(
+        section="2.1",
         item="An interval of numbers holds at least one number.",
         implements=("bellman.typing.sets:literal_faults",),
         checks=("bellman.typing.context:_refuse_literal_faults",),
@@ -474,14 +665,16 @@ SEMANTIC_RULES = (
             ("Bellman-Sym/API/stage/09-binding-verbs.md", "2"),
         ),
         package_today=(
-            "`calibrate` decides no membership in a set of extended reals. It binds any value "
-            "there, including a string, the floating-point value NaN (not a number), and the "
-            "infinity that the set excludes, and `stage.obligations()` lists the membership as "
-            "the condition `calibration-domain-membership`, which stays required. In an interval "
-            "whose bound is an expectation over a shock, such as `(0, E_{y}(y))`, it binds any "
-            "number in the same way."
+            "`calibrate` decides the membership of a number in a set of extended reals: a finite "
+            "number lies in every such set, and an infinity in the sets that hold it, so that "
+            "`inf` is refused for `ℝ_{-∞}`. A value that is no number, a string or the "
+            "floating-point value NaN (not a number), is still bound there, and "
+            "`stage.obligations()` lists its membership as the condition "
+            "`calibration-domain-membership`, which stays required. In an interval whose bound "
+            "is an expectation over a shock, such as `(0, E_{y}(y))`, it binds any number in the "
+            "same way."
         ),
-        example=('@stage: t\nx : ℝ_{-∞}\nstage.calibrate({"x": float("inf")})\n'),
+        example=('@stage: t\nx : ℝ_{-∞}\nstage.calibrate({"x": float("nan")})\n'),
     ),
     SemanticRule(
         section="2.1",
@@ -521,6 +714,27 @@ SEMANTIC_RULES = (
             "[id=arvl_to_dcsn, (k : ℝ, y) : !arvl -> (m : ℝ) : !dcsn] { m = k + y }\n"
         ),
     ),
+    SemanticRule(
+        section="2.1",
+        item=(
+            "The words `if`, `then` and `else` are no names also as the id of a line's "
+            "annotation, `:: [id=if]`, as they are none as the id of a block."
+        ),
+        checked=False,
+        also_concerns=("2.3",),
+        package_today=(
+            "The package reads a line annotated `:: [id=if]` and gives the line the place "
+            "`arvl_to_dcsn.if`. A methods file cannot address that place: the entry "
+            "`arvl_to_dcsn.if.method : …` is refused under `syntax`, with the sentence that `if` "
+            "is no name. The id of a block, `[id=if, …]`, is refused under `syntax`."
+        ),
+        example=(
+            "@stage: t\n"
+            "[id=arvl_to_dcsn, (k : ℝ) : !arvl -> (m : ℝ) : !dcsn] {\n"
+            "m = k :: [id=if]\n"
+            "}\n"
+        ),
+    ),
     # --- 2.2 Blocks and their headers ---
     SemanticRule(
         section="2.2",
@@ -534,7 +748,7 @@ SEMANTIC_RULES = (
             "bellman.typing.declarations:Declarations.read_body_statement",
         ),
         checks=(
-            "bellman.factory.elaboration:_syntax_refusal",
+            "bellman.syntax.parse:syntax_refusal",
             "bellman.typing.declarations:Declarations.block_header",
             "bellman.typing.declarations:Declarations.read_body_statement",
         ),
@@ -2558,10 +2772,12 @@ UNCHECKED_ELSEWHERE = (
             ("wiki/settings.md", "2"),
         ),
         package_today=(
-            "`configure` decides the membership from the sets that the stage defines, without the "
-            "calibration. On a coordinate whose set names a parameter it refuses every bound "
-            "under `grid-bounds`, as not decidably inside the declared set, also a bound that "
-            "lies inside the set at the calibrated value, as in the text."
+            "`configure` decides the membership at the calibration that is bound, and refuses a "
+            "bound outside the set there under `grid-bounds`. `calibrate` judges no bound of a "
+            "grid again, so a calibration that replaces an earlier one leaves a bound outside the "
+            "set of its coordinate, as in the text. Before a calibration is bound, `configure` "
+            "refuses every bound on a coordinate whose set names a parameter, as not decidably "
+            "inside the declared set."
         ),
         example=(
             "@stage: t\n"
@@ -2576,9 +2792,8 @@ UNCHECKED_ELSEWHERE = (
             "dcsn_to_arvl.evaluate.method : !Linear\n"
             "dcsn_to_arvl.evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))\n"
             'stage.calibrate({"k_lo": 0.0}).methodize(methods).configure({"n_k": 5, "k_min": '
-            '1.0, "k_max": 2.0})\n'
+            '1.0, "k_max": 2.0}).calibrate({"k_lo": 1.5})\n'
         ),
-        refused_under="grid-bounds",
     ),
 )
 
@@ -2604,6 +2819,7 @@ RULES_STATED_ELSEWHERE = MappingProxyType(
         "derived-parameter": "Bellman-Sym/appendices/12-equation-parsing-rules.md",
         "distribution-domain": "Bellman-Sym/reference/laws.md",
         "method-admission": _METHODIZATION,
+        "method-setting-declared": _METHODIZATION,
         "no-method-for-derivative": _METHODIZATION,
         "component-typed-twice": _METHODIZATION,
         "method-option-value": _METHODIZATION,

@@ -488,6 +488,7 @@ KINDS = {
     T.Closed: "terms.Closed",
     T.Complementary: "terms.Complementary",
     T.Comprehension: "terms.Comprehension",
+    T.Conditional: "terms.Conditional",
     T.Constant: "terms.Constant",
     T.Continuation: "terms.Continuation",
     T.Control: "terms.Control",

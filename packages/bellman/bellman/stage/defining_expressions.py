@@ -67,7 +67,13 @@ from bellman.distributions.families import (
 )
 from bellman.fold.block_lines import fields_of, perches_of
 from bellman.fold.stage_names import StageNames, branches_of
-from bellman.fold.wire_terms import is_wire_symbol, label_case, wire_symbol, wires_read
+from bellman.fold.wire_terms import (
+    defined_field,
+    is_wire_symbol,
+    label_case,
+    wire_symbol,
+    wires_read,
+)
 from bellman.native.identity import Identity, box_identity
 from bellman.native.labels import (
     AGGREGATOR_LETTER,
@@ -1847,8 +1853,11 @@ def _evaluation_rules(stage, ctx, row, output):
     for condition in conditions:
         statement = And(statement, S.substitute(condition, bound))
     rules = [Rule(statement)]
-    for coordinate, right_side, _address, _source in getattr(row, "derivatives", ()):
-        rules.append(_stated_derivative_rule(stage, ctx, row, output, coordinate, right_side))
+    # a derivative line is a rule on the value its left side names, and on no
+    # other output of the Evaluation
+    for coordinate, right_side, _address, _source, value in getattr(row, "derivatives", ()):
+        if value == output.identity:
+            rules.append(_stated_derivative_rule(stage, ctx, row, output, coordinate, right_side))
     return tuple(rules)
 
 
@@ -1970,15 +1979,10 @@ def _aggregation_rules(stage, row, output):
     named = written_name(stage, output.identity)
     if named is None:
         return ()
-    position = tuple(row.outputs).index(output.identity)
-    statements = tuple(row.statements)
-    address = (
-        statements[position]
-        if len(statements) == len(row.outputs)
-        else statements[0]
-        if statements
-        else None
-    )
+    # the line is the one that writes the output, whatever its place among
+    # the row's lines: a block may write its outputs in another order than
+    # its header lists them, and may begin with a local definition
+    address = _writing_line(stage, ctx, row, named)
     definition = stage.definitions.get(address) if address is not None else None
     core = definition.equations[0] if definition is not None and definition.equations else None
     core = relation_of(core)
@@ -1999,6 +2003,30 @@ def _aggregation_rules(stage, row, output):
     if region is None:
         return (Rule(Compare(S.Apply(reference_term(named), (x,)), "=", right)),)
     return (Rule(Compare(reference_term(named), "=", _read_bare(right, x)), (), region),)
+
+
+def _writing_line(stage, ctx, row, named):
+    """The address of the line of the row `row` that writes the output named
+    `named`: the first of the row's lines whose left side defines the field
+    of that name (`wire_terms.defined_field`), at the perch of `named` where
+    both stand at a perch; None where no line of the row defines it. The
+    row's lines stand in the order of the block, which is not the order of
+    the row's outputs: a value block may write `L = L[>]` before `V = 𝑢(c) +
+    β*V[>]` under a header that lists `(V, L)`, and may begin with a local
+    definition, `c = z_d*𝑓(k_d) + (1-δ)*k_d - k_nxt`, which writes no
+    output."""
+    for address in row.statements:
+        definition = stage.definitions.get(address)
+        if definition is None or not definition.equations:
+            continue
+        defined = defined_field(ctx, row.builder, definition.equations[0])
+        if (
+            defined is not None
+            and defined.field == named.field
+            and (defined.perch is None or named.perch is None or defined.perch == named.perch)
+        ):
+            return address
+    return None
 
 
 def _argmax_rules(stage, ctx, row):

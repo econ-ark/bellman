@@ -66,6 +66,10 @@ module dynspec
        | Tuple(expr* items)
        | Select(expr family, selector sel)
        | Space(setexpr set)
+       | Conditional(cond test, expr then, expr otherwise)
+                                              -- (stage) if test then … else …: the
+                                              -- right side of a derived parameter's
+                                              -- definition, or a branch of one
 
   selector  = Pos(int at) | Key(identifier at)
             | Term(expr at)                  -- (stage) a selector that is a term, in the

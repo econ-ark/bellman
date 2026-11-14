@@ -5,12 +5,12 @@ tags:
 - methodization
 - stage-lifecycle
 wiki_status: canonical
-last_reviewed: '2026-11-05'
-reviewed_by: Codex (Astra); source-checked. Revised by Claude (Fable), session of 5 November 2026, at AAS's request, for the settings declared with their domains in the methods file, checked against the Bellman calculus page on methods, and revised after one adversarial review round
+last_reviewed: '2026-11-14'
+reviewed_by: Codex (Astra); source-checked. Revised by Claude (Fable), session of 5 November 2026, at AAS's request, for the settings declared with their domains in the methods file, checked against the Bellman calculus page on methods, and revised after one adversarial review round. Revised by Claude (Fable), session of 14 November 2026, for AAS's ruling of that day that a method's entry writes no number
 sources:
 - path: docs/bellman-calculus/06-Methods.md
   class: canonical
-  date: '2026-11-05'
+  date: '2026-11-14'
 - path: docs/Bellman-Sym/API/factory/stage-factory.md
   class: canonical
   date: '2026-09-07'
@@ -45,7 +45,7 @@ n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 tol_v : ℝ₊₊          :: ["tolerance of value function iteration"]
 ```
 
-A bound of a grid is a point of the set the stage declares for the coordinate, `Xa` for the savings `a` or a literal set such as `ℝ₊`; a count is a natural number; a tolerance is a positive real; a setting valued in a finite set of labels, such as a tie-breaking rule, is declared on that set. A declared set may name a parameter or a derived parameter, as `tol_s : (0, ρ)` does. A name is declared once in a stage, and two declarations of one name with different sets are refused. The scope of a declaration is the addition and the stage it is unioned with; where two stages of one [[period]] each declare one name, they denote one setting of that period, as a parameter name does. A grid entry names settings and holds no number: `policy.grid : !Cartesian(a=(a_min, a_max, n_a))` names three. A method word's keyword argument names a declared setting where the choice is to be configured, `!gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)`, and may hold a number or a quoted string where the method's catalogue row admits one. An undeclared name is refused as any other is.
+A bound of a grid is a point of the set the stage declares for the coordinate, `Xa` for the savings `a` or a literal set such as `ℝ₊`; a count is a natural number; a tolerance is a positive real; a setting valued in a finite set of labels, such as a tie-breaking rule, is declared on that set. A declared set may name a parameter or a derived parameter, as `tol_s : (0, ρ)` does. A name is declared once in a stage, and two declarations of one name with different sets are refused. The scope of a declaration is the addition and the stage it is unioned with; where two stages of one [[period]] each declare one name, they denote one setting of that period, as a parameter name does. A grid entry names settings and holds no number: `policy.grid : !Cartesian(a=(a_min, a_max, n_a))` names three. A method word's keyword argument names a declared setting for every number the method reads, `!gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)`, and holds no number: an entry that writes one is refused, as a grid entry that writes one is. An argument may hold a quoted string, which is the value of the argument and no setting. An undeclared name is refused as any other is.
 
 ## 2 Bound by configure
 

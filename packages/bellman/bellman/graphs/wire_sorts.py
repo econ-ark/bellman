@@ -264,8 +264,14 @@ class WireTable:
             domain=field.domain if field is not None else None,
             coordinates=arguments,
             # the coordinates in which the writing Evaluation records a stated
-            # derivative of the value (AMD-MB-001 §5.1)
-            derivatives=tuple(entry[0] for entry in getattr(producer, "derivatives", ())),
+            # derivative of the value (AMD-MB-001 §5.1): the entries whose
+            # line names this wire's value, and no entry of another value
+            # the Evaluation writes
+            derivatives=tuple(
+                entry[0]
+                for entry in getattr(producer, "derivatives", ())
+                if entry[4] == identity
+            ),
         )
 
     def _result_sort(self, identity, producer, arguments):

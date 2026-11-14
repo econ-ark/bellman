@@ -55,7 +55,7 @@ from bellman.native.predicates import Member
 from bellman.native.records import BlockData, Definition, Line, NodeData, OperatorOccurrence, Sort
 from bellman.native.versions import StageVersion
 from bellman.syntax import terms as T
-from bellman.syntax.source import to_source
+from bellman.syntax.source import may_hold_infinity, to_source
 from bellman.syntax.vocabulary import (
     ALIAS,
     CONTROL,
@@ -72,6 +72,7 @@ from bellman.typing.line_unknowns import (
     occurrence_paths,
     system_occurrence,
 )
+from bellman.typing.sets import resolved
 
 
 class StageNames:
@@ -152,8 +153,9 @@ class StageNames:
         }
         # the set a derived parameter's definition declares, the one
         # coordinate of its record, is not among `sets` below: the fold reads
-        # a derived parameter as a real number (`declared_sets._declared_set`)
-        # and calibration judges the set at the value the definition takes
+        # a derived parameter as a real number, or on its declared set where
+        # that set may hold an infinity (`extended_derived_sets`), and
+        # calibration judges the set at the value the definition takes
         # (`calibration_requirements`)
         self.derived = {
             d.identity.field: d
@@ -175,6 +177,32 @@ class StageNames:
         # the sets the stage defines by name, through which the set algebra
         # resolves a name before it decides an inclusion (AMD-SG-016 §4)
         self.set_terms = {d.identity.field: d.equations[0] for d in definitions if d.kind == "set"}
+        # the declared set of each derived parameter whose set may hold `inf`
+        # or `-inf`, judged from the form of the set with each named set read
+        # through its definition (`source.may_hold_infinity`): `ℝ_{+∞}` for
+        # `h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf`. A line that
+        # computes with such a derived parameter owns the conditions that a
+        # parameter declared on that set gives it; every other derived
+        # parameter is read as a real number (AMD-GRAM-006)
+        self.extended_derived_sets = {
+            name: d.coordinates[0][1]
+            for name, d in self.derived.items()
+            if d.coordinates
+            and any(
+                may_hold_infinity(resolved(d.coordinates[0][1], self.set_terms), negative)
+                for negative in (False, True)
+            )
+        }
+        # for each of those derived parameters, the set of extended reals of
+        # the sides that its declared set may hold (`_extended_reals`):
+        # `ℝ_{+∞}` for `h : (0, T] := 1/(1 - Γ/R)`. The condition that the
+        # definition owns states membership in this set
+        # (`stage_fold._derived_definedness`); the declared set itself is
+        # judged at the value by `calibration_requirements`
+        self.derived_extended_reals = {
+            name: _extended_reals(resolved(declared, self.set_terms))
+            for name, declared in self.extended_derived_sets.items()
+        }
 
     @property
     def function_names(self):
@@ -409,6 +437,16 @@ class StageNames:
                     for item in held
                 )
         return tuple(dict.fromkeys(out))
+
+
+def _extended_reals(declared):
+    """The set of extended reals of the sides that the set `declared` may
+    hold, judged from its form (`source.may_hold_infinity`): `ℝ̄` where it
+    may hold both infinities, `ℝ_{+∞}` where it may hold `inf` alone, and
+    `ℝ_{-∞}` where it may hold `-inf` alone. `declared` is a set that may
+    hold one of the two, with each named set replaced by its definition."""
+    above, below = (may_hold_infinity(declared, negative) for negative in (False, True))
+    return T.Named("ℝ̄" if above and below else "ℝ_{+∞}" if above else "ℝ_{-∞}")
 
 
 def _latent_shocks(stage, ports):

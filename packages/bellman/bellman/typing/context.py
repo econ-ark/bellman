@@ -40,7 +40,7 @@ from bellman.native.identity import Identity
 from bellman.native.records import ExpressionType, ResolvedName, Sort, construction_typing_table
 from bellman.refusals import NotConstructed
 from bellman.syntax import terms
-from bellman.syntax.source import comprehension_text, to_source
+from bellman.syntax.source import comprehension_text, condition_text, to_source
 from bellman.syntax.vocabulary import (
     CONTINUATION,
     DECISION,
@@ -550,7 +550,8 @@ class TypingContext:
                 forms = (
                     "a definition without arguments defines a set, as `Xa := ℝ₊` does, or a "
                     "function of the stage, as `𝑑𝑢 := D_{c}(𝑢)` does, or a derived parameter, "
-                    "arithmetic of parameters and numbers whose only calls are log and exp, as "
+                    "arithmetic of parameters and numbers whose only calls are log, exp, min "
+                    "and max, or a definition by cases of such arithmetic, as "
                     "`h := 1/(1 - Γ/R)` does"
                 )
                 raise self.declarations.error(
@@ -662,6 +663,33 @@ class TypingContext:
             )
         if isinstance(expr, (terms.Rel, terms.Between)):
             return self._typed_relation(expr, **where)
+        if isinstance(expr, terms.Conditional):
+            # a definition by cases reads what its test and its two branches
+            # read; its value is a real number, or an extended real where a
+            # branch is one. The two sides of the test are numbers for every
+            # relation, `=` among them, as the operands of arithmetic are: a
+            # label of a finite set there is refused under `well-typed`
+            # (AMD-GRAM-006)
+            sides = self._numeric_arguments(
+                expr.test,
+                (expr.test.left, expr.test.right),
+                (
+                    visit(expr.test.left, ("test", "left")),
+                    visit(expr.test.right, ("test", "right")),
+                ),
+                address=address,
+            )
+            parts = (
+                *sides,
+                visit(expr.then, ("then",)),
+                visit(expr.otherwise, ("otherwise",)),
+            )
+            result = (
+                _EXTENDED_REAL
+                if any(_EXTENDED_REAL in part.results for part in parts[2:])
+                else _REAL_TYPE
+            )
+            return _Typed(_merge(part.inputs for part in parts), (result,))
         raise self.declarations.error(
             "readable-form",
             address,
@@ -1560,7 +1588,7 @@ class TypingContext:
                 address,
                 (
                     f"`{to_source(operand)}` is a label, a member of a finite set "
-                    f"of names, and `{to_source(expr)}` reads it as a number; a "
+                    f"of names, and `{_reading_text(expr)}` reads it as a number; a "
                     f"label carries no arithmetic. Select by the label, "
                     f"`(…)[{to_source(operand)}]`, where a value depends on it"
                 ),
@@ -1721,9 +1749,9 @@ class TypingContext:
                     "well-typed",
                     address,
                     (
-                        f"`{to_source(operand)}` is {what}, and `{to_source(expr)}` reads it as a "
-                        f"number; arithmetic, an ordered comparison and the bounds of an interval "
-                        f"read numbers. {advice[0].upper()}{advice[1:]}"
+                        f"`{to_source(operand)}` is {what}, and `{_reading_text(expr)}` reads it "
+                        f"as a number; arithmetic, an ordered comparison and the bounds of an "
+                        f"interval read numbers. {advice[0].upper()}{advice[1:]}"
                     ),
                 )
             converted.append(
@@ -1790,6 +1818,14 @@ class _TypedLine:
     kind: str
     unknowns: tuple = ()
     calls: tuple = ()
+
+
+def _reading_text(expr):
+    """The text of the expression that reads an operand as a number, as a
+    refusal quotes it: a comparison as a condition is written, `d < R` or,
+    for the test of a definition by cases, `d = R`, and any other expression
+    as the source printer writes it."""
+    return condition_text(expr) if isinstance(expr, terms.Rel) else to_source(expr)
 
 
 def _merge(contexts):

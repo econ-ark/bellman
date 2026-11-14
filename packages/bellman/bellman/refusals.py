@@ -272,6 +272,10 @@ RULES = (
     # keyword the row requires there, one count per shock for a quadrature's
     # nodes.
     "method-admission",
+    # No argument of a method word is written as a number, at any depth of
+    # its tuples and nested words: a number that a method reads is a setting
+    # the methods file declares, whose value the settings file holds.
+    "method-setting-declared",
     # A function representation's family accepts the data its place
     # supplies, chosen in the order of an authored table, the policy pairs of
     # an `!egm` builder's closing Evaluation, a complete authored expression
@@ -344,7 +348,9 @@ RULES = (
     # At configuration the bounds of a factor are in order and inside the
     # coordinate's declared set, its count is at least two, and a node set
     # is strictly increasing; each configured point of `!Points` has finite
-    # real coordinates inside the coordinates' declared sets.
+    # real coordinates inside the coordinates' declared sets. A declared set
+    # that reads a parameter is read at the calibration that is bound, and
+    # before one is bound a bound of a factor over such a set is refused.
     "grid-bounds",
     # The predicate words a grid writes after `require` are among `!Empty`,
     # `!Cartesian`, `!NonCartesian` and `!UniformCartesian`, and no two
@@ -424,12 +430,17 @@ RULES = (
     "distribution-domain",
     # A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared
     # parameters, finite numbers and other derived parameters, and is formed
-    # by signs, sums, differences, products, quotients, powers and the calls
-    # `log` and `exp` of one argument; the calibration supplies no value for
-    # it, and at the calibration values every operation of its definition is
-    # defined and its value is a finite real number. The set a definition
-    # declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is a set of numbers and reads
-    # no setting.
+    # by signs, sums, differences, products, quotients, powers, the calls
+    # `log` and `exp` of one argument and the calls `min` and `max` of one
+    # argument or more, or by cases, `if … then … else …`; where the stage
+    # defines a function of one of those four names, the definition calls
+    # none of that name. The calibration supplies no value for it, and at the
+    # calibration values every operation it evaluates is defined and its
+    # value is a finite real number, or the infinity a branch of its
+    # conditional writes. The set a definition declares, `q : (0,1) :=
+    # (β*R)^(1/ρ)/R`, is a set of numbers and reads no setting, and it holds
+    # each infinity that a branch writes: a definition that declares no set
+    # writes no infinite branch.
     "derived-parameter",
     # The conditional distribution an expectation needs is a declared
     # conditional, a product of them, or a marginal or conditional of a joint

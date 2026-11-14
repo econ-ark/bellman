@@ -96,7 +96,7 @@ L     1 - h                    -50.999999999999886  the natural borrowing limit 
 h = 51.999999999999886 := 1/(1 - Γ/R)
 ```
 
-The calibration supplies no value for a derived parameter, since its definition gives the value. A calibration source that names a derived parameter is refused under `derived-parameter`, at the definition, and the refused binding leaves the stage as it was; the calibration the stage keeps holds the declared parameters alone. A definition that has no finite real value at the calibration values, such as one that divides by zero there, is refused under the same rule, at that definition ([Refusals](../../reference/refusals.md#derived-parameter)):
+The calibration supplies no value for a derived parameter, since its definition gives the value. A calibration source that names a derived parameter is refused under `derived-parameter`, at the definition, and the refused binding leaves the stage as it was; the calibration the stage keeps holds the declared parameters alone. A definition that has no value at the calibration values, such as one that divides by zero there, is refused under the same rule, at that definition ([Refusals](../../reference/refusals.md#derived-parameter)):
 
 ```python
 from bellman.refusals import ConstructionError

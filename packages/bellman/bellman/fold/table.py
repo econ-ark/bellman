@@ -121,7 +121,8 @@ class OperatorRow:
     properties: tuple = ()  # the lines attached to the row's line by a dotted id
     # the derivatives of the value an Evaluation writes that the block's derivative
     # lines state (AMD-MB-001 §4.3, D4): one entry per line, the tuple
-    # (coordinate identity, right-side term, line address, source text)
+    # (coordinate identity, right-side term, line address, source text,
+    # function wire of the value the line's left side names)
     derivatives: tuple = ()
 
     def __post_init__(self):

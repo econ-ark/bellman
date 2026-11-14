@@ -76,9 +76,12 @@ PORTFOLIO = (
     "    ς = solve_{ς}(E_{Ψ,θ}(D_{m_next}V[>]*(Ψ - R)))   :: [id=foc]\n}\n"
 )
 # the quadrature typed at the operator head `E_Ψ_θ` at file level, which
-# names every occurrence of the operator in the stage (specification 0.7 F3)
+# names every occurrence of the operator in the stage (specification 0.7 F3);
+# each node count is a declared setting, since a method's entry writes no
+# number (AAS, 14 November 2026)
 GAUSS_HERMITE = {
-    "text": "@methods: t\nE_Ψ_θ.method : !gauss_hermite(n_Ψ=7, n_θ=7)\n",
+    "text": "@methods: t\nn_Ψ_nodes : ℕ\nn_θ_nodes : ℕ\n"
+            "E_Ψ_θ.method : !gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)\n",
     "origin": "t.methods.bl",
 }
 
@@ -184,7 +187,7 @@ def test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_poli
         if row.kind == "Evaluation" and row.builder == "cntn_to_dcsn"
     ]
     assert len(rows) == 1 and len(rows[0].outputs) == 1
-    ((coordinate, term, address, source),) = rows[0].derivatives
+    ((coordinate, term, address, source, _value),) = rows[0].derivatives
     assert (coordinate.field, address) == ("m_d", "cntn_to_dcsn.marginal")
     # a bare field name prints in parentheses, since the printer cannot tell it
     # from a function name; a marked field prints bare, `D_{a}V[>]` (MB-A11)
@@ -213,7 +216,7 @@ def test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_poli
         for row in construction_table(composite).primitive_rows
         if row.kind == "Evaluation" and row.builder == "cntn_to_dcsn"
     ]
-    ((coordinate, term, address, source),) = rows[0].derivatives
+    ((coordinate, term, address, source, _value),) = rows[0].derivatives
     assert (coordinate.field, address) == ("k_d", "cntn_to_dcsn.marginal")
     assert to_source(term) == "E_{θ}(D_{m}V[>]*R)"
     conditions = [item.condition for item in composite.obligations()]
@@ -222,9 +225,9 @@ def test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_poli
     # line with its two shocks counted, and the stage configures
     portfolio = stage_from_text(PORTFOLIO)
     portfolio.methodize(GAUSS_HERMITE)
-    assert str(portfolio.methods["E_Ψ_θ"]) == "!gauss_hermite(n_Ψ=7, n_θ=7)"
+    assert str(portfolio.methods["E_Ψ_θ"]) == "!gauss_hermite(n_Ψ=n_Ψ_nodes, n_θ=n_θ_nodes)"
     assert list(portfolio.builder["cntn", "dcsn"].primitives["value:Expectation:1"].methods) == ["E_Ψ_θ"]
-    portfolio.configure({"settings": {}})
+    portfolio.configure({"settings": {"n_Ψ_nodes": 7, "n_θ_nodes": 7}})
     # the derivative line's right side is one expectation: the piece compiles its
     # integrand with the shocks among its arguments and names them (MB-A18)
     piece = kernel(portfolio, "marginal:Derivative:1")

@@ -970,6 +970,210 @@ def test_a_derived_parameter_is_evaluated_after_those_it_reads_and_its_kernel_te
     )
 
 
+def test_a_definition_by_cases_with_a_declared_set_is_printed_by_every_record_that_reads_it(
+        derived_parameters):
+    """A derived parameter defined by cases on a declared set is read by
+    every record that reads a definition with a declared set (AMD-GRAM-005;
+    AMD-GRAM-006): the list of the declared parameters leaves it out, the
+    table of parameters prints the set before the definition, the stage's
+    sheet and the card of the definition print both, a card of a calibrated
+    stage prints an infinite value as `∞`, and a kernel that reads the
+    derived parameter names the set in its comment line."""
+    from bellman.factory.recipe import declared_parameters
+    from bellman.refusal_examples import EXPLICIT_POLICY
+
+    by_cases = "h : (0, inf] := if Γ < R then 1/(1 - Γ/R) else inf"
+    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    changes = (("h := 1/(1 - Γ/R)", by_cases),
+               (growth, growth + "q : (0, 3) := if β < R then 1 else 2\n"))
+    stage = derived_parameters.stage(*changes)
+    text = derived_parameters.text
+    for written, changed in changes:
+        text = text.replace(written, changed)
+    assert declared_parameters(text, "t.bl") == ("β", "ρ", "R", "Γ")
+    assert list(stage.par) == ["β", "ρ", "R", "Γ", "q", "h", "R_n"]
+    rows = {line.split()[0]: line for line in str(stage.par).split("\n")[1:] if line.strip()}
+    assert rows["q"].split("  unbound")[0].split(maxsplit=1)[1].strip() == (
+        "(0, 3) := if β < R then 1 else 2")
+    assert "q : (0, 3) := if β < R then 1 else 2" in stage.view()
+    q, h = (f"perfect_foresight:derived:{name}" for name in ("q", "h"))
+    assert "  q  ∈ (0, 3),  := if β < R then 1 else 2\n" in str(stage.definitions.denote(q))
+    infinite = copy_native(stage).calibrate({**derived_parameters.calibration, "Γ": 1.04})
+    assert str(infinite.par["h"]) == "h = inf : (0, inf] := if Γ < R then 1/(1 - Γ/R) else inf"
+    card = str(infinite.definitions.denote(h))
+    assert "  h  ∈ (0, ∞],  := if Γ < R then 1/(1 − Γ/R) else ∞\n     = ∞\n" in card
+    stage.methodize({"text": EXPLICIT_POLICY, "origin": "explicit_policy.bl"})
+    kernel = stage.builder.policy.primitives["consumption:Aggregation"].kernel()
+    assert f"# derived parameter: {by_cases}\n" in kernel.python
+    assert kernel.parameters == ("β", "ρ", "R", "Γ")
+
+
+def test_a_kernel_that_reads_a_definition_by_cases_gives_calibration_s_value_under_jax(
+        derived_parameters):
+    """The text of a compiled kernel that reads a definition by cases, run
+    with JAX's arrays in place of NumPy's, gives the value that calibration
+    gives (AMD-GRAM-006, acceptance item 5). Under `jax.jit` the test is a
+    traced value, which has no one truth value, so both branches are
+    evaluated and one is selected. With concrete JAX arrays of growth
+    factors on both sides of R both branches are evaluated as well, and
+    `jax.numpy` has no `errstate`. A first branch that divides by zero at Γ
+    = R gives no wrong value at the entries that the test does not choose,
+    and two integer branches are selected as floats, so that a negative
+    power of the selected value is that of calibration. With a Python float
+    for Γ and no `jit` the test is one truth value, and the branch it
+    chooses is a float as well, so that arithmetic which is exact in
+    integers, `(h0^60 + 1) - h0^60`, gives what it gives calibration. A run
+    without JAX reports the test as skipped."""
+    jax = pytest.importorskip("jax")
+    from bellman.refusal_examples import EXPLICIT_POLICY
+
+    jax.config.update("jax_enable_x64", True)
+    resources = numpy.array([0.0, 1.0, 10.0])
+    # consumption at human wealth h, (1 - (Rβ)^(1/ρ)/R)(m - 1 + h), at Rβ = 1
+    consumed = lambda wealth: 0.04 / 1.04 * (resources - 1 + numpy.asarray(wealth))  # noqa: E731
+    for definition, growths, wealth in (
+        ("h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf", (1.02, 1.04, 1.05),
+         [52.0, math.inf, math.inf]),
+        ("h := if Γ < R then 1/(1 - Γ/R) else 1000", (1.02, 1.04, 1.05), [52.0, 1000.0, 1000.0]),
+        ("h0 := if Γ < R then 2 else 3\nh := h0^(-1)", (1.02, 1.04, 1.05), [1 / 2, 1 / 3, 1 / 3]),
+        # (h0^60 + 1) - h0^60 is 1 in integers and 0 in floats; h has no
+        # value at Γ = R
+        ("h0 := if Γ < R then 2 else 3\nh := (h0^60 + 1) - h0^60 + 1/(1 - Γ/R)",
+         (1.02, 1.05, 1.02), [52.0, -104.0, 52.0]),
+    ):
+        stage = derived_parameters.stage(("h := 1/(1 - Γ/R)", definition))
+        # the values that calibration gives h at the three growth factors
+        assert [
+            copy_native(stage).calibrate({**derived_parameters.calibration, "Γ": growth})
+            .par["h"].value
+            for growth in growths
+        ] == pytest.approx(wealth), definition
+        stage.methodize({"text": EXPLICIT_POLICY, "origin": "explicit_policy.bl"})
+        stage.calibrate({"calibration": derived_parameters.calibration})
+        kernel = stage.builder.policy.primitives["consumption:Aggregation"].kernel()
+        held = dict(zip(kernel.parameters, kernel.parameter_values, strict=True))
+        namespace = {}
+        exec(kernel.python.replace("import numpy as np", "import jax.numpy as np"), namespace)
+        function = namespace["G_policy_consumption"]
+        traced = jax.jit(function)
+        for growth, value in zip(growths, wealth, strict=True):
+            assert numpy.allclose(
+                traced(resources, **{**held, "Γ": growth}), consumed(value)
+            ), (definition, growth)
+            # one truth value: a Python float for Γ and no `jit`
+            assert numpy.allclose(
+                function(jax.numpy.asarray(resources), **{**held, "Γ": growth}), consumed(value)
+            ), (definition, growth)
+        concrete = function(
+            jax.numpy.asarray(resources), **{**held, "Γ": jax.numpy.asarray(growths)}
+        )
+        assert numpy.allclose(concrete, consumed(wealth)), definition
+
+
+def test_a_set_may_hold_an_infinity_at_a_named_endpoint_and_through_the_base_of_its_conditions():
+    """`may_hold_infinity` judges from the form of a set whether it may hold
+    `inf` or `-inf` (AMD-GRAM-006): an interval closed at that side whose
+    endpoint is the infinity or the bare name of a parameter, an extended
+    real set that holds the infinity, a union with such a member, a
+    difference with such a left side, and a set with conditions on such a
+    base, none of whose conditions excludes the infinity; an interval open
+    at that side, or closed at a number or at a formula that computes,
+    holds none. A condition excludes `inf` where it bounds the name strictly
+    from above, `x < e` with any `e`, or by a number, `x <= 5`, and `-inf`
+    in mirror image; a condition that bounds the name by another name, `x
+    <= T`, excludes neither. The lowering reads the answer where it keeps
+    several sets of one type: an open infinite endpoint restricts a union
+    one of whose members is closed at a named endpoint."""
+    from bellman.syntax.source import may_hold_infinity
+
+    def lowered(written):
+        term, _ = parse_with_spans(f"β : {written}\n", "t.bl")
+        (domain,) = [c for c in term.items[-1].declaration.classifiers if isinstance(c, T.Domain)]
+        return domain.space
+
+    answers = {
+        # the set: whether it may hold inf, whether it may hold -inf
+        "(0, inf]": (True, False),
+        "(0, inf)": (False, False),
+        "[-inf, 0)": (False, True),
+        "(0, T]": (True, False),
+        "[T, 5)": (False, True),
+        "(0, T)": (False, False),
+        "(0, 5]": (False, False),
+        "(0, 2*T]": (False, False),
+        "(0, -T]": (False, False),
+        "ℝ": (False, False),
+        "ℝ_{+∞}": (True, False),
+        "ℝ_{-∞}": (False, True),
+        "ℝ̄": (True, True),
+        "{1, …, 5}": (False, False),
+        "(0, 1) \\/ [2, T]": (True, False),
+        "(0, 1) \\/ (2, 3)": (False, False),
+        "ℝ̄ \\ {0}": (True, True),
+        "ℝ \\ {0}": (False, False),
+        "ℝ̄ @ (0, 5)": (False, False),
+        "ℝ̄ @ (0, inf)": (False, False),
+        "ℝ̄ @ (0, inf]": (True, False),
+        "ℝ̄ @ [-inf, 5)": (False, True),
+        "ℝ̄ @ (0, 5]": (False, False),
+        "ℝ̄ @ [-5, inf]": (True, False),
+        "ℝ̄ @ (0, T)": (False, False),
+        "ℝ̄ @ (0, T]": (True, False),
+        "ℝ̄ @ [T, 5)": (False, True),
+        "ℝ_{+∞} @ (0, 100]": (False, False),
+        "ℝ₊₊ @ (0, R)": (False, False),
+        "(0, 1) @ (0, R)": (False, False),
+    }
+    for written, (above, below) in answers.items():
+        held = lowered(written)
+        assert may_hold_infinity(held, negative=False) is above, written
+        assert may_hold_infinity(held, negative=True) is below, written
+    # a set with a bar is read by the same rule, also where a condition
+    # writes the bound name on its right side
+    for written, (above, below) in {
+        "{x : ℝ̄ | x < 100}": (False, True),
+        "{x : ℝ̄ | 100 > x}": (False, True),
+        "{x : ℝ̄ | 0 <= x}": (True, False),
+        "{x : ℝ̄ | x >= T}": (True, True),
+    }.items():
+        term, _ = parse_with_spans(f"H := {written}\n", "t.bl")
+        held = term.items[-1].core.value.set
+        assert isinstance(held, T.Comprehension), written
+        assert may_hold_infinity(held, negative=False) is above, written
+        assert may_hold_infinity(held, negative=True) is below, written
+    kept = lowered("(0, 1) \\/ [2, T] @ (0, inf)")
+    assert [to_source(condition) for condition in kept.conds] == ["β > 0", "β < inf"]
+    assert [to_source(c) for c in lowered("(0, 1) \\/ [2, 3] @ (0, inf)").conds] == ["β > 0"]
+
+
+def test_a_recorded_condition_reads_a_name_valued_at_an_infinity_as_that_infinity():
+    """`predicate_value` judges a condition that a stage records at parameter
+    values (AMD-GRAM-006). The membership of a bare name valued at an
+    infinity is decided by whether the set holds that infinity, for a name
+    written as its text and for one referred to by its identity; a set of
+    which a bound has no value at the values decides nothing; and
+    arithmetic that reads the infinite value makes its predicate false, as
+    an undefined value does."""
+    from bellman.native.predicates import Compare, Member
+    from bellman.stage.calibration_requirements import predicate_value
+
+    def lowered(written):
+        term, _ = parse_with_spans(f"β : {written}\n", "t.bl")
+        (domain,) = [c for c in term.items[-1].declaration.classifiers if isinstance(c, T.Domain)]
+        return domain.space
+
+    h = T.Sym(T.Constant("h"))
+    by_identity = T.Sym(T.Constant(Identity("derived", stage="t", field="h")))
+    values = {"h": math.inf, "R": 2.0}
+    for subject in (h, by_identity):
+        for written, answer in (("ℝ_{+∞}", True), ("ℝ", False), ("(0, inf]", True),
+                                ("(0, R]", False), ("(0, 1/(R - 2)]", None), ("Foo", None)):
+            judged = predicate_value(Member(subject, lowered(written)), values)
+            assert (judged.value, judged.read) == (answer, frozenset({"h"})), written
+    assert predicate_value(Member(T.Add(h, T.Number(1)), lowered("ℝ̄")), values).value is False
+    assert predicate_value(Compare(T.Mul(T.Number(2), h), ">", T.Number(0)), values).value is False
+
+
 def test_configure_binds_the_settings_the_attached_methods_name_from_a_file_or_a_mapping(cons_methodized, cons_configured, cons_sources):
     assert repr(cons_configured) == "ElaboratedStage('cons', specified)"
     assert {"n_m", "m_min", "m_max"} <= set(cons_configured.bindings.settings)
@@ -4386,6 +4590,28 @@ def test_encoding_schema_rejects_unknown_fields_and_inconsistent_method_versions
             target = target[key]
         target["unknown"] = None
         assert not validator.is_valid(changed), path
+
+
+def test_every_constructor_of_the_terms_has_a_kind_of_the_encoding_and_of_its_schema():
+    """Each dataclass of `bellman.syntax.terms` is written under the kind
+    `terms.<name>`: `KINDS` of the encoding has its row, one of the schema's
+    two lists of kinds names it, and `x-constructors` lists its fields in
+    order, so that a constructor added to the grammar is not left out."""
+    from dataclasses import fields, is_dataclass
+    from importlib.resources import files
+    from bellman.display.answer_encoding import KINDS
+
+    schema = json.loads(files("bellman.display").joinpath("stage-encoding-2.6.schema.json").read_text())
+    named = {kind for node in ("ordinaryNode", "scopedNode")
+             for kind in schema["$defs"][node]["properties"]["node"]["enum"]}
+    constructors = [value for value in vars(T).values()
+                    if isinstance(value, type) and is_dataclass(value) and value.__module__ == T.__name__]
+    assert len(constructors) > 100
+    for constructor in constructors:
+        kind = f"terms.{constructor.__name__}"
+        assert KINDS.get(constructor) == kind, kind
+        assert kind in named, kind
+        assert schema["x-constructors"].get(kind) == [f.name for f in fields(constructor)], kind
 
 
 def test_calibration_reports_evidence_and_preserves_pending_conditions(

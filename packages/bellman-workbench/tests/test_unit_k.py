@@ -1,6 +1,6 @@
 """The acceptance tests of unit K of model interface specification 0.4, the
-polish of the page (the plan `2026-10-07-unit-k.md` in the plans folder
-of the model-interface build area): one test for each
+polish of the page (the plan `2026-10-07-unit-k.md` of the model-interface build
+area, now in the private archive): one test for each
 task's acceptance check, each reading the page's elements and the layout's
 records, never a screenshot's pixels (ruling K-P3). Deleted when the next
 amendment is accepted (lean implementation rule, layer 2).

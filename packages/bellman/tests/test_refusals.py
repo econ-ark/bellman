@@ -884,16 +884,64 @@ def test_a_distribution_call_of_another_number_of_arguments_than_its_family_take
         elaborate_text(CHAIN_STAGE.replace("DECLARATION", admitted))
 
 
-# the refusals of a derived parameter (AMD-MT-003, build contract §5), each the
-# definition of h in the perfect-foresight stage of the derived checks as
-# changed, the calibration that provokes it or None for a refusal at
-# elaboration, and the words its message names; the catalogue's example holds
-# the call of a function other than log and exp
+# the refusals of a derived parameter (AMD-MT-003, build contract §5;
+# AMD-GRAM-006), each the definition of h in the perfect-foresight stage of
+# the derived checks as changed, the calibration that provokes it or None
+# for a refusal at elaboration, and the words its message names; the
+# catalogue's example holds the call of a function other than log, exp, min
+# and max
 DERIVED_REFUSALS = [
     ("a field", "h := 1/(1 - Γ/m)", None, ("the derived parameter h", "reads m, a field")),
     ("a set", "h := 1/(1 - Γ/R) + Xm", None, ("reads Xm, a set of the stage",)),
     ("a function", "h := 1 + 𝑢", None, ("reads 𝑢, a function of the stage",)),
     ("infinity", "h := 1/(1 - Γ/R) + inf", None, ("reads inf, which is no finite number",)),
+    # the sentence names the four calls and the definition by cases
+    ("a call of another function", "h := 1/sqrt(R)", None,
+     ("calls sqrt", "none of log, exp, min and max",
+      "the calls `min` and `max`, each of one argument or more",
+      "its right side may be a conditional, `if … then … else …`")),
+    ("min of a set", "h := min(Γ, Xm)", None, ("reads Xm, a set of the stage",)),
+    # what a test and a branch of a definition by cases read and call
+    ("a set in a test", "h := if Xa < R then 1 else 2", None, ("reads Xa, a set of the stage",)),
+    ("a field in a test", "h := if m < R then 1 else 2", None, ("reads m, a field of the stage",)),
+    ("a function as a branch", "h := if Γ < R then 𝑢 else 2", None,
+     ("reads 𝑢, a function of the stage",)),
+    ("a call of another function in a branch", "h := if Γ < R then 1/sqrt(R) else 2", None,
+     ("calls sqrt", "its right side may be a conditional")),
+    # an infinity is a whole branch and nothing else
+    ("infinity in the arithmetic of a branch", "h := if Γ < R then 1 else 2*inf", None,
+     ("reads inf, which is no finite number",)),
+    ("infinity in a test", "h := if Γ < inf then 1 else 2", None,
+     ("reads inf, which is no finite number",)),
+    ("infinity as a whole definition", "h := inf", None,
+     ("reads inf, which is no finite number",)),
+    # an infinite branch needs a declared set that holds it
+    ("an infinite branch without a declared set", "h := if Γ < R then 1/(1 - Γ/R) else inf", None,
+     ("writes the branch `inf`", "the set ℝ of a definition that declares none cannot hold inf",
+      "a branch written `inf` or `-inf` is admitted in a definition whose declared set holds "
+      "that infinity")),
+    ("an infinite branch on a set open at that end",
+     "h : (0, inf) := if Γ < R then 1/(1 - Γ/R) else inf", None,
+     ("writes the branch `inf`", "its declared set `(0, inf)` cannot hold inf")),
+    ("an infinite branch on a set that holds the other infinity",
+     "h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else -inf", None,
+     ("writes the branch `-inf`", "its declared set `ℝ_{+∞}` cannot hold -inf")),
+    # log, exp, min and max are the functions of the language: a stage that
+    # defines a function of one of those names calls none of that name in a
+    # derived parameter's definition
+    ("a call of min where the stage defines min", "h := min(Γ, R)\nmin(a : ℝ, b : ℝ) := a + b",
+     None, ("calls min, `min(Γ, R)`, and the stage defines a function named min",
+            "would give the one name two meanings")),
+    ("a call of log where the stage defines log", "h := 1 + log(R)\nlog(a : ℝ₊₊) := 2*a", None,
+     ("calls log, `log(R)`, and the stage defines a function named log",)),
+    # also where the stage's function takes another number of arguments than
+    # the call gives
+    ("a call of min where the stage defines min of one argument",
+     "h := min(Γ, R)\nmin(a : ℝ) := a", None,
+     ("calls min, `min(Γ, R)`, and the stage defines a function named min",)),
+    ("a call of log where the stage defines log of two arguments",
+     "h := 1 + log(R)\nlog(a : ℝ₊₊, b : ℝ) := a + b", None,
+     ("calls log, `log(R)`, and the stage defines a function named log",)),
     ("a number beyond the floating-point range", "h := 1/(1 - Γ/R) + 1" + "0" * 400, None,
      ("writes a number that exceeds the largest finite floating-point number",)),
     ("a decimal number beyond the floating-point range", "h := 1/(1 - Γ/R) + 1e400", None,
@@ -915,6 +963,16 @@ DERIVED_REFUSALS = [
      ("`exp(1000*ρ)` at ρ = 2.0 exceeds the largest finite floating-point number",)),
     ("a positive argument lost to underflow", "h := log(exp(-1000*ρ))", {},
      ("is 0.0 by floating-point underflow", "which numeric underflow does not supply")),
+    # the branch a test chooses is evaluated as any definition is, and a zero
+    # that floating point rounded from a nonzero result decides no test
+    ("a division by zero in the chosen branch", "h := if Γ < R then 1/(β - β) else 2", {},
+     ("the divisor `β - β` is 0.0", "a division by zero has no value")),
+    ("an underflowed side of a test", "h := if exp(-800*R) = 0 then 1 else 2", {},
+     ("the test `exp(-800*R) = 0` reads `exp(-800*R)`, which is 0.0 by floating-point underflow",
+      "such a zero decides no comparison")),
+    # every argument of min is evaluated, whichever is the least
+    ("an argument of min without a value", "h := min(R, 1/(R - Γ))", {"Γ": 1.04},
+     ("the divisor `R - Γ` is 0.0",)),
 ]
 
 
@@ -922,11 +980,14 @@ DERIVED_REFUSALS = [
 def test_a_derived_parameter_is_refused_at_its_definition(case, derived_parameters):
     """A derived parameter's definition that reads a name other than a
     declared parameter or a derived parameter, that calls a function other
-    than log or exp of one argument or that writes another form is refused
-    under `derived-parameter` where it is written, before any line is read;
-    a calibration that supplies a value for it, or at which its arithmetic has
-    no finite real value, is refused under the same rule at its definition's
-    file position, naming the operation and the numbers it reads."""
+    than log or exp of one argument and min or max of one argument or more,
+    that calls one of the four where the stage defines a function of that
+    name, that writes another form, or that writes an infinite branch its
+    declared set cannot hold is refused under `derived-parameter` where it
+    is written, before any line is read; a calibration that supplies a value
+    for it, or at which its arithmetic has no value, is refused under the
+    same rule at its definition's file position, naming the operation and
+    the numbers it reads."""
     _, definition, values, words = case
     with pytest.raises(ConstructionError) as refused:
         stage = derived_parameters.stage(("h := 1/(1 - Γ/R)", definition))
@@ -946,6 +1007,327 @@ def test_a_derived_parameter_is_refused_at_its_definition(case, derived_paramete
     for word in words:
         assert word in error.message, (word, error.message)
     assert error.write
+
+
+def test_a_definition_that_computes_with_an_infinite_value_has_no_value(derived_parameters):
+    """No arithmetic of infinities is defined (AMD-GRAM-006): a definition
+    that reads a derived parameter valued at an infinity, in arithmetic, in a
+    call, in a test, as the branch that its test chooses or as its whole
+    right side, has no value there, and the calibration is refused at that
+    definition under `derived-parameter`, naming the infinite value."""
+    by_cases = "h : ℝ_{+∞} := if Γ < R then 1/(1 - Γ/R) else inf"
+    for reading in ("1 - h", "-h", "max(h, 60)", "if h > 60 then 1 else 0",
+                    "if Γ < R then 1 else h", "h"):
+        stage = derived_parameters.stage(("h := 1/(1 - Γ/R)", f"{by_cases}\nw := {reading}"))
+        stage.calibrate({"calibration": derived_parameters.calibration})
+        with pytest.raises(ConstructionError) as refused:
+            derived_parameters.stage(
+                ("h := 1/(1 - Γ/R)", f"{by_cases}\nw := {reading}")
+            ).calibrate({"calibration": {**derived_parameters.calibration, "Γ": 1.04}})
+        error = refused.value
+        assert (error.rule, error.address) == (
+            "derived-parameter", f"{derived_parameters.origin}:9"), reading
+        assert (f"the derived parameter w, defined as `{reading}`, has no value: the value inf "
+                "of h is no finite number; ") in error.message, reading
+        assert error.write == "Write parameter values at which the definition of w has a value"
+
+
+def test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_in_arithmetic(
+        derived_parameters):
+    """A test reads what a branch reads, parameters, derived parameters and
+    finite numbers (AMD-GRAM-006): a label of a finite set written on either
+    side of a test, with an ordered relation or with `=`, is refused under
+    `well-typed` where the file is read, as the same label in arithmetic
+    is."""
+    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    for reading in ("if d < R then 1 else 2", "if d = R then 1 else 2",
+                    "if R >= d then 1 else 2", "d + R"):
+        with pytest.raises(ConstructionError) as refused:
+            derived_parameters.stage((growth, growth + f"d : {{work, retire}}\nw := {reading}\n"))
+        error = refused.value
+        read = reading[3:].split(" then")[0] if reading.startswith("if ") else reading
+        assert (error.rule, error.line) == ("well-typed", 9), reading
+        assert (f"`d` is a label, a member of a finite set of names, and `{read}` reads it as a "
+                "number; a label carries no arithmetic") in error.message, reading
+
+
+# the perfect-foresight stage's lines that the texts below change
+HUMAN_WEALTH = "h := 1/(1 - Γ/R)"
+UTILITY = "𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)                :: [id=util]"
+RESOURCES = "    m = R_n*k + 1                   :: [id=market_resources]"
+# the sentence that the three words of a definition by cases are no names
+NO_NAME = (
+    "`if`, `then` and `else` are the words of a definition by cases, and none of them is a name"
+)
+# where a definition by cases stands, the advice of a refusal of the parser
+# at a line that writes the word `if`
+CONDITIONAL_PLACE = (
+    "a conditional, `if … then … else …`, stands as the whole right side of a definition "
+    "without arguments, `x := if a < b then 1 else 2`, with or without a declared set, "
+    "`x : (0, 3) := if a < b then 1 else 2`, or as a branch of another conditional; it stands "
+    f"inside no formula, no function's body and no line of a block; {NO_NAME}"
+)
+
+
+@pytest.mark.parametrize("change, column, why", [
+    ((HUMAN_WEALTH, "h := 1 + if Γ < R then 1 else 2"), 13, "the file writes `Γ` here"),
+    ((HUMAN_WEALTH, "h := (if Γ < R then 1 else 2)"), 10, "the file writes `Γ` here"),
+    ((HUMAN_WEALTH, "h : (0, 3) := 1 + if Γ < R then 1 else 2"), 22, "the file writes `Γ` here"),
+    ((HUMAN_WEALTH, "h := min(R, if Γ < R then 1 else 2)"), 16, "the file writes `Γ` here"),
+    ((UTILITY, "𝑢(c : ℝ₊₊) := if c < 1 then c else 1    :: [id=util]"), 18,
+     "the file writes `c` here"),
+    ((RESOURCES, "    m = if k < 0 then 1 else R_n*k + 1   :: [id=market_resources]"), 12,
+     "the file writes `k` here"),
+    # a conditional always has both branches
+    ((HUMAN_WEALTH, "h := if Γ < R then 1"), 21, "the language admits `else` at this place"),
+    # the word at the start of a right side is the first word of a
+    # conditional, and no name
+    ((HUMAN_WEALTH, "h := if + 1"), 9,
+     "the language admits `(`, `-`, a name, a number or `inf` at this place"),
+    ((HUMAN_WEALTH, "h := if"), 13,
+     "the language admits `(`, `-`, a name, a number or `inf` at this place"),
+    ((HUMAN_WEALTH, "h := if(R)"), 11, "the language admits `=` or a comparison"),
+], ids=lambda value: value[1].strip() if isinstance(value, tuple) else None)
+def test_a_conditional_stands_as_the_whole_right_side_of_a_definition_and_nowhere_else(
+        change, column, why, derived_parameters):
+    """A conditional, `if … then … else …`, stands as the whole right side of
+    a definition without arguments, with or without a declared set, and as a
+    branch of another conditional (AMD-GRAM-006). Written inside a formula,
+    in parentheses, as an argument, in a function's body or in a line of a
+    block, written without `else`, or begun by the word `if` used as a name,
+    the text is refused by the parser under `syntax` at the place it stopped
+    at, and the advice says where the form stands and that its three words
+    are no names."""
+    with pytest.raises(ConstructionError) as refused:
+        derived_parameters.stage(change)
+    error = refused.value
+    assert (error.rule, error.file) == ("syntax", derived_parameters.origin), change
+    assert error.column == column and why in error.parts.why, error.parts.why
+    assert error.write == CONDITIONAL_PLACE
+
+
+def test_the_word_if_in_a_comment_or_in_a_quoted_text_writes_no_conditional(derived_parameters):
+    """A line that writes no conditional receives no advice on where a
+    conditional stands (AMD-GRAM-006): the word `if` inside a comment, a
+    quoted explanation or an annotation is no word of the line's formula,
+    and the refusal of the parser at such a line gives the advice that the
+    same line receives without the word."""
+    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    for line, why in (
+        ("x := 2*R +   # add the premium if any", "the line ends here"),
+        ('β2 : (0,1)   :: ["a second discount factor, if any"] :: ["again"]',
+         'the file writes `:: ["again"]` here'),
+        ("β2 : (0,1)   :: ['a second discount factor, if any'] :: ['again']",
+         "the file writes `:: ['again']` here"),
+        # the word as the id of an annotation, in brackets without quotes
+        ("x := 2*R   :: [id=if] :: [id=b]", "the file writes `:: [id=b]` here"),
+    ):
+        refusals = []
+        for written in (line, line.replace("if any", "at most").replace("id=if", "id=a")):
+            with pytest.raises(ConstructionError) as refused:
+                derived_parameters.stage((growth, growth + written + "\n"))
+            refusals.append(refused.value)
+        error, without_the_word = refusals
+        assert (error.rule, error.file, error.line) == ("syntax", derived_parameters.origin, 8)
+        assert why in error.parts.why, error.parts.why
+        assert "stands as the whole right side of a definition" not in (error.write or ""), line
+        assert error.write == without_the_word.write, line
+
+
+def test_the_three_words_of_a_definition_by_cases_are_no_names(derived_parameters):
+    """`if`, `then` and `else` are words of the language and no names (AAS,
+    12 November 2026; AMD-GRAM-006): a file that writes one of them as a
+    name, in a declaration, a definition, a binder, a header or a formula, of
+    a stage file or of a methods file, is refused under `syntax` at the
+    word, with one sentence. A name that begins with one of the words is a
+    name."""
+    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    side = "(k : Xa) : !arvl"
+    assert derived_parameters.text.count(side) == 1
+
+    def places(word):
+        return {
+            "a declaration": (growth, growth + f"{word} : ℝ₊₊\n"),
+            "a definition": (growth, growth + f"{word} := 2*R\n"),
+            "a definition with a set": (growth, growth + f"{word} : (0, 9) := 2*R\n"),
+            "a named set": (growth, growth + f"{word} := [0, 1]\n"),
+            "a function's name": (growth, growth + f"{word}(x : ℝ) := x^2\n"),
+            "a function's argument": (growth, growth + f"𝑓({word} : ℝ) := {word}^2\n"),
+            "the binder of a set": (growth, growth + f"H := {{{word} : ℝ | {word} >= 0}}\n"),
+            "a law's subject": (growth, growth + f"{word} ~ N(0, 1)\n"),
+            "a subscript": (growth, growth + f"w : (0, E_{{{word}}}({word}^2))\n"),
+            "a field of a header": (side, f"({word} : Xa) : !arvl"),
+            "the id of a header": ("[id=arvl_to_dcsn,", f"[id={word},"),
+            "a formula": (growth, growth + f"w := 1 + {word}\n"),
+            "a formula in parentheses": (growth, growth + f"w := ({word})\n"),
+            "an endpoint of a set": (growth, growth + f"w : (0, {word})\n"),
+            "the name of a set": (growth, growth + f"w : {word}\n"),
+            "a test": (growth, growth + f"w := if {word} < R then 1 else 0\n"),
+            "a line of a block": ("    m = R_n*k + 1 ", f"    m = R_n*k + {word} "),
+        }
+
+    for word in ("if", "then", "else"):
+        for place, change in places(word).items():
+            with pytest.raises(ConstructionError) as refused:
+                derived_parameters.stage(change)
+            error = refused.value
+            assert (error.rule, error.file) == ("syntax", derived_parameters.origin), (word, place)
+            assert error.parts.why == f"the file writes `{word}` as a name; {NO_NAME}", (
+                word, place)
+            assert error.write == f"Write another name in place of `{word}`", (word, place)
+            # the refusal stands at the word
+            assert error.end_column - error.column == len(word), (word, place)
+        # a methods file is read by the same rule, by `methodize`
+        for addition in (f"{word} : ℝ₊₊\n", f"κ := 1 - {word}\n"):
+            with pytest.raises(ConstructionError) as refused:
+                derived_parameters.stage().methodize(
+                    {"text": f"@methods: perfect_foresight\n{addition}", "origin": "m.bl"})
+            error = refused.value
+            assert (error.rule, error.file, error.line) == ("syntax", "m.bl", 2), (word, addition)
+            assert f"the file writes `{word}` as a name; {NO_NAME}" in error.message
+    # names that begin with the words
+    named = derived_parameters.stage(
+        (growth, growth + "iffy := 3*R\nthenar := 2*R\nelsewhere := thenar + iffy\n"))
+    assert named.par["elsewhere"].derived
+
+
+def test_methodize_refuses_an_addition_the_parser_cannot_read_as_elaborate_stage_refuses_it(
+        derived_parameters):
+    """A methods addition that the parser cannot read is refused by
+    `methodize` as `elaborate_stage` refuses it: under `syntax`, in the
+    addition's own file, with the marked line and the advice; a conditional
+    inside a formula of an addition carries the advice on where a
+    conditional stands (AMD-GRAM-006)."""
+    from bellman.stage import elaborate_stage
+
+    for addition, admitted in (
+        ("κ := 1 + if Γ < R then 1 else 2\n", "the file writes `Γ` here"),
+        ("κ := if Γ < R then 1\n", "the language admits `else` at this place"),
+        ("κ := 1 +\n", "the line ends here"),
+    ):
+        methods = {"text": f"@methods: perfect_foresight\n{addition}", "origin": "m.bl"}
+        with pytest.raises(ConstructionError) as refused:
+            derived_parameters.stage().methodize(methods)
+        error = refused.value
+        assert (error.rule, error.file, error.line) == ("syntax", "m.bl", 2), addition
+        assert admitted in error.parts.why and addition.rstrip("\n") in error.parts.what
+        assert (error.write == CONDITIONAL_PLACE) == ("if " in addition), addition
+        # the stage file with the same addition is refused in the same words
+        with pytest.raises(ConstructionError) as elaborated:
+            elaborate_stage({
+                "stage": {"text": derived_parameters.text, "origin": derived_parameters.origin},
+                "calibration": {}, "settings": {}, "methods": [methods]})
+        assert str(elaborated.value) == str(error), addition
+
+
+def test_a_definition_by_cases_that_declares_a_set_reads_a_parameter(derived_parameters):
+    """A definition that declares a set reads at least one parameter or
+    derived parameter, by cases as otherwise (AMD-GRAM-005 §2; AMD-GRAM-006):
+    one whose test and branches read none is refused under `readable-form`,
+    as `ρ : ℝ := 2` is, with a sentence that advises no conditional in a
+    calibration file."""
+    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    with pytest.raises(ConstructionError) as refused:
+        derived_parameters.stage((growth, growth + "w : (0, 3) := if 1 < 2 then 1 else 2\n"))
+    error = refused.value
+    assert (error.rule, error.line) == ("readable-form", 8)
+    assert error.message == (
+        "the declaration of w carries the value if 1 < 2 then 1 else 2, a definition by cases "
+        "that reads no parameter; a definition that declares a set reads at least one parameter "
+        "or derived parameter, by cases as otherwise, and a value that reads none is one number, "
+        "which the calibration file supplies")
+    assert error.write == (
+        "Write `w : (0, 3)` here and the number in the calibration file, or a test and branches "
+        "that read a parameter")
+    # a conditional on a declaration that does not have the shape of a
+    # definition with a declared set, one of several names or one with a
+    # role word, is refused without that sentence and without its advice,
+    # which are untrue of such a declaration whether its conditional reads a
+    # parameter or none, and without the advice to write a conditional in a
+    # calibration file; its sentence writes no declaration as an example,
+    # since `a, b : ℝ` is no line that the parser reads and `x : ℝ` declares
+    # a parameter
+    for subject, names in (("(a, b) : ℝ", "a, b"), ("x : ℝ @ !ctrl", "x")):
+        for value in ("if β < R then 1 else 2", "if 1 < 2 then 1 else 2"):
+            declaration = f"{subject} := {value}"
+            with pytest.raises(ConstructionError) as refused:
+                derived_parameters.stage((growth, growth + declaration + "\n"))
+            error = refused.value
+            assert (error.rule, error.line) == ("readable-form", 8), declaration
+            for untrue in ("reads no parameter", "a test and branches that read a parameter",
+                           "in the calibration file"):
+                assert untrue not in error.message + (error.write or ""), (declaration, untrue)
+            assert error.message == (
+                f"the declaration of {names} carries the value {value}; a declaration states the "
+                "set a name lies in, and the calibration file supplies the value of each name"
+            ), declaration
+            assert error.write is None, declaration
+    # a definition that declares a set and whose value defines no derived
+    # parameter is refused with the forms such a definition takes, the four
+    # calls and the definition by cases among them
+    with pytest.raises(ConstructionError) as refused:
+        derived_parameters.stage((growth, growth + "w : (0, 3) := sqrt(β)\n"))
+    error = refused.value
+    assert error.rule == "readable-form" and "defines no derived parameter" in error.message
+    assert error.write == (
+        "Write the value of w from declared parameters, finite numbers and derived parameters, "
+        "with signs, sums, differences, products, quotients, powers, log, exp, min and max, or "
+        "by cases with `if … then … else …`")
+
+
+def test_the_advice_for_an_infinite_value_writes_the_spelling_a_calibration_file_reads(
+        derived_parameters, tmp_path):
+    """A declaration of one name that carries a number as written or an
+    infinity is refused under `readable-form` with the advice to supply the
+    value in the calibration file (AMD-GRAM-005 §2; AMD-GRAM-006). The
+    advice writes each value in a spelling that the reader of a calibration
+    file returns as a number: `.inf` and `-.inf` for the two infinities,
+    since it returns `inf` as a text, and a float with an exponent with a
+    decimal point, `1.0e-05`, since it returns `1e-05` as a text. A value
+    that it would return as a text, `1/2`, receives no such advice."""
+    from bellman.stage.sources import load_calibration
+
+    growth = 'Γ : ℝ₊₊          :: ["permanent income growth factor"]\n'
+    for value, supplied in (("inf", ".inf"), ("-inf", "-.inf")):
+        with pytest.raises(ConstructionError) as refused:
+            derived_parameters.stage((growth, growth + f"T : ℝ̄ := {value}\n"))
+        error = refused.value
+        assert (error.rule, error.line) == ("readable-form", 8), value
+        assert error.message == (
+            f"the declaration of T carries the value {value}; a stage file declares the set a "
+            f"name lies in, `T : ℝ̄`, and the calibration file supplies its value, `T: {supplied}`")
+        assert error.write == (
+            f"Write `T : ℝ̄` here, and `T: {supplied}` in the calibration file, where "
+            f"`{supplied}` is read as a number and `{value}` as a text")
+    # a finite number is advised as it is written, with its sign
+    for value in ("2", "-3"):
+        with pytest.raises(ConstructionError) as refused:
+            derived_parameters.stage((growth, growth + f"T : ℝ̄ := {value}\n"))
+        assert refused.value.write == (
+            f"Write `T : ℝ̄` here, and `T: {value}` in the calibration file"), value
+    # a float that the package prints with an exponent and no decimal point,
+    # `1e-05`, is advised with the point
+    with pytest.raises(ConstructionError) as refused:
+        derived_parameters.stage((growth, growth + "T : ℝ̄ := 1e-5\n"))
+    assert refused.value.write == (
+        "Write `T : ℝ̄` here, and `T: 1.0e-05` in the calibration file, where `1.0e-05` is read "
+        "as a number and `1e-05` as a text")
+    # a value that is no number as written, which the reader of a calibration
+    # file returns as a text, receives no such advice
+    with pytest.raises(ConstructionError) as refused:
+        derived_parameters.stage((growth, growth + "T : ℝ̄ := 1/2\n"))
+    error = refused.value
+    assert (error.rule, error.line, error.write) == ("readable-form", 8, None)
+    assert error.message == (
+        "the declaration of T carries the value 1/2; a declaration states the set a name lies "
+        "in, and the calibration file supplies the value of each name")
+    path = tmp_path / "calibration.yaml"
+    path.write_text(
+        "above: .inf\nbelow: -.inf\ntext: inf\nquotient: 1/2\npoint: 1.0e-05\nno_point: 1e-05\n",
+        encoding="utf-8")
+    assert load_calibration(path) == {
+        "above": math.inf, "below": -math.inf, "text": "inf", "quotient": "1/2",
+        "point": 1e-05, "no_point": "1e-05"}
 
 
 def test_a_derived_parameter_that_reads_a_setting_is_refused_in_its_methods_file(
@@ -993,8 +1375,8 @@ def test_two_lines_merged_into_one_box_bind_one_method(elaborate_text):
     # an occurrence of the maximization in a named line reaches the box the
     # line's row is, which the sentence names by the line's block
     with pytest.raises(ConstructionError) as refused:
-        methodize(stage, {"text": "@methods: bundles\npolicy.argmax.method : !max\n"
-                                  "policy.objective.argmax.method : !golden_section(n_sections=5)\n",
+        methodize(stage, {"text": "@methods: bundles\nn_golden : ℕ\npolicy.argmax.method : !max\n"
+                                  "policy.objective.argmax.method : !golden_section(n_sections=n_golden)\n",
                           "origin": "bundles.methods.bl"})
     assert "which both reach the operator `argmax` of block 'policy';" in str(refused.value)
     # two stage-wide places of different names reach the one merged box, and
@@ -1472,8 +1854,9 @@ def test_command_refuses_malformed_sources_unreadable_paths_and_invalid_argument
 
 
 def test_method_keyword_names_must_be_declared_even_inside_nested_values(cons):
-    """Method arguments read declared names; quoted strings remain literal."""
-    for value in ("missing", "(2, !foo(inner=missing))"):
+    """Method arguments read declared names; quoted strings remain literal,
+    and a number is refused at every depth (AAS, 14 November 2026)."""
+    for value in ("missing", '("a", !foo(inner=missing))'):
         addition = {"text": "@methods: cons\n"
                     f"policy.evaluate.method : !Linear(option={value})\n",
                     "origin": "keywords.methods.bl"}
@@ -1485,8 +1868,20 @@ def test_method_keyword_names_must_be_declared_even_inside_nested_values(cons):
         assert error.address == "policy.evaluate"
         assert error.column is not None and error.write
         assert "missing" in error.message
+    for value in ("2", '("a", 2)', "!foo(inner=2)"):
+        addition = {"text": "@methods: cons\n"
+                    f"policy.evaluate.method : !Linear(option={value})\n",
+                    "origin": "keywords.methods.bl"}
+        with pytest.raises(ConstructionError) as caught:
+            copy_native(cons).methodize(addition)
+        error = caught.value
+        assert error.rule == "method-setting-declared"
+        assert error.file == "keywords.methods.bl" and error.line == 2
+        assert error.address == "policy.evaluate"
+        assert error.column is not None and error.write
+        assert "writes the number 2" in error.message
     allowed = copy_native(cons).methodize({
-        "text": '@methods: cons\npolicy.evaluate.method : !Linear(option="literal", count=2)\n',
+        "text": '@methods: cons\npolicy.evaluate.method : !Linear(option="literal")\n',
         "origin": "keywords.methods.bl",
     })
     assert "policy.evaluate" in allowed.methods

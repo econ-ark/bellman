@@ -140,5 +140,5 @@ perch.
    from the legacy. The legacy's `!analytic-inverse` at `policy.InvEuler` is left
    out, because `configure` stops with an error at a method bound at a node.
 6. **The calibration's source** (`economics.md`, "Calibration"). The values are
-   those of the AER edition. The working paper in the model folder's `reference/` reports others,
+   those of the AER edition. The working paper, NBER Working Paper 21721 (2015), which the model folder's `reference/README.md` cites, reports others,
    in its Table 1 (the earnings) and its Table 2 (the estimates).

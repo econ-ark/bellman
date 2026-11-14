@@ -1348,6 +1348,7 @@ def _document_and_level(expression, names):
         (_STATEMENTS, _statements_document),
         (_NAMES, _names_document),
         (_ARITHMETIC, _arithmetic_document),
+        ((T.Conditional,), _conditional_document),
         (_APPLICATIONS, _applications_document),
         (_SETS, _sets_document),
         (_PREDICATES, _predicates_document),
@@ -1648,6 +1649,30 @@ def _names_document(expression, names):
         return _Printed(layout.text("undeclared"), ATOM)
     if isinstance(expression, (str, Numeric)):
         return _Printed(layout.text(str(expression)), ATOM)
+
+
+def _conditional_document(expression, names):
+    """The document of a definition by cases, `if p = 0 then θ else ξ`, and
+    its level: the words of the form with its test and its two branches, on
+    one line where it fits and otherwise broken before `then` and before
+    `else`, two columns in. The form stands as a whole right side, so it
+    binds loosest."""
+    return _Printed(
+        layout.group(
+            "if ",
+            _document_at(expression.test, names, RELATION),
+            layout.nest(
+                2,
+                layout.line(),
+                "then ",
+                _document_at(expression.then, names, BOTTOM),
+                layout.line(),
+                "else ",
+                _document_at(expression.otherwise, names, BOTTOM),
+            ),
+        ),
+        BOTTOM,
+    )
 
 
 def _arithmetic_document(expression, names):

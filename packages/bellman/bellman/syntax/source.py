@@ -474,6 +474,10 @@ def _expr(expression, need: int) -> str:
 
 
 def _level(expression) -> int:
+    if isinstance(expression, T.Conditional):
+        # a conditional stands after `:=` and as a branch of another alone,
+        # so that it is parenthesized in no position of a formula
+        return _ATOM
     if isinstance(expression, (T.Add, T.Sub, T.Neg)):
         return _SUM
     if isinstance(expression, (T.Mul, T.Div)):
@@ -484,6 +488,11 @@ def _level(expression) -> int:
 
 
 def _expression_text(expression) -> str:
+    if isinstance(expression, T.Conditional):
+        return (
+            f"if {condition_text(expression.test)} then {_expression_text(expression.then)} "
+            f"else {_expression_text(expression.otherwise)}"
+        )
     if isinstance(expression, T.Number):
         return _number(expression.value)
     if isinstance(expression, T.Sym):
@@ -802,19 +811,34 @@ def is_infinity(endpoint, negative) -> bool:
 
 def may_hold_infinity(set_expression, negative) -> bool:
     """Whether a set, as it is written, may hold `-inf`, with `negative`, or
-    `inf`. An interval holds it where it is closed at that infinite
-    endpoint, and an extended real set where it reaches that side, `ℝ̄` or
-    `ℝ_{+∞}`. A real set, an integer set, a range of integers and a list of
-    finite numbers hold neither infinity. A union may hold it where one of
-    its members may, and a difference where its left side may. Every other
-    set may hold it: a set the file names, whose members are not known from
-    its name, and a list with a member that is no finite number as written."""
+    `inf`. An interval may hold it where it is closed at that side and its
+    endpoint there is that infinity, or the bare name of a parameter or of a
+    derived parameter, since the value of such a name at a calibration may
+    be that infinity and the endpoint is then read as it (AMD-GRAM-006). An
+    extended real set holds it where it reaches that side, `ℝ̄` or `ℝ_{+∞}`.
+    A real set, an integer set, a range of integers and a list of finite
+    numbers hold neither infinity. A union may hold it where one of its
+    members may, and a difference where its left side may. A set with
+    conditions may hold it where the set that its conditions restrict may
+    and no condition excludes it by its form (`_excludes_infinity`): `ℝ̄ @
+    (0, inf]` may hold `inf`, and `ℝ̄ @ (0, inf)` and `{x : ℝ̄ | x < 100}`
+    may not. Every other set may hold it: a set the file names, whose
+    members are not known from its name, and a list with a member that is
+    no finite number as written. A caller that holds the definitions of the
+    named sets replaces each name by its set first
+    (`typing.sets.resolved`)."""
     if isinstance(set_expression, T.Interval):
         if not is_interval(set_expression):
             return False
         bounds = set_expression.bounds
         end, bracket = (bounds.lower, bounds.left) if negative else (bounds.upper, bounds.right)
-        return is_infinity(end, negative) and isinstance(bracket, T.Closed)
+        if not isinstance(bracket, T.Closed):
+            return False
+        return is_infinity(end, negative) or (
+            isinstance(end, T.Sym)
+            and isinstance(end.symbol, T.Constant)
+            and end.symbol.name != "inf"
+        )
     if isinstance(set_expression, T.Named):
         primitive = PRIMITIVE_SETS.get(set_expression.name)
         if primitive is None:
@@ -830,7 +854,43 @@ def may_hold_infinity(set_expression, negative) -> bool:
         return any(may_hold_infinity(member, negative) for member in set_expression.members)
     if isinstance(set_expression, T.SetDifference):
         return may_hold_infinity(set_expression.left, negative)
+    if isinstance(set_expression, T.Comprehension) and set_expression.base is not None:
+        name = bound_name(set_expression.bound)
+        if any(_excludes_infinity(each, name, negative) for each in set_expression.conds):
+            return False
+        return may_hold_infinity(set_expression.base, negative)
     return True
+
+
+def _excludes_infinity(condition, name, negative) -> bool:
+    """Whether a condition of a set with conditions excludes `-inf`, with
+    `negative`, or `inf` from the set by its form. `name` is the term of the
+    name that the set binds (`bound_name`), None where it binds no one name.
+
+    A condition excludes `inf` where it bounds the name from above strictly,
+    `x < e`, whatever `e` is, since no value is greater than `inf`; or
+    weakly by a finite number as written, `x <= 5`. It excludes `-inf` in
+    mirror image, by `x > e` and by `x >= -5`. A condition that writes the
+    name on its right side, `5 > x`, is read as `x < 5`. A weak bound that
+    is no number, `x <= T` or `x <= inf`, excludes neither infinity, since
+    the value of `T` at a calibration may be that infinity; and neither does
+    an equality or any other form."""
+    if name is None or not isinstance(condition, T.Rel) or not _ordered(condition.op):
+        return False
+    if condition.left == name:
+        bound, below = condition.right, _lower(condition.op)
+    elif condition.right == name:
+        bound, below = condition.left, not _lower(condition.op)
+    else:
+        return False
+    if below != negative:
+        return False
+    if isinstance(bracket_of(condition.op), T.Open):
+        return True
+    number = bound.operand if isinstance(bound, T.Neg) else bound
+    return isinstance(number, T.Number) and (
+        type(number.value) is int or (type(number.value) is float and math.isfinite(number.value))
+    )
 
 
 def union_of(members):

@@ -4,7 +4,8 @@ of the catalogue (specification 0.7 §5, D1, D5; the grid note §3).
 At binding, once the typing entries of a stage file and its additions are
 resolved to their places (`places.typings`), `check_components` reads the
 `Components` of each place against the row of its method word: a keyword
-the row requires is written (`method-admission`); every factor of a grid
+the row requires is written (`method-admission`) and no argument of the
+word is written as a number (`method-setting-declared`); every factor of a grid
 names a coordinate of the function the place holds, a control for a
 feasible factor or a shock for a quadrature factor, and a word that reads no
 grid has none written (`grid-coordinate`); every name a factor writes is a
@@ -47,11 +48,13 @@ from bellman.stage.grains import construction_table
 from bellman.stage.grids import (
     SETTING,
     SPACING,
+    calibration_values,
     check_grid_at_binding,
     check_grid_at_configuration,
     expectation_names,
     factor_form_of,
     grid_domain,
+    parameters_read_at,
     place_row,
     point_in_declared_set,
 )
@@ -187,9 +190,25 @@ def _typed_places(stage):
 def _check_keywords(stage, place, held, row, record):
     """A keyword the row requires is written among the word's arguments,
     one per shock the expectation at the place integrates for a keyword
-    written `n_<shock>`. Every bare name in an argument is a declared setting."""
+    written `n_<shock>`. Every bare name in an argument is a declared setting,
+    and an argument written as a number is refused at every depth of the
+    word's tuples and nested words (`method-setting-declared`; AAS,
+    14 November 2026)."""
     declared = setting_sets(stage)
     for argument in _word_arguments(held.method):
+        if isinstance(argument, T.Literal):
+            refuse_at_entry(
+                stage,
+                place.address,
+                record,
+                "method-setting-declared",
+                f"the entry `{typing_text(record)}` writes the number {to_source(argument)} "
+                "among the arguments of its method; a number that a method reads is a "
+                "setting declared in the methods file and valued in the settings file",
+                write="Declare a setting with its set in the methods file, write the "
+                "setting's name in place of the number, and give the number in the "
+                "settings file",
+            )
         if isinstance(argument, T.Name) and argument.name not in declared:
             refuse_at_entry(
                 stage,
@@ -554,10 +573,15 @@ def _check_grid_bounds(stage, place, held, values, domain):
     set, and the count an integer of at least two; for a listed factor
     valued by the settings a strictly increasing sequence of at least two
     finite reals inside the set; for a feasible factor a count of at least
-    two. A factor on a control or a shock has no declared set to check. The
-    configured points of `!Points` and the requirements the bound values
-    decide are then checked from the records of the grid constructors
+    two. A factor on a control or a shock has no declared set to check. A
+    declared set that reads a parameter, `Xa := [a_Art, inf)`, is read at
+    the calibration that is bound, as the declared set of a setting is
+    (`grids.point_in_declared_set`); before a calibration is bound nothing
+    decides such a membership, and the point is refused. The configured
+    points of `!Points` and the requirements the bound values decide are
+    then checked from the records of the grid constructors
     (`grids.check_grid_at_configuration`)."""
+    calibration = calibration_values(stage)
 
     def refuse(factor, reason, write):
         raise ConstructionError(
@@ -574,13 +598,14 @@ def _check_grid_bounds(stage, place, held, values, domain):
     def inside(factor, point, declared):
         if declared is None:
             return
-        member = point_in_declared_set(stage, point, declared)
+        member = point_in_declared_set(stage, point, declared, calibration)
         if member is not True:
             word = "lies outside" if member is False else "is not decidably inside"
             refuse(
                 factor,
                 f"writes the point {point!r}, which {word} the declared set "
-                f"{to_source(declared)} of {factor.coordinate}",
+                f"{to_source(declared)} of {factor.coordinate}"
+                f"{parameters_read_at(stage, declared, calibration)}",
                 "write points inside the declared set",
             )
 

@@ -23,7 +23,7 @@ topic: [applications]
 The model is the within-life problem of Benhabib, J., Bisin, A. and Luo, M.
 (2019), "Wealth distribution and social mobility in the US: A quantitative
 approach", *American Economic Review* 109(5), 1623–1647 (the working paper,
-NBER 21721, is in `reference/`). The timing is that of the paper's online
+NBER Working Paper 21721, 2015, is cited in `reference/README.md`). The timing is that of the paper's online
 Appendix A.1, which describes the authors' numerical solution. The legacy's
 `bellman-excerpt.md` and `dolo-plus-draft.yaml` adopted that timing for this
 reason, and `benhabib_bellman.bl` follows them.
@@ -152,10 +152,10 @@ which `trellis.yml` writes, nor any stage: the recipe's `registry` block admits
 them, the trellis holds them, and its drawing reads `last_age` to label each
 period with its age.
 
-The working paper in `reference/`, `benhabib-bisin-luo-2019.pdf` (NBER 21721,
-2015), reports different earnings in its Table 1. Its first decile is negative,
+The working paper, NBER Working Paper 21721 (2015), which `reference/README.md`
+cites, reports different earnings in its Table 1. Its first decile is negative,
 −2.689 at ages 25 to 30, and its top decile at those ages is 87.90, where the AER
-edition gives 100.3. The folder's copy therefore does not support the values of
+edition gives 100.3. The working paper therefore does not support the values of
 `declaration/calibration/wage/`. Nor does it support those of `declaration/calibration/main.yml`: its
 estimates, in its Table 2, include $\mu = 1.1860$ and $A = 0.0312$, and its
 Table 4 is a transition matrix.

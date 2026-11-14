@@ -146,7 +146,7 @@ from bellman.typing.line_unknowns import (
 # --- the construction, and the stage's name ---
 
 
-def stage_fields(term, spans):
+def stage_fields(term, spans, replaced=()):
     """The fields of the `ElaboratedStage` of the stage that `term`
     describes, by their names, which `elaborated.make_stage` constructs the
     stage from; this module does not import the stage's class, so that the
@@ -155,7 +155,11 @@ def stage_fields(term, spans):
 
     `term` is a `bellman.syntax.terms.FILE`; `spans` is its source-span table
     (a Mapping from term address to `SourceSpan`) for a fresh parse, or None
-    for a decoded saved term. An argument of another kind — `.bl` text, a JSON
+    for a decoded saved term. `replaced` holds the blocks of `term` in which
+    the lines of an addition stand in place of the stage file's lines, each
+    with the word of its solution method (`levels.construct`); the refusal
+    of an output that no line of such a block defines names the addition's
+    block. An argument of another kind — `.bl` text, a JSON
     mapping not yet decoded, a Lark tree, a YAML node — raises `TypeError`
     before anything is built. A declaration or statement that breaks a
     construction rule — a file with no `@stage` line or with two, a field
@@ -218,7 +222,7 @@ def stage_fields(term, spans):
     unread = declarations.unread_value_inputs()
     sorts = _field_sorts(declarations, fields)
     boxes = _builder_boxes(declarations, _read_signatures(signatures, unread), sorts, unread)
-    hypergraph = _stage_hypergraph(declarations, fields, boxes, sorts, unread)
+    hypergraph = _stage_hypergraph(declarations, fields, boxes, sorts, unread, replaced)
     _check_grid_lines(declarations)
     wire_sorts = dict(sorts)
     wire_sorts.update(_latent_shock_sorts(declarations, sorts))
@@ -703,7 +707,9 @@ def _forward_chain_reads(perch_from, perch_to, outputs, declarations) -> bool:
 # --- the stage hypergraph and the checks of its fields ---
 
 
-def _stage_hypergraph(declarations, fields, boxes, sorts, unread) -> BellmanHypergraph:
+def _stage_hypergraph(
+    declarations, fields, boxes, sorts, unread, replaced=()
+) -> BellmanHypergraph:
     """The stage as one hypergraph: the builder boxes in the order the file
     writes the blocks, each box's ports wired from its own dom and cod, one
     spider per wire type joining every port of that type, with dom the
@@ -719,7 +725,9 @@ def _stage_hypergraph(declarations, fields, boxes, sorts, unread) -> BellmanHype
     check that every field is consumed the author's listing counts as its
     consumption, since the listing is admitted and not refused (AAS, 17
     October 2026); the stage records it as a diagnostic, and a field it
-    produces that the listing alone consumed stands among `unused_outputs`."""
+    produces that the listing alone consumed stands among `unused_outputs`.
+    `replaced` holds the blocks in which the lines of an addition stand in
+    place of the stage file's lines, which `_check_block_outputs` reads."""
     if not boxes:
         return BellmanHypergraph.id(Ty())
     roles = declarations.field_roles
@@ -780,7 +788,7 @@ def _stage_hypergraph(declarations, fields, boxes, sorts, unread) -> BellmanHype
     _check_fields_produced_and_consumed(
         declarations, wired, dom_types, cod_types, index, consumed, produced
     )
-    _check_block_outputs(declarations)
+    _check_block_outputs(declarations, replaced)
     assert set(index.values()) <= consumed | produced
     hypergraph = BellmanHypergraph(
         dom=Ty(*(sorts[t] for t in dom_types)),
@@ -897,7 +905,7 @@ def _placed_by_a_forward_block(declarations, wire_type) -> bool:
     return False
 
 
-def _check_block_outputs(declarations):
+def _check_block_outputs(declarations, replaced=()):
     """The check that every block defines each output its header declares,
     its equations read apart from the connectivity of its header.
 
@@ -911,13 +919,22 @@ def _check_block_outputs(declarations):
     a builder is formed from a line the file writes, so a policy block that
     writes its candidate and the cash on hand at the continuation perch and
     omits the line identifying the policy with the candidate, `c = c[>]`, is
-    refused, and no relation is inferred for the line it does not write."""
+    refused, and no relation is inferred for the line it does not write.
+
+    `replaced` holds the blocks in which the lines of an addition stand in
+    place of the stage file's lines, each with the word of its solution
+    method. The refusal of an output that no line of such a block defines
+    names the addition's block (`_output_unwritten_by_addition`)."""
     for block_id, block_address in declarations.blocks:
         read = _output_equations(declarations, block_id)
         _refuse_circular_outputs(declarations, read.dependencies)
         for output in declarations.side_entries(block_id, OUTPUT):
             if output.wire_type in read.supplied:
                 continue
+            if block_id in replaced:
+                raise _output_unwritten_by_addition(
+                    declarations, block_id, block_address, output, replaced[block_id]
+                )
             stem = output.stem
             control = declarations.field_roles[stem] == CONTROL
             instead = (
@@ -951,6 +968,45 @@ def _check_block_outputs(declarations):
                     f"the output side"
                 ),
             )
+
+
+def _output_unwritten_by_addition(declarations, block_id, block_address, output, word):
+    """The refusal under `output-defined` of the output `output` of a block
+    whose lines are those of an addition, which stand in place of the stage
+    file's lines under the solution method `word`, where none of them
+    defines the output. The sentence names the addition's block and its
+    file. The refusal stands at the entry that types the method where the
+    addition writes that entry, and at the first line of the addition's
+    block otherwise; the listing of the output in the stage file's header is
+    its related location."""
+    spans = declarations.spans
+    appended = [
+        spans[address]
+        for _, address, _ in declarations.bodies[block_id]
+        if not declarations.in_stage_file(address)
+    ]
+    file = appended[0].file
+    entry = spans.get(f"{block_address}.method")
+    stem, text = output.stem, output.text
+    line = (
+        f"the maximization `{stem} = argmax_{{…}}(…)`, a solve, or, where the lines of the "
+        f"block write the candidate at the continuation perch, the identification "
+        f"`{stem} = {stem}[>]`"
+        if declarations.field_roles[stem] == CONTROL
+        else f"`{text} = …`, or, if block {block_id!r} is not meant to write {text}, remove "
+        f"{text} from the output side of its header"
+    )
+    advice = f"Write in that block of {file} a line that defines {text}: {line}"
+    return declarations.error(
+        "output-defined",
+        block_address,
+        f"the header of block {block_id!r} lists {text} on its output side, and no line "
+        f"defines {text} in the block `[id={block_id}]` of {file}, whose lines stand in place "
+        f"of the stage file's lines of the block under !{word}. {advice}",
+        related=(declarations.location(f"{output.address}.out.{text}", "listed output"),),
+        write=advice,
+        span=entry if entry is not None and entry.file == file else appended[0],
+    )
 
 
 class _OutputEquations(NamedTuple):

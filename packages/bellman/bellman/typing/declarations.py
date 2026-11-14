@@ -47,7 +47,13 @@ from bellman.native.identity import (
 )
 from bellman.refusals import ConstructionError, NotConstructed, construction_error, location
 from bellman.syntax import terms
-from bellman.syntax.source import comprehension_text, is_infinity, to_source
+from bellman.syntax.source import (
+    comprehension_text,
+    is_infinity,
+    is_number,
+    may_hold_infinity,
+    to_source,
+)
 from bellman.syntax.walk import children, nodes
 from bellman.syntax.vocabulary import (
     ARRIVAL,
@@ -303,9 +309,23 @@ _STANDARD_FORMS = (
 
 # --- the derived parameters (AMD-MT-003, build contract §5) ---
 
-# the functions a derived parameter's definition may call, each with one
-# argument; `typing/primitive_definitions.py` defines both
-DERIVED_PARAMETER_CALLS = ("log", "exp")
+# the functions a derived parameter's definition may call:
+# `typing/primitive_definitions.py` defines the four, `log` and `exp` of one
+# argument and `min` and `max` of one argument or more, the least and the
+# greatest of the arguments
+DERIVED_PARAMETER_ELEMENTARY = ("log", "exp")
+DERIVED_PARAMETER_EXTREMA = ("min", "max")
+DERIVED_PARAMETER_CALLS = DERIVED_PARAMETER_ELEMENTARY + DERIVED_PARAMETER_EXTREMA
+
+
+def derived_parameter_call(term) -> bool:
+    """Whether `term` is a call a derived parameter's definition admits: `log`
+    or `exp` of one argument, or `min` or `max` of one argument or more."""
+    if not isinstance(term, terms.Call):
+        return False
+    if term.fun in DERIVED_PARAMETER_ELEMENTARY:
+        return len(term.args) == 1
+    return term.fun in DERIVED_PARAMETER_EXTREMA and len(term.args) >= 1
 
 
 def derived_parameter_body(body, bodies, defined, active=frozenset()) -> bool:
@@ -313,13 +333,15 @@ def derived_parameter_body(body, bodies, defined, active=frozenset()) -> bool:
     the definition a derived parameter, a constant of the stage defined from
     its parameters, `h := 1/(1 - Γ/R)`: an arithmetic expression, whose
     outermost form is a number, a sign, a sum, a difference, a product, a
-    quotient, a power, a call of `log` or `exp`, or a name the stage defines
-    as neither a set nor a function. `bodies` holds the right side of each
-    definition without arguments by its name, through which a name such a
-    definition writes is followed to the definition it names; `defined`
-    holds the names of the sets and of the functions and correspondences
-    with arguments; `active` holds the names being followed, a cycle making
-    no derived parameter here, since the dependency order refuses it.
+    quotient, a power, a call of `log`, `exp`, `min` or `max`, a conditional
+    `if … then … else …`, or a name the stage defines as neither a set nor a
+    function. `bodies` holds the right
+    side of each definition without arguments by its name, through which a
+    name such a definition writes is followed to the definition it names;
+    `defined` holds the names of the sets and of the functions and
+    correspondences with arguments; `active` holds the names being followed,
+    a cycle making no derived parameter here, since the dependency order
+    refuses it.
 
     The typing walk and the fold read this one rule. What a derived
     parameter's definition reads and calls is checked by
@@ -328,7 +350,17 @@ def derived_parameter_body(body, bodies, defined, active=frozenset()) -> bool:
     tuple or a call such as `linspace(H_min, H_max, n_H)`, keeps the reading
     it had without derived parameters."""
     if isinstance(
-        body, (terms.Number, terms.Neg, terms.Add, terms.Sub, terms.Mul, terms.Div, terms.Pow)
+        body,
+        (
+            terms.Number,
+            terms.Neg,
+            terms.Add,
+            terms.Sub,
+            terms.Mul,
+            terms.Div,
+            terms.Pow,
+            terms.Conditional,
+        ),
     ):
         return True
     if isinstance(body, terms.Call):
@@ -347,26 +379,54 @@ def declared_definition(declaration):
     """The name and the set of a declaration that carries a value and has
     the shape of a definition with a declared set, `q : (0,1) := e`, as a
     pair; None for any other declaration that carries a value. The shape:
-    one bare name, typed by sets alone, which the lowering keeps as one set;
-    and a value that reads at least one name other than `inf`. A value that
-    reads no such name, `ρ : ℝ := 2` or `ρ : ℝ := inf`, is a number, which
-    the calibration supplies."""
+    one bare name, typed by sets alone, which the lowering keeps as one set
+    (`_shaped_as_a_declared_definition`); and a value that reads at least
+    one name other than `inf`. A value that reads no such name, `ρ : ℝ := 2`
+    or `ρ : ℝ := inf`, is a number, which the calibration supplies."""
+    if not _shaped_as_a_declared_definition(declaration) or not _reads_a_name(declaration.value):
+        return None
+    return declaration.subject.coordinates[0].stem, declaration.classifiers[0].space
+
+
+def _shaped_as_a_declared_definition(declaration) -> bool:
+    """Whether a declaration that carries a value has, apart from what its
+    value reads, the shape of a definition with a declared set, `q : (0,1)
+    := e`: one bare name, with no perch mark and no set of its own in
+    parentheses, typed by sets alone, which the lowering keeps as one set.
+    A declaration of several names, `(a, b) : ℝ := e`, one with a role
+    word, `x : ℝ @ !ctrl := e`, and one with a perch mark, `x[>] : ℝ := e`,
+    do not have that shape."""
     coordinates, classifiers = declaration.subject.coordinates, declaration.classifiers
     if len(coordinates) != 1 or len(classifiers) != 1:
-        return None
+        return False
     coordinate, classifier = coordinates[0], classifiers[0]
-    if (
-        not isinstance(coordinate, terms.Coordinate)
-        or coordinate.at is not None
-        or coordinate.classifiers
-        or not isinstance(classifier, terms.Domain)
-        or not any(
-            isinstance(node, terms.Sym) and not is_infinity(node, negative=False)
-            for node in nodes(declaration.value)
-        )
-    ):
-        return None
-    return coordinate.stem, classifier.space
+    return (
+        isinstance(coordinate, terms.Coordinate)
+        and coordinate.at is None
+        and not coordinate.classifiers
+        and isinstance(classifier, terms.Domain)
+    )
+
+
+def _reads_a_name(value) -> bool:
+    """Whether a value reads at least one name other than `inf`. A value
+    that reads none, `2`, `inf` or `if 1 < 2 then 1 else 2`, is a number."""
+    return any(
+        isinstance(node, terms.Sym) and not is_infinity(node, negative=False)
+        for node in nodes(value)
+    )
+
+
+def _a_number_as_written(value) -> bool:
+    """Whether the value of a declaration is a number as it is written, `2`,
+    `-3` or `1.5e-3`, or one of the two infinities, `inf` or `-inf`. Such a
+    value is read as a number in a calibration file, in the spelling that
+    `_calibration_spelling` gives it. Any other value, `1/2`, `2*inf`,
+    `sqrt(2)`, `β*R` or a conditional, is read there as a text
+    (`stage.sources.load_calibration`)."""
+    return (
+        is_number(value) or is_infinity(value, negative=False) or is_infinity(value, negative=True)
+    )
 
 
 def derived_parameter_declaration(declaration):
@@ -388,7 +448,42 @@ def derived_parameter_declaration(declaration):
 _DERIVED_PARAMETER_FORMS = (
     "a derived parameter's definition reads declared parameters, finite numbers and other "
     "derived parameters, and is formed by signs, sums, differences, products, quotients, "
-    "powers and the calls `log` and `exp`, each of one argument"
+    "powers, the calls `log` and `exp`, each of one argument, and the calls `min` and `max`, "
+    "each of one argument or more; its right side may be a conditional, `if … then … else …`, "
+    "whose test compares two such formulas and whose branches are such formulas, further "
+    "conditionals, or `inf` or `-inf` where the definition declares a set that holds that "
+    "infinity"
+)
+
+
+# the two infinities as a stage file prints them, each with the spelling that
+# is read as that infinite float in a calibration file, a YAML file, where
+# `inf` and `-inf` are read as texts (`_calibration_spelling`)
+_YAML_INFINITY = {"inf": ".inf", "-inf": "-.inf"}
+
+
+def _calibration_spelling(value: str) -> str:
+    """The spelling in which a number or an infinity, printed as `value`, is
+    read as that number in a calibration file, a YAML file
+    (`stage.sources.load_calibration`). The two infinities are written
+    `.inf` and `-.inf`. A float that is printed with an exponent and no
+    decimal point, `1e-05`, is written with the point, `1.0e-05`: in a YAML
+    file a float with an exponent is read as a number only where it has a
+    decimal point, and `1e-05` is read as a text. Every other number is
+    read as it is printed."""
+    if value in _YAML_INFINITY:
+        return _YAML_INFINITY[value]
+    mantissa, exponent, power = value.partition("e")
+    return f"{mantissa}.0e{power}" if exponent and "." not in mantissa else value
+
+
+# the forms a derived parameter's definition is written with, in the action
+# of a refusal of what such a definition reads, calls or writes
+# (`derived_parameter_fault`) and of a definition with a declared set whose
+# value defines none (`Declarations.declared_value_refusal`)
+_DERIVED_PARAMETER_WRITTEN = (
+    "signs, sums, differences, products, quotients, powers, log, exp, min and max, or by "
+    "cases with `if … then … else …`"
 )
 
 
@@ -411,22 +506,46 @@ def derived_parameter_fault(name, term, parameters, derived, kinds):
     and writes what a derived parameter's definition admits: names among
     `parameters`, the declared parameters, and `derived`, the derived
     parameters; finite numbers; signs, sums, differences, products, quotients
-    and powers; and the calls `log` and `exp` of one argument. `kinds` maps
+    and powers; the calls `log` and `exp` of one argument; the calls `min`
+    and `max` of one argument or more; and, as the whole right side, a
+    conditional whose test compares two such formulas and whose branches are
+    such formulas, further conditionals, `inf` or `-inf`. `kinds` maps
     each other name the stage declares to its kind, `setting`, `set`,
     `function`, `correspondence`, `shock` or `multiplier`, which the sentence
     that names it states; a name it does not map is a field of the stage. The
     declaration pass and the fold (`fold.derived_parameters.derived_order`)
-    both read this one check."""
+    both read this one check.
+
+    In a derived parameter's definition `log`, `exp`, `min` and `max` are the
+    functions of the language. A definition that calls one of them where the
+    stage defines a function or a correspondence of that name is refused,
+    with the advice to rename the stage's function: a compiled kernel that
+    reads the derived parameter beside a line that calls the stage's
+    function would give the one name two meanings (AMD-GRAM-006)."""
+    for node in nodes(term):
+        if (
+            isinstance(node, terms.Call)
+            and node.fun in DERIVED_PARAMETER_CALLS
+            and kinds.get(node.fun) in ("function", "correspondence")
+        ):
+            return (
+                f"the derived parameter {name}, defined as `{to_source(term)}`, calls "
+                f"{node.fun}, `{to_source(node)}`, and the stage defines a {kinds[node.fun]} "
+                f"named {node.fun}; in a derived parameter's definition `log`, `exp`, `min` and "
+                "`max` are the functions of the language, and a kernel that reads "
+                f"{name} beside a line that calls the stage's {node.fun} would give the one "
+                "name two meanings",
+                f"Give the stage's {kinds[node.fun]} {node.fun} another name",
+            )
     meanings = {other: _UNREADABLE[kind] for other, kind in kinds.items()}
-    fault = _derived_parameter_fault(term, parameters, derived, meanings)
+    fault = _derived_definition_fault(term, parameters, derived, meanings)
     if fault is None:
         return None
     return (
         f"the derived parameter {name}, defined as `{to_source(term)}`, {fault}; "
         f"{_DERIVED_PARAMETER_FORMS}",
         f"Write the definition of {name} from declared parameters, finite numbers and "
-        "derived parameters, with signs, sums, differences, products, quotients, powers, "
-        "log and exp",
+        f"derived parameters, with {_DERIVED_PARAMETER_WRITTEN}",
     )
 
 
@@ -441,9 +560,108 @@ def _overflowed(term) -> bool:
     )
 
 
+def infinity(term):
+    """The infinity a term writes, `math.inf` for `inf` and `-math.inf` for
+    `-inf`, or None for any other term."""
+    if (
+        isinstance(term, terms.Sym)
+        and isinstance(term.symbol, terms.Constant)
+        and term.symbol.name in ("inf", "∞")
+    ):
+        return math.inf
+    if isinstance(term, terms.Neg) and infinity(term.operand) == math.inf:
+        return -math.inf
+    return None
+
+
+def infinities_written(term) -> tuple:
+    """The infinities that a derived parameter's definition writes as a whole
+    branch of a conditional, at any depth: `math.inf` for a branch `inf` and
+    `-math.inf` for a branch `-inf`, each once, in the order of the text.
+    The empty tuple for a definition that is no conditional, whose value is
+    a finite number wherever it has one."""
+    if not isinstance(term, terms.Conditional):
+        return ()
+    found = []
+    for branch in (term.then, term.otherwise):
+        written = infinity(branch)
+        for each in infinities_written(branch) if written is None else (written,):
+            if each not in found:
+                found.append(each)
+    return tuple(found)
+
+
+def infinite_branch_fault(name, term, declared, definitions):
+    """The refusal of the derived parameter `name`, defined as `term`, where a
+    branch writes an infinity that the declared set cannot hold, as the pair
+    of its sentence and its action; None for every other definition.
+    `declared` is the set the definition declares, or None where it declares
+    none, and its declared set is then ℝ. `definitions` holds the sets the
+    stage defines by name, through which a named set is read.
+
+    Whether the set can hold the infinity is judged from the form of the set
+    (`source.may_hold_infinity`). A set that holds it only at some
+    calibrations, `(0, T]` with `T` a parameter, is read, and calibration
+    holds the value to the set as it holds every derived parameter's
+    (`stage.calibration_requirements`). The declaration pass and the fold
+    (`fold.derived_parameters.derived_order`) both read this one check
+    (AMD-GRAM-006; AAS, 12 November 2026)."""
+    written = infinities_written(term)
+    if not written:
+        return None
+    held = sets.resolved(terms.Named("ℝ") if declared is None else declared, definitions)
+    missing = [each for each in written if not may_hold_infinity(held, negative=each < 0)]
+    if not missing:
+        return None
+    spelled = "-inf" if missing[0] < 0 else "inf"
+    its_set = (
+        "the set ℝ of a definition that declares none"
+        if declared is None
+        else f"its declared set `{to_source(declared)}`"
+    )
+    advised = "ℝ̄" if len(written) == 2 else "ℝ_{-∞}" if written[0] < 0 else "ℝ_{+∞}"
+    closed = "[-inf, 0)" if missing[0] < 0 else "(0, inf]"
+    return (
+        f"the derived parameter {name}, defined as `{to_source(term)}`, writes the branch "
+        f"`{spelled}`, and {its_set} cannot hold {spelled}; a branch written `inf` or `-inf` is "
+        "admitted in a definition whose declared set holds that infinity",
+        f"Write `{name} : {advised} := {to_source(term)}`, or another set that holds {spelled}, "
+        f"such as an interval closed at that endpoint, `{closed}`",
+    )
+
+
+def _derived_definition_fault(node, parameters, derived, meanings):
+    """The fault of the right side of a derived parameter's definition, or of
+    a branch of its conditional: a conditional is admitted here and nowhere
+    inside a formula, its test compares two formulas of the admitted forms,
+    and each branch is such a formula, a further conditional, `inf` or
+    `-inf`."""
+    if not isinstance(node, terms.Conditional):
+        return _derived_parameter_fault(node, parameters, derived, meanings)
+    test = node.test
+    if not isinstance(test, terms.Rel):
+        return f"tests `{to_source(test)}`, which is no comparison of two formulas"
+    for side in (test.left, test.right):
+        fault = _derived_parameter_fault(side, parameters, derived, meanings)
+        if fault is not None:
+            return fault
+    for branch in (node.then, node.otherwise):
+        if infinity(branch) is not None:
+            continue
+        fault = _derived_definition_fault(branch, parameters, derived, meanings)
+        if fault is not None:
+            return fault
+    return None
+
+
 def _derived_parameter_fault(node, parameters, derived, meanings):
     """The words that say what the first form of `node` a derived parameter's
     definition does not admit is, in the order of its text, or None."""
+    if isinstance(node, terms.Conditional):
+        return (
+            f"writes the conditional `{to_source(node)}` inside a formula; a conditional "
+            "stands as the right side of the definition or as a branch of another"
+        )
     if isinstance(node, terms.Number):
         if isinstance(node.value, bool):
             return f"writes the number {node.value!r}, which is no finite real number"
@@ -473,11 +691,11 @@ def _derived_parameter_fault(node, parameters, derived, meanings):
     elif isinstance(node, (terms.Add, terms.Sub, terms.Mul, terms.Div)):
         parts = (node.left, node.right)
     elif isinstance(node, terms.Call) and node.fun in DERIVED_PARAMETER_CALLS:
-        if len(node.args) != 1:
+        if not derived_parameter_call(node):
             return f"calls {node.fun} with {len(node.args)} arguments, `{to_source(node)}`"
         parts = node.args
     elif isinstance(node, terms.Call):
-        return f"calls {node.fun}, `{to_source(node)}`, which is neither log nor exp"
+        return f"calls {node.fun}, `{to_source(node)}`, which is none of log, exp, min and max"
     else:
         return f"writes `{to_source(node)}`, a form no derived parameter's definition admits"
     for part in parts:
@@ -809,8 +1027,21 @@ class Declarations:
                     to_source(domains[0].space) if len(domains) == 1 else "<set>",
                     to_source(declaration.value),
                     address,
-                    one=len(declaration.subject.coordinates) == 1,
+                    # the advice for one name, to write the value in the
+                    # calibration file, is given for a number as written
+                    # and for an infinity; any other value, a conditional
+                    # among them, is read in a calibration file as a text
+                    one=len(declaration.subject.coordinates) == 1
+                    and _a_number_as_written(declaration.value),
                     defined=declared_definition(declaration) is not None,
+                    # the sentence on a definition by cases that reads no
+                    # parameter is given where the declaration has the shape
+                    # of a definition with a declared set and its
+                    # conditional reads none; its advice is untrue of any
+                    # other declaration
+                    by_cases=isinstance(declaration.value, terms.Conditional)
+                    and _shaped_as_a_declared_definition(declaration)
+                    and not _reads_a_name(declaration.value),
                 )
             # `q : (0,1) := (β*R)^(1/ρ)/R`: the definition of a derived
             # parameter with the set its value lies in, read as `q := …` is;
@@ -876,14 +1107,31 @@ class Declarations:
             if role == SHOCK:
                 self.note_shock(c.stem, address, place)
 
-    def declared_value_refusal(self, names, declared, value, address, one=True, defined=False):
+    def declared_value_refusal(
+        self, names, declared, value, address, one=True, defined=False, by_cases=False
+    ):
         """The refusal, under `readable-form`, of a declaration that carries
         a value and defines no derived parameter: the declaration of `names`
-        with the printed set `declared` and the printed `value`, of `one`
-        name or of several. The sentence advises writing the value in the
-        calibration file, which supplies numbers. With `defined`, the
-        declaration has the shape of a definition with a declared set
-        (`declared_definition`), `q : (0,1) := max(β, R)`, and the sentence
+        with the printed set `declared` and the printed `value`. With `one`,
+        the declaration of one name whose value is a number as written or
+        an infinity (`_a_number_as_written`), the sentence writes the
+        declaration without the value and advises writing the value in the
+        calibration file, in the spelling in which it is read there as a
+        number (`_calibration_spelling`): `.inf` or `-.inf` for the value
+        `inf` or `-inf` and `1.0e-05` for `1e-05`, since `inf`, `-inf` and
+        `1e-05` are read there as texts. Without `one`, the declaration of
+        several names, or of one name whose value is read in a calibration
+        file as a text, `1/2`, `β*R` or a conditional, the sentence says
+        that the calibration file supplies the value of each name. It
+        writes no declaration as an example, since the declaration of
+        several names without a value, `a, b : ℝ`, is no line that the
+        parser reads, and it gives no advice. With `by_cases`, the
+        declaration has the shape of a definition with a declared set and
+        its value is a conditional that reads no name, `q : (0, 3) := if 1 <
+        2 then 1 else 2`, and the sentence says that a definition by cases
+        reads a parameter. With `defined`, the declaration has the shape of
+        a definition with a declared set and its value reads a name
+        (`declared_definition`), `q : (0,1) := sqrt(β)`, and the sentence
         states instead the forms a derived parameter's definition takes."""
         if defined:
             return self.error(
@@ -896,27 +1144,53 @@ class Declarations:
                 ),
                 write=(
                     f"Write the value of {names} from declared parameters, finite numbers and "
-                    "derived parameters, with signs, sums, differences, products, quotients, "
-                    "powers, log and exp"
+                    f"derived parameters, with {_DERIVED_PARAMETER_WRITTEN}"
                 ),
             )
+        if by_cases:
+            return self.error(
+                "readable-form",
+                address,
+                (
+                    f"the declaration of {names} carries the value {value}, a definition by "
+                    f"cases that reads no parameter; a definition that declares a set reads at "
+                    f"least one parameter or derived parameter, by cases as otherwise, and a "
+                    f"value that reads none is one number, which the calibration file supplies"
+                ),
+                write=(
+                    f"Write `{names} : {declared}` here and the number in the calibration file, "
+                    f"or a test and branches that read a parameter"
+                ),
+            )
+        if not one:
+            return self.error(
+                "readable-form",
+                address,
+                (
+                    f"the declaration of {names} carries the value {value}; a declaration "
+                    f"states the set a name lies in, and the calibration file supplies the "
+                    f"value of each name"
+                ),
+            )
+        # the spelling in which the value is read as a number in a calibration
+        # file
+        supplied = _calibration_spelling(value)
         return self.error(
             "readable-form",
             address,
             (
                 f"the declaration of {names} carries the value {value}; a stage file "
                 f"declares the set a name lies in, `{names} : {declared}`, and the "
-                + (
-                    f"calibration file supplies its value, `{names}: {value}`"
-                    if one
-                    else "calibration file supplies the value of each name"
-                )
+                f"calibration file supplies its value, `{names}: {supplied}`"
             ),
             write=(
-                f"Write `{names} : {declared}` here, and `{names}: {value}` in the "
+                f"Write `{names} : {declared}` here, and `{names}: {supplied}` in the "
                 f"calibration file"
-                if one
-                else None
+                + (
+                    f", where `{supplied}` is read as a number and `{value}` as a text"
+                    if supplied != value
+                    else ""
+                )
             ),
         )
 
@@ -1187,8 +1461,7 @@ class Declarations:
                 f"{_DERIVED_PARAMETER_FORMS}",
                 write=(
                     f"Write the definition of {name} from declared parameters, finite numbers "
-                    "and derived parameters, with signs, sums, differences, products, "
-                    "quotients, powers, log and exp"
+                    f"and derived parameters, with {_DERIVED_PARAMETER_WRITTEN}"
                 ),
             )
         self.functions[name] = _Definition(
@@ -1902,9 +2175,13 @@ class Declarations:
         under `name-in-scope` with the names in scope. The set of a
         function's argument may read the arguments written before it.
 
-        Last, the set of a parameter, of a setting and of a derived
-        parameter is refused where it reads a field
-        (`check_parameter_sets`)."""
+        The set of a parameter, of a setting and of a derived parameter is
+        then refused where it reads a field (`check_parameter_sets`).
+
+        Last, a set that reads a bare name which the headers list with a
+        perch mark alone, `XV := {x : ℝ | x > V_kp}` where they list
+        `V_kp[>]`, is refused under `name-in-scope`, naming the marked
+        spelling (`listed_with_a_mark_alone`)."""
         sites = [
             (declaration.domain_term, declaration.address, f"the declaration of {name!r}", ())
             for name, declaration in self.scalars.items()
@@ -1993,6 +2270,60 @@ class Declarations:
                     write=f"Write one of the sets in scope here: {self.sets_in_scope_text()}",
                 )
         self.check_parameter_sets()
+        for term, address, what, bound in sites:
+            for name in names_read_in_set(term, bound):
+                marked = self.listed_with_a_mark_alone(name)
+                if marked:
+                    # a definition writes a set with conditions with a bar
+                    bar = isinstance(term, terms.Comprehension) and address in self.spaces.values()
+                    written = comprehension_text(term) if bar else to_source(term)
+                    listed, advice = self.marked_spellings_text(name, marked)
+                    raise self.error(
+                        "name-in-scope",
+                        address,
+                        (
+                            f"{what} reads the name {name!r} in the set `{written}`, and the "
+                            f"headers of the stage list the field {name} {listed}; a bare name "
+                            f"reads the field that a header lists without a mark. {advice}"
+                        ),
+                        write=advice,
+                    )
+
+    def listed_with_a_mark_alone(self, name) -> list:
+        """The spellings under which the headers list the field `name`, each
+        once in textual order, where every header that lists the field
+        writes a perch mark: `["V_kp[>]"]` for `V_kp` in `tenure.bl`. The
+        answer is empty for a name that a header lists without a mark, for a
+        control, for a shock and for a name that no header lists. A bare name
+        reads the field that a header lists without a mark
+        (`listed_identity`), so a name answered here reads no field where a
+        set or a definition writes it bare."""
+        listed = [listing for listing in self.listings if listing.stem == name]
+        declared = self.scalars.get(name)
+        if (
+            not listed
+            or name in self.shocks
+            or any(listing.mark is None or listing.role == CONTROL for listing in listed)
+            or (declared is not None and declared.role == CONTROL)
+        ):
+            return []
+        return list(dict.fromkeys(listing.text for listing in listed))
+
+    def marked_spellings_text(self, name, marked) -> tuple:
+        """The two parts of a refusal that name the marked spellings of a
+        field which a set or a definition writes bare: how the headers list
+        the field, and what to write."""
+        spellings = [f"`{spelling}`" for spelling in marked]
+        if len(spellings) == 1:
+            return (
+                f"with a mark alone, as {spellings[0]}",
+                f"Write {spellings[0]} in place of `{name}`",
+            )
+        return (
+            f"with a mark alone, as {' and '.join(spellings)}",
+            f"Write {' or '.join(spellings)} in place of `{name}`, the field at the perch "
+            f"that the mark names",
+        )
 
     def check_parameter_sets(self) -> None:
         """The set of a parameter, of a setting and of a derived parameter
@@ -2908,9 +3239,11 @@ class Declarations:
     def check_derived_parameters(self) -> None:
         """Each derived parameter's definition reads declared parameters,
         finite numbers and other derived parameters, and is formed by signs,
-        sums, differences, products, quotients, powers and the calls `log`
-        and `exp` of one argument (`derived_parameter_fault`); any other name,
-        call or form is refused under `derived-parameter` at the definition.
+        sums, differences, products, quotients, powers, the calls `log` and
+        `exp` of one argument and the calls `min` and `max` of one argument
+        or more, or is written by cases (`derived_parameter_fault`); any
+        other name, call or form is refused under `derived-parameter` at the
+        definition.
         The check is made here, before any line is read, since the check of a
         line follows the definitions it reads into their bodies and would
         otherwise refuse a derived parameter that reads a field at a line that
@@ -2920,7 +3253,10 @@ class Declarations:
 
         The set a definition declares, `q : (0,1) := β*R`, is refused under
         the same rule where it holds no number or reads a setting
-        (`declared_set_fault`; AMD-GRAM-005)."""
+        (`declared_set_fault`; AMD-GRAM-005). A definition by cases one of
+        whose branches writes `inf` or `-inf` is refused under it where its
+        declared set, ℝ where it declares none, cannot hold that infinity
+        (`infinite_branch_fault`; AMD-GRAM-006)."""
         derived = {
             name: definition
             for name, definition in self.functions.items()
@@ -2944,6 +3280,10 @@ class Declarations:
             refused = derived_parameter_fault(name, definition.body, parameters, derived, kinds)
             if refused is None and definition.declared_set is not None:
                 refused = self.declared_set_fault(name, definition.declared_set, kinds)
+            if refused is None:
+                refused = infinite_branch_fault(
+                    name, definition.body, definition.declared_set, self.space_terms
+                )
             if refused is not None:
                 message, write = refused
                 raise self.error("derived-parameter", definition.address, message, write=write)
@@ -2952,8 +3292,8 @@ class Declarations:
         """The refusal of the set `declared` that the definition of the
         derived parameter `name` declares, as the pair of its sentence and
         its action, or None. A set of labels, a product and a set of
-        functions hold no single real number, which a derived parameter's
-        value is. A set that reads a setting cannot be judged at calibration,
+        functions hold no single number, which a derived parameter's value
+        is. A set that reads a setting cannot be judged at calibration,
         since configuration gives a setting its value afterwards. `kinds`
         maps a setting of the stage to the word `setting`, as
         `derived_parameter_fault` reads it."""
@@ -2961,7 +3301,7 @@ class Declarations:
         if sets.kind_without_numbers(declared, self.space_terms) is not None:
             return (
                 f"the derived parameter {name} declares the set `{written}`; a derived "
-                f"parameter's value is one finite real number, which lies in no set of labels, "
+                f"parameter's value is one number, which lies in no set of labels, "
                 f"no product and no set of functions",
                 f"Write a set of numbers for {name}, as in `{name} : (0, 1) := …`, or write the "
                 f"definition without a set",
@@ -3036,6 +3376,9 @@ class Declarations:
                     visit(item, bound)
             elif isinstance(e, terms.Select):
                 visit(e.family, bound)
+            elif isinstance(e, terms.Conditional):
+                for part in (e.test.left, e.test.right, e.then, e.otherwise):
+                    visit(part, bound)
             elif isinstance(e, terms.Interval) and isinstance(e.bounds, terms.Range):
                 visit(e.bounds.lower, bound)
                 visit(e.bounds.upper, bound)
@@ -3076,7 +3419,21 @@ class Declarations:
                     ),
                 )
 
-        check_selections_and_calls(definition.body, address, self, dict(definition.domains))
+        # in a derived parameter's definition `log`, `exp`, `min` and `max`
+        # are the functions of the language, so the arguments of a call of
+        # one are not counted against a function of that name that the stage
+        # defines: `check_derived_parameters` refuses the call under
+        # `derived-parameter`, whatever number of arguments that function
+        # takes
+        check_selections_and_calls(
+            definition.body,
+            address,
+            self,
+            dict(definition.domains),
+            language_calls=(
+                DERIVED_PARAMETER_CALLS if self.defines_a_derived_parameter(definition) else ()
+            ),
+        )
         visit(definition.body)
         return out
 
@@ -3147,7 +3504,10 @@ class Declarations:
     def check_definition_name(self, definition, symbol, bound, params) -> None:
         """A name a definition's body reads is in scope where the definition
         stands: one of its arguments, a name an operator binds, `inf`, or a
-        name the stage declares; a marked field is one the stage lists."""
+        name the stage declares; a marked field is one the stage lists, and
+        a field written bare is one that a header lists without a mark
+        (`listed_with_a_mark_alone`). A derived parameter's definition that
+        reads a field is left to `check_derived_parameters`."""
         if isinstance(symbol.symbol, terms.Constant):
             name = symbol.symbol.name
             if not (
@@ -3168,6 +3528,23 @@ class Declarations:
                         f"in scope here are {self.names_in_scope_text(params)}"
                     ),
                     write=f"Write one of the names in scope here: {self.names_in_scope_text(params)}",
+                )
+            marked = (
+                []
+                if name in params or name in bound or self.defines_a_derived_parameter(definition)
+                else self.listed_with_a_mark_alone(name)
+            )
+            if marked:
+                listed, advice = self.marked_spellings_text(name, marked)
+                raise self.error(
+                    "name-in-scope",
+                    definition.address,
+                    (
+                        f"the definition of {definition.name!r} mentions {name!r}, and the "
+                        f"headers of the stage list the field {name} {listed}; a bare name "
+                        f"reads the field that a header lists without a mark. {advice}"
+                    ),
+                    write=advice,
                 )
         elif (
             isinstance(symbol.symbol, terms.Variable)
@@ -3511,8 +3888,13 @@ class Declarations:
         """A chosen label: the value line of the block from the continuation
         to the decision perch selects by one tuple indexed by the chosen
         label `key`, and the policy's `argmax` over `key` maximizes over
-        that tuple; `check_positions` then places each continuation value."""
-        value = policy = None
+        that tuple; `check_positions` then places each continuation value.
+        Where several lines of that block write a field of the value role,
+        the value line is the one whose tuple the policy maximizes. Where
+        the policy maximizes the tuple of none, the refusal names the line
+        whose tuple holds the most entries of the policy's maximand, and the
+        last of the lines that hold equally many."""
+        value_lines, policy = [], None
         for b, _ in self.blocks:
             for _, a, item in self.bodies[b]:
                 core = item.core
@@ -3526,7 +3908,7 @@ class Declarations:
                         for stem, _ in outputs_and_unknowns(core.lhs, a, self, core.rhs)
                     )
                 ):
-                    value = _AuthoredLine(address=a, rhs=core.rhs)
+                    value_lines.append(_AuthoredLine(address=a, rhs=core.rhs))
                 if (
                     isinstance(core.rhs, terms.Operator)
                     and core.rhs.head == "argmax"
@@ -3534,8 +3916,18 @@ class Declarations:
                     and subscript_binder(core.rhs.subs[0]) == key
                 ):
                     policy = _AuthoredLine(address=a, rhs=core.rhs)
-        tuples = selection_tuples(value.rhs, key) if value else []
         chosen = selection_tuples(policy.rhs, key) if policy else []
+
+        def agreement(line):
+            # whether the line's tuple is the policy's maximand, then how
+            # many entries of the tuple the maximand holds
+            selected = selection_tuples(line.rhs, key)
+            if not selected or not chosen:
+                return (False, 0)
+            return (selected[0] == chosen[0], sum(item in chosen[0] for item in selected[0]))
+
+        value = max(reversed(value_lines), key=agreement, default=None)
+        tuples = selection_tuples(value.rhs, key) if value else []
         if not tuples or not chosen or tuples[0] != chosen[0]:
             written = lambda items: "(" + ", ".join(to_source(item) for item in items) + ")"
             read = (
@@ -3604,9 +3996,15 @@ class Declarations:
         which the stage records as diagnostics under `unread-input`. A line
         reads the names of its right side, of its clause after `⟂` and of a
         left side that names no field, as `check_names_in_scope` reads them,
-        a `!doc` line and a property line among the lines, so the listings
-        answered here are exactly the ones `signature-complete` does not
-        require. A block whose lines read no listed value input keeps its
+        a `!doc` line and a property line among the lines. A line also reads
+        the value fields that the feasible set of its maximization reads
+        (`feasible_set_reads`), so a listed value that the body of `Γ_c`
+        names is an input of the block whose line writes
+        `argmax_{cp : Γ_c(m)}(…)`. `signature-complete` requires none of the
+        listings answered here. It does not require the listing of a field
+        that a feasible set alone reads either: `check_definition_name`
+        requires that some header of the stage list such a field. A block
+        whose lines read no listed value input keeps its
         listings, since the kernel of a statement with no value dependency
         takes one as its formal input (rule `value-input-role`), and is not
         in the answer. Called after `check_statements`, so every line has
@@ -3631,9 +4029,39 @@ class Declarations:
                         identity = listed_identity(spelling, listings, self)
                         if identity is not None:
                             read.add(identity)
+                    read.update(self.feasible_set_reads(term, address))
             unread = tuple(l for l in values if l.wire_type not in read)
             if unread and len(unread) < len(values):
                 found[block_id] = unread
+        return found
+
+    def feasible_set_reads(self, term, address) -> set:
+        """The identities of the fields that the feasible sets of a term
+        read. A feasible set is the set of a binder of an `argmax`, `Γ_c(m)`
+        in `argmax_{cp : Γ_c(m)}(…)`. The body of each definition the set
+        calls is read in the call's place (`free_names_with_shocks`), so the
+        set reads the fields that the body of `Γ_c` names. A name is the
+        field the stage lists under it (`listed_identity` on every listing
+        of the stage), as `TypingContext._input_named` reads a name of a
+        definition's body, which stands in no block: `L[>]` is the
+        continuation field, and a bare name is the field of the first
+        listing that writes the name bare. A binder written before a set,
+        `c` in `h_choice : Γ_h(m - c)`, is bound in that set and names no
+        field."""
+        found = set()
+        for node in nodes(term):
+            if not (isinstance(node, terms.Operator) and node.head == "argmax"):
+                continue
+            bound = set()
+            for sub in node.subs:
+                if isinstance(sub, terms.In):
+                    for spelling, _ in free_names_with_shocks(
+                        sub.set, address, self, bound=frozenset(bound)
+                    ):
+                        identity = listed_identity(spelling, self.listings, self)
+                        if identity is not None:
+                            found.add(identity)
+                bound.add(subscript_binder(sub))
         return found
 
     def check_block(self, block_id: str) -> None:
@@ -3728,6 +4156,12 @@ class Declarations:
                         self.check_input_perch_state(
                             block_id, line_perch, term, aliases, address
                         )
+            if (
+                self.backward_block_edge(block_id) is not None
+                and isinstance(equation, terms.Equation)
+                and DOC not in marks
+            ):
+                self.check_defines_no_name_by_itself(block_id, equation, address)
             for lhs in left_fields:
                 lhs_type = listed_identity(lhs, out_listings, self)
                 for read in reads:
@@ -3754,6 +4188,52 @@ class Declarations:
         if perch == CONTINUATION and not self.policy_candidate_spelling(block_id, spelling):
             return output_perch
         return perch
+
+    def check_defines_no_name_by_itself(self, block_id, equation, address) -> None:
+        """An operative equation of a backward block that writes values
+        (`backward_block_edge`) whose two sides are one bare name, `L = L`,
+        defines the name by itself and is refused under `definition-order`,
+        as the same line of a forward block is. The sentence names the two
+        marked spellings, `L = L[>]` for a line that reads the continuation
+        field and `L[<] = …` for a line that writes the arrival field. For a
+        control, `c = c`, the sentence gives the reason alone and the refusal
+        carries no action: the header of such a block refuses a marked
+        control under `field-perch`."""
+        lhs = equation.lhs
+        if not (
+            isinstance(lhs, terms.Sym)
+            and isinstance(lhs.symbol, terms.Constant)
+            and equation.rhs == lhs
+        ):
+            return
+        name = lhs.symbol.name
+        if self.field_roles.get(name) == CONTROL:
+            raise self.error(
+                "definition-order",
+                address,
+                (
+                    f"the two sides of this line of block {block_id!r} are the one name {name}, so "
+                    f"the line defines {name} by itself, the cycle {name} → {name}; {name} is a "
+                    f"control, and the lines of a backward block are read at the controls that "
+                    f"its header lists"
+                ),
+            )
+        advice = (
+            f"Write `{name} = {name}[>]` where the line reads the field at the continuation "
+            f"perch, or `{name}[<] = …` where it writes the field at the arrival perch, and "
+            f"list the field with that mark in the header of the block"
+        )
+        raise self.error(
+            "definition-order",
+            address,
+            (
+                f"the two sides of this line of block {block_id!r} are the one name {name}, so "
+                f"the line defines {name} by itself, the cycle {name} → {name}; a mark tells "
+                f"the fields of one name at two perches apart: `{name}[>]` is the field at the "
+                f"continuation perch and `{name}[<]` the field at the arrival perch. {advice}"
+            ),
+            write=advice,
+        )
 
     def check_line_id(self, block_id, item, ordinal, address, ids) -> None:
         """The id a line carries names one line of its block; `ids` holds the
@@ -4648,7 +5128,13 @@ class Declarations:
         ]
         if shocks:
             drawn = ", ".join(sorted({shock for shock, _ in shocks}))
-            first, _ = shocks[0]
+            # the advice names every shock of the edge, in header order, the
+            # shocks the line already integrates among them
+            every = list(
+                dict.fromkeys(shock for block in chain for shock in self.input_shocks(block))
+            )
+            over = "it" if len(every) == 1 else "every shock of that edge"
+            advice = f"Write the expectation over {over}, `E_{{{','.join(every)}}}(…)`"
             raise self.error(
                 "shock-observed",
                 address,
@@ -4658,9 +5144,9 @@ class Declarations:
                     f"edge from the {left} perch to the {perch} perch draws "
                     f"the shock {drawn}, so the value of "
                     f"{spelling_text(spelling)} is not known at the {left} perch. "
-                    f"Write the expectation over it, `E_{{{first}}}(…)`"
+                    f"{advice}"
                 ),
-                write=f"Write the expectation over it, `E_{{{first}}}(…)`",
+                write=advice,
             )
 
     def input_shocks(self, block_id: str) -> list:

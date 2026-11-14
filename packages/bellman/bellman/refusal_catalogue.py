@@ -367,8 +367,8 @@ def _four_parts(example, refusal):
     write = refusal.write or ""
     written = getattr(refusal, "parts", None)
     if written is not None:
-        # `_syntax_refusal` stores the two parts of a refusal under the rule
-        # `syntax` on the refusal, and they are read there
+        # `syntax.parse.syntax_refusal` stores the two parts of a refusal
+        # under the rule `syntax` on the refusal, and they are read there
         return dict(where=where, what=written.what, why=written.why, write=write)
     # a refusal at a line of an addition marks the addition's text
     what = (

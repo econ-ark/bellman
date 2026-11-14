@@ -764,7 +764,7 @@ def test_item_3_a_derived_parameter_may_carry_a_declared_set():
     # with the forms such a definition takes; a number, with the advice to
     # write it in the calibration file
     for value, words in (
-        ("max(β, R)", "defines no derived parameter"),
+        ("sqrt(β)", "defines no derived parameter"),
         ("𝑢", "defines no derived parameter"),
         ("2", "the calibration file supplies its value, `q: 2`"),
     ):
@@ -1177,11 +1177,17 @@ def test_item_5_the_corrections_hold():
     assert _open_memberships(copy_native(expected).calibrate({"β": 0.2, "R": 2.0})) == [
         "The value 0.2 of β must belong to (0, E_{y}(y^2))."
     ]
-    # so does that of a bound whose parameter, declared on the extended
-    # reals, is infinite: no arithmetic fails there
+    # a bound that is the bare name of a parameter declared on the extended
+    # reals and valued at an infinity is read as that infinity, so the
+    # membership is decided: 0.2 lies in (0, ∞). Until 12 November 2026 this
+    # membership stayed open; AAS ruled on that day that an infinite endpoint
+    # has one reading, whatever supplies the value (AMD-GRAM-006)
     extended = stage_from_text(_two_nodes("β : (0, T)\nT : ℝ̄"))
     infinite = copy_native(extended).calibrate({"β": 0.2, "R": 2.0, "T": math.inf})
-    assert "The value 0.2 of β must belong to (0, T)." in _open_memberships(infinite)
+    assert _open_memberships(infinite) == []
+    assert "the value -1.0 lies outside the declared set (0, T)" in _refused_calibration(
+        extended, {"β": -1.0, "R": 2.0, "T": math.inf}
+    )
     # a setting's set is judged so at configuration, from a mapping and from
     # a settings file
     bounded = methodized(plain, "n : ℝ₊₊\ntol : (0, 1/(n-2))\n")

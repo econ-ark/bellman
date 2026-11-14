@@ -145,7 +145,8 @@ def _declared_set(term, ctx, block, local, active=()):
     a field is the meet its sort holds and for a bound variable the binder's
     set; for a derived parameter, the reals, since its value at a calibration
     is a finite real number (AMD-MT-003, build contract §5), whatever set its
-    definition declares; and, for the bare
+    definition declares, unless that set may hold an infinity, and then that
+    set, as for a parameter declared on it (AMD-GRAM-006); and, for the bare
     name an alias line of the block writes, the set of that line's body
     (AMD-SG-017 §4). A field under a perch mark, `c[>]`, has
     the declared set of its own listing and borrows none, since whether a
@@ -165,8 +166,10 @@ def _declared_set(term, ctx, block, local, active=()):
             # a derived parameter's value is a finite real number, which the
             # calibration establishes or refuses (AMD-MT-003, build contract
             # §5); the set its definition declares is judged there as well
-            # and settles no condition of a line here
-            return REAL
+            # and settles no condition of a line here. Where that set may
+            # hold an infinity, the value may be one, and the line is read
+            # as it is for a parameter declared on that set
+            return ctx.extended_derived_sets.get(symbol.name, REAL)
         if isinstance(symbol, T.Constant) and symbol.name not in active:
             body = ctx.alias_body(symbol.name, block)
             if body is not None:

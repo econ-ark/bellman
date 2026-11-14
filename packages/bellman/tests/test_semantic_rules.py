@@ -12,7 +12,8 @@ raised when a file breaks it and one test that exercises it. The tests below
 read every row: each function is read by import and attribute lookup, each
 test is one that pytest collects, each refusal is a rule of the refusal
 catalogue, the sections of the rows are those of the page, every rule the
-package refuses under has a row or a page that states it, and the example
+package refuses under has a row or a page that states it, every rule that a
+section 2.1 to 2.5 or a rule R1 to R12 names has a row, and the example
 of a rule the package does not yet check is read or refused as its row says.
 The rows of `UNCHECKED_ELSEWHERE`, the rules not yet checked that another
 section of the page or another page states, are run in the same way. The
@@ -205,6 +206,15 @@ def test_item_5_every_rule_the_package_refuses_under_has_a_row_or_a_page_that_st
         for rule, page in RULES_STATED_ELSEWHERE.items()
         if not (DOCS / page).is_file()
     ]
+    # a rule that a section 2.1 to 2.5 or a rule R1 to R12 of the page names
+    # in a code span stands in a row, and not in RULES_STATED_ELSEWHERE alone
+    sections, _ = page_sections()
+    for label in sorted(set(SECTION_HEADING.findall((DOCS / APPENDIX).read_text("utf-8")))):
+        named = set(re.findall(r"`([a-z][a-z-]*)`", sections[label])) & rules
+        problems += [
+            f"section {label} of docs/{APPENDIX} names the rule {rule!r}, which stands in no row"
+            for rule in sorted(named - in_rows)
+        ]
     assert not problems, reported(problems)
 
 

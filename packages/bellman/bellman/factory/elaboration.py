@@ -42,7 +42,7 @@ from bellman.stage.levels import (
     supplies_addition,
 )
 from bellman.syntax.lower import parse_with_spans
-from bellman.syntax.parse import expected_forms, grammar_sentence, marked_line, place_at
+from bellman.syntax.parse import syntax_refusal
 from bellman.syntax.union import union
 
 # --- the stage of a record and the symbolic stage of a text ---
@@ -368,7 +368,7 @@ def construct_stage(text, origin, additions=()):
             try:
                 parsed.append(parse_with_spans(held_text, filename=held_origin))
             except (LarkError, ConstructionError) as error:
-                failure = _syntax_refusal(error, held_text, held_origin)
+                failure = syntax_refusal(error, held_text, held_origin)
                 clear_frames(error.__traceback__)
                 break
         # Raising outside the handler keeps parser state out of __context__.
@@ -398,107 +398,6 @@ def construct_stage(text, origin, additions=()):
         parsed = unioned = None
 
 
-# --- the refusal of a text the parser or the lowering cannot read ---
-
-
-class SyntaxParts(NamedTuple):
-    """The two parts of a refusal under the rule `syntax` that the catalogue
-    of refusals prints each under its own heading: `why`, what the file
-    writes there and what the language admits, and `what`, the line of the
-    file with a mark under the column. The message is written from these two
-    alone; the action stands once, in the refusal's `write`."""
-
-    why: str
-    what: str
-
-
-def _syntax_refusal(error, text, origin):
-    """The refusal of a text the parser or the lowering cannot read, under the
-    rule `syntax` or the rule the lowering names, in the four parts of a refusal.
-
-    Where: the file, the line and the column, which `ConstructionError` writes
-    before the message, and the end of the token the parser read or of the
-    item the lowering refused, so that an editor underlines the token and
-    guesses no end. What: the line of the file with a mark under the
-    column. Why: what the file writes there and, for a refusal of the parser,
-    the forms the language admits at that place, each terminal of the grammar
-    read once from `syntax.parse.FORMS`. What to write, the refusal's
-    `write`: the sentence of the grammar's own comment for the place the
-    position falls inside, where it falls inside a block header or an
-    operator's subscript, and the sentence the lowering supplies where the
-    lowering refuses. No token name and no rule name of Lark is written."""
-    lowered = isinstance(error, ConstructionError)
-    token = getattr(error, "token", None)
-    line, column, end_line, end_column = (
-        (error.line, error.column, error.end_line, error.end_column)
-        if lowered
-        else (
-            getattr(error, "line", None),
-            getattr(error, "column", None),
-            getattr(token, "end_line", None),
-            getattr(token, "end_column", None),
-        )
-    )
-    line, column, end_line, end_column = (
-        held if type(held) is int else None for held in (line, column, end_line, end_column)
-    )
-    if line is not None and (end_line is None or end_column is None):
-        # the parser stopped at one character, and names no token
-        end_line, end_column = line, column + 1
-    forms = expected_forms(
-        getattr(error, "accepts", None)
-        or getattr(error, "expected", None)
-        or getattr(error, "allowed", None)
-        or ()
-    )
-    advice = error.write if lowered else None
-    if forms:
-        # a spelling of the language is quoted; a phrase that says what may
-        # stand there, `a name`, is written as it reads
-        quoted = [form if " " in form else f"`{form}`" for form in forms]
-        admitted = " or ".join([", ".join(quoted[:-1]), quoted[-1]] if len(quoted) > 1 else quoted)
-        why = f"{_written(error)}, and the language admits {admitted} at this place"
-        place = None if line is None else place_at(text, line, column)
-        if place is not None:
-            advice = f"{place}: {grammar_sentence(place)}"
-    else:
-        # the lowering refuses in its own sentence, which quotes what it read
-        # (`syntax.lower._refusal`)
-        why = error.message if lowered else str(error)
-    marked = "" if line is None else marked_line(text, line, column)
-    parts = SyntaxParts(why=why, what=marked)
-    refusal = ConstructionError(
-        "\n".join(part for part in (why, marked) if part),
-        file=origin,
-        line=line,
-        column=column,
-        end_line=None if line is None else end_line,
-        end_column=None if line is None else end_column,
-        # a refusal of the lowering keeps the rule it names, `syntax` or
-        # `marginal-role-retired`; a refusal of the parser is under `syntax`
-        rule=error.rule if lowered else "syntax",
-        write=advice or None,
-    )
-    # the explanation and the marked line, which the catalogue of the rules
-    # (`refusal_catalogue.py`) shows each under its own heading
-    refusal.parts = parts
-    return refusal
-
-
-def _written(error):
-    """What the file writes where the parser stopped, in one short piece: the
-    first line of the text the parser read there, shortened where it is long,
-    or the end of the line or of the file where it read none."""
-    token = getattr(error, "token", None)
-    written = str(token) if token is not None else (getattr(error, "char", None) or "")
-    if getattr(token, "type", None) == "$END":
-        return "the file ends here"
-    head = written.split("\n")[0].strip()
-    if not head:
-        return "the line ends here"
-    return f"the file writes `{head if len(head) <= 24 else head[:24] + '…'}` here"
-
-
 # --- the spans of a text, and the binding of a stage from a record ---
 
 
@@ -526,7 +425,7 @@ def source_spans(text, origin):
     try:
         return parse_with_spans(text, filename=origin).spans
     except (LarkError, ConstructionError) as error:
-        refusal = _syntax_refusal(error, text, origin)
+        refusal = syntax_refusal(error, text, origin)
         clear_frames(error.__traceback__)
     raise refusal from None
 

@@ -343,6 +343,13 @@ class Space(expr):
     set: object
 
 
+@dataclass(frozen=True, slots=True)
+class Conditional(expr):
+    test: object
+    then: object
+    otherwise: object
+
+
 class selector:
     __slots__ = ()
 

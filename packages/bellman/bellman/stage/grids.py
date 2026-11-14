@@ -74,6 +74,7 @@ from bellman.native.records import (
 )
 from bellman.refusals import ConstructionError
 from bellman.stage.boxes import builder_rows_of
+from bellman.stage.calibration_requirements import membership
 from bellman.stage.method_rows import OUTPUT_PERCH
 from bellman.stage.places import components_by_place, typings
 from bellman.stage.representations import bound_row, supports_equal
@@ -727,13 +728,50 @@ def expectation_names(stage):
     )
 
 
-def point_in_declared_set(stage, value, declared):
+def point_in_declared_set(stage, value, declared, calibration=None):
     """True, False, or None for the membership of a number in a declared
-    set, decided by the set algebra through the sets the stage defines."""
+    set, decided by the set algebra through the sets the stage defines.
+    Where the set algebra leaves it undecided and `calibration` holds
+    parameter values, as it does for a set whose endpoint is a parameter,
+    `Xa := [a_Art, inf)`, the membership is decided at those values as the
+    value of a setting is (`calibration_requirements.membership`), so that a
+    setting and a grid bound of one value in one set receive one answer."""
     point = T.Interval(
         T.Range(left=T.Closed(), lower=T.Number(value), upper=T.Number(value), right=T.Closed())
     )
-    return sets.within(point, declared, _set_definitions(stage))
+    member = sets.within(point, declared, _set_definitions(stage))
+    if member is None and calibration:
+        try:
+            status, _ = membership(stage, dict(stage.definitions), declared, value, calibration)
+        except ValueError:
+            # a bound of the set has no value at the calibration, `[1/k_lo,
+            # inf)` at k_lo = 0, so nothing decides the membership
+            return None
+        if status is True or status is False:
+            return status
+    return member
+
+
+def parameters_read_at(stage, declared, calibration):
+    """The values of the parameters a declared set reads, ` at a_Art = 0.5`,
+    for the sentence that refuses a point judged at them; nothing for a set
+    that reads no parameter `calibration` values. A set the stage defines by
+    name is read through its definition."""
+    if not calibration or declared is None:
+        return ""
+    definitions = _set_definitions(stage)
+    read, followed, pending = [], set(), [declared]
+    while pending:
+        for node in term_nodes(pending.pop(0)):
+            if isinstance(node, T.Named) and node.name in definitions:
+                if node.name not in followed:
+                    followed.add(node.name)
+                    pending.append(definitions[node.name])
+            elif isinstance(node, T.Sym) and isinstance(node.symbol, T.Constant):
+                name = node.symbol.name
+                if name in calibration and name not in read:
+                    read.append(name)
+    return " at " + ", ".join(f"{name} = {calibration[name]!r}" for name in read) if read else ""
 
 
 def _set_definitions(stage):
@@ -1087,20 +1125,22 @@ def check_grid_at_configuration(stage, place, held, values, domain):
     """The checks of the grid typed at `place` at the settings `values`, which
     `configure` makes, on the `GridDomain` `domain` of one box of the place:
     each configured point of `!Points` has the shape of the domain's
-    coordinates, finite real coordinates and, where the set algebra decides
-    it, membership of each coordinate's declared set (`grid-bounds`); and
-    each requirement written after `require` holds of the grid constructed at
-    the bound values (`grid-requirement`), where those values decide it.
-    Where construction cannot establish the grid, its omitted factors, an
-    undecided membership or a feasible set without a sampler among them, the
-    requirement remains an obligation and nothing is refused here."""
+    coordinates, finite real coordinates and, where the set algebra or the
+    calibration that is bound decides it, membership of each coordinate's
+    declared set (`grid-bounds`); and each requirement written after
+    `require` holds of the grid constructed at the bound values
+    (`grid-requirement`), where those values decide it. Where construction
+    cannot establish the grid, its omitted factors, an undecided membership
+    or a feasible set without a sampler among them, the requirement remains
+    an obligation and nothing is refused here."""
     grid = held.grid
+    calibration = calibration_values(stage)
     for term, coordinates in _point_terms(grid, domain):
-        _check_point_values(stage, place, held, values, term, coordinates, domain)
+        _check_point_values(stage, place, held, values, term, coordinates, domain, calibration)
     if not _requirements(grid):
         return
     try:
-        constructed = _construct(stage, grid, domain, values, _calibration(stage))
+        constructed = _construct(stage, grid, domain, values, calibration)
     except _Unresolved:
         return
     failure = _requirement_failure(grid, constructed)
@@ -1129,22 +1169,24 @@ def _requirements(grid):
     return isinstance(grid, T.Fibred) and (bool(grid.base.require) or bool(grid.fibre.require))
 
 
-def _calibration(stage):
+def calibration_values(stage):
     """The parameter values the version's calibration binds, joined by the
     value of each derived parameter at them (`derived_values`), so that a
-    feasible set or a bound that reads a derived parameter is read at its
-    value, while the stored calibration keeps the declared parameters alone
-    (shared contract §8); empty on a symbolic version."""
+    feasible set, a bound or a declared set that reads a parameter or a
+    derived parameter is read at its value, while the stored calibration
+    keeps the declared parameters alone (shared contract §8); empty on a
+    symbolic version."""
     calibration = dict(stage.bindings.calibration or {})
     if not calibration:
         return calibration
     return {**calibration, **derived_values(stage, calibration)}
 
 
-def _check_point_values(stage, place, held, values, term, coordinates, domain):
+def _check_point_values(stage, place, held, values, term, coordinates, domain, calibration):
     """The configured or defined points of one `!Points` term: one finite
     real coordinate for each of `coordinates`, and each coordinate inside its
-    declared set where the set algebra decides the membership."""
+    declared set where the set algebra, or the parameter values
+    `calibration`, decide the membership."""
     if term.nodes is None:
         return
 
@@ -1180,10 +1222,13 @@ def _check_point_values(stage, place, held, values, term, coordinates, domain):
                     "write finite reals",
                 )
             declared = domain.states.get(name)
-            if declared is not None and point_in_declared_set(stage, value, declared) is False:
+            if declared is None:
+                continue
+            if point_in_declared_set(stage, value, declared, calibration) is False:
                 refuse(
                     f"hold the point {row!r}, whose coordinate {name} = {value!r} lies outside "
-                    f"the declared set {to_source(declared)}",
+                    f"the declared set {to_source(declared)}"
+                    f"{parameters_read_at(stage, declared, calibration)}",
                     "write points inside the declared sets",
                 )
 
@@ -1245,11 +1290,11 @@ def _construct_on(stage, grid, states, domain, values, calibration):
     if isinstance(grid, T.Fibred):
         return _fibred(stage, grid, domain, values, calibration)
     if isinstance(grid, T.PointGrid):
-        return _points(stage, grid, states, values)
-    return _cartesian(stage, grid, states, domain, values)
+        return _points(stage, grid, states, values, calibration)
+    return _cartesian(stage, grid, states, domain, values, calibration)
 
 
-def _cartesian(stage, grid, states, domain, values):
+def _cartesian(stage, grid, states, domain, values, calibration):
     """The product, in the declared order of `states`, of the nodes of one
     factor per coordinate. A feasible factor is a family of grids indexed by
     the states, a quadrature factor's nodes come from its handler and a
@@ -1278,13 +1323,14 @@ def _cartesian(stage, grid, states, domain, values):
                 f"it names no factor for the coordinate {name}, and numerical construction "
                 f"requires one for each coordinate of its domain, ({', '.join(states)})"
             )
-        nodes.append(_coordinate_nodes(stage, by_coordinate[name], declared, values))
+        nodes.append(_coordinate_nodes(stage, by_coordinate[name], declared, values, calibration))
     return _Constructed(GRID_WORDS[T.Cartesian], tuple(states), tuple(itertools.product(*nodes)))
 
 
-def _coordinate_nodes(stage, factor, declared, values):
+def _coordinate_nodes(stage, factor, declared, values, calibration):
     """The exact nodes of one spaced or listed factor at the settings, each
-    inside the coordinate's declared set, in order and without repetition."""
+    inside the coordinate's declared set at the parameter values
+    `calibration`, in order and without repetition."""
     if isinstance(factor, T.Spaced):
         if factor.spacing is not None:
             raise _Unresolved(
@@ -1313,7 +1359,7 @@ def _coordinate_nodes(stage, factor, declared, values):
         if not isinstance(listed, (list, tuple)) or not all(_finite_real(v) for v in listed):
             raise _Unresolved(f"the nodes of its factor {to_source(factor)} are not finite reals")
         found = tuple(Fraction(value) for value in listed)
-    _check_membership(stage, factor.coordinate, found, declared)
+    _check_membership(stage, factor.coordinate, found, declared, calibration)
     return tuple(dict.fromkeys(found))
 
 
@@ -1338,22 +1384,24 @@ def _spaced(lower, upper, count):
     return tuple(lower + (upper - lower) * Fraction(k, count - 1) for k in range(count))
 
 
-def _check_membership(stage, name, nodes, declared):
+def _check_membership(stage, name, nodes, declared, calibration):
     """Each node of the coordinate `name` lies in its declared set, as the
-    set algebra decides; a membership that is false or not decided is
+    set algebra decides or, where it does not, the parameter values
+    `calibration`; a membership that is false or not decided is
     unresolved."""
     if declared is None:
         return
     for node in nodes:
-        member = point_in_declared_set(stage, _number(node), declared)
+        member = point_in_declared_set(stage, _number(node), declared, calibration)
         if member is not True:
             word = "lies outside" if member is False else "is not decidably inside"
             raise _Unresolved(
                 f"its node {name} = {_number(node)} {word} the declared set {to_source(declared)}"
+                f"{parameters_read_at(stage, declared, calibration)}"
             )
 
 
-def _points(stage, grid, states, values):
+def _points(stage, grid, states, values, calibration):
     """The support of the declared points of `!Points`, each point in the
     declared order of `states`, without repetition; the empty grid where no
     points are named."""
@@ -1375,7 +1423,9 @@ def _points(stage, grid, states, values):
             raise _Unresolved(f"its point {row!r} has a coordinate that is no finite real")
     exact = tuple(tuple(Fraction(value) for value in row) for row in rows)
     for index, (name, declared) in enumerate(states.items()):
-        _check_membership(stage, name, tuple(point[index] for point in exact), declared)
+        _check_membership(
+            stage, name, tuple(point[index] for point in exact), declared, calibration
+        )
     return _Constructed(GRID_WORDS[T.PointGrid], coordinates, tuple(dict.fromkeys(exact)))
 
 
@@ -1419,7 +1469,7 @@ def _fibred(stage, grid, domain, values, calibration):
     for state in base.points:
         lower, upper = _interval_at(feasible, tuple(states), state, calibration)
         nodes = _spaced(lower, upper, count)
-        _check_membership(stage, control, nodes, declared)
+        _check_membership(stage, control, nodes, declared, calibration)
         fibres.append((state, nodes))
         points.extend(state + (node,) for node in nodes)
     return _Constructed(
@@ -1825,7 +1875,7 @@ def realized_grids(stage, builder):
     if stage.bindings.settings is None:
         return None
     values = dict(stage.bindings.settings)
-    calibration = _calibration(stage)
+    calibration = calibration_values(stage)
     entries = {
         typing.place.address: typing
         for typing in typings(stage)

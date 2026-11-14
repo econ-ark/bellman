@@ -14,17 +14,22 @@ read says in the language's words: `FORMS`, one entry per terminal of the
 grammar; `expected_forms`, the forms admitted at a position; `place_at` and
 `grammar_sentence`, the place a position falls inside and the sentence of the
 grammar's own comment for it; and `marked_line`, the line of the text with a
-mark under the column. `factory/elaboration.py` raises the refusal and writes
-its sentence, its marked line and its advice from these; no token name and no
-rule name of Lark leaves this module.
+mark under the column. `syntax_refusal` writes the refusal's sentence, its
+marked line and its advice from these, and `factory/elaboration.py` and
+`stage/binding_verbs.py` raise it for a stage file and for a methods file; no
+token name and no rule name of Lark leaves this module. `CASE_WORDS` holds
+the three words of a definition by cases, which are no names.
 """
 
 import functools
 import pathlib
+import re
 from typing import NamedTuple
 
 from lark import Lark
 from lark.exceptions import UnexpectedInput
+
+from bellman.refusals import ConstructionError
 
 _GRAMMAR = pathlib.Path(__file__).parent / "grammars" / "stage.lark"
 _RETIRED = _GRAMMAR.with_name("retired.lark")
@@ -152,6 +157,10 @@ FORMS = {
     "TAGBANG": "a !-marked vocabulary word",
     "STAGE_STRING": "a quoted string",
     "_ASSIGN": ":=",
+    # the three words of a definition by cases
+    "_IF": "if",
+    "_THEN": "then",
+    "_ELSE": "else",
     # what stands at the ends of a line
     "_NL": "the end of the line",
     "STMT_META": "an annotation, :: [ … ]",
@@ -295,3 +304,156 @@ def grammar_sentence(place):
     sentence = " ".join(comment)
     head, stop, _ = sentence.partition(". ")
     return f"{head}." if stop else sentence
+
+
+# --- the refusal of a text the parser or the lowering cannot read ---
+
+# The three words of a definition by cases, `x := if a < b then 1 else 2`.
+# Each is a word of the language and no name (AMD-GRAM-006; AAS, 12 November
+# 2026): the lowering refuses one that the parser read as a name
+# (`lower.ToAst.name`), and a refusal of the parser at a line that writes
+# `if` gives the same sentence in its advice (`syntax_refusal`).
+CASE_WORDS = ("if", "then", "else")
+CASE_WORDS_ARE_NO_NAMES = (
+    "`if`, `then` and `else` are the words of a definition by cases, and none of them is a name"
+)
+
+
+class SyntaxParts(NamedTuple):
+    """The two parts of a refusal under the rule `syntax` that the catalogue
+    of refusals prints each under its own heading: `why`, what the file
+    writes there and what the language admits, and `what`, the line of the
+    file with a mark under the column. The message is written from these two
+    alone; the action stands once, in the refusal's `write`."""
+
+    why: str
+    what: str
+
+
+def syntax_refusal(error, text, origin):
+    """The refusal of a text the parser or the lowering cannot read, under the
+    rule `syntax` or the rule the lowering names, in the four parts of a
+    refusal.
+
+    Where: the file, the line and the column, which `ConstructionError` writes
+    before the message, and the end of the token the parser read or of the
+    item the lowering refused, so that an editor underlines the token and
+    guesses no end. What: the line of the file with a mark under the
+    column. Why: what the file writes there and, for a refusal of the parser,
+    the forms the language admits at that place, each terminal of the grammar
+    read once from `FORMS`. What to write, the refusal's `write`: the sentence
+    of the grammar's own comment for the place the position falls inside,
+    where it falls inside a block header or an operator's subscript; where
+    the line writes the word `if` before the place the parser stopped at,
+    outside a comment, a quoted text and an annotation
+    (`_writes_the_word_if`), the place a definition by cases stands in and
+    the sentence that its three words are no names (`_CONDITIONAL_PLACE`);
+    and the sentence the lowering supplies where the lowering refuses. No
+    token name and no rule name of Lark is written."""
+    lowered = isinstance(error, ConstructionError)
+    token = getattr(error, "token", None)
+    line, column, end_line, end_column = (
+        (error.line, error.column, error.end_line, error.end_column)
+        if lowered
+        else (
+            getattr(error, "line", None),
+            getattr(error, "column", None),
+            getattr(token, "end_line", None),
+            getattr(token, "end_column", None),
+        )
+    )
+    line, column, end_line, end_column = (
+        held if type(held) is int else None for held in (line, column, end_line, end_column)
+    )
+    if line is not None and (end_line is None or end_column is None):
+        # the parser stopped at one character, and names no token
+        end_line, end_column = line, column + 1
+    forms = expected_forms(
+        getattr(error, "accepts", None)
+        or getattr(error, "expected", None)
+        or getattr(error, "allowed", None)
+        or ()
+    )
+    advice = error.write if lowered else None
+    if forms:
+        # a spelling of the language is quoted; a phrase that says what may
+        # stand there, `a name`, is written as it reads
+        quoted = [form if " " in form else f"`{form}`" for form in forms]
+        admitted = " or ".join([", ".join(quoted[:-1]), quoted[-1]] if len(quoted) > 1 else quoted)
+        why = f"{_written(error)}, and the language admits {admitted} at this place"
+        place = None if line is None else place_at(text, line, column)
+        if place is not None:
+            advice = f"{place}: {grammar_sentence(place)}"
+        if line is not None and _writes_the_word_if(text, line, column):
+            advice = _CONDITIONAL_PLACE
+    else:
+        # the lowering refuses in its own sentence, which quotes what it read
+        # (`syntax.lower._refusal`)
+        why = error.message if lowered else str(error)
+    marked = "" if line is None else marked_line(text, line, column)
+    parts = SyntaxParts(why=why, what=marked)
+    refusal = ConstructionError(
+        "\n".join(part for part in (why, marked) if part),
+        file=origin,
+        line=line,
+        column=column,
+        end_line=None if line is None else end_line,
+        end_column=None if line is None else end_column,
+        # a refusal of the lowering keeps the rule it names, `syntax` or
+        # `marginal-role-retired`; a refusal of the parser is under `syntax`
+        rule=error.rule if lowered else "syntax",
+        write=advice or None,
+    )
+    # the explanation and the marked line, which the catalogue of the rules
+    # (`refusal_catalogue.py`) shows each under its own heading
+    refusal.parts = parts
+    return refusal
+
+
+# where a definition by cases stands, and that its three words are no names:
+# the advice of a refusal of the parser at a line that writes the word `if`
+# before the place the parser stopped at
+_CONDITIONAL_PLACE = (
+    "a conditional, `if … then … else …`, stands as the whole right side of a definition "
+    "without arguments, `x := if a < b then 1 else 2`, with or without a declared set, "
+    "`x : (0, 3) := if a < b then 1 else 2`, or as a branch of another conditional; it stands "
+    f"inside no formula, no function's body and no line of a block; {CASE_WORDS_ARE_NO_NAMES}"
+)
+
+
+def _writes_the_word_if(text, line, column):
+    """Whether the line the parser stopped in writes the word `if` before the
+    column it stopped at, outside a comment, a quoted text and an
+    annotation. The parser read that word as the first word of a
+    conditional, which then did not continue as one, or as a name, at a
+    place where no conditional stands. The word inside a comment, `# if
+    any`, inside a quoted text, `"if any"`, or inside an annotation, `::
+    [id=if]` or `:: used if positive`, is no word of the line's formula. The
+    text is searched with these removed: each annotation, as the grammar's
+    `STMT_META` reads it, in brackets with unquoted or quoted content, as
+    one quoted text, or as a text up to `#` or `{`; each other quoted text,
+    as the grammar's `STAGE_STRING` reads it; and the comment."""
+    lines = text.split("\n")
+    if not 1 <= line <= len(lines):
+        return False
+    written = re.sub(
+        r'[ \t]*::[ \t]*(?:\[(?:[^\]"\r\n]|"[^"\r\n]*")*\]|"[^"\r\n]*"|[^\r\n#{]+)'
+        r"|\"[^\"\r\n]*\"|'[^'\r\n]*'|#.*",
+        "",
+        lines[line - 1][: max(0, column - 1)],
+    )
+    return re.search(r"(?<!\w)if(?!\w)", written) is not None
+
+
+def _written(error):
+    """What the file writes where the parser stopped, in one short piece: the
+    first line of the text the parser read there, shortened where it is long,
+    or the end of the line or of the file where it read none."""
+    token = getattr(error, "token", None)
+    written = str(token) if token is not None else (getattr(error, "char", None) or "")
+    if getattr(token, "type", None) == "$END":
+        return "the file ends here"
+    head = written.split("\n")[0].strip()
+    if not head:
+        return "the line ends here"
+    return f"the file writes `{head if len(head) <= 24 else head[:24] + '…'}` here"

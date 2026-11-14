@@ -381,9 +381,9 @@ def test_item_4_calibration_decides_the_membership_of_a_value_in_a_set_with_cond
             with pytest.raises(ValueError) as refused:
                 copy_native(stage).calibrate(values)
             assert "parameter 'R'" in str(refused.value) and word in str(refused.value), ordered
-    # the same where the membership of a parameter that is read is never
-    # decided: R is outside its set, whose endpoint S lies on the extended
-    # reals, and the bound of β reads R
+    # the same where the set of a parameter that is read has an endpoint
+    # declared on the extended reals: R is outside its set, whose endpoint
+    # S lies on the extended reals, and the bound of β reads R
     three = ("β : (0,1) @ (0, R)", "R : (0, S)", "S : ℝ̄")
     for ordered in (three, (three[1], three[0], three[2]), three[::-1]):
         stage = stage_from_text(TWO_NODES.replace(both, "\n".join(ordered) + "\n"))

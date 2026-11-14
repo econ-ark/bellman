@@ -743,6 +743,32 @@ EXAMPLES = {
             )
         },
     ),
+    # the number of candidate levels of value function iteration written as a
+    # number in place of a declared setting (AAS, 14 November 2026)
+    "method-setting-declared": Example(
+        rule="method-setting-declared",
+        corpus="cons",
+        additions=(
+            (
+                "methods.bl",
+                "@methods: cons\n"
+                "tol_v : ℝ₊₊\n"
+                "cntn_to_dcsn.method : !vfi(tol=tol_v, n_c=50)\n",
+            ),
+        ),
+        origin="methods.bl",
+        provokes="union",
+        address="cntn_to_dcsn",
+        words=("n_c=50", "the number 50", "a setting declared in the methods file"),
+        write={
+            "edits": (
+                (
+                    "tol_v : ℝ₊₊\ncntn_to_dcsn.method : !vfi(tol=tol_v, n_c=50)\n",
+                    "tol_v : ℝ₊₊\nn_c : ℕ\ncntn_to_dcsn.method : !vfi(tol=tol_v, n_c=n_c)\n",
+                ),
+            )
+        },
+    ),
     # the closed form typed at the Evaluation of a value builder whose method
     # is no `!explicit`, which supplies no complete authored expression: a
     # label without its expression supplies no data to the closed form, and
@@ -1060,13 +1086,19 @@ EXAMPLES = {
         words=("`(y, z) ~ N((0, 0), ((1, 2), (2, 1)))`", "not positive semidefinite", "-1.0"),
         write={"edits": (("((1, 2), (2, 1))", "((1, 0), (0, 1))"),)},
     ),
-    # a derived parameter's definition calls a function other than `log` and
-    # `exp`; the declaration pass refuses it at the definition's term address
+    # a derived parameter's definition calls a function other than `log`,
+    # `exp`, `min` and `max`; the declaration pass refuses it at the
+    # definition's term address
     "derived-parameter": Example(
         rule="derived-parameter",
         text="@stage: t\nβ : (0,1)\nh := 1/sqrt(1 - β)\n",
         address="3",
-        words=("the derived parameter h", "`1/sqrt(1 - β)`", "calls sqrt", "neither log nor exp"),
+        words=(
+            "the derived parameter h",
+            "`1/sqrt(1 - β)`",
+            "calls sqrt",
+            "none of log, exp, min and max",
+        ),
         write={"edits": (("h := 1/sqrt(1 - β)", "h := 1/(1 - β)^(1/2)"),)},
     ),
     "conditional-not-declared": Example(

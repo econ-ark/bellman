@@ -79,7 +79,11 @@ from bellman.syntax import terms as T
 from bellman.syntax.source import distribution_subject_text, to_source
 from bellman.syntax.vocabulary import PERCH_MARK
 from bellman.typing import sets
-from bellman.typing.declarations import DERIVED_PARAMETER_CALLS
+from bellman.typing.declarations import (
+    DERIVED_PARAMETER_ELEMENTARY,
+    DERIVED_PARAMETER_EXTREMA,
+    derived_parameter_call,
+)
 
 # --- the kernel of an operator, as text and compiled ---
 
@@ -247,9 +251,17 @@ def compile_kernel(stage, box):
     NumPy is reached by `np` alone. With array arguments it follows NumPy
     broadcasting, a value declared on a product of n sets carrying its n
     components on its last axis; it checks no declared set, shape or label.
+    A selection by a label is NumPy's `where` on the label, at each point of
+    an array of labels; where the key is one label and `where` refuses an
+    operand it cannot convert, as it refuses a value JAX is tracing, the
+    component the label selects is returned at the common shape of the
+    operands, the shape `where` gives its result, so that a caller can trace
+    a kernel with the label fixed.
     It returns one output as it is and several as a tuple. Retained
     arithmetic and calls to closed-form named functions, also through an
-    alias of a function's name, are written through their definitions, and an
+    alias of a function's name, are written through their definitions, a call
+    of `min` or `max` of numbers on a line of a block as `np.minimum` or
+    `np.maximum` (`_Writer._call`), and an
     expectation over a label shock as its weighted sum; a symbolic derivative
     or another form the text cannot write is refused under `kernel-form`, and
     under `kernel-target` a box with no explicit function: an `Argmax`, an
@@ -845,6 +857,10 @@ _MARKED_PERCH = {mark: perch for perch, mark in PERCH_MARK.items() if mark}
 _MADE = itertools.count(1)
 
 
+# the Python sign of each relation a conditional's test writes
+_COMPARISON_SIGNS = {T.Lt: "<", T.Le: "<=", T.Eq: "==", T.Ge: ">=", T.Gt: ">"}
+
+
 class _Written(NamedTuple):
     """One written Python expression: its text, the precedence of its
     outermost operation, the number of axes its value has at a point, and
@@ -1158,6 +1174,8 @@ class _Writer:
             return self._key(term, env, domains)
         if isinstance(term, T.Call):
             return self._call(term, env, domains)
+        if isinstance(term, T.Conditional) and self.writing_derived:
+            return self._conditional(term, env, domains)
         case = label_case(self.ctx, term, self.spec.builder)
         if case is not None:
             return self.expression(case, env, domains)
@@ -1272,15 +1290,16 @@ class _Writer:
         """The entry of a collection, or the component of a product value,
         that a key selects. For a collection on an index set the entry is
         found by the collection's own index set, the first factor of its
-        domain: by a label's position for a set of labels, by one `np.where`
+        domain: by a label's position for a set of labels, written as one
+        selection by a label for each (`_label_helper`), by one `np.where`
         for each integer member of a listed set, the members written from
         the parameters, and by the offset from the lower bound for an
         integer range, the bounds written from the parameters, so that the
         text holds no calibration and the parameters the index set reads
         become arguments; a key equal to no member, or outside the range,
         gives no value. For a product value the key's own declared finite set
-        of labels gives the component's position, written as one `np.where`
-        for each label; a key with no such set is refused."""
+        of labels gives the component's position, written as one selection by
+        a label for each; a key with no such set is refused."""
         ctx, name = self.ctx, term.sel.at
         key = self.expression(T.Sym(T.Constant(name)), env, domains)
         if key.axes:
@@ -1320,7 +1339,7 @@ class _Writer:
                     f"{to_source(indexed[0])}, which is no finite index set"
                 )
             components = [_component(family, index) for index in range(len(conditions))]
-            return self._cases(conditions, components)
+            return self._cases(conditions, components, by_label=isinstance(first, T.FiniteSet))
         declared = (
             domains[name]
             if name in domains
@@ -1349,7 +1368,9 @@ class _Writer:
                 )
             components = [_component(family, index) for index in range(len(labels))]
         return self._cases(
-            tuple(f"np.asarray({key.text}) == {label!r}" for label in labels), components
+            tuple(f"np.asarray({key.text}) == {label!r}" for label in labels),
+            components,
+            by_label=True,
         )
 
     def _index_expression(self, term, env, domains):
@@ -1503,6 +1524,79 @@ class _Writer:
             self.order.insert(0, key)
         return self.functions[key].name
 
+    def _conditional(self, term, env, domains):
+        """A definition by cases inside a derived parameter's definition,
+        `if Γ < R then 1/(R - Γ) else inf`, written as a call of the inner
+        function `by_cases` (`_by_cases_helper`), each branch given as a
+        function without arguments."""
+        left = self.expression(term.test.left, env, domains)
+        right = self.expression(term.test.right, env, domains)
+        then = self.expression(term.then, env, domains)
+        otherwise = self.expression(term.otherwise, env, domains)
+        written = (left, right, then, otherwise)
+        return _Written(
+            f"{self._by_cases_helper()}({left.text} {_COMPARISON_SIGNS[type(term.test.op)]} "
+            f"{right.text}, lambda: {then.text}, lambda: {otherwise.text})",
+            _ATOM,
+            max(part.axes for part in written),
+            any(part.batched for part in written),
+        )
+
+    def _by_cases_helper(self):
+        """The inner function of a definition by cases. Where the test is one
+        truth value, it evaluates the branch the test chooses and no other.
+        Where the test is an array, it evaluates a branch only if the test
+        chooses it at some entry; where the test chooses each branch at some
+        entry, it evaluates both with NumPy's floating-point errors ignored,
+        so that a branch neither raises nor warns at the entries the test
+        does not choose. `np.where` then takes at each entry the value of the
+        branch the test chooses there. Where the test is a value that a
+        compiler traces, which has no truth value, it evaluates both branches
+        and `np.where` selects between them. It ignores the floating-point
+        errors only where the array library has `errstate`, since a kernel's
+        text may be run with another library in place of NumPy, as
+        `jax.numpy`, which has none. Where it selects between both
+        branches, it multiplies the selected array by 1.0, so that the
+        result is a float array, as calibration's value is a float: of two
+        integer branches, `if Γ < R then 2 else 3`, `np.where` gives an
+        integer array, which refuses a negative integer power, as the
+        least or the greatest of integers does (`_call`). Where the test is
+        one truth value, it multiplies the chosen branch by 1.0 as well: an
+        integer branch is then a float and no Python integer, whose
+        arithmetic is exact where calibration's rounds, as in `(h0^60 + 1)
+        - h0^60`."""
+        key = ("by_cases",)
+        if key not in self.functions:
+            name = self.names.take("by_cases", "function")
+            self.functions[key] = _Function(
+                name,
+                (
+                    f"def {name}(test, then, otherwise):",
+                    "    try:",
+                    "        holds = bool(test)",
+                    "    except (TypeError, ValueError):",
+                    "        pass",
+                    "    else:",
+                    "        return 1.0*(then() if holds else otherwise())",
+                    "    try:",
+                    "        some, every = bool(np.any(test)), bool(np.all(test))",
+                    "    except (TypeError, ValueError):",
+                    "        return 1.0*np.where(test, then(), otherwise())",
+                    "    if every:",
+                    "        return np.where(test, then(), np.nan)",
+                    "    if not some:",
+                    "        return np.where(test, np.nan, otherwise())",
+                    "    if not hasattr(np, 'errstate'):",
+                    "        return 1.0*np.where(test, then(), otherwise())",
+                    "    with np.errstate(all='ignore'):",
+                    "        return 1.0*np.where(test, then(), otherwise())",
+                ),
+                0,
+                (),
+            )
+            self.order.insert(0, key)
+        return self.functions[key].name
+
     def _integer_match_helper(self):
         """The inner function comparing integer keys after conversion, with no
         floating comparison between the two keys."""
@@ -1524,19 +1618,63 @@ class _Writer:
             self.order.append(key)
         return self.functions[key].name
 
-    def _cases(self, conditions, components):
+    def _cases(self, conditions, components, by_label=False):
         """One `np.where` for each member of a finite index set, the component
         of the family at the member's position where the key equals the
-        member, and no value where it equals none."""
+        member, and no value where it equals none. With `by_label` the
+        members are labels, and each is written through the inner function
+        of a selection by a label (`_label_helper`) in place of `np.where`."""
         axes = max(component.axes for component in components)
+        where = self._label_helper() if by_label else "np.where"
         text = "np.nan"
         for condition, component in reversed(tuple(zip(conditions, components))):
             written = _Written(condition, _COMPARISON, 0, True)
             text = (
-                f"np.where({_aligned(written, axes).text}, "
+                f"{where}({_aligned(written, axes).text}, "
                 f"{_aligned(component, axes).text}, {text})"
             )
         return _Written(text, _ATOM, axes, True)
+
+    def _label_helper(self):
+        """The name of the inner function of a selection by a label, written
+        once before the first output that selects by one: NumPy's `where` on
+        the comparison of the key with the label, so that an array of labels
+        selects at each point and every operand NumPy takes gives what
+        `np.where` gives. Where `where` refuses an operand it cannot convert,
+        as it refuses a value JAX is tracing, and the key is one label, so
+        that the comparison is one truth value, the function returns the
+        component the label selects at the common shape of the three
+        operands, the shape `where` gives its result, so that a component not
+        selected still gives the result its shape: the component as it is
+        where that shape is its own, and otherwise its product with an array
+        of that shape whose every entry is True, which leaves every value as
+        it is. With the label fixed the kernel can then be traced. With an
+        array of labels the refusal stands, as it does for an operand NumPy
+        cannot convert that has no `shape`."""
+        key = ("label_case",)
+        if key not in self.functions:
+            name = self.names.take("where_label", "function")
+            self.functions[key] = _Function(
+                name,
+                (
+                    f"def {name}(condition, value, otherwise):",
+                    "    try:",
+                    "        return np.where(condition, value, otherwise)",
+                    "    except TypeError:",
+                    "        if np.size(condition) != 1:",
+                    "            raise",
+                    "    chosen = value if np.all(condition) else otherwise",
+                    "    operands = condition, value, otherwise",
+                    "    shape = np.broadcast_shapes(*map(np.shape, operands))",
+                    "    if np.shape(chosen) == shape:",
+                    "        return chosen",
+                    "    return chosen*np.ones(shape, dtype=bool)",
+                ),
+                0,
+                (),
+            )
+            self.order.append(key)
+        return self.functions[key].name
 
     def _family_set(self, family, domains):
         """The declared set of the family a selection reads: of a parameter,
@@ -1604,9 +1742,48 @@ class _Writer:
         """A call of a closed-form function, written as a call of the inner
         function that the text defines for it; inside a derived parameter's
         definition, a call of `log` or `exp` of one argument, written as the
-        NumPy function of that name."""
-        if self.writing_derived and term.fun in DERIVED_PARAMETER_CALLS and len(term.args) == 1:
-            argument = self.expression(term.args[0], env, domains)
+        NumPy function of that name, and a call of `min` or `max`, written
+        as `np.minimum` or `np.maximum` of its arguments taken two at a
+        time. Where no argument of such a call is surely a float
+        (`_surely_float`), the first is multiplied by 1.0, so that the result
+        is a float, as calibration's value is, and a negative integer power
+        of it has a value; NumPy returns the least or the greatest of
+        integers as a NumPy integer, which refuses such a power. A call of
+        `min` or `max` on a line of a block, `L = max(L[>], b)`, is written
+        by the same rule where the stage defines no function of that name;
+        it is refused where an argument is a tuple or a collection, since
+        the rule takes the least and the greatest of numbers. In the body of
+        a closed-form function the two names are written by no rule."""
+        on_a_line = (
+            not self.writing_derived
+            and not self.writing
+            and term.fun in DERIVED_PARAMETER_EXTREMA
+            and term.fun not in self.ctx.functions
+        )
+        if derived_parameter_call(term) and (self.writing_derived or on_a_line):
+            written = [self.expression(argument, env, domains) for argument in term.args]
+            if on_a_line and any(argument.axes for argument in written):
+                self._refuse(
+                    f"the call {self._printed(term)} with an argument that is no single "
+                    "number, a tuple or a collection"
+                )
+            if term.fun in DERIVED_PARAMETER_EXTREMA:
+                function = "np.minimum" if term.fun == "min" else "np.maximum"
+                if len(written) > 1 and not any(map(_surely_float, term.args)):
+                    first = written[0]
+                    written[0] = _Written(
+                        f"1.0*{_bracketed(first, _POWER)}", _PRODUCT, first.axes, first.batched
+                    )
+                text = written[0].text
+                for argument in written[1:]:
+                    text = f"{function}({text}, {argument.text})"
+                return _Written(
+                    text,
+                    _ATOM if len(written) > 1 else written[0].precedence,
+                    max(argument.axes for argument in written),
+                    any(argument.batched for argument in written),
+                )
+            argument = written[0]
             return _Written(
                 f"np.{term.fun}({argument.text})", _ATOM, argument.axes, argument.batched
             )
@@ -1765,6 +1942,27 @@ def _number(value):
     else:
         text = repr(value)
     return _Written(text, _NEGATION if text.startswith("-") else _ATOM, 0, False)
+
+
+def _surely_float(term):
+    """Whether a term of a derived parameter's definition has a float value
+    whatever numbers its names hold: a number written with a decimal point,
+    a quotient, a call of `log` or `exp`, or a formula or a call one part of
+    which is such a term. A name, of a parameter or of a derived parameter,
+    may hold an integer, and is not surely a float."""
+    if isinstance(term, T.Number):
+        return isinstance(term.value, float)
+    if isinstance(term, T.Div):
+        return True
+    if isinstance(term, T.Neg):
+        return _surely_float(term.operand)
+    if isinstance(term, T.Pow):
+        return _surely_float(term.base) or _surely_float(term.exponent)
+    if isinstance(term, (T.Add, T.Sub, T.Mul)):
+        return _surely_float(term.left) or _surely_float(term.right)
+    if isinstance(term, T.Call):
+        return term.fun in DERIVED_PARAMETER_ELEMENTARY or any(map(_surely_float, term.args))
+    return False
 
 
 def _bracketed(written, least):

@@ -318,11 +318,13 @@ def _definition_conditions(ctx, definition, found):
     in the definitions table, its address being the ordinal of the item in the
     file (AMD-SG-014 §3); and `law-support` for a distribution. A derived
     parameter has here no condition of its own: where the declared sets
-    leave its definition open, or the definition calls log or exp, and only
-    there, the fold records for it the one obligation that its value is a
-    finite real number, which the calibration decides by evaluating its
-    definition (`stage_fold._derived_definedness`; AMD-MT-003, build
-    contract §5)."""
+    leave its definition open, the definition calls log, exp, min or max or
+    it is written by cases, and only there, the fold records for it the one
+    obligation that its value is a finite real number, or a finite real
+    number or an infinity that its declared set may hold, which the
+    calibration decides by evaluating its definition
+    (`stage_fold._derived_definedness`; AMD-MT-003, build contract §5;
+    AMD-GRAM-006)."""
     if definition.kind in ("function", "correspondence"):
         _term_conditions(
             ctx,
