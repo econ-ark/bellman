@@ -7844,6 +7844,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#2026-11-12-the-forward-record-of-a-period-and-one-periods-forward-map-and-its-fixed-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-12 — The forward record of a period, and one period's forward map and its fixed point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-12-a-selection-by-one-label-carries-a-value-numpy-cannot-convert" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11170,6 +11181,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#2026-11-12-the-forward-record-of-a-period-and-one-periods-forward-map-and-its-fixed-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-12 — The forward record of a period, and one period's forward map and its fixed point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-12-a-selection-by-one-label-carries-a-value-numpy-cannot-convert" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14474,6 +14496,14 @@
 <li>A named set or a declared function that reads bare a field which the headers list with a mark alone, <code>Xm := {x : ℝ | x &gt; L}</code> where a header lists <code>L[&gt;]</code>, is refused under <a href="../Bellman-Sym/reference/refusals/#name-in-scope"><code>name-in-scope</code></a>, with the file, the line and the marked spelling. Before, the elaboration raised a Python <code>KeyError</code>.</li>
 <li>The refusal under <a href="../Bellman-Sym/reference/refusals/#shock-observed"><code>shock-observed</code></a> of an arrival line with no expectation advises the expectation over every shock that the edge draws, <code>E_{ψ,ξ}(…)</code>. Before, it advised the first shock alone, and the line written as advised was refused again.</li>
 <li>Where a block of a methods file typed <code>!explicit</code> stands in place of a stage's block and writes no line for an output that the stage's header lists, the refusal under <a href="../Bellman-Sym/reference/refusals/#output-defined"><code>output-defined</code></a> names the block of the methods file and says that its lines stand in place of the stage's. Before, it pointed at the block of the stage file, which writes the line.</li>
+</ul>
+<h3 id="2026-11-12-the-forward-record-of-a-period-and-one-periods-forward-map-and-its-fixed-point">2026-11-12 — The forward record of a period, and one period's forward map and its fixed point<a class="headerlink" href="#2026-11-12-the-forward-record-of-a-period-and-one-periods-forward-map-and-its-fixed-point" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>forward_record(period, inter_connector, to=None)</code>, of <code>bellman.period</code>, answers the <strong>forward record</strong> of a <a href="../wiki/period/">period</a>: what each <a href="../wiki/forward_builder/">forward builder</a> of the period, the builder that carries the measure of a population from one perch of a stage to the next, needs and what it gives, as plain data that refers to no stage. For each one, in the order the builders are applied, a <code>ForwardStep</code> names the state fields it reads from the measure that reaches it, each shock it draws with the law the stage file declares and the values of the parameters that law reads, each control with the states its policy is read at, the law of motion as the function <code>compile_kernel()</code> answers with its parameters and their values, and the state fields of the measure it gives. The record then holds the joins within the period, the fields at which a measure enters and leaves the period, and the joins of the inter-period mapping, an entry such as <code>{"a": "k"}</code>, to the period given as <code>to</code> or, with no <code>to</code>, to the period itself. <code>needs()</code> lists what a numerical step must be given: nodes and weights for each builder's shocks, a function for each control, and a value for each parameter that has none. <code>closed()</code> says whether the mapping joins the period to itself at every field at which a measure enters it.</li>
+<li>The record is read from elaborated stages and binds nothing. A stage with one forward builder is held: a stage that declares no arrival perch, which is entered at its decision perch, and a stage that ends a model. A builder with a sub-builder or a branch, or whose law of motion has no explicit function, is refused with a <code>ValueError</code> that names the stage and the builder, and a stage whose forward builders are not constructed is refused by the stage as before.</li>
+<li><code>asva.forward</code>, a new module of the package <code>asva</code>, computes with the record and with what its caller supplies, and imports nothing of <code>bellman</code>. A measure is held as weighted atoms, <code>Atoms</code>: for each field <code>(stage key, field)</code> an array of points, and an array of masses. <code>carry</code> carries a measure between two places of a period, through each builder in turn: the measure is extended by the table of the builder's shocks, each control is read from its policy, and the law of motion is applied. <code>one_period_ahead</code> carries a measure through the period and along the inter-period mapping, with a survivors' share of mass and the measure of those who enter in place of the rest. <code>transition</code> gives the same map on a product grid by linear lottery, <code>stationary</code> its fixed point, the measure <code>mu</code> with <code>mu = s T mu + (1 - s) nu</code> for the survivors' share <code>s</code> and the entrants' measure <code>nu</code>, by a linear solve or by iteration, and by power iteration where every household survives, and it reports whether an iteration converged and how much the measure changes over one more period. A grid is finite, and the lottery places at an end node the mass the map carries beyond it; <code>transition</code> holds how much each node sends below and above the grid, and <code>stationary</code> reports the share of its measure that the ends hold in that way, since a measure that keeps its place only because of that return, all the mass at the top node of a map that moves every household up, is no stationary measure of the map. <code>tabulated</code> makes a policy from a table of one state.</li>
+<li>Two questions are thereby asked of a period that has been built and solved, with no entry in a trellis file: where a given population stands one period ahead, and what population the period's policy would generate if the same period followed without end. The second is the stationary population of the period, and it is the stationary population of a model only where that policy is the model's.</li>
+<li>Death and birth can be stated in a stage file with the language as it stands: a stage in which a household survives with a declared probability and is otherwise replaced by a newborn, written with a label drawn from <code>Categorical</code> and a selection by that label. A period that holds such a stage has, as the fixed point of its own forward map, the measure that the survivors' share and the entrants give when they are passed as arguments; the tests of the record compare the two.</li>
 </ul>
 <h3 id="2026-11-12-a-selection-by-one-label-carries-a-value-numpy-cannot-convert">2026-11-12 — A selection by one label carries a value NumPy cannot convert<a class="headerlink" href="#2026-11-12-a-selection-by-one-label-carries-a-value-numpy-cannot-convert" title="Permanent link">&para;</a></h3>
 <ul>
