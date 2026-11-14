@@ -8385,6 +8385,14 @@
 <td><code>refusals.py</code>, <code>RULES</code>, <code>"method-admission"</code></td>
 </tr>
 <tr>
+<td><a id="method-setting-declared"></a><code>method-setting-declared</code></td>
+<td><code>(rule method-setting-declared)</code></td>
+<td><code>elaborate</code></td>
+<td>No argument of a method word is written as a number, at any depth of its tuples and nested words: a number that a method reads is a setting the methods file declares, whose value the settings file holds.</td>
+<td>—</td>
+<td><code>refusals.py</code>, <code>RULES</code>, <code>"method-setting-declared"</code></td>
+</tr>
+<tr>
 <td><a id="representation-source"></a><code>representation-source</code></td>
 <td><code>(rule representation-source)</code></td>
 <td><code>elaborate</code></td>
@@ -8452,7 +8460,7 @@
 <td><a id="grid-bounds"></a><code>grid-bounds</code></td>
 <td><code>(rule grid-bounds)</code></td>
 <td><code>configure</code></td>
-<td>At configuration the bounds of a factor are in order and inside the coordinate's declared set, its count is at least two, and a node set is strictly increasing; each configured point of <code>!Points</code> has finite real coordinates inside the coordinates' declared sets.</td>
+<td>At configuration the bounds of a factor are in order and inside the coordinate's declared set, its count is at least two, and a node set is strictly increasing; each configured point of <code>!Points</code> has finite real coordinates inside the coordinates' declared sets. A declared set that reads a parameter is read at the calibration that is bound, and before one is bound a bound of a factor over such a set is refused.</td>
 <td>—</td>
 <td><code>refusals.py</code>, <code>RULES</code>, <code>"grid-bounds"</code></td>
 </tr>
@@ -8588,7 +8596,7 @@
 <td><a id="derived-parameter"></a><code>derived-parameter</code></td>
 <td><code>(rule derived-parameter)</code></td>
 <td><code>elaborate</code></td>
-<td>A derived parameter's definition, <code>h := 1/(1 - Γ/R)</code>, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers and the calls <code>log</code> and <code>exp</code> of one argument; the calibration supplies no value for it, and at the calibration values every operation of its definition is defined and its value is a finite real number. The set a definition declares, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, is a set of numbers and reads no setting.</td>
+<td>A derived parameter's definition, <code>h := 1/(1 - Γ/R)</code>, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers, the calls <code>log</code> and <code>exp</code> of one argument and the calls <code>min</code> and <code>max</code> of one argument or more, or by cases, <code>if … then … else …</code>; where the stage defines a function of one of those four names, the definition calls none of that name. The calibration supplies no value for it, and at the calibration values every operation it evaluates is defined and its value is a finite real number, or the infinity a branch of its conditional writes. The set a definition declares, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, is a set of numbers and reads no setting, and it holds each infinity that a branch writes: a definition that declares no set writes no infinite branch.</td>
 <td>—</td>
 <td><code>refusals.py</code>, <code>RULES</code>, <code>"derived-parameter"</code></td>
 </tr>
@@ -9128,448 +9136,458 @@
 <a id="__codelineno-5-310" name="__codelineno-5-310" href="#__codelineno-5-310"></a>  why    the entry `cntn_to_dcsn.method : !Linear` types `cntn_to_dcsn`, a place of the kind builder, with `!Linear`, whose row of the catalogue admits node, statement, definition, operator evaluate; write the word at a place of a kind it admits, or a word that admits this place
 <a id="__codelineno-5-311" name="__codelineno-5-311" href="#__codelineno-5-311"></a>  write  Write the entry at `cntn_to_dcsn.evaluate`, `cntn_to_dcsn.evaluate.method : !Linear`, or give `cntn_to_dcsn` a word that admits the kind builder
 <a id="__codelineno-5-312" name="__codelineno-5-312" href="#__codelineno-5-312"></a>
-<a id="__codelineno-5-313" name="__codelineno-5-313" href="#__codelineno-5-313"></a>representation-source  (graph construction; elaborate)
-<a id="__codelineno-5-314" name="__codelineno-5-314" href="#__codelineno-5-314"></a>  condition  A function representation's family accepts the data its place supplies, chosen in the order of an authored table, the policy pairs of an `!egm` builder's closing Evaluation, a complete authored expression with an explicit kernel, and the family's own nodes; missing data selects no other case, and an optional grid beside an authored table discretizes the coordinates at which the table is evaluated, written as a name or as a tuple of names in the order of the grid's coordinates, and has exactly its finite support where both are known at configuration.
+<a id="__codelineno-5-313" name="__codelineno-5-313" href="#__codelineno-5-313"></a>method-setting-declared  (graph construction; elaborate)
+<a id="__codelineno-5-314" name="__codelineno-5-314" href="#__codelineno-5-314"></a>  condition  No argument of a method word is written as a number, at any depth of its tuples and nested words: a number that a method reads is a setting the methods file declares, whose value the settings file holds.
 <a id="__codelineno-5-315" name="__codelineno-5-315" href="#__codelineno-5-315"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-316" name="__codelineno-5-316" href="#__codelineno-5-316"></a>  where  applications/portfolio-choice/declaration/stages/cons/cons.bl, line 2, column 1 (address 'cntn_to_dcsn.evaluate')
+<a id="__codelineno-5-316" name="__codelineno-5-316" href="#__codelineno-5-316"></a>  where  methods.bl, line 3, column 1 (address 'cntn_to_dcsn')
 <a id="__codelineno-5-317" name="__codelineno-5-317" href="#__codelineno-5-317"></a>  what
-<a id="__codelineno-5-318" name="__codelineno-5-318" href="#__codelineno-5-318"></a>    cntn_to_dcsn.evaluate.method : !closed_form
+<a id="__codelineno-5-318" name="__codelineno-5-318" href="#__codelineno-5-318"></a>    cntn_to_dcsn.method : !vfi(tol=tol_v, n_c=50)
 <a id="__codelineno-5-319" name="__codelineno-5-319" href="#__codelineno-5-319"></a>    ^
-<a id="__codelineno-5-320" name="__codelineno-5-320" href="#__codelineno-5-320"></a>  why    stage 'cons', place 'cntn_to_dcsn.evaluate': !closed_form reads a complete authored expression with an explicit kernel, and the place supplies none: the closing Evaluation of an !explicit builder, a line that defines one name by an expression, or a declared function supplies one, and a label without its expression does not; its data sources are expression
-<a id="__codelineno-5-321" name="__codelineno-5-321" href="#__codelineno-5-321"></a>  write  Type a family that samples the function on its own grid, such as !Linear, at `cntn_to_dcsn.evaluate`, or write the function's expression
+<a id="__codelineno-5-320" name="__codelineno-5-320" href="#__codelineno-5-320"></a>  why    stage 'cons', place 'cntn_to_dcsn': the entry `cntn_to_dcsn.method : !vfi(tol=tol_v, n_c=50)` writes the number 50 among the arguments of its method; a number that a method reads is a setting declared in the methods file and valued in the settings file
+<a id="__codelineno-5-321" name="__codelineno-5-321" href="#__codelineno-5-321"></a>  write  Declare a setting with its set in the methods file, write the setting's name in place of the number, and give the number in the settings file
 <a id="__codelineno-5-322" name="__codelineno-5-322" href="#__codelineno-5-322"></a>
-<a id="__codelineno-5-323" name="__codelineno-5-323" href="#__codelineno-5-323"></a>explicit-solution  (graph construction; elaborate)
-<a id="__codelineno-5-324" name="__codelineno-5-324" href="#__codelineno-5-324"></a>  condition  An `!explicit` builder is a policy or backward value builder to which an addition appends lines in a block of the builder's id, `[id=policy, policy.method : !explicit]`, which stand in place of the declared lines at the operative level; a builder with no such block is refused. The lines write every output by `output = expression` on the states of the builder's own perch, the parameters, the derived parameters and the names the block introduces, with a compiled kernel for each output: a line that reads an input of the builder's header, a value input or its derivative or a control at which a value builder's declared lines are read, states a relation or applies an operator on its right side is refused naming `!egm` or `!time_iteration`, a line that defines or reads a field at another perch, the candidate `c[&gt;]` or the identification `c = c[&gt;]`, naming `!egm`, and a block that writes no output with the line `&lt;output&gt; = &lt;expression&gt;` to write; each refusal stands at the line at fault, and at the typing entry where no line is. A complete block of such lines under `!egm` or `!time_iteration`, appended by an addition or written in the stage file, is refused, naming `!explicit`.
+<a id="__codelineno-5-323" name="__codelineno-5-323" href="#__codelineno-5-323"></a>representation-source  (graph construction; elaborate)
+<a id="__codelineno-5-324" name="__codelineno-5-324" href="#__codelineno-5-324"></a>  condition  A function representation's family accepts the data its place supplies, chosen in the order of an authored table, the policy pairs of an `!egm` builder's closing Evaluation, a complete authored expression with an explicit kernel, and the family's own nodes; missing data selects no other case, and an optional grid beside an authored table discretizes the coordinates at which the table is evaluated, written as a name or as a tuple of names in the order of the grid's coordinates, and has exactly its finite support where both are known at configuration.
 <a id="__codelineno-5-325" name="__codelineno-5-325" href="#__codelineno-5-325"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-326" name="__codelineno-5-326" href="#__codelineno-5-326"></a>  where  methods.bl, line 2, column 13 (address 'policy')
+<a id="__codelineno-5-326" name="__codelineno-5-326" href="#__codelineno-5-326"></a>  where  applications/portfolio-choice/declaration/stages/cons/cons.bl, line 2, column 1 (address 'cntn_to_dcsn.evaluate')
 <a id="__codelineno-5-327" name="__codelineno-5-327" href="#__codelineno-5-327"></a>  what
-<a id="__codelineno-5-328" name="__codelineno-5-328" href="#__codelineno-5-328"></a>    [id=policy, policy.method : !egm] {
-<a id="__codelineno-5-329" name="__codelineno-5-329" href="#__codelineno-5-329"></a>                ^
-<a id="__codelineno-5-330" name="__codelineno-5-330" href="#__codelineno-5-330"></a>  why    stage 'perfect_foresight', builder 'policy': the block of the builder under !egm defines every output by an explicit expression of its states and parameters and reads no value input, so it states an explicit solution, on which !egm has nothing to iterate; type !explicit on the builder for such a block, or write the lines !egm solves, which read the continuation value or its derivative
-<a id="__codelineno-5-331" name="__codelineno-5-331" href="#__codelineno-5-331"></a>  write  Type `policy.method : !explicit` in place of `policy.method : !egm`
+<a id="__codelineno-5-328" name="__codelineno-5-328" href="#__codelineno-5-328"></a>    cntn_to_dcsn.evaluate.method : !closed_form
+<a id="__codelineno-5-329" name="__codelineno-5-329" href="#__codelineno-5-329"></a>    ^
+<a id="__codelineno-5-330" name="__codelineno-5-330" href="#__codelineno-5-330"></a>  why    stage 'cons', place 'cntn_to_dcsn.evaluate': !closed_form reads a complete authored expression with an explicit kernel, and the place supplies none: the closing Evaluation of an !explicit builder, a line that defines one name by an expression, or a declared function supplies one, and a label without its expression does not; its data sources are expression
+<a id="__codelineno-5-331" name="__codelineno-5-331" href="#__codelineno-5-331"></a>  write  Type a family that samples the function on its own grid, such as !Linear, at `cntn_to_dcsn.evaluate`, or write the function's expression
 <a id="__codelineno-5-332" name="__codelineno-5-332" href="#__codelineno-5-332"></a>
-<a id="__codelineno-5-333" name="__codelineno-5-333" href="#__codelineno-5-333"></a>declared-twice  (graph construction; elaborate)
-<a id="__codelineno-5-334" name="__codelineno-5-334" href="#__codelineno-5-334"></a>  condition  Over the files of a stage, a component is typed once, whether by an absolute or a relative spelling of its path, a name is defined once, or identically in each file, and a line id names one line of a block; the union of the stage file and its additions refuses a second entry, definition or line naming both positions.
+<a id="__codelineno-5-333" name="__codelineno-5-333" href="#__codelineno-5-333"></a>explicit-solution  (graph construction; elaborate)
+<a id="__codelineno-5-334" name="__codelineno-5-334" href="#__codelineno-5-334"></a>  condition  An `!explicit` builder is a policy or backward value builder to which an addition appends lines in a block of the builder's id, `[id=policy, policy.method : !explicit]`, which stand in place of the declared lines at the operative level; a builder with no such block is refused. The lines write every output by `output = expression` on the states of the builder's own perch, the parameters, the derived parameters and the names the block introduces, with a compiled kernel for each output: a line that reads an input of the builder's header, a value input or its derivative or a control at which a value builder's declared lines are read, states a relation or applies an operator on its right side is refused naming `!egm` or `!time_iteration`, a line that defines or reads a field at another perch, the candidate `c[&gt;]` or the identification `c = c[&gt;]`, naming `!egm`, and a block that writes no output with the line `&lt;output&gt; = &lt;expression&gt;` to write; each refusal stands at the line at fault, and at the typing entry where no line is. A complete block of such lines under `!egm` or `!time_iteration`, appended by an addition or written in the stage file, is refused, naming `!explicit`.
 <a id="__codelineno-5-335" name="__codelineno-5-335" href="#__codelineno-5-335"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-336" name="__codelineno-5-336" href="#__codelineno-5-336"></a>  where  m.bl, line 2, column 29 (address 'policy.policy.method')
+<a id="__codelineno-5-336" name="__codelineno-5-336" href="#__codelineno-5-336"></a>  where  methods.bl, line 2, column 13 (address 'policy')
 <a id="__codelineno-5-337" name="__codelineno-5-337" href="#__codelineno-5-337"></a>  what
-<a id="__codelineno-5-338" name="__codelineno-5-338" href="#__codelineno-5-338"></a>    [id=policy, method : !egm | policy.method : !vfi] {
-<a id="__codelineno-5-339" name="__codelineno-5-339" href="#__codelineno-5-339"></a>                                ^
-<a id="__codelineno-5-340" name="__codelineno-5-340" href="#__codelineno-5-340"></a>  why    the component `method` of block 'policy' is written twice with different content: `method : !egm` at m.bl:2:13 (term address 'policy.method') and `policy.method : !vfi` here; a component holds one entry over the files of a stage, so keep one of the two
-<a id="__codelineno-5-341" name="__codelineno-5-341" href="#__codelineno-5-341"></a>  write  Keep one of the two entries, `method : !egm` or `policy.method : !vfi`
+<a id="__codelineno-5-338" name="__codelineno-5-338" href="#__codelineno-5-338"></a>    [id=policy, policy.method : !egm] {
+<a id="__codelineno-5-339" name="__codelineno-5-339" href="#__codelineno-5-339"></a>                ^
+<a id="__codelineno-5-340" name="__codelineno-5-340" href="#__codelineno-5-340"></a>  why    stage 'perfect_foresight', builder 'policy': the block of the builder under !egm defines every output by an explicit expression of its states and parameters and reads no value input, so it states an explicit solution, on which !egm has nothing to iterate; type !explicit on the builder for such a block, or write the lines !egm solves, which read the continuation value or its derivative
+<a id="__codelineno-5-341" name="__codelineno-5-341" href="#__codelineno-5-341"></a>  write  Type `policy.method : !explicit` in place of `policy.method : !egm`
 <a id="__codelineno-5-342" name="__codelineno-5-342" href="#__codelineno-5-342"></a>
-<a id="__codelineno-5-343" name="__codelineno-5-343" href="#__codelineno-5-343"></a>label-not-in-parent  (graph construction; elaborate)
-<a id="__codelineno-5-344" name="__codelineno-5-344" href="#__codelineno-5-344"></a>  condition  A nested block of an addition merges with the branch of the same label under its parent, and a path inside a block names a line or an operator of that block: a label the parent lacks, and a first segment that names another block, are refused.
+<a id="__codelineno-5-343" name="__codelineno-5-343" href="#__codelineno-5-343"></a>declared-twice  (graph construction; elaborate)
+<a id="__codelineno-5-344" name="__codelineno-5-344" href="#__codelineno-5-344"></a>  condition  Over the files of a stage, a component is typed once, whether by an absolute or a relative spelling of its path, a name is defined once, or identically in each file, and a line id names one line of a block; the union of the stage file and its additions refuses a second entry, definition or line naming both positions.
 <a id="__codelineno-5-345" name="__codelineno-5-345" href="#__codelineno-5-345"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-346" name="__codelineno-5-346" href="#__codelineno-5-346"></a>  where  m.bl, line 3, column 5 (address 'dcsn_to_cntn.rent')
+<a id="__codelineno-5-346" name="__codelineno-5-346" href="#__codelineno-5-346"></a>  where  m.bl, line 2, column 29 (address 'policy.policy.method')
 <a id="__codelineno-5-347" name="__codelineno-5-347" href="#__codelineno-5-347"></a>  what
-<a id="__codelineno-5-348" name="__codelineno-5-348" href="#__codelineno-5-348"></a>        [label=rent, () -&gt; (a_x : ℝ₊) : !cntn] {
-<a id="__codelineno-5-349" name="__codelineno-5-349" href="#__codelineno-5-349"></a>        ^
-<a id="__codelineno-5-350" name="__codelineno-5-350" href="#__codelineno-5-350"></a>  why    the nested block `label=rent` has no branch of that label in block 'dcsn_to_cntn', whose header stands at t.bl:5:1 (term address 'dcsn_to_cntn'); a nested block of an addition merges with the branch of the same label under its parent, and the union adds no branch
-<a id="__codelineno-5-351" name="__codelineno-5-351" href="#__codelineno-5-351"></a>  write  Write the nested block under one of the labels block 'dcsn_to_cntn' holds: work, retire
+<a id="__codelineno-5-348" name="__codelineno-5-348" href="#__codelineno-5-348"></a>    [id=policy, method : !egm | policy.method : !vfi] {
+<a id="__codelineno-5-349" name="__codelineno-5-349" href="#__codelineno-5-349"></a>                                ^
+<a id="__codelineno-5-350" name="__codelineno-5-350" href="#__codelineno-5-350"></a>  why    the component `method` of block 'policy' is written twice with different content: `method : !egm` at m.bl:2:13 (term address 'policy.method') and `policy.method : !vfi` here; a component holds one entry over the files of a stage, so keep one of the two
+<a id="__codelineno-5-351" name="__codelineno-5-351" href="#__codelineno-5-351"></a>  write  Keep one of the two entries, `method : !egm` or `policy.method : !vfi`
 <a id="__codelineno-5-352" name="__codelineno-5-352" href="#__codelineno-5-352"></a>
-<a id="__codelineno-5-353" name="__codelineno-5-353" href="#__codelineno-5-353"></a>type-conflict  (graph construction; elaborate)
-<a id="__codelineno-5-354" name="__codelineno-5-354" href="#__codelineno-5-354"></a>  condition  The field names determine a signature: a coordinate an addition restates keeps the stage's typing, and a different type on it, or a different perch word on its side, is refused.
+<a id="__codelineno-5-353" name="__codelineno-5-353" href="#__codelineno-5-353"></a>label-not-in-parent  (graph construction; elaborate)
+<a id="__codelineno-5-354" name="__codelineno-5-354" href="#__codelineno-5-354"></a>  condition  A nested block of an addition merges with the branch of the same label under its parent, and a path inside a block names a line or an operator of that block: a label the parent lacks, and a first segment that names another block, are refused.
 <a id="__codelineno-5-355" name="__codelineno-5-355" href="#__codelineno-5-355"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-356" name="__codelineno-5-356" href="#__codelineno-5-356"></a>  where  m.bl, line 2, column 26 (address 'cntn_to_dcsn.out.V')
+<a id="__codelineno-5-356" name="__codelineno-5-356" href="#__codelineno-5-356"></a>  where  m.bl, line 3, column 5 (address 'dcsn_to_cntn.rent')
 <a id="__codelineno-5-357" name="__codelineno-5-357" href="#__codelineno-5-357"></a>  what
-<a id="__codelineno-5-358" name="__codelineno-5-358" href="#__codelineno-5-358"></a>    [id=cntn_to_dcsn, () -&gt; (V : ℝ @ !vlu) : !dcsn] {
-<a id="__codelineno-5-359" name="__codelineno-5-359" href="#__codelineno-5-359"></a>                             ^
-<a id="__codelineno-5-360" name="__codelineno-5-360" href="#__codelineno-5-360"></a>  why    the coordinate 'V' on the output side of block 'cntn_to_dcsn' is typed `[-inf, inf) @ !vlu` at t.bl:20:62 (term address 'cntn_to_dcsn.out.V') and `ℝ @ !vlu` here; the field names determine the signature and the stage's typing is kept, so write the coordinate without a type or with the stage's
-<a id="__codelineno-5-361" name="__codelineno-5-361" href="#__codelineno-5-361"></a>  write  Write `V` without a type, or with the stage's, `V : [-inf, inf) @ !vlu`
+<a id="__codelineno-5-358" name="__codelineno-5-358" href="#__codelineno-5-358"></a>        [label=rent, () -&gt; (a_x : ℝ₊) : !cntn] {
+<a id="__codelineno-5-359" name="__codelineno-5-359" href="#__codelineno-5-359"></a>        ^
+<a id="__codelineno-5-360" name="__codelineno-5-360" href="#__codelineno-5-360"></a>  why    the nested block `label=rent` has no branch of that label in block 'dcsn_to_cntn', whose header stands at t.bl:5:1 (term address 'dcsn_to_cntn'); a nested block of an addition merges with the branch of the same label under its parent, and the union adds no branch
+<a id="__codelineno-5-361" name="__codelineno-5-361" href="#__codelineno-5-361"></a>  write  Write the nested block under one of the labels block 'dcsn_to_cntn' holds: work, retire
 <a id="__codelineno-5-362" name="__codelineno-5-362" href="#__codelineno-5-362"></a>
-<a id="__codelineno-5-363" name="__codelineno-5-363" href="#__codelineno-5-363"></a>metadata-mismatch  (graph construction; elaborate)
-<a id="__codelineno-5-364" name="__codelineno-5-364" href="#__codelineno-5-364"></a>  condition  An addition names the stage it adds to, `@methods: &lt;stage&gt;`, with the name the stage file gives itself, and a metadata line of another key agrees with the stage file's line of that key.
+<a id="__codelineno-5-363" name="__codelineno-5-363" href="#__codelineno-5-363"></a>type-conflict  (graph construction; elaborate)
+<a id="__codelineno-5-364" name="__codelineno-5-364" href="#__codelineno-5-364"></a>  condition  The field names determine a signature: a coordinate an addition restates keeps the stage's typing, and a different type on it, or a different perch word on its side, is refused.
 <a id="__codelineno-5-365" name="__codelineno-5-365" href="#__codelineno-5-365"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-366" name="__codelineno-5-366" href="#__codelineno-5-366"></a>  where  m.bl, line 1, column 1 (address '1')
+<a id="__codelineno-5-366" name="__codelineno-5-366" href="#__codelineno-5-366"></a>  where  m.bl, line 2, column 26 (address 'cntn_to_dcsn.out.V')
 <a id="__codelineno-5-367" name="__codelineno-5-367" href="#__codelineno-5-367"></a>  what
-<a id="__codelineno-5-368" name="__codelineno-5-368" href="#__codelineno-5-368"></a>    @methods: port
-<a id="__codelineno-5-369" name="__codelineno-5-369" href="#__codelineno-5-369"></a>    ^
-<a id="__codelineno-5-370" name="__codelineno-5-370" href="#__codelineno-5-370"></a>  why    the addition names the stage 'port', and the stage file names itself 'cons' at t.bl:1:1 (term address '1'); an addition's first line is `@methods: &lt;stage&gt;` with the name of the stage file it adds to
-<a id="__codelineno-5-371" name="__codelineno-5-371" href="#__codelineno-5-371"></a>  write  Write `@methods: cons`
+<a id="__codelineno-5-368" name="__codelineno-5-368" href="#__codelineno-5-368"></a>    [id=cntn_to_dcsn, () -&gt; (V : ℝ @ !vlu) : !dcsn] {
+<a id="__codelineno-5-369" name="__codelineno-5-369" href="#__codelineno-5-369"></a>                             ^
+<a id="__codelineno-5-370" name="__codelineno-5-370" href="#__codelineno-5-370"></a>  why    the coordinate 'V' on the output side of block 'cntn_to_dcsn' is typed `[-inf, inf) @ !vlu` at t.bl:20:62 (term address 'cntn_to_dcsn.out.V') and `ℝ @ !vlu` here; the field names determine the signature and the stage's typing is kept, so write the coordinate without a type or with the stage's
+<a id="__codelineno-5-371" name="__codelineno-5-371" href="#__codelineno-5-371"></a>  write  Write `V` without a type, or with the stage's, `V : [-inf, inf) @ !vlu`
 <a id="__codelineno-5-372" name="__codelineno-5-372" href="#__codelineno-5-372"></a>
-<a id="__codelineno-5-373" name="__codelineno-5-373" href="#__codelineno-5-373"></a>grid-coordinate  (graph construction; elaborate)
-<a id="__codelineno-5-374" name="__codelineno-5-374" href="#__codelineno-5-374"></a>  condition  Every factor of a grid names a coordinate of the function the place holds, a control of the builder for a feasible factor or a shock for a quadrature factor; a coordinate no factor names takes the default, the product over the coordinates of that function, as every coordinate does where the place writes no grid entry; a method that reads no grid has none written at its place, and a representation fitted from the pairs the endogenous grid method computes has no grid of its own at the Evaluation of the builder that method solves, since its nodes are the endogenous points of the pairs. A grid constructor stands only at the places its record admits, `!Fibred` only where the occurrence's domain is its base's states followed by its fibre's controls; the base of `!Fibred` is `!Points` or a `!Cartesian` term on the states, and its fibre a `!Cartesian` term of feasible-control factors; each declared point of `!Points` has one coordinate for each coordinate of the place.
+<a id="__codelineno-5-373" name="__codelineno-5-373" href="#__codelineno-5-373"></a>metadata-mismatch  (graph construction; elaborate)
+<a id="__codelineno-5-374" name="__codelineno-5-374" href="#__codelineno-5-374"></a>  condition  An addition names the stage it adds to, `@methods: &lt;stage&gt;`, with the name the stage file gives itself, and a metadata line of another key agrees with the stage file's line of that key.
 <a id="__codelineno-5-375" name="__codelineno-5-375" href="#__codelineno-5-375"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-376" name="__codelineno-5-376" href="#__codelineno-5-376"></a>  where  t.bl, line 20, column 5 (address 'policy')
+<a id="__codelineno-5-376" name="__codelineno-5-376" href="#__codelineno-5-376"></a>  where  m.bl, line 1, column 1 (address '1')
 <a id="__codelineno-5-377" name="__codelineno-5-377" href="#__codelineno-5-377"></a>  what
-<a id="__codelineno-5-378" name="__codelineno-5-378" href="#__codelineno-5-378"></a>        m[&gt;] = a + c[&gt;]        :: [id=grid]
-<a id="__codelineno-5-379" name="__codelineno-5-379" href="#__codelineno-5-379"></a>        ^
-<a id="__codelineno-5-380" name="__codelineno-5-380" href="#__codelineno-5-380"></a>  why    stage 't', place 'policy': the factor m=(a_min, a_max, n_a) of the grid names 'm', which is no coordinate of the function at policy; the coordinates are a; a factor names one of them, keyed by its name, and a coordinate no factor names takes the default
-<a id="__codelineno-5-381" name="__codelineno-5-381" href="#__codelineno-5-381"></a>  write  Write the factor for a, `a=(a_min, a_max, n_a)`
+<a id="__codelineno-5-378" name="__codelineno-5-378" href="#__codelineno-5-378"></a>    @methods: port
+<a id="__codelineno-5-379" name="__codelineno-5-379" href="#__codelineno-5-379"></a>    ^
+<a id="__codelineno-5-380" name="__codelineno-5-380" href="#__codelineno-5-380"></a>  why    the addition names the stage 'port', and the stage file names itself 'cons' at t.bl:1:1 (term address '1'); an addition's first line is `@methods: &lt;stage&gt;` with the name of the stage file it adds to
+<a id="__codelineno-5-381" name="__codelineno-5-381" href="#__codelineno-5-381"></a>  write  Write `@methods: cons`
 <a id="__codelineno-5-382" name="__codelineno-5-382" href="#__codelineno-5-382"></a>
-<a id="__codelineno-5-383" name="__codelineno-5-383" href="#__codelineno-5-383"></a>grid-setting-declared  (graph construction; elaborate)
-<a id="__codelineno-5-384" name="__codelineno-5-384" href="#__codelineno-5-384"></a>  condition  Every name a factor of a grid writes is a setting the methods file declares, a node set the stage defines or an expectation operator of the stage, and the declared points of `!Points` are a setting the methods file declares or a set the stage defines; a bound or a count written as a number is refused.
+<a id="__codelineno-5-383" name="__codelineno-5-383" href="#__codelineno-5-383"></a>grid-coordinate  (graph construction; elaborate)
+<a id="__codelineno-5-384" name="__codelineno-5-384" href="#__codelineno-5-384"></a>  condition  Every factor of a grid names a coordinate of the function the place holds, a control of the builder for a feasible factor or a shock for a quadrature factor; a coordinate no factor names takes the default, the product over the coordinates of that function, as every coordinate does where the place writes no grid entry; a method that reads no grid has none written at its place, and a representation fitted from the pairs the endogenous grid method computes has no grid of its own at the Evaluation of the builder that method solves, since its nodes are the endogenous points of the pairs. A grid constructor stands only at the places its record admits, `!Fibred` only where the occurrence's domain is its base's states followed by its fibre's controls; the base of `!Fibred` is `!Points` or a `!Cartesian` term on the states, and its fibre a `!Cartesian` term of feasible-control factors; each declared point of `!Points` has one coordinate for each coordinate of the place.
 <a id="__codelineno-5-385" name="__codelineno-5-385" href="#__codelineno-5-385"></a>  example  the package's example of the rule, and the refusal it provokes:
 <a id="__codelineno-5-386" name="__codelineno-5-386" href="#__codelineno-5-386"></a>  where  t.bl, line 20, column 5 (address 'policy')
 <a id="__codelineno-5-387" name="__codelineno-5-387" href="#__codelineno-5-387"></a>  what
 <a id="__codelineno-5-388" name="__codelineno-5-388" href="#__codelineno-5-388"></a>        m[&gt;] = a + c[&gt;]        :: [id=grid]
 <a id="__codelineno-5-389" name="__codelineno-5-389" href="#__codelineno-5-389"></a>        ^
-<a id="__codelineno-5-390" name="__codelineno-5-390" href="#__codelineno-5-390"></a>  why    stage 't', place 'policy': the factor a=(0, a_max, n_a) of the grid writes the number 0; a bound and a count are settings declared in the methods file and valued in the settings file; write the setting's name
-<a id="__codelineno-5-391" name="__codelineno-5-391" href="#__codelineno-5-391"></a>
-<a id="__codelineno-5-392" name="__codelineno-5-392" href="#__codelineno-5-392"></a>grid-bounds  (graph construction; configure)
-<a id="__codelineno-5-393" name="__codelineno-5-393" href="#__codelineno-5-393"></a>  condition  At configuration the bounds of a factor are in order and inside the coordinate's declared set, its count is at least two, and a node set is strictly increasing; each configured point of `!Points` has finite real coordinates inside the coordinates' declared sets.
-<a id="__codelineno-5-394" name="__codelineno-5-394" href="#__codelineno-5-394"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-395" name="__codelineno-5-395" href="#__codelineno-5-395"></a>  where  address 'cntn_to_dcsn.evaluate'
-<a id="__codelineno-5-396" name="__codelineno-5-396" href="#__codelineno-5-396"></a>  why    stage 'cons', place 'cntn_to_dcsn.evaluate', grid !Cartesian(m_d=(m_min, m_max, n_m)): the factor m_d=(m_min, m_max, n_m) has the bounds 10.0 and 1.0, which are not two finite reals in order; configure requires the bounds of a factor in order and inside the coordinate's declared set, its count at least two and a node set strictly increasing; write a lower bound below the upper bound
-<a id="__codelineno-5-397" name="__codelineno-5-397" href="#__codelineno-5-397"></a>
-<a id="__codelineno-5-398" name="__codelineno-5-398" href="#__codelineno-5-398"></a>grid-requirement  (graph construction; elaborate)
-<a id="__codelineno-5-399" name="__codelineno-5-399" href="#__codelineno-5-399"></a>  condition  The predicate words a grid writes after `require` are among `!Empty`, `!Cartesian`, `!NonCartesian` and `!UniformCartesian`, and no two contradict each other; each holds of the grid wherever the bound values decide it, an outer requirement of `!Fibred` of the joint grid and one inside its fibre of each fibre. The numerical construction of a grid establishes its finite points, a factor for each coordinate, a sampler for each feasible set and every required property before the grid is used, and reports what it cannot establish instead of supplying a default.
-<a id="__codelineno-5-400" name="__codelineno-5-400" href="#__codelineno-5-400"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-401" name="__codelineno-5-401" href="#__codelineno-5-401"></a>  where  t.bl, line 20, column 5 (address 'policy')
-<a id="__codelineno-5-402" name="__codelineno-5-402" href="#__codelineno-5-402"></a>  what
-<a id="__codelineno-5-403" name="__codelineno-5-403" href="#__codelineno-5-403"></a>        m[&gt;] = a + c[&gt;]        :: [id=grid]
-<a id="__codelineno-5-404" name="__codelineno-5-404" href="#__codelineno-5-404"></a>        ^
-<a id="__codelineno-5-405" name="__codelineno-5-405" href="#__codelineno-5-405"></a>  why    stage 't', place 'policy': the grid !Cartesian requires !Uniform, which is no predicate word; a grid may require !Empty, !Cartesian, !NonCartesian and !UniformCartesian, or a tuple of them
-<a id="__codelineno-5-406" name="__codelineno-5-406" href="#__codelineno-5-406"></a>  write  Write predicate words among !Empty, !Cartesian, !NonCartesian and !UniformCartesian
+<a id="__codelineno-5-390" name="__codelineno-5-390" href="#__codelineno-5-390"></a>  why    stage 't', place 'policy': the factor m=(a_min, a_max, n_a) of the grid names 'm', which is no coordinate of the function at policy; the coordinates are a; a factor names one of them, keyed by its name, and a coordinate no factor names takes the default
+<a id="__codelineno-5-391" name="__codelineno-5-391" href="#__codelineno-5-391"></a>  write  Write the factor for a, `a=(a_min, a_max, n_a)`
+<a id="__codelineno-5-392" name="__codelineno-5-392" href="#__codelineno-5-392"></a>
+<a id="__codelineno-5-393" name="__codelineno-5-393" href="#__codelineno-5-393"></a>grid-setting-declared  (graph construction; elaborate)
+<a id="__codelineno-5-394" name="__codelineno-5-394" href="#__codelineno-5-394"></a>  condition  Every name a factor of a grid writes is a setting the methods file declares, a node set the stage defines or an expectation operator of the stage, and the declared points of `!Points` are a setting the methods file declares or a set the stage defines; a bound or a count written as a number is refused.
+<a id="__codelineno-5-395" name="__codelineno-5-395" href="#__codelineno-5-395"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-396" name="__codelineno-5-396" href="#__codelineno-5-396"></a>  where  t.bl, line 20, column 5 (address 'policy')
+<a id="__codelineno-5-397" name="__codelineno-5-397" href="#__codelineno-5-397"></a>  what
+<a id="__codelineno-5-398" name="__codelineno-5-398" href="#__codelineno-5-398"></a>        m[&gt;] = a + c[&gt;]        :: [id=grid]
+<a id="__codelineno-5-399" name="__codelineno-5-399" href="#__codelineno-5-399"></a>        ^
+<a id="__codelineno-5-400" name="__codelineno-5-400" href="#__codelineno-5-400"></a>  why    stage 't', place 'policy': the factor a=(0, a_max, n_a) of the grid writes the number 0; a bound and a count are settings declared in the methods file and valued in the settings file; write the setting's name
+<a id="__codelineno-5-401" name="__codelineno-5-401" href="#__codelineno-5-401"></a>
+<a id="__codelineno-5-402" name="__codelineno-5-402" href="#__codelineno-5-402"></a>grid-bounds  (graph construction; configure)
+<a id="__codelineno-5-403" name="__codelineno-5-403" href="#__codelineno-5-403"></a>  condition  At configuration the bounds of a factor are in order and inside the coordinate's declared set, its count is at least two, and a node set is strictly increasing; each configured point of `!Points` has finite real coordinates inside the coordinates' declared sets. A declared set that reads a parameter is read at the calibration that is bound, and before one is bound a bound of a factor over such a set is refused.
+<a id="__codelineno-5-404" name="__codelineno-5-404" href="#__codelineno-5-404"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-405" name="__codelineno-5-405" href="#__codelineno-5-405"></a>  where  address 'cntn_to_dcsn.evaluate'
+<a id="__codelineno-5-406" name="__codelineno-5-406" href="#__codelineno-5-406"></a>  why    stage 'cons', place 'cntn_to_dcsn.evaluate', grid !Cartesian(m_d=(m_min, m_max, n_m)): the factor m_d=(m_min, m_max, n_m) has the bounds 10.0 and 1.0, which are not two finite reals in order; configure requires the bounds of a factor in order and inside the coordinate's declared set, its count at least two and a node set strictly increasing; write a lower bound below the upper bound
 <a id="__codelineno-5-407" name="__codelineno-5-407" href="#__codelineno-5-407"></a>
-<a id="__codelineno-5-408" name="__codelineno-5-408" href="#__codelineno-5-408"></a>setting-outside-set  (graph construction; configure)
-<a id="__codelineno-5-409" name="__codelineno-5-409" href="#__codelineno-5-409"></a>  condition  A setting's configured value lies in the set its declaration names.
+<a id="__codelineno-5-408" name="__codelineno-5-408" href="#__codelineno-5-408"></a>grid-requirement  (graph construction; elaborate)
+<a id="__codelineno-5-409" name="__codelineno-5-409" href="#__codelineno-5-409"></a>  condition  The predicate words a grid writes after `require` are among `!Empty`, `!Cartesian`, `!NonCartesian` and `!UniformCartesian`, and no two contradict each other; each holds of the grid wherever the bound values decide it, an outer requirement of `!Fibred` of the joint grid and one inside its fibre of each fibre. The numerical construction of a grid establishes its finite points, a factor for each coordinate, a sampler for each feasible set and every required property before the grid is used, and reports what it cannot establish instead of supplying a default.
 <a id="__codelineno-5-410" name="__codelineno-5-410" href="#__codelineno-5-410"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-411" name="__codelineno-5-411" href="#__codelineno-5-411"></a>  where  methods.bl, line 3, column 1 (address 'methods.bl:3')
+<a id="__codelineno-5-411" name="__codelineno-5-411" href="#__codelineno-5-411"></a>  where  t.bl, line 20, column 5 (address 'policy')
 <a id="__codelineno-5-412" name="__codelineno-5-412" href="#__codelineno-5-412"></a>  what
-<a id="__codelineno-5-413" name="__codelineno-5-413" href="#__codelineno-5-413"></a>    a_min : ℝ₊           :: ["lower bound of the savings grid"]
-<a id="__codelineno-5-414" name="__codelineno-5-414" href="#__codelineno-5-414"></a>    ^
-<a id="__codelineno-5-415" name="__codelineno-5-415" href="#__codelineno-5-415"></a>  why    stage 't', setting 'a_min': the value -1.0 lies outside the declared set ℝ₊; a setting's value lies in the set its declaration names; write a value in ℝ₊
-<a id="__codelineno-5-416" name="__codelineno-5-416" href="#__codelineno-5-416"></a>
-<a id="__codelineno-5-417" name="__codelineno-5-417" href="#__codelineno-5-417"></a>setting-unvalued  (graph construction; configure)
-<a id="__codelineno-5-418" name="__codelineno-5-418" href="#__codelineno-5-418"></a>  condition  Every setting the methods file declares, and every setting a bound method's keyword arguments or grid name, has a value when settings are bound.
-<a id="__codelineno-5-419" name="__codelineno-5-419" href="#__codelineno-5-419"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-420" name="__codelineno-5-420" href="#__codelineno-5-420"></a>  where  methods.bl, line 2, column 1 (address 'methods.bl:2')
-<a id="__codelineno-5-421" name="__codelineno-5-421" href="#__codelineno-5-421"></a>  what
-<a id="__codelineno-5-422" name="__codelineno-5-422" href="#__codelineno-5-422"></a>    n_a : ℕ              :: ["number of points of the savings grid"]
-<a id="__codelineno-5-423" name="__codelineno-5-423" href="#__codelineno-5-423"></a>    ^
-<a id="__codelineno-5-424" name="__codelineno-5-424" href="#__codelineno-5-424"></a>  why    stage 't', setting 'n_a': the settings source supplies no value for it; every setting the methods file declares is valued when settings are bound; write `n_a: &lt;value&gt;` in the settings source
-<a id="__codelineno-5-425" name="__codelineno-5-425" href="#__codelineno-5-425"></a>
-<a id="__codelineno-5-426" name="__codelineno-5-426" href="#__codelineno-5-426"></a>multiplier-declaration  (graph construction; elaborate)
-<a id="__codelineno-5-427" name="__codelineno-5-427" href="#__codelineno-5-427"></a>  condition  A multiplier is declared inside the block whose continuation grid it extends, once, marked `[&gt;]`, with one declared set and one bound after ⟂ that names continuation states, multipliers of the block, parameters, numbers or `inf`.
-<a id="__codelineno-5-428" name="__codelineno-5-428" href="#__codelineno-5-428"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-429" name="__codelineno-5-429" href="#__codelineno-5-429"></a>  where  t.bl, line 18, column 5 (address 'policy.slackness')
-<a id="__codelineno-5-430" name="__codelineno-5-430" href="#__codelineno-5-430"></a>  what
-<a id="__codelineno-5-431" name="__codelineno-5-431" href="#__codelineno-5-431"></a>        μ[&gt;]   : ℝ₊ ⟂ c &gt;= 0             :: [id=slackness]
-<a id="__codelineno-5-432" name="__codelineno-5-432" href="#__codelineno-5-432"></a>        ^
-<a id="__codelineno-5-433" name="__codelineno-5-433" href="#__codelineno-5-433"></a>  why    the bound of the multiplier 'μ' names 'c', written c, a control; the bound of a declared multiplier names continuation states, multipliers of block 'policy', parameters, numbers or `inf`. Write the bound on a continuation state, or state the condition on a line of the block with its own clause
-<a id="__codelineno-5-434" name="__codelineno-5-434" href="#__codelineno-5-434"></a>  write  Write the bound of 'μ' on a continuation state, or state the condition on a line of block 'policy' with its own clause
+<a id="__codelineno-5-413" name="__codelineno-5-413" href="#__codelineno-5-413"></a>        m[&gt;] = a + c[&gt;]        :: [id=grid]
+<a id="__codelineno-5-414" name="__codelineno-5-414" href="#__codelineno-5-414"></a>        ^
+<a id="__codelineno-5-415" name="__codelineno-5-415" href="#__codelineno-5-415"></a>  why    stage 't', place 'policy': the grid !Cartesian requires !Uniform, which is no predicate word; a grid may require !Empty, !Cartesian, !NonCartesian and !UniformCartesian, or a tuple of them
+<a id="__codelineno-5-416" name="__codelineno-5-416" href="#__codelineno-5-416"></a>  write  Write predicate words among !Empty, !Cartesian, !NonCartesian and !UniformCartesian
+<a id="__codelineno-5-417" name="__codelineno-5-417" href="#__codelineno-5-417"></a>
+<a id="__codelineno-5-418" name="__codelineno-5-418" href="#__codelineno-5-418"></a>setting-outside-set  (graph construction; configure)
+<a id="__codelineno-5-419" name="__codelineno-5-419" href="#__codelineno-5-419"></a>  condition  A setting's configured value lies in the set its declaration names.
+<a id="__codelineno-5-420" name="__codelineno-5-420" href="#__codelineno-5-420"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-421" name="__codelineno-5-421" href="#__codelineno-5-421"></a>  where  methods.bl, line 3, column 1 (address 'methods.bl:3')
+<a id="__codelineno-5-422" name="__codelineno-5-422" href="#__codelineno-5-422"></a>  what
+<a id="__codelineno-5-423" name="__codelineno-5-423" href="#__codelineno-5-423"></a>    a_min : ℝ₊           :: ["lower bound of the savings grid"]
+<a id="__codelineno-5-424" name="__codelineno-5-424" href="#__codelineno-5-424"></a>    ^
+<a id="__codelineno-5-425" name="__codelineno-5-425" href="#__codelineno-5-425"></a>  why    stage 't', setting 'a_min': the value -1.0 lies outside the declared set ℝ₊; a setting's value lies in the set its declaration names; write a value in ℝ₊
+<a id="__codelineno-5-426" name="__codelineno-5-426" href="#__codelineno-5-426"></a>
+<a id="__codelineno-5-427" name="__codelineno-5-427" href="#__codelineno-5-427"></a>setting-unvalued  (graph construction; configure)
+<a id="__codelineno-5-428" name="__codelineno-5-428" href="#__codelineno-5-428"></a>  condition  Every setting the methods file declares, and every setting a bound method's keyword arguments or grid name, has a value when settings are bound.
+<a id="__codelineno-5-429" name="__codelineno-5-429" href="#__codelineno-5-429"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-430" name="__codelineno-5-430" href="#__codelineno-5-430"></a>  where  methods.bl, line 2, column 1 (address 'methods.bl:2')
+<a id="__codelineno-5-431" name="__codelineno-5-431" href="#__codelineno-5-431"></a>  what
+<a id="__codelineno-5-432" name="__codelineno-5-432" href="#__codelineno-5-432"></a>    n_a : ℕ              :: ["number of points of the savings grid"]
+<a id="__codelineno-5-433" name="__codelineno-5-433" href="#__codelineno-5-433"></a>    ^
+<a id="__codelineno-5-434" name="__codelineno-5-434" href="#__codelineno-5-434"></a>  why    stage 't', setting 'n_a': the settings source supplies no value for it; every setting the methods file declares is valued when settings are bound; write `n_a: &lt;value&gt;` in the settings source
 <a id="__codelineno-5-435" name="__codelineno-5-435" href="#__codelineno-5-435"></a>
-<a id="__codelineno-5-436" name="__codelineno-5-436" href="#__codelineno-5-436"></a>set-mismatch  (graph construction; elaborate)
-<a id="__codelineno-5-437" name="__codelineno-5-437" href="#__codelineno-5-437"></a>  condition  A field produced on one declared set and consumed on another is declared with sets whose inclusion holds; otherwise the stage declares the inclusion through the control's feasible set.
+<a id="__codelineno-5-436" name="__codelineno-5-436" href="#__codelineno-5-436"></a>multiplier-declaration  (graph construction; elaborate)
+<a id="__codelineno-5-437" name="__codelineno-5-437" href="#__codelineno-5-437"></a>  condition  A multiplier is declared inside the block whose continuation grid it extends, once, marked `[&gt;]`, with one declared set and one bound after ⟂ that names continuation states, multipliers of the block, parameters, numbers or `inf`.
 <a id="__codelineno-5-438" name="__codelineno-5-438" href="#__codelineno-5-438"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-439" name="__codelineno-5-439" href="#__codelineno-5-439"></a>  where  t.bl, line 2, column 1 (address 'a')
+<a id="__codelineno-5-439" name="__codelineno-5-439" href="#__codelineno-5-439"></a>  where  t.bl, line 18, column 5 (address 'policy.slackness')
 <a id="__codelineno-5-440" name="__codelineno-5-440" href="#__codelineno-5-440"></a>  what
-<a id="__codelineno-5-441" name="__codelineno-5-441" href="#__codelineno-5-441"></a>    [id=a, (x : ℝ) : !arvl -&gt; (y : ℝ) : !dcsn] { y = x }
-<a id="__codelineno-5-442" name="__codelineno-5-442" href="#__codelineno-5-442"></a>    ^
-<a id="__codelineno-5-443" name="__codelineno-5-443" href="#__codelineno-5-443"></a>  why    the field y is produced by 'a' on ℝ and consumed by 'b' on ℝ₊₊, and ℝ does not lie in ℝ₊₊; declare the field with one set in both blocks, or state the control's feasible set in the maximization line
-<a id="__codelineno-5-444" name="__codelineno-5-444" href="#__codelineno-5-444"></a>  write  Declare y with one set in blocks 'a' and 'b', or state the control's feasible set in the maximization line
+<a id="__codelineno-5-441" name="__codelineno-5-441" href="#__codelineno-5-441"></a>        μ[&gt;]   : ℝ₊ ⟂ c &gt;= 0             :: [id=slackness]
+<a id="__codelineno-5-442" name="__codelineno-5-442" href="#__codelineno-5-442"></a>        ^
+<a id="__codelineno-5-443" name="__codelineno-5-443" href="#__codelineno-5-443"></a>  why    the bound of the multiplier 'μ' names 'c', written c, a control; the bound of a declared multiplier names continuation states, multipliers of block 'policy', parameters, numbers or `inf`. Write the bound on a continuation state, or state the condition on a line of the block with its own clause
+<a id="__codelineno-5-444" name="__codelineno-5-444" href="#__codelineno-5-444"></a>  write  Write the bound of 'μ' on a continuation state, or state the condition on a line of block 'policy' with its own clause
 <a id="__codelineno-5-445" name="__codelineno-5-445" href="#__codelineno-5-445"></a>
-<a id="__codelineno-5-446" name="__codelineno-5-446" href="#__codelineno-5-446"></a>category-codes  (graph construction; elaborate)
-<a id="__codelineno-5-447" name="__codelineno-5-447" href="#__codelineno-5-447"></a>  condition  A set marked `!categories` is a nonempty range of integers written as a comprehension over ℤ or ℕ, whose annotation gives each member one category name and each name one member. The marker is written only on a top-level named set, and a field declared on a set with category codes names that set at every site that names a set.
+<a id="__codelineno-5-446" name="__codelineno-5-446" href="#__codelineno-5-446"></a>set-mismatch  (graph construction; elaborate)
+<a id="__codelineno-5-447" name="__codelineno-5-447" href="#__codelineno-5-447"></a>  condition  A field produced on one declared set and consumed on another is declared with sets whose inclusion holds; otherwise the stage declares the inclusion through the control's feasible set.
 <a id="__codelineno-5-448" name="__codelineno-5-448" href="#__codelineno-5-448"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-449" name="__codelineno-5-449" href="#__codelineno-5-449"></a>  where  t.bl, line 3, column 1 (address 't.bl:3')
+<a id="__codelineno-5-449" name="__codelineno-5-449" href="#__codelineno-5-449"></a>  where  t.bl, line 2, column 1 (address 'a')
 <a id="__codelineno-5-450" name="__codelineno-5-450" href="#__codelineno-5-450"></a>  what
-<a id="__codelineno-5-451" name="__codelineno-5-451" href="#__codelineno-5-451"></a>    HouseholdStatus := {i : ℤ | i &gt;= 0, i &lt;= 1} :: [!categories household_status, newborn=0, old=2]
+<a id="__codelineno-5-451" name="__codelineno-5-451" href="#__codelineno-5-451"></a>    [id=a, (x : ℝ) : !arvl -&gt; (y : ℝ) : !dcsn] { y = x }
 <a id="__codelineno-5-452" name="__codelineno-5-452" href="#__codelineno-5-452"></a>    ^
-<a id="__codelineno-5-453" name="__codelineno-5-453" href="#__codelineno-5-453"></a>  why    the set HouseholdStatus is marked `!categories`, and its definition and its annotation give no category map. The entry `old=2` gives a code outside HouseholdStatus, the integers from 0 to 1; give each category a code from 0 to 1. The set HouseholdStatus holds the integers from 0 to 1, and the member 1 has no category; give each member one category
-<a id="__codelineno-5-454" name="__codelineno-5-454" href="#__codelineno-5-454"></a>
-<a id="__codelineno-5-455" name="__codelineno-5-455" href="#__codelineno-5-455"></a>value-input-role  (graph construction; elaborate)
-<a id="__codelineno-5-456" name="__codelineno-5-456" href="#__codelineno-5-456"></a>  condition  A statement of a backward block reads values or marginal values, not both: its kernel acts on one role and its output has that role.
-<a id="__codelineno-5-457" name="__codelineno-5-457" href="#__codelineno-5-457"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-458" name="__codelineno-5-458" href="#__codelineno-5-458"></a>  where  t.bl, line 6, column 5 (address 'cntn_to_dcsn.value')
-<a id="__codelineno-5-459" name="__codelineno-5-459" href="#__codelineno-5-459"></a>  what
-<a id="__codelineno-5-460" name="__codelineno-5-460" href="#__codelineno-5-460"></a>        V = 3   :: [id=value]
-<a id="__codelineno-5-461" name="__codelineno-5-461" href="#__codelineno-5-461"></a>        ^
-<a id="__codelineno-5-462" name="__codelineno-5-462" href="#__codelineno-5-462"></a>  why    the line cntn_to_dcsn.value reads no value input, and the header of block 'cntn_to_dcsn' lists none; a line of a backward block acts on a value or a marginal value that its header lists; list a value input in the header and read it on the line
-<a id="__codelineno-5-463" name="__codelineno-5-463" href="#__codelineno-5-463"></a>  write  List a value input in the header of block 'cntn_to_dcsn' and read it on line cntn_to_dcsn.value
+<a id="__codelineno-5-453" name="__codelineno-5-453" href="#__codelineno-5-453"></a>  why    the field y is produced by 'a' on ℝ and consumed by 'b' on ℝ₊₊, and ℝ does not lie in ℝ₊₊; declare the field with one set in both blocks, or state the control's feasible set in the maximization line
+<a id="__codelineno-5-454" name="__codelineno-5-454" href="#__codelineno-5-454"></a>  write  Declare y with one set in blocks 'a' and 'b', or state the control's feasible set in the maximization line
+<a id="__codelineno-5-455" name="__codelineno-5-455" href="#__codelineno-5-455"></a>
+<a id="__codelineno-5-456" name="__codelineno-5-456" href="#__codelineno-5-456"></a>category-codes  (graph construction; elaborate)
+<a id="__codelineno-5-457" name="__codelineno-5-457" href="#__codelineno-5-457"></a>  condition  A set marked `!categories` is a nonempty range of integers written as a comprehension over ℤ or ℕ, whose annotation gives each member one category name and each name one member. The marker is written only on a top-level named set, and a field declared on a set with category codes names that set at every site that names a set.
+<a id="__codelineno-5-458" name="__codelineno-5-458" href="#__codelineno-5-458"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-459" name="__codelineno-5-459" href="#__codelineno-5-459"></a>  where  t.bl, line 3, column 1 (address 't.bl:3')
+<a id="__codelineno-5-460" name="__codelineno-5-460" href="#__codelineno-5-460"></a>  what
+<a id="__codelineno-5-461" name="__codelineno-5-461" href="#__codelineno-5-461"></a>    HouseholdStatus := {i : ℤ | i &gt;= 0, i &lt;= 1} :: [!categories household_status, newborn=0, old=2]
+<a id="__codelineno-5-462" name="__codelineno-5-462" href="#__codelineno-5-462"></a>    ^
+<a id="__codelineno-5-463" name="__codelineno-5-463" href="#__codelineno-5-463"></a>  why    the set HouseholdStatus is marked `!categories`, and its definition and its annotation give no category map. The entry `old=2` gives a code outside HouseholdStatus, the integers from 0 to 1; give each category a code from 0 to 1. The set HouseholdStatus holds the integers from 0 to 1, and the member 1 has no category; give each member one category
 <a id="__codelineno-5-464" name="__codelineno-5-464" href="#__codelineno-5-464"></a>
-<a id="__codelineno-5-465" name="__codelineno-5-465" href="#__codelineno-5-465"></a>signature-complete  (graph construction; elaborate)
-<a id="__codelineno-5-466" name="__codelineno-5-466" href="#__codelineno-5-466"></a>  condition  A forward block's header lists every field its lines read that no earlier line of the block defines. A backward block's header lists the value fields its lines read and the controls at which they are read, but no state; a state of its output perch is a coordinate. A value field a backward header lists and no line of the block reads is admitted: it is left out of the block's builder and recorded as a diagnostic, `unread-input`, in place of a refusal.
+<a id="__codelineno-5-465" name="__codelineno-5-465" href="#__codelineno-5-465"></a>value-input-role  (graph construction; elaborate)
+<a id="__codelineno-5-466" name="__codelineno-5-466" href="#__codelineno-5-466"></a>  condition  A statement of a backward block reads values or marginal values, not both: its kernel acts on one role and its output has that role.
 <a id="__codelineno-5-467" name="__codelineno-5-467" href="#__codelineno-5-467"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-468" name="__codelineno-5-468" href="#__codelineno-5-468"></a>  where  t.bl, line 6, column 5 (address 'd.1')
+<a id="__codelineno-5-468" name="__codelineno-5-468" href="#__codelineno-5-468"></a>  where  t.bl, line 6, column 5 (address 'cntn_to_dcsn.value')
 <a id="__codelineno-5-469" name="__codelineno-5-469" href="#__codelineno-5-469"></a>  what
-<a id="__codelineno-5-470" name="__codelineno-5-470" href="#__codelineno-5-470"></a>        w = x + y
+<a id="__codelineno-5-470" name="__codelineno-5-470" href="#__codelineno-5-470"></a>        V = 3   :: [id=value]
 <a id="__codelineno-5-471" name="__codelineno-5-471" href="#__codelineno-5-471"></a>        ^
-<a id="__codelineno-5-472" name="__codelineno-5-472" href="#__codelineno-5-472"></a>  why    the line reads x, which the header of block 'd' does not list and no earlier line of the block defines; a forward block's header lists every field its lines read. List it in the header, `(y, x) : !dcsn -&gt; (w : ℝ) : !dcsn`, or define it on an earlier line of the block. The corrected header writes a perch word on each field of a side where the side's one word no longer holds for every field; a control is at the decision perch under either spelling
-<a id="__codelineno-5-473" name="__codelineno-5-473" href="#__codelineno-5-473"></a>  write  List x in the header, `(y, x) : !dcsn -&gt; (w : ℝ) : !dcsn`
+<a id="__codelineno-5-472" name="__codelineno-5-472" href="#__codelineno-5-472"></a>  why    the line cntn_to_dcsn.value reads no value input, and the header of block 'cntn_to_dcsn' lists none; a line of a backward block acts on a value or a marginal value that its header lists; list a value input in the header and read it on the line
+<a id="__codelineno-5-473" name="__codelineno-5-473" href="#__codelineno-5-473"></a>  write  List a value input in the header of block 'cntn_to_dcsn' and read it on line cntn_to_dcsn.value
 <a id="__codelineno-5-474" name="__codelineno-5-474" href="#__codelineno-5-474"></a>
-<a id="__codelineno-5-475" name="__codelineno-5-475" href="#__codelineno-5-475"></a>header-coordinate  (graph construction; elaborate)
-<a id="__codelineno-5-476" name="__codelineno-5-476" href="#__codelineno-5-476"></a>  condition  A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which its output stands is a coordinate of the output function, and a state of its input perch is reached through the law of motion.
+<a id="__codelineno-5-475" name="__codelineno-5-475" href="#__codelineno-5-475"></a>signature-complete  (graph construction; elaborate)
+<a id="__codelineno-5-476" name="__codelineno-5-476" href="#__codelineno-5-476"></a>  condition  A forward block's header lists every field its lines read that no earlier line of the block defines. A backward block's header lists the value fields its lines read and the controls at which they are read, but no state; a state of its output perch is a coordinate. A value field a backward header lists and no line of the block reads is admitted: it is left out of the block's builder and recorded as a diagnostic, `unread-input`, in place of a refusal.
 <a id="__codelineno-5-477" name="__codelineno-5-477" href="#__codelineno-5-477"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-478" name="__codelineno-5-478" href="#__codelineno-5-478"></a>  where  t.bl, line 5, column 1 (address 'cntn_to_dcsn')
+<a id="__codelineno-5-478" name="__codelineno-5-478" href="#__codelineno-5-478"></a>  where  t.bl, line 6, column 5 (address 'd.1')
 <a id="__codelineno-5-479" name="__codelineno-5-479" href="#__codelineno-5-479"></a>  what
-<a id="__codelineno-5-480" name="__codelineno-5-480" href="#__codelineno-5-480"></a>    [id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, x_d : !dcsn) -&gt; (V : ℝ @ !vlu) : !dcsn] {
-<a id="__codelineno-5-481" name="__codelineno-5-481" href="#__codelineno-5-481"></a>    ^
-<a id="__codelineno-5-482" name="__codelineno-5-482" href="#__codelineno-5-482"></a>  why    the header of block 'cntn_to_dcsn' lists x_d on its input side, and the block is a backward block, whose header lists the value fields it reads and writes and the controls at which its lines are read, and no state (rule header-coordinate). x_d is a state of the dcsn perch, the perch at which the block's output stands, so it is a coordinate of the output function and no input of the block. Remove the listing, `(V[&gt;] : ℝ @ !vlu) -&gt; (V : ℝ @ !vlu) : !dcsn`; a line of the block may still mention a state of the dcsn perch, which is a coordinate of what it defines
-<a id="__codelineno-5-483" name="__codelineno-5-483" href="#__codelineno-5-483"></a>  write  Remove x_d from the header: `(V[&gt;] : ℝ @ !vlu) -&gt; (V : ℝ @ !vlu) : !dcsn`
+<a id="__codelineno-5-480" name="__codelineno-5-480" href="#__codelineno-5-480"></a>        w = x + y
+<a id="__codelineno-5-481" name="__codelineno-5-481" href="#__codelineno-5-481"></a>        ^
+<a id="__codelineno-5-482" name="__codelineno-5-482" href="#__codelineno-5-482"></a>  why    the line reads x, which the header of block 'd' does not list and no earlier line of the block defines; a forward block's header lists every field its lines read. List it in the header, `(y, x) : !dcsn -&gt; (w : ℝ) : !dcsn`, or define it on an earlier line of the block. The corrected header writes a perch word on each field of a side where the side's one word no longer holds for every field; a control is at the decision perch under either spelling
+<a id="__codelineno-5-483" name="__codelineno-5-483" href="#__codelineno-5-483"></a>  write  List x in the header, `(y, x) : !dcsn -&gt; (w : ℝ) : !dcsn`
 <a id="__codelineno-5-484" name="__codelineno-5-484" href="#__codelineno-5-484"></a>
-<a id="__codelineno-5-485" name="__codelineno-5-485" href="#__codelineno-5-485"></a>input-perch-state  (graph construction; elaborate)
-<a id="__codelineno-5-486" name="__codelineno-5-486" href="#__codelineno-5-486"></a>  condition  A backward line reads a state of its input or a later perch only through the law of motion. A direct read is refused, including in a relation or a condition after `⟂`. A read under the expectation over the edge's shock and continuation-state indexing on a policy candidate line are admitted.
+<a id="__codelineno-5-485" name="__codelineno-5-485" href="#__codelineno-5-485"></a>header-coordinate  (graph construction; elaborate)
+<a id="__codelineno-5-486" name="__codelineno-5-486" href="#__codelineno-5-486"></a>  condition  A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which its output stands is a coordinate of the output function, and a state of its input perch is reached through the law of motion.
 <a id="__codelineno-5-487" name="__codelineno-5-487" href="#__codelineno-5-487"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-488" name="__codelineno-5-488" href="#__codelineno-5-488"></a>  where  t.bl, line 9, column 5 (address 'cntn_to_dcsn.1')
+<a id="__codelineno-5-488" name="__codelineno-5-488" href="#__codelineno-5-488"></a>  where  t.bl, line 5, column 1 (address 'cntn_to_dcsn')
 <a id="__codelineno-5-489" name="__codelineno-5-489" href="#__codelineno-5-489"></a>  what
-<a id="__codelineno-5-490" name="__codelineno-5-490" href="#__codelineno-5-490"></a>        V = a + V[&gt;]
-<a id="__codelineno-5-491" name="__codelineno-5-491" href="#__codelineno-5-491"></a>        ^
-<a id="__codelineno-5-492" name="__codelineno-5-492" href="#__codelineno-5-492"></a>  why    the line is read at the dcsn perch and mentions a, a state of the cntn perch, the perch block 'cntn_to_dcsn' reads its inputs at; a backward block reaches a state of its input perch, or of a later perch, through the law of motion alone, and read directly the state would stand free in a rule that holds on the dcsn state (rule input-perch-state). The forward block 'dcsn_to_cntn' defines it at t.bl:6:5 (term address 'dcsn_to_cntn.1'), `a = x_d`. Write `x_d` in its place, as the law of motion holds with no shock drawn on the edge of block 'dcsn_to_cntn'; across an edge that draws a shock, the state is read under the expectation over that shock
-<a id="__codelineno-5-493" name="__codelineno-5-493" href="#__codelineno-5-493"></a>  write  Write `x_d` in place of `a`
+<a id="__codelineno-5-490" name="__codelineno-5-490" href="#__codelineno-5-490"></a>    [id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, x_d : !dcsn) -&gt; (V : ℝ @ !vlu) : !dcsn] {
+<a id="__codelineno-5-491" name="__codelineno-5-491" href="#__codelineno-5-491"></a>    ^
+<a id="__codelineno-5-492" name="__codelineno-5-492" href="#__codelineno-5-492"></a>  why    the header of block 'cntn_to_dcsn' lists x_d on its input side, and the block is a backward block, whose header lists the value fields it reads and writes and the controls at which its lines are read, and no state (rule header-coordinate). x_d is a state of the dcsn perch, the perch at which the block's output stands, so it is a coordinate of the output function and no input of the block. Remove the listing, `(V[&gt;] : ℝ @ !vlu) -&gt; (V : ℝ @ !vlu) : !dcsn`; a line of the block may still mention a state of the dcsn perch, which is a coordinate of what it defines
+<a id="__codelineno-5-493" name="__codelineno-5-493" href="#__codelineno-5-493"></a>  write  Remove x_d from the header: `(V[&gt;] : ℝ @ !vlu) -&gt; (V : ℝ @ !vlu) : !dcsn`
 <a id="__codelineno-5-494" name="__codelineno-5-494" href="#__codelineno-5-494"></a>
-<a id="__codelineno-5-495" name="__codelineno-5-495" href="#__codelineno-5-495"></a>kernel-form  (graph construction; query)
-<a id="__codelineno-5-496" name="__codelineno-5-496" href="#__codelineno-5-496"></a>  condition  A kernel that `compile_kernel` writes as a Python function is retained arithmetic and calls to closed-form functions; a symbolic derivative has no compile rule. The function takes the values of the parameters it reads as arguments, so a symbolic version compiles too and answers no values, `parameter_values` None.
+<a id="__codelineno-5-495" name="__codelineno-5-495" href="#__codelineno-5-495"></a>input-perch-state  (graph construction; elaborate)
+<a id="__codelineno-5-496" name="__codelineno-5-496" href="#__codelineno-5-496"></a>  condition  A backward line reads a state of its input or a later perch only through the law of motion. A direct read is refused, including in a relation or a condition after `⟂`. A read under the expectation over the edge's shock and continuation-state indexing on a policy candidate line are admitted.
 <a id="__codelineno-5-497" name="__codelineno-5-497" href="#__codelineno-5-497"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-498" name="__codelineno-5-498" href="#__codelineno-5-498"></a>  where  address 'cntn_to_dcsn.marginal'
-<a id="__codelineno-5-499" name="__codelineno-5-499" href="#__codelineno-5-499"></a>  why    stage 'cons_savings_iid': the kernel of 'marginal:Derivative:1' (cons_savings_iid:G:cntn_to_dcsn) contains the call 𝑑𝑢(c) of 𝑑𝑢 := D_{c}(𝑢) (cons_savings_iid:function:𝑑𝑢), which is not a closed-form function; no compile rule evaluates it: compile evaluates retained arithmetic and calls to closed-form named functions and selects no numerical method (AMD-SG-007 §3.1, rule kernel-form); define that function in closed form, or read the kernel with kernel(stage, box)
-<a id="__codelineno-5-500" name="__codelineno-5-500" href="#__codelineno-5-500"></a>
-<a id="__codelineno-5-501" name="__codelineno-5-501" href="#__codelineno-5-501"></a>method-option-value  (graph construction; configure)
-<a id="__codelineno-5-502" name="__codelineno-5-502" href="#__codelineno-5-502"></a>  condition  Every configured keyword argument of a method lies in the domain its row of the catalogue names for it.
-<a id="__codelineno-5-503" name="__codelineno-5-503" href="#__codelineno-5-503"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-504" name="__codelineno-5-504" href="#__codelineno-5-504"></a>  where  address 'cntn_to_dcsn'
-<a id="__codelineno-5-505" name="__codelineno-5-505" href="#__codelineno-5-505"></a>  why    stage 'cons', place 'cntn_to_dcsn', method !vfi, keyword 'tol': -1.0 is not a positive real; configure requires the value to lie in the domain the method's row names; write a finite value greater than zero
-<a id="__codelineno-5-506" name="__codelineno-5-506" href="#__codelineno-5-506"></a>
-<a id="__codelineno-5-507" name="__codelineno-5-507" href="#__codelineno-5-507"></a>kernel-target  (graph construction; query)
-<a id="__codelineno-5-508" name="__codelineno-5-508" href="#__codelineno-5-508"></a>  condition  `kernel` and `compile` read a primitive operator box, and `compile` one whose kernel is g or G.
-<a id="__codelineno-5-509" name="__codelineno-5-509" href="#__codelineno-5-509"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-510" name="__codelineno-5-510" href="#__codelineno-5-510"></a>  where  address 'cntn_to_dcsn'
-<a id="__codelineno-5-511" name="__codelineno-5-511" href="#__codelineno-5-511"></a>  why    stage 'cons': compile evaluates the explicit numerical kernels g and G, and 'cntn_to_dcsn:Evaluation' is a Evaluation box whose kernel, identity at m_d; no policy is inserted, has no callable representation (AMD-SG-007 §3.1, rule kernel-target); inspect it with kernel(stage, box), or compile a pullback, push-forward or aggregation box
-<a id="__codelineno-5-512" name="__codelineno-5-512" href="#__codelineno-5-512"></a>
-<a id="__codelineno-5-513" name="__codelineno-5-513" href="#__codelineno-5-513"></a>distribution-dependency  (graph construction; elaborate)
-<a id="__codelineno-5-514" name="__codelineno-5-514" href="#__codelineno-5-514"></a>  condition  The distribution declarations read one another without a cycle, and a declaration does not read its own subject.
-<a id="__codelineno-5-515" name="__codelineno-5-515" href="#__codelineno-5-515"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-516" name="__codelineno-5-516" href="#__codelineno-5-516"></a>  where  t.bl, line 4, column 1 (address '4')
-<a id="__codelineno-5-517" name="__codelineno-5-517" href="#__codelineno-5-517"></a>  what
-<a id="__codelineno-5-518" name="__codelineno-5-518" href="#__codelineno-5-518"></a>    y ~ N(z, 1)
-<a id="__codelineno-5-519" name="__codelineno-5-519" href="#__codelineno-5-519"></a>    ^
-<a id="__codelineno-5-520" name="__codelineno-5-520" href="#__codelineno-5-520"></a>  why    the distribution declarations form a cycle: `y ~ N(z, 1)` reads z, `z ~ N(y, 1)` reads y; the joint distribution of an edge is the product of the declared conditional distributions in a dependency order, which a cycle does not have; remove one of the shock arguments, or declare the dependent shocks jointly, such as `(y, z) ~ N(…)`
-<a id="__codelineno-5-521" name="__codelineno-5-521" href="#__codelineno-5-521"></a>  write  Remove one of the shock arguments, or declare y, z jointly, such as `(y, z) ~ N(…)`
+<a id="__codelineno-5-498" name="__codelineno-5-498" href="#__codelineno-5-498"></a>  where  t.bl, line 9, column 5 (address 'cntn_to_dcsn.1')
+<a id="__codelineno-5-499" name="__codelineno-5-499" href="#__codelineno-5-499"></a>  what
+<a id="__codelineno-5-500" name="__codelineno-5-500" href="#__codelineno-5-500"></a>        V = a + V[&gt;]
+<a id="__codelineno-5-501" name="__codelineno-5-501" href="#__codelineno-5-501"></a>        ^
+<a id="__codelineno-5-502" name="__codelineno-5-502" href="#__codelineno-5-502"></a>  why    the line is read at the dcsn perch and mentions a, a state of the cntn perch, the perch block 'cntn_to_dcsn' reads its inputs at; a backward block reaches a state of its input perch, or of a later perch, through the law of motion alone, and read directly the state would stand free in a rule that holds on the dcsn state (rule input-perch-state). The forward block 'dcsn_to_cntn' defines it at t.bl:6:5 (term address 'dcsn_to_cntn.1'), `a = x_d`. Write `x_d` in its place, as the law of motion holds with no shock drawn on the edge of block 'dcsn_to_cntn'; across an edge that draws a shock, the state is read under the expectation over that shock
+<a id="__codelineno-5-503" name="__codelineno-5-503" href="#__codelineno-5-503"></a>  write  Write `x_d` in place of `a`
+<a id="__codelineno-5-504" name="__codelineno-5-504" href="#__codelineno-5-504"></a>
+<a id="__codelineno-5-505" name="__codelineno-5-505" href="#__codelineno-5-505"></a>kernel-form  (graph construction; query)
+<a id="__codelineno-5-506" name="__codelineno-5-506" href="#__codelineno-5-506"></a>  condition  A kernel that `compile_kernel` writes as a Python function is retained arithmetic and calls to closed-form functions; a symbolic derivative has no compile rule. The function takes the values of the parameters it reads as arguments, so a symbolic version compiles too and answers no values, `parameter_values` None.
+<a id="__codelineno-5-507" name="__codelineno-5-507" href="#__codelineno-5-507"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-508" name="__codelineno-5-508" href="#__codelineno-5-508"></a>  where  address 'cntn_to_dcsn.marginal'
+<a id="__codelineno-5-509" name="__codelineno-5-509" href="#__codelineno-5-509"></a>  why    stage 'cons_savings_iid': the kernel of 'marginal:Derivative:1' (cons_savings_iid:G:cntn_to_dcsn) contains the call 𝑑𝑢(c) of 𝑑𝑢 := D_{c}(𝑢) (cons_savings_iid:function:𝑑𝑢), which is not a closed-form function; no compile rule evaluates it: compile evaluates retained arithmetic and calls to closed-form named functions and selects no numerical method (AMD-SG-007 §3.1, rule kernel-form); define that function in closed form, or read the kernel with kernel(stage, box)
+<a id="__codelineno-5-510" name="__codelineno-5-510" href="#__codelineno-5-510"></a>
+<a id="__codelineno-5-511" name="__codelineno-5-511" href="#__codelineno-5-511"></a>method-option-value  (graph construction; configure)
+<a id="__codelineno-5-512" name="__codelineno-5-512" href="#__codelineno-5-512"></a>  condition  Every configured keyword argument of a method lies in the domain its row of the catalogue names for it.
+<a id="__codelineno-5-513" name="__codelineno-5-513" href="#__codelineno-5-513"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-514" name="__codelineno-5-514" href="#__codelineno-5-514"></a>  where  address 'cntn_to_dcsn'
+<a id="__codelineno-5-515" name="__codelineno-5-515" href="#__codelineno-5-515"></a>  why    stage 'cons', place 'cntn_to_dcsn', method !vfi, keyword 'tol': -1.0 is not a positive real; configure requires the value to lie in the domain the method's row names; write a finite value greater than zero
+<a id="__codelineno-5-516" name="__codelineno-5-516" href="#__codelineno-5-516"></a>
+<a id="__codelineno-5-517" name="__codelineno-5-517" href="#__codelineno-5-517"></a>kernel-target  (graph construction; query)
+<a id="__codelineno-5-518" name="__codelineno-5-518" href="#__codelineno-5-518"></a>  condition  `kernel` and `compile` read a primitive operator box, and `compile` one whose kernel is g or G.
+<a id="__codelineno-5-519" name="__codelineno-5-519" href="#__codelineno-5-519"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-520" name="__codelineno-5-520" href="#__codelineno-5-520"></a>  where  address 'cntn_to_dcsn'
+<a id="__codelineno-5-521" name="__codelineno-5-521" href="#__codelineno-5-521"></a>  why    stage 'cons': compile evaluates the explicit numerical kernels g and G, and 'cntn_to_dcsn:Evaluation' is a Evaluation box whose kernel, identity at m_d; no policy is inserted, has no callable representation (AMD-SG-007 §3.1, rule kernel-target); inspect it with kernel(stage, box), or compile a pullback, push-forward or aggregation box
 <a id="__codelineno-5-522" name="__codelineno-5-522" href="#__codelineno-5-522"></a>
-<a id="__codelineno-5-523" name="__codelineno-5-523" href="#__codelineno-5-523"></a>distribution-edge  (graph construction; elaborate)
-<a id="__codelineno-5-524" name="__codelineno-5-524" href="#__codelineno-5-524"></a>  condition  The shocks of connected declarations are drawn on the edge of one forward builder.
+<a id="__codelineno-5-523" name="__codelineno-5-523" href="#__codelineno-5-523"></a>distribution-dependency  (graph construction; elaborate)
+<a id="__codelineno-5-524" name="__codelineno-5-524" href="#__codelineno-5-524"></a>  condition  The distribution declarations read one another without a cycle, and a declaration does not read its own subject.
 <a id="__codelineno-5-525" name="__codelineno-5-525" href="#__codelineno-5-525"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-526" name="__codelineno-5-526" href="#__codelineno-5-526"></a>  where  t.bl, line 3, column 1 (address '3')
+<a id="__codelineno-5-526" name="__codelineno-5-526" href="#__codelineno-5-526"></a>  where  t.bl, line 4, column 1 (address '4')
 <a id="__codelineno-5-527" name="__codelineno-5-527" href="#__codelineno-5-527"></a>  what
-<a id="__codelineno-5-528" name="__codelineno-5-528" href="#__codelineno-5-528"></a>    y ~ N(0, 1)
+<a id="__codelineno-5-528" name="__codelineno-5-528" href="#__codelineno-5-528"></a>    y ~ N(z, 1)
 <a id="__codelineno-5-529" name="__codelineno-5-529" href="#__codelineno-5-529"></a>    ^
-<a id="__codelineno-5-530" name="__codelineno-5-530" href="#__codelineno-5-530"></a>  why    the shock y is listed on the headers of the forward blocks 'arvl_to_dcsn' and 'dcsn_to_cntn'; a shock is drawn on one edge, the edge of the one forward block whose header lists it; remove y from the header and from the lines of one of the two blocks, which changes the law of motion of that block
-<a id="__codelineno-5-531" name="__codelineno-5-531" href="#__codelineno-5-531"></a>  write  Remove y from the header and from the lines of block 'arvl_to_dcsn' or of block 'dcsn_to_cntn', which changes the law of motion of that block
+<a id="__codelineno-5-530" name="__codelineno-5-530" href="#__codelineno-5-530"></a>  why    the distribution declarations form a cycle: `y ~ N(z, 1)` reads z, `z ~ N(y, 1)` reads y; the joint distribution of an edge is the product of the declared conditional distributions in a dependency order, which a cycle does not have; remove one of the shock arguments, or declare the dependent shocks jointly, such as `(y, z) ~ N(…)`
+<a id="__codelineno-5-531" name="__codelineno-5-531" href="#__codelineno-5-531"></a>  write  Remove one of the shock arguments, or declare y, z jointly, such as `(y, z) ~ N(…)`
 <a id="__codelineno-5-532" name="__codelineno-5-532" href="#__codelineno-5-532"></a>
-<a id="__codelineno-5-533" name="__codelineno-5-533" href="#__codelineno-5-533"></a>distribution-domain  (graph construction; elaborate)
-<a id="__codelineno-5-534" name="__codelineno-5-534" href="#__codelineno-5-534"></a>  condition  A declaration's family parameters lie in the family's domain: matched dimensions, a symmetric positive semidefinite covariance, nonnegative variances and deviations, finite endpoints in order, positive scales, and real arguments that have a number.
+<a id="__codelineno-5-533" name="__codelineno-5-533" href="#__codelineno-5-533"></a>distribution-edge  (graph construction; elaborate)
+<a id="__codelineno-5-534" name="__codelineno-5-534" href="#__codelineno-5-534"></a>  condition  The shocks of connected declarations are drawn on the edge of one forward builder.
 <a id="__codelineno-5-535" name="__codelineno-5-535" href="#__codelineno-5-535"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-536" name="__codelineno-5-536" href="#__codelineno-5-536"></a>  where  t.bl, line 4, column 1 (address 't.bl:4')
+<a id="__codelineno-5-536" name="__codelineno-5-536" href="#__codelineno-5-536"></a>  where  t.bl, line 3, column 1 (address '3')
 <a id="__codelineno-5-537" name="__codelineno-5-537" href="#__codelineno-5-537"></a>  what
-<a id="__codelineno-5-538" name="__codelineno-5-538" href="#__codelineno-5-538"></a>    (y, z) ~ N((0, 0), ((1, 2), (2, 1)))
+<a id="__codelineno-5-538" name="__codelineno-5-538" href="#__codelineno-5-538"></a>    y ~ N(0, 1)
 <a id="__codelineno-5-539" name="__codelineno-5-539" href="#__codelineno-5-539"></a>    ^
-<a id="__codelineno-5-540" name="__codelineno-5-540" href="#__codelineno-5-540"></a>  why    the covariance ((1, 2), (2, 1)) of the normal declaration `(y, z) ~ N((0, 0), ((1, 2), (2, 1)))` is not positive semidefinite: its smallest eigenvalue is -1.0; write a symmetric positive semidefinite covariance matrix
-<a id="__codelineno-5-541" name="__codelineno-5-541" href="#__codelineno-5-541"></a>  write  Write a symmetric positive semidefinite covariance matrix
+<a id="__codelineno-5-540" name="__codelineno-5-540" href="#__codelineno-5-540"></a>  why    the shock y is listed on the headers of the forward blocks 'arvl_to_dcsn' and 'dcsn_to_cntn'; a shock is drawn on one edge, the edge of the one forward block whose header lists it; remove y from the header and from the lines of one of the two blocks, which changes the law of motion of that block
+<a id="__codelineno-5-541" name="__codelineno-5-541" href="#__codelineno-5-541"></a>  write  Remove y from the header and from the lines of block 'arvl_to_dcsn' or of block 'dcsn_to_cntn', which changes the law of motion of that block
 <a id="__codelineno-5-542" name="__codelineno-5-542" href="#__codelineno-5-542"></a>
-<a id="__codelineno-5-543" name="__codelineno-5-543" href="#__codelineno-5-543"></a>derived-parameter  (graph construction; elaborate)
-<a id="__codelineno-5-544" name="__codelineno-5-544" href="#__codelineno-5-544"></a>  condition  A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers and the calls `log` and `exp` of one argument; the calibration supplies no value for it, and at the calibration values every operation of its definition is defined and its value is a finite real number. The set a definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is a set of numbers and reads no setting.
+<a id="__codelineno-5-543" name="__codelineno-5-543" href="#__codelineno-5-543"></a>distribution-domain  (graph construction; elaborate)
+<a id="__codelineno-5-544" name="__codelineno-5-544" href="#__codelineno-5-544"></a>  condition  A declaration's family parameters lie in the family's domain: matched dimensions, a symmetric positive semidefinite covariance, nonnegative variances and deviations, finite endpoints in order, positive scales, and real arguments that have a number.
 <a id="__codelineno-5-545" name="__codelineno-5-545" href="#__codelineno-5-545"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-546" name="__codelineno-5-546" href="#__codelineno-5-546"></a>  where  t.bl, line 3, column 1 (address '3')
+<a id="__codelineno-5-546" name="__codelineno-5-546" href="#__codelineno-5-546"></a>  where  t.bl, line 4, column 1 (address 't.bl:4')
 <a id="__codelineno-5-547" name="__codelineno-5-547" href="#__codelineno-5-547"></a>  what
-<a id="__codelineno-5-548" name="__codelineno-5-548" href="#__codelineno-5-548"></a>    h := 1/sqrt(1 - β)
+<a id="__codelineno-5-548" name="__codelineno-5-548" href="#__codelineno-5-548"></a>    (y, z) ~ N((0, 0), ((1, 2), (2, 1)))
 <a id="__codelineno-5-549" name="__codelineno-5-549" href="#__codelineno-5-549"></a>    ^
-<a id="__codelineno-5-550" name="__codelineno-5-550" href="#__codelineno-5-550"></a>  why    the derived parameter h, defined as `1/sqrt(1 - β)`, calls sqrt, `sqrt(1 - β)`, which is neither log nor exp; a derived parameter's definition reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers and the calls `log` and `exp`, each of one argument
-<a id="__codelineno-5-551" name="__codelineno-5-551" href="#__codelineno-5-551"></a>  write  Write the definition of h from declared parameters, finite numbers and derived parameters, with signs, sums, differences, products, quotients, powers, log and exp
+<a id="__codelineno-5-550" name="__codelineno-5-550" href="#__codelineno-5-550"></a>  why    the covariance ((1, 2), (2, 1)) of the normal declaration `(y, z) ~ N((0, 0), ((1, 2), (2, 1)))` is not positive semidefinite: its smallest eigenvalue is -1.0; write a symmetric positive semidefinite covariance matrix
+<a id="__codelineno-5-551" name="__codelineno-5-551" href="#__codelineno-5-551"></a>  write  Write a symmetric positive semidefinite covariance matrix
 <a id="__codelineno-5-552" name="__codelineno-5-552" href="#__codelineno-5-552"></a>
-<a id="__codelineno-5-553" name="__codelineno-5-553" href="#__codelineno-5-553"></a>conditional-not-declared  (graph construction; elaborate)
-<a id="__codelineno-5-554" name="__codelineno-5-554" href="#__codelineno-5-554"></a>  condition  The conditional distribution an expectation needs is a declared conditional, a product of them, or a marginal or conditional of a joint normal declaration whose conditioning block is positive definite.
+<a id="__codelineno-5-553" name="__codelineno-5-553" href="#__codelineno-5-553"></a>derived-parameter  (graph construction; elaborate)
+<a id="__codelineno-5-554" name="__codelineno-5-554" href="#__codelineno-5-554"></a>  condition  A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers, the calls `log` and `exp` of one argument and the calls `min` and `max` of one argument or more, or by cases, `if … then … else …`; where the stage defines a function of one of those four names, the definition calls none of that name. The calibration supplies no value for it, and at the calibration values every operation it evaluates is defined and its value is a finite real number, or the infinity a branch of its conditional writes. The set a definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is a set of numbers and reads no setting, and it holds each infinity that a branch writes: a definition that declares no set writes no infinite branch.
 <a id="__codelineno-5-555" name="__codelineno-5-555" href="#__codelineno-5-555"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-556" name="__codelineno-5-556" href="#__codelineno-5-556"></a>  where  t.bl, line 17, column 5 (address 'cntn_to_dcsn.value')
+<a id="__codelineno-5-556" name="__codelineno-5-556" href="#__codelineno-5-556"></a>  where  t.bl, line 3, column 1 (address '3')
 <a id="__codelineno-5-557" name="__codelineno-5-557" href="#__codelineno-5-557"></a>  what
-<a id="__codelineno-5-558" name="__codelineno-5-558" href="#__codelineno-5-558"></a>        V = E_{z}(E_{y}(V[&gt;])) :: [id=value]
-<a id="__codelineno-5-559" name="__codelineno-5-559" href="#__codelineno-5-559"></a>        ^
-<a id="__codelineno-5-560" name="__codelineno-5-560" href="#__codelineno-5-560"></a>  why    the expectation over y on line cntn_to_dcsn.value needs the distribution of y given z from the normal declaration `(y, z) ~ N((0, 0), ((1, 0), (0, 0)))`, whose covariance block of z, which is 0, is singular (smallest eigenvalue 0.0); the conditional of a joint normal declaration requires a positive definite block for the shocks conditioned on, and no pseudoinverse is taken; condition on shocks whose covariance block is positive definite, or integrate them jointly, `E_{y, z}(…)`
-<a id="__codelineno-5-561" name="__codelineno-5-561" href="#__codelineno-5-561"></a>  write  Condition on shocks whose covariance block is positive definite, or integrate y, z jointly, `E_{y, z}(…)`
+<a id="__codelineno-5-558" name="__codelineno-5-558" href="#__codelineno-5-558"></a>    h := 1/sqrt(1 - β)
+<a id="__codelineno-5-559" name="__codelineno-5-559" href="#__codelineno-5-559"></a>    ^
+<a id="__codelineno-5-560" name="__codelineno-5-560" href="#__codelineno-5-560"></a>  why    the derived parameter h, defined as `1/sqrt(1 - β)`, calls sqrt, `sqrt(1 - β)`, which is none of log, exp, min and max; a derived parameter's definition reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers, the calls `log` and `exp`, each of one argument, and the calls `min` and `max`, each of one argument or more; its right side may be a conditional, `if … then … else …`, whose test compares two such formulas and whose branches are such formulas, further conditionals, or `inf` or `-inf` where the definition declares a set that holds that infinity
+<a id="__codelineno-5-561" name="__codelineno-5-561" href="#__codelineno-5-561"></a>  write  Write the definition of h from declared parameters, finite numbers and derived parameters, with signs, sums, differences, products, quotients, powers, log, exp, min and max, or by cases with `if … then … else …`
 <a id="__codelineno-5-562" name="__codelineno-5-562" href="#__codelineno-5-562"></a>
-<a id="__codelineno-5-563" name="__codelineno-5-563" href="#__codelineno-5-563"></a>branch-form  (graph construction; elaborate)
-<a id="__codelineno-5-564" name="__codelineno-5-564" href="#__codelineno-5-564"></a>  condition  A branching block holds one labeled nested block per label and nothing else, at least two, in the forward block from the decision perch to the continuation perch, whose own output side is empty; a nested block has an empty input side and writes continuation fields.
+<a id="__codelineno-5-563" name="__codelineno-5-563" href="#__codelineno-5-563"></a>conditional-not-declared  (graph construction; elaborate)
+<a id="__codelineno-5-564" name="__codelineno-5-564" href="#__codelineno-5-564"></a>  condition  The conditional distribution an expectation needs is a declared conditional, a product of them, or a marginal or conditional of a joint normal declaration whose conditioning block is positive definite.
 <a id="__codelineno-5-565" name="__codelineno-5-565" href="#__codelineno-5-565"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-566" name="__codelineno-5-566" href="#__codelineno-5-566"></a>  where  t.bl, line 5, column 1 (address 'dcsn_to_cntn')
+<a id="__codelineno-5-566" name="__codelineno-5-566" href="#__codelineno-5-566"></a>  where  t.bl, line 17, column 5 (address 'cntn_to_dcsn.value')
 <a id="__codelineno-5-567" name="__codelineno-5-567" href="#__codelineno-5-567"></a>  what
-<a id="__codelineno-5-568" name="__codelineno-5-568" href="#__codelineno-5-568"></a>    [id=dcsn_to_cntn, (a_d, d : !ctrl @ {work, retire}) : !dcsn -&gt; ()] {
-<a id="__codelineno-5-569" name="__codelineno-5-569" href="#__codelineno-5-569"></a>    ^
-<a id="__codelineno-5-570" name="__codelineno-5-570" href="#__codelineno-5-570"></a>  why    block 'dcsn_to_cntn' holds one nested block, `work`; a branching block holds one nested block for each label of its label coordinate 'd', {work, retire}; write the nested block of `retire`
-<a id="__codelineno-5-571" name="__codelineno-5-571" href="#__codelineno-5-571"></a>  write  Write the nested block `[label=retire, …] { … }` after the branch `work`
+<a id="__codelineno-5-568" name="__codelineno-5-568" href="#__codelineno-5-568"></a>        V = E_{z}(E_{y}(V[&gt;])) :: [id=value]
+<a id="__codelineno-5-569" name="__codelineno-5-569" href="#__codelineno-5-569"></a>        ^
+<a id="__codelineno-5-570" name="__codelineno-5-570" href="#__codelineno-5-570"></a>  why    the expectation over y on line cntn_to_dcsn.value needs the distribution of y given z from the normal declaration `(y, z) ~ N((0, 0), ((1, 0), (0, 0)))`, whose covariance block of z, which is 0, is singular (smallest eigenvalue 0.0); the conditional of a joint normal declaration requires a positive definite block for the shocks conditioned on, and no pseudoinverse is taken; condition on shocks whose covariance block is positive definite, or integrate them jointly, `E_{y, z}(…)`
+<a id="__codelineno-5-571" name="__codelineno-5-571" href="#__codelineno-5-571"></a>  write  Condition on shocks whose covariance block is positive definite, or integrate y, z jointly, `E_{y, z}(…)`
 <a id="__codelineno-5-572" name="__codelineno-5-572" href="#__codelineno-5-572"></a>
-<a id="__codelineno-5-573" name="__codelineno-5-573" href="#__codelineno-5-573"></a>branch-labels  (graph construction; elaborate)
-<a id="__codelineno-5-574" name="__codelineno-5-574" href="#__codelineno-5-574"></a>  condition  The nested blocks carry the labels of the block's label coordinate, a control or a shock with its law, whose set is a finite set of at least two labels, each once and in the set's order.
+<a id="__codelineno-5-573" name="__codelineno-5-573" href="#__codelineno-5-573"></a>branch-form  (graph construction; elaborate)
+<a id="__codelineno-5-574" name="__codelineno-5-574" href="#__codelineno-5-574"></a>  condition  A branching block holds one labeled nested block per label and nothing else, at least two, in the forward block from the decision perch to the continuation perch, whose own output side is empty; a nested block has an empty input side and writes continuation fields.
 <a id="__codelineno-5-575" name="__codelineno-5-575" href="#__codelineno-5-575"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-576" name="__codelineno-5-576" href="#__codelineno-5-576"></a>  where  t.bl, line 9, column 5 (address 'dcsn_to_cntn.stop')
+<a id="__codelineno-5-576" name="__codelineno-5-576" href="#__codelineno-5-576"></a>  where  t.bl, line 5, column 1 (address 'dcsn_to_cntn')
 <a id="__codelineno-5-577" name="__codelineno-5-577" href="#__codelineno-5-577"></a>  what
-<a id="__codelineno-5-578" name="__codelineno-5-578" href="#__codelineno-5-578"></a>        [label=stop, () -&gt; (a_r : ℝ₊) : !cntn] {
-<a id="__codelineno-5-579" name="__codelineno-5-579" href="#__codelineno-5-579"></a>        ^
-<a id="__codelineno-5-580" name="__codelineno-5-580" href="#__codelineno-5-580"></a>  why    the label 'stop' is not a member of {work, retire}, the set of the label coordinate 'd'; write one nested block for each member, in the set's order
-<a id="__codelineno-5-581" name="__codelineno-5-581" href="#__codelineno-5-581"></a>
-<a id="__codelineno-5-582" name="__codelineno-5-582" href="#__codelineno-5-582"></a>branch-tuple-mismatch  (graph construction; elaborate)
-<a id="__codelineno-5-583" name="__codelineno-5-583" href="#__codelineno-5-583"></a>  condition  The value line selects by one tuple indexed by the label coordinate, one entry per label, and the policy maximizes over the same tuple in the same order; a branch a shock selects is read under the expectation over the shock alone.
-<a id="__codelineno-5-584" name="__codelineno-5-584" href="#__codelineno-5-584"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-585" name="__codelineno-5-585" href="#__codelineno-5-585"></a>  where  t.bl, line 14, column 5 (address 'cntn_to_dcsn.choice_value')
-<a id="__codelineno-5-586" name="__codelineno-5-586" href="#__codelineno-5-586"></a>  what
-<a id="__codelineno-5-587" name="__codelineno-5-587" href="#__codelineno-5-587"></a>        V = (V_w[&gt;], V_r[&gt;])[d]                :: [id=choice_value]
-<a id="__codelineno-5-588" name="__codelineno-5-588" href="#__codelineno-5-588"></a>        ^
-<a id="__codelineno-5-589" name="__codelineno-5-589" href="#__codelineno-5-589"></a>  why    the value line selects from (V_w[&gt;], V_r[&gt;]) by 'd', and the policy line policy.choice maximizes over (V_r[&gt;], V_w[&gt;]); write the policy's maximand as the value line's tuple, in its order
-<a id="__codelineno-5-590" name="__codelineno-5-590" href="#__codelineno-5-590"></a>
-<a id="__codelineno-5-591" name="__codelineno-5-591" href="#__codelineno-5-591"></a>branch-value-position  (graph construction; elaborate)
-<a id="__codelineno-5-592" name="__codelineno-5-592" href="#__codelineno-5-592"></a>  condition  A continuation value stands at one position of the selection tuples, the position of the branch on whose fields it is a function.
-<a id="__codelineno-5-593" name="__codelineno-5-593" href="#__codelineno-5-593"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-594" name="__codelineno-5-594" href="#__codelineno-5-594"></a>  where  t.bl, line 14, column 5 (address 'cntn_to_dcsn.choice_value')
-<a id="__codelineno-5-595" name="__codelineno-5-595" href="#__codelineno-5-595"></a>  what
-<a id="__codelineno-5-596" name="__codelineno-5-596" href="#__codelineno-5-596"></a>        V = (V_w[&gt;], V_w[&gt;])[d]                :: [id=choice_value]
-<a id="__codelineno-5-597" name="__codelineno-5-597" href="#__codelineno-5-597"></a>        ^
-<a id="__codelineno-5-598" name="__codelineno-5-598" href="#__codelineno-5-598"></a>  why    V_w[&gt;] is read at the position of 'work' and at the position of 'retire'; a branch value stands at one position in every tuple, the position of its branch; write each branch value at its own branch's position alone
-<a id="__codelineno-5-599" name="__codelineno-5-599" href="#__codelineno-5-599"></a>
-<a id="__codelineno-5-600" name="__codelineno-5-600" href="#__codelineno-5-600"></a>branch-law  (graph construction; elaborate)
-<a id="__codelineno-5-601" name="__codelineno-5-601" href="#__codelineno-5-601"></a>  condition  The law of a label shock gives one probability to each label in the order of the labels, `Categorical((p₁, …, pₙ))` or `Bernoulli(p)` over two.
-<a id="__codelineno-5-602" name="__codelineno-5-602" href="#__codelineno-5-602"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-603" name="__codelineno-5-603" href="#__codelineno-5-603"></a>  where  t.bl, line 7, column 1 (address 'dcsn_to_cntn')
-<a id="__codelineno-5-604" name="__codelineno-5-604" href="#__codelineno-5-604"></a>  what
-<a id="__codelineno-5-605" name="__codelineno-5-605" href="#__codelineno-5-605"></a>    [id=dcsn_to_cntn, (a_d, s) : !dcsn -&gt; ()] {
-<a id="__codelineno-5-606" name="__codelineno-5-606" href="#__codelineno-5-606"></a>    ^
-<a id="__codelineno-5-607" name="__codelineno-5-607" href="#__codelineno-5-607"></a>  why    the shock 's' selects the branches of block 'dcsn_to_cntn' and has no distribution; the branches are weighted by the distribution of the shock, so write `s ~ Categorical((p_young, p_old))`, one probability for each label in the order {young, old}
-<a id="__codelineno-5-608" name="__codelineno-5-608" href="#__codelineno-5-608"></a>
-<a id="__codelineno-5-609" name="__codelineno-5-609" href="#__codelineno-5-609"></a>not-constructed  (graph construction; elaborate)
-<a id="__codelineno-5-610" name="__codelineno-5-610" href="#__codelineno-5-610"></a>  condition  The item is a form of the language the construction does not read.
-<a id="__codelineno-5-611" name="__codelineno-5-611" href="#__codelineno-5-611"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-612" name="__codelineno-5-612" href="#__codelineno-5-612"></a>  where  t.bl, line 5, column 1 (address 'dcsn_to_cntn')
-<a id="__codelineno-5-613" name="__codelineno-5-613" href="#__codelineno-5-613"></a>  what
-<a id="__codelineno-5-614" name="__codelineno-5-614" href="#__codelineno-5-614"></a>    [id=dcsn_to_cntn, (a_d, c : !ctrl @ [0,1], d : !ctrl @ {work, retire}) : !dcsn -&gt; ()] {
-<a id="__codelineno-5-615" name="__codelineno-5-615" href="#__codelineno-5-615"></a>    ^
-<a id="__codelineno-5-616" name="__codelineno-5-616" href="#__codelineno-5-616"></a>  why    block 'dcsn_to_cntn' lists the controls 'c', 'd' beside its branches; the construction reads a branching block whose branches state equations alone and whose label coordinate is its one control, or a shock over a finite set in a stage that chooses nothing, and reads no other form of a branching block; the declarations and the other blocks of the stage are read, and no builder of the stage is drawn while this block keeps this form
-<a id="__codelineno-5-617" name="__codelineno-5-617" href="#__codelineno-5-617"></a>
-<a id="__codelineno-5-618" name="__codelineno-5-618" href="#__codelineno-5-618"></a>target-not-found  (the names of the pieces; query)
-<a id="__codelineno-5-619" name="__codelineno-5-619" href="#__codelineno-5-619"></a>  condition  A name given to a query of the stage object, a box name or an identity, names a piece the version asked holds.
-<a id="__codelineno-5-620" name="__codelineno-5-620" href="#__codelineno-5-620"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-621" name="__codelineno-5-621" href="#__codelineno-5-621"></a>  where  stage 'cons', target 'cntn_to_dcsn:Substitution:V'
-<a id="__codelineno-5-622" name="__codelineno-5-622" href="#__codelineno-5-622"></a>  why    stage 'cons': 'cntn_to_dcsn:Substitution:V' names no box of the version's views and no record of its definitions table; a printed view, a kernel and a compiled kernel read an actual box or definition
-<a id="__codelineno-5-623" name="__codelineno-5-623" href="#__codelineno-5-623"></a>  write  Write a box name that stage.builder.bwd.primitives.list() or stage.builder.fwd.primitives.list() shows, or an identity of stage.definitions
-<a id="__codelineno-5-624" name="__codelineno-5-624" href="#__codelineno-5-624"></a>
-<a id="__codelineno-5-625" name="__codelineno-5-625" href="#__codelineno-5-625"></a>target-ambiguous  (the names of the pieces; query)
-<a id="__codelineno-5-626" name="__codelineno-5-626" href="#__codelineno-5-626"></a>  condition  A name given to a query reaches one piece of the version, not two.
-<a id="__codelineno-5-627" name="__codelineno-5-627" href="#__codelineno-5-627"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-628" name="__codelineno-5-628" href="#__codelineno-5-628"></a>  where  stage 'cons', target 'cntn_to_dcsn'
-<a id="__codelineno-5-629" name="__codelineno-5-629" href="#__codelineno-5-629"></a>  why    stage 'cons': 'cntn_to_dcsn' names 2 different targets: the box cntn_to_dcsn in the initial diagram, backward at the grain builder, builder cntn_to_dcsn | the box cntn_to_dcsn in the builders graph, backward at the grain builder, builder cntn_to_dcsn; one name selects one target only when the boxes it names are equal
-<a id="__codelineno-5-630" name="__codelineno-5-630" href="#__codelineno-5-630"></a>  write  Pass the box itself from the view and grain you mean
-<a id="__codelineno-5-631" name="__codelineno-5-631" href="#__codelineno-5-631"></a>
-<a id="__codelineno-5-632" name="__codelineno-5-632" href="#__codelineno-5-632"></a>target-version  (the names of the pieces; query)
-<a id="__codelineno-5-633" name="__codelineno-5-633" href="#__codelineno-5-633"></a>  condition  An object given to a query belongs to the version asked: a box or a record of one version is not read against another version, since versions share no object.
-<a id="__codelineno-5-634" name="__codelineno-5-634" href="#__codelineno-5-634"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-635" name="__codelineno-5-635" href="#__codelineno-5-635"></a>  where  stage 'cons', target 'cntn_to_dcsn:Pullback'
-<a id="__codelineno-5-636" name="__codelineno-5-636" href="#__codelineno-5-636"></a>  why    stage 'cons': the box 'cntn_to_dcsn:Pullback' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object
-<a id="__codelineno-5-637" name="__codelineno-5-637" href="#__codelineno-5-637"></a>  write  Ask the version whose view holds the box, or pass a box of this version's view
-<a id="__codelineno-5-638" name="__codelineno-5-638" href="#__codelineno-5-638"></a>
-<a id="__codelineno-5-639" name="__codelineno-5-639" href="#__codelineno-5-639"></a>recipe-shape  (the Bellman factory; read)
-<a id="__codelineno-5-640" name="__codelineno-5-640" href="#__codelineno-5-640"></a>  condition  The recipe names its trellis file under `trellis:` and has a `stages` mapping; each stage key stands once and its entry names its stage file under `stage:`, each file by its path from the recipe's folder; each kind block is a mapping with an `all` list; a range key is written `lo-hi` with lo ≤ hi and no two ranges of one list overlap; `periods:` is a pair.
-<a id="__codelineno-5-641" name="__codelineno-5-641" href="#__codelineno-5-641"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-642" name="__codelineno-5-642" href="#__codelineno-5-642"></a>  where  registry/spec.yml, address 'stages'
-<a id="__codelineno-5-643" name="__codelineno-5-643" href="#__codelineno-5-643"></a>  what
-<a id="__codelineno-5-644" name="__codelineno-5-644" href="#__codelineno-5-644"></a>{'registry': {}}
-<a id="__codelineno-5-645" name="__codelineno-5-645" href="#__codelineno-5-645"></a>  why    the recipe has no top-level `stages` mapping
-<a id="__codelineno-5-646" name="__codelineno-5-646" href="#__codelineno-5-646"></a>  write  stages: {&lt;stage key&gt;: {stage: &lt;path&gt;.bl, calibration: {all: [...]}, settings: {all: [...]}, methods: {all: [stages/&lt;key&gt;/methods.bl]}}}
-<a id="__codelineno-5-647" name="__codelineno-5-647" href="#__codelineno-5-647"></a>
-<a id="__codelineno-5-648" name="__codelineno-5-648" href="#__codelineno-5-648"></a>recipe-source  (the Bellman factory; read)
-<a id="__codelineno-5-649" name="__codelineno-5-649" href="#__codelineno-5-649"></a>  condition  Every source name is relative to the registry without `..`, names a file the registry holds, of the kind of the list it stands in, and its `parent:` chain neither cycles nor exceeds ten files.
-<a id="__codelineno-5-650" name="__codelineno-5-650" href="#__codelineno-5-650"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-651" name="__codelineno-5-651" href="#__codelineno-5-651"></a>  where  registry/spec.yml, address 'stages.two_nodes.calibration.all'
-<a id="__codelineno-5-652" name="__codelineno-5-652" href="#__codelineno-5-652"></a>  what
-<a id="__codelineno-5-653" name="__codelineno-5-653" href="#__codelineno-5-653"></a>calibration/absent
-<a id="__codelineno-5-654" name="__codelineno-5-654" href="#__codelineno-5-654"></a>  why    the registry holds no source file 'calibration/absent'; tried registry/calibration/absent.yml, registry/calibration/absent.yaml, registry/calibration/absent
-<a id="__codelineno-5-655" name="__codelineno-5-655" href="#__codelineno-5-655"></a>  write  the name of a file under the registry, without its extension
-<a id="__codelineno-5-656" name="__codelineno-5-656" href="#__codelineno-5-656"></a>
-<a id="__codelineno-5-657" name="__codelineno-5-657" href="#__codelineno-5-657"></a>recipe-slot-unknown  (the Bellman factory; read)
-<a id="__codelineno-5-658" name="__codelineno-5-658" href="#__codelineno-5-658"></a>  condition  Every fill names a slot the recipe declares by a `$` name in one of its source lists.
-<a id="__codelineno-5-659" name="__codelineno-5-659" href="#__codelineno-5-659"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-660" name="__codelineno-5-660" href="#__codelineno-5-660"></a>  where  registry/spec.yml, address 'fil'
-<a id="__codelineno-5-661" name="__codelineno-5-661" href="#__codelineno-5-661"></a>  what
-<a id="__codelineno-5-662" name="__codelineno-5-662" href="#__codelineno-5-662"></a>fil
-<a id="__codelineno-5-663" name="__codelineno-5-663" href="#__codelineno-5-663"></a>  why    the keyword 'fil' names no slot of the recipe; its slots are $fill
-<a id="__codelineno-5-664" name="__codelineno-5-664" href="#__codelineno-5-664"></a>  write  one of $fill, or a new `$` name in a source list of the recipe
-<a id="__codelineno-5-665" name="__codelineno-5-665" href="#__codelineno-5-665"></a>
-<a id="__codelineno-5-666" name="__codelineno-5-666" href="#__codelineno-5-666"></a>recipe-template-agreement  (the Bellman factory; read)
-<a id="__codelineno-5-667" name="__codelineno-5-667" href="#__codelineno-5-667"></a>  condition  Every stage the recipe names occupies a period the trellis file holds, and every stage a period holds is named by the recipe.
-<a id="__codelineno-5-668" name="__codelineno-5-668" href="#__codelineno-5-668"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-669" name="__codelineno-5-669" href="#__codelineno-5-669"></a>  where  registry/spec.yml, address 'other'
-<a id="__codelineno-5-670" name="__codelineno-5-670" href="#__codelineno-5-670"></a>  what
-<a id="__codelineno-5-671" name="__codelineno-5-671" href="#__codelineno-5-671"></a>other
-<a id="__codelineno-5-672" name="__codelineno-5-672" href="#__codelineno-5-672"></a>  why    the recipe names the stage 'other', which no period of registry/trellis.yml holds
-<a id="__codelineno-5-673" name="__codelineno-5-673" href="#__codelineno-5-673"></a>  write  'other' in a period template of registry/trellis.yml, or no entry for it in the recipe
-<a id="__codelineno-5-674" name="__codelineno-5-674" href="#__codelineno-5-674"></a>
-<a id="__codelineno-5-675" name="__codelineno-5-675" href="#__codelineno-5-675"></a>slot-value-not-a-mapping  (the Bellman factory; read)
-<a id="__codelineno-5-676" name="__codelineno-5-676" href="#__codelineno-5-676"></a>  condition  A slot is bound to a mapping.
-<a id="__codelineno-5-677" name="__codelineno-5-677" href="#__codelineno-5-677"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-678" name="__codelineno-5-678" href="#__codelineno-5-678"></a>  where  registry/spec.yml, address 'fill'
-<a id="__codelineno-5-679" name="__codelineno-5-679" href="#__codelineno-5-679"></a>  what
-<a id="__codelineno-5-680" name="__codelineno-5-680" href="#__codelineno-5-680"></a>'β: 0.9'
-<a id="__codelineno-5-681" name="__codelineno-5-681" href="#__codelineno-5-681"></a>  why    slot 'fill' is given the text 'β: 0.9', which is no mapping of names to values
-<a id="__codelineno-5-682" name="__codelineno-5-682" href="#__codelineno-5-682"></a>  write  fill={'calibration': {...}, 'settings': {...}} or a flat mapping of names to values
-<a id="__codelineno-5-683" name="__codelineno-5-683" href="#__codelineno-5-683"></a>
-<a id="__codelineno-5-684" name="__codelineno-5-684" href="#__codelineno-5-684"></a>fill-names-nothing  (the Bellman factory; read)
-<a id="__codelineno-5-685" name="__codelineno-5-685" href="#__codelineno-5-685"></a>  condition  Every key of a fill names a parameter or a setting a receiving stage declares, or a name the `registry` block admits.
-<a id="__codelineno-5-686" name="__codelineno-5-686" href="#__codelineno-5-686"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-687" name="__codelineno-5-687" href="#__codelineno-5-687"></a>  where  registry/spec.yml, address 'fill'
-<a id="__codelineno-5-688" name="__codelineno-5-688" href="#__codelineno-5-688"></a>  what
-<a id="__codelineno-5-689" name="__codelineno-5-689" href="#__codelineno-5-689"></a>beta
-<a id="__codelineno-5-690" name="__codelineno-5-690" href="#__codelineno-5-690"></a>  why    slot 'fill', key 'beta': no stage that receives this slot declares 'beta' as a parameter (two_nodes declares β, R) or as a setting (two_nodes declares n_k), and no registry block admits it; a fill key names a parameter or a setting of a stage that receives it
-<a id="__codelineno-5-691" name="__codelineno-5-691" href="#__codelineno-5-691"></a>  write  one of the declared names R, n_k, β
-<a id="__codelineno-5-692" name="__codelineno-5-692" href="#__codelineno-5-692"></a>
-<a id="__codelineno-5-693" name="__codelineno-5-693" href="#__codelineno-5-693"></a>fill-mixes-kinds  (the Bellman factory; read)
-<a id="__codelineno-5-694" name="__codelineno-5-694" href="#__codelineno-5-694"></a>  condition  A flat fill names parameters or settings, not both.
-<a id="__codelineno-5-695" name="__codelineno-5-695" href="#__codelineno-5-695"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-696" name="__codelineno-5-696" href="#__codelineno-5-696"></a>  where  registry/spec.yml, address 'fill'
-<a id="__codelineno-5-697" name="__codelineno-5-697" href="#__codelineno-5-697"></a>  what
-<a id="__codelineno-5-698" name="__codelineno-5-698" href="#__codelineno-5-698"></a>β, n_k
-<a id="__codelineno-5-699" name="__codelineno-5-699" href="#__codelineno-5-699"></a>  why    slot 'fill' names the parameters β and the settings n_k in one flat mapping
-<a id="__codelineno-5-700" name="__codelineno-5-700" href="#__codelineno-5-700"></a>  write  fill={'calibration': {...}, 'settings': {...}}, each name under its kind
-<a id="__codelineno-5-701" name="__codelineno-5-701" href="#__codelineno-5-701"></a>
-<a id="__codelineno-5-702" name="__codelineno-5-702" href="#__codelineno-5-702"></a>trellis-file-shape  (the Bellman factory; read)
-<a id="__codelineno-5-703" name="__codelineno-5-703" href="#__codelineno-5-703"></a>  condition  A trellis file, or a trellis dictionary, lists its `periods` and its `inter_connectors`; each period holds `stages` and `connectors`; each record of a file names its `stage`.
-<a id="__codelineno-5-704" name="__codelineno-5-704" href="#__codelineno-5-704"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-705" name="__codelineno-5-705" href="#__codelineno-5-705"></a>  where  registry/broken.yml, address 'periods'
-<a id="__codelineno-5-706" name="__codelineno-5-706" href="#__codelineno-5-706"></a>  what
-<a id="__codelineno-5-707" name="__codelineno-5-707" href="#__codelineno-5-707"></a>{'stages': []}
-<a id="__codelineno-5-708" name="__codelineno-5-708" href="#__codelineno-5-708"></a>  why    the trellis file has no list `periods`
-<a id="__codelineno-5-709" name="__codelineno-5-709" href="#__codelineno-5-709"></a>  write  periods: [{template: period.yml, repeat: 51}] or the periods written out
-<a id="__codelineno-5-710" name="__codelineno-5-710" href="#__codelineno-5-710"></a>
-<a id="__codelineno-5-711" name="__codelineno-5-711" href="#__codelineno-5-711"></a>record-shape  (the Bellman factory; elaborate)
-<a id="__codelineno-5-712" name="__codelineno-5-712" href="#__codelineno-5-712"></a>  condition  A record holds `stage` as `{text, origin}` and its three mappings, and a supplied digest or origin agrees with the source.
-<a id="__codelineno-5-713" name="__codelineno-5-713" href="#__codelineno-5-713"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-714" name="__codelineno-5-714" href="#__codelineno-5-714"></a>  where  address 'record'
-<a id="__codelineno-5-715" name="__codelineno-5-715" href="#__codelineno-5-715"></a>  what
-<a id="__codelineno-5-716" name="__codelineno-5-716" href="#__codelineno-5-716"></a>stage
-<a id="__codelineno-5-717" name="__codelineno-5-717" href="#__codelineno-5-717"></a>  why    the record holds no calibration, methods or settings fields
-<a id="__codelineno-5-718" name="__codelineno-5-718" href="#__codelineno-5-718"></a>  write  a record with stage, calibration, settings and methods, and optionally label and provenance
-<a id="__codelineno-5-719" name="__codelineno-5-719" href="#__codelineno-5-719"></a>
-<a id="__codelineno-5-720" name="__codelineno-5-720" href="#__codelineno-5-720"></a>period-join-cycle  (the Bellman factory; connect)
-<a id="__codelineno-5-721" name="__codelineno-5-721" href="#__codelineno-5-721"></a>  condition  The pairs of a period, authored by its connectors or inferred from equal field names, close no cycle, and no connector joins a stage to itself.
-<a id="__codelineno-5-722" name="__codelineno-5-722" href="#__codelineno-5-722"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-723" name="__codelineno-5-723" href="#__codelineno-5-723"></a>  where  address 'periods[0]'
-<a id="__codelineno-5-724" name="__codelineno-5-724" href="#__codelineno-5-724"></a>  what
-<a id="__codelineno-5-725" name="__codelineno-5-725" href="#__codelineno-5-725"></a>disc continues to 'a' and port arrives at 'k'; port continues to 'm_next' and disc arrives at 'a'
-<a id="__codelineno-5-726" name="__codelineno-5-726" href="#__codelineno-5-726"></a>  why    the joins of the period form a cycle: disc continues to 'a' and port arrives at 'k'; port continues to 'm_next' and disc arrives at 'a'; the stages of a period are ordered by their field dependencies, so no stage may take a field it produces through the others
-<a id="__codelineno-5-727" name="__codelineno-5-727" href="#__codelineno-5-727"></a>  write  connectors with no cycle among the stages; remove or redirect an authored connector, and qualify an endpoint with its stage key where its bare name is ambiguous
-<a id="__codelineno-5-728" name="__codelineno-5-728" href="#__codelineno-5-728"></a>
-<a id="__codelineno-5-729" name="__codelineno-5-729" href="#__codelineno-5-729"></a>connector-names-no-field  (the Bellman factory; connect)
-<a id="__codelineno-5-730" name="__codelineno-5-730" href="#__codelineno-5-730"></a>  condition  A connector is a mapping, flat or in the keyed form {from, to, fields} within a period, and one entry maps a continuation field; a connector whose endpoint names no field, or several, is a diagnostic of the trellis's selection of its connections and no refusal.
-<a id="__codelineno-5-731" name="__codelineno-5-731" href="#__codelineno-5-731"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-732" name="__codelineno-5-732" href="#__codelineno-5-732"></a>  where  address 'periods[0].connectors[0]'
-<a id="__codelineno-5-733" name="__codelineno-5-733" href="#__codelineno-5-733"></a>  what
-<a id="__codelineno-5-734" name="__codelineno-5-734" href="#__codelineno-5-734"></a>{'from': 'cons', 'to': 'port', 'fields': {'a': 'k'}, 'label': 'x'}
-<a id="__codelineno-5-735" name="__codelineno-5-735" href="#__codelineno-5-735"></a>  why    the connector is written in the keyed form and has the key 'label' beside from, to and fields
-<a id="__codelineno-5-736" name="__codelineno-5-736" href="#__codelineno-5-736"></a>  write  {&lt;continuation field&gt;: &lt;arrival field&gt;}, or within a period {from: &lt;stage key&gt;, to: &lt;stage key&gt;, fields: {&lt;continuation field&gt;: &lt;arrival field&gt;}}
-<a id="__codelineno-5-737" name="__codelineno-5-737" href="#__codelineno-5-737"></a>
-<a id="__codelineno-5-738" name="__codelineno-5-738" href="#__codelineno-5-738"></a>period-parameter-agreement  (the Bellman factory; connect)
-<a id="__codelineno-5-739" name="__codelineno-5-739" href="#__codelineno-5-739"></a>  condition  A parameter name two or more stages of one period declare names one parameter of the period: the sets the stages declare it with have one nonempty intersection the package reads, the stages' sources supply it one value, and that value lies in every declared set; a setting name two or more stages declare in their methods files names one setting of the period in the same way.
-<a id="__codelineno-5-740" name="__codelineno-5-740" href="#__codelineno-5-740"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-741" name="__codelineno-5-741" href="#__codelineno-5-741"></a>  where  registry/trellis.yml, address 'periods[0]'
-<a id="__codelineno-5-742" name="__codelineno-5-742" href="#__codelineno-5-742"></a>  what
-<a id="__codelineno-5-743" name="__codelineno-5-743" href="#__codelineno-5-743"></a>R : ℝ₊₊ in two_nodes; R : (-inf, 0) in other
-<a id="__codelineno-5-744" name="__codelineno-5-744" href="#__codelineno-5-744"></a>  why    the stages two_nodes (registry/stages/two_nodes/two_nodes.bl) and other (registry/stages/other/other.bl) of the period declare the parameter 'R' with the sets ℝ₊₊ and (-inf, 0), which have no nonempty intersection; a parameter name names one parameter of the period, shared by the stages that declare it, so their declared sets agree
-<a id="__codelineno-5-745" name="__codelineno-5-745" href="#__codelineno-5-745"></a>  write  one set for 'R' in every stage of the period, or sets the package reads whose intersection is not empty, or distinct names for distinct parameters
-<a id="__codelineno-5-746" name="__codelineno-5-746" href="#__codelineno-5-746"></a>
-<a id="__codelineno-5-747" name="__codelineno-5-747" href="#__codelineno-5-747"></a>readable-file  (the Bellman factory; read)
-<a id="__codelineno-5-748" name="__codelineno-5-748" href="#__codelineno-5-748"></a>  condition  A stage file, read by its path or named under `stage:` in a recipe, is a readable `.bl` file of UTF-8 text; a source file a binding verb reads, or a record of a trellis file names, is a readable YAML mapping that writes each key once.
-<a id="__codelineno-5-749" name="__codelineno-5-749" href="#__codelineno-5-749"></a>  example  the package's example of the rule, and the refusal it provokes:
-<a id="__codelineno-5-750" name="__codelineno-5-750" href="#__codelineno-5-750"></a>  where  cons.txt
-<a id="__codelineno-5-751" name="__codelineno-5-751" href="#__codelineno-5-751"></a>  what
-<a id="__codelineno-5-752" name="__codelineno-5-752" href="#__codelineno-5-752"></a>cons.txt
-<a id="__codelineno-5-753" name="__codelineno-5-753" href="#__codelineno-5-753"></a>  why    cons.txt names no stage file, since a stage file is a `.bl` file
-<a id="__codelineno-5-754" name="__codelineno-5-754" href="#__codelineno-5-754"></a>  write  the path of a stage file, `&lt;name&gt;.bl`
+<a id="__codelineno-5-578" name="__codelineno-5-578" href="#__codelineno-5-578"></a>    [id=dcsn_to_cntn, (a_d, d : !ctrl @ {work, retire}) : !dcsn -&gt; ()] {
+<a id="__codelineno-5-579" name="__codelineno-5-579" href="#__codelineno-5-579"></a>    ^
+<a id="__codelineno-5-580" name="__codelineno-5-580" href="#__codelineno-5-580"></a>  why    block 'dcsn_to_cntn' holds one nested block, `work`; a branching block holds one nested block for each label of its label coordinate 'd', {work, retire}; write the nested block of `retire`
+<a id="__codelineno-5-581" name="__codelineno-5-581" href="#__codelineno-5-581"></a>  write  Write the nested block `[label=retire, …] { … }` after the branch `work`
+<a id="__codelineno-5-582" name="__codelineno-5-582" href="#__codelineno-5-582"></a>
+<a id="__codelineno-5-583" name="__codelineno-5-583" href="#__codelineno-5-583"></a>branch-labels  (graph construction; elaborate)
+<a id="__codelineno-5-584" name="__codelineno-5-584" href="#__codelineno-5-584"></a>  condition  The nested blocks carry the labels of the block's label coordinate, a control or a shock with its law, whose set is a finite set of at least two labels, each once and in the set's order.
+<a id="__codelineno-5-585" name="__codelineno-5-585" href="#__codelineno-5-585"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-586" name="__codelineno-5-586" href="#__codelineno-5-586"></a>  where  t.bl, line 9, column 5 (address 'dcsn_to_cntn.stop')
+<a id="__codelineno-5-587" name="__codelineno-5-587" href="#__codelineno-5-587"></a>  what
+<a id="__codelineno-5-588" name="__codelineno-5-588" href="#__codelineno-5-588"></a>        [label=stop, () -&gt; (a_r : ℝ₊) : !cntn] {
+<a id="__codelineno-5-589" name="__codelineno-5-589" href="#__codelineno-5-589"></a>        ^
+<a id="__codelineno-5-590" name="__codelineno-5-590" href="#__codelineno-5-590"></a>  why    the label 'stop' is not a member of {work, retire}, the set of the label coordinate 'd'; write one nested block for each member, in the set's order
+<a id="__codelineno-5-591" name="__codelineno-5-591" href="#__codelineno-5-591"></a>
+<a id="__codelineno-5-592" name="__codelineno-5-592" href="#__codelineno-5-592"></a>branch-tuple-mismatch  (graph construction; elaborate)
+<a id="__codelineno-5-593" name="__codelineno-5-593" href="#__codelineno-5-593"></a>  condition  The value line selects by one tuple indexed by the label coordinate, one entry per label, and the policy maximizes over the same tuple in the same order; a branch a shock selects is read under the expectation over the shock alone.
+<a id="__codelineno-5-594" name="__codelineno-5-594" href="#__codelineno-5-594"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-595" name="__codelineno-5-595" href="#__codelineno-5-595"></a>  where  t.bl, line 14, column 5 (address 'cntn_to_dcsn.choice_value')
+<a id="__codelineno-5-596" name="__codelineno-5-596" href="#__codelineno-5-596"></a>  what
+<a id="__codelineno-5-597" name="__codelineno-5-597" href="#__codelineno-5-597"></a>        V = (V_w[&gt;], V_r[&gt;])[d]                :: [id=choice_value]
+<a id="__codelineno-5-598" name="__codelineno-5-598" href="#__codelineno-5-598"></a>        ^
+<a id="__codelineno-5-599" name="__codelineno-5-599" href="#__codelineno-5-599"></a>  why    the value line selects from (V_w[&gt;], V_r[&gt;]) by 'd', and the policy line policy.choice maximizes over (V_r[&gt;], V_w[&gt;]); write the policy's maximand as the value line's tuple, in its order
+<a id="__codelineno-5-600" name="__codelineno-5-600" href="#__codelineno-5-600"></a>
+<a id="__codelineno-5-601" name="__codelineno-5-601" href="#__codelineno-5-601"></a>branch-value-position  (graph construction; elaborate)
+<a id="__codelineno-5-602" name="__codelineno-5-602" href="#__codelineno-5-602"></a>  condition  A continuation value stands at one position of the selection tuples, the position of the branch on whose fields it is a function.
+<a id="__codelineno-5-603" name="__codelineno-5-603" href="#__codelineno-5-603"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-604" name="__codelineno-5-604" href="#__codelineno-5-604"></a>  where  t.bl, line 14, column 5 (address 'cntn_to_dcsn.choice_value')
+<a id="__codelineno-5-605" name="__codelineno-5-605" href="#__codelineno-5-605"></a>  what
+<a id="__codelineno-5-606" name="__codelineno-5-606" href="#__codelineno-5-606"></a>        V = (V_w[&gt;], V_w[&gt;])[d]                :: [id=choice_value]
+<a id="__codelineno-5-607" name="__codelineno-5-607" href="#__codelineno-5-607"></a>        ^
+<a id="__codelineno-5-608" name="__codelineno-5-608" href="#__codelineno-5-608"></a>  why    V_w[&gt;] is read at the position of 'work' and at the position of 'retire'; a branch value stands at one position in every tuple, the position of its branch; write each branch value at its own branch's position alone
+<a id="__codelineno-5-609" name="__codelineno-5-609" href="#__codelineno-5-609"></a>
+<a id="__codelineno-5-610" name="__codelineno-5-610" href="#__codelineno-5-610"></a>branch-law  (graph construction; elaborate)
+<a id="__codelineno-5-611" name="__codelineno-5-611" href="#__codelineno-5-611"></a>  condition  The law of a label shock gives one probability to each label in the order of the labels, `Categorical((p₁, …, pₙ))` or `Bernoulli(p)` over two.
+<a id="__codelineno-5-612" name="__codelineno-5-612" href="#__codelineno-5-612"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-613" name="__codelineno-5-613" href="#__codelineno-5-613"></a>  where  t.bl, line 7, column 1 (address 'dcsn_to_cntn')
+<a id="__codelineno-5-614" name="__codelineno-5-614" href="#__codelineno-5-614"></a>  what
+<a id="__codelineno-5-615" name="__codelineno-5-615" href="#__codelineno-5-615"></a>    [id=dcsn_to_cntn, (a_d, s) : !dcsn -&gt; ()] {
+<a id="__codelineno-5-616" name="__codelineno-5-616" href="#__codelineno-5-616"></a>    ^
+<a id="__codelineno-5-617" name="__codelineno-5-617" href="#__codelineno-5-617"></a>  why    the shock 's' selects the branches of block 'dcsn_to_cntn' and has no distribution; the branches are weighted by the distribution of the shock, so write `s ~ Categorical((p_young, p_old))`, one probability for each label in the order {young, old}
+<a id="__codelineno-5-618" name="__codelineno-5-618" href="#__codelineno-5-618"></a>
+<a id="__codelineno-5-619" name="__codelineno-5-619" href="#__codelineno-5-619"></a>not-constructed  (graph construction; elaborate)
+<a id="__codelineno-5-620" name="__codelineno-5-620" href="#__codelineno-5-620"></a>  condition  The item is a form of the language the construction does not read.
+<a id="__codelineno-5-621" name="__codelineno-5-621" href="#__codelineno-5-621"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-622" name="__codelineno-5-622" href="#__codelineno-5-622"></a>  where  t.bl, line 5, column 1 (address 'dcsn_to_cntn')
+<a id="__codelineno-5-623" name="__codelineno-5-623" href="#__codelineno-5-623"></a>  what
+<a id="__codelineno-5-624" name="__codelineno-5-624" href="#__codelineno-5-624"></a>    [id=dcsn_to_cntn, (a_d, c : !ctrl @ [0,1], d : !ctrl @ {work, retire}) : !dcsn -&gt; ()] {
+<a id="__codelineno-5-625" name="__codelineno-5-625" href="#__codelineno-5-625"></a>    ^
+<a id="__codelineno-5-626" name="__codelineno-5-626" href="#__codelineno-5-626"></a>  why    block 'dcsn_to_cntn' lists the controls 'c', 'd' beside its branches; the construction reads a branching block whose branches state equations alone and whose label coordinate is its one control, or a shock over a finite set in a stage that chooses nothing, and reads no other form of a branching block; the declarations and the other blocks of the stage are read, and no builder of the stage is drawn while this block keeps this form
+<a id="__codelineno-5-627" name="__codelineno-5-627" href="#__codelineno-5-627"></a>
+<a id="__codelineno-5-628" name="__codelineno-5-628" href="#__codelineno-5-628"></a>target-not-found  (the names of the pieces; query)
+<a id="__codelineno-5-629" name="__codelineno-5-629" href="#__codelineno-5-629"></a>  condition  A name given to a query of the stage object, a box name or an identity, names a piece the version asked holds.
+<a id="__codelineno-5-630" name="__codelineno-5-630" href="#__codelineno-5-630"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-631" name="__codelineno-5-631" href="#__codelineno-5-631"></a>  where  stage 'cons', target 'cntn_to_dcsn:Substitution:V'
+<a id="__codelineno-5-632" name="__codelineno-5-632" href="#__codelineno-5-632"></a>  why    stage 'cons': 'cntn_to_dcsn:Substitution:V' names no box of the version's views and no record of its definitions table; a printed view, a kernel and a compiled kernel read an actual box or definition
+<a id="__codelineno-5-633" name="__codelineno-5-633" href="#__codelineno-5-633"></a>  write  Write a box name that stage.builder.bwd.primitives.list() or stage.builder.fwd.primitives.list() shows, or an identity of stage.definitions
+<a id="__codelineno-5-634" name="__codelineno-5-634" href="#__codelineno-5-634"></a>
+<a id="__codelineno-5-635" name="__codelineno-5-635" href="#__codelineno-5-635"></a>target-ambiguous  (the names of the pieces; query)
+<a id="__codelineno-5-636" name="__codelineno-5-636" href="#__codelineno-5-636"></a>  condition  A name given to a query reaches one piece of the version, not two.
+<a id="__codelineno-5-637" name="__codelineno-5-637" href="#__codelineno-5-637"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-638" name="__codelineno-5-638" href="#__codelineno-5-638"></a>  where  stage 'cons', target 'cntn_to_dcsn'
+<a id="__codelineno-5-639" name="__codelineno-5-639" href="#__codelineno-5-639"></a>  why    stage 'cons': 'cntn_to_dcsn' names 2 different targets: the box cntn_to_dcsn in the initial diagram, backward at the grain builder, builder cntn_to_dcsn | the box cntn_to_dcsn in the builders graph, backward at the grain builder, builder cntn_to_dcsn; one name selects one target only when the boxes it names are equal
+<a id="__codelineno-5-640" name="__codelineno-5-640" href="#__codelineno-5-640"></a>  write  Pass the box itself from the view and grain you mean
+<a id="__codelineno-5-641" name="__codelineno-5-641" href="#__codelineno-5-641"></a>
+<a id="__codelineno-5-642" name="__codelineno-5-642" href="#__codelineno-5-642"></a>target-version  (the names of the pieces; query)
+<a id="__codelineno-5-643" name="__codelineno-5-643" href="#__codelineno-5-643"></a>  condition  An object given to a query belongs to the version asked: a box or a record of one version is not read against another version, since versions share no object.
+<a id="__codelineno-5-644" name="__codelineno-5-644" href="#__codelineno-5-644"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-645" name="__codelineno-5-645" href="#__codelineno-5-645"></a>  where  stage 'cons', target 'cntn_to_dcsn:Pullback'
+<a id="__codelineno-5-646" name="__codelineno-5-646" href="#__codelineno-5-646"></a>  why    stage 'cons': the box 'cntn_to_dcsn:Pullback' passed is no box of a graph of this version; a query reads the boxes of the version it is asked of, and versions share no object
+<a id="__codelineno-5-647" name="__codelineno-5-647" href="#__codelineno-5-647"></a>  write  Ask the version whose view holds the box, or pass a box of this version's view
+<a id="__codelineno-5-648" name="__codelineno-5-648" href="#__codelineno-5-648"></a>
+<a id="__codelineno-5-649" name="__codelineno-5-649" href="#__codelineno-5-649"></a>recipe-shape  (the Bellman factory; read)
+<a id="__codelineno-5-650" name="__codelineno-5-650" href="#__codelineno-5-650"></a>  condition  The recipe names its trellis file under `trellis:` and has a `stages` mapping; each stage key stands once and its entry names its stage file under `stage:`, each file by its path from the recipe's folder; each kind block is a mapping with an `all` list; a range key is written `lo-hi` with lo ≤ hi and no two ranges of one list overlap; `periods:` is a pair.
+<a id="__codelineno-5-651" name="__codelineno-5-651" href="#__codelineno-5-651"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-652" name="__codelineno-5-652" href="#__codelineno-5-652"></a>  where  registry/spec.yml, address 'stages'
+<a id="__codelineno-5-653" name="__codelineno-5-653" href="#__codelineno-5-653"></a>  what
+<a id="__codelineno-5-654" name="__codelineno-5-654" href="#__codelineno-5-654"></a>{'registry': {}}
+<a id="__codelineno-5-655" name="__codelineno-5-655" href="#__codelineno-5-655"></a>  why    the recipe has no top-level `stages` mapping
+<a id="__codelineno-5-656" name="__codelineno-5-656" href="#__codelineno-5-656"></a>  write  stages: {&lt;stage key&gt;: {stage: &lt;path&gt;.bl, calibration: {all: [...]}, settings: {all: [...]}, methods: {all: [stages/&lt;key&gt;/methods.bl]}}}
+<a id="__codelineno-5-657" name="__codelineno-5-657" href="#__codelineno-5-657"></a>
+<a id="__codelineno-5-658" name="__codelineno-5-658" href="#__codelineno-5-658"></a>recipe-source  (the Bellman factory; read)
+<a id="__codelineno-5-659" name="__codelineno-5-659" href="#__codelineno-5-659"></a>  condition  Every source name is relative to the registry without `..`, names a file the registry holds, of the kind of the list it stands in, and its `parent:` chain neither cycles nor exceeds ten files.
+<a id="__codelineno-5-660" name="__codelineno-5-660" href="#__codelineno-5-660"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-661" name="__codelineno-5-661" href="#__codelineno-5-661"></a>  where  registry/spec.yml, address 'stages.two_nodes.calibration.all'
+<a id="__codelineno-5-662" name="__codelineno-5-662" href="#__codelineno-5-662"></a>  what
+<a id="__codelineno-5-663" name="__codelineno-5-663" href="#__codelineno-5-663"></a>calibration/absent
+<a id="__codelineno-5-664" name="__codelineno-5-664" href="#__codelineno-5-664"></a>  why    the registry holds no source file 'calibration/absent'; tried registry/calibration/absent.yml, registry/calibration/absent.yaml, registry/calibration/absent
+<a id="__codelineno-5-665" name="__codelineno-5-665" href="#__codelineno-5-665"></a>  write  the name of a file under the registry, without its extension
+<a id="__codelineno-5-666" name="__codelineno-5-666" href="#__codelineno-5-666"></a>
+<a id="__codelineno-5-667" name="__codelineno-5-667" href="#__codelineno-5-667"></a>recipe-slot-unknown  (the Bellman factory; read)
+<a id="__codelineno-5-668" name="__codelineno-5-668" href="#__codelineno-5-668"></a>  condition  Every fill names a slot the recipe declares by a `$` name in one of its source lists.
+<a id="__codelineno-5-669" name="__codelineno-5-669" href="#__codelineno-5-669"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-670" name="__codelineno-5-670" href="#__codelineno-5-670"></a>  where  registry/spec.yml, address 'fil'
+<a id="__codelineno-5-671" name="__codelineno-5-671" href="#__codelineno-5-671"></a>  what
+<a id="__codelineno-5-672" name="__codelineno-5-672" href="#__codelineno-5-672"></a>fil
+<a id="__codelineno-5-673" name="__codelineno-5-673" href="#__codelineno-5-673"></a>  why    the keyword 'fil' names no slot of the recipe; its slots are $fill
+<a id="__codelineno-5-674" name="__codelineno-5-674" href="#__codelineno-5-674"></a>  write  one of $fill, or a new `$` name in a source list of the recipe
+<a id="__codelineno-5-675" name="__codelineno-5-675" href="#__codelineno-5-675"></a>
+<a id="__codelineno-5-676" name="__codelineno-5-676" href="#__codelineno-5-676"></a>recipe-template-agreement  (the Bellman factory; read)
+<a id="__codelineno-5-677" name="__codelineno-5-677" href="#__codelineno-5-677"></a>  condition  Every stage the recipe names occupies a period the trellis file holds, and every stage a period holds is named by the recipe.
+<a id="__codelineno-5-678" name="__codelineno-5-678" href="#__codelineno-5-678"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-679" name="__codelineno-5-679" href="#__codelineno-5-679"></a>  where  registry/spec.yml, address 'other'
+<a id="__codelineno-5-680" name="__codelineno-5-680" href="#__codelineno-5-680"></a>  what
+<a id="__codelineno-5-681" name="__codelineno-5-681" href="#__codelineno-5-681"></a>other
+<a id="__codelineno-5-682" name="__codelineno-5-682" href="#__codelineno-5-682"></a>  why    the recipe names the stage 'other', which no period of registry/trellis.yml holds
+<a id="__codelineno-5-683" name="__codelineno-5-683" href="#__codelineno-5-683"></a>  write  'other' in a period template of registry/trellis.yml, or no entry for it in the recipe
+<a id="__codelineno-5-684" name="__codelineno-5-684" href="#__codelineno-5-684"></a>
+<a id="__codelineno-5-685" name="__codelineno-5-685" href="#__codelineno-5-685"></a>slot-value-not-a-mapping  (the Bellman factory; read)
+<a id="__codelineno-5-686" name="__codelineno-5-686" href="#__codelineno-5-686"></a>  condition  A slot is bound to a mapping.
+<a id="__codelineno-5-687" name="__codelineno-5-687" href="#__codelineno-5-687"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-688" name="__codelineno-5-688" href="#__codelineno-5-688"></a>  where  registry/spec.yml, address 'fill'
+<a id="__codelineno-5-689" name="__codelineno-5-689" href="#__codelineno-5-689"></a>  what
+<a id="__codelineno-5-690" name="__codelineno-5-690" href="#__codelineno-5-690"></a>'β: 0.9'
+<a id="__codelineno-5-691" name="__codelineno-5-691" href="#__codelineno-5-691"></a>  why    slot 'fill' is given the text 'β: 0.9', which is no mapping of names to values
+<a id="__codelineno-5-692" name="__codelineno-5-692" href="#__codelineno-5-692"></a>  write  fill={'calibration': {...}, 'settings': {...}} or a flat mapping of names to values
+<a id="__codelineno-5-693" name="__codelineno-5-693" href="#__codelineno-5-693"></a>
+<a id="__codelineno-5-694" name="__codelineno-5-694" href="#__codelineno-5-694"></a>fill-names-nothing  (the Bellman factory; read)
+<a id="__codelineno-5-695" name="__codelineno-5-695" href="#__codelineno-5-695"></a>  condition  Every key of a fill names a parameter or a setting a receiving stage declares, or a name the `registry` block admits.
+<a id="__codelineno-5-696" name="__codelineno-5-696" href="#__codelineno-5-696"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-697" name="__codelineno-5-697" href="#__codelineno-5-697"></a>  where  registry/spec.yml, address 'fill'
+<a id="__codelineno-5-698" name="__codelineno-5-698" href="#__codelineno-5-698"></a>  what
+<a id="__codelineno-5-699" name="__codelineno-5-699" href="#__codelineno-5-699"></a>beta
+<a id="__codelineno-5-700" name="__codelineno-5-700" href="#__codelineno-5-700"></a>  why    slot 'fill', key 'beta': no stage that receives this slot declares 'beta' as a parameter (two_nodes declares β, R) or as a setting (two_nodes declares n_k), and no registry block admits it; a fill key names a parameter or a setting of a stage that receives it
+<a id="__codelineno-5-701" name="__codelineno-5-701" href="#__codelineno-5-701"></a>  write  one of the declared names R, n_k, β
+<a id="__codelineno-5-702" name="__codelineno-5-702" href="#__codelineno-5-702"></a>
+<a id="__codelineno-5-703" name="__codelineno-5-703" href="#__codelineno-5-703"></a>fill-mixes-kinds  (the Bellman factory; read)
+<a id="__codelineno-5-704" name="__codelineno-5-704" href="#__codelineno-5-704"></a>  condition  A flat fill names parameters or settings, not both.
+<a id="__codelineno-5-705" name="__codelineno-5-705" href="#__codelineno-5-705"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-706" name="__codelineno-5-706" href="#__codelineno-5-706"></a>  where  registry/spec.yml, address 'fill'
+<a id="__codelineno-5-707" name="__codelineno-5-707" href="#__codelineno-5-707"></a>  what
+<a id="__codelineno-5-708" name="__codelineno-5-708" href="#__codelineno-5-708"></a>β, n_k
+<a id="__codelineno-5-709" name="__codelineno-5-709" href="#__codelineno-5-709"></a>  why    slot 'fill' names the parameters β and the settings n_k in one flat mapping
+<a id="__codelineno-5-710" name="__codelineno-5-710" href="#__codelineno-5-710"></a>  write  fill={'calibration': {...}, 'settings': {...}}, each name under its kind
+<a id="__codelineno-5-711" name="__codelineno-5-711" href="#__codelineno-5-711"></a>
+<a id="__codelineno-5-712" name="__codelineno-5-712" href="#__codelineno-5-712"></a>trellis-file-shape  (the Bellman factory; read)
+<a id="__codelineno-5-713" name="__codelineno-5-713" href="#__codelineno-5-713"></a>  condition  A trellis file, or a trellis dictionary, lists its `periods` and its `inter_connectors`; each period holds `stages` and `connectors`; each record of a file names its `stage`.
+<a id="__codelineno-5-714" name="__codelineno-5-714" href="#__codelineno-5-714"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-715" name="__codelineno-5-715" href="#__codelineno-5-715"></a>  where  registry/broken.yml, address 'periods'
+<a id="__codelineno-5-716" name="__codelineno-5-716" href="#__codelineno-5-716"></a>  what
+<a id="__codelineno-5-717" name="__codelineno-5-717" href="#__codelineno-5-717"></a>{'stages': []}
+<a id="__codelineno-5-718" name="__codelineno-5-718" href="#__codelineno-5-718"></a>  why    the trellis file has no list `periods`
+<a id="__codelineno-5-719" name="__codelineno-5-719" href="#__codelineno-5-719"></a>  write  periods: [{template: period.yml, repeat: 51}] or the periods written out
+<a id="__codelineno-5-720" name="__codelineno-5-720" href="#__codelineno-5-720"></a>
+<a id="__codelineno-5-721" name="__codelineno-5-721" href="#__codelineno-5-721"></a>record-shape  (the Bellman factory; elaborate)
+<a id="__codelineno-5-722" name="__codelineno-5-722" href="#__codelineno-5-722"></a>  condition  A record holds `stage` as `{text, origin}` and its three mappings, and a supplied digest or origin agrees with the source.
+<a id="__codelineno-5-723" name="__codelineno-5-723" href="#__codelineno-5-723"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-724" name="__codelineno-5-724" href="#__codelineno-5-724"></a>  where  address 'record'
+<a id="__codelineno-5-725" name="__codelineno-5-725" href="#__codelineno-5-725"></a>  what
+<a id="__codelineno-5-726" name="__codelineno-5-726" href="#__codelineno-5-726"></a>stage
+<a id="__codelineno-5-727" name="__codelineno-5-727" href="#__codelineno-5-727"></a>  why    the record holds no calibration, methods or settings fields
+<a id="__codelineno-5-728" name="__codelineno-5-728" href="#__codelineno-5-728"></a>  write  a record with stage, calibration, settings and methods, and optionally label and provenance
+<a id="__codelineno-5-729" name="__codelineno-5-729" href="#__codelineno-5-729"></a>
+<a id="__codelineno-5-730" name="__codelineno-5-730" href="#__codelineno-5-730"></a>period-join-cycle  (the Bellman factory; connect)
+<a id="__codelineno-5-731" name="__codelineno-5-731" href="#__codelineno-5-731"></a>  condition  The pairs of a period, authored by its connectors or inferred from equal field names, close no cycle, and no connector joins a stage to itself.
+<a id="__codelineno-5-732" name="__codelineno-5-732" href="#__codelineno-5-732"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-733" name="__codelineno-5-733" href="#__codelineno-5-733"></a>  where  address 'periods[0]'
+<a id="__codelineno-5-734" name="__codelineno-5-734" href="#__codelineno-5-734"></a>  what
+<a id="__codelineno-5-735" name="__codelineno-5-735" href="#__codelineno-5-735"></a>disc continues to 'a' and port arrives at 'k'; port continues to 'm_next' and disc arrives at 'a'
+<a id="__codelineno-5-736" name="__codelineno-5-736" href="#__codelineno-5-736"></a>  why    the joins of the period form a cycle: disc continues to 'a' and port arrives at 'k'; port continues to 'm_next' and disc arrives at 'a'; the stages of a period are ordered by their field dependencies, so no stage may take a field it produces through the others
+<a id="__codelineno-5-737" name="__codelineno-5-737" href="#__codelineno-5-737"></a>  write  connectors with no cycle among the stages; remove or redirect an authored connector, and qualify an endpoint with its stage key where its bare name is ambiguous
+<a id="__codelineno-5-738" name="__codelineno-5-738" href="#__codelineno-5-738"></a>
+<a id="__codelineno-5-739" name="__codelineno-5-739" href="#__codelineno-5-739"></a>connector-names-no-field  (the Bellman factory; connect)
+<a id="__codelineno-5-740" name="__codelineno-5-740" href="#__codelineno-5-740"></a>  condition  A connector is a mapping, flat or in the keyed form {from, to, fields} within a period, and one entry maps a continuation field; a connector whose endpoint names no field, or several, is a diagnostic of the trellis's selection of its connections and no refusal.
+<a id="__codelineno-5-741" name="__codelineno-5-741" href="#__codelineno-5-741"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-742" name="__codelineno-5-742" href="#__codelineno-5-742"></a>  where  address 'periods[0].connectors[0]'
+<a id="__codelineno-5-743" name="__codelineno-5-743" href="#__codelineno-5-743"></a>  what
+<a id="__codelineno-5-744" name="__codelineno-5-744" href="#__codelineno-5-744"></a>{'from': 'cons', 'to': 'port', 'fields': {'a': 'k'}, 'label': 'x'}
+<a id="__codelineno-5-745" name="__codelineno-5-745" href="#__codelineno-5-745"></a>  why    the connector is written in the keyed form and has the key 'label' beside from, to and fields
+<a id="__codelineno-5-746" name="__codelineno-5-746" href="#__codelineno-5-746"></a>  write  {&lt;continuation field&gt;: &lt;arrival field&gt;}, or within a period {from: &lt;stage key&gt;, to: &lt;stage key&gt;, fields: {&lt;continuation field&gt;: &lt;arrival field&gt;}}
+<a id="__codelineno-5-747" name="__codelineno-5-747" href="#__codelineno-5-747"></a>
+<a id="__codelineno-5-748" name="__codelineno-5-748" href="#__codelineno-5-748"></a>period-parameter-agreement  (the Bellman factory; connect)
+<a id="__codelineno-5-749" name="__codelineno-5-749" href="#__codelineno-5-749"></a>  condition  A parameter name two or more stages of one period declare names one parameter of the period: the sets the stages declare it with have one nonempty intersection the package reads, the stages' sources supply it one value, and that value lies in every declared set; a setting name two or more stages declare in their methods files names one setting of the period in the same way.
+<a id="__codelineno-5-750" name="__codelineno-5-750" href="#__codelineno-5-750"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-751" name="__codelineno-5-751" href="#__codelineno-5-751"></a>  where  registry/trellis.yml, address 'periods[0]'
+<a id="__codelineno-5-752" name="__codelineno-5-752" href="#__codelineno-5-752"></a>  what
+<a id="__codelineno-5-753" name="__codelineno-5-753" href="#__codelineno-5-753"></a>R : ℝ₊₊ in two_nodes; R : (-inf, 0) in other
+<a id="__codelineno-5-754" name="__codelineno-5-754" href="#__codelineno-5-754"></a>  why    the stages two_nodes (registry/stages/two_nodes/two_nodes.bl) and other (registry/stages/other/other.bl) of the period declare the parameter 'R' with the sets ℝ₊₊ and (-inf, 0), which have no nonempty intersection; a parameter name names one parameter of the period, shared by the stages that declare it, so their declared sets agree
+<a id="__codelineno-5-755" name="__codelineno-5-755" href="#__codelineno-5-755"></a>  write  one set for 'R' in every stage of the period, or sets the package reads whose intersection is not empty, or distinct names for distinct parameters
+<a id="__codelineno-5-756" name="__codelineno-5-756" href="#__codelineno-5-756"></a>
+<a id="__codelineno-5-757" name="__codelineno-5-757" href="#__codelineno-5-757"></a>readable-file  (the Bellman factory; read)
+<a id="__codelineno-5-758" name="__codelineno-5-758" href="#__codelineno-5-758"></a>  condition  A stage file, read by its path or named under `stage:` in a recipe, is a readable `.bl` file of UTF-8 text; a source file a binding verb reads, or a record of a trellis file names, is a readable YAML mapping that writes each key once.
+<a id="__codelineno-5-759" name="__codelineno-5-759" href="#__codelineno-5-759"></a>  example  the package's example of the rule, and the refusal it provokes:
+<a id="__codelineno-5-760" name="__codelineno-5-760" href="#__codelineno-5-760"></a>  where  cons.txt
+<a id="__codelineno-5-761" name="__codelineno-5-761" href="#__codelineno-5-761"></a>  what
+<a id="__codelineno-5-762" name="__codelineno-5-762" href="#__codelineno-5-762"></a>cons.txt
+<a id="__codelineno-5-763" name="__codelineno-5-763" href="#__codelineno-5-763"></a>  why    cons.txt names no stage file, since a stage file is a `.bl` file
+<a id="__codelineno-5-764" name="__codelineno-5-764" href="#__codelineno-5-764"></a>  write  the path of a stage file, `&lt;name&gt;.bl`
 </code></pre></div>
 <p>The example of <code>recipe-shape</code> above is a recipe with no <code>stages</code> mapping. A recipe names every file it reads by its path from its own folder, the trellis file under <code>trellis:</code> and each stage's file under <code>stage:</code> in the stage's entry, and nothing is read in place of a path it does not write. The same rule therefore refuses the example <a href="../../../wiki/spec_factory/">registry</a>'s recipe without its <code>trellis:</code> line, and without the <code>stage:</code> line of its one entry, although <code>trellis.yml</code> and <code>stages/two_nodes/two_nodes.bl</code> stand in the registry:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.refusal_examples</span><span class="w"> </span><span class="kn">import</span> <span class="n">EXAMPLES</span>

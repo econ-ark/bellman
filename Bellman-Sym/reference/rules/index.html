@@ -8478,7 +8478,7 @@
 <tr>
 <td>A declaration is a name, a colon and a type, and the type is a set, a role word or both, written with <code>@</code> between them in either order.</td>
 <td><code>syntax/lower.py</code>: <code>ToAst.declaration</code><br><code>typing/declarations.py</code>: <code>Declarations.read_declaration</code>, <code>Declarations.classify</code></td>
-<td><code>factory/elaboration.py</code>: <code>_syntax_refusal</code><br><code>typing/declarations.py</code>: <code>Declarations.read_declaration</code>, <code>Declarations.classify</code></td>
+<td><code>syntax/parse.py</code>: <code>syntax_refusal</code><br><code>typing/declarations.py</code>: <code>Declarations.read_declaration</code>, <code>Declarations.classify</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a>, <a href="../refusals/#one-name-one-meaning"><code>one-name-one-meaning</code></a>, <a href="../refusals/#field-perch"><code>field-perch</code></a></td>
 <td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[readable-form]</code></td>
 </tr>
@@ -8581,6 +8581,76 @@
 <td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_5_the_corrections_hold</code></td>
 </tr>
 <tr>
+<td>The set that a derived parameter's definition declares is a set of numbers that reads no setting, a definition that declares a set reads at least one parameter or derived parameter, by cases as otherwise, and no separate declaration of the name stands beside its definition.</td>
+<td><code>typing/declarations.py</code>: <code>declared_definition</code>, <code>derived_parameter_declaration</code></td>
+<td><code>typing/declarations.py</code>: <code>Declarations.check_names</code>, <code>Declarations.read_declaration</code>, <code>Declarations.declared_value_refusal</code>, <code>Declarations.check_derived_parameters</code>, <code>Declarations.declared_set_fault</code></td>
+<td><a href="../refusals/#one-name-one-meaning"><code>one-name-one-meaning</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a>, <a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
+<td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_3_a_derived_parameter_may_carry_a_declared_set</code></td>
+</tr>
+<tr>
+<td>A derived parameter's definition may call <code>log</code> and <code>exp</code>, each of one argument, and <code>min</code> and <code>max</code>, each of one argument or more, and a call of any other function, or of one of the four with another number of arguments, is refused.</td>
+<td><code>typing/declarations.py</code>: <code>derived_parameter_call</code>, <code>derived_parameter_body</code><br><code>fold/derived_parameters.py</code>: <code>derived_value</code></td>
+<td><code>syntax/parse.py</code>: <code>syntax_refusal</code><br><code>typing/declarations.py</code>: <code>derived_parameter_fault</code>, <code>Declarations.check_derived_parameters</code><br><code>typing/context.py</code>: <code>TypingContext._typed_function</code></td>
+<td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a>, <a href="../refusals/#not-constructed"><code>not-constructed</code></a>, <a href="../refusals/#syntax"><code>syntax</code></a></td>
+<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_1_a_derived_parameter_calls_min_and_max_and_is_defined_by_cases</code></td>
+</tr>
+<tr>
+<td>A derived parameter's definition may be written by cases, <code>if test then a else b</code>, with or without a declared set; the conditional stands as the whole right side of the definition or as a branch of another conditional, and inside a formula, in a function's body, in a line of a block or as an endpoint of a set it is refused.</td>
+<td><code>syntax/lower.py</code>: <code>ToAst.conditional</code>, <code>ToAst.declared_value</code><br><code>typing/declarations.py</code>: <code>derived_parameter_body</code>, <code>derived_parameter_declaration</code></td>
+<td><code>syntax/parse.py</code>: <code>syntax_refusal</code><br><code>typing/declarations.py</code>: <code>derived_parameter_fault</code></td>
+<td><a href="../refusals/#syntax"><code>syntax</code></a></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_conditional_stands_as_the_whole_right_side_of_a_definition_and_nowhere_else</code></td>
+</tr>
+<tr>
+<td>The words <code>if</code>, <code>then</code> and <code>else</code> are no names, and a file that writes one of them as a name, in a declaration, a definition, a binder, a block header or a formula, is refused.</td>
+<td><code>syntax/lower.py</code>: <code>ToAst.name</code></td>
+<td><code>syntax/lower.py</code>: <code>ToAst.name</code><br><code>syntax/parse.py</code>: <code>syntax_refusal</code></td>
+<td><a href="../refusals/#syntax"><code>syntax</code></a></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_the_three_words_of_a_definition_by_cases_are_no_names</code></td>
+</tr>
+<tr>
+<td>In a derived parameter's definition <code>log</code>, <code>exp</code>, <code>min</code> and <code>max</code> are the functions of the language, and a definition that calls one of them where the stage defines a function of that name is refused.</td>
+<td>—</td>
+<td><code>typing/declarations.py</code>: <code>derived_parameter_fault</code>, <code>Declarations.check_derived_parameters</code></td>
+<td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_derived_parameter_is_refused_at_its_definition[a call of min where the stage defines min]</code></td>
+</tr>
+<tr>
+<td>The test of a definition by cases reads what a branch reads, parameters, derived parameters and finite numbers: a set, a field or a function there is refused, and so is a label of a finite set, as it is in arithmetic.</td>
+<td><code>typing/context.py</code>: <code>TypingContext._typed_expression</code></td>
+<td><code>typing/context.py</code>: <code>TypingContext._numeric_arguments</code><br><code>typing/declarations.py</code>: <code>derived_parameter_fault</code></td>
+<td><a href="../refusals/#well-typed"><code>well-typed</code></a>, <a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_in_arithmetic</code></td>
+</tr>
+<tr>
+<td>A derived parameter's value is its definition evaluated at the calibration, which for a definition by cases is the branch that its test chooses, the other branch not evaluated, and a branch written <code>inf</code> or <code>-inf</code> gives that infinity; a definition that reads a name valued at an infinity where it is evaluated, in a formula, a call or a test, as the branch that its test chooses or as its whole right side, has no value, and the calibration is refused at that definition.</td>
+<td><code>fold/derived_parameters.py</code>: <code>derived_value</code>, <code>_conditional</code></td>
+<td><code>fold/derived_parameters.py</code>: <code>derived_values</code></td>
+<td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
+<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_2_the_value_is_the_branch_the_test_chooses</code></td>
+</tr>
+<tr>
+<td>A branch written <code>inf</code> or <code>-inf</code> is admitted only in a definition whose declared set can hold that infinity, as the form of the set decides, and the set ℝ of a definition that declares none holds neither; calibration holds the value, finite or infinite, to the declared set.</td>
+<td><code>typing/declarations.py</code>: <code>infinities_written</code><br><code>syntax/source.py</code>: <code>may_hold_infinity</code></td>
+<td><code>typing/declarations.py</code>: <code>infinite_branch_fault</code>, <code>Declarations.check_derived_parameters</code><br><code>fold/derived_parameters.py</code>: <code>derived_order</code><br><code>stage/calibration_requirements.py</code>: <code>calibration_requirements</code></td>
+<td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
+<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_3_an_infinite_branch_needs_a_declared_set_that_holds_it</code></td>
+</tr>
+<tr>
+<td>An endpoint of an interval, or a side of a condition of a set, that is the bare name of a parameter or of a derived parameter valued at an infinity is read as that infinity.</td>
+<td><code>stage/calibration_requirements.py</code>: <code>_infinite_value</code>, <code>_endpoint_at</code>, <code>_side_at</code>, <code>_infinity_in</code></td>
+<td><code>stage/calibration_requirements.py</code>: <code>membership</code>, <code>predicate_value</code></td>
+<td>—</td>
+<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_4_one_reading_of_an_infinite_value</code></td>
+</tr>
+<tr>
+<td>A bound of a declared set may call <code>log</code>, <code>exp</code>, <code>min</code> and <code>max</code>, which calibration evaluates as in a derived parameter's definition, and a bound that computes with a name valued at an infinity, or with the written <code>inf</code>, has no value and refuses the calibration; a bound that calls another function is not decided, whatever it computes with.</td>
+<td><code>stage/calibration_requirements.py</code>: <code>_bound_at</code></td>
+<td><code>stage/calibration_requirements.py</code>: <code>judged</code></td>
+<td>—</td>
+<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_4_one_reading_of_an_infinite_value</code></td>
+</tr>
+<tr>
 <td>An interval of numbers holds at least one number.</td>
 <td><code>typing/sets.py</code>: <code>literal_faults</code></td>
 <td><code>typing/context.py</code>: <code>_refuse_literal_faults</code></td>
@@ -8612,7 +8682,7 @@
 <tr>
 <td>A block is a bracketed header, with one id and one signature, followed by its statements.</td>
 <td><code>typing/declarations.py</code>: <code>Declarations.read_block</code>, <code>Declarations.block_header</code>, <code>Declarations.read_body_statement</code></td>
-<td><code>factory/elaboration.py</code>: <code>_syntax_refusal</code><br><code>typing/declarations.py</code>: <code>Declarations.block_header</code>, <code>Declarations.read_body_statement</code></td>
+<td><code>syntax/parse.py</code>: <code>syntax_refusal</code><br><code>typing/declarations.py</code>: <code>Declarations.block_header</code>, <code>Declarations.read_body_statement</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a>, <a href="../refusals/#not-constructed"><code>not-constructed</code></a></td>
 <td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[syntax]</code></td>
 </tr>
@@ -9444,6 +9514,10 @@
 </tr>
 <tr>
 <td><a href="../refusals/#method-admission"><code>method-admission</code></a></td>
+<td><a href="../../04-methodization/">Methodization</a></td>
+</tr>
+<tr>
+<td><a href="../refusals/#method-setting-declared"><code>method-setting-declared</code></a></td>
 <td><a href="../../04-methodization/">Methodization</a></td>
 </tr>
 <tr>

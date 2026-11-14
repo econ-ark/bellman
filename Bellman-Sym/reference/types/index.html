@@ -8184,7 +8184,7 @@
 <td><a id="derived-parameter"></a>derived parameter</td>
 <td>A constant that the file defines from parameters, numbers and other derived parameters; the calibration supplies no value for it.</td>
 <td><code>h := 1/(1 - Γ/R)</code><br>in <code>perfect_foresight.bl</code></td>
-<td>No type on this line. A definition may declare a set before <code>:=</code>, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, and calibration holds the value to that set.</td>
+<td>No type on this line. A definition may declare a set before <code>:=</code>, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, and calibration holds the value to that set. The declared set is the set written there, or <code>ℝ</code> where none is written; a definition by cases that writes the branch <code>inf</code> or <code>-inf</code> declares a set that can hold that infinity, as its form decides, as in <code>h : ℝ_{+∞} := if Γ &lt; R then 1/(1 - Γ/R) else inf</code>.</td>
 <td><code>native/records.py</code>: <code>Definition</code></td>
 <td><code>stage.par["h"]</code></td>
 </tr>
@@ -8395,7 +8395,7 @@
 <tr>
 <td><a id="interval"></a><code>Interval</code></td>
 <td><code>ρ : (1, inf)</code></td>
-<td>The real numbers between two endpoints, where a round bracket leaves its endpoint out and a square bracket includes it; an endpoint may read parameters, and <code>-inf</code> or <code>inf</code> leaves a side unbounded.</td>
+<td>The real numbers between two endpoints, where a round bracket leaves its endpoint out and a square bracket includes it; an endpoint may read parameters, and <code>-inf</code> or <code>inf</code> leaves a side unbounded; an endpoint that is the bare name of a parameter or of a derived parameter which the calibration values at an infinity is read as that infinity.</td>
 <td>every object that is declared with a set</td>
 </tr>
 <tr>
@@ -8503,6 +8503,26 @@
 <td>A definition that declares a set reads at least one name; a value that reads none is a number, which the calibration supplies.</td>
 <td><code>ρ : ℝ := 2</code></td>
 <td><a href="../refusals/#readable-form"><code>readable-form</code></a></td>
+</tr>
+<tr>
+<td>A conditional, <code>if … then … else …</code>, stands as the whole right side of a definition without arguments or as a branch of another conditional, and inside no formula, no function's body, no line of a block and no endpoint of a set.</td>
+<td><code>x : (0, if 1 &lt; 2 then 1 else 2)</code></td>
+<td><a href="../refusals/#syntax"><code>syntax</code></a></td>
+</tr>
+<tr>
+<td>In a derived parameter's definition <code>inf</code> and <code>-inf</code> stand only as a whole branch of a definition by cases; a definition that reads a name valued at an infinity where it is evaluated, in a formula, a call or a test, as the branch that its test chooses or as its whole right side, has no value at that calibration, and neither has a bound of a declared set that computes with such a name; a bound that computes with the written <code>inf</code>, <code>(0, 2*inf)</code>, has none at any calibration; a bound that calls a function other than <code>log</code>, <code>exp</code>, <code>min</code> and <code>max</code> is not decided, whatever it computes with.</td>
+<td><code>x := 2*inf</code></td>
+<td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
+</tr>
+<tr>
+<td>The words <code>if</code>, <code>then</code> and <code>else</code> are words of the language and no names.</td>
+<td><code>if : ℝ₊₊</code></td>
+<td><a href="../refusals/#syntax"><code>syntax</code></a></td>
+</tr>
+<tr>
+<td>A branch written <code>inf</code> or <code>-inf</code> stands in a definition whose declared set can hold that infinity, and the set <code>ℝ</code> of a definition that declares none holds neither.</td>
+<td><code>h := if 1 &lt; 2 then 1 else inf</code></td>
+<td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
 </tr>
 </tbody>
 </table>

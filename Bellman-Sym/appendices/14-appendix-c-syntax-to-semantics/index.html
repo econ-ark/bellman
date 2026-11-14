@@ -9085,6 +9085,58 @@ reads no name, <code>ρ : ℝ := 2</code>, is refused under <code>readable-form<
 calibration supplies that number. The set that a definition declares is a
 set of numbers, and any other set there is refused under
 <code>derived-parameter</code>.</p>
+<p>The definition of a derived parameter may call <code>log</code> and <code>exp</code>, each of one
+argument, and <code>min</code> and <code>max</code>, each of one argument or more; a call of any
+other function, or of <code>log</code> or <code>exp</code> with several arguments, is refused
+under <code>derived-parameter</code>, or under <code>not-constructed</code> where a call of
+another function is the whole right side. The definition may also be
+written by cases, with or without a declared set:
+<code>h := if Γ &lt; R then 1/(1 - Γ/R) else 0</code> and
+<code>q : (0, 3) := if β &lt; R then 1 else 2</code> are both read
+(<a href="../12-equation-parsing-rules/">Equation parsing rules</a> §2 gives the forms
+of the test and of the branches). The conditional <code>if … then … else …</code>
+stands as the whole right side of a definition without arguments or as a
+branch of another conditional. Inside a formula, in a function's body, in a
+line of a block and as an endpoint of a set it is refused under <code>syntax</code>.
+The words <code>if</code>, <code>then</code> and <code>else</code> are no names: a file that writes one of
+them as a name, in a declaration, a definition, a binder, a block header or
+a formula, is refused under <code>syntax</code>. The package does not yet refuse one
+written as the id of a line's annotation, <code>:: [id=if]</code> (§5.3). In a derived
+parameter's definition <code>log</code>, <code>exp</code>, <code>min</code> and <code>max</code> are the functions of
+the language, and a definition that calls one of them where the stage
+defines a function of that name is refused under <code>derived-parameter</code>. A
+test reads what a branch reads, parameters, derived parameters and finite
+numbers: a set, a field or a function written there is refused under
+<code>derived-parameter</code>, and a label of a finite set under <code>well-typed</code>, as a
+label in arithmetic is.</p>
+<p>The value of a derived parameter is its definition evaluated at the
+calibration. For a definition by cases it is the branch that the test
+chooses, and the other branch is not evaluated, so that the value of <code>h</code>
+above is 0 at <code>Γ = R</code>. A branch written <code>inf</code> or <code>-inf</code> gives that
+infinity, and no arithmetic of infinities is defined: a definition that
+reads a name valued at an infinity where it is evaluated, in a formula, a
+call or a test, as the branch that its test chooses or as its whole right
+side, has no value, and the calibration is refused under
+<code>derived-parameter</code> at that definition. A branch written <code>inf</code> or <code>-inf</code>
+is admitted only in a definition whose declared set can hold that
+infinity, as <code>ℝ_{+∞}</code>, <code>ℝ̄</code> and <code>(0, inf]</code> hold <code>inf</code>. A definition whose
+declared set cannot hold it is refused under <code>derived-parameter</code> when the
+file is read. The set ℝ, the declared set of a definition that writes none,
+holds no infinity, so <code>h := if Γ &lt; R then 1/(1 - Γ/R) else inf</code> is refused
+and <code>h : ℝ_{+∞} := if Γ &lt; R then 1/(1 - Γ/R) else inf</code> is read. Whether a
+set can hold the infinity is judged from its form, also for several sets in
+one type and for a named set written with a bar: <code>ℝ̄ @ (0, inf]</code> can hold
+<code>inf</code>, and <code>ℝ̄ @ (0, inf)</code>, <code>ℝ_{+∞} @ (0, 100]</code> and <code>{x : ℝ̄ | x &lt; 100}</code>,
+which exclude it by an open endpoint, by an endpoint that is a number and
+by a condition, cannot. A condition <code>x &lt;= e</code> excludes <code>inf</code> only where <code>e</code>
+is a number, so <code>ℝ_{+∞} @ (0, 2*100]</code> is read and calibration refuses its
+infinite value, while <code>(0, 2*100]</code> is refused when the file is read. A
+union can hold an infinity that one of its members can hold. A difference
+is judged by its left side alone, so a definition on <code>ℝ̄ \ [0, inf]</code> is
+read, and calibration refuses its infinite value. Where the answer depends
+on a calibrated value, as for <code>(0, T]</code>, the file is read, and calibration
+holds the value, finite or infinite, to the declared set, as it holds the
+value of every definition that declares a set.</p>
 <p>The declared set of a parameter may be a union or a difference of sets of
 numbers. <code>ρ : (0,1) \/ (1, inf)</code> declares that <code>ρ</code> lies in one of the two
 intervals, and <code>ρ : ℝ₊₊ \ {1}</code> that <code>ρ</code> is positive and is not 1;
@@ -9106,9 +9158,22 @@ at least one number, so <code>(2, 1)</code> is refused under <code>readable-form
 file is read. A difference holds at least one number as well. One whose left
 side lies within its right side, as in <code>(0,1) \ ℝ₊</code>, is refused under
 <code>readable-form</code> when the file is read, where the package can decide the
-inclusion. A difference that is a member of a union is not judged. A bound
-of a parameter's set whose arithmetic has no value at the calibration,
-<code>1/(R-2)</code> at <code>R = 2</code>, refuses the calibration.</p>
+inclusion. A difference that is a member of a union is not judged.</p>
+<p>An endpoint of an interval, or a side of a condition after the bar of a
+comprehension, <code>{x : ℝ | x &lt; T}</code>, that is the bare name of a parameter or
+of a derived parameter valued at an infinity is read as that infinity,
+whatever supplies the value. With <code>T : ℝ̄</code> calibrated at <code>inf</code>, the set
+<code>[0, T)</code> is <span class="arithmatex">\([0, \infty)\)</span>, and so is the set of <code>debt : ℝ₊ @ [0, h)</code> where
+the definition of <code>h</code> above, declared on <code>ℝ_{+∞}</code>, gives <code>h</code> the value
+<code>inf</code>. A bound of a parameter's set may call <code>log</code>, <code>exp</code>, <code>min</code> and <code>max</code>,
+which calibration evaluates as in a derived parameter's definition. A bound
+that calls another function is not decided, also where it computes with an
+infinity: calibration binds the value, and <code>stage.obligations()</code> lists its
+membership in the set as required. A bound that calibration evaluates and
+whose arithmetic has no value at the calibration, <code>1/(R-2)</code> at <code>R = 2</code>,
+refuses the calibration, and so does one that computes with a name valued
+at an infinity, as <code>2*T</code> and <code>-T</code> do at <code>T = inf</code>, or with the written
+infinity, as <code>2*inf</code> does at every calibration.</p>
 <p>A declared function binds its formal arguments: the <code>c</code> in the body of <code>𝑢</code>
 is the function's own variable and not the control <code>c</code> of the stage (R4). The
 operators <code>D_{c}</code> and <code>Inv</code> applied to a declared function denote its
@@ -11366,8 +11431,8 @@ its §2 and how a card is read in its §5.</p>
 </tr>
 <tr>
 <td>§2.1. The value bound to a parameter lies in its declared set, also where that set is a set of extended reals, <code>ℝ̄</code>, <code>ℝ_{-∞}</code>, <code>ℝ_{+∞}</code> or <code>ℝ_{±∞}</code>. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.2 and <a href="../../API/stage/09-binding-verbs/">The binding verbs</a> §2.</td>
-<td><code>calibrate</code> decides no membership in a set of extended reals. It binds any value there, including a string, the floating-point value NaN (not a number), and the infinity that the set excludes, and <code>stage.obligations()</code> lists the membership as the condition <code>calibration-domain-membership</code>, which stays required. In an interval whose bound is an expectation over a shock, such as <code>(0, E_{y}(y))</code>, it binds any number in the same way.</td>
-<td><code>@stage: t</code><br><code>x : ℝ_{-∞}</code><br><code>stage.calibrate({"x": float("inf")})</code></td>
+<td><code>calibrate</code> decides the membership of a number in a set of extended reals: a finite number lies in every such set, and an infinity in the sets that hold it, so that <code>inf</code> is refused for <code>ℝ_{-∞}</code>. A value that is no number, a string or the floating-point value NaN (not a number), is still bound there, and <code>stage.obligations()</code> lists its membership as the condition <code>calibration-domain-membership</code>, which stays required. In an interval whose bound is an expectation over a shock, such as <code>(0, E_{y}(y))</code>, it binds any number in the same way.</td>
+<td><code>@stage: t</code><br><code>x : ℝ_{-∞}</code><br><code>stage.calibrate({"x": float("nan")})</code></td>
 </tr>
 <tr>
 <td>§2.1, §2.5, R7. In <code>D_{c}(𝑢)</code> the subscript names a formal argument of the function that is differentiated. See also <a href="../12-equation-parsing-rules/">Equation parsing rules</a> §5.</td>
@@ -11378,6 +11443,11 @@ its §2 and how a card is read in its §5.</p>
 <td>§2.1. The law of a shock gives probability only to values in the declared set of the shock, so a normal law of positive variance is not declared on a strictly positive set. See also <a href="../12-equation-parsing-rules/">Equation parsing rules</a> §4.</td>
 <td>The package reads the stage and records the requirement as the condition <code>law-support</code>, which <code>stage.obligations()</code> lists as required. Calibration decides the condition for a truncated lognormal law, and leaves it required for a normal, a lognormal and a uniform law.</td>
 <td><code>@stage: t</code><br><code>y : ℝ₊₊</code><br><code>y ~ N(0, 1)</code><br><code>[id=arvl_to_dcsn, (k : ℝ, y) : !arvl -&gt; (m : ℝ) : !dcsn] { m = k + y }</code></td>
+</tr>
+<tr>
+<td>§2.1, §2.3. The words <code>if</code>, <code>then</code> and <code>else</code> are no names also as the id of a line's annotation, <code>:: [id=if]</code>, as they are none as the id of a block.</td>
+<td>The package reads a line annotated <code>:: [id=if]</code> and gives the line the place <code>arvl_to_dcsn.if</code>. A methods file cannot address that place: the entry <code>arvl_to_dcsn.if.method : …</code> is refused under <code>syntax</code>, with the sentence that <code>if</code> is no name. The id of a block, <code>[id=if, …]</code>, is refused under <code>syntax</code>.</td>
+<td><code>@stage: t</code><br><code>[id=arvl_to_dcsn, (k : ℝ) : !arvl -&gt; (m : ℝ) : !dcsn] {</code><br><code>m = k :: [id=if]</code><br><code>}</code></td>
 </tr>
 <tr>
 <td>§2.2, §2.4. Where one block writes a field and another reads it, the set written lies in the set read. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.3, <a href="../../01-stage/">Stages</a> §2 and <a href="../13-perch-tagging-rules/">Perch tagging rules</a> §2.</td>
@@ -11516,8 +11586,8 @@ its §2 and how a card is read in its §5.</p>
 </tr>
 <tr>
 <td>§5.2. A bound of a grid lies inside the declared set of its coordinate, read at the calibrated value of each parameter that the set names. See also <a href="../../04-methodization/">Methodization</a> §3.2 and <a href="../../../wiki/settings/">Settings</a> §2.</td>
-<td><code>configure</code> decides the membership from the sets that the stage defines, without the calibration. On a coordinate whose set names a parameter it refuses every bound under <code>grid-bounds</code>, as not decidably inside the declared set, also a bound that lies inside the set at the calibrated value, as in the text.</td>
-<td><code>@stage: t</code><br><code>Xk := [k_lo, inf)</code><br><code>k_lo : ℝ</code><br><code>[id=arvl_to_dcsn, (k : Xk) : !arvl -&gt; (m : ℝ) : !dcsn] { m = k }</code><br><code>[id=dcsn_to_arvl, (V : ℝ @ !vlu) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] { V[&lt;] = V }</code><br><code>@methods: t</code><br><code>n_k : ℕ</code><br><code>k_min : ℝ</code><br><code>k_max : ℝ</code><br><code>dcsn_to_arvl.evaluate.method : !Linear</code><br><code>dcsn_to_arvl.evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))</code><br><code>stage.calibrate({"k_lo": 0.0}).methodize(methods).configure({"n_k": 5, "k_min": 1.0, "k_max": 2.0})</code></td>
+<td><code>configure</code> decides the membership at the calibration that is bound, and refuses a bound outside the set there under <code>grid-bounds</code>. <code>calibrate</code> judges no bound of a grid again, so a calibration that replaces an earlier one leaves a bound outside the set of its coordinate, as in the text. Before a calibration is bound, <code>configure</code> refuses every bound on a coordinate whose set names a parameter, as not decidably inside the declared set.</td>
+<td><code>@stage: t</code><br><code>Xk := [k_lo, inf)</code><br><code>k_lo : ℝ</code><br><code>[id=arvl_to_dcsn, (k : Xk) : !arvl -&gt; (m : ℝ) : !dcsn] { m = k }</code><br><code>[id=dcsn_to_arvl, (V : ℝ @ !vlu) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] { V[&lt;] = V }</code><br><code>@methods: t</code><br><code>n_k : ℕ</code><br><code>k_min : ℝ</code><br><code>k_max : ℝ</code><br><code>dcsn_to_arvl.evaluate.method : !Linear</code><br><code>dcsn_to_arvl.evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))</code><br><code>stage.calibrate({"k_lo": 0.0}).methodize(methods).configure({"n_k": 5, "k_min": 1.0, "k_max": 2.0}).calibrate({"k_lo": 1.5})</code></td>
 </tr>
 </tbody>
 </table>
