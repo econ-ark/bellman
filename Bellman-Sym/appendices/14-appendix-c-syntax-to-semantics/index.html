@@ -2982,6 +2982,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -3152,6 +3156,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8805,7 +8865,13 @@ continuation value in the continuation coordinate <code>a</code> (§1.5, R8). A
 block headers;
 it is constant with respect to the stage uncertainty. A <strong>shock</strong> is a
 random variable supplied on an edge between two perches. Its law is declared
-or remains an explicit requirement. It is available at the later perch and
+on a line of its own, <code>y ~ …</code>, and an expectation over a shock that has no
+declared law is refused under <code>not-constructed</code>. The shock is drawn on one
+edge, the edge of the forward block whose header lists it
+(<a href="../../reference/laws/">Shock distributions</a> §1). A second forward block
+that lists it is refused under <code>distribution-edge</code>. A later law of motion
+therefore reads the realized shock through a state that the earlier law of
+motion defines, such as <code>y_d = y</code>. The shock is available at the later perch and
 is not assumed known earlier. This does not rule out a degenerate shock
 that is already measurable earlier.</p>
 <p>One name may be read at two perches. In a stage file <code>w</code> denotes cash on
@@ -8814,7 +8880,12 @@ continuation perch; these are two fields, two random variables, and they
 are equal only when a statement says so. The perch marks <code>[&lt;]</code>, <code>[~]</code>,
 and <code>[&gt;]</code> name the arrival, decision, and continuation perches; a field
 at the decision perch is written bare, and <code>x[~]</code> is the same field as <code>x</code>
-(<a href="../13-perch-tagging-rules/">Perch tagging rules</a>).</p>
+(<a href="../13-perch-tagging-rules/">Perch tagging rules</a>). The package reads
+<code>x[~]</code> as the bare name <code>x</code> wherever it is written, and it does not yet
+check that the name is at the decision perch (§5.3). On a backward line the
+package does not yet read the bare name of a decision state when a state at
+another perch has the same name: the line is refused under <code>name-in-scope</code>,
+so such a decision state takes a name of its own, such as <code>w_d</code> (§5.3).</p>
 <h3 id="12-the-state-at-a-perch-and-the-function-representing-a-field">1.2 The state at a perch and the function representing a field<a class="headerlink" href="#12-the-state-at-a-perch-and-the-function-representing-a-field" title="Permanent link">&para;</a></h3>
 <p>The <strong>state vector</strong> <span class="arithmatex">\(X_p\)</span> collects the declared state coordinates at perch
 <span class="arithmatex">\(p\)</span>, in their declared order, and takes values in the <strong>state space</strong>
@@ -8827,7 +8898,8 @@ sets. Measurability at the perch <span class="arithmatex">\(\mathcal F_p\)</span
 <span class="arithmatex">\(X_p\)</span> omits relevant information. The state must also determine the
 conditional laws needed for the stage. These are the relevant
 <strong>state-sufficiency assumptions</strong>; they do not assert that the current
-state reconstructs every earlier observation.</p>
+state reconstructs every earlier observation. The package does not yet
+check these assumptions (§5.3).</p>
 <p>For real-valued fields, and more generally standard Borel value spaces,
 this gives a measurable representative <span class="arithmatex">\(\mathrm z\)</span> with
 <span class="arithmatex">\(Z = \mathrm z(X_p)\)</span> almost surely. A standard Borel space is a measurable
@@ -8918,8 +8990,12 @@ a random variable into a function or an evaluated number (§1.2).</p>
 <td>the arrival, decision, and continuation perches; <span class="arithmatex">\(\mathcal F_\prec \subseteq \mathcal F_\sim \subseteq \mathcal F_\succ\)</span> their <span class="arithmatex">\(\sigma\)</span>-algebras</td>
 </tr>
 <tr>
-<td><code>x[&lt;]</code>, <code>x</code>, <code>x[~]</code>, <code>x[&gt;]</code></td>
-<td>the field named <code>x</code> at the arrival, decision, decision, and continuation perches</td>
+<td><code>x[&lt;]</code>, <code>x[~]</code>, <code>x[&gt;]</code></td>
+<td>the field named <code>x</code> at the arrival, decision, and continuation perches (§1.1)</td>
+</tr>
+<tr>
+<td><code>x</code></td>
+<td>the bare name: a control at the decision perch and a shock at no perch; otherwise the field that the block's header lists as <code>x</code>, at the perch that its listing gives it (§2.2), so that <code>b</code> in <code>w = y + b*R</code> is the arrival state where the arrival side lists <code>b</code>; a state that a backward line reads without a listing is the state at the one perch at which the stage places a state <code>x</code></td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(X_p\)</span>, <span class="arithmatex">\(\mathsf X_p\)</span></td>
@@ -8939,7 +9015,7 @@ a random variable into a function or an evaluated number (§1.2).</p>
 </tr>
 <tr>
 <td><code>D_{a}V[&gt;]</code>, <span class="arithmatex">\(\mathrm{dv}_\succ\)</span></td>
-<td>the derivative term: the derivative of the continuation value in the continuation coordinate <span class="arithmatex">\(a\)</span>. It denotes <span class="arithmatex">\(\partial_a \mathrm v_\succ\)</span>, a function of <span class="arithmatex">\(\mathrm v_\succ\)</span> and not a second object, which this page writes <span class="arithmatex">\(\mathrm{dv}_\succ\)</span>; <span class="arithmatex">\(\mathrm{dv}_\sim\)</span> and <span class="arithmatex">\(\mathrm{dv}_\prec\)</span> are the derivatives of <span class="arithmatex">\(\mathrm v_\sim\)</span> and <span class="arithmatex">\(\mathrm v_\prec\)</span> in the state coordinate of their perch. No field is a marginal value</td>
+<td>the derivative term: the derivative of the continuation value in the continuation coordinate <span class="arithmatex">\(a\)</span>. It denotes <span class="arithmatex">\(\partial_a \mathrm v_\succ\)</span>, a function of <span class="arithmatex">\(\mathrm v_\succ\)</span> and not a second object, which this page writes <span class="arithmatex">\(\mathrm{dv}_\succ\)</span>; <span class="arithmatex">\(\mathrm{dv}_\sim\)</span> and <span class="arithmatex">\(\mathrm{dv}_\prec\)</span> are the derivatives of <span class="arithmatex">\(\mathrm v_\sim\)</span> and <span class="arithmatex">\(\mathrm v_\prec\)</span> in the state coordinate of their perch. No field is a marginal value. A line at an earlier perch reads the term at the state that the law of motion gives, as <span class="arithmatex">\(\mathrm{dv}_\succ(\mathrm g_\succ(x, c, \eta))\)</span>. The package does not yet record this reading for such a line (§5.3)</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(c, \pi\)</span></td>
@@ -8969,7 +9045,21 @@ prefixed by <code>!</code>, or a conjunction of them, written with <code>@</code
 in any order.
 Several sets in one type declare their intersection, as in
 <code>β : (0,1) @ (0, R^(ρ-1))</code>
-(<a href="../../reference/symbols-conventions/">Symbols and conventions</a> §9.2).</p>
+(<a href="../../reference/symbols-conventions/">Symbols and conventions</a> §9.2).
+Several sets are read on the declaration of one name on a line of its own,
+outside the blocks. They are sets of numbers, none of them a set of labels
+or a product, and at most one of them is not written as an interval with two
+endpoints, such as <code>[1, inf)</code>. The glyphs <code>ℝ₊</code> and <code>ℝ₊₊</code> count here as sets
+not so written, and two equal sets count as one: <code>θ : ℤ @ [1, inf)</code> is read,
+and <code>θ : ℝ₊₊ @ ℤ</code> is refused under <code>syntax</code>. Two intervals with no number in
+common, <code>(0,1) @ (2,3)</code>, are refused under the same rule. The package decides
+this only between intervals whose endpoints are numbers or ratios of two
+integers. Where the sets have no number in common and one of them is a
+reserved set, a named set, a list of integers, a union or a difference, as in
+<code>β : ℝ₊₊ @ (-2,-1)</code>, or an endpoint is a formula, as in <code>(2*1, 3)</code>, it reads
+the declaration, and no calibration can bind the name (§5.3). A field listed in
+a block header carries one set, and several sets there are refused under
+<code>readable-form</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>β : (0,1)
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>w : ℝ₊
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>c : !ctrl @ ℝ₊
@@ -8983,15 +9073,56 @@ Several sets in one type declare their intersection, as in
 supplies <code>Y</code>, <code>μ_y</code>, <code>σ_y</code>, <code>ρ</code>, and the field perches. The complete context
 distinguishes the parameter <code>β</code> from the state coordinate <code>w</code> and classifies
 the controls and values.</p>
+<p>A <strong>derived parameter</strong> is a constant that a definition without arguments
+writes from the declared parameters, <code>h := 1/(1 - Γ/R)</code>
+(<a href="../../reference/symbols-conventions/">Symbol conventions</a> §8). Its
+definition may declare the set its value lies in, on the same line:
+<code>q : (0,1) := (β*R)^(1/ρ)/R</code>. Calibration computes the value and refuses
+parameter values at which it lies outside that set. A separate declaration
+<code>q : (0,1)</code> beside the definition <code>q := …</code> is refused under
+<code>one-name-one-meaning</code>. A definition that declares a set and whose value
+reads no name, <code>ρ : ℝ := 2</code>, is refused under <code>readable-form</code>, since the
+calibration supplies that number. The set that a definition declares is a
+set of numbers, and any other set there is refused under
+<code>derived-parameter</code>.</p>
+<p>The declared set of a parameter may be a union or a difference of sets of
+numbers. <code>ρ : (0,1) \/ (1, inf)</code> declares that <code>ρ</code> lies in one of the two
+intervals, and <code>ρ : ℝ₊₊ \ {1}</code> that <code>ρ</code> is positive and is not 1;
+<code>A ∪ B</code> and <code>A ∖ B</code> are second spellings of <code>A \/ B</code> and <code>A \ B</code>. A union
+and a difference are read in the declared set of a parameter, of a derived
+parameter and of a setting, which a methods file declares
+(<a href="../../04-methodization/">Methodization</a> §4). They are refused in the set
+of a field, of a shock and of a function's argument, and they are not read
+after <code>:=</code>, in the definition of a named set or of a set-valued function
+such as <code>Γ(x : ℝ₊) := (0, x]</code>.</p>
+<p>The set of a parameter or of a derived parameter reads parameters, derived
+parameters, named sets and numbers, and the set of a setting may also read
+settings. A derived parameter's set that reads a setting is refused under
+<code>derived-parameter</code>. A shock is read inside an expectation over it where its
+law reads no field. A set that reads a field, whether directly, through a
+named set or through the law of a shock that an expectation in it
+integrates, is refused under <code>readable-form</code>. An interval of numbers holds
+at least one number, so <code>(2, 1)</code> is refused under <code>readable-form</code> when the
+file is read. A difference holds at least one number as well. One whose left
+side lies within its right side, as in <code>(0,1) \ ℝ₊</code>, is refused under
+<code>readable-form</code> when the file is read, where the package can decide the
+inclusion. A difference that is a member of a union is not judged. A bound
+of a parameter's set whose arithmetic has no value at the calibration,
+<code>1/(R-2)</code> at <code>R = 2</code>, refuses the calibration.</p>
 <p>A declared function binds its formal arguments: the <code>c</code> in the body of <code>𝑢</code>
 is the function's own variable and not the control <code>c</code> of the stage (R4). The
 operators <code>D_{c}</code> and <code>Inv</code> applied to a declared function denote its
 derivative with respect to the named argument and its functional inverse,
-under the assumptions R7 records.</p>
+under the assumptions R7 records. The subscript of <code>D_{c}</code> names one scalar
+argument of the function: a subscript that names several arguments is
+refused under <code>derivative-one-name</code>, and one that names a product-valued
+argument under <code>derivative-scalar-coordinate</code>. The package does not yet
+check that the subscript names an argument of the function (§5.3).</p>
 <p>A named set may also be a comprehension, <code>H := {i : ℤ | i &gt;= 0, i &lt;= 1}</code>,
 whose bound name <code>i</code> is local to the definition, as a formal argument is
-local to its function. Marked <code>!categories</code>, a comprehension over ℤ or ℕ
-whose conditions bound the name below and above by integers gives its
+local to its function. Marked <code>!categories</code>, a comprehension over ℤ, or
+over ℕ with a lower bound of at least 1, whose conditions bound the name
+below and above by integers written as numbers gives its
 members category names
 (<a href="../../reference/symbols-conventions/">Symbol conventions</a> §§9.2–9.3):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>HouseholdStatus := {i : ℤ | i &gt;= 0, i &lt;= 1} :: [!categories household_status, newborn=0, old=1]
@@ -9038,11 +9169,18 @@ of that side. Its eventual measurability follows its timing (§1.1). A control i
 decision perch wherever it is listed, because a control is chosen with the
 decision information; listing it on a continuation side records that it is
 available there, which it is, since <span class="arithmatex">\(\mathcal F_\sim \subseteq \mathcal F_\succ\)</span>.
-A side may omit its perch word only when the perch of every non-shock
-coordinate it lists is already established; the perch of a name is never
+A side may omit its perch word only when every non-shock coordinate it
+lists is placed without it: a control is at the decision perch, and any
+other coordinate carries the mark <code>[&lt;]</code> or <code>[&gt;]</code> or a perch word in its own
+type, as in <code>(w : !dcsn, c : !ctrl @ ℝ₊₊) -&gt; (a : ℝ₊) : !cntn</code>. A bare name
+is not placed by another block's listing of it; the perch of a name is never
 guessed. A perch mark on a name must agree with what the context already
-records. Compatible sets written for the same name are intersected as
-described in §2.4; an empty or unreadable intersection is refused.</p>
+records, and a mark <code>[&lt;]</code> or <code>[&gt;]</code> that disagrees with the perch word of its
+side is refused under <code>field-perch</code>. The package does not yet check the
+mark <code>[~]</code>, which it reads as the bare name (§5.3). Sets written for the
+same name at several places are intersected as described in §2.4. Where one
+block writes a field and another reads it, the set written must lie in the
+set read (§2.4).</p>
 <p>The second line of the block is a <strong>derivative line</strong>: its left side is the
 derivative term <code>D_{w}V</code>, the derivative of the value <code>V</code> the block writes
 in the state coordinate <code>w</code> of its output perch, and the line states that
@@ -9052,17 +9190,25 @@ methods file and for error messages, and it decides nothing about the
 block's meaning (R1).</p>
 <h3 id="23-statements-and-annotations">2.3 Statements and annotations<a class="headerlink" href="#23-statements-and-annotations" title="Permanent link">&para;</a></h3>
 <p>A statement is an equation, optionally followed by <code>::</code> and a bracketed
-list of annotations. <code>[id=value]</code> gives the statement an address. <code>!doc</code>
+list of annotations. <code>[id=value]</code> gives the statement an address. A dotted
+id, <code>[id=optimality.euler]</code>, instead attaches the statement to the line
+<code>optimality</code> of its policy block as a property of that line: the statement
+forms no operation and takes no address of its own
+(<a href="../../10-constraints/">Constraints</a> §4.1). A dotted id is refused under
+<code>readable-form</code> where its block writes no control, or where the line it
+names is absent, is marked <code>!doc</code> or is itself a property. <code>!doc</code>
 marks a statement as documentation. It defines no equation of the block's
 operator, but its content may be retained as a condition. The binder of a
 documentary maximization also declares the feasible set of its control, which
 enters the control's type. <code>!node</code> marks a statement as an authored node, so that the
 function it defines is an operator of its own for a method to address
-(<a href="../15-appendix-d-node-tag-and-field-indexing/">Appendix D</a>). The marker
+(<a href="../15-appendix-d-node-tag-and-field-indexing/">Appendix D</a>). The mark
+needs an id in the same annotation, <code>:: [id=disc, !node]</code>; without one the
+statement is refused under <code>declared-once</code>. The marker
 <code>!categories</code> is written only in the annotation of a named set of the form
 of §2.1; on a statement, a block header or any other item it is refused
 under <code>category-codes</code>. The clause
-<code>⟂ m_d - c &gt;= 0</code> after a decision-perch equation gives a complementarity
+<code>⟂ m_d - c &gt;= 0</code> after a decision-perch equation of a policy block gives a complementarity
 condition with a specified residual sign (R10), using the law of motion
 <code>a = m_d - c</code>. It is not unchanged when the equation's
 two sides are exchanged. After an equation the clause may carry two bounds
@@ -9071,23 +9217,54 @@ The body of a policy block may also declare a <strong>multiplier</strong>,
 <code>μ[&gt;] : ℝ₊ ⟂ a &gt;= 0</code>: a name with the continuation mark, one declared set
 and a clause with one bound. The declaration defines no equation; it adds a
 coordinate at the continuation perch to the functions its block defines
-there (R1, R10).</p>
+there (R1, R10). A clause and a multiplier are written in a policy block.
+The package does not yet check this: in another block it reads them, and
+they enter no rule of that block's builder (§5.3).</p>
 <h3 id="24-forming-the-context">2.4 Forming the context<a class="headerlink" href="#24-forming-the-context" title="Permanent link">&para;</a></h3>
 <p>The context is formed before any statement is read. Every declaration and
 every block side contributes what it asserts about each name; a name's set
 is the intersection of the sets asserted for it, so <code>c : !ctrl @ ℝ₊</code> on
 one side and <code>c : ℝ₊₊ @ !ctrl</code> on another give the control the set
-<span class="arithmatex">\(\mathbb R_{++}\)</span>. Two assertions that cannot both hold, such as two perches
-for one field or two roles for one name, are an error. A name whose set is
+<span class="arithmatex">\(\mathbb R_{++}\)</span>. The package computes the intersection of sets that are
+written identically, of the sets <code>ℝ</code>, <code>ℝ₊</code> and <code>ℝ₊₊</code>, and of intervals whose
+endpoints are numbers or infinity. It does not yet compute the intersection
+of other sets, such as a named set <code>Z := ℝ₊₊</code> beside <code>ℝ₊₊</code>, and it then
+records no set for the name (§5.3).</p>
+<p>Where one block writes a field and another reads it, the set written must
+lie in the set read. The policy block may write <code>c : ℝ₊₊ @ !ctrl</code> for a
+transition that reads <code>c : !ctrl @ ℝ₊</code>. With the two sets exchanged, the
+reading block declares the narrower set, and the stage is refused under
+<code>set-mismatch</code>. The package does not yet check the inclusion where it
+cannot decide it, as with an endpoint that names a parameter, or where the
+control stands on the left side of a line marked <code>!doc</code> (§5.3). A field declared on a set
+with category codes (§2.1) is declared on that set at every place that
+writes a set for it, and another set at one of them is refused under
+<code>category-codes</code>.</p>
+<p>Two assertions that cannot both hold, such as two perches for one field
+(<code>field-perch</code>) or two roles for one name (<code>one-name-one-meaning</code>), are an
+error. Sets written for one field that have no value in common are such
+assertions. The package does not yet check this, except between a block
+that writes the field and a block that reads it (§5.3). A name whose set is
 asserted nowhere is an error, not a parameter: a parameter exists only where
-the file declares one.</p>
+the file declares one. The package does not yet check this for a field or a
+shock that a block header lists (§5.3); a name that a line reads and that
+the file declares nowhere is refused under <code>name-in-scope</code>. A name that the file
+declares with a set on a line of its own, and that no block header lists,
+is a parameter, and a line of a block that writes it is refused under
+<code>parameter-or-field</code>.</p>
 <h3 id="25-binders-free-names-and-bound-names">2.5 Binders, free names, and bound names<a class="headerlink" href="#25-binders-free-names-and-bound-names" title="Permanent link">&para;</a></h3>
 <p>The formal arguments of functions and operator subscripts determine the
 local variables of an expression. <code>E_{y}</code> integrates over the designated
 shock, while <code>argmax_{c}</code> and <code>solve_{c}</code> specify a control or unknown within
-their arguments. Nested local variables refer to their innermost binder.
+their arguments. The binders of <code>argmax</code> and <code>solve</code> stand, in order, for
+the fields that the left side of the line writes, and a binder may be a new
+name, as <code>cp</code> is in <code>c = argmax_{cp : Γ(w)}(𝑢(cp) + β*V[&gt;])</code>. The left
+side's own names written in another order are refused under
+<code>not-constructed</code>. Nested local variables refer to their innermost binder.
 <code>D_{c}(𝑢)</code> identifies the formal argument of the declared function that is
-differentiated; it does not bind unrelated occurrences of the stage control.</p>
+differentiated; it does not bind unrelated occurrences of the stage control.
+The package does not yet check that the subscript names a formal argument of
+the function (§5.3).</p>
 <p>Two kinds of dependence must be distinguished. The integration variable
 introduced by an expectation is local. Its integrand's declared field
 dependencies may include that shock indirectly: if <code>w = y + b*R</code>, the
@@ -9106,18 +9283,23 @@ the object the form denotes, and the assumptions under which the denotation
 holds or the condition under which the form is rejected. A rejection may identify conflicting declarations, an undefined operation,
 or a construction for which the required context has not been supplied.
 An analytic assumption is a condition needed for a stated interpretation;
-it is recorded separately from the information that defines the model.</p>
+it is recorded separately from the information that defines the model.
+The reference page <a href="../../reference/rules/">Rules and their code</a> lists, for
+each rule, the functions of the package that implement it and check it, and
+the refusals that the package raises when a file breaks it. Where the
+package does not yet check a rule, this appendix says so at the rule, and
+§5.3 lists each such rule.</p>
 <h3 id="r1-blocks-and-their-headers">R1 Blocks and their headers<a class="headerlink" href="#r1-blocks-and-their-headers" title="Permanent link">&para;</a></h3>
 <p><strong>Written form.</strong> A block <code>[id=B, (inputs) : !p -&gt; (outputs) : !q] { … }</code>
 with its statements, as in §2.2.</p>
 <p><strong>Context.</strong> The header contributes the sets, roles, and perches of its
 coordinates (§2.4). The statements are read in order (R2). A multiplier
-declared in the body (§2.3) contributes one more name, at the continuation
-perch, with the role of a multiplier and its declared set. It is a
-coordinate of the functions the block defines at that perch and of no
-other function: it is no input or output of the block or of any other
-block, no header lists it, and the functions the block reads keep their
-own coordinates (R10).</p>
+declared in the body of a policy block (§2.3) contributes one more name, at
+the continuation perch, with the role of a multiplier and its declared set.
+It is a coordinate of the functions the policy block defines at that perch
+and of no other function: it is no input or output of the block or of any
+other block, no header lists it, and the functions the block reads keep
+their own coordinates (R10).</p>
 <p><strong>Interpretation.</strong> A block denotes a typed relation between its inputs and
 outputs. Explicit definitions give an operator; an implicit system gives one
 only after the required solution or selection conditions are supplied.
@@ -9146,7 +9328,7 @@ header and the roles of its outputs, never from its identifier:</p>
 <tr>
 <td>value fields at <span class="arithmatex">\(\succ\)</span> (with controls) to value fields at <span class="arithmatex">\(\sim\)</span>; a state at <span class="arithmatex">\(\sim\)</span> is a coordinate, while a state at <span class="arithmatex">\(\succ\)</span> is reached through the law of motion</td>
 <td>backward block</td>
-<td>the induced aggregator <span class="arithmatex">\(B_\succ\)</span>, which carries the continuation value function to the choice value, <span class="arithmatex">\(Q = B_\succ(\mathrm v_\succ)\)</span> (<a href="../../../bellman-calculus/03-Stages%20and%20perches/">Stages and perches</a> §2; R5, R7)</td>
+<td>the builder at a policy <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>, which carries the continuation value function to the decision value function, <span class="arithmatex">\((\mathbb T_{\succ,\pi}\mathrm v_\succ)(x) = Q(x, \pi(x))\)</span>, where <span class="arithmatex">\(Q = B_\succ(\mathrm v_\succ)\)</span> is the choice value that the induced aggregator <span class="arithmatex">\(B_\succ\)</span> gives on state and control; the block's lines are read at the control that the policy gives, and where the policy block writes a maximization, the choice value on state and control is its objective (<a href="../../../bellman-calculus/03-Stages%20and%20perches/">Stages and perches</a> §2; <a href="../../../bellman-calculus/05-Operators%20and%20builders/">Operators and builders</a> §6; R5, R7, R8)</td>
 </tr>
 <tr>
 <td>value fields at <span class="arithmatex">\(\sim\)</span> to value fields at <span class="arithmatex">\(\prec\)</span>; a state at <span class="arithmatex">\(\prec\)</span> is a coordinate, while a state at <span class="arithmatex">\(\sim\)</span> or <span class="arithmatex">\(\succ\)</span> is reached through the law of motion</td>
@@ -9154,7 +9336,7 @@ header and the roles of its outputs, never from its identifier:</p>
 <td>the arrival aggregator <span class="arithmatex">\(B_\prec\)</span> (R5, R7)</td>
 </tr>
 <tr>
-<td>value fields at <span class="arithmatex">\(\succ\)</span>, and their derivative terms, to controls at <span class="arithmatex">\(\sim\)</span>; a state at <span class="arithmatex">\(\sim\)</span> is a coordinate, while a state at <span class="arithmatex">\(\succ\)</span> is reached through the law of motion, apart from candidate lines indexed by continuation state</td>
+<td>value fields at <span class="arithmatex">\(\succ\)</span> to controls at <span class="arithmatex">\(\sim\)</span>; the lines read the derivatives of those values by derivative terms such as <code>D_{a}V[&gt;]</code>, which the header does not list; a state at <span class="arithmatex">\(\sim\)</span> is a coordinate, while a state at <span class="arithmatex">\(\succ\)</span> is reached through the law of motion, apart from candidate lines indexed by continuation state</td>
 <td>policy block</td>
 <td>the policy <span class="arithmatex">\(\pi\)</span> (R8, R10)</td>
 </tr>
@@ -9165,8 +9347,12 @@ input sorts and its output sort (<a href="../../../bellman-calculus/APPX-C-STAGE
 term</a> §1).
 The backward symbols have ranks over the value-function sorts alone, so a
 backward header lists the value fields it reads and writes, with the controls
-at which its lines are read, and nothing else: the derivative of a value is
-read by the term <code>D_{a}V[&gt;]</code> and is no field of a header. A state of the
+at which its lines are read, and no state: the derivative of a value is
+read by the term <code>D_{a}V[&gt;]</code> and is no field of a header. A shock may also
+be listed, as on any side (§2.2). The listing adds no input to the block's
+builder. It lets a line read, outside an expectation, a shock drawn on the
+edge between the block's two perches, where a later line of the block
+integrates it, as in <code>W = η*V[&gt;]</code> followed by <code>V = 𝑢(c) + E_{η}(W)</code>. A state of the
 perch at which the block's output
 stands is a coordinate of the output function and is not listed; a state of
 its input perch is reached only through the law of motion (R5, R7). The
@@ -9181,13 +9367,17 @@ semantics</a>
 §1); it is refused under <code>header-coordinate</code> rather than read with the state
 removed, since read by the rule that a header's inputs are the builder's wires
 it would assert a wire of state sort that no builder produces, and the written
-header would no longer determine the rank. A control is listed because it
-changes the sort of what the lines denote, the choice value on state and
-control rather than the value on the state alone. Forward headers list the
-arguments of the law of motion, a map between state spaces.</p>
+header would no longer determine the rank. A control is listed because the
+lines are read at it: the block denotes the operator at the policy that
+represents the control (R8), whose output is the value function on the
+decision state alone, and the control remains an argument only of the choice
+value that the written equation gives (R5) and of the law of motion. Forward
+headers list the arguments of the law of motion, a map between state spaces.</p>
 <p>A direct read of an input or later perch's state on any backward line is
-refused under <code>input-perch-state</code>, including a read in a relation or a condition
-after <code>⟂</code>. A read under an expectation over the edge's shock is admitted, as
+refused, including a read in a relation or a condition after <code>⟂</code>: under
+<code>input-perch-state</code> where no forward block between the two perches draws a
+shock, and under <code>shock-observed</code> where one does. A read under an expectation
+over the edge's shock is admitted, as
 is the continuation-state indexing of a policy candidate line (R8, R10).</p>
 <p>Two blocks with the same header and the same statements denote the same
 operator whatever their identifiers; renaming every identifier consistently
@@ -9211,14 +9401,21 @@ state. Its backward operator <span class="arithmatex">\(\mathbb T\)</span> carri
 functions to the arrival value functions, and its forward operator
 <span class="arithmatex">\(\mathbb M_\pi\)</span> carries the law of the arrival state to the law of the
 continuation state.</p>
-<p><strong>Rejection.</strong> An output that no statement determines is an error, and so
-is an input that a statement redefines; a policy block whose lines write the
-candidate at the continuation perch determines its policy only by the line
-that identifies the control with the candidate (R10). A coordinate whose set is declared nowhere is an error
-(§2.4). A multiplier declaration is an error when it has no clause, a mark
-other than <code>[&gt;]</code>, a clause of two bounds, or a bound naming a control, a
-decision or arrival state or a candidate; so are a second declaration of
-one multiplier and a header that lists a multiplier.</p>
+<p><strong>Rejection.</strong> An output that no statement determines is an error; a policy
+block whose lines write the candidate at the continuation perch determines
+its policy only by the line that identifies the control with the candidate
+(R10). An input that a statement redefines is an error. The package does not
+yet check this (§5.3). A second block between the same two perches whose
+output side lists a field that another block writes is an error
+(<code>one-builder-per-output</code>), and so is a second forward block, or a second
+block that writes value fields, between the same two perches, even where it
+writes another field (<code>forward-composite</code>). A coordinate whose set is declared
+nowhere is an error (§2.4). The package does not yet check this (§5.3). A
+multiplier is declared only in the body of a policy block. The package does
+not yet check this (§5.3). A multiplier declaration is also an error when it
+has no clause, a mark other than <code>[&gt;]</code>, a clause of two bounds, or a bound
+naming a control, a decision or arrival state or a candidate; so are a second
+declaration of one multiplier and a header that lists a multiplier.</p>
 <h3 id="r2-ordered-statements-and-substitution">R2 Ordered statements and substitution<a class="headerlink" href="#r2-ordered-statements-and-substitution" title="Permanent link">&para;</a></h3>
 <p><strong>Written form.</strong> Several statements in one block.</p>
 <p><strong>Interpretation.</strong> Explicit definitions are read in dependency order. An
@@ -9228,10 +9425,14 @@ assignment before those unknowns are determined. A block composes these
 operations according to their inputs and outputs.</p>
 <p><strong>Substitution.</strong> Replacing an explicit alias by its defining expression
 preserves the field relation wherever the operations are defined. An explicit
-statement may also be solved for a name that occurs in it once and affinely:
+statement may also be solved for a name that occurs in it once and affinely,
+with a coefficient that the declared sets show to be nonzero:
 the result is an equation between the same fields, holding wherever the
 statement holds, so that the transition <code>a = m_d - c</code> of §4.2 gives
-<code>m_d = a + c</code>. For a name that occurs more than once, or not affinely, the
+<code>m_d = a + c</code>, and <code>a = R*m_d - c</code> with <code>R : ℝ₊₊</code> gives <code>m_d = (a + c)/R</code>.
+For a name that occurs more than once, or not affinely, or with a
+coefficient that the declared sets do not show to be nonzero, as under
+<code>R : ℝ₊</code>, the
 statement is not solved; R10 uses this rearrangement to check a coordinate
 line against the transition, and makes no check where it does not apply. Resolve
 bindings before substitution (§2.5). A shock dependence reached through an
@@ -9249,14 +9450,21 @@ invertibility, or existence of a solution.</p>
 <code>-&gt; (k[&gt;] : ℝ₊, b[&gt;] : ℝ₊) : !cntn</code>; a tuple expression <code>(e_1, e_2)</code>; a
 selection <code>(e_1, e_2)[d]</code>; a tuple left side <code>(i, b_n) = …</code>.</p>
 <p><strong>Context.</strong> The typing of a tuple subject follows the declared form:
-<code>(w, c) : S</code> declares two fields jointly constrained by the set <span class="arithmatex">\(S\)</span>, while
-<code>x : ℝ × ℝ</code> declares one field with values in a product, whose coordinates
-are reached by selection.</p>
+<code>(w, c) : S</code> declares two fields when <code>S</code> is a product with one factor for
+each name, written out or named, and each field takes its own factor, so
+that <code>(w, c) : ℝ₊ × ℝ₊₊</code> declares <code>w</code> in <span class="arithmatex">\(\mathbb R_+\)</span> and <code>c</code> in
+<span class="arithmatex">\(\mathbb R_{++}\)</span>. A set that couples the names is refused under
+<code>readable-form</code>; a constraint that couples a control with a state is written
+on the binder of the maximization (R7). <code>x : ℝ × ℝ</code> declares one field with
+values in a product, whose coordinates are reached by selection.</p>
 <p><strong>Interpretation.</strong> The output of a block whose side lists several
 coordinates is the tuple of those fields, so the continuation state space of the
 example is <span class="arithmatex">\(\mathsf X_\succ = \mathbb R_+ \times \mathbb R_+\)</span>. Each
-coordinate is defined by its own statement, or all coordinates at once by a
-statement with a tuple left side. The transition
+coordinate is defined by its own statement. A statement with a tuple left
+side defines several outputs at once only where its right side is one
+<code>argmax</code> or one <code>solve</code>, as in the joint choice of a policy block (R7, R10);
+an ordinary tuple assignment, such as <code>(k[&gt;], b[&gt;]) = ((1-δ)*k_d + i, b_n)</code>,
+is refused under <code>not-constructed</code>. The transition
 <span class="arithmatex">\(\mathrm g_\succ : \mathsf X_\sim \times \mathsf C \to \mathsf X_\succ\)</span> has
 one component per output coordinate. A component may itself be product-valued;
 coordinate count alone does not determine a Euclidean dimension. A tuple expression denotes a finite family in the
@@ -9271,9 +9479,15 @@ first factor. Integer keys identify entries whose values may be real numbers;
 equal numerical outcomes at two distinct keys do not identify those keys.
 The forward reading of a product output is
 the joint law of the tuple (R9), not a product of marginal laws.</p>
-<p><strong>Rejection.</strong> A positional selection must be within the family, and a
-labeled selection must name a declared member. A selector variable must
-have a compatible domain and scope. The family and its labels must agree
+<p><strong>Rejection.</strong> A positional selection must be within the family. A
+selection by a name reads a declared selector variable and never a label
+written in the brackets, so that <code>(e_1, e_2)[work]</code> is refused even where
+<code>work</code> is a member of a declared set. A selector variable must
+have a compatible domain and scope: for a tuple, a finite set with as many
+members as the tuple has entries, and for a collection on an index set, a
+set within that index set. A selection outside these forms is refused under
+<code>family-selection</code>, and on the value line of a branching block under
+<code>branch-tuple-mismatch</code>. The family and its labels must agree
 in length and order. A tuple of alternative value functions is distinct
 from the labeled union of successor state spaces in §4.7.</p>
 <h3 id="r4-scope-binding-and-information">R4 Scope, binding, and information<a class="headerlink" href="#r4-scope-binding-and-information" title="Permanent link">&para;</a></h3>
@@ -9292,15 +9506,35 @@ its dependence in the integrand.</p>
 <p><strong>Interpretation.</strong> Information checks apply to each operation in its own
 context, with local bindings and indirect dependencies preserved. An
 explicit field definition must produce a quantity measurable at its stated
-perch. An implicit equation instead defines a relation to be solved under
+perch. On a backward line the construction asks for a function of the state
+at that perch (§1.2): a state of an earlier perch is refused under
+<code>forward-composite</code>, and a field of a later perch that is read across an
+edge that draws a shock is refused under <code>shock-observed</code> unless it stands
+inside an expectation over each shock drawn on the way. The package does not
+yet check this for a shock that the header of a backward block lists and
+that is drawn on an earlier edge or on no edge: the line reads it as known,
+and the function that the line defines keeps the shock free (§5.3). An implicit
+equation instead defines a relation to be solved under
 the information available to its unknowns; it is not a claim that every
-intermediate expression already has that measurability.</p>
+intermediate expression already has that measurability. Its two sides are
+one relation (R10), and a term on either side that reads a field of a later
+perch is read through the law of motion and, across an edge that draws a
+shock, inside an expectation over that shock. The package does not yet check
+this on the left side, for a term outside an expectation that combines a
+field of a later perch, or its derivative, with other quantities, such as
+<code>β*D_{a}V[&gt;]</code> (§5.3).</p>
 <p>Declared dependencies give a sufficient information bound, not necessarily
 the smallest information set of the mathematical expression: a shock may
 cancel algebraically. A construction that does not prove such cancellation
 may report that the required measurability has not been established, but
 must not assert that the expression is mathematically nonmeasurable for
-that reason or insert an expectation.</p>
+that reason or insert an expectation. The package takes as declared
+dependencies the shocks that the forward blocks between the two perches
+list, whether or not a law of motion reads them, and it refuses under
+<code>shock-observed</code> a field of the later perch that is read outside an
+expectation over them. The message of that refusal says that the value is
+not known at the earlier perch; the package does not yet word it as a report
+that measurability has not been established (§5.3).</p>
 <p>For example, at arrival <code>E_{y}(V + y)</code> integrates the designated shock in
 both terms, whereas <code>E_{y}(V) + y</code> retains a free final <code>y</code>. If <code>y</code> is not
 known at arrival, the latter is not an arrival-field definition. The mere
@@ -9318,7 +9552,13 @@ assumes.</p>
 <p><strong>Written form.</strong> A statement <code>Z = F(Y_1, …, Y_n)</code> whose left side is a
 field at perch <span class="arithmatex">\(p\)</span> and whose right side mentions fields <span class="arithmatex">\(Y_i\)</span> at perches
 <span class="arithmatex">\(q_i\)</span> and parameters, after the aliases and declared functions of R2 have
-been expanded, so that <code>F</code> is the function the expression denotes.</p>
+been expanded, so that <code>F</code> is the function the expression denotes. The
+package does not yet print the expanded expression on the card of a builder,
+the record of the builder that <code>denote()</code> prints
+(<a href="../../API/stage/05-piece/">A piece</a> §5), where the block writes an alias
+before the output statement: the rule that the card prints for the output is
+then the alias's line, while the function that the operation computes is the
+expanded expression (§5.3).</p>
 <p><strong>Context.</strong> The state arguments, the declared transitions, the functions
 supplied as inputs, and any recovery maps for earlier quantities needed as
 functions of the chosen state.</p>
@@ -9335,8 +9575,15 @@ functions of the chosen state.</p>
   explicit representation in the available arguments, which a line of the
   file supplies. A field whose name is a coordinate <span class="arithmatex">\(x\)</span> of perch <span class="arithmatex">\(p\)</span>, written
   with the mark of another perch <span class="arithmatex">\(q\)</span>, denotes that coordinate read at <span class="arithmatex">\(q\)</span>,
-  and a line <code>x[q] = e</code> supplies the map <span class="arithmatex">\(\mathrm r_x\)</span>, the function <code>e</code>
-  denotes at <span class="arithmatex">\(q\)</span>, from the state at <span class="arithmatex">\(q\)</span> to the coordinate <span class="arithmatex">\(x\)</span> of <span class="arithmatex">\(p\)</span>. In the
+  and in a policy block a line <code>x[q] = e</code> supplies the map <span class="arithmatex">\(\mathrm r_x\)</span>, the
+  function <code>e</code> denotes at <span class="arithmatex">\(q\)</span>, from the state at <span class="arithmatex">\(q\)</span> to the coordinate <span class="arithmatex">\(x\)</span>
+  of <span class="arithmatex">\(p\)</span>. Under the continuation mark, <span class="arithmatex">\(x\)</span> is a state of the decision perch,
+  and a line there for a state of another perch is refused under
+  <code>candidate-coordinate</code>. In a value block or an arrival block the line
+  supplies no map: under the arrival mark it is retained as a relation that
+  no operation realizes, which <code>stage.obligations()</code>, the list of the
+  conditions the stage records, holds as <code>retained-relation</code>, and under the
+  continuation mark it is refused under <code>input-perch-state</code>. In the
   consumption stage of §4.2, <code>m_d[&gt;] = a + c[&gt;]</code> supplies the decision
   coordinate read at the continuation perch, the coordinate map
   <span class="arithmatex">\(\varphi(a) = a + \mathrm f(a)\)</span> of R8; (A2) supplies the reading in the
@@ -9374,7 +9621,9 @@ unqualified <span class="arithmatex">\(\mathbb E_\eta\,\mathrm v_\succ\)</span> 
 </div>
 <p><strong>Implicit dependence.</strong> If a substituted argument depends on the output
 being determined, the substitution produces a residual in that unknown.
-It does not fail; it gives the implicit relation of R10. An alias such as
+It does not fail; it gives the implicit relation of R10. The package does
+not yet read the statement in this way where its left side is the bare
+control and the dependence enters through an alias (§5.3). An alias such as
 <code>z = c[&gt;]</code> can describe dependence on an undetermined control without
 itself supplying an equation that determines that control.</p>
 <p><strong>A statement across two perches.</strong> A statement <code>Y = Z</code> whose left side is
@@ -9389,7 +9638,7 @@ the transition are consistent (R10), the two rewritings denote the same set
 of pairs, each substitution reversing the other. No unknown is assigned, so
 R2's rule that an implicit condition is retained as a relation stands; the
 construction rewrites the relation at the perch whose map contains no
-unknown.</p>
+unknown. The package does not yet do this for every such statement (§5.3).</p>
 <p><strong>Where the equality holds.</strong> An almost-sure field equality determines
 representatives only almost everywhere under the relevant state law. A
 written formula or supplied continuation function may instead specify a
@@ -9402,18 +9651,28 @@ that the changed law does not give positive probability to the exceptional
 set. Neither diagram silently upgrades an almost-sure identity to a
 pointwise one.</p>
 <h3 id="r6-well-formedness">R6 Well-formedness<a class="headerlink" href="#r6-well-formedness" title="Permanent link">&para;</a></h3>
-<p>Five checks apply to every statement. The first two find contradictions in
-the declarations; the third and fourth check whether the supplied context justifies the
-claimed field interpretation; the fifth finds blocks that determine less
-than they promise.</p>
+<p>Five checks apply to every statement. The first two check the declarations:
+the first records the conditions that the declared sets leave open, and the
+second finds contradictions between roles. The third and fourth check
+whether the supplied context justifies the claimed field interpretation. The
+fifth finds blocks that determine less than they promise.</p>
 <ol>
-<li><strong>Domain.</strong> Every name has a set (§2.4). A function applied to an
-   argument whose set is not contained in the declared set of its formal
-   argument is an error;
-   <code>𝑢(c)</code> with <code>𝑢(c : ℝ₊₊)</code> and <code>c : ℝ₊</code> is one, and the file repairs it
+<li><strong>Domain.</strong> Every name has a set (§2.4). The package does not yet check
+   this for a field or a shock that a block header lists (§5.3). A function applied to
+   an argument whose set is not known to lie in the declared set of its
+   formal argument is not refused: the stage records the condition
+   <code>function-argument-domain-inclusion</code>, which <code>stage.obligations()</code> lists
+   as required and calibration does not decide.
+   <code>𝑢(c)</code> with <code>𝑢(c : ℝ₊₊)</code> and <code>c : ℝ₊</code> records one, and the file removes it
    by declaring the control in <span class="arithmatex">\(\mathbb R_{++}\)</span>. A restriction that the
-   declared sets cannot express is an assumption, recorded and not checked:
-   the body <code>c^(1-γ)/(1-γ)</code> under <code>γ : ℝ₊</code> assumes <span class="arithmatex">\(\gamma \neq 1\)</span>.</li>
+   declared sets do not state is recorded as a condition as well, and
+   calibration decides it where it reads parameters alone:
+   the body <code>c^(1-γ)/(1-γ)</code> under <code>γ : ℝ₊</code> records that <span class="arithmatex">\(1 - \gamma\)</span> is not
+   zero, which a calibration at <span class="arithmatex">\(\gamma = 2\)</span> establishes, and a calibration
+   at <span class="arithmatex">\(\gamma = 1\)</span> is refused. A declared set can state such a restriction:
+   under <code>γ : ℝ₊₊ \ {1}</code> a calibration at <span class="arithmatex">\(\gamma = 1\)</span> is refused as a value
+   outside the declared set. A restriction that reads a state, a control
+   or the argument of a function stays required and is not checked.</li>
 <li><strong>Role.</strong> A name has at most one role. A control is at the decision
    perch. A value field carries <code>!vlu</code>; the derivative of a value is read
    by a derivative term and has no role. A shock has a law or the word
@@ -9424,8 +9683,22 @@ than they promise.</p>
    a diagnostic. Algebraic cancellation can justify more cases than a
    conservative dependency check establishes.</li>
 <li><strong>Scope.</strong> Resolve every reference to a declaration, a local definition,
-   or a binder. A field a block reads is listed in its header or defined
-   earlier in the block; using it still requires the appropriate state
+   or a binder. A bare name that resolves to none of them is refused under
+   <code>name-in-scope</code>. A call of a function that the file does not declare,
+   such as <code>log(c)</code> or the misspelling <code>𝑢𝑢(c)</code> beside a declared <code>𝑢</code>, is not
+   refused: it is read as a function supplied from outside the file, the
+   stage records the conditions <code>external-callable-signature-and-provider</code>
+   and <code>external-callable-result-domain</code>, and the stage's diagnostics,
+   <code>stage.diagnostics()</code>, list the call under <code>external_calls</code>. On a
+   backward line the package does not yet resolve the bare name of a
+   decision state where a state at another perch has the same name, and it
+   refuses the line under <code>name-in-scope</code> (§1.1, §5.3). A field that a
+   forward block reads is listed in its header or defined earlier in the
+   block. So is a value field or a control that a backward block reads, and
+   a shock that it reads outside an expectation over that shock. A backward
+   block lists no state: it reads a state of the perch of its output without
+   a listing, and a state of its input perch only through the law of motion
+   (R1). Using a field still requires the appropriate state
    representation. For example, knowledge of decision <code>w</code> does not make
    <code>w[&gt;] = w</code> a function of the saving state <code>a</code> without a recovery
    relation. Check references and selections inside functions and
@@ -9449,14 +9722,20 @@ each with its own mathematical requirement. The
 them; a maximization written on a line not marked <code>!doc</code>, for instance,
 stands in an operation of the kind <code>Argmax</code>, and the residuals of a
 solution in an <code>Aggregation</code> (R8, R10).</p>
-<p><strong>Application.</strong> Arithmetic and the application of a declared or built-in
-function, <code>𝑢(c)</code>, <code>log(c)</code>, act pointwise and preserve the perch of their
-arguments. <code>D_{c}(𝑢)</code> denotes the derivative of the declared function with
-respect to its named argument and assumes differentiability. <code>Inv(𝑑𝑢)</code>
+<p><strong>Application.</strong> Arithmetic and the application of a function, <code>𝑢(c)</code>,
+<code>log(c)</code>, act pointwise and preserve the perch of their arguments. A
+function that the file does not declare, such as <code>log</code>, is read as a
+function supplied from outside the file, under the conditions that R6
+names. <code>D_{c}(𝑢)</code> denotes the derivative of the declared function with
+respect to its named argument and assumes differentiability. The package
+does not yet check that the subscript names an argument of the function
+(§2.1, §5.3). It does not yet record the assumption of differentiability
+as a condition of the stage (§5.3). <code>Inv(𝑑𝑢)</code>
 denotes the functional inverse and assumes that the function is a bijection
 between the declared set of its argument and its range; for the marginal utility
 of power utility with strictly positive risk aversion, <span class="arithmatex">\(\mathbb R_{++}\)</span>
-onto <span class="arithmatex">\(\mathbb R_{++}\)</span>.</p>
+onto <span class="arithmatex">\(\mathbb R_{++}\)</span>. The stage records this assumption as the condition
+<code>inverse-function-domain</code>.</p>
 <p><strong>Expectation.</strong> Interpret <code>E_{ζ}(e)</code> in its current conditioning context
 <span class="arithmatex">\(\mathcal G\)</span>. For an outermost arrival-value equation this is
 <span class="arithmatex">\(\mathcal F_\prec\)</span>; nested integrations must retain their own still-free
@@ -9487,10 +9766,13 @@ occurrences on its paths have integrated, <span class="arithmatex">\(S\)</span> 
 names, and <span class="arithmatex">\(A(S)\)</span> the shock arguments and other subject components of the
 declarations of <span class="arithmatex">\(S\)</span>. The occurrence conditions on
 <span class="arithmatex">\(C = ((R \setminus S) \cup A(S)) \setminus (S \cup H)\)</span> and the source
-coordinates, and uses the law of <span class="arithmatex">\(S\)</span> given <span class="arithmatex">\(C\)</span> derived from the edge's joint
-law: a declared conditional, a product of declared conditionals in
+coordinates, and uses the law of <span class="arithmatex">\(S\)</span> given <span class="arithmatex">\(C\)</span> derived from the joint law of
+the edge whose law of motion the block substitutes: a declared conditional, a product of declared conditionals in
 dependency order, or a marginal or conditional of a joint normal declaration
-whose conditioning covariance block is positive definite. Its result is a
+whose conditioning covariance block is positive definite. Every shock of
+<span class="arithmatex">\(S\)</span> is drawn on that edge: an expectation over a shock that another edge
+draws, or that no edge draws, is refused under <code>distribution-edge</code>. The
+result of the occurrence is a
 function of the source coordinates and <span class="arithmatex">\(C\)</span>, and the shocks of <span class="arithmatex">\(S\)</span> outside
 <span class="arithmatex">\(C\)</span> join <span class="arithmatex">\(H\)</span>. At a pointwise combination, remove from the combined history
 the shocks on which any genuine sibling value input still depends. A later
@@ -9499,7 +9781,9 @@ history (<code>shock-reintroduced</code>). Any other conditional, a posterior am
 refused (<code>conditional-not-declared</code>). Under <code>ν ~ N(κ_1, σ_ν^2)</code> and
 <code>Ψ ~ LogNormal(ν, σ_Ψ)</code> the order <code>E_{ν}(E_{Ψ}(·))</code> uses the law of <span class="arithmatex">\(\Psi\)</span>
 given <span class="arithmatex">\(\nu\)</span> and then the marginal of <span class="arithmatex">\(\nu\)</span>; the reversed order would need the
-law of <span class="arithmatex">\(\nu\)</span> given <span class="arithmatex">\(\Psi\)</span> and is refused. A block output depends on no shock,
+law of <span class="arithmatex">\(\nu\)</span> given <span class="arithmatex">\(\Psi\)</span> and is refused. In the objective of a policy block
+the package does not yet refuse the reversed order under this rule: it
+refuses it under <code>shock-observed</code> (§5.3). A block output depends on no shock,
 and every shock of the edge is integrated on each path to it
 (<code>shock-observed</code>).</p>
 <p>For finite real-valued results require the relevant integrals to be finite.
@@ -9510,11 +9794,17 @@ expressions such as <span class="arithmatex">\(+\infty-\infty\)</span>. A sum wi
 term <span class="arithmatex">\(+\infty\)</span> is <span class="arithmatex">\(-\infty\)</span>, the value of an infeasible point. These are
 analytic requirements, not consequences of the operator's syntax.</p>
 <p><strong>Maximization and maximum.</strong> With feasible controls <span class="arithmatex">\(\mathcal C(x)\)</span> and
-choice value <span class="arithmatex">\(Q(x,c)\)</span>, <code>argmax_{c}(e)</code> denotes the maximizer set; a policy,
-where one is required, is a measurable selection from it,
+choice value <span class="arithmatex">\(Q(x,c)\)</span>, <code>argmax_{c}(e)</code> names at each state <span class="arithmatex">\(x\)</span> the maximizer
+set of the display below, and the line that writes it denotes the set of
+maximizing policies (R8). A policy, where one is required, is a measurable
+selection from the maximizer set,
 $$
 \pi(x)\in\operatorname*{arg\,max}_{c\in\mathcal C(x)}Q(x,c).
 $$
+The binders stand, in order, for the fields that the left side of the line
+writes (§2.5). A line whose binders and left-side fields differ in number is
+refused, under <code>well-typed</code>, or under <code>output-defined</code> where an output of
+the block is thereby left without a definition.
 A feasibility correspondence can specify a product of sets or a product
 restricted by conditions, as <a href="../../10-constraints/#1-three-kinds-of-constraint-and-where-each-is-written">Constraints</a>
 §1 shows. A call <code>Γ(x)</code> substitutes <code>x</code> for the definition's formal argument
@@ -9525,7 +9815,9 @@ still triples, with the equality retained as a restriction on the whole
 product; neither the formal argument <code>z</code> nor the bound member <code>q</code> becomes
 an additional free state coordinate.</p>
 <p>The operation of the kind <code>Argmax</code> that a line not marked <code>!doc</code> forms has
-that set as its output; the closing <code>Evaluation</code> of the policy builder
+as its output the set of maximizing policies, the measurable policies that
+select a member of the maximizer set at every state; the set may be empty or
+hold several policies. The closing <code>Evaluation</code> of the policy builder
 selects no member of it, and the selection is the numerical method's. The maximum value
 <span class="arithmatex">\(\max_{c}Q(x,c)\)</span> may be well-defined without a unique maximizer or a
 chosen policy. Nonempty compact feasible sets and
@@ -9544,7 +9836,10 @@ Border 2006, Theorem 18.19). Pointwise attainment alone is insufficient.</p>
 <p>Where several maximizers exist, keep the selection requirement explicit;
 the syntax supplies no automatic tie-break.</p>
 <p><strong>Solution.</strong> <code>solve_{c}(r_1, …, r_k)</code> denotes the relation of feasible
-unknowns satisfying every residual equation. A unique solution gives a
+unknowns satisfying every residual equation. The package does not yet form
+this relation for one unknown with two or more residuals: it reads such a
+line without a refusal, and the rule of its operation holds no residual
+(§5.3). A unique solution gives a
 single-valued map; several solutions require a specified selection to
 produce one. In either case measurability is an additional requirement.
 Existence, selection, and optimality are separate questions (R8, R10).</p>
@@ -9561,17 +9856,22 @@ R10. Keep this exact interpretation distinct from its tabulated approximation.</
 operator, its statements describe the constituents of that operator, and
 the occurrences of the operations above
 inside the statements are the finest constituents. A numerical method may be
-attached to the block, to a statement marked <code>!node</code>, or to an occurrence;
+attached to the block, to a declared function, to a statement marked <code>!node</code>
+or a line that has an id, or to an occurrence;
 the choice of level is the methods file's, and it does not change what the
 block denotes. Every mathematical operation remains present at its appropriate detail,
 including within an unmarked equation. Only <code>!node</code> creates a separately
 authored node; a method's convenience does not create a
 new authored equation or place.</p>
 <p><strong>The result of an occurrence.</strong> An occurrence of an operation inside an
-unmarked equation, <code>E_{η}(v(g(x, c, η)))</code> in the line
-<code>V = u(c) + E_{η}(v(g(x, c, η)))</code>, receives a function of the arguments the
+unmarked equation, <code>E_{η}(V[&gt;])</code> in the line <code>V = 𝑢(c) + E_{η}(V[&gt;])</code> of a
+backward block whose header lists the control <code>c</code>, receives a function of the arguments the
 equation has bound so far and returns a function of the arguments that
-remain, here a function of <code>(x, c)</code>. The statement's aggregation reads that
+remain. The block's builder is the operator at a policy (R1), so the
+integrand is <span class="arithmatex">\(\mathrm v_\succ(\mathrm g_\succ(x, \pi(x), \eta))\)</span> and the
+result is a function of the decision state <span class="arithmatex">\(x\)</span> alone; the same occurrence
+in the objective of the policy block, <code>c = argmax_{c}(𝑢(c) + E_{η}(V[&gt;]))</code>,
+returns a function of <code>(x, c)</code>. The statement's aggregation reads that
 result as its value input, and whether it is affine in that input is a
 property of the statement, never a condition of construction. That result
 exists in the composed
@@ -9581,11 +9881,14 @@ methods attach to it (a quadrature rule to an expectation, a maximizer to a
 maximization, a root finder to a solution), and nothing may represent it: its
 value is obtained exactly, through its definition, wherever the equation
 reads it. A representation, an interpolant or a table on a grid, attaches
-only to a function the author named, a builder output or a statement marked
-<code>!node</code>; an author who wants the expectation held as an object writes it on
-its own line and marks the line. The two questions are therefore separate:
+only to a declared function, a builder output, a statement marked <code>!node</code>,
+a line that has an id, where it represents the function that the line
+defines, or an authored <code>evaluate</code>, where the representation is the method
+by which that evaluation is computed; an author who wants
+the expectation held as an object writes it on its own line and gives the
+line an id or marks it <code>!node</code>. The two questions are therefore separate:
 whether a function exists as an object is decided by the source (the block
-outputs and the <code>!node</code> marks), and whether an existing object is exact or
+outputs, the <code>!node</code> marks and the ids of lines), and whether an existing object is exact or
 an approximation is decided by the methods file, with exact as the default.
 Attaching a method to an occurrence, a quadrature rule to <code>E_{η}(·)</code>, does
 not make the occurrence a node: a sub-builder is created by <code>!node</code> alone,
@@ -9598,10 +9901,13 @@ the occurrence is.</p>
 <span class="arithmatex">\(\mathrm v_\sim(x) = Q(x, \pi(x))\)</span>. No optimality is involved; this is the
 policy operator <span class="arithmatex">\(T_\pi\)</span> of Sargent and Stachurski, and it is what a stage
 computes when the policy is given from outside.</p>
-<p><strong>Maximization.</strong> <code>argmax_{c}(…)</code> denotes the set of maximizing controls,
-and a policy that maximizes is a measurable selection from it,
-<span class="arithmatex">\(\pi(x) \in \arg\max_{c \in \mathcal C(x)} Q(x, c)\)</span>, under the assumptions of
-R7; then <span class="arithmatex">\(\mathrm v_\sim(x) = \max_{c} Q(x, c)\)</span>. The two steps together
+<p><strong>Maximization.</strong> A line <code>c = argmax_{c}(…)</code> denotes the set of maximizing
+policies: the measurable policies <span class="arithmatex">\(\pi\)</span> with
+<span class="arithmatex">\(\pi(x) \in \arg\max_{c \in \mathcal C(x)} Q(x, c)\)</span> at every state <span class="arithmatex">\(x\)</span>, which
+are the measurable selections from the maximizer set of R7. The set may be
+empty or hold several policies. Under the assumptions of
+R7 it holds a policy, and evaluation at a policy in it gives
+<span class="arithmatex">\(\mathrm v_\sim(x) = \max_{c} Q(x, c)\)</span>. The two steps together
 are the maximum; the calculus writes them as evaluation composed with
 selection
 (<a href="../../../bellman-calculus/05-Operators%20and%20builders/">Operators and builders</a> §7).
@@ -9615,14 +9921,19 @@ concave objective on a convex feasible domain and the appropriate first-order
 conditions; strict concavity supplies uniqueness when a maximizer exists. An
 equality residual states the interior condition; where the control's bound
 can bind, the file must state the corner condition, by the clause <code>⟂</code> of
-R10 on the first-order condition, by a multiplier declared in the policy
+R10 on the first-order condition, by the clause on the continuation-marked
+candidate line, <code>c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;]) ⟂ a &gt;= 0</code> (§4.5), by a multiplier declared in the policy
 block with the clause on its declaration (R10), or by a separately declared
 branch, or the statement determines the policy only on the region where the
 interior condition has a solution.</p>
 <p><strong>The endogenous-grid policy.</strong> In a policy block whose header names the
 continuation value <code>V[&gt;]</code> and whose lines read its derivative by the term
 <code>D_{a}V[&gt;]</code>, the continuation-marked candidate lines read the
-continuation state <code>a</code> as their coordinate. The statements
+continuation state <code>a</code> as their coordinate. Such a line writes a control
+under the continuation mark, <code>c[&gt;]</code>, a state of the decision perch under the
+mark, <code>w[&gt;]</code>, or the value candidate that an <code>upper_env</code> of the block
+compares (R12); a line that writes another name under the mark is refused,
+as <code>z[&gt;] = 2*c[&gt;]</code> is under <code>candidate-coordinate</code>. The statements
 <code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;])</code> and <code>w[&gt;] = a + c[&gt;]</code> define two fields at the
 continuation perch, represented with respect to <span class="arithmatex">\(a\)</span> by the <strong>candidate</strong>
 <span class="arithmatex">\(\mathrm f(a) = \mathrm{du}^{-1}(\beta\,\mathrm{dv}_\succ(a))\)</span> and the
@@ -9634,7 +9945,9 @@ coordinate map (R5), it states <span class="arithmatex">\(\pi(\varphi(a)) = \mat
 control at the cash on hand <span class="arithmatex">\(w = \varphi(a)\)</span> equal to the candidate there.
 Under R10's consistency and single-valuedness conditions the two readings
 give the same policy on the represented decision domain. A block that
-omits the final line determines no policy and is refused (R1). If <span class="arithmatex">\(\varphi\)</span> is injective,
+omits the final line determines no policy and is refused (R1). A line that
+writes a candidate which no later line of the block reads is refused under
+<code>candidate-read</code>; the coordinate line, <code>w[&gt;] = a + c[&gt;]</code>, needs no reader. If <span class="arithmatex">\(\varphi\)</span> is injective,
 this policy can be written <span class="arithmatex">\(\pi = \mathrm f \circ \varphi^{-1}\)</span>; injectivity
 is sufficient but is not the general condition. The
 tabulation of <span class="arithmatex">\((\varphi(a_i), \mathrm f(a_i))\)</span> on an asset grid and the
@@ -9642,7 +9955,10 @@ interpolation between the points are the numerical method's approximation of
 this composition; they are not operations of the stage. An authored
 <code>c = evaluate(w[&gt;], c[&gt;], w)</code> expresses evaluation of the determined
 relation where such a functional interpretation is supplied. With finite
-tables, it instead evaluates the chosen approximation (R7).</p>
+tables, it instead evaluates the chosen approximation (R7). The package does
+not yet construct either of these readings: it reads the line and records
+its rule without a definition of <code>evaluate</code>, also where the methods file
+types a representation at the line (§5.3).</p>
 <p><strong>Marginal values.</strong> A marginal value is the derivative of a value and no
 field: a line reads it by the derivative term, <code>D_{a}V[&gt;]</code> for the
 derivative of the continuation value in the continuation coordinate <code>a</code>,
@@ -9653,7 +9969,12 @@ the declared set, on which the one-sided derivative exists everywhere and
 the derivative is single-valued almost everywhere and set-valued at a kink,
 as a value with a discrete choice downstream is at its switching points;
 differentiability at the point a line reads is a condition the rules
-record, not a type. A derivative line (§2.2), <code>D_{w}V = 𝑑𝑢(c)</code> in the
+record, not a type. The package does not yet read a derivative in this way:
+it defines the derivative as the limit of the difference quotients, a single
+number, and it records no condition at a line that reads a derivative
+(§5.3). <code>stage.obligations()</code> lists differentiability only for a derivative
+line, under <code>marginal-reading</code>, and for a policy builder under the
+endogenous grid method, under <code>egm-eligibility</code>. A derivative line (§2.2), <code>D_{w}V = 𝑑𝑢(c)</code> in the
 value builder's block of the stage file, or the same line in the block of
 the methods file that names the builder's block by its id,
 <code>[id=cntn_to_dcsn]</code>, states the derivative of the value the builder
@@ -9698,7 +10019,11 @@ value <span class="arithmatex">\(\mathrm v_\succ\)</span> is concave and continu
 candidate <span class="arithmatex">\(\mathrm f\)</span> is continuous and nondecreasing, the coordinate map
 <span class="arithmatex">\(\varphi\)</span> is strictly increasing from <span class="arithmatex">\(\mathrm f(0)\)</span> to infinity, and the
 policy is <span class="arithmatex">\(\mathrm f \circ \varphi^{-1}\)</span> at cash on hand of at least
-<span class="arithmatex">\(\mathrm f(0)\)</span> and the whole of cash on hand below it (§4.5).</p>
+<span class="arithmatex">\(\mathrm f(0)\)</span> and the whole of cash on hand below it (§4.5). The package
+does not yet record such a condition for another solution method: under
+<code>!time_iteration</code> or <code>!explicit</code> the method's lines stand in place of the
+maximization, and <code>stage.obligations()</code> lists no condition under which they
+compute its policy (§5.3).</p>
 <p><strong>Derivative lines of the methods file.</strong> Where the stage file writes no
 derivative line, the author writes it in the methods file, in a block that
 names the backward value builder's block by its id and carries no
@@ -9743,7 +10068,13 @@ aggregate, as in an equilibrium model, is a fixed point above the stage and
 not an object of these rules.</p>
 <h3 id="r9-the-forward-reading">R9 The forward reading<a class="headerlink" href="#r9-the-forward-reading" title="Permanent link">&para;</a></h3>
 <p><strong>Written form.</strong> The same transition blocks and law statements as the
-backward reading, together with the policy the policy block determines.</p>
+backward reading, together with the policy the policy block determines. A
+statement of a transition block defines the law of motion and contains no
+expectation. A statement there that integrates a shock, as
+<code>w = E_{y}(y) + b*R</code> would in the arrival transition of <code>cons_savings_iid</code>
+(§4.2), is refused under <code>transition-without-expectation</code>; an integration
+over a shock is written in a backward block or in the policy block (R7,
+R11).</p>
 <p><strong>Interpretation.</strong> Under a measurable feasible policy <span class="arithmatex">\(\pi\)</span>, the declared
 transitions and conditional shock laws determine a state-transition kernel.
 For either edge write it as <span class="arithmatex">\(K(x,A)\)</span>: the probability that the next state
@@ -9768,13 +10099,23 @@ discounting, and optimization remain their separately authored operations.</p>
 <p>For a stage the forward composition is
 <span class="arithmatex">\(\mathbb M_\pi=\mathbb M_{\succ,\pi}\circ\mathbb M_\prec\)</span>.
 A product output has the joint law of its components, and a selected branch
-has its law on the appropriate labeled successor space. State-space
+has its law on the appropriate labeled successor space. For a branching
+block the stage records the condition <code>mass-conservation</code>, that the masses
+of the branch measures sum to the mass of the measure pushed forward. The
+condition is established where a control selects the branch, or a shock
+selects it with weights written as numbers, provided that the stage
+establishes that every line of a branch writes a value in the declared set
+of its field; otherwise <code>stage.obligations()</code> lists it as required. State-space
 sufficiency must include the conditional kernels used in this composition.</p>
 <p><strong>Dependence.</strong> A joint conditional law, or the declared conditional laws
 that factor it, specifies shocks used together. Separate declarations define
 the product of the declared conditional laws, each given its named parents
 and the source coordinates, and the forward extension adds them in that
-dependency order, parents first. The factorization is an assumption the
+dependency order, parents first. Declarations that have no such order are
+refused under <code>distribution-dependency</code>: a declaration that reads a
+component of its own subject as an argument, <code>(y, z) ~ N((y, 0), …)</code>, and
+declarations whose shock arguments form a cycle, <code>y ~ N(z, 1)</code> with
+<code>z ~ N(y, 1)</code>. The factorization is an assumption the
 elaboration records; it is not inferred from distinct variable names.</p>
 <p><strong>Scope.</strong> Forward propagation needs the transitions, laws, and a supplied
 policy. Value equations are needed if that policy is itself obtained by
@@ -9794,14 +10135,22 @@ block, <code>μ[&gt;] : ℝ₊ ⟂ a &gt;= 0</code>.</p>
 right side may reach the output being determined.</p>
 <p><strong>Interpretation.</strong> The <strong>unknown</strong> of an implicit statement is the output
 of the block that the statement determines, and a bare control on the left
-side names it. Where the left side of an equation is neither a name nor a
-tuple of names, the statement is a <strong>candidate statement</strong>, and its
+side names it. Where the left side of an equation is neither a name, nor a
+tuple of names, nor one derivative term, the statement is a <strong>candidate statement</strong>, and its
 <strong>candidates</strong> are the outputs of its block that it mentions, bare or under a
 perch mark, and that no operative statement of the block with a name on its
-left side defines. A statement is <strong>operative</strong> when the block computes with
-it, which is every line the author does not mark <code>!doc</code>; a line so marked
+left side defines. A line whose left side is one derivative term,
+<code>D_{a}V[&gt;]</code>, is no candidate statement: every block reads it as a derivative
+line (§2.2). In a policy block <code>D_{a}V[&gt;] = 𝑑𝑢(c) ⟂ m_d - c &gt;= 0</code> is
+therefore refused, under <code>forward-composite</code>, and the first-order condition
+is written with the term on its right side,
+<code>𝑑𝑢(c) = D_{a}V[&gt;] ⟂ m_d - c &gt;= 0</code>. A statement is <strong>operative</strong> when the block computes with
+it, which is every line that the author neither marks <code>!doc</code> nor attaches to
+another line as its property by a dotted id (§2.3); a line marked <code>!doc</code>
 states what an object is and no operation realizes it, so the maximization
-statement of a policy block leaves the control it names undetermined here.
+statement of a policy block leaves the control it names undetermined here,
+and a property line forms no operation, defines no output and enters no
+system.
 A candidate statement mentions a field when the field's
 name occurs on either side of its equation after the substitution of aliases
 (R2): an argument of a call is an occurrence, the body of a called function
@@ -9832,12 +10181,20 @@ undetermined.</p>
 builder, an Aggregation whose rule holds the relation with the system's
 unknowns on both sides, reached by one <code>solve</code> occurrence at its first
 statement that holds the system's unknowns, so that a method attached to the
-policy block addresses the system as one place. Its rule is the conjunction, over the system's statements, of each
+policy block addresses the system as one place. The package does not yet
+record this occurrence on every system (§5.3). On the first-order condition
+<code>𝑑𝑢(c) = D_{a}V[&gt;] ⟂ m_d - c &gt;= 0</code>, the example of this paragraph, no place
+<code>policy.solve</code> exists, a root finder has no place at which to be typed, and
+a solution method is typed at the policy builder, as
+<code>policy.method : !time_iteration</code> is. The rule of
+the operation is the conjunction, over the system's statements, of each
 statement read at the decision state <span class="arithmatex">\(x\)</span>: every function at the coordinates
 of its own perch, every continuation coordinate replaced by the matching
 component of the law of motion at <span class="arithmatex">\(x\)</span> and the policy,
 <span class="arithmatex">\(\mathrm g_\succ(x, \pi(x))\)</span>, and a clause read in the same way and held
-whole beside its statement. The rule holds at every <span class="arithmatex">\(x\)</span> in the declared
+whole beside its statement. The package does not yet read the left side of a
+statement in this way: a continuation value written there is not composed
+with the law of motion (R4, §5.3). The rule holds at every <span class="arithmatex">\(x\)</span> in the declared
 decision domain. For the consumption stage of §4.2 with its three policy
 lines replaced by <code>𝑑𝑢(c) = D_{a}V[&gt;] ⟂ m_d - c &gt;= 0</code> it is
 $$
@@ -9845,10 +10202,19 @@ $$
 \ \perp\ \mathrm g_\succ(x, \pi(x)) \ge 0
 \qquad\text{for every } x \in X_m ,
 $$
-the Kuhn–Tucker system of the next paragraph at every state.</p>
+the Kuhn–Tucker system of the next paragraph at every state. The package
+does not yet record this rule. The rule that it records takes the
+derivative, in the continuation coordinate, of the continuation value
+already composed with the law of motion. That composed function does not
+depend on the continuation coordinate, so the derivative that the recorded
+rule states is zero (§1.5, §5.3).</p>
 <p><strong>Complementarity.</strong> A clause pairs the residual <span class="arithmatex">\(r\)</span>, left side minus
 right side, with the slack <span class="arithmatex">\(s\)</span> of its bound on a quantity <span class="arithmatex">\(z\)</span>: <span class="arithmatex">\(s = z - b\)</span>
 for <code>z &gt;= b</code>, written <span class="arithmatex">\(z\)</span> when <span class="arithmatex">\(b\)</span> is zero, and <span class="arithmatex">\(s = b - z\)</span> for <code>z &lt;= b</code>. A
+bound is written with <code>&gt;=</code> or <code>&lt;=</code>. The package does not yet check this for
+a clause with one bound: it reads a strict sign there as the weak one, so
+that <code>⟂ a &gt; 0</code> states the condition of <code>⟂ a &gt;= 0</code> (§5.3). In a clause with
+two bounds a strict sign is refused under <code>readable-form</code>. A
 lower bound means
 $$
 r\geq0,\qquad s\geq0,\qquad r\,s=0,
@@ -9899,7 +10265,9 @@ conditions (their §4.2), one exists.</p>
 <span class="arithmatex">\(\mathrm H:\mathsf S\to\mathsf X_\sim\)</span> the coordinate map, the
 functions that the candidate line and the coordinate line of a policy
 block denote on the continuation coordinates <span class="arithmatex">\(\mathsf S\)</span>, the second
-supplied under R5 (A3). Other retained state arguments must be explicit if
+supplied under R5 (A3). R8 states which names a continuation-marked line may
+write (<code>candidate-coordinate</code>) and that a later line reads each candidate
+(<code>candidate-read</code>). Other retained state arguments must be explicit if
 the displayed map gives only one coordinate. Rewritten at the continuation
 perch (R5), the identification states <span class="arithmatex">\(\pi(\mathrm H(s)) = \mathrm U(s)\)</span>
 for every <span class="arithmatex">\(s \in \mathsf S\)</span>, the relation
@@ -9996,7 +10364,9 @@ states, other multipliers of the block, parameters, numbers and <code>inf</code>
 bound naming a control, a decision or arrival state or a candidate is
 refused, since reading a control through its candidate would be an
 inference. A constraint on a control is therefore written with the clause
-on the first-order condition.</p>
+on the first-order condition. A multiplier declared in the body of a block
+that is no policy block is an error (R1). The package does not yet check
+this (§5.3).</p>
 <p><strong>Several unknowns.</strong> <code>(i, b_n) = solve_{i, b_n}(r_1, r_2)</code> denotes the
 relation in the product of the unknowns' sets. It determines a tuple of
 outputs where there is one solution or an explicit selection from the
@@ -10024,9 +10394,15 @@ occurrence in a transition. Conditional expectations can be combined using
 the tower property only with the required nested conditioning information
 and integrability; nonlinear aggregation must stay in its authored order.</p>
 <p>Shock timing therefore constrains the validity of the written value
-operators; it does not insert them. Intermediate functions remain part of
+operators; it does not insert them. An expectation is written in a statement
+of a backward block or of the policy block: a statement of a transition, an
+intermediate one included, takes no expectation, and <code>a = a_1 + E_{η}(η)</code> is
+refused under <code>transition-without-expectation</code> (R9). Intermediate functions remain part of
 the mathematical composition whether or not a <code>!node</code> gives one an
-independently addressable node. See
+independently addressable node. The package does not yet print the
+composition on the card of a builder whose intermediate line has no <code>!node</code>:
+the card then prints the rule of the intermediate line as the rule of the
+value (R5, §5.3). See
 <a href="../../../bellman-calculus/05-Operators%20and%20builders/">Operators and builders</a> §10.</p>
 <p><strong>Recursive preferences.</strong> The order of expectation and any nonlinear
 transformation is part of the value equation's meaning. A <strong>certainty
@@ -10036,8 +10412,13 @@ that operation; the value statement must write the required transformations
 explicitly, with their domains and order preserved.</p>
 <h3 id="r12-envelopes">R12 Envelopes<a class="headerlink" href="#r12-envelopes" title="Permanent link">&para;</a></h3>
 <p><strong>Written form.</strong> A selection among branch values, <code>(V_w[&gt;] - δ, V_r[&gt;])[d]</code>
-with <code>d = argmax_{d}(…)</code>; an authored <code>upper_env(…)</code>; or nothing, when an
-envelope is a step inside a numerical method.</p>
+with <code>d = argmax_{d}(V_w[&gt;] - δ, V_r[&gt;])</code>, whose maximand is the tuple of the
+value line, written entry by entry in the same order; an authored <code>upper_env(…)</code>; or nothing, when an
+envelope is a step inside a numerical method. A maximand that is another
+tuple is refused under <code>branch-tuple-mismatch</code>, also where it holds the same
+entries in another order or an entry equal in value but written differently,
+such as <code>-δ + V_w[&gt;]</code>. A value line that selects by no tuple indexed by <code>d</code>,
+such as <code>V = max(V_w[&gt;] - δ, V_r[&gt;])</code>, is refused under the same rule.</p>
 <p><strong>Interpretation.</strong> A finite branch maximum and a selection among a
 parameterized set of candidates are different uses of an upper envelope.
 For branches, the value is <span class="arithmatex">\(\max_j Q(x,j)\)</span> and a selected label attains it.
@@ -10054,7 +10435,11 @@ The maximization selects a parameter }_{s\in S_x<span class="arithmatex">\(s^*\)
 selection are required for the latter two expressions. A non-injective
 coordinate map need not give different controls in a fiber (condition (F)),
 and concavity alone does not make an arbitrarily parameterized map injective.</p>
-<p>An authored <code>upper_env</code> requests the stated mathematical operation. A
+<p>An authored <code>upper_env</code> requests the stated mathematical operation. The
+package does not yet give it that definition: it reads the line, lets a
+method such as <code>!FUES</code> address the operator, checks none of its arguments,
+and lists the condition <code>external-callable-signature-and-provider</code> for it
+(§5.3). A
 numerical method may compare interpolated candidate values as part of
 realizing a declared optimization problem, without creating an authored
 <code>upper_env</code>, <code>evaluate</code>, or <code>!node</code> statement. An envelope between finite
@@ -10077,15 +10462,23 @@ not establish the domain, information, or analytic assumptions. The consumption
 examples reproduce the equations of
 <code>applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl</code> and, in §4.2,
 those of <code>applications/portfolio-choice/declaration/stages/cons/cons.bl</code>, apart from the differences
-stated here. The policy block is written in the interior form: the
-application writes its candidate line as the inequality
-<code>c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0</code>, whose clause states the borrowing
-constraint (§4.5), and adds a maximization line marked <code>!doc</code>, which
-declares the control's
-feasible set by the correspondence <code>Γ(x : ℝ₊₊) := (0, x]</code>. The application
+stated here. The listing of §4.2 writes the policy block of <code>cons</code> in the
+interior form, with the candidate line as an equality. The application's
+stage file writes that policy block as one maximization,
+<code>c = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])</code>, which is not marked <code>!doc</code> and
+whose binder gives the control's feasible set by the correspondence
+<code>Γ(x : ℝ₊₊) := (0, x]</code>. The application's methods file, <code>methods.bl</code> beside
+the stage file, declares <code>𝑑𝑢𝑖𝑛𝑣</code>, types the endogenous grid method on the
+policy builder and writes the method's three lines: the candidate line as
+the inequality <code>c[&gt;] &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0</code>, whose clause states the
+borrowing constraint (§4.5), the coordinate line <code>m_d[&gt;] = a + c[&gt;]</code> and
+the final line <code>c = c[&gt;]</code>. These three lines take the place of the
+maximization in the operative policy builder, the stage keeping the
+maximization at the declared level (R8). The application
 also declares the control in <code>ℝ₊₊</code> on the forward block's header, where the
-listing declares it in <code>ℝ₊</code>; the reading of the control's set in §4.2 is the
-listing's. Any additional mathematical restrictions are stated below the
+listing declares it in <code>ℝ₊</code>, and it lists a second arrival state,
+<code>l : ℝ₊</code>, which the listing omits; the reading of the control's set in §4.2
+is the listing's. Any additional mathematical restrictions are stated below the
 examples.</p>
 <h3 id="41-a-product-output-without-consumption">4.1 A product output without consumption<a class="headerlink" href="#41-a-product-output-without-consumption" title="Permanent link">&para;</a></h3>
 <div class="admonition example">
@@ -10162,10 +10555,14 @@ Q(k, b, z, i, b_n) = \mathrm{div}(k, b, z, i, b_n) + \beta\,\mathrm v_\succ\bigl
 $$
 the choice value with both controls retained.</p>
 <p><strong>R8 and R7.</strong> The policy block binds <span class="arithmatex">\(i\)</span> and <span class="arithmatex">\(b_n\)</span> jointly. Its line,
-which is not marked <code>!doc</code>, denotes the set of the pairs that maximize <span class="arithmatex">\(Q\)</span>
-over <span class="arithmatex">\(\mathbb R_+ \times [0, b_{\max}]\)</span>, and a policy is a selection from
-that set, <span class="arithmatex">\((i, b_n) = \pi(k, b, z) \in \arg\max\)</span>. The rules record the assumption that
-the maximum is attained; the bound <span class="arithmatex">\(b_{\max}\)</span> is what makes the feasible set
+which is not marked <code>!doc</code>, denotes the set of the maximizing policies (R8):
+at each state the pairs that maximize <span class="arithmatex">\(Q\)</span> over
+<span class="arithmatex">\(\mathbb R_+ \times [0, b_{\max}]\)</span> form the maximizer set, and a policy is a
+measurable selection from it, <span class="arithmatex">\((i, b_n) = \pi(k, b, z) \in \arg\max\)</span>. The
+interpretation assumes that the maximum is attained. The stage records no
+condition for it: <code>stage.obligations()</code> lists no condition of attainment
+beside the operation of the kind <code>Argmax</code> that the line forms, and the set
+of the maximizing policies may be empty (R7). The bound <span class="arithmatex">\(b_{\max}\)</span> is what makes the feasible set
 compact in the borrowing direction, and attainment in the investment
 direction requires a separate restriction. For example, continuity and an
 objective tending to <span class="arithmatex">\(-\infty\)</span> as investment grows, uniformly over the
@@ -10178,7 +10575,11 @@ at arrival and <span class="arithmatex">\(z\)</span> independent of the arrival 
 $$
 \mathrm v_\prec(k, b) = \int \mathrm v_\sim(k, b, z)\,\mu_z(\mathrm dz),
 $$
-under one-sided integrability of the integrand.</p>
+provided that, at each <span class="arithmatex">\((k, b)\)</span>, the integrand <span class="arithmatex">\(\mathrm v_\sim(k, b, \cdot)\)</span>
+is integrable under the law of <span class="arithmatex">\(z\)</span>, so that the integral is finite, as the
+declaration of <code>V[&lt;]</code> in <span class="arithmatex">\(\mathbb R\)</span> requires (R7). The stage records this
+requirement as the condition <code>expectation-integrability</code>, which
+<code>stage.obligations()</code> lists as required.</p>
 <p><strong>The stage operator.</strong> <span class="arithmatex">\(\mathbb T : \mathrm v_\succ \mapsto \mathrm v_\prec\)</span>
 is the composite of these four steps: substitute <span class="arithmatex">\(\mathrm g_\succ\)</span>, add the
 payout, select, integrate over <span class="arithmatex">\(z\)</span>.</p>
@@ -10226,8 +10627,12 @@ other stage, <code>disc</code>, carries the discount factor.</p>
 <p><strong>Context.</strong> The parameter <span class="arithmatex">\(\rho \ge 1\)</span>; the sets <span class="arithmatex">\(X_m = \mathbb R_{++}\)</span>
 and <span class="arithmatex">\(X_a = \mathbb R_+\)</span>; the control <span class="arithmatex">\(c\)</span> with set
 <span class="arithmatex">\(\mathbb R_+ \cap \mathbb R_{++} = \mathbb R_{++}\)</span> (§2.4), which also
-satisfies the domain check for <code>𝑢(c)</code> (R6). The body of <code>𝑢</code> assumes
-<span class="arithmatex">\(\rho \neq 1\)</span>, an assumption recorded. States <span class="arithmatex">\(m\)</span> at arrival, <span class="arithmatex">\(m_d\)</span> at
+satisfies the domain check for <code>𝑢(c)</code> (R6). The body of <code>𝑢</code> requires
+<span class="arithmatex">\(\rho \neq 1\)</span>, which the declared set <span class="arithmatex">\([1, \infty)\)</span> does not state. The
+stage records it as the condition <code>arithmetic-definedness</code>, that the
+divisor <span class="arithmatex">\(1 - \rho\)</span> is not zero, and calibration decides that condition, so
+a calibration with <span class="arithmatex">\(\rho = 1\)</span> is refused although the declared set admits
+it (R6). States <span class="arithmatex">\(m\)</span> at arrival, <span class="arithmatex">\(m_d\)</span> at
 decision, <span class="arithmatex">\(a\)</span> at continuation. No shock: the income and return process of
 this period live in other stages.</p>
 <p><strong>R1.</strong> <span class="arithmatex">\(\mathrm g_\prec(m) = m\)</span>; <span class="arithmatex">\(\mathrm g_\succ(m_d, c) = m_d - c\)</span>; a
@@ -10249,7 +10654,11 @@ writes and never insert a discount factor.</p>
 <p><strong>R8, the policy.</strong> The candidate and coordinate map are
 <span class="arithmatex">\(\mathrm f(a) = \mathrm{du}^{-1}(\mathrm{dv}_\succ(a))\)</span> and
 <span class="arithmatex">\(\varphi(a) = a + \mathrm f(a)\)</span>, again without <span class="arithmatex">\(\beta\)</span>, since
-<span class="arithmatex">\(\mathrm{dv}_\succ\)</span> is discounted by <code>disc</code>. The implicit statement
+<span class="arithmatex">\(\mathrm{dv}_\succ\)</span> is discounted by <code>disc</code>. The package does not yet
+record this derivative: the rule that it holds for the candidate line
+differentiates a function that does not depend on the variable in which it
+is differentiated, although the card prints the rule as the intended
+derivative (§5.3). The implicit statement
 <code>c = c[&gt;]</code> reads <span class="arithmatex">\(c = \mathrm f(m - c)\)</span>, which is the Euler equation
 <span class="arithmatex">\(\mathrm{du}(c) = \mathrm{dv}_\succ(m - c)\)</span> (R10). When <span class="arithmatex">\(\varphi\)</span> is
 injective, its solution is <span class="arithmatex">\(\pi(m) = \mathrm f(\varphi^{-1}(m))\)</span> for <span class="arithmatex">\(m\)</span> in
@@ -10278,7 +10687,7 @@ Its stage file states the values and the maximization:</p>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>Y := ℝ₊
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>β : ℝ₊₊ :: ["discount factor must be a strictly positive number"] 
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>γ : ℝ₊ :: ["Relative risk aversion must be greater than 1"]
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>γ : (1, inf) :: ["Relative risk aversion must be greater than 1"]
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>R : ℝ₊₊
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>μ_y : ℝ
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>σ_y : ℝ₊
@@ -10334,8 +10743,8 @@ values (<a href="../../04-methodization/">Methodization</a> §1):</p>
 <code>𝑑𝑢𝑖𝑛𝑣</code> its inverse (R7), so
 <span class="arithmatex">\(\mathrm{du}(c) = c^{-\gamma}\)</span> and <span class="arithmatex">\(\mathrm{du}^{-1}(x) = x^{-1/\gamma}\)</span>,
 the inverse existing because <span class="arithmatex">\(\mathrm{du}\)</span> is a bijection of
-<span class="arithmatex">\(\mathbb R_{++}\)</span> for <span class="arithmatex">\(\gamma &gt; 0\)</span>, a restriction the declared set <code>γ : ℝ₊</code>
-does not itself impose. The shock <span class="arithmatex">\(y\)</span> is listed on the arrival
+<span class="arithmatex">\(\mathbb R_{++}\)</span> for <span class="arithmatex">\(\gamma &gt; 0\)</span>, a restriction that the declared set
+<code>γ : (1, inf)</code> implies. The shock <span class="arithmatex">\(y\)</span> is listed on the arrival
 side as an argument of the transition, not as a coordinate of the arrival
 state, and is realized between arrival and decision. The value statement
 lowers to <span class="arithmatex">\(Q(w, c) = \mathrm u(c) + \beta\,\mathrm v_\succ(w - c)\)</span>, the
@@ -10352,9 +10761,14 @@ maximization at the declared level, since a block defines its control once
 (the rule <code>defined-once</code>). The interior-only
 form, a stage file whose policy block states the control by the candidate
 and the implicit statement alone, remains admitted. The arrival value's
-statement and its derivative line are derived in §4.4. The declared set <code>γ : ℝ₊</code> admits
-<span class="arithmatex">\(\gamma = 1\)</span>, at which the body of <code>𝑢</code> is undefined; the prose annotation does not enforce a domain restriction. The
-interpretation used here requires <span class="arithmatex">\(\gamma&gt;0\)</span> and <span class="arithmatex">\(\gamma\neq1\)</span> (R6).
+statement and its derivative line are derived in §4.4. The declared set
+<code>γ : (1, inf)</code> excludes <span class="arithmatex">\(\gamma = 1\)</span>, at which the body of <code>𝑢</code> is undefined,
+and it states the restriction that the prose annotation describes: a
+calibration with <span class="arithmatex">\(\gamma = 1\)</span> or with <span class="arithmatex">\(\gamma = 0.5\)</span> is refused as a value
+outside the declared set. The declared set shows that <span class="arithmatex">\(1 - \gamma\)</span> is not
+zero, so the stage records no condition for the division in the body of
+<code>𝑢</code>. The interpretation used here requires <span class="arithmatex">\(\gamma&gt;0\)</span> and <span class="arithmatex">\(\gamma\neq1\)</span>
+(R6), and the declared set implies both.
 At zero resources, the stated strictly positive control and the nonnegative
 saving constraint cannot both hold. A value or policy at that state needs
 an explicit boundary interpretation; the income mixture includes an atom
@@ -10374,8 +10788,11 @@ unchanged (R1).</p>
 <p>The final line states one relation, which R5 rewrites at either perch.
 Read at the decision perch, <code>c = c[&gt;]</code> is <span class="arithmatex">\(c = \mathrm f(w - c)\)</span>, an
 implicit equation that a root finder can solve without the coordinate map.
+The package does not yet form this reading. It reads a block that writes
+the candidate line and the final line without the coordinate line, and the
+card then states no relation for the final line (R5, §5.3).
 Rewritten at the continuation perch, the second statement supplying the
-decision coordinate <code>w</code> read there (R5 (A3)), it is
+decision coordinate <code>w</code> read there (R5 (A3)), the final line is
 <span class="arithmatex">\(\pi(\varphi(a)) = \mathrm f(a)\)</span>, the relation the construction states,
 since that perch's map contains no unknown. The mark on <code>w[&gt;]</code> identifies
 that coordinate; the budget identity and the equations establish the
@@ -10422,7 +10839,11 @@ writes <code>D_{b}V[&lt;] = E_{y}(R * D_{w}V)</code>, which lowers in the same w
 <span class="arithmatex">\(\mathrm{dv}_\prec(b) = R \int \mathrm{dv}_\sim(y + R\,b)\,\nu_y(\mathrm dy)\)</span>:
 <code>D_{w}V</code> denotes <span class="arithmatex">\(\mathrm{dv}_\sim\)</span>, the derivative of the decision value
 in <span class="arithmatex">\(w\)</span>, and the factor <span class="arithmatex">\(R\)</span> is the derivative of the law <span class="arithmatex">\(w = y + R\,b\)</span> in
-<span class="arithmatex">\(b\)</span>. The line states the derivative of the arrival value in <span class="arithmatex">\(b\)</span>, and it is
+<span class="arithmatex">\(b\)</span>. The package does not yet record this reading: the rule that it prints
+for the line differentiates in <span class="arithmatex">\(w\)</span> the decision value composed with the
+law, <span class="arithmatex">\(\mathrm v_\sim(y + R\,b)\)</span>, which does not depend on <span class="arithmatex">\(w\)</span>, at a point
+<span class="arithmatex">\(w\)</span> that the rule leaves free (§1.5, §5.3). The line states the derivative
+of the arrival value in <span class="arithmatex">\(b\)</span>, and it is
 that derivative when differentiation under the integral sign is justified,
 an assumption the rules record and nothing checks (R8). The author writes
 the line because the law between the perches is not the identity and
@@ -10468,8 +10889,8 @@ is the block's output <span class="arithmatex">\(c\)</span>. Its clause writes <
 the continuation state supplied by the forward block. After the substitution
 of R5, under which <code>D_{a}V[&gt;]</code> denotes <span class="arithmatex">\(\mathrm{dv}_\succ(a)\)</span>, the
 derivative of <span class="arithmatex">\(\mathrm v_\succ\)</span> at the saving <span class="arithmatex">\(a = w - c\)</span>, the residual is
-<span class="arithmatex">\(r(w, c) = \mathrm{du}(c) - \beta\,\mathrm{dv}_\succ(w - c)\)</span>, and the
-clause denotes
+<span class="arithmatex">\(r(w, c) = \mathrm{du}(c) - \beta\,\mathrm{dv}_\succ(w - c)\)</span>. The package
+does not yet record this residual (R10, §5.3). The clause denotes
 $$
 r(w, c) \ge 0, \qquad w - c \ge 0, \qquad r(w, c)\,(w - c) = 0 .
 $$
@@ -10606,9 +11027,14 @@ nonincreasing, <span class="arithmatex">\(\mathrm{dv}_\succ(0)\)</span> being th
    corresponding result for the sequence problem, given a fixed and optimal
    sequence of future discrete choices; their Definition 1 names the
    property that roots coincide with solutions and proves nothing.
-   Sufficiency is a property of the stage's problem and is stated here, on
-   this page, and on no method: it holds or fails whichever method computes
-   the policy.</li>
+   Sufficiency is a property of the stage's problem: it holds or fails
+   whichever method computes the policy. For the three blocks above,
+   written in a stage file, it is stated here, on this page, and the stage
+   records no condition for it. Where the endogenous grid method is typed
+   on the policy builder, <code>stage.obligations()</code> lists the condition
+   <code>egm-eligibility</code> (R8), that the continuation value is concave and
+   continuously differentiable on <span class="arithmatex">\((0,\infty)\)</span> with a finite positive right
+   derivative at zero, and nothing checks it.</li>
 <li>The inequality statement without its clause agrees with <span class="arithmatex">\(\pi^\ast\)</span> on
    <span class="arithmatex">\(\varphi(\mathbb R_+) = [\bar w, \infty)\)</span>, the image of its grid, and
    states nothing below <span class="arithmatex">\(\bar w\)</span>, where <span class="arithmatex">\(\pi^\ast(w) = w\)</span> follows from
@@ -10687,14 +11113,22 @@ made on no record of the stage.</p>
 <p><strong>An explicit evaluation.</strong> The author may instead write
 <code>c = evaluate(w[&gt;], c[&gt;], w)</code>. With exact coordinate and candidate maps,
 and the functional interpretation of R10, this evaluates the same policy.
-With tabulated pairs it evaluates the chosen interpolating representation,
-which generally approximates that policy. Distinct knots alone neither
+With tabulated pairs the line evaluates the chosen interpolating representation,
+which generally approximates that policy. The package does not yet construct
+either reading: the rule of the line prints
+<code>UNRESOLVED[evaluate; mathematical definition]</code>, also with <code>!Linear</code> typed
+at the line (R8, §5.3). Distinct knots alone neither
 choose an interpolant nor establish the exact policy between them (R7).</p>
 <h3 id="47-a-discrete-choice-and-the-pension-model">4.7 A discrete choice and the pension model<a class="headerlink" href="#47-a-discrete-choice-and-the-pension-model" title="Permanent link">&para;</a></h3>
-<p>A discrete choice is written as a block whose control is valued in a finite
+<p>A discrete choice is written as a block whose one control is valued in a finite
 set of labels and whose output side is empty, with one nested block per
-label; the backward block selects among the branch values by the control
-and the policy block chooses the control by comparing them:</p>
+label, in the order in which the set lists the labels; nested blocks in
+another order are refused under <code>branch-labels</code>. The backward block selects
+among the branch values by the control. Each continuation value stands at
+one position of the tuple, and that position decides the branch to which the
+value belongs; a value at two positions or at none is refused under
+<code>branch-value-position</code>. The policy block chooses the control by maximizing
+over the same tuple in the same order (R12):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>@stage: ret_choice
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>δ : ℝ₊
@@ -10736,12 +11170,14 @@ the exact branch maximum. Forward, a state <span class="arithmatex">\(a\)</span>
 <p><strong>The pension model.</strong> The savings-and-retirement model of Druedahl and
 Jørgensen (2017), with a contribution cap, as solved by the inverse Euler
 method of Dobrescu and Shanker, combines the constructions above. Its
-worker stage has a decision state with two coordinates, liquid and pension
-assets, two controls, consumption and the pension deposit, and a
+worker stage has a decision state with three coordinates, liquid assets,
+pension assets and earnings, two controls, consumption and the pension
+deposit, and a
 continuation state with two coordinates, so both transitions are products
 (R3); its retirement choice is a branch of the form just shown; its
-earnings shock is realized after the decision, so the expectation stands in
-the backward block (R11); and its first-order conditions, one per
+earnings shock is realized between arrival and decision, so the expectation
+over it stands in the arrival block, <code>V[&lt;] = E_{w}(V)</code> in <code>dcsn_to_arvl</code>,
+as in §4.4 (R7); and its first-order conditions, one per
 asset, form one system in two unknowns, which R10 reads as a <code>solve</code>
 over both, whose residuals are subject
 to the three constraints the model imposes, the liquidity constraint on the
@@ -10840,9 +11276,16 @@ records their correspondence with the paper's equations.</p>
 <p>These are sufficient premises or explicit requirements for particular
 interpretations. Failure to verify one does not prove that the desired
 conclusion is false; it means that the stated justification is unavailable.</p>
-<p>Each assumption is recorded beside the operator that needs it. A file that
-satisfies R6 and is read by the rules is a well-formed statement of a
-problem, not a proof that the problem has a solution.</p>
+<p>The rules record each assumption beside the operator that needs it. The
+stage records some of them as conditions, which <code>stage.obligations()</code> lists,
+and §5.3 lists the ones that a rule says the stage records and that the
+package does not yet record. Calibration decides a recorded restriction that
+reads parameters alone and refuses the values at which it fails, so that
+<code>ρ = 1</code> is refused for the body of <code>𝑢</code> in §4.2. A recorded restriction that
+reads a state, a control or the argument of a function stays required and is
+not checked. A file that satisfies R6 and is read by the
+rules is a well-formed statement of a problem, not a proof that the problem
+has a solution.</p>
 <h3 id="52-what-the-rules-do-not-decide">5.2 What the rules do not decide<a class="headerlink" href="#52-what-the-rules-do-not-decide" title="Permanent link">&para;</a></h3>
 <p>The rules assign no numerical method. Quadrature for an expectation,
 interpolation for an evaluation, the grid on which a policy is tabulated,
@@ -10858,14 +11301,228 @@ is a matter for the simulation and not for the stage.</p>
   written, is intended to be admitted under the same context as the perch
   form (§1.4); which such spellings the grammar admits is a separate
   question from what they mean.</li>
-<li>A tuple law can specify a joint distribution. Separate marginal laws
-  still need dependence information; the rules cannot complete them by
-  silently assuming independence. Any unsupported conditional-law spelling
-  must be distinguished from the mathematical conditional kernel it intends.</li>
+<li>A tuple law can specify a joint distribution. Separate declarations on
+  one edge are read as the product of §2.1, which the elaboration records as
+  the condition <code>joint-distribution-factorization</code>. Any unsupported
+  conditional-law spelling must be distinguished from the mathematical
+  conditional kernel it intends.</li>
 <li>A specialized form for a certainty equivalent under recursive preferences
   remains outside these rules; explicit transformations are read in their
   written order (R11).</li>
 </ul>
+<p>The table below lists the rules that the language is meant to have and that
+the package does not yet check, or does not yet get right. Each row gives
+the sections of this appendix that the rule concerns and states the rule,
+then what the package does today, and the smallest text that shows it. The
+rows follow the order of those sections. A rule that another page states
+stands at the section of this appendix that it concerns, with a link to
+that page.</p>
+<p>A text is the text of a stage file, with one line of the file on each line
+of the cell. A line <code>@methods: t</code> and the lines after it, up to a last line
+that begins with <code>stage.</code>, are a methods file of the stage. A last line that
+begins with <code>stage.</code> is a call on the stage that the text gives, in which
+<code>methods</code> names that methods file. Where a
+cell holds two texts, an empty line stands between them. <code>stage.fields()</code>
+lists every field of a stage with its perch, its role and its declared set
+(<a href="../../API/stage/01-the-stage/">The stage</a> §5).
+<a href="../../API/stage/05-piece/">A piece</a> describes the kernel of an operation in
+its §2 and how a card is read in its §5.</p>
+<!-- The table between the two markers below is written by docs/_hooks/reference_pages.py from the tables `SEMANTIC_RULES` and `UNCHECKED_ELSEWHERE` of the package (`packages/bellman/bellman/semantic_rules.py`); change the tables and run the script, never the table by hand. -->
+<!-- reference-table -->
+
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>What the package does today</th>
+<th>Smallest text</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1.1, §2.2. The mark <code>[~]</code> names a field at the decision perch, and a perch mark on a name agrees with the perch word of the side that lists the name. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §3 and <a href="../13-perch-tagging-rules/">Perch tagging rules</a> §1.</td>
+<td>The package reads <code>x[~]</code> as the bare name <code>x</code> and checks nothing about the mark. A name marked <code>[~]</code> on an arrival side or on a continuation side is read as the field of that side: for the text, <code>stage.fields()</code> lists <code>x</code> as a state at the arrival perch.</td>
+<td><code>@stage: t</code><br><code>[id=arvl_to_dcsn, (x[~] : ℝ) : !arvl -&gt; (y : ℝ) : !dcsn] { y = x[~] }</code></td>
+</tr>
+<tr>
+<td>§1.1, R6. A backward line reads a decision state by its bare name, also where the stage places a state of the same name at another perch.</td>
+<td>The package refuses the line under <code>name-in-scope</code>, with the bare name and with the name marked <code>[~]</code>. The refusal tells the author to write <code>w</code> for the decision state, which is the spelling that it has just refused.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (w : ℝ₊, c : !ctrl @ ℝ₊) : !dcsn -&gt; (w[&gt;] : ℝ) : !cntn] { w[&gt;] = w - c }</code><br><code>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] { V = c + V[&gt;] + 0*w }</code></td>
+</tr>
+<tr>
+<td>§1.2, R4. A value line defines a function of the state at its perch, so outside an expectation it reads no shock that this state does not determine.</td>
+<td>A shock that the header of a backward block lists, and that is drawn on an earlier edge or on no edge, is read as known on the lines of the block. The line is read, the rule that the card prints for the value function keeps the shock free, here <code>𝑉(m) = 𝑉≻(𝑔≻(m)) + y</code>, and no condition records the reading.</td>
+<td><code>@stage: t</code><br><code>y : ℝ</code><br><code>y ~ N(0, 1)</code><br><code>[id=dcsn_to_cntn, (m : ℝ) : !dcsn -&gt; (a : ℝ) : !cntn] { a = m }</code><br><code>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, y) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] { V = V[&gt;] + y }</code></td>
+</tr>
+<tr>
+<td>§1.5, R10, §4.2, §4.4, §4.5. A derivative term on a line, <code>D_{a}V[&gt;]</code> or <code>D_{w}V</code>, denotes the derivative of the value function that it names in the named coordinate, read at the point of the line: at the continuation coordinate on a candidate line, and at the image of the law of motion on a line of an earlier perch.</td>
+<td>The rule that the package records for such a line applies the derivative to a map whose body does not read the variable that the map binds. On a line of an earlier perch the body is the value composed with the law of motion, and the derivative is read at a point that the rule leaves free: the rule of the text applies the derivative to the map <code>(a, unit) ↦ 𝑉≻(𝑔≻(m, 𝑐(m)))</code> at the point <code>(a≻, ())</code>. On a candidate line the body reads the line's own coordinate of the same name, so that the rule prints as the intended derivative.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢(c : ℝ₊₊) := c^(-2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { 𝑑𝑢(c) = D_{a}V[&gt;] ⟂ m - c &gt;= 0 }</code></td>
+</tr>
+<tr>
+<td>§2.1. The several sets in the type of one name have a number in common, also where one of them is a reserved set, a named set, a list of integers, a union or a difference, and where an endpoint of an interval is a formula. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.2, <a href="../../01-stage/">Stages</a> §2 and <a href="../../reference/types/">Types</a> §2.6.</td>
+<td>The package compares the intervals of the type alone, by those of their endpoints that are numbers or ratios of two integers. A set of another form and an endpoint that is a formula enter no comparison. The package reads both texts, and <code>calibrate</code> then refuses every value given for <code>β</code>.</td>
+<td><code>@stage: t</code><br><code>β : ℝ₊₊ @ (-2,-1)</code><br><br><code>@stage: t</code><br><code>β : (0,1) @ (2*1, 3)</code></td>
+</tr>
+<tr>
+<td>§2.1. The value bound to a parameter lies in its declared set, also where that set is a set of extended reals, <code>ℝ̄</code>, <code>ℝ_{-∞}</code>, <code>ℝ_{+∞}</code> or <code>ℝ_{±∞}</code>. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.2 and <a href="../../API/stage/09-binding-verbs/">The binding verbs</a> §2.</td>
+<td><code>calibrate</code> decides no membership in a set of extended reals. It binds any value there, including a string, the floating-point value NaN (not a number), and the infinity that the set excludes, and <code>stage.obligations()</code> lists the membership as the condition <code>calibration-domain-membership</code>, which stays required. In an interval whose bound is an expectation over a shock, such as <code>(0, E_{y}(y))</code>, it binds any number in the same way.</td>
+<td><code>@stage: t</code><br><code>x : ℝ_{-∞}</code><br><code>stage.calibrate({"x": float("inf")})</code></td>
+</tr>
+<tr>
+<td>§2.1, §2.5, R7. In <code>D_{c}(𝑢)</code> the subscript names a formal argument of the function that is differentiated. See also <a href="../12-equation-parsing-rules/">Equation parsing rules</a> §5.</td>
+<td>A subscript that names no formal argument of the function is read without a refusal: the text is read, although <code>𝑢</code> has the one argument <code>c</code> and the file declares no <code>x</code>.</td>
+<td><code>@stage: t</code><br><code>𝑢(c : ℝ₊₊) := c^2</code><br><code>𝑑𝑢 := D_{x}(𝑢)</code></td>
+</tr>
+<tr>
+<td>§2.1. The law of a shock gives probability only to values in the declared set of the shock, so a normal law of positive variance is not declared on a strictly positive set. See also <a href="../12-equation-parsing-rules/">Equation parsing rules</a> §4.</td>
+<td>The package reads the stage and records the requirement as the condition <code>law-support</code>, which <code>stage.obligations()</code> lists as required. Calibration decides the condition for a truncated lognormal law, and leaves it required for a normal, a lognormal and a uniform law.</td>
+<td><code>@stage: t</code><br><code>y : ℝ₊₊</code><br><code>y ~ N(0, 1)</code><br><code>[id=arvl_to_dcsn, (k : ℝ, y) : !arvl -&gt; (m : ℝ) : !dcsn] { m = k + y }</code></td>
+</tr>
+<tr>
+<td>§2.2, §2.4. Where one block writes a field and another reads it, the set written lies in the set read. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.3, <a href="../../01-stage/">Stages</a> §2 and <a href="../13-perch-tagging-rules/">Perch tagging rules</a> §2.</td>
+<td>The package refuses under <code>set-mismatch</code> only an inclusion that it decides to fail. Where it cannot decide the inclusion, as with an endpoint that names a parameter, it reads the stage, records no condition, leaves the field with no declared set, and binds a calibration at which the inclusion fails, as the first text shows at <code>ā = 5</code>. Where the block that writes a control also holds a line marked <code>!doc</code> with the control on its left side, it compares no sets for the control: the second text is read, and without its <code>!doc</code> line it is refused under <code>set-mismatch</code>.</td>
+<td><code>@stage: t</code><br><code>ā : ℝ₊₊</code><br><code>[id=arvl_to_dcsn, (x : ℝ) : !arvl -&gt; (y : [0, ā]) : !dcsn] { y = x }</code><br><code>[id=dcsn_to_cntn, (y : [0, 1]) : !dcsn -&gt; (w : ℝ) : !cntn] { w = y }</code><br><code>stage.calibrate({"ā": 5.0})</code><br><br><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : ℝ₊₊ @ !ctrl) : !dcsn -&gt; (a : ℝ) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊ @ !ctrl) : !dcsn] {</code><br><code>c = m/2 :: [id=half, !doc]</code><br><code>c = argmax_{cp}(cp + V[&gt;])</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>§2.3, R1, R10. A clause after <code>⟂</code> and the declaration of a multiplier are written in a policy block and in no other block.</td>
+<td>The package reads both in a block of any kind. A clause after a line of a value block or of a forward block is read and enters no rule and no condition of the builder. A multiplier declared there is recorded as a multiplier at the continuation perch, no observable set is formed, and a value line that reads it keeps it free in its rule: for the text the card prints <code>𝑉(m) = 𝑐(m) + 𝑉≻(𝑔≻(m, 𝑐(m))) + ν≻</code>.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {</code><br><code>ν[&gt;] : ℝ₊ ⟂ a &gt;= 0</code><br><code>V = c + V[&gt;] + ν[&gt;] ⟂ m - c &gt;= 0</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>§2.4. The declared set of a name is the intersection of the sets written for it. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.2 and <a href="../13-perch-tagging-rules/">Perch tagging rules</a> §2.</td>
+<td>The package computes the intersection of sets that are written identically, of the sets <code>ℝ</code>, <code>ℝ₊</code> and <code>ℝ₊₊</code>, and of intervals whose endpoints are numbers or infinity. For other sets, such as a named set beside the set that defines it, or an interval with an endpoint that names a parameter, it records the field with no set and refuses nothing, and the stage loses the condition <code>range-compatibility</code> of the line that writes the field.</td>
+<td><code>@stage: t</code><br><code>Xp := ℝ₊</code><br><code>[id=arvl_to_dcsn, (x : ℝ) : !arvl -&gt; (y : Xp) : !dcsn] { y = x }</code><br><code>[id=dcsn_to_cntn, (y : ℝ₊) : !dcsn -&gt; (w : ℝ) : !cntn] { w = y }</code></td>
+</tr>
+<tr>
+<td>§2.4. The sets written for one field at its several places have a value in common. See also <a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.3, <a href="../../01-stage/">Stages</a> §2 and <a href="../13-perch-tagging-rules/">Perch tagging rules</a> §2.</td>
+<td>The package compares only the set of a block that writes the field with the set of a block that reads it. A set declared on a line of its own beside the set of a header, and the sets of two blocks that read the field, are not compared: the stage is read, and the field is recorded with no set.</td>
+<td><code>@stage: t</code><br><code>b : [-3, -1]</code><br><code>[id=arvl_to_dcsn, (b : ℝ₊) : !arvl -&gt; (w : ℝ) : !dcsn] { w = b }</code></td>
+</tr>
+<tr>
+<td>§2.4, R1, R6. Every field, a shock included, has a declared set. See also <a href="../../01-stage/">Stages</a> §2 and <a href="../13-perch-tagging-rules/">Perch tagging rules</a> §2.</td>
+<td>A field that the block headers list with no set at any place is read: <code>stage.fields()</code> prints it with no set, the signature of its builder prints <code>UNRESOLVED[k≺; argument set]</code>, and <code>calibrate</code> admits the stage. A shock with a law and no set is read as well. Only a name that the file declares nowhere is refused, under <code>name-in-scope</code>.</td>
+<td><code>@stage: t</code><br><code>[id=arvl_to_dcsn, (k) : !arvl -&gt; (m) : !dcsn] { m = k }</code></td>
+</tr>
+<tr>
+<td>§2.4. In a declaration outside the blocks, a name inside a nested tuple is a parameter when no block header lists it, as a name of a flat tuple is. See also <a href="../../01-stage/">Stages</a> §2.</td>
+<td>The package reads the declaration, and a line may read the nested names, but <code>stage.par</code>, the list of the parameters, omits them. <code>calibrate</code> requires no value for them and judges no value against their sets.</td>
+<td><code>@stage: t</code><br><code>((p, q) : ℝ₊ × ℝ₊, r : ℝ)</code><br><code>stage.calibrate({"r": 1.0, "p": -1.0})</code></td>
+</tr>
+<tr>
+<td>R1. No statement of a block redefines an input of that block.</td>
+<td>The package compares the lines of a block with one another only. A line that writes an input, a state, a control or a value, is read, the lines that follow read what the line writes in place of the input, and <code>calibrate</code> admits the stage. For the text the kernel of the operation is <code>𝐺(V≻, m, c) = c + 0</code>, in which the continuation value is unused.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {</code><br><code>V[&gt;] = 0</code><br><code>V = c + V[&gt;]</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>R3, §4.7. Within an alternative of a branching block, a law of motion reads no continuation state of another alternative. See also <a href="../13-perch-tagging-rules/">Perch tagging rules</a> §5.</td>
+<td>The package reads such a law and puts the law of motion of the other alternative for the state that the line names: for the text the law of motion is <code>𝑔(a_d, d) = (a_d + a_d, a_d)</code>.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (a_d : ℝ₊, d : !ctrl @ {work, retire}) : !dcsn -&gt; ()] {</code><br><code>[label=work, () -&gt; (a_w : ℝ₊) : !cntn] { a_w = a_d + a_r }</code><br><code>[label=retire, () -&gt; (a_r : ℝ₊) : !cntn] { a_r = a_d }</code><br><code>}</code><br><code>[id=cntn_to_dcsn, (V_w[&gt;] : ℝ @ !vlu, V_r[&gt;] : ℝ @ !vlu, d) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] { V = (V_w[&gt;], V_r[&gt;])[d] }</code><br><code>[id=policy, (V_w[&gt;], V_r[&gt;]) : !cntn -&gt; (d : {work, retire} @ !ctrl) : !dcsn] { d = argmax_{d}(V_w[&gt;], V_r[&gt;]) }</code></td>
+</tr>
+<tr>
+<td>R4, R10. The two sides of an implicit equation are one relation: a term on either side that reads a field of a later perch is composed with the law of motion and, across an edge that draws a shock, stands inside an expectation over that shock.</td>
+<td>The package checks the right side and the clause alone. A term on the left side that combines a field of a later perch, or its derivative, with other quantities, as <code>1*D_{a}V[&gt;]</code> does in the text, is read without the expectation, forms no Pullback, and stands in the rule uncomposed with the law of motion. With the sides exchanged, the line of the text is refused under <code>shock-observed</code>.</td>
+<td><code>@stage: t</code><br><code>η : ℝ₊₊</code><br><code>η ~ LogNormal(0, 1)</code><br><code>𝑑𝑢(c : ℝ₊₊) := c^(-2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊, η) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = (m - c)*η }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { 1*D_{a}V[&gt;] = 𝑑𝑢(c) }</code></td>
+</tr>
+<tr>
+<td>R4. A refusal for a dependence on a shock that the construction has not shown to cancel reports that measurability has not been established, and does not assert that the value is unknown.</td>
+<td>The message of <code>shock-observed</code> says "so the value of V is not known at the arvl perch" wherever a forward block between the two perches lists a shock, also where its law of motion does not read the shock or the shock cancels in it, as in the text.</td>
+<td><code>@stage: t</code><br><code>y : ℝ</code><br><code>y ~ N(0, 1)</code><br><code>[id=arvl_to_dcsn, (k : ℝ, y) : !arvl -&gt; (m : ℝ) : !dcsn] { m = k + y - y }</code><br><code>[id=dcsn_to_arvl, (V : ℝ @ !vlu) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] { V[&lt;] = V }</code></td>
+</tr>
+<tr>
+<td>R5, R11. The rule of an output statement is its expression with the aliases of its block expanded, whether or not an intermediate line is marked <code>!node</code>.</td>
+<td>Where a block writes an alias before the output statement, the card of the builder prints the line of the alias as the rule of the output, while the function that the operation computes is the expanded expression. For the text the card prints <code>𝑉(m) = 𝑐(m)</code>, and the kernel of the operation is <code>𝐺(V≻, m, c) = c + V≻</code>.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {</code><br><code>W = c</code><br><code>V = W + V[&gt;]</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>R5. Where a substituted alias depends on the output being determined, the statement gives the implicit relation of R10.</td>
+<td>A line whose left side is the bare control and whose right side reads a field of a later perch through an alias is refused under <code>not-constructed</code>. The same reading written in the line itself, <code>c = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;])</code>, is read, and so is the alias inside <code>solve_{c}(…)</code>.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {</code><br><code>z = D_{a}V[&gt;]</code><br><code>c = 𝑑𝑢𝑖𝑛𝑣(z)</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>R5, §4.3. A statement across two perches states one relation, which is rewritten at the perch whose map contains no unknown. Read at the decision perch, the final line <code>c = c[&gt;]</code> of a policy block is an implicit equation in the control, which needs no coordinate line.</td>
+<td>The package rewrites only the identification <code>c = c[&gt;]</code> of a block that writes the coordinate line. A block that writes the candidate line and the final line without the coordinate line is read, as the text is: the card prints the type of <code>𝑐</code> in place of a rule for the operation of the final line, the record of that operation is <code>UNRESOLVED[policy.2:Pullback; solution coordinate relation]</code>, and no refusal, condition or diagnostic reports it. With the coordinate line <code>m[&gt;] = a + c[&gt;]</code> and another right side on the final line, <code>c = 1*c[&gt;]</code>, the card prints <code>𝑐(m) = 1 · UNRESOLVED[c≻; free mathematical reference]</code>.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {</code><br><code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;])</code><br><code>c = c[&gt;]</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>R7. The differentiability that <code>D_{c}(𝑢)</code> assumes is recorded as a condition of the stage, as the bijection that <code>Inv</code> assumes is.</td>
+<td><code>stage.obligations()</code> lists <code>inverse-function-domain</code> for <code>Inv(𝑑𝑢)</code>. For <code>D_{c}(𝑢)</code> it lists only <code>binding-domain</code>, which requires that the bound variable have a declared domain, and no condition of differentiability.</td>
+<td><code>@stage: t</code><br><code>𝑢(c : ℝ₊₊) := c^(-1)</code><br><code>𝑑𝑢 := D_{c}(𝑢)</code><br><code>𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)</code><br><code>[id=arvl_to_dcsn, (k : ℝ₊₊) : !arvl -&gt; (m : ℝ₊₊) : !dcsn] { m = 𝑑𝑢𝑖𝑛𝑣(𝑑𝑢(k)) }</code></td>
+</tr>
+<tr>
+<td>R7. An order of expectations that needs a conditional law the file does not declare, a posterior among them, is refused under <code>conditional-not-declared</code>.</td>
+<td>In a backward block the package refuses such an order under that rule. In the objective of a policy block it refuses the order first under <code>shock-observed</code>, with a message that asks for an expectation that the line already writes, "Write the expectation over it, <code>E_{ν}(…)</code>".</td>
+<td><code>@stage: t</code><br><code>ν : ℝ</code><br><code>ν ~ N(0, 1)</code><br><code>Ψ : ℝ₊₊</code><br><code>Ψ ~ LogNormal(ν, 1)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊, ν, Ψ) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = (m - c)*Ψ }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = argmax_{c}(c + E_{Ψ}(E_{ν}(V[&gt;]))) }</code></td>
+</tr>
+<tr>
+<td>R7. The set of a binder, <code>argmax_{var : set}</code>, is a named set or a correspondence applied to its arguments. See also <a href="../../10-constraints/">Constraints</a> §1.</td>
+<td>The package reads <code>set</code> as an expression and checks only that its names are declared. A parameter, a state, a number, a pair such as <code>(0, m)</code> or the name of a correspondence without arguments is read, and the policy card prints the maximization over it, as in <code>argmax_{cp ∈ ρ}</code>.</td>
+<td><code>@stage: t</code><br><code>ρ : ℝ₊₊</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = argmax_{cp : ρ}(cp + V[&gt;]) }</code></td>
+</tr>
+<tr>
+<td>R7. The body of a feasibility correspondence may be a finite set of integers, written as an integer range <code>{0, …, J}</code> or as a list <code>{0, 1}</code>. See also <a href="../../10-constraints/">Constraints</a> §1.</td>
+<td>Written alone as the body, either is refused under <code>not-constructed</code>. As a factor of a product, <code>{0, …, 3} × ℝ</code>, either is read.</td>
+<td><code>@stage: t</code><br><code>Γ(x : ℝ₊₊) := {0, …, 3}</code></td>
+</tr>
+<tr>
+<td>R7. The policy card prints the set that a binder names in the statement of the maximization, also where the binder names a named set. See also <a href="../../10-constraints/">Constraints</a> §1.</td>
+<td>For a binder over a named set the card prints <code>𝑐(m) ∈ Xm</code> beside the type of the policy, and <code>UNRESOLVED[Xm; free mathematical reference]</code> in place of the set in the statement.</td>
+<td><code>@stage: t</code><br><code>Xm := ℝ₊₊</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = argmax_{cp : Xm}(cp + V[&gt;]) }</code></td>
+</tr>
+<tr>
+<td>R7. <code>solve_{c}(r_1, …, r_k)</code> denotes the relation of the feasible unknowns that satisfy every residual equation.</td>
+<td>For one unknown with two or more residuals the line is read without a refusal, the rule of its operation holds no residual, and the output of the operation is recorded as <code>UNRESOLVED[policy.1:Aggregation; solve relation]</code>. With the one residual <code>c - 1/2</code> the card prints <code>r₁ = c − 1/2</code> and <code>c = solve_{c}(r₁)</code>.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = solve_{c}(c - 1/2, c - 1/3) }</code></td>
+</tr>
+<tr>
+<td>R7. No method is attached to a statement marked <code>!doc</code>, which is a declaration and forms no operation. See also <a href="../../10-constraints/">Constraints</a> §1.</td>
+<td>The id of a <code>!doc</code> line is a place of the kind <code>statement</code>. <code>methodize</code> reads a representation such as <code>!Linear</code> typed there, holds the entry in <code>stage.methods</code>, and the policy card prints it under <code>Method</code>.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {</code><br><code>c = argmax_{c}(c + V[&gt;]) :: [id=optimality, !doc]</code><br><code>c = m/2</code><br><code>}</code><br><code>@methods: t</code><br><code>policy.optimality.method : !Linear</code><br><code>stage.methodize(methods)</code></td>
+</tr>
+<tr>
+<td>R8, §4.6. An authored <code>c = evaluate(w[&gt;], c[&gt;], w)</code> with exact candidate and coordinate maps denotes evaluation of the relation that the candidate line and the coordinate line determine. With tabulated pairs it evaluates the interpolating representation that the methods file types at the line.</td>
+<td>The package holds no definition of <code>evaluate</code>. The line is read, the rule of its operation prints <code>UNRESOLVED[evaluate; mathematical definition]</code>, and <code>stage.obligations()</code> lists the condition <code>external-callable-signature-and-provider</code> for <code>evaluate</code>. The printed rule and the condition are the same where the methods file types a representation such as <code>!Linear</code> at <code>policy.evaluate</code>.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {</code><br><code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;])</code><br><code>m[&gt;] = a + c[&gt;]</code><br><code>c = evaluate(m[&gt;], c[&gt;], m)</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>R8. Differentiability of a value at the point where a line reads its derivative is a condition that the stage records, the value being read as a locally Lipschitz function whose derivative is set-valued at a kink.</td>
+<td>The package defines the derivative as the limit of the difference quotients, a single number, and a line that reads <code>D_{a}V[&gt;]</code> records no condition. <code>stage.obligations()</code> lists differentiability only under <code>marginal-reading</code>, for a derivative line, and under <code>egm-eligibility</code>, for a policy builder under <code>!egm</code>.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {</code><br><code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;])</code><br><code>m[&gt;] = a + c[&gt;]</code><br><code>c = c[&gt;]</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>R8. The lines of a solution method compute the policy of the declared maximization only under a condition, which the stage records under the method table's name for it.</td>
+<td>In the method table only <code>!egm</code> names such a condition, <code>egm-eligibility</code>. Under <code>!time_iteration</code> or <code>!explicit</code> the lines of the method stand in place of the maximization in <code>stage.builder</code>, and <code>stage.obligations()</code> lists no condition under which they compute its policy.</td>
+<td><code>@stage: t</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { c = argmax_{c}(c + V[&gt;]) }</code><br><code>@methods: t</code><br><code>[id=policy, method : !explicit] { c = m/2 }</code><br><code>stage.methodize(methods)</code></td>
+</tr>
+<tr>
+<td>R10. A system of candidate statements is reached by one <code>solve</code> occurrence at its first statement, so that a method addresses the system as one place.</td>
+<td>The package records the occurrence on some systems only. Where the first statement is <code>𝑑𝑢(c) = D_{a}V[&gt;] ⟂ m - c &gt;= 0</code>, as in the text, or <code>2*D_{a}V[&gt;] = 𝑑𝑢(c) ⟂ m - c &gt;= 0</code>, the block has no place <code>policy.solve</code>, and an entry that types a root finder there is refused under <code>name-in-scope</code>. Where the first statement is <code>𝑑𝑢(c) - D_{a}V[&gt;] = 0 ⟂ m - c &gt;= 0</code>, the block has the place.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢(c : ℝ₊₊) := c^(-2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { 𝑑𝑢(c) = D_{a}V[&gt;] ⟂ m - c &gt;= 0 }</code><br><code>@methods: t</code><br><code>policy.solve.method : !root_find</code><br><code>stage.methodize(methods)</code></td>
+</tr>
+<tr>
+<td>R10. The bound of a clause is written with <code>&gt;=</code> or <code>&lt;=</code>.</td>
+<td>A clause with one bound and a strict sign is read as the clause with the weak sign: the card prints the sign as written, and the Kuhn–Tucker conditions that the package forms from the clause are those of the weak sign. A strict sign in a clause with two bounds is refused under <code>readable-form</code>.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢(c : ℝ₊₊) := c^(-2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] { 𝑑𝑢(c) = D_{a}V[&gt;] ⟂ m - c &gt; 0 }</code></td>
+</tr>
+<tr>
+<td>R12. An authored <code>upper_env</code> denotes the upper envelope of R12: at each decision state, the control of a candidate that attains the greatest candidate value.</td>
+<td>The package holds no definition of <code>upper_env</code> and checks none of its arguments. The line is read with no value candidate among its arguments, as in the text, and with one argument or four, and a method such as <code>!FUES</code> is typed at <code>policy.upper_env</code>. The rule of the line prints <code>UNRESOLVED[upper_env; mathematical definition]</code>, and <code>stage.obligations()</code> lists <code>external-callable-signature-and-provider</code> for <code>upper_env</code>.</td>
+<td><code>@stage: t</code><br><code>𝑑𝑢𝑖𝑛𝑣(x : ℝ₊₊) := x^(-1/2)</code><br><code>[id=dcsn_to_cntn, (m : ℝ₊, c : !ctrl @ ℝ₊₊) : !dcsn -&gt; (a : ℝ₊) : !cntn] { a = m - c }</code><br><code>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {</code><br><code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;])</code><br><code>m[&gt;] = a + c[&gt;]</code><br><code>c = upper_env(m[&gt;], c[&gt;])</code><br><code>}</code></td>
+</tr>
+<tr>
+<td>§5.2. A setting bound before a calibration lies in its declared set at the values that the calibration binds, a calibration that replaces an earlier one included. See also <a href="../../04-methodization/">Methodization</a> §7 and <a href="../../API/stage/09-binding-verbs/">The binding verbs</a> §3.</td>
+<td><code>configure</code> admits a value whose set names a parameter while no calibration is bound, and <code>calibrate</code> judges no setting bound before it. The value stays bound outside its set until a later <code>configure</code> refuses it under <code>setting-outside-set</code>. In the order <code>calibrate</code>, <code>methodize</code>, <code>configure</code>, the call of <code>configure</code> refuses the same value.</td>
+<td><code>@stage: t</code><br><code>R : ℝ₊₊</code><br><code>[id=arvl_to_dcsn, (k : ℝ) : !arvl -&gt; (m : ℝ) : !dcsn] { m = R*k }</code><br><code>@methods: t</code><br><code>tol_s : (0, R)</code><br><code>arvl_to_dcsn.method : !deterministic</code><br><code>stage.methodize(methods).configure({"tol_s": 5.0}).calibrate({"R": 1.04})</code></td>
+</tr>
+<tr>
+<td>§5.2. A bound of a grid lies inside the declared set of its coordinate, read at the calibrated value of each parameter that the set names. See also <a href="../../04-methodization/">Methodization</a> §3.2 and <a href="../../../wiki/settings/">Settings</a> §2.</td>
+<td><code>configure</code> decides the membership from the sets that the stage defines, without the calibration. On a coordinate whose set names a parameter it refuses every bound under <code>grid-bounds</code>, as not decidably inside the declared set, also a bound that lies inside the set at the calibrated value, as in the text.</td>
+<td><code>@stage: t</code><br><code>Xk := [k_lo, inf)</code><br><code>k_lo : ℝ</code><br><code>[id=arvl_to_dcsn, (k : Xk) : !arvl -&gt; (m : ℝ) : !dcsn] { m = k }</code><br><code>[id=dcsn_to_arvl, (V : ℝ @ !vlu) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] { V[&lt;] = V }</code><br><code>@methods: t</code><br><code>n_k : ℕ</code><br><code>k_min : ℝ</code><br><code>k_max : ℝ</code><br><code>dcsn_to_arvl.evaluate.method : !Linear</code><br><code>dcsn_to_arvl.evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))</code><br><code>stage.calibrate({"k_lo": 0.0}).methodize(methods).configure({"n_k": 5, "k_min": 1.0, "k_max": 2.0})</code></td>
+</tr>
+</tbody>
+</table>
+<!-- /reference-table -->
+
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Aliprantis, C. D., and Border, K. C. (2006). <em>Infinite Dimensional

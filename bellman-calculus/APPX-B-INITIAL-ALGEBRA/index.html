@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8059,7 +8119,7 @@
 <p>We use the many-sorted algebra account of Goguen, Thatcher, Wagner, and Wright (1977, hereafter ADJ), §2. The results concern a specified mathematical signature and interpretation; they do not prescribe a stored software representation.</p>
 <p><a id="b1-signature-and-term-algebra"></a></p>
 <h2 id="1-signature-and-term-algebra">1. Signature and term algebra<a class="headerlink" href="#1-signature-and-term-algebra" title="Permanent link">&para;</a></h2>
-<p>A many-sorted <strong>signature</strong> <span class="arithmatex">\(\Sigma = \langle S, \Omega \rangle\)</span> declares a set <span class="arithmatex">\(S\)</span> of sorts and a family <span class="arithmatex">\(\Omega\)</span> of operator symbols, each with an arity (a string of input sorts) and an output sort, and nothing else: no carriers, no functions (ADJ 1977, §2; <a href="../../wiki/signature/">signature</a>). A <strong><span class="arithmatex">\(\Sigma\)</span>-algebra</strong> <span class="arithmatex">\(A\)</span> supplies a carrier set <span class="arithmatex">\(A_s\)</span> for each sort and an actual operation per symbol of matching rank. A <strong>homomorphism</strong> <span class="arithmatex">\(h : A \to A'\)</span> is a sort-indexed family of maps commuting with every operation.</p>
+<p>A many-sorted <strong>signature</strong> <span class="arithmatex">\(\Sigma = \langle S, \Omega \rangle\)</span> declares a set <span class="arithmatex">\(S\)</span> of sorts and a family <span class="arithmatex">\(\Omega\)</span> of operator symbols, each with an arity (a string of input sorts) and an output sort, and nothing else: no carriers, no functions (ADJ 1977, §2; <a href="../../wiki/signature/">signature</a>). A <strong><span class="arithmatex">\(\Sigma\)</span>-algebra</strong> <span class="arithmatex">\(A\)</span> supplies a carrier set <span class="arithmatex">\(A_s\)</span> for each sort and an actual operation per symbol of matching rank. The rank of a symbol is its arity with its output sort, in the usage of Goguen and Meseguer (1992, Definition 2.1) that <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3, D1, adopts. A <strong>homomorphism</strong> <span class="arithmatex">\(h : A \to A'\)</span> is a sort-indexed family of maps commuting with every operation.</p>
 <p>The <strong>coarse stage signature</strong> contains perch-indexed value-function sorts <span class="arithmatex">\(\mathsf V_p\)</span>, distribution sorts <span class="arithmatex">\(\mathsf M_p\)</span>, and typed backward and forward builder symbols. The model supplies state spaces, feasible actions, shock laws, transitions and local payoff functions. These data determine the operations under the conditions in <a href="../03-Stages%20and%20perches/">Stages and perches</a>. A diagram records a finite expression using those operations; the signature also specifies their ranks and cannot be inferred from unlabeled arrows alone.</p>
 <p>The ground terms over <span class="arithmatex">\(\Sigma\)</span> form the <strong>term algebra</strong> <span class="arithmatex">\(T_\Sigma\)</span>, whose operations construct terms. Ground terms contain no free inputs. For a sort-indexed family of free input names <span class="arithmatex">\(X\)</span>, use the <strong>free algebra</strong> <span class="arithmatex">\(T_\Sigma(X)\)</span>. An environment <span class="arithmatex">\(e_s:X_s\to A_s\)</span> assigns a value to every free input of sort <span class="arithmatex">\(s\)</span>. The environment and the target operations together determine evaluation. A finite acyclic term graph can represent such an expression with shared subterms (§6); this is mathematical notation, not a claim that the parser's abstract syntax tree is retained.</p>
 <p><a id="b2-initiality"></a></p>
@@ -8093,7 +8153,7 @@
 <p>The valuation <span class="arithmatex">\(\Upsilon\)</span> is the unique interpretation homomorphism after these target choices and any free-input environment have been supplied. A term is syntax; its image is its mathematical meaning. Additional equations may restrict admissible targets, but an equation imposed on a quotient syntax also requires its interpretation to satisfy that equation.</p>
 <p><a id="b4-refinement-derived-operations-and-the-factorisation-theorem"></a></p>
 <h2 id="4-exact-refinement">4. Exact refinement<a class="headerlink" href="#4-exact-refinement" title="Permanent link">&para;</a></h2>
-<p>Let <span class="arithmatex">\(\Sigma\)</span> be the coarse signature with optimizing builder <span class="arithmatex">\(\mathbb T_\succ\)</span> and arrival builder <span class="arithmatex">\(\mathbb T_\prec\)</span>, and <span class="arithmatex">\(\Sigma'\)</span> a finer signature containing the operations used to define them. A <strong>derived signature morphism</strong> <span class="arithmatex">\(\delta:\Sigma\to\Sigma'\)</span> assigns each coarse symbol a fine term of the same input and output ranks. The sorts are held fixed here, and the term's formal inputs are explicit. Composition and pairing below abbreviate substitution into ordinary many-sorted terms. For the stage builders, the assignment is</p>
+<p>Let <span class="arithmatex">\(\Sigma\)</span> be the coarse signature with optimizing builder <span class="arithmatex">\(\mathbb T_\succ\)</span> and arrival builder <span class="arithmatex">\(\mathbb T_\prec\)</span>, and <span class="arithmatex">\(\Sigma'\)</span> a finer signature containing the operations used to define them. A <strong>derived signature morphism</strong> <span class="arithmatex">\(\delta:\Sigma\to\Sigma'\)</span> assigns each coarse symbol a fine term of the same rank. The sorts are held fixed here, and the term's formal inputs are explicit. Composition and pairing below abbreviate substitution into ordinary many-sorted terms. For the stage builders, the assignment is</p>
 <div class="arithmatex">\[
 \delta(\mathbb T_\succ)=\operatorname{evaluate}\circ\langle B_\succ,\operatorname{argmax}\circ B_\succ\rangle,
 \qquad
@@ -8133,14 +8193,14 @@ h_{A'|_\delta} \;=\; \bigl(h_{A'}\bigr)\big|_\delta \circ\, \mathrm{tr}_\delta .
 <p><a id="b8-the-adequacy-obligation"></a></p>
 <h2 id="8-the-adequacy-obligation">8. The adequacy obligation<a class="headerlink" href="#8-the-adequacy-obligation" title="Permanent link">&para;</a></h2>
 <p>Initiality determines the meaning of composite terms once primitive meanings and free inputs have been fixed. It does not certify a backend. For an exact implementation, verify agreement at the chosen operation boundaries and then use the factorization result. For an approximate method, identify the reference numerical operation, its relation to the mathematical operator, and whether the package computes that reference.</p>
-<p>Convergence requires method-specific approximation and stability results in declared spaces. Optimization may also require selection assumptions; value convergence alone need not imply policy convergence. The defining identities of <a href="../03-Stages%20and%20perches/">Stages and perches</a> provide mathematical checks, but a finite collection of numerical tests is not a proof of those identities on their full domains. No general adequacy or convergence theorem follows from the architecture.</p>
+<p>Convergence requires method-specific approximation and stability results in chosen spaces. Optimization may also require selection assumptions; value convergence alone need not imply policy convergence. The defining identities of <a href="../03-Stages%20and%20perches/">Stages and perches</a> provide mathematical checks, but a finite collection of numerical tests is not a proof of those identities on their full domains. No general adequacy or convergence theorem follows from the architecture.</p>
 <h2 id="9-related-documents">9. Related documents<a class="headerlink" href="#9-related-documents" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Pedagogical companion:</strong> <a href="../04-fields%2C%20functions%20and%20types/">Fields, functions and types</a> §§4–5 (the same claims in prose, on the buffer-stock example)</li>
 <li><strong>The elaboration:</strong> <a href="../APPX-A-SEMANTICS/">Appendix A — Semantics</a> (syntax, interpretation and numerical methods)</li>
 <li><strong>Wiki:</strong> <a href="../../wiki/initial_algebra/">initial algebra</a>, <a href="../../wiki/signature/">signature</a>, <a href="../../wiki/lawvere_theory/">Lawvere theory</a>, <a href="../../wiki/semgraph/">semgraph</a>, <a href="../../wiki/upsilon/">Υ</a></li>
 </ul>
-<p><strong>References.</strong> Goguen, J. A., Thatcher, J. W., Wagner, E. G., and Wright, J. B. (1977). Initial algebra semantics and continuous algebras. <em>Journal of the ACM</em> 24(1), 68–95. Burris, S. and Sankappanavar, H. P. (1981). <em>A Course in Universal Algebra</em>. Springer. Lawvere, F. W. (1963). Functorial semantics of algebraic theories. <em>PNAS</em> 50(5), 869–872. Sannella, D. and Tarlecki, A. (2012). <em>Foundations of Algebraic Specification and Formal Software Development</em>. Springer. Plotkin, G. and Pretnar, M. (2013). Handling algebraic effects. <em>Logical Methods in Computer Science</em> 9(4). Barendregt, H. P. et al. (1987). Term graph rewriting. <em>PARLE</em>, LNCS 259. Plump, D. (1999). Term graph rewriting. In <em>Handbook of Graph Grammars and Computing by Graph Transformation</em>, Vol. 2. Drewes, F., Hoffmann, B., and Plump, D. (2002). Hierarchical graph transformation. <em>JCSS</em> 64(2), 249–283. Oliveira, B. C. d. S. and Löh, A. (2012). Abstract syntax graphs for domain specific languages. <em>PEPM '12</em>. Fiore, M., Plotkin, G., and Turi, D. (1999). Abstract syntax and variable binding. <em>LICS '99</em>. Lamiaux, T. and Ahrens, B. (2024). An introduction to initial semantics. arXiv:2401.09366. Aho, A. V. and Johnson, S. C. (1976). Optimal code generation for expression trees. <em>JACM</em> 23(3), 488–501. Blindell, G. H. (2016). <em>Instruction Selection: Principles, Methods, and Applications</em>. Springer. Morris, F. L. (1973). Advice on structuring compilers and proving them correct. <em>POPL '73</em>. Thatcher, J. W., Wagner, E. G., and Wright, J. B. (1981). More on advice on structuring compilers and proving them correct. <em>Theoretical Computer Science</em> 15(3), 223–249.</p>
+<p><strong>References.</strong> Goguen, J. A., Thatcher, J. W., Wagner, E. G., and Wright, J. B. (1977). Initial algebra semantics and continuous algebras. <em>Journal of the ACM</em> 24(1), 68–95. Goguen, J. A. and Meseguer, J. (1992). Order-sorted algebra I: equational deduction for multiple inheritance, overloading, exceptions and partial operations. <em>Theoretical Computer Science</em> 105(2), 217–273. Burris, S. and Sankappanavar, H. P. (1981). <em>A Course in Universal Algebra</em>. Springer. Lawvere, F. W. (1963). Functorial semantics of algebraic theories. <em>PNAS</em> 50(5), 869–872. Sannella, D. and Tarlecki, A. (2012). <em>Foundations of Algebraic Specification and Formal Software Development</em>. Springer. Plotkin, G. and Pretnar, M. (2013). Handling algebraic effects. <em>Logical Methods in Computer Science</em> 9(4). Barendregt, H. P. et al. (1987). Term graph rewriting. <em>PARLE</em>, LNCS 259. Plump, D. (1999). Term graph rewriting. In <em>Handbook of Graph Grammars and Computing by Graph Transformation</em>, Vol. 2. Drewes, F., Hoffmann, B., and Plump, D. (2002). Hierarchical graph transformation. <em>JCSS</em> 64(2), 249–283. Oliveira, B. C. d. S. and Löh, A. (2012). Abstract syntax graphs for domain specific languages. <em>PEPM '12</em>. Fiore, M., Plotkin, G., and Turi, D. (1999). Abstract syntax and variable binding. <em>LICS '99</em>. Lamiaux, T. and Ahrens, B. (2024). An introduction to initial semantics. arXiv:2401.09366. Aho, A. V. and Johnson, S. C. (1976). Optimal code generation for expression trees. <em>JACM</em> 23(3), 488–501. Blindell, G. H. (2016). <em>Instruction Selection: Principles, Methods, and Applications</em>. Springer. Morris, F. L. (1973). Advice on structuring compilers and proving them correct. <em>POPL '73</em>. Thatcher, J. W., Wagner, E. G., and Wright, J. B. (1981). More on advice on structuring compilers and proving them correct. <em>Theoretical Computer Science</em> 15(3), 223–249.</p>
 
 
 

@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8068,7 +8128,7 @@
 <h1 id="appendix-e3-operators">Appendix E.3 — Operators<a class="headerlink" href="#appendix-e3-operators" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>This catalogue lists mathematical operations and their input and output types. It distinguishes transition expectation, reward-bearing evaluation and optimizing selection, and records the conditions needed for each operation. §4 names the eight operations a builder is composed of by the kinds under which the package prints them.</p>
+<p>This catalogue lists mathematical operations and their input and output sorts. It distinguishes transition expectation, reward-bearing evaluation and optimizing selection, and records the conditions needed for each operation. §4 names the eight operations a builder is composed of by the operation kinds under which the package prints them.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -8077,11 +8137,11 @@
 <strong>Formal account</strong> — <a href="../../APPX-F-OPERATOR-ALGEBRA/">Operator algebra</a> qualifies composition, copying and numerical approximation.
 <strong>See also</strong> — <a href="../../06-Methods/">Methods</a> discusses numerical procedures.</p>
 </details>
-<p>An <strong>operator</strong> maps objects in a declared domain to a declared codomain. Its <strong>rank</strong> lists its input and output sorts. In a first-order signature, operators can be operation symbols without an additional carrier of operator-valued data; they are nevertheless typed. Whether a builder is primitive or a named composite depends on the chosen signature.</p>
-<p>At perch <span class="arithmatex">\(p\)</span>, <span class="arithmatex">\(\mathsf X_p\)</span> is the state space, <span class="arithmatex">\(\mathsf V_p\)</span> a chosen value-function space, and <span class="arithmatex">\(\mathsf M_p\)</span> the probability measures on <span class="arithmatex">\(\mathsf X_p\)</span>. Let <span class="arithmatex">\(\mathsf L\)</span> be the scalar value domain, <span class="arithmatex">\(\Gamma(x)\)</span> the feasible actions, <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> the choice-value functions on <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\Pi_\Gamma\)</span> the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.</p>
+<p>An <strong>operator</strong> maps objects in a specified domain, such as a space of functions or of measures, to objects in a specified codomain. Its <strong>rank</strong> lists its input and output sorts (<a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3). In a first-order signature, operators can be operation symbols without an additional carrier of operator-valued data; they nevertheless have ranks. Whether a builder is primitive or a named composite depends on the chosen signature.</p>
+<p>At perch <span class="arithmatex">\(p\)</span>, <span class="arithmatex">\(\mathsf X_p\)</span> is the state space, <span class="arithmatex">\(\mathsf V_p\)</span> a chosen value-function space, and <span class="arithmatex">\(\mathsf M_p\)</span> the finite measures on <span class="arithmatex">\(\mathsf X_p\)</span>, of which the probability measures are those of mass one. Let <span class="arithmatex">\(\mathsf L\)</span> be the declared set of the scalar value fields, <span class="arithmatex">\(\Gamma(x)\)</span> the feasible actions, <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> the choice-value functions on <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\Pi_\Gamma\)</span> the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.</p>
 <p><a id="structural-morphisms-category-plumbing"></a></p>
 <h2 id="1-structural-operations">1. Structural operations<a class="headerlink" href="#1-structural-operations" title="Permanent link">&para;</a></h2>
-<p>These operations describe composition of inputs and alternatives. They do not alone prove that a software graph has a categorical universal property. Here <span class="arithmatex">\(s,t\)</span> denote types, <span class="arithmatex">\(I\)</span> the one-point type, <span class="arithmatex">\(\otimes\)</span> a product in the deterministic interpretation, and <span class="arithmatex">\(\bigsqcup\)</span> a labeled disjoint union.</p>
+<p>These operations describe composition of inputs and alternatives. They do not alone prove that a software graph has a categorical universal property. Here <span class="arithmatex">\(s,t\)</span> denote sorts, <span class="arithmatex">\(I\)</span> the one-point sort, <span class="arithmatex">\(\otimes\)</span> a product in the deterministic interpretation, and <span class="arithmatex">\(\bigsqcup\)</span> a labeled disjoint union.</p>
 <table>
 <thead>
 <tr>
@@ -8123,12 +8183,12 @@
 </tr>
 <tr>
 <td>Connector</td>
-<td>compatible boundary types</td>
+<td>boundary fields, each written on a set inside the set on which it is read (<a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §5)</td>
 <td>identify or rename fields between stages</td>
 </tr>
 <tr>
 <td>Inter-period connector</td>
-<td>compatible boundary types</td>
+<td>boundary fields, each written on a set inside the set on which it is read</td>
 <td>identify or rename fields between periods</td>
 </tr>
 </tbody>
@@ -8172,7 +8232,7 @@
 </tr>
 </tbody>
 </table>
-<p>These are mathematical names, not prescribed YAML stage keys. Stage equations are <code>.bl</code>; current block and method-place forms belong to Bellman-SYM's pages on field equations and methodization.</p>
+<p>These are mathematical names, not prescribed block identifiers. Stage equations are <code>.bl</code>; current block and method-place forms belong to Bellman-SYM's pages on field equations and methodization.</p>
 <p><a id="forward-builders-measure-side"></a></p>
 <h2 id="3-forward-builders-and-transition-expectations">3. Forward builders and transition expectations<a class="headerlink" href="#3-forward-builders-and-transition-expectations" title="Permanent link">&para;</a></h2>
 <table>
@@ -8187,12 +8247,12 @@
 <tr>
 <td><span class="arithmatex">\(\mathbb M_\prec\)</span></td>
 <td><span class="arithmatex">\(\mathsf M_\prec\to\mathsf M_\sim\)</span></td>
-<td>arrival transition and conditional shock law</td>
+<td>arrival law of motion and conditional shock law</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(\mathbb M_{\succ,\pi}\)</span></td>
 <td><span class="arithmatex">\(\mathsf M_\sim\to\mathsf M_\succ\)</span></td>
-<td>decision transition, conditional shock law and policy</td>
+<td>decision law of motion, conditional shock law and policy</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(\mathbb M_\pi=\mathbb M_{\succ,\pi}\circ\mathbb M_\prec\)</span></td>
@@ -8224,7 +8284,7 @@
 \]</div>
 <p>that is, <span class="arithmatex">\((\mathbb T_\succ v)(x)=(B_\succ v)\bigl(x,s(B_\succ v)(x)\bigr)=\max_{a\in\Gamma(x)}(B_\succ v)(x,a)\)</span>. Where the supremum is not attained, or is attained by no measurable policy, the optimizing value has no representation of this form.</p>
 <p><strong>Domains and assumptions.</strong> <span class="arithmatex">\(\Pi_\Gamma\)</span> holds the measurable maps <span class="arithmatex">\(\pi\)</span> from <span class="arithmatex">\(\mathsf X_\sim\)</span> to the action space with <span class="arithmatex">\(\pi(x)\in\Gamma(x)\)</span> at every state, and <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> holds functions on <span class="arithmatex">\(\operatorname{Gr}(\Gamma)\)</span> measurable for the σ-algebra that the product σ-algebra induces on it. Then <span class="arithmatex">\(x\mapsto(x,\pi(x))\)</span> is measurable for every <span class="arithmatex">\(\pi\in\Pi_\Gamma\)</span>, so <span class="arithmatex">\(\iota^{*}(Q,\pi)\)</span> is a measurable function, and <span class="arithmatex">\(\mathsf V_\sim\)</span> is chosen to contain these functions. The maximizing set is nonempty, for example, when the action space is finite, <span class="arithmatex">\(\Gamma(x)\)</span> is nonempty at every state, and for each action the states at which it is feasible form a measurable set on which <span class="arithmatex">\(Q(\cdot,a)\)</span> is measurable (Sargent and Stachurski 2026, <em>Dynamic Programming</em>, vol. 2, Lemma 7.1.1), or when the state and action spaces are metric spaces with their Borel σ-algebras, the action space is separable, <span class="arithmatex">\(\Gamma\)</span> is nonempty, compact-valued and continuous, and <span class="arithmatex">\(Q\)</span> is continuous on <span class="arithmatex">\(\operatorname{Gr}(\Gamma)\)</span> (ibid., Lemma 7.1.2 and Theorem A.3.3). These conditions are sufficient and are not part of the definitions: the factorization states what <span class="arithmatex">\(\mathbb T_\succ\)</span> is on the domain of the named selection, and asserts nothing about which continuation functions lie in that domain.</p>
-<p>In the display, <span class="arithmatex">\(\iota^{*}\)</span> inserts a policy into a choice-value function, as the table defines. The first column of the table names the <strong>kind</strong> of each operation, the name under which the package lists it among the operations of a builder; the last column links to the reference row that states which lines of a stage form an operation of that kind. <span class="arithmatex">\(B_\succ\)</span> has no kind: a builder lists it as the operations it is composed of.</p>
+<p>In the display, <span class="arithmatex">\(\iota^{*}\)</span> inserts a policy into a choice-value function, as the table defines. The first column of the table names the <strong>operation kind</strong> of each operation, the name under which the package lists it among the operations of a builder; the last column links to the reference row that states which lines of a stage form an operation of that kind. <span class="arithmatex">\(B_\succ\)</span> has no operation kind: a builder lists it as the operations it is composed of.</p>
 <table>
 <thead>
 <tr>
@@ -8313,7 +8373,7 @@
 <p><a id="shock-distribution"></a></p>
 <p>The <strong>conditional distribution</strong> <span class="arithmatex">\(\mu\)</span> of a shock with values in <span class="arithmatex">\(\mathsf Z\)</span>, given retained arguments with values in <span class="arithmatex">\(H\)</span>, is a probability kernel: <span class="arithmatex">\(\mu(\cdot\mid h)\)</span> is a probability measure on <span class="arithmatex">\(\mathsf Z\)</span> for each <span class="arithmatex">\(h\in H\)</span>, and <span class="arithmatex">\(h\mapsto\mu(B\mid h)\)</span> is measurable for each measurable <span class="arithmatex">\(B\subseteq\mathsf Z\)</span>. A distribution that reads no retained argument is constant in <span class="arithmatex">\(h\)</span>. The expectation integrates against it, the distribution extension extends a measure by it, and the shock discretization of §7 approximates it.</p>
 <p>The value of a function at a point and a numerical interpolation of that function are different descriptions: a numerical routine may interpolate internally, and representing a function on a grid adds no operation to this catalogue.</p>
-<p>For an invertible transformation <span class="arithmatex">\(\varphi\)</span> on the relevant value domain, a certainty equivalent may take the form <span class="arithmatex">\(R_z^\varphi=\varphi^{-1}\circ\mathbb E_z\circ\varphi\)</span> when the integrals and inverse are defined. It reduces to expectation for <span class="arithmatex">\(\varphi=\mathrm{id}\)</span>. This formula does not make every recursive preference a single local integrand; that extension remains unfinished. #todo</p>
+<p>For an invertible transformation <span class="arithmatex">\(\varphi\)</span> on the declared set of the value field, a certainty equivalent may take the form <span class="arithmatex">\(R_z^\varphi=\varphi^{-1}\circ\mathbb E_z\circ\varphi\)</span> when the integrals and inverse are defined. It reduces to expectation for <span class="arithmatex">\(\varphi=\mathrm{id}\)</span>. This formula does not make every recursive preference a single local integrand; that extension remains unfinished. #todo</p>
 <p>A vector shock can be integrated sequentially with its conditional laws, under the conditions for iterated integration. Replacing those laws by independent marginals requires independence; the tower property does not supply it. Intermediate numerical integrations do not introduce new information perches by themselves.</p>
 <p><a id="derived-named-operators"></a></p>
 <h2 id="5-named-composites">5. Named composites<a class="headerlink" href="#5-named-composites" title="Permanent link">&para;</a></h2>
@@ -8410,7 +8470,7 @@
 </table>
 <div class="admonition note">
 <p class="admonition-title">Derivatives and names</p>
-<p>A derivative operation and a name given to a function are distinct. Differentiation of a declared function in one of its formal coordinates yields a function, and the derivative term on a value field, <code>D_{a}V[&gt;]</code>, yields the derivative of that value; naming a function defines nothing further, and no field stands for a derivative. <a href="../functions/">Functions</a> describes their types.</p>
+<p>A derivative operation and a name given to a function are distinct. Differentiation of a declared function in one of its formal coordinates yields a function, and the derivative term on a value field, <code>D_{a}V[&gt;]</code>, yields the derivative of that value; naming a function defines nothing further, and no field stands for a derivative. <a href="../functions/">Functions</a> lists their domains and codomains.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Iterated transitions</p>

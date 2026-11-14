@@ -2569,6 +2569,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2739,6 +2743,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8005,7 +8065,8 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>ElaboratedStage('cons', specified) True
 </code></pre></div>
 <h2 id="2-calibration">2 Calibration<a class="headerlink" href="#2-calibration" title="Permanent link">&para;</a></h2>
-<p><code>calibrate</code> requires a value for every declared parameter, in the set the file declares it on; a name the stage does not declare is not bound, except the name of a <a href="../../../../wiki/parameters/">derived parameter</a>, <code>h := 1/(1 - Γ/R)</code>, whose value is refused, since calibration computes it from the definition at the bound values before it decides the conditions below. A parameter declared on the functions from a finite integer or label set, <code>δ : L_J → ℝ</code>, takes a sequence with one entry per member in the members' order, nested for a product of index sets, or a mapping keyed by those integers or labels. The entries may be real-valued; the integer keys identify the entries and are not their values. The version holds the sequence, and a wrong count, a key the set does not hold or an entry outside the entries' set is refused naming the declaration and the key.</p>
+<p><code>calibrate</code> requires a value for every declared parameter, in the set the file declares it on; a name the stage does not declare is not bound, except the name of a <a href="../../../../wiki/parameters/">derived parameter</a>, <code>h := 1/(1 - Γ/R)</code>, whose value is refused, since calibration computes it from the definition at the bound values before it decides the conditions below. Calibration judges the values in three steps. First it judges each declared value against its declared set, reading each parameter that the set names at its value, and refuses a value outside its set. Second it computes the value of each derived parameter from its definition at the declared values, and refuses a definition that has no finite real value there, such as one that divides by zero. Third, at the declared and the derived values together, it judges the value of each derived parameter against the set its definition declares, as <code>q : (0,1) := (β*R)^(1/ρ)/R</code> declares <code>(0,1)</code>, and every membership the first step left undecided, such as that of a parameter declared on <code>(0, h)</code>. A derived value outside its set is refused with a sentence that names the derived parameter, its definition, the set and the values of the parameters read. A bound of a declared set whose arithmetic has no value at the calibration, such as <code>1/(R - 2)</code> at <code>R = 2</code>, refuses the calibration. Where the three steps do not decide a membership, as for a parameter declared on the extended reals <code>ℝ̄</code>, the real numbers with both infinities adjoined, the package binds the value given, and <code>stage.obligations()</code> lists the membership as the condition <code>calibration-domain-membership</code>, which stays required. The value must still lie in the set. The package does not yet check this (<a href="../../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
+<p>A parameter declared on the functions from a finite integer or label set, <code>δ : L_J → ℝ</code>, takes a sequence with one entry per member in the members' order, nested for a product of index sets, or a mapping keyed by those integers or labels. The entries may be real-valued; the integer keys identify the entries and are not their values. The version holds the sequence, and a wrong count, a key the set does not hold or an entry outside the entries' set is refused naming the declaration and the key.</p>
 <p>Calibration then decides every condition of the stage that involves parameters and numbers alone: a condition that holds becomes established, with the values as its evidence, and a condition that fails refuses the calibration. So <code>stage.calibrate({"ρ": 1.0})</code> is refused, since the utility <code>c^(1-ρ)/(1-ρ)</code> divides by <code>1 - ρ</code>, while at <code>ρ = 2.0</code> that condition is established, as the listing below shows; a condition that involves a <a href="../../../../wiki/field/">field</a>, a control, a function the file does not declare or an expression calibration cannot evaluate stays as the construction left it, and is never turned into a claim of proof. A source may be a mapping as well as a file:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">at_rho_2</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">calibrate</span><span class="p">({</span><span class="s2">"ρ"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">})</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="nb">print</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">at_rho_2</span><span class="p">),</span> <span class="n">at_rho_2</span><span class="o">.</span><span class="n">par</span><span class="p">[</span><span class="s2">"ρ"</span><span class="p">])</span>
@@ -8026,7 +8087,8 @@
 <a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>evaluation-domain                    The representation is evaluated inside the interval its nodes span, or outside it through an identified extension; the node interval does not replace the domain of the represented function.
 </code></pre></div>
 <h2 id="3-methodization-and-configuration">3 Methodization and configuration<a class="headerlink" href="#3-methodization-and-configuration" title="Permanent link">&para;</a></h2>
-<p><code>methodize</code> holds each entry of an addition at the place its path names: a method must admit the kind of place it is typed at, and an unknown method word, a path that names no place and a method at a place it does not admit are each refused. <code>configure</code> requires a value for every setting the methods files declare and for every name a bound method writes, and checks each value against its declared set; on a stage with no methods bound it refuses nothing, and it binds the file's values as names no declaration holds, which <code>stage.settings</code> lists with no set. Methodization may also precede calibration:</p>
+<p><code>methodize</code> holds each entry of an addition at the place its path names: a method must admit the kind of place it is typed at, and an unknown method word, a path that names no place and a method at a place it does not admit are each refused. <code>configure</code> requires a value for every setting the methods files declare and for every name a bound method writes, and judges each value against its declared set, reading each parameter that the set names at its calibrated value, and each derived parameter at the value its definition takes at the calibration. A value outside its declared set is refused under <code>setting-outside-set</code>, and a declared setting with no value under <code>setting-unvalued</code>. <code>configure</code> then judges the values where the methods read them, so that a value inside its declared set can still be refused. A keyword's value outside the domain the method's row names is refused under <code>method-option-value</code>, as <code>tol_v : ℝ</code> valued at <code>-1.0</code> is for <code>!vfi(tol=tol_v)</code>. A grid whose bounds are out of order or outside the coordinate's declared set, whose count is below two or whose node set is not strictly increasing is refused under <code>grid-bounds</code>. A requirement written after <code>require=</code> that the grid built at the bound values does not meet is refused under <code>grid-requirement</code>. A grid beside an authored table is refused under <code>representation-source</code> where its points and the table's knots are both known exactly at configuration and differ (<a href="../../../../wiki/settings/">Settings</a> §2; <a href="../../../reference/refusals/">Refusals</a>).</p>
+<p>On a stage with no methods bound <code>configure</code> refuses nothing, and it binds the file's values as names no declaration holds, which <code>stage.settings</code> lists with no set; a later <code>methodize</code> judges them against the settings its additions declare. Where no calibration is bound, <code>configure</code> does not judge a value against a declared set that names a parameter, such as <code>tol_s : (0, ρ)</code>, and binds the value. A setting bound before a calibration must lie in its declared set at the values that calibration binds. The package does not yet check this (<a href="../../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). <code>calibrate</code> judges no setting bound before it. A later <code>configure</code> or <code>methodize</code> judges each bound setting at the calibration. Methodization may also precede calibration:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">other_order</span> <span class="o">=</span> <span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">methodize</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/methods.bl"</span><span class="p">)</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>               <span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/cons.yml"</span><span class="p">)</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>               <span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/calibration/portfolio.yml"</span><span class="p">))</span>

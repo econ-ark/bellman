@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7900,11 +7960,11 @@
 
 
 <h1 id="signature">Signature<a class="headerlink" href="#signature" title="Permanent link">&para;</a></h1>
-<p>A <strong>signature</strong> is a typed vocabulary of operation symbols. It specifies each operation's ordered input types and output type. An interpretation supplies the actual operations on objects of those types; listing a symbol is not yet giving its mathematical behavior.</p>
-<p>In a many-sorted algebra, sorts form an index set and each sort has a carrier set of objects. For each input word of sorts and output sort, the signature provides operation symbols of that type. Their interpretations map products of the corresponding input carriers to the output carrier. Goguen, Thatcher, Wagner and Wright (1977), <em>Initial Algebra Semantics and Continuous Algebras</em>, §2 p. 70, gives this definition. That source uses <strong>rank</strong> for the length of the input word; a full input/output type contains more information.</p>
+<p>A <strong>signature</strong> has a set of <a href="../sort/">sorts</a> and a set of operation symbols, each with a <a href="../rank/">rank</a>: its ordered input sorts and its output sort (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3). An interpretation supplies the actual operations on the carriers of those sorts; listing a symbol is not yet giving its mathematical behavior.</p>
+<p>In a many-sorted algebra, sorts form an index set and each sort has a carrier set of objects. For each input word of sorts and output sort, the signature provides operation symbols of that rank. Their interpretations map products of the corresponding input carriers to the output carrier. Goguen, Thatcher, Wagner and Wright (1977), <em>Initial Algebra Semantics and Continuous Algebras</em>, §2 p. 70, gives this definition. That source uses <strong>rank</strong> for the length of the input word and calls the pair of the input word and the output sort the symbol's type; the entry <a href="../rank/">rank</a> states the usage followed here.</p>
 <h2 id="builder-signatures-and-mathematical-signatures">Builder signatures and mathematical signatures<a class="headerlink" href="#builder-signatures-and-mathematical-signatures" title="Permanent link">&para;</a></h2>
 <p>A <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">block</a> header declares the input and output <a href="../field/">fields</a> of authored text, with their sets, roles and <a href="../perch/">perches</a>. A <a href="../sym/">Bellman-SYM</a> <a href="../builder/">builder</a> signature instead gives the actual function or measure <a href="../semgraph/">wires</a> of the <a href="../operator/">operator</a> constructed from that block; <code>signature()</code> answers it as one record with two parts, <code>inputs</code> and <code>outputs</code>. On a controlled backward edge, the control is a coordinate of the functions carried by the wires and is not itself an input wire. A state of the perch at which a <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">backward block</a>'s output stands is likewise a coordinate of the output function and is listed on no backward header (<a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/#r1-blocks-and-their-headers">Appendix C</a> R1). The policy is an index on the <a href="../builder/">builder at a policy</a> and is not an argument of the <a href="../builder/">decision value function</a>. A block identifier names the authored block; its <a href="../statement/">statements</a> and dependencies determine the constructed operator.</p>
-<p>A mathematical signature for <a href="../stage/">stage</a> composition instead specifies operations such as combining compatible builders or stages. Its terms, their interpretations and the <code>.bl</code> constructor grammar are distinct objects. <a href="../../bellman-calculus/APPX-C-STAGE-TERM/">The stage term</a> and <a href="../../bellman-calculus/11-abstract-grammar/">Abstract grammar</a> give the mathematical account.</p>
+<p>A <a href="../stage/">stage</a> has two mathematical signatures (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6). The sorts of its <strong>state signature</strong> name the state spaces of its perches, and its symbols are the stage's transitions, each a <a href="../operator/#kernels">law of motion</a> with its shock law. Its <strong>operator signature</strong> has two sorts for each perch, which name a space of value functions and a space of measures on the state space of the perch, and a sort of policies, and its symbols are the builders; a builder signature gives the rank of one of them. Composition is no operation of either signature. A term is a path of symbols, an arrow of the free category of the signature, whose objects are the sorts, and two builders compose by the concatenation of their paths. The terms of a signature, their interpretations and the <code>.bl</code> constructor grammar are distinct objects. <a href="../../bellman-calculus/APPX-C-STAGE-TERM/">The stage term</a> and <a href="../../bellman-calculus/11-abstract-grammar/">Abstract grammar</a> give the mathematical account.</p>
 <p>Neither a signature nor matching <strong>inputs and outputs</strong> prove integrability, an attained maximum or admissibility of a numerical method. <a href="../methodization/">Methodization</a> requires a supported existing computation and the method's contract. See <a href="../sort/">sort</a>, <a href="../syntax/">syntax</a> and <a href="../expression/">expression</a>.</p>
 
 

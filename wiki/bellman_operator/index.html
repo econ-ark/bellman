@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7907,7 +7967,7 @@
 \]</div>
 <p>Its domain is a chosen class of continuation functions for which the required choice values and supremum are defined and the output belongs to the declared value space. An attained maximum and a measurable maximizing policy require additional assumptions. For a feasible measurable policy <span class="arithmatex">\(\pi\)</span>, fixed-policy evaluation is <span class="arithmatex">\((T_\pi v)(x)=B(x,\pi(x),v)\)</span>.</p>
 <h2 id="stage-factorization">Stage factorization<a class="headerlink" href="#stage-factorization" title="Permanent link">&para;</a></h2>
-<p>In the staged reading, write <span class="arithmatex">\(\mathbb T_\succ\)</span> for optimizing continuation-to-decision evaluation and <span class="arithmatex">\(\mathbb T_\prec\)</span> for decision-to-arrival aggregation; in a <a href="../stage/">stage</a> these are the decision and the arrival <a href="../builder/">builders</a>. Then</p>
+<p>In the staged reading, write <span class="arithmatex">\(\mathbb T_\succ\)</span> for optimizing continuation-to-decision evaluation and <span class="arithmatex">\(\mathbb T_\prec\)</span> for decision-to-arrival aggregation. In a <a href="../stage/">stage</a>, <span class="arithmatex">\(\mathbb T_\prec\)</span> is the arrival <a href="../builder/">builder</a>, and the decision builder is the <a href="../builder/">builder at a policy</a> <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>. The optimizing decision builder <span class="arithmatex">\(\mathbb T_\succ\)</span> is the image of no edge (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6). Then</p>
 <div class="arithmatex">\[
 \mathbb T=\mathbb T_\prec\circ\mathbb T_\succ,
 \qquad

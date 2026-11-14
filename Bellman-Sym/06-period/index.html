@@ -2634,6 +2634,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2804,6 +2808,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8204,6 +8264,7 @@ K(d\psi,d\theta)=\nu_\Psi(d\psi)\nu_\theta(d\theta),
 </table>
 <p>The stage declarations establish direction. Reversing the pair is not another spelling of the same join. The second authored pair belongs in the <a href="../07-trellis/#2-inter-period-connectors">inter-period connector</a>, not alongside the first: placing both in this period would close a cycle.</p>
 <p>The pair performs no calculation. Interest, income, depreciation, discounting, and unit conversion must appear in a stage equation. Equal domain labels alone do not establish compatibility: the fields must denote compatible quantities with matching economic roles and information at the join. Their continuation and arrival tags refer to different stages, but describe the same boundary information after identification. <a href="../appendices/13-perch-tagging-rules/">Perch tagging rules</a> explains why tags within a stage do not by themselves identify quantities across stages.</p>
+<p>Declared sets are <strong>compatible</strong> when the set of the outgoing field is contained in the set of the incoming field, so that every value the preceding stage can write is one the receiving stage accepts. The two sets need not be equal: a declared set states where a field's values may lie and does not claim that every member is reached. A field on <code>ℝ₊₊</code> can therefore be copied into one on <code>ℝ₊</code>, and the reverse is marked incompatible, because <code>ℝ₊</code> contains zero. Two sets written alike in one period are one set. Otherwise, where a bound names a parameter, the sets are compared at the parameters' values, and the connection is not established until a calibration supplies them.</p>
 <p>For a field with <a href="../01-stage/#22-category-codes">category codes</a>, a connection checks both the admissible integers and their recorded meanings. Every code the preceding stage can write must be accepted by the receiving stage with the same meaning. This applies to authored pairs, inferred pairs and connections between periods, and to each coordinate of a product. A domain with category meanings is incompatible with an ordinary integer domain that records none.</p>
 <p>For example, two stages using the identifier <code>household_status</code> with <code>newborn=0, old=1</code> can copy their status fields. If the receiving stage instead declares <code>newborn=1, old=0</code>, copying 0 would change its meaning, so the connection is marked incompatible. A stage equation such as <code>n_next = 1 - n</code> can express the required conversion into that reversed coding; a connector performs no conversion, and the package does not prove that an arbitrary transition preserves category meanings. The identifier and its scope are described in <a href="../reference/symbols-conventions/#922-category-codes">Symbol conventions §9.2.2</a>.</p>
 <p>A restriction of a coded set retains the meanings of its admitted codes. For example, <code>Old := {j : HouseholdStatus | j = 1}</code> admits only old households under the preceding coding. A field on <code>Old</code> can be copied into one on <code>HouseholdStatus</code>, but the reverse is marked incompatible because <code>HouseholdStatus</code> also admits newborn households.</p>

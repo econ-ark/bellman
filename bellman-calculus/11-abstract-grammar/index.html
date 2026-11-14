@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7992,7 +8052,7 @@
 <strong>Used by</strong> — <a href="../../Bellman-Sym/01-stage/">Stages</a>, <a href="../../Bellman-Sym/03-field-equations/">Field equations</a>, <a href="../../Bellman-Sym/06-period/">Period Syntax</a>, <a href="../../Bellman-Sym/07-trellis/">Trellis Syntax</a> and <a href="../../Bellman-Sym/04-methodization/">Methodization</a> state the authoring rules; Bellman-SYM's <a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> states the interpretation rules.</p>
 </details>
 <h2 id="1-two-grammars">1 Two grammars<a class="headerlink" href="#1-two-grammars" title="Permanent link">&para;</a></h2>
-<p>The <strong>concrete grammar</strong> specifies which source strings are well formed. The <strong>abstract grammar</strong> describes the structure of their expressions after punctuation is removed. Schmidt distinguishes the derivation tree from the string that abbreviates it.<sup id="fnref:schmidt"><a class="footnote-ref" href="#fn:schmidt">1</a></sup> For the current language, <code>.bl</code> stage declarations and arithmetic equations are parsed, while supporting YAML records model composition and bindings. The mathematical composition notation used here is a separate description of the resulting operations.</p>
+<p>The <strong>concrete grammar</strong> specifies which source strings are well formed. The <strong>abstract grammar</strong> describes the structure of their expressions after punctuation is removed. Schmidt distinguishes the derivation tree from the string that abbreviates it.<sup id="fnref:schmidt"><a class="footnote-ref" href="#fn:schmidt">1</a></sup> For the current language, the declarations and arithmetic equations of <code>.bl</code> stage files and methods files are parsed, while supporting YAML records model composition and the values that calibration and configuration bind. The mathematical composition notation used here is a separate description of the resulting operations.</p>
 <p>The syntax pages use <strong>ASDL</strong>, the Zephyr Abstract Syntax Description Language, to describe constructor positions and their types.<sup id="fnref:asdl"><a class="footnote-ref" href="#fn:asdl">2</a></sup> An <strong>ASDL field</strong> is a named position in a constructor, distinct from an economic field. The symbols <code>?</code> and <code>*</code> denote an optional position and a list. These notations describe syntax structure; they do not make every mathematical diagram on this page a concrete parser constructor. An operator's method and grid components, written as typing entries of the operator's name, are described in <a href="../06-Methods/">Methods</a> §2.</p>
 <p>The following is schematic mathematical composition notation, not the <code>.bl</code> abstract grammar or a loader schema. It suppresses documentation names and binding records to show the composition operands:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>model_term = TRELLIS(period* periods, connector* inter_connectors)
@@ -8090,14 +8150,14 @@ N\equiv\langle\mathrm{TRELLIS},\langle P_0,\ldots,P_{H-1}\rangle,
 <h2 id="4-source-and-retained-structures">4 Source and retained structures<a class="headerlink" href="#4-source-and-retained-structures" title="Permanent link">&para;</a></h2>
 <p>Arithmetic such as <code>R*k + y</code> is parsed into expression structure. Local function types and binders remain available to interpretation; substitution must respect scope. The source may author evaluation, optimization and implicit relations. Their meaning and applicable conditions come from the declared expression and the interpretation rules of Bellman-SYM's Appendix C, not an inference that all branches expose the same method operations.</p>
 <p>In the specified construction, parser trees and source locations are temporary. The stage retains interpreted equations, definitions and typed diagrams. Periods and the trellis retain their outer records, with fresh objects for distinct occurrences; reuse of a module does not imply one shared mutable stage object or a retained whole-trellis syntax graph. These statements describe the construction specified for the language, not completion of every runtime component.</p>
-<p>The mathematical signatures used here are <strong>many-sorted</strong>: their symbols have declared input and output types. Their vocabulary is the specified signature under discussion. Adding a form requires extending that signature and its interpretation; defining a local function within the admitted language is a different act. Neither statement proves all the identities an extension might need.</p>
+<p>The mathematical signatures used here are <strong>many-sorted</strong>: each symbol has a rank, its declared input sorts and its output sort (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3, D1). Their vocabulary is the specified signature under discussion. Adding a form requires extending that signature and its interpretation; defining a local function within the admitted language is a different act. Neither statement proves all the identities an extension might need.</p>
 <p>Branching also requires its own interpretation. A finite choice compares complete feasible branch values; an exogenous branch uses the declared conditional probabilities. Evaluating all feasible branch values and then maximizing is generally different from evaluating a single branch selected by a pre-existing predicate. Ties and measurable policy selection retain the qualifications in <a href="../09-branching/">Branching</a>.</p>
 <h2 id="5-the-typing-entries-of-a-methods-file">5 The typing entries of a methods file<a class="headerlink" href="#5-the-typing-entries-of-a-methods-file" title="Permanent link">&para;</a></h2>
-<p>A methods file adds to a stage file the numerical choices of its operators without changing the model: a <strong>typing entry</strong> types one component of an operator by the path of that component, <code>policy.method : !egm(tol=tol_v)</code> for the method and <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> for the grid, the discretized domain on which the operator's function is represented, written with one of the three grid words <code>!Cartesian</code>, <code>!Points</code> and <code>!Fibred</code>; a <strong>handler binding</strong>, <code>policy.handler : "cons-port:egm"</code>, names the program that realizes the operator. An entry stands inside a block's header, in the groups that <code>|</code> opens after the block's own entries, or at file level with the full path. A typing entry assigns the method or the grid component of one operator's signature, so that the operator is realized by that method on that grid while the model's equations are unchanged, and a handler binding names the program that realizes it (<a href="../../wiki/handler/">the handler</a>); this section records the constructors the entries parse to, in the house dialect of the ASDL notation, with the grammar that owns each line: <code>(core)</code> for a form that dyno's own files could carry, <code>(stage)</code> for a form that belongs to the typing layer of Bellman-SYM.</p>
-<p>The representation words <code>!Linear</code>, <code>!pchip</code> and <code>!closed_form</code>, each of which states the numerical form of a function (<a href="../06-Methods/">Methods</a> §4), and the word of the explicit solution method, <code>!explicit</code>, are method words like <code>!egm</code>, written in a typing entry of the method component, <code>policy.evaluate.method : !Linear</code> or <code>policy.method : !explicit</code>. The lines of <code>!explicit</code>, which give each output of the builder by a formula, stand in a block of the methods file whose id is the builder's, as the lines of <code>!egm</code> do (§5 of Bellman-SYM's page on methodization). A <a href="../../wiki/parameters/">derived parameter</a>, a constant of the stage that a definition without arguments writes from the stage's parameters, <code>h := 1/(1 - Γ/R)</code>, is written in a stage file or a methods file with the definition form <code>:=</code> that a stage file already uses. None of these forms adds a constructor: a method word is held by the <code>Method</code> classifier of the box below, the block is the host's <code>Block</code>, and the definition of a derived parameter is the host's <code>Assignment</code>.</p>
+<p>A methods file adds to a stage file the numerical choices of its operators without changing the model's equations: a <strong>typing entry</strong> types one component of an operator by the path of that component, <code>policy.method : !egm(tol=tol_v)</code> for the method and <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> for the grid, the discretized domain on which the operator's function is represented, written with one of the three grid words <code>!Cartesian</code>, <code>!Points</code> and <code>!Fibred</code>; a <strong>handler binding</strong>, <code>policy.handler : "cons-port:egm"</code>, names the program that realizes the operator. An entry stands inside a block's header, in the groups that <code>|</code> opens after the block's own entries, or at file level with the full path. A typing entry assigns the method or the grid component of one operator's signature, so that the operator is realized by that method on that grid while the model's equations are unchanged, and a handler binding names the program that realizes it (<a href="../../wiki/handler/">the handler</a>); this section records the constructors the entries parse to, in the house dialect of the ASDL notation, with the grammar that owns each line: <code>(core)</code> for a form that dyno's own files could carry, <code>(stage)</code> for a form that belongs to the typing layer of Bellman-SYM.</p>
+<p>The representation words <code>!Linear</code>, <code>!pchip</code> and <code>!closed_form</code>, each of which states the numerical form of a function (<a href="../06-Methods/">Methods</a> §4), and the word of the explicit solution method, <code>!explicit</code>, are method words like <code>!egm</code>, written in a typing entry of the method component, <code>policy.evaluate.method : !Linear</code> or <code>policy.method : !explicit</code>. The lines of <code>!explicit</code>, which give each output of the builder by a formula, stand in a block of the methods file whose id is the builder's, as the lines of <code>!egm</code> do (§5 of Bellman-SYM's page on methodization). A <a href="../../wiki/parameters/">derived parameter</a>, a name that a definition without arguments defines from parameters, derived parameters and numbers, <code>h := 1/(1 - Γ/R)</code>, is written in a stage file or a methods file with the definition form <code>:=</code> that a stage file already uses. Its definition may declare a set, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, and the line is then a declaration that carries a value. A derived parameter that a methods file defines adds a condition on the parameters, that its value exists and lies in its declared set, which is <span class="arithmatex">\(\mathbb R\)</span> where none is written. For a stage methodized by that file, the admissible set of the parameters is the set of the parameter vectors at which these conditions hold as well as those of the stage file (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4). None of these forms adds a constructor: a method word is held by the <code>Method</code> component of the box below, the block is the host's <code>Block</code>, and the definition of a derived parameter is the host's <code>Assignment</code>, or, with a declared set, the host's <code>Declaration</code> with its <code>value</code>.</p>
 <details class="ast">
 <summary>Abstract grammar: the typing entries</summary>
-<p>The host constructors keep their profiles; the lines below are added as alternatives of existing sorts (<code>+=</code>) or as new sorts. <code>Declaration</code> is the host's, reused: a typing entry is a <code>Declaration</code> whose subject is a <code>Path</code> and whose one classifier is the <code>Method</code> or the <code>Grid</code>.</p>
+<p>The host constructors keep their profiles; the lines below are added as alternatives of existing sorts (<code>+=</code>) or as new sorts. <code>Declaration</code> is the host's, reused: a typing entry is a <code>Declaration</code> whose subject is a <code>Path</code> and whose one component is the <code>Method</code> or the <code>Grid</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>entry      += Tagged(word tag)                               -- (core)  a tag with keyword arguments
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>word        = Word(identifier name, keyword* arguments)       -- (core)  a name with its keyword arguments
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>keyword     = Keyword(identifier key, argument value)         -- (core)

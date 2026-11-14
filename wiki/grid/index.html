@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="The finite set of points of a function's domain at which a method computes and stores the function, written as the grid component of an operator's signature.">
+        <meta name="description" content="The finite set of points of a function's domain at which a method computes and stores the function, written as the typing of the operator's grid component, a label beside the operator's inputs and outputs.">
       
       
       
@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7946,7 +8006,7 @@
 <h1 id="grid">Grid<a class="headerlink" href="#grid" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>A <strong>grid</strong> is the finite set of points of a function's domain at which a numerical method computes and stores the function; between the points the method's interpolant supplies the values. It is the discretized domain, a typed object of the <a href="../signature/">signature</a> of the <a href="../operator/">operator</a> that holds the function, written at the operator's place as its own entry by one of three constructors: <code>!Cartesian</code>, a product of one node set per coordinate, <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code>; <code>!Points</code>, a finite set of declared points; and <code>!Fibred</code>, the feasible values of a control at each state of a base grid. A grid names <a href="../settings/">settings</a> or sets the stage defines, and holds no number.</p>
+<p>A <strong>grid</strong> is the finite set of points of a function's domain at which a numerical method computes and stores the function; between the points the method's interpolant supplies the values. It is the discretized domain. The <strong>grid word</strong> that names it, with its arguments, is the grid label of the <a href="../operator/">operator</a> that holds the function, beside the operator's <a href="../signature/">inputs and outputs</a> (<a href="../../bellman-calculus/06-Methods/">Methods</a> §2), and is written at the operator's place as its own entry. The grid word is one of three constructors: <code>!Cartesian</code>, a product of one node set per coordinate, <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code>; <code>!Points</code>, a finite set of declared points; and <code>!Fibred</code>, the feasible values of a control at each state of a base grid. A grid word takes <a href="../settings/">settings</a> or sets the stage defines among its arguments, and it takes no number.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -7970,10 +8030,10 @@
 <p>Every name in a factor is a declared setting, a declared node set, the feasible set of a control or an expectation operator of the stage, and the points of <code>!Points</code> are a declared setting or a set the stage defines; a number is refused. The settings are declared in the methods file with their domains, <code>n_a : ℕ</code>, <code>a_min : Xa</code>, and the values stand in the settings file (<a href="../settings/">settings</a>). At configuration the package checks each bound pair ordered and inside the coordinate's declared set, each count at least two, each node set strictly increasing, each declared point's shape and finite coordinates, inside the coordinates' declared sets where that is decided, and each requirement that the bound values decide; it checks nothing about accuracy.</p>
 <p>Once the settings are bound, the package constructs each grid at their values, and a builder's <code>kernels().grids</code> holds, for each place within the builder that types a grid, the realized grid, with its coordinates in declared order and its finite points, or the reason the construction cannot establish them and every required property, such as a coordinate that no factor names; no default is supplied (<a href="../../Bellman-Sym/API/stage/04-builder/">A builder</a> §5).</p>
 <h2 id="2-the-default-and-what-lies-outside">2 The default and what lies outside<a class="headerlink" href="#2-the-default-and-what-lies-outside" title="Permanent link">&para;</a></h2>
-<p>An operator that writes no grid entry has a grid of the kind <code>!Cartesian</code> over every state coordinate of the domain of the function it holds, in declared order: for the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that stores a builder's result, the states of the <a href="../perch/">perch</a> at which the stored function stands; for a solution method, the states its rows name, which for the endogenous grid method are the states of the continuation perch, the input perch of the policy <a href="../builder/">builder</a>, since the method's grid is the predetermined grid of end-of-period assets from which the points of the policy are generated (Carroll 2006, §2.2, p. 315). The default fixes the kind and the coordinates and supplies no number; where a method needs bounds and counts, the entry writes them. The representation of the policy at the closing Evaluation of an <code>!egm</code> builder writes no grid entry, and one written there is refused: it reads the pairs of resources and consumption that the endogenous grid method computes at the savings on its grid, which give its nodes.</p>
+<p>An operator that writes no grid entry has a grid built by the constructor <code>!Cartesian</code> over every state coordinate of the domain of the function it holds, in declared order: for the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that stores a builder's result, the states of the <a href="../perch/">perch</a> at which the stored function stands; for a solution method, the states its rows name, which for the endogenous grid method are the states of the continuation perch, the input perch of the policy <a href="../builder/">builder</a>, since the method's grid is the predetermined grid of end-of-period assets from which the points of the policy are generated (Carroll 2006, §2.2, p. 315). The default fixes the constructor and the coordinates and supplies no number; where a method needs bounds and counts, the entry writes them. The representation of the policy at the closing Evaluation of an <code>!egm</code> builder writes no grid entry, and one written there is refused: it reads the pairs of resources and consumption that the endogenous grid method computes at the savings on its grid, which give its nodes.</p>
 <p>What a method does outside its grid, extrapolation or clamping at the bounds, is a keyword argument of the method word, its value a declared setting, as the durables application writes <code>!Linear(extrapolate=extrap_policy)</code> with <code>extrap_policy : {0, 1}</code>, and no part of the grid, which states its bounds only.</p>
 <h2 id="3-what-a-grid-is-not">3 What a grid is not<a class="headerlink" href="#3-what-a-grid-is-not" title="Permanent link">&para;</a></h2>
-<p>A grid is a numerical object and no part of the model. A discrete set that belongs to the economics, such as the set of housing sizes a household chooses among, is a domain declared in the stage file, and the scalars that define it are <a href="../parameters/">parameters</a>. A grid approximates a continuous domain and names settings. The grid is the object a representation is built on, and the representation, <code>!Linear</code> or <code>!pchip</code>, is a method: two methods over one grid store different functions between the same points. A representation may also be built from data that need no grid of its own, an authored table, the pairs of the endogenous grid method or the authored expression that <code>!closed_form</code> reads (<a href="../../bellman-calculus/06-Methods/">Methods</a> §5).</p>
+<p>A grid is a numerical object and no part of the model. A discrete set that belongs to the economics, such as the set of housing sizes a household chooses among, is the declared set of a <a href="../field/">field</a> in the stage file and no grid, and the scalars that define it are <a href="../parameters/">parameters</a>. A grid approximates a continuous domain, and the grid word that names it takes settings among its arguments. The grid is the object a representation is built on, and the representation, <code>!Linear</code> or <code>!pchip</code>, is a method: two methods over one grid store different functions between the same points. A representation may also be built from data that need no grid of its own, an authored table, the pairs of the endogenous grid method or the authored expression that <code>!closed_form</code> reads (<a href="../../bellman-calculus/06-Methods/">Methods</a> §5).</p>
 <p>Formally, a grid on a domain <span class="arithmatex">\(X\)</span> is a finite subset <span class="arithmatex">\(G \subset X\)</span> with its inclusion <span class="arithmatex">\(\iota : G \to X\)</span>; restriction <span class="arithmatex">\(r(f) = f \circ \iota\)</span> takes a function to its values at the nodes, and a representation is an interpolant <span class="arithmatex">\(s\)</span> with <span class="arithmatex">\(r \circ s = \mathrm{id}\)</span>, a section in the sense of Adámek, Herrlich and Strecker (2004, Definitions 7.19 and 7.24, pp. 106–107), so that the represented functions form a retract of the function space. <a href="../../bellman-calculus/06-Methods/">Methods</a> §5 states this with its consequences. The inclusion of <span class="arithmatex">\(G\)</span> in <span class="arithmatex">\(X\)</span> is a map of sets and establishes no subsort relation (<a href="../sort/">sort</a>).</p>
 
 

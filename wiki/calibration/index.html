@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7833,9 +7893,9 @@
 
 
 <h1 id="calibration">Calibration<a class="headerlink" href="#calibration" title="Permanent link">&para;</a></h1>
-<p><strong>Calibration</strong> supplies values for the model's declared economic <a href="../parameters/">parameters</a>. It is distinct from <a href="../settings/">settings</a>, which configure numerical approximation. Declaring risk aversion in a <code>.bl</code> <a href="../stage/">stage file</a> fixes its name and admissible domain; supplying a particular value calibrates that declaration.</p>
-<p>The stage verb is <code>stage.calibrate(calibration_source)</code>, with a source path or mapping; <code>calibrate_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a> with the calibration the <a href="../trellis/">syntactic trellis</a> holds there. It requires a value for every declared parameter, refuses a value for a <a href="../parameters/">derived parameter</a>, evaluates each derived parameter's definition at the bound values before the checks of distributions and supports that read it, adds the values to the <a href="../stage/">stage occurrence</a> it is called on and returns it, with the mapping among its bindings; <code>stage.par["ρ"]</code> then answers the parameter's record, whose <code>value</code> is the number bound. Parameter names remain symbolic in retained equations. Additional shared-source keys can remain in the mapping without creating new declarations. In a trellis, a parameter name two stages of one period declare is one <a href="../parameters/">parameter</a> of the period: <code>calibrate_trellis</code> supplies it once, from the sources of the stages that declare it, and refuses two sources that give it two values or a value outside a declaring stage's set (<a href="../../Bellman-Sym/API/factory/trellis-factory/">The trellis factory</a> §4).</p>
-<p>In the recommended order calibration comes first, followed by <a href="../methodization/">methodization</a> and configuration. Only methodization must precede configuration, because the methods name the settings, so calibration may also be applied after either. Applying it again returns another stage version with new values; this does not prove that the binding operations commute. A failed calibration leaves the earlier stage version unchanged. A subsequent connection report on that earlier trellis reads the values it still holds, not values from the failed request. See <a href="../specified_stage/">specified stage</a> for the complete lifecycle.</p>
+<p><strong>Calibration</strong> supplies values for the model's declared economic <a href="../parameters/">parameters</a>. It is distinct from <a href="../settings/">settings</a>, which configure numerical approximation. Declaring risk aversion in a <code>.bl</code> <a href="../stage/">stage file</a> fixes its name and its declared set; supplying a particular value calibrates that declaration. The parameter lines of a file together define one admissible set of parameter vectors, and each line adds one condition: a declaration adds that the parameter's value lies in its declared set, which may name other parameters, as <code>Γ : (0, R)</code> does, and the definition of a <a href="../parameters/">derived parameter</a> adds that its formula has a value, in the set the definition declares where it declares one. The values a calibration supplies are one vector of that set (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4).</p>
+<p>The stage verb is <code>stage.calibrate(calibration_source)</code>, with a source path or mapping; <code>calibrate_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a> with the calibration the <a href="../trellis/">syntactic trellis</a> holds there. It requires a value for every declared parameter and refuses a value for a <a href="../parameters/">derived parameter</a>. It judges the values in three steps. First it judges each declared value against the parameter's declared set and refuses a value outside it. Second it evaluates each derived parameter's definition at the declared values, and refuses a definition that has no value there. Third, at the declared and the derived values together, it judges each derived parameter's value against the set its definition declares, and every membership the first step left undecided, such as that of a set that names a derived parameter, and again refuses a value outside its set. Where the steps do not decide a membership, as for a parameter declared on the extended reals <code>ℝ̄</code>, the real numbers with both infinities adjoined, the value is bound and <code>stage.obligations()</code> lists the membership as a condition that stays required (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a> §2). The checks of distributions and supports follow, and read the derived values as well. The verb adds the values to the <a href="../stage/">stage occurrence</a> it is called on and returns it, with the mapping among its bindings; <code>stage.par["ρ"]</code> then answers the parameter's record, whose <code>value</code> is the number bound. Parameter names remain symbolic in retained equations. Additional shared-source keys can remain in the mapping without creating new declarations. In a trellis, a parameter name two stages of one <a href="../period/">period</a> declare is one <a href="../parameters/">parameter</a> of the period: <code>calibrate_trellis</code> supplies it once, from the sources of the stages that declare it, and refuses two sources that give it two values or a value outside a declaring stage's set (<a href="../../Bellman-Sym/API/factory/trellis-factory/">The trellis factory</a> §4).</p>
+<p>In the recommended order calibration comes first, followed by <a href="../methodization/">methodization</a> and configuration, but the package requires no order among the three. Configuration applied before methodization binds the settings without judging them, since no methods file declares them yet; methodization then judges them against the settings its files declare, and refuses a declared setting with no value under <code>setting-unvalued</code> and a value outside its declared set under <code>setting-outside-set</code>. Calibration may likewise be applied after either (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a> §3). Applying <code>stage.calibrate</code> again binds the new values on the same stage, in place of the earlier ones, and returns that stage, so that every variable that refers to the stage reads the new values; <code>calibrate_trellis</code> applied again returns a new trellis whose stage occurrences hold the new values, and leaves the earlier trellis as it was. This does not prove that the binding operations commute. A refused calibration leaves the <a href="../stage/">stage version</a> as it was, with its earlier values. A subsequent connection report on that earlier trellis reads the values it still holds, not values from the refused request. See <a href="../specified_stage/">specified stage</a> for the complete lifecycle.</p>
 <p>A recipe can combine baseline and overriding parameter sources before calibration: the syntactic trellis holds the merged mappings, and the stage verb binds. The merge and parent-source rules are those of the <a href="../spec_factory/">specification factory</a>. Merging source mappings does not itself validate stage mathematics or produce a numerical solution. A calibrated stage still needs the applicable analytic assumptions, compatible methods and continuation data.</p>
 <p>See <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a> and <a href="../../Bellman-Sym/API/factory/spec-factory/">Recipe functions</a>.</p>
 

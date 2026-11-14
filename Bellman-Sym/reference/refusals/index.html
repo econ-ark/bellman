@@ -16,7 +16,7 @@
         <link rel="prev" href="../methods/">
       
       
-        <link rel="next" href="../symbols-conventions/">
+        <link rel="next" href="../rules/">
       
       
         
@@ -2487,6 +2487,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2784,6 +2788,62 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -8120,7 +8180,7 @@
 <td><a id="parameter-or-field"></a><code>parameter-or-field</code></td>
 <td><code>(rule parameter-or-field)</code></td>
 <td><code>elaborate</code></td>
-<td>A top-level scalar declaration is a parameter; only a shock is both declared at the top level and listed on the side of a block.</td>
+<td>A name that a stage file declares at the top level is a field where a block header lists it; where none does, it is a parameter unless it has a law or the word <code>!shck</code>, and a parameter carries no role word. No line of a block writes a parameter, a derived parameter or a setting.</td>
 <td>—</td>
 <td><code>refusals.py</code>, <code>RULES</code>, <code>"parameter-or-field"</code></td>
 </tr>
@@ -8528,7 +8588,7 @@
 <td><a id="derived-parameter"></a><code>derived-parameter</code></td>
 <td><code>(rule derived-parameter)</code></td>
 <td><code>elaborate</code></td>
-<td>A derived parameter's definition, <code>h := 1/(1 - Γ/R)</code>, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers and the calls <code>log</code> and <code>exp</code> of one argument; the calibration supplies no value for it, and at the calibration values every operation of its definition is defined and its value is a finite real number.</td>
+<td>A derived parameter's definition, <code>h := 1/(1 - Γ/R)</code>, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers and the calls <code>log</code> and <code>exp</code> of one argument; the calibration supplies no value for it, and at the calibration values every operation of its definition is defined and its value is a finite real number. The set a definition declares, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, is a set of numbers and reads no setting.</td>
 <td>—</td>
 <td><code>refusals.py</code>, <code>RULES</code>, <code>"derived-parameter"</code></td>
 </tr>
@@ -8816,7 +8876,7 @@
 <a id="__codelineno-5-58" name="__codelineno-5-58" href="#__codelineno-5-58"></a>  write  Give 'y' here or the function 'y' another name
 <a id="__codelineno-5-59" name="__codelineno-5-59" href="#__codelineno-5-59"></a>
 <a id="__codelineno-5-60" name="__codelineno-5-60" href="#__codelineno-5-60"></a>parameter-or-field  (graph construction; elaborate)
-<a id="__codelineno-5-61" name="__codelineno-5-61" href="#__codelineno-5-61"></a>  condition  A top-level scalar declaration is a parameter; only a shock is both declared at the top level and listed on the side of a block.
+<a id="__codelineno-5-61" name="__codelineno-5-61" href="#__codelineno-5-61"></a>  condition  A name that a stage file declares at the top level is a field where a block header lists it; where none does, it is a parameter unless it has a law or the word `!shck`, and a parameter carries no role word. No line of a block writes a parameter, a derived parameter or a setting.
 <a id="__codelineno-5-62" name="__codelineno-5-62" href="#__codelineno-5-62"></a>  example  the package's example of the rule, and the refusal it provokes:
 <a id="__codelineno-5-63" name="__codelineno-5-63" href="#__codelineno-5-63"></a>  where  t.bl, line 2, column 1 (address '2')
 <a id="__codelineno-5-64" name="__codelineno-5-64" href="#__codelineno-5-64"></a>  what
@@ -9299,7 +9359,7 @@
 <a id="__codelineno-5-541" name="__codelineno-5-541" href="#__codelineno-5-541"></a>  write  Write a symmetric positive semidefinite covariance matrix
 <a id="__codelineno-5-542" name="__codelineno-5-542" href="#__codelineno-5-542"></a>
 <a id="__codelineno-5-543" name="__codelineno-5-543" href="#__codelineno-5-543"></a>derived-parameter  (graph construction; elaborate)
-<a id="__codelineno-5-544" name="__codelineno-5-544" href="#__codelineno-5-544"></a>  condition  A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers and the calls `log` and `exp` of one argument; the calibration supplies no value for it, and at the calibration values every operation of its definition is defined and its value is a finite real number.
+<a id="__codelineno-5-544" name="__codelineno-5-544" href="#__codelineno-5-544"></a>  condition  A derived parameter's definition, `h := 1/(1 - Γ/R)`, reads declared parameters, finite numbers and other derived parameters, and is formed by signs, sums, differences, products, quotients, powers and the calls `log` and `exp` of one argument; the calibration supplies no value for it, and at the calibration values every operation of its definition is defined and its value is a finite real number. The set a definition declares, `q : (0,1) := (β*R)^(1/ρ)/R`, is a set of numbers and reads no setting.
 <a id="__codelineno-5-545" name="__codelineno-5-545" href="#__codelineno-5-545"></a>  example  the package's example of the rule, and the refusal it provokes:
 <a id="__codelineno-5-546" name="__codelineno-5-546" href="#__codelineno-5-546"></a>  where  t.bl, line 3, column 1 (address '3')
 <a id="__codelineno-5-547" name="__codelineno-5-547" href="#__codelineno-5-547"></a>  what
@@ -9576,13 +9636,13 @@
         
         
           
-          <a href="../symbols-conventions/" class="md-footer__link md-footer__link--next" aria-label="Next: Symbol conventions">
+          <a href="../rules/" class="md-footer__link md-footer__link--next" aria-label="Next: Rules and their code">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Symbol conventions
+                Rules and their code
               </div>
             </div>
             <div class="md-footer__button md-icon">

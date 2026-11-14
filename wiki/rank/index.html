@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7900,10 +7960,10 @@
 
 
 <h1 id="rank">Rank<a class="headerlink" href="#rank" title="Permanent link">&para;</a></h1>
-<p>In the local typed-operator vocabulary, an operator's <strong>rank</strong> is its input/output profile <span class="arithmatex">\(s_1\times\cdots\times s_n\to s\)</span>. It states which sorts an operation accepts and which sort it returns. Distinct named operations can have the same profile; type compatibility does not determine their meaning.</p>
-<p>Terminology varies by source. Goguen, Thatcher, Wagner and Wright (1977), §2, p. 70, call the full pair of input sorts and output sort the <strong>type</strong>, the input-sort string the <strong>arity</strong>, and its length the <strong>rank</strong>. Thus their rank is an argument count. State the convention when comparing sources.</p>
+<p>In the local typed-operator vocabulary, an operator's <strong>rank</strong> is its input/output profile <span class="arithmatex">\(s_1\times\cdots\times s_n\to s\)</span> (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3). It states which sorts an operation accepts and which sort it returns. Distinct named operations can have the same profile; the profile does not determine their meaning.</p>
+<p>Terminology varies by source. Goguen, Thatcher, Wagner and Wright (1977), §2, p. 70, call the full pair of input sorts and output sort the <strong>type</strong>, the input-sort string the <strong>arity</strong>, and its length the <strong>rank</strong>. Thus their rank is an argument count. Goguen and Meseguer (1992, Definition 2.1) call the full pair the rank, which is the usage here. State the convention when comparing sources.</p>
 <h2 id="model-and-numerical-types">Model and numerical types<a class="headerlink" href="#model-and-numerical-types" title="Permanent link">&para;</a></h2>
-<p>A <a href="../signature/">signature</a> declares operation profiles. The interpreted operation acts on the corresponding chosen carrier sets, while actual <a href="../field/">field</a> types also retain their declared role, <a href="../perch/">perch</a> and domain. The input/output profile of one operation is not a complete description of the model's typing context.</p>
+<p>A <a href="../signature/">signature</a> declares operation profiles. The interpreted operation acts on the corresponding chosen carrier sets, while the type of a <a href="../field/">field</a> also names its role, its declared set and, unless it is a shock, its <a href="../perch/">perch</a>. The input/output profile of one operation is not a complete description of the model's typing context.</p>
 <p>A numerical method may approximate the same mathematical operation using grids or other representations. Equal mathematical ranks do not make numerical arrays interchangeable or guarantee equal answers. State the numerical domains, comparison maps and approximation conditions; see <a href="../adequacy/">adequacy</a> and <a href="../../bellman-calculus/APPX-F-OPERATOR-ALGEBRA/#7-types-and-identities">Operator algebra</a>.</p>
 <p>See <a href="../operator/">operator</a>, <a href="../sort/">sort</a> and <a href="../signature/">signature</a>.</p>
 

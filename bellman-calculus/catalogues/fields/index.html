@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7914,16 +7974,16 @@
 <h1 id="appendix-e1-field-types">Appendix E.1 — Field types<a class="headerlink" href="#appendix-e1-field-types" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>A field is a named random variable with a declared value domain, role, and information context. This catalogue lists the domains and fields in the buffer-stock example. The value domain is distinct from a space of random variables and from a representing function's domain.</p>
+<p>A field is a named random variable with a declared set, a role and, unless it is a shock, a perch. This catalogue lists the domains and fields in the buffer-stock example. The declared set is distinct from a space of random variables and from a representing function's domain.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
 <p><strong>Builds on</strong> — <a href="../../04-fields%2C%20functions%20and%20types/">Fields, functions and types</a> states the field-to-function representation conditions.
-<strong>Formal account</strong> — <a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> distinguishes classifier declarations from their interpretations.
+<strong>Formal account</strong> — <a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §5 classifies fields by role, perch and declared set.
 <strong>Used by</strong> — Bellman-SYM's <a href="../../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> gives the <code>.bl</code> rules that declare these fields.
 <strong>See also</strong> — <a href="../functions/">Function types</a> lists the representing functions.</p>
 </details>
-<p>A <strong>field</strong> at perch <span class="arithmatex">\(p\)</span> is a random variable measurable with respect to the information set <span class="arithmatex">\(\mathcal F_p\)</span>. A declaration specifies its <strong>value domain</strong>, the set in which its realized values lie, and its role. The source declares types with a colon and combines type components with <code>@</code>; §2 of Bellman-SYM's Appendix C gives the <code>.bl</code> rules. Shock declarations require their transition timing and law, rather than an inferred native perch.</p>
+<p>A <strong>field</strong> at perch <span class="arithmatex">\(p\)</span> is a random variable measurable with respect to the information set <span class="arithmatex">\(\mathcal F_p\)</span>. A declaration states its role and its <strong>declared set</strong>, the set in which its realized values lie (<a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §5); the headings of this page call that set a value domain. A file writes a field's type after a colon: a role word, a perch word, sets, or several of these with <code>@</code> between them. <a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3 states the sort that such a type names, and §2 of Bellman-SYM's Appendix C gives the <code>.bl</code> rules. Shock declarations require their transition timing and law, rather than an inferred native perch.</p>
 <p><a id="carriers-the-object-sorts-a-field-can-inhabit"></a></p>
 <h2 id="1-value-domains-and-state-spaces">1. Value domains and state spaces<a class="headerlink" href="#1-value-domains-and-state-spaces" title="Permanent link">&para;</a></h2>
 <table>
@@ -7953,11 +8013,11 @@
 <tr>
 <td><span class="arithmatex">\(\mathsf L\)</span></td>
 <td>values</td>
-<td>a stated value domain, such as <span class="arithmatex">\(\mathbb R\)</span> or extended reals where all operations are defined</td>
+<td>the declared set of a value field, such as <span class="arithmatex">\(\mathbb R\)</span> or extended reals where all operations are defined</td>
 </tr>
 </tbody>
 </table>
-<p>These are domains for realized coordinates and vectors. The field itself belongs to a space of measurable random variables. A real value domain does not imply finite expectation or finite second moment; expectations and derivatives require their separate assumptions. Unbounded utility does not by itself require infinite values or determine a suitable value-function space.</p>
+<p>These are domains for realized coordinates and vectors. The field itself belongs to a space of measurable random variables. A declared set of real numbers does not imply finite expectation or finite second moment; expectations and derivatives require their separate assumptions. Unbounded utility does not by itself require infinite values or determine a suitable value-function space.</p>
 <p><a id="field-types-buffer-stock"></a></p>
 <h2 id="2-buffer-stock-fields">2. Buffer-stock fields<a class="headerlink" href="#2-buffer-stock-fields" title="Permanent link">&para;</a></h2>
 <p>Here <span class="arithmatex">\(k\)</span> is arrival assets, <span class="arithmatex">\(y\)</span> is income, <span class="arithmatex">\(m\)</span> is resources, <span class="arithmatex">\(c\)</span> is consumption, and <span class="arithmatex">\(a\)</span> is assets after consumption.</p>
@@ -7967,7 +8027,7 @@
 <th>Field</th>
 <th>Perch or transition</th>
 <th>Role</th>
-<th>Value domain</th>
+<th>Declared set</th>
 </tr>
 </thead>
 <tbody>
@@ -8010,7 +8070,7 @@
 </tbody>
 </table>
 <p>The derivative of a value is no field and has no role. It is read by the derivative term <code>D_{a}V[&gt;]</code>, the derivative operator applied to the declared continuation value in the continuation coordinate <code>a</code>, and a derivative line of the builder that writes a value states what that derivative equals. The derivative operator <code>D_{x}</code> and a chosen function name such as <code>𝑑𝑢</code> are different objects, and neither the term nor a derivative line proves differentiability or positivity.</p>
-<p>A perch's state space uses its declared <strong>state coordinates</strong>, not all fields known there. With no joint restriction it is their product; the buffer-stock example has one state coordinate at each perch. If the continuation field is measurable with respect to <span class="arithmatex">\(\sigma(X_\succ)\)</span>, the information generated by the continuation state, it has a measurable representative <span class="arithmatex">\(V_\succ=\mathrm v_\succ(X_\succ)\)</span> almost surely. Its realization is a value, and <span class="arithmatex">\(\mathrm v_\succ\)</span> is the function listed in <a href="../functions/">Function types</a>. Local utility functions and intermediate definitions also retain their argument and result types.</p>
+<p>A perch's state space uses its declared <strong>state coordinates</strong>, not all fields known there. With no joint restriction it is their product; the buffer-stock example has one state coordinate at each perch. If the continuation field is measurable with respect to <span class="arithmatex">\(\sigma(X_\succ)\)</span>, the information generated by the continuation state, it has a measurable representative <span class="arithmatex">\(V_\succ=\mathrm v_\succ(X_\succ)\)</span> almost surely. Its realization is a value, and <span class="arithmatex">\(\mathrm v_\succ\)</span> is the function listed in <a href="../functions/">Function types</a>. Local utility functions and intermediate definitions also retain the sets of their arguments and results.</p>
 
 
 

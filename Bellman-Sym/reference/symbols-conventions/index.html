@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://bellman.io/Bellman-Sym/reference/symbols-conventions/">
       
       
-        <link rel="prev" href="../refusals/">
+        <link rel="prev" href="../types/">
       
       
         <link rel="next" href="../model-directory-layout/">
@@ -2487,6 +2487,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2657,6 +2661,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8259,7 +8319,7 @@
 <p>Here <code>a</code>, <code>a_d</code>, and <code>a[&gt;]</code> are assets at three information contexts. The transition equations state that their values agree in this stage. The stage writes no derivative line: its two backward lines are a scaling and an identity of the value, whose state passes unchanged, so the derivative of the value passes through them, and a stage before this one that reads <code>D_{a}V[&gt;]</code> of its continuation receives the derivative of the discounted value. No letters of a name establish a derivative; the derivative of a value is read by the term <code>D_{a}V[&gt;]</code>, which applies the operator <code>D</code> to the declared value in the named coordinate (§4).</p>
 <p>The block identifier <code>cntn_to_dcsn</code> provides an address. Renaming it changes references such as the path of a place in a methods file, but does not change multiplication by <code>β</code>. In a model with a separate discounting stage, do not insert a second discount factor into the beta-free consumption equations.</p>
 <h2 id="2-fields-functions-and-spaces">2 Fields, functions, and spaces<a class="headerlink" href="#2-fields-functions-and-spaces" title="Permanent link">&para;</a></h2>
-<p>A <strong>field</strong> is a named quantity at one perch: a state, a control, a shock, or a value. Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A <strong>state function</strong> represents such a quantity using explicit state arguments. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.</p>
+<p>A <strong>field</strong> is a named quantity of a stage: a state, a control, a value or a multiplier (<a href="../../10-constraints/">Constraints</a> §4.2) at one perch, or a shock, which belongs to no perch (§9.3). Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A <strong>state function</strong> represents such a quantity using explicit state arguments. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.</p>
 <table>
 <thead>
 <tr>
@@ -8341,6 +8401,7 @@
 </tr>
 </tbody>
 </table>
+<p>In a block's header a mark agrees with the perch word of its side: the listing <code>(a[&gt;] : Xa) : !arvl</code> is refused under <a href="../refusals/#field-perch"><code>field-perch</code></a>. The package reads <code>a[~]</code> as the bare name <code>a</code>, so the listing <code>(a[~] : Xa) : !arvl</code>, which breaks the rule, is read as the arrival field <code>a</code>. The package does not yet check this (<a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
 <p>When nested information is assumed, the information structure can be written <span class="arithmatex">\(\mathcal F_\prec\subseteq\mathcal F_\sim\subseteq\mathcal F_\succ\)</span>. Stage marks alone do not establish this assumption. These inclusions need not be strict: an identity transition can reveal no additional information. Nor must a list of current state coordinates alone generate all past information. State sufficiency is an assumption used when passing to functions of those coordinates.</p>
 <p>Information marks distinguish field references within the stage. They are not dates, and a perch is not an operator endpoint. In particular, a shock listed as a transition argument need not be observed before that transition. A decision control written beside continuation values is still a decision control. The rules for the sides of a block's header respect these role exceptions.</p>
 <p>The diagram below records information order and the usual directions of transition and value calculations; its circles denote information contexts:</p>
@@ -8404,12 +8465,13 @@
 <p>Terminal continuation values are separate boundary data for period zero. A connector renames corresponding fields between occurrences; matching names alone does not prove matching domains or information roles. The per-stage mathematical graph and the syntactic trellis, a dictionary of stage records, serve different purposes; the order of a period's stages is computed from the fields they join. <a href="../../06-period/">Periods</a> and <a href="../../07-trellis/">Trellises</a> give their composition rules.</p>
 <h2 id="8-parameters-settings-and-interpretation">8 Parameters, settings, and interpretation<a class="headerlink" href="#8-parameters-settings-and-interpretation" title="Permanent link">&para;</a></h2>
 <p>A <strong>parameter</strong> defines the economic problem; a <strong>setting</strong> controls a numerical calculation. A finite menu of housing sizes is a mathematical domain, so changing its endpoints or number of available sizes changes the problem. A grid approximating a continuous housing domain is a numerical choice. A simulation grid need not equal the solution grid.</p>
-<p>A <strong>derived parameter</strong> is a constant of the economic problem that a definition without arguments writes from the declared parameters, such as human wealth <code>h := 1/(1 - Γ/R)</code>, so that it is a parameter and not a setting (<a href="../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2; <a href="../../API/stage/06-par-and-settings/">Parameters and settings</a> §1.1).</p>
+<p>A <strong>derived parameter</strong> is a constant of the economic problem that a definition without arguments writes from the declared parameters, such as human wealth <code>h := 1/(1 - Γ/R)</code>, so that it is a parameter and not a setting (<a href="../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2; <a href="../../API/stage/06-par-and-settings/">Parameters and settings</a> §1.1). The line that defines a derived parameter may declare the set in which its value lies, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, and calibration then refuses values of the parameters at which the derived value lies outside that set (§9.2).</p>
 <p>The meaning map <span class="arithmatex">\(\Upsilon\)</span> interprets declarations and equations. The representation map Ρ denotes their numerical realization after the required choices and bindings. Lowercase <span class="arithmatex">\(\rho\)</span> remains available for an economic parameter, such as risk aversion. These names do not assert that interpretation or approximation is invertible, or that different numerical choices commute.</p>
 <p>Elaboration keeps the fields, with the interpreted equation bodies and definitions, in the two <a href="../../../wiki/semgraph/">initial diagrams</a>, and derives from them, under explicit assumptions, the two builders graphs, on functions and on measures. The temporary syntax tree and source spans are discarded; a second independently editable function model is not required. See <a href="../../09-from-syntax-to-formal-problem-definition/">From source to a formal problem</a>.</p>
 <h2 id="9-declarations-domains-and-type-words">9 Declarations, domains and type words<a class="headerlink" href="#9-declarations-domains-and-type-words" title="Permanent link">&para;</a></h2>
+<p>The reference page <a href="../types/">Types</a> lists the role words, the perch words, the reserved sets, the forms of a set expression and the limits on them.</p>
 <h3 id="91-punctuation">9.1 Punctuation<a class="headerlink" href="#91-punctuation" title="Permanent link">&para;</a></h3>
-<p>The examples are lines of the stage files under <code>applications/portfolio-choice/</code>: <code>disc.bl</code>, whose source §1 shows, <code>cons.bl</code> and <code>noport.bl</code>; the derived parameter <code>h</code> is a line of <code>perfect_foresight.bl</code> under <code>applications/consumption-perfect-foresight-crra/</code>.</p>
+<p>The examples are lines of the stage files under <code>applications/portfolio-choice/</code>: <code>disc.bl</code>, whose source §1 shows, <code>cons.bl</code> and <code>noport.bl</code>; the derived parameter <code>h</code> and the definition of <code>q</code> that declares its set are lines of <code>perfect_foresight.bl</code> under <code>applications/consumption-perfect-foresight-crra/</code>. The examples of the union and the difference are written for this table.</p>
 <table>
 <thead>
 <tr>
@@ -8421,17 +8483,27 @@
 <tbody>
 <tr>
 <td><code>:</code></td>
-<td>Declare a type: a domain, a role or an information context.</td>
-<td><code>β : (0,1)</code></td>
+<td>Declare a type: a declared set (§9.2) or a role, on a line of its own or on a side of a block's header, and an information context on a side of a block's header only. A declaration on a line of its own that carries a perch word is refused under <a href="../refusals/#field-perch"><code>field-perch</code></a>.</td>
+<td><code>β : (0,1)</code>; <code>(a : Xa) : !arvl</code></td>
 </tr>
 <tr>
 <td><code>@</code></td>
-<td>Join the components of a type; their order does not matter. Several sets in one type declare their intersection (§9.2).</td>
+<td>Write the components of a type with <code>@</code> between them; their order does not matter. Several sets in one type declare their intersection (§9.2).</td>
 <td><code>c : !ctrl @ ℝ₊₊</code></td>
 </tr>
 <tr>
-<td><code>:=</code></td>
-<td>Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8).</td>
+<td><code>\/</code>, also <code>∪</code></td>
+<td>Form the union of two sets of numbers, in the declared set of a parameter, a derived parameter or a setting (§9.2).</td>
+<td><code>ρ : (0,1) \/ (1, inf)</code></td>
+</tr>
+<tr>
+<td><code>\</code>, also <code>∖</code></td>
+<td>Form the difference of two sets of numbers, the members of the first that lie outside the second, in the same places (§9.2).</td>
+<td><code>ρ : ℝ₊₊ \ {1}</code></td>
+</tr>
+<tr>
+<td><code>:=</code>, also <code>&lt;-</code></td>
+<td>Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8), whose definition may declare its set, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>.</td>
 <td><code>Xa := ℝ₊</code>; <code>Xa := [0, ā]</code>; <code>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)</code>; <code>h := 1/(1 - Γ/R)</code></td>
 </tr>
 <tr>
@@ -8463,7 +8535,7 @@
 </table>
 <p>The argument <code>c</code> of <code>𝑢(c : ℝ₊₊)</code> is local to the definition and declares no control, and a name such as <code>𝑑𝑢</code> differentiates nothing: the body of its definition defines the function. An equation is not an assignment or a policy function by its form alone: <code>c = c[&gt;]</code> in the block <code>policy</code> of <code>methods.bl</code>, the methods file beside <code>cons.bl</code>, is an implicit relation between the policy and the candidate <code>c[&gt;]</code>, which the line <code>m_d[&gt;] = a + c[&gt;]</code> places at the cash on hand of each saving (<a href="../../appendices/15-appendix-d-node-tag-and-field-indexing/">Appendix D</a> §7).</p>
 <h3 id="92-domains">9.2 Domains<a class="headerlink" href="#92-domains" title="Permanent link">&para;</a></h3>
-<p>A <strong>domain</strong> is the set of values a field or a parameter may take. These set names are reserved by the grammar and need no definition line:</p>
+<p>A <strong>domain</strong> is the set of values a field or a parameter may take, also called its <strong>declared set</strong>. These set names are reserved by the grammar and need no definition line:</p>
 <table>
 <thead>
 <tr>
@@ -8506,12 +8578,14 @@
 </tr>
 </tbody>
 </table>
-<p>A bare <code>R</code>, <code>N</code> or <code>Z</code> is an ordinary name and not one of these sets; <code>R</code> may be the gross return on assets. Define any other named set before using it, <code>Xa := ℝ₊</code>. A named set may also be an interval, <code>Xa := [0, ā]</code>, <code>Xa := (0, ā]</code> or <code>Xa := [0, ā)</code>, whose endpoints may name parameters; a field typed <code>a : Xa</code> then has the same declared set as <code>a : [0, ā]</code>. The open-open form is the exception: after <code>:=</code>, <code>(0, ā)</code> is read as a pair of values, not as a set, so an open interval is written after the typing colon where it is used, <code>a : (0, ā)</code>. An interval writes its endpoints with the usual brackets, <code>(a,b)</code>, <code>(a,b]</code>, <code>[a,b)</code> and <code>[a,b]</code>, and an endpoint may be infinite, <code>ρ : [1, inf)</code>; a finite set lists its labels, <code>R_type := {r1, r2, r3, r4, r5}</code> or, inline, <code>d : !ctrl @ {work, retire}</code>; and a product uses <code>×</code>, <code>x : ℝ × ℝ</code>.</p>
-<p>A declaration may write several sets in one type, with <code>@</code> between them, and the declared name then lies in each of them: <code>β : (0,1) @ (0, R^(ρ-1))</code> declares a discount factor in both intervals, below one and below <code>R^(ρ-1)</code>. A bound is written as an interval, whose endpoints may name parameters and whose unbounded side is <code>-inf</code> or <code>inf</code>: <code>θ : ℤ @ [1, inf)</code> declares an integer of at least one. At most one of the sets is written otherwise than as an interval with brackets, and a named set counts as such a set. The sets may be written in any order. Several sets are read on the declaration of one name on its own line; a field listed in a block header carries one set. When values are bound, <code>calibrate</code> refuses a value outside any of the sets and names the bound it breaks. A bound that reads a random variable or a derived parameter is not decided: the stage binds, and <code>stage.obligations()</code> lists the membership as required.</p>
+<p>A bare <code>R</code>, <code>N</code> or <code>Z</code> is an ordinary name and not one of these sets; <code>R</code> may be the gross return on assets. Define any other named set before using it, <code>Xa := ℝ₊</code>. A named set may also be an interval, <code>Xa := [0, ā]</code>, <code>Xa := (0, ā]</code> or <code>Xa := [0, ā)</code>, whose endpoints may name parameters; a field typed <code>a : Xa</code> then has the same declared set as <code>a : [0, ā]</code>. The same holds where one block header lists the field on <code>Xa</code> and another on <code>[0, ā]</code>. The package does not yet check this (<a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). The open-open form is the exception: after <code>:=</code>, <code>(0, ā)</code> is read as a pair of values, which is neither a set nor a derived parameter, so the line <code>Xa := (0, ā)</code> is refused under <a href="../refusals/#not-constructed"><code>not-constructed</code></a>, even where nothing reads <code>Xa</code>. An open interval is written after the typing colon where it is used, <code>a : (0, ā)</code>. An interval writes its endpoints with the usual brackets, <code>(a,b)</code>, <code>(a,b]</code>, <code>[a,b)</code> and <code>[a,b]</code>, and an endpoint may be infinite, <code>ρ : [1, inf)</code>; an interval that holds no number, such as <code>(2, 1)</code>, is refused when the file is read. A finite set lists its labels, <code>R_type := {r1, r2, r3, r4, r5}</code> or, inline, <code>d : !ctrl @ {work, retire}</code>, and a product uses <code>×</code>, <code>x : ℝ × ℝ</code>.</p>
+<p>The union of two sets of numbers is written <code>A \/ B</code>, also <code>A ∪ B</code>, and their difference <code>A \ B</code>, also <code>A ∖ B</code>: <code>ρ : (0,1) \/ (1, inf)</code> declares a parameter in one of the two intervals, and <code>ρ : ℝ₊₊ \ {1}</code> a positive parameter other than one. A value lies in a union when it lies in at least one member, and in a difference when it lies in the left set and outside the right. The product <code>×</code> is read before the two signs and the arrow <code>→</code> after them, and the two signs are read from left to right. The package prints them as <code>\/</code> and <code>\</code>. A union and a difference are read in the declared set of a parameter, of a derived parameter and of a setting. They are refused in the set of a field, of a shock and of a function's argument, and they are not read after <code>:=</code>. A difference whose left side lies within its right side, as in <code>(0,1) \ ℝ₊</code>, holds no number and is refused under <a href="../refusals/#readable-form"><code>readable-form</code></a> when the file is read, where the package can decide the inclusion. A difference that is a member of a union is not judged.</p>
+<p>A declaration may write several sets in one type, with <code>@</code> between them, and the declared name then lies in each of them, so that the sets declare their intersection: <code>β : (0,1) @ (0, R^(ρ-1))</code> declares a discount factor in both intervals, below one and below <code>R^(ρ-1)</code>. A bound is written as an interval, whose endpoints may name parameters and derived parameters and whose unbounded side is <code>-inf</code> or <code>inf</code>: <code>θ : ℤ @ [1, inf)</code> declares an integer of at least one. A parameter's or a setting's set that names a field is refused, and an undeclared name there is refused under <a href="../refusals/#name-in-scope"><code>name-in-scope</code></a>; a shock inside an expectation over that shock is still read where its law reads no field, as in the bound <code>(0, E_{Ψ}(Ψ^(1-γ)))</code>. At most one of the sets is written otherwise than as an interval with brackets, and a named set counts as such a set; a second such set is refused under <a href="../refusals/#syntax"><code>syntax</code></a>. The sets may be written in any order, and two equal sets are read as one. Two intervals of numbers with no number in common, such as <code>(0,1) @ (2,3)</code>, are refused under <code>syntax</code>. Several sets are read on the declaration of one name on a line of its own only; on a field's listing in a block header they are refused under <a href="../refusals/#readable-form"><code>readable-form</code></a>.</p>
+<p>When values are bound, <code>calibrate</code> refuses a value outside any of the sets and names the bound it breaks. A value bound to a name declared on an extended real, <code>ℝ_{-∞}</code>, <code>ℝ_{+∞}</code> or <code>ℝ_{±∞}</code>, must lie in that set. The package does not yet check this (<a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). A bound that reads a derived parameter is judged once calibration has computed the derived value from the declared values. The value of a derived parameter whose definition declares a set is judged against that set in the same step, and calibration refuses a value outside it with a sentence that names the parameter, its definition, the set and the values read. A bound whose arithmetic has no value at the calibration, such as <code>1/(R-2)</code> at <code>R = 2</code>, refuses the calibration. A bound that holds an expectation over a shock, or that calls a function other than <code>log</code> and <code>exp</code>, such as a function the file defines, is not decided: the stage binds, and <code>stage.obligations()</code> lists the membership as required.</p>
 <p>Adjoining infinity lets a value reach an endpoint; it does not make every operation on such values defined. An expectation needs integrability or an extended-value convention, and infinity minus infinity is undefined. <a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> states the assumptions used for value equations.</p>
 <h4 id="921-finite-indexed-data">9.2.1 Finite indexed data<a class="headerlink" href="#921-finite-indexed-data" title="Permanent link">&para;</a></h4>
 <p>A finite set of integer keys lists them, <code>{0, 1}</code>, or names the set its members lie in when a member names a parameter, <code>S_θ := {0, θ} ⊂ ℤ</code>, with <code>θ</code> integer-valued. An integer range whose bounds may name parameters, <code>L_J := {1, …, J}</code>, with <code>…</code> or <code>...</code> between the commas, holds every integer from the first bound to the second, including both bounds. The bounds and the listed members must be integers; their conditions are retained until calibration if they depend on parameters. A value such as <code>3.0</code> is integer-valued and identifies the same key as <code>3</code>, without rounding another integer to it. Separately listed keys must be distinct. A bare <code>{a, b}</code> continues to list two labels.</p>
-<p>A collection is declared with one entry per key, <code>δ : L_J → ℝ</code>, or per ordered pair, <code>dist : L_J × L_J → ℝ₊</code>. The admitted index sets are integer ranges, listed integer keys, finite label sets, and products of these sets. Selection uses a name declared on the corresponding index set: <code>δ[j]</code> selects the entry at <code>j : L_J</code>, and <code>dist[j][i]</code> the entry at the pair of keys. An integer literal in brackets denotes a position, so use a declared key name to select from an indexed collection. Numerical keys must be integer-valued; the entries they identify, such as wages, distances and shock outcomes, may be real-valued. Separate indices of a finite shock distribution may identify equal numerical outcomes.</p>
+<p>A collection is declared with one entry per key, <code>δ : L_J → ℝ</code>, or per ordered pair, <code>dist : L_J × L_J → ℝ₊</code>. The admitted index sets are integer ranges, listed integer keys, finite label sets, and products of these sets. Selection uses a name declared on the corresponding index set: <code>δ[j]</code> selects the entry at <code>j : L_J</code>, and <code>dist[j][i]</code> the entry at the pair of keys. An integer literal in brackets denotes a position, and a collection on an index set is not selected by a position: <code>δ[1]</code> is refused under <a href="../refusals/#family-selection"><code>family-selection</code></a>, although 1 is a key of <code>L_J</code>. Select with a name declared on the index set, <code>δ[j]</code> with <code>j : L_J</code>. Numerical keys must be integer-valued; the entries they identify, such as wages, distances and shock outcomes, may be real-valued. Separate indices of a finite shock distribution may identify equal numerical outcomes.</p>
 <p>Calibration supplies a sequence in index order or a mapping from keys to entries. Integer ranges are ordered from the lower bound to the upper bound; listed sets retain the order in which their members are written. For example, declare:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>θ : ℤ @ [1, inf)
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>S_θ := {0, θ} ⊂ ℤ
@@ -8563,7 +8637,7 @@
 </tr>
 <tr>
 <td><code>!shck</code></td>
-<td>A shock, whose law and timing are declared separately.</td>
+<td>A shock, whose law and timing are declared separately. A shock belongs to no perch: it is drawn on the edge between two perches, and a perch word or a mark <code>[&lt;]</code> or <code>[&gt;]</code> written on a shock is refused under <a href="../refusals/#field-perch"><code>field-perch</code></a>.</td>
 </tr>
 <tr>
 <td><code>!vlu</code></td>
@@ -8575,7 +8649,9 @@
 </tr>
 </tbody>
 </table>
-<p>Removing a word can change the problem: without <code>!ctrl</code>, <code>c</code> is no longer chosen. A parameter needs no word; <code>β : (0,1)</code> declares one. A type restated elsewhere in the file must agree with the first statement, and a word written on a side of a block's header follows the rules for roles: a shock listed as an argument is not thereby observed on that side, and a control listed beside continuation values remains a decision control (<a href="../../appendices/13-perch-tagging-rules/">Perch tagging rules</a> §2).</p>
+<p>Removing a word can change the problem: without <code>!ctrl</code>, <code>c</code> is no longer chosen. A parameter needs no word: a name declared with a set on a line of its own, which no block header lists, is a parameter, as <code>β : (0,1)</code> is, and a line of a block that writes it is refused under <a href="../refusals/#parameter-or-field"><code>parameter-or-field</code></a>.</p>
+<p>A name is declared on a line of its own at most once (<a href="../refusals/#declared-once"><code>declared-once</code></a>), and a role restated in a block header must agree with the first statement (<a href="../refusals/#one-name-one-meaning"><code>one-name-one-meaning</code></a>). A set restated in a block header need not equal the first. The field lies in each of the sets written for it, so that they declare their intersection, as several sets in one type do (§9.2), and these sets must have a member in common. The package does not yet check this, except between a block that writes the field and a block that reads it (<a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). The set written by the block that writes a field must also lie in the set written by each block that reads it; where the package can compare the two sets, a field that breaks this is refused under <a href="../refusals/#set-mismatch"><code>set-mismatch</code></a>. The package does not yet check this where it cannot compare the two sets, as with <code>[0, ā]</code> written and <code>[0, 1]</code> read, since the endpoint <code>ā</code> names a parameter (<a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
+<p>A word written on a side of a block's header follows the rules for roles: a shock listed as an argument is not thereby observed on that side, and a control listed beside continuation values remains a decision control (<a href="../../appendices/13-perch-tagging-rules/">Perch tagging rules</a> §2).</p>
 <p>Two marks go in a line's annotation, <code>:: [id=value, !node]</code>, and a third in the annotation of a named set, <code>:: [!categories household_status, newborn=0, old=1]</code>:</p>
 <table>
 <thead>
@@ -8640,7 +8716,7 @@
 </tr>
 <tr>
 <td><code>(x, y) : S</code></td>
-<td>Two fields constrained together by the set <code>S</code>.</td>
+<td>Two names declared together, read where <code>S</code> is a product with one factor for each name, written out or named, <code>S := ℝ₊ × [0, 1]</code>; each name then lies in its own factor, <code>x</code> in <code>ℝ₊</code> and <code>y</code> in <code>[0, 1]</code>. Any other <code>S</code>, such as a set that couples the two names, is refused under <a href="../refusals/#readable-form"><code>readable-form</code></a>; a constraint that couples two controls is written in the feasible set of the maximization statement (<a href="../../10-constraints/">Constraints</a> §1).</td>
 </tr>
 <tr>
 <td><code>x : ℝ × ℝ</code></td>
@@ -8691,7 +8767,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../refusals/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Refusals">
+          <a href="../types/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Types">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -8701,7 +8777,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Refusals
+                Types
               </div>
             </div>
           </a>

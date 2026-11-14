@@ -2711,6 +2711,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2881,6 +2885,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8236,7 +8296,7 @@
 <h2 id="1-three-kinds-of-constraint-and-where-each-is-written">1 Three kinds of constraint and where each is written<a class="headerlink" href="#1-three-kinds-of-constraint-and-where-each-is-written" title="Permanent link">&para;</a></h2>
 <p>An economic model constrains a choice in three ways, and the language, Bellman-SYM, gives each its own place.</p>
 <p>A <strong>fixed bound</strong> does not depend on the state. A portfolio share lies in <span class="arithmatex">\([0,1]\)</span>; investment is nonnegative; a labor supply lies in <span class="arithmatex">\([0,1]\)</span>. Such a bound is the control's declared set, written in the signature of the block where the control is introduced, for example <code>ς : [0,1] @ !ctrl</code> or <code>i : ℝ₊ @ !ctrl</code>. Nothing further is written, because the set is the constraint. Declarations, roles such as <code>!ctrl</code> and annotations <code>:: [id=…]</code> are read as in <a href="../01-stage/">Stages</a> §2, <a href="../reference/symbols-conventions/">Symbol conventions</a> and <a href="../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §1; <code>[&gt;]</code> marks a field at the continuation <strong>perch</strong>, the information set at which the quantities after the decision are known (<a href="../01-stage/">Stages</a> §1).</p>
-<p>A <strong>state-dependent bound</strong> is a feasibility correspondence, a function from states to sets, which the notation of the <a href="../../bellman-calculus/">Bellman calculus</a> writes <span class="arithmatex">\(\Gamma\)</span>. It is defined at the top of the file by a function definition whose body is a set rather than a formula, and it is named in the binder of the <strong>maximization statement</strong> of the <strong>policy block</strong>, the block of a stage that states how the control is chosen; the maximization statement names the control as a maximizer of its objective over its feasible set, and §4 states, for each spelling, whether it forms an operation. A statement marked <code>!doc</code> is a declaration: it forms no operation, and no method is attached to it. A correspondence is not written as the type of a control: controls keep plain declared sets, and the loading software reads the feasible set from the maximization statement.</p>
+<p>A <strong>state-dependent bound</strong> is a feasibility correspondence, a function from states to sets, which the notation of the <a href="../../bellman-calculus/">Bellman calculus</a> writes <span class="arithmatex">\(\Gamma\)</span>. It is defined at the top of the file by a function definition whose body is a set rather than a formula, and it is named in the binder of the <strong>maximization statement</strong> of the <strong>policy block</strong>, the block of a stage that states how the control is chosen; the maximization statement names the control as a maximizer of its objective over its feasible set, and §4 states, for each spelling, whether it forms an operation. A statement marked <code>!doc</code> is a declaration: it forms no operation. A methods file attaches no method to it. The package does not yet check this (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). A correspondence is not written as the type of a control: controls keep plain declared sets, and the loading software reads the feasible set from the maximization statement. It compares the feasible set with the control's declared set. Where it cannot show that the first lies within the second, it refuses nothing and records the condition <code>range-compatibility</code>, that the policy takes its values in the declared set. It leaves that condition undecided, also after calibration. For the correspondence <code>Γ(x : ℝ₊₊) := [0, x]</code> and a control declared on <code>ℝ₊₊</code>, the card of the policy builder (§4) prints the condition under the heading <code>Conditions</code> as <code>𝑐(m_d) ∈ ℝ₊₊</code>. The loading software records the same condition where no point of the feasible set lies in the declared set. The author therefore writes a feasible set that lies within the control's declared set.</p>
 <p>In the maximization statement the binder introduces a bound variable, local to the statement, that ranges over the feasible set: <code>argmax_{cp : Γ(w, h)}</code> binds <code>cp</code> to <span class="arithmatex">\(\Gamma(w,h)\)</span>, the feasible set at the state <span class="arithmatex">\((w, h)\)</span> of §5.2, with the same colon that types a declaration. When the bound is fixed the bare binder suffices, <code>argmax_{i}(…)</code>, because the control's declared set is its feasible set.</p>
 <p>A feasible set for a pair of jointly chosen quantities may be a product:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Γ(z : ℝ₊) := [0, z] × ℝ₊
@@ -8246,12 +8306,12 @@
 </code></pre></div>
 <p>Here <code>q</code> is one nonnegative triple, and its first two components must sum to <code>z</code>; its third component remains nonnegative. For <code>z = 3</code>, <code>(1, 2, 0)</code> is feasible, whereas <code>(1, 1, 0)</code> violates the equality and <code>(1, 2, -1)</code> violates nonnegativity. Comma-separated conditions must all hold, so an equality may be combined with inequalities. The policy's maximization statement retains this complete feasible set for the joint choice; <a href="../appendices/14-appendix-c-syntax-to-semantics/#r7-the-operations-a-line-writes">Appendix C</a> R7 states the separate requirements for a maximizer and its numerical selection.</p>
 <p>An <strong>occasionally binding constraint</strong> holds with equality at some states and with slack at others: the borrowing limit that binds at low wealth, the irreversibility of investment that binds when capital is abundant, the collateral limit that binds when house prices fall. Its first-order condition is the Kuhn–Tucker condition of §2, which the language writes in one of three spellings (§4).</p>
-<p>A fixed bound on a parameter is part of its declared set. A bound is an endpoint of the set, a number as in <code>β : (0,1)</code> or a formula of other parameters as in <code>Γ : (0, R)</code>. A further bound is a second set written after <code>@</code>, and the declared name then lies in both: <code>β : (0,1) @ (0, R^(ρ-1))</code> declares a discount factor below one and below <code>R^(ρ-1)</code>. Calibration refuses a value outside either set and names the bound it breaks (<a href="../reference/symbols-conventions/">Symbols and conventions</a> §9.2).</p>
+<p>A fixed bound on a parameter is part of its declared set. A bound is an endpoint of the set, a number as in <code>β : (0,1)</code> or a formula of other parameters as in <code>Γ : (0, R)</code>. A further bound is a second set written after <code>@</code>, and the declared name then lies in both: <code>β : (0,1) @ (0, R^(ρ-1))</code> declares a discount factor below one and below <code>R^(ρ-1)</code>. Calibration refuses a parameter's value that lies outside any of its sets, and names the bound it breaks. A bound that holds an expectation, or that calls a function other than <code>log</code> and <code>exp</code>, is not decided, and the membership is left required (<a href="../reference/symbols-conventions/">Symbols and conventions</a> §9.2). At most one of the sets is written otherwise than as an interval with its brackets. A named set such as <code>Xa</code>, or a reserved set such as <code>ℝ₊₊</code>, counts as such a set, so <code>ρ : ℝ₊₊ @ (1, inf)</code> is read and <code>ρ : Xa @ ℝ₊₊</code> is refused under <code>syntax</code>. Several sets are read only on the declaration of one name on its own line at the top level of the file. A field listed in a block header carries one set, and a second set there is refused under <code>readable-form</code> (<a href="../reference/symbols-conventions/">Symbols and conventions</a> §9.2).</p>
 <details class="ast">
 <summary>Abstract grammar: CorrDef</summary>
 <p><div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>stmt  += CorrDef(identifier name, coordinate* params, setexpr body)
 </code></pre></div>
-<code>params</code> has at least one entry, each a typed argument; <code>body</code> is an interval, a finite set, a product of sets or a set comprehension, in the arguments. A comprehension may restrict its member by equalities and inequalities. A set comprehension is admitted in one other place, after <code>:=</code> in the definition of a named set, which has no arguments, as in <code>H := {i : ℤ | i &gt;= 0, i &lt;= 1}</code> (<a href="../reference/symbols-conventions/">Symbol conventions</a> §9.2); marked <code>!categories</code>, such a set is bounded by inequalities alone, and an equality condition is refused under <code>category-codes</code>.</p>
+<code>params</code> has at least one entry, each a typed argument; <code>body</code> is a closed or half-open interval, a finite set, a product of sets or a set comprehension, in the arguments. An open interval written alone as the body, <code>(0, x)</code>, is read after <code>:=</code> as a pair of values, so <code>Γ(x : ℝ₊₊) := (0, x)</code> defines a function, not a correspondence. An open feasible set is written by comprehension, <code>Γ(x : ℝ₊₊) := {c : ℝ₊₊ | c &lt; x}</code>. As a factor of a product, <code>(0, x) × ℝ₊</code>, the same brackets are read as an open interval. A finite set is a set of labels, <code>{work, retire}</code>, an integer range, <code>{0, …, J}</code>, or a list of integers, <code>{0, 1}</code>. The package does not yet read an integer range or a list of integers written alone as the body (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). It refuses such a line under <code>not-constructed</code>. It reads either one as a factor of a product, <code>{0, …, J} × ℝ</code>. A comprehension may restrict its member by equalities and inequalities. A set comprehension is admitted in one other place, after <code>:=</code> in the definition of a named set, which has no arguments, as in <code>H := {i : ℤ | i &gt;= 0, i &lt;= 1}</code> (<a href="../reference/symbols-conventions/">Symbol conventions</a> §9.2); marked <code>!categories</code>, such a set is bounded by inequalities alone, and an equality condition is refused under <code>category-codes</code>.</p>
 <p><strong>Keys.</strong> <code>name</code> is the correspondence's name, applied in a binder (§1); <code>params</code> are its typed arguments; <code>body</code> is the set it assigns to each argument value (§1).</p>
 <p><strong>Head.</strong> A function-definition line, <code>name(arg : set, …) := body</code>, whose body is a set rather than a formula.</p>
 <p><strong>Denotes.</strong> The feasibility correspondence <span class="arithmatex">\(\Gamma\)</span> of <a href="../../bellman-calculus/03-Stages%20and%20perches/">Stages and perches</a> §1, a function from decision states to sets of admissible controls.</p>
@@ -8262,11 +8322,11 @@
 <p><div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>subscript = Var(identifier name)
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>          | In(identifier var, expr set)
 </code></pre></div>
-<code>var</code> is the bound variable; <code>set</code> is a named set or an applied correspondence.</p>
+<code>var</code> is the bound variable; <code>set</code> is a named set or an applied correspondence. The package does not yet check this (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). A reserved set such as <code>ℝ₊₊</code> is refused in the binder under <code>syntax</code>.</p>
 <p><strong>Keys.</strong> <code>var</code> is the name bound by the operator (§1); <code>set</code> is the set it ranges over (§1).</p>
 <p><strong>Head.</strong> Inside the operator's subscript braces, <code>argmax_{var : set}</code>; the bare form <code>argmax_{var}</code> is <code>Var</code>.</p>
 <p><strong>Denotes.</strong> The maximization of <a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> R7 over the set the binder names, with the variable local to the statement.</p>
-<p><strong>Status.</strong> The loading software parses both forms and records the binder with the operator occurrence. A maximization statement marked <code>!doc</code> is printed on the policy card under the heading <code>Declared</code> with the policy substituted for the control, <code>𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]</code>, and forms no operation; written without the mark, it forms the Argmax operation that outputs the policy, and the card prints the same statement as that operation's rule (§4.1).</p>
+<p><strong>Status.</strong> The loading software parses both forms and records the binder with the operator occurrence. A maximization statement marked <code>!doc</code> is printed on the policy card under the heading <code>Declared</code> with the policy substituted for the control, <code>𝑐(m_d) ∈ argmax_{cp ∈ Γ(m_d)} [𝑢(cp) + 𝑉≻(𝑔≻(m_d, cp))]</code>, and forms no operation; written without the mark, it forms the Argmax operation that outputs the policy, and the card prints the same statement as that operation's rule (§4.1). For a binder over a named set, such as <code>argmax_{cp : Xm}</code>, the card prints <code>𝑐(m_d) ∈ Xm</code> beside the policy's type, and it prints the statement with <code>UNRESOLVED[Xm; free mathematical reference]</code> in place of the set. The package does not yet print a named set there (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
 </details>
 <h2 id="2-the-kuhntucker-condition">2 The Kuhn–Tucker condition<a class="headerlink" href="#2-the-kuhntucker-condition" title="Permanent link">&para;</a></h2>
 <p>The running example is the consumption stage of <a href="../03-field-equations/">Field equations</a> §3. At cash on hand <span class="arithmatex">\(m_d &gt; 0\)</span> the household chooses consumption <span class="arithmatex">\(c &gt; 0\)</span> and saves <span class="arithmatex">\(a = m_d - c\)</span>, subject to the borrowing limit <span class="arithmatex">\(a \ge 0\)</span>, to maximize <span class="arithmatex">\(u(c) + V_\succ(a)\)</span>, where <span class="arithmatex">\(u\)</span> is utility and <span class="arithmatex">\(V_\succ\)</span> is the continuation value, the function the field <code>V[&gt;]</code> denotes; the period's other stage, <code>disc</code>, applies the discount factor, so <span class="arithmatex">\(V_\succ\)</span> is already discounted and no <span class="arithmatex">\(\beta\)</span> appears (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §4.2). The page writes <span class="arithmatex">\(u'\)</span> for marginal utility, <code>𝑑𝑢</code> in the file, <span class="arithmatex">\((u')^{-1}\)</span> for its inverse, <code>𝑑𝑢𝑖𝑛𝑣</code>, and <span class="arithmatex">\(V_\succ'\)</span> for the marginal value of saving, the derivative of the continuation value, which the derivative term <code>D_{a}V[&gt;]</code> denotes and a card prints as <code>D_{a}𝑉≻</code>. Throughout, <span class="arithmatex">\(u'\)</span> is a strictly decreasing bijection of <span class="arithmatex">\(\mathbb R_{++}\)</span>, and <span class="arithmatex">\(V_\succ\)</span> is differentiable on <span class="arithmatex">\(X_a = \mathbb R_+\)</span>, from the right at zero, with derivative <span class="arithmatex">\(V_\succ'\)</span> valued in <span class="arithmatex">\(\mathbb R_{++}\)</span>.</p>
@@ -8467,7 +8527,7 @@ A_{\succ,\mathrm{policy}} = \{(a, \mu) \in X_a \times \mathbb R_+ \mid a \ge 0,\
 <summary>Technical details</summary>
 <p>The card states the set of admitted pairs once, under the heading <code>Where</code>, as <code>A≻,policy</code>; its coordinates have no perch marks, because on a card <code>μ≻</code> names the measure of the continuation state.</p>
 </details>
-<p>The bound is held as written, even where the declared set of the continuation state already implies it: the loading software compares no bound with a declared set, and on a state declared on <span class="arithmatex">\(\mathbb R\)</span> the bound is the only place the constraint enters the set of admitted pairs; §5.2 writes such a bound. Because a bound may not name a control, a constraint on a control, such as the cap on the pension deposit in §3, is written with the clause on the first-order condition.</p>
+<p>The bound is held as written, even where the declared set of the continuation state already implies it: the loading software compares no bound of a clause with a declared set, and on a state declared on <span class="arithmatex">\(\mathbb R\)</span> the bound is the only place the constraint enters the set of admitted pairs; §5.2 writes such a bound. Because a bound may not name a control, a constraint on a control, such as the cap on the pension deposit in §3, is written with the clause on the first-order condition.</p>
 <details class="ast">
 <summary>Abstract grammar: Complementary</summary>
 <p><div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>typer += Complementary(typer d, cond bound)

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="The numerical method chosen for one operator of a stage, named by a word with keyword arguments and written as the typing of the operator's method component in the signature.">
+        <meta name="description" content="The numerical method chosen for one operator of a stage, named by a word with keyword arguments and written as the typing of the operator's method component, a label beside the operator's inputs and outputs.">
       
       
       
@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7946,7 +8006,7 @@
 <h1 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>A <strong>method</strong> is the numerical procedure chosen for one <a href="../operator/">operator</a> of a <a href="../stage/">stage</a>: a quadrature rule for an expectation, an interpolant for the function an Evaluation stores, a solution method such as the endogenous grid method for the policy <a href="../builder/">builder</a>. It is named by a word with keyword arguments, <code>!gauss_hermite(n_ψ=n_ψ_nodes)</code>, <code>!Linear(extrap=clamp)</code>, <code>!egm</code>, and written as the typing of the operator's method component, <code>policy.method : !egm</code>, so that the method is a component of the operator's <a href="../signature/">signature</a> beside its <a href="../signature/">inputs and outputs</a> and its <a href="../grid/">grid</a>. The model does not depend on it: forgetting every label leaves the model's operations unchanged, and forgetting the methods file returns the <a href="../stage/">stage file</a>.</p>
+<p>A <strong>method</strong> is the numerical procedure chosen for one <a href="../operator/">operator</a> of a <a href="../stage/">stage</a>: a quadrature rule for an expectation, an interpolant for the function an Evaluation stores, a solution method such as the endogenous grid method for the policy <a href="../builder/">builder</a>. It is named by a word with keyword arguments, <code>!gauss_hermite(n_ψ=n_ψ_nodes)</code>, <code>!Linear(extrapolate=extrap_policy)</code>, <code>!egm</code>, and written as the typing of the operator's method component, <code>policy.method : !egm</code>, so that the method is a label on the operator, beside its <a href="../signature/">inputs and outputs</a> and its <a href="../grid/">grid</a>. The model does not depend on it: forgetting every label leaves the model's operations unchanged, and forgetting the methods file returns the <a href="../stage/">stage file</a>.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -7955,12 +8015,12 @@
 <strong>Used by</strong> — <a href="../methodization/">Methodization</a>: the binding of methods to a stage and the places they bind at; <a href="../handler/">Handler</a>: the program that computes a method; <a href="../../Bellman-Sym/reference/methods/">Method types</a>: the catalogue.</p>
 </details>
 <h2 id="1-where-a-method-stands">1 Where a method stands<a class="headerlink" href="#1-where-a-method-stands" title="Permanent link">&para;</a></h2>
-<p>A method types an operator and nothing else: not a <a href="../field/">field</a>, which is a quantity and not a computation, and not a side of a block header, the inputs before the arrow or the outputs after it, whose <a href="../perch/">perch</a> word types every coordinate listed on it. The entry is written in the methods file, an <a href="../addition/">addition</a> to the stage file, inside the bracket of the block that holds the operator, <code>[id=policy, policy.method : !egm | evaluate.method : !Linear] { … }</code>, the block's own method in the first group and each inner operator's in a group opened by <code>|</code>; or at file level with the full path, <code>dcsn_to_arvl.evaluate.method : !Linear</code>. The operators that admit a method are those <code>stage.places()</code> lists: a builder; the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that stores the builder's result, named by what it evaluates where the value and its stated derivative are represented apart, <code>evaluate[V[&lt;]].method</code> and <code>evaluate[D_{k}V[&lt;]].method</code>; an operator of a line, such as the expectation <code>E_ψ_ξ</code> or the maximization <code>argmax</code>; a line marked <code>!node</code>, a computation inside a block that the author names so that a method can stand on it; and a declared function. The derivative operator <code>D</code> admits no method.</p>
-<p>Which methods an operator admits depends on its kind: the method is a type over the kind of operator, and the catalogue <a href="../../Bellman-Sym/reference/methods/">Method types</a> lists each word with the kinds it admits and the keywords the package reads. A further keyword is read by the <a href="../handler/">handler</a> that computes the method. A method takes keyword arguments only, each valued by the name of a declared setting, a number, a quoted string or a word with its own arguments; a numerical choice that is to be configured is written as a declared setting's name, and no value is part of a signature.</p>
+<p>A method types an operator and nothing else: not a <a href="../field/">field</a>, which is a quantity and not a computation, and not a side of a block header, the inputs before the arrow or the outputs after it, whose <a href="../perch/">perch</a> word types the states and the values listed on it. The entry is written in the methods file, an <a href="../addition/">addition</a> to the stage file, inside the bracket of the block that holds the operator, <code>[id=policy, policy.method : !egm | evaluate.method : !Linear] { … }</code>, the block's own method in the first group and each inner operator's in a group opened by <code>|</code>; or at file level with the full path, <code>dcsn_to_arvl.evaluate.method : !Linear</code>. The places that admit a method are those <code>stage.places()</code> lists: a builder; the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that stores the builder's result, named by what it evaluates where the value and its stated derivative are represented apart, <code>evaluate[V[&lt;]].method</code> and <code>evaluate[D_{k}V[&lt;]].method</code>; an operator of a line, such as the expectation <code>E_ψ_ξ</code> or the maximization <code>argmax</code>; a line marked <code>!node</code>, a computation inside a block that the author names so that a method can stand on it; and a declared function. The derivative operator <code>D</code> admits no method.</p>
+<p>Which methods an operator admits depends on its operation kind, the name under which the package lists the operation, such as <code>Expectation</code> or <code>Evaluation</code>. The methods admitted at one operation kind form one set (<a href="../../bellman-calculus/06-Methods/">Methods</a> §4), and the catalogue <a href="../../Bellman-Sym/reference/methods/">Method types</a> lists each word with the kinds of place it admits and the keywords the package reads. A further keyword is read by the <a href="../handler/">handler</a> that computes the method. A method takes keyword arguments only, each valued by the name of a declared setting, a number, a quoted string or a word with its own arguments; a numerical choice that is to be configured is written as a declared setting's name, and no value is part of a signature.</p>
 <h2 id="2-what-a-method-does-to-the-stage">2 What a method does to the stage<a class="headerlink" href="#2-what-a-method-does-to-the-stage" title="Permanent link">&para;</a></h2>
 <p>A method does one of three things, according to the operator it stands on. A <strong>representation</strong>, <code>!Linear</code>, <code>!pchip</code> or <code>!closed_form</code>, stores a function from the data its family accepts: an authored table, the policy pairs of <code>!egm</code> at its builder's closing Evaluation, a complete authored expression, or its values on the grid its grid component names (<a href="../../bellman-calculus/06-Methods/">Methods</a> §5). It stands at the Evaluation that closes a builder, one entry for everything the Evaluation stores or one entry per stored object, each with its own grid; or at a <code>!node</code> line or a declared function. A <strong>solution method</strong>, <code>!egm</code> or <code>!vfi</code> or time iteration, stands on a builder and supplies the lines by which the builder is computed at the operative level, the stage keeping the declared lines in <code>stage.declared</code> (<a href="../addition/">addition</a> §3); <code>!vfi</code> supplies no lines. A method of an <strong>operator of a line</strong> fixes how that operation is computed: a quadrature or a discretization of a law at an expectation, <code>!gauss_hermite</code> or <code>!tauchen</code>, and a root finder or a search at a maximization. Interpolation and the comparison of candidates inside a method create no authored equation, and no method proves that a computed policy is optimal.</p>
 <h2 id="3-composition-and-erasure">3 Composition and erasure<a class="headerlink" href="#3-composition-and-erasure" title="Permanent link">&para;</a></h2>
-<p>Two operators compose when the outputs of the first are the inputs of the second; the method plays no part in that condition, and a composite carries the list of its operators' labels, which are kept and never combined. This is the composition of parametrized morphisms of Capucci, Gavranović, Hedges and Rischel (2022, Definition 2, p. 236) under the trivial action. The exact meaning of a stage reads no label; the numerical semantics <a href="../rho/">Ρ</a> reads each label as the routine its handler computes, a handler in the sense of Plotkin and Pretnar (2009): a model of the operators it admits, extended to every composite. Forgetting every label is the erasure <span class="arithmatex">\(U_m\)</span>, and assigning them from a methods file the methodization <span class="arithmatex">\(M_m\)</span>, with <span class="arithmatex">\(U_m \circ M_m = \mathrm{id}\)</span>, the identity label, the list with no entries, standing on every operator without an entry; forgetting the methods file by its provenance is the second erasure, which returns the stage file (<a href="../../bellman-calculus/06-Methods/">Methods</a> §8). A stage is <strong>methodized</strong> when any operator's signature carries a nonempty method component. <code>stage.methods</code> answers each method by the place it binds at, and <code>stage.builder[...].signature()</code> prints the two components beside the inputs and outputs.</p>
+<p>Two operators compose when the outputs of the first are the inputs of the second; the method plays no part in that condition, and a composite carries the list of its operators' labels, which are kept and never combined. This is the composition of parametrized morphisms of Capucci, Gavranović, Hedges and Rischel (2022, Definition 2, p. 236) under the trivial action. The exact meaning of a stage reads no label; the numerical semantics <a href="../rho/">Ρ</a> reads each label as the routine its handler computes, a handler in the sense of Plotkin and Pretnar (2009): a model of the operators it admits, extended to every composite. Forgetting every label is the erasure <span class="arithmatex">\(U_m\)</span>, and assigning them from a methods file the methodization <span class="arithmatex">\(M_m\)</span>, with <span class="arithmatex">\(U_m \circ M_m = \mathrm{id}\)</span>, the identity label, the list with no entries, standing on every operator without an entry; forgetting the methods file by its provenance is the second erasure, which returns the stage file (<a href="../../bellman-calculus/06-Methods/">Methods</a> §8). A stage is <strong>methodized</strong> when some operator carries a method label other than the identity label. <code>stage.methods</code> answers each method by the place it binds at, and <code>stage.builder[...].signature()</code> prints the two components beside the inputs and outputs.</p>
 
 
 

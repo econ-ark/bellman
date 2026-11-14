@@ -2589,6 +2589,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2759,6 +2763,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8004,7 +8064,7 @@
 </tr>
 <tr>
 <td><code>V</code> or <code>V[~]</code></td>
-<td>Decision value.</td>
+<td>Decision value, where the header side that lists <code>V</code>, or the perch word in <code>V</code>'s own listing, names the decision perch.</td>
 </tr>
 <tr>
 <td><code>V[&gt;]</code></td>
@@ -8027,9 +8087,12 @@
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>}
 </code></pre></div>
 <p>This complete transition fragment states the two identities; it does not infer them from a shared name. The declaration establishes unmarked <code>a</code> as an arrival input in the first block, whereas <code>a[&gt;]</code> explicitly identifies the continuation output in the second. The decision state is named <code>a_d</code>. Bare references are resolved from declarations and the expression's context; the parser's identical treatment of a bare token and <code>[~]</code> does not itself determine its economic role.</p>
+<p>In a header, a mark must agree with the perch word of its side, <code>: !arvl</code>, <code>: !dcsn</code> or <code>: !cntn</code>. Construction checks this for <code>[&lt;]</code> and <code>[&gt;]</code>: the listing <code>(a[&gt;] : Xa) : !arvl</code> is refused under <a href="../../reference/refusals/#field-perch"><code>field-perch</code></a>. The mark <code>[~]</code> names the decision perch and is optional. The package reads <code>x[~]</code> as the bare name <code>x</code>. A state or a value written without a mark takes the perch of the header side that lists it, so the listing <code>(a[~] : Xa) : !arvl</code>, which breaks the rule, is read as the arrival field <code>a</code> and nothing is refused. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
 <p>We use <code>[&lt;]</code>, <code>[~]</code>, and <code>[&gt;]</code> for stage information. Although <code>.bl</code> inherits syntax from <strong>dynspec</strong>, an expression language, we do not transfer its steady-state reading of <code>[~]</code> into these equations, or use ordinary component indices such as <code>[1]</code> as alternative perch marks.</p>
 <h2 id="2-how-headers-establish-context">2 How headers establish context<a class="headerlink" href="#2-how-headers-establish-context" title="Permanent link">&para;</a></h2>
-<p>A new field requires a domain and an established information context, supplied by its declaration or by a side of a block's header that names its perch. The construction checks all declarations for agreement. A later occurrence may restate a domain or role, but cannot silently replace it. A side may omit its perch word only when the existing declarations determine its context without guessing.</p>
+<p>A new field requires a declared set and an established information context. A top-level declaration or a header listing supplies the set. A block header alone supplies the context of a state or a value: the perch word of the side that lists the field, or the perch word or mark in the field's own listing. A control stands at the decision perch by its role, and a shock belongs to no perch. Construction refuses a state or a value that nothing places at a perch, under <code>field-perch</code>. It admits a field to which no declaration and no header gives a set, and that field has no declared set. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
+<p>All declarations of one field must agree. A later occurrence may restate a declared set or a role, but cannot silently replace it. Two roles for one field are refused under <a href="../../reference/refusals/#one-name-one-meaning"><code>one-name-one-meaning</code></a>. The sets written for one field at its several occurrences are intersected. Where one block produces the field on one set and another block reads it on a second set, the first set must lie in the second, and a field that breaks this is refused under <a href="../../reference/refusals/#set-mismatch"><code>set-mismatch</code></a>. For some pairs of sets, such as a pair in which an endpoint names a parameter, the package does not yet check the inclusion (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). Where that refusal does not apply, two cases leave the field without a declared set, and nothing is refused. In the first the sets have no member in common, as with a top-level declaration <code>a_d : [2,3]</code> beside a header's <code>(a_d : [0,1])</code>. In the second the package does not compute their intersection, as with the named set <code>Xa</code> beside <code>ℝ</code>. The package does not yet refuse the first case, and in the second it does not yet compute the intersection (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). A header listing carries one set, and several sets in one listing are refused under <a href="../../reference/refusals/#readable-form"><code>readable-form</code></a> (<a href="../../reference/symbols-conventions/">Symbols and conventions</a> §9.2).</p>
+<p>A side may omit its perch word only when each field it lists carries the mark <code>[&lt;]</code> or <code>[&gt;]</code> or its own perch word, as in <code>(a_d : Xa @ !dcsn)</code>, or is a control or a shock. A bare listing on such a side is refused under <code>field-perch</code>, even where another header lists the name at one perch, so a perch is never guessed. The package reads a listing marked <code>[~]</code> as a bare listing, so on such a side it is refused under <code>field-perch</code> in the same way (§1).</p>
 <details class="ast">
 <summary>Abstract grammar: Signature</summary>
 <p>This <a href="../../../wiki/asdl/">ASDL</a> projection gives the constructor <code>Signature</code>, by which the grammar records a block's header, and the simple coordinate case. Other <code>typer</code> and coordinate alternatives remain in the full grammar; the box does not redefine them.</p>
@@ -8059,14 +8122,14 @@
 <h2 id="3-shocks-and-expectations">3 Shocks and expectations<a class="headerlink" href="#3-shocks-and-expectations" title="Permanent link">&para;</a></h2>
 <p>In the <a href="../12-equation-parsing-rules/#4-shock-laws">income transition</a>, <code>y</code> is listed beside arrival assets <code>b</code>, but income is realized between arrival and decision. The state equation <code>w = y + b*R</code> makes income available in decision cash on hand. The backward equation <code>V[&lt;] = E_{y}(V)</code> uses the shock's conditional law to form arrival value.</p>
 <p>Writing an explicit perch mark cannot make an unobserved shock known. For example, replacing that arrival equation by <code>V[&lt;] = E_{y}(V) + y</code> leaves an unintegrated shock outside the expectation. Construction must reject this use when <code>y</code> is unobserved at arrival, identifying the statement and offending occurrence. The nested expression <code>E_{y}(V + y)</code> has a different scope: both terms are integrated, subject to integrability.</p>
-<p>An ordered joint distribution for <code>(ε, η)</code> determines a joint expectation over those shocks. The order of the inputs a header lists implies nothing about dependence. Separate marginal laws do not establish the joint law required for a complete connection route; independence must be stated in the model rather than inferred from separate declarations. Constant parameters describe an IID draw only when the declared distribution is conditional on earlier information and does not depend on that information.</p>
+<p>An ordered joint distribution for <code>(ε, η)</code> determines a joint expectation over those shocks. The order of the inputs a header lists implies nothing about dependence. Separate declarations define the joint law of the shocks of one transition as the product of the declared conditional laws (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §2.1). Each law is conditional on the shocks that it names as arguments and on the source coordinates, the states and controls on the transition's input side. Two shocks whose laws name no other shock are therefore conditionally independent given the source coordinates. Construction records the product as the assumption <code>joint-distribution-factorization</code>, which <code>stage.obligations()</code> lists. The law of the continuation state, which a connection route (<a href="../../06-period/">Periods</a> §2) requires, is formed from the joint laws so defined. A dependence between two shocks is stated in the model by a joint declaration, <code>(ε, η) ~ N(…)</code>, or by naming one shock as an argument of the other's law. Constant parameters describe an IID draw only when the declared distribution is conditional on earlier information and does not depend on that information.</p>
 <h2 id="4-fields-at-another-perch">4 Fields at another perch<a class="headerlink" href="#4-fields-at-another-perch" title="Permanent link">&para;</a></h2>
 <p>A reference at another perch needs an equation or supported transition interpretation that defines it there. The mark is not an inverse-transition operator. For instance, a forward equation defining decision cash on hand from arrival wealth and income does not automatically recover the two inputs from cash on hand.</p>
 <p>The consumption example deliberately defines <code>c[&gt;]</code> and <code>m_d[&gt;]</code> as candidates indexed by continuation savings. Its final <code>c = c[&gt;]</code> is an implicit relation between the policy and the candidate: read at the decision perch, it relates them through the savings transition; rewritten at the continuation perch, it relates them through the coordinate map that <code>m_d[&gt;] = a + c[&gt;]</code> defines, and the construction states it there (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> R5 and R10). The continuation candidate and decision policy are distinct objects; matching their values requires the relation and the function-selection conditions in <a href="../../03-field-equations/#3-an-implicit-policy-relation">Field equations</a>.</p>
 <p>A <strong>state vector</strong> collects chosen state coordinates. Representing a field as a function of that vector requires that those coordinates contain enough information to determine the field, as well as the relevant conditional laws. Perch measurability alone does not establish this. Nor does writing three state vectors prove their generated information sets are nested: a state transition can discard information. <a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> R5 separates these assumptions from syntax.</p>
 <h2 id="5-discrete-alternatives">5 Discrete alternatives<a class="headerlink" href="#5-discrete-alternatives" title="Permanent link">&para;</a></h2>
 <p>A branching stage declares a finite-valued control and the state outputs for each labeled alternative. For example, the retirement stage declares the labels <code>work</code> and <code>retire</code>, distinct continuation fields <code>V_w[&gt;]</code> and <code>V_r[&gt;]</code>, and selects from their ordered tuple using the control <code>d</code>. The branch labels identify alternatives within the continuation interface; they do not add calendar dates or new perch kinds. <a href="../../05-branching/">Branching</a> supplies the complete source.</p>
-<p>Within each alternative, the fields and functions must use that alternative's declared state domain. The value comparison also requires a common objective and the declared label order. Ordinary tuple selection is distinct from a perch mark, so <code>(V_w[&gt;], V_r[&gt;])[d]</code> first names continuation quantities and then chooses a tuple entry.</p>
+<p>Within each alternative, the fields and functions must use that alternative's declared state domain. Construction refuses a continuation value read at the tuple positions of two alternatives, under <a href="../../reference/refusals/#branch-value-position"><code>branch-value-position</code></a>, and a derivative of one alternative's continuation value taken in another alternative's state, under <a href="../../reference/refusals/#derivative-coordinate"><code>derivative-coordinate</code></a>. It admits a law of motion of one alternative that reads another alternative's continuation state: <code>a_w = a_d + a_r</code> in the <code>work</code> block is read with the <code>retire</code> block's law in place of <code>a_r</code>, as <code>a_w = a_d + a_d</code>. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). The value comparison also requires a common objective and the declared label order. Ordinary tuple selection is distinct from a perch mark, so <code>(V_w[&gt;], V_r[&gt;])[d]</code> first names continuation quantities and then chooses a tuple entry.</p>
 
 
 

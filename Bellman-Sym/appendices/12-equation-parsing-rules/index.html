@@ -2600,6 +2600,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2770,6 +2774,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8036,7 +8096,7 @@
 </details>
 <p>For example, substituting an undeclared name <code>missing</code> for <code>a</code> still has the grammatical shape of an equation. Construction must reject the unresolved reference and identify the statement and source span, the part of the source file where the error occurs. An empty body does not define an identity transition; write the identity equation explicitly.</p>
 <h2 id="2-types-and-definitions">2 Types and definitions<a class="headerlink" href="#2-types-and-definitions" title="Permanent link">&para;</a></h2>
-<p>The colon <code>:</code> introduces type information; <code>@</code> combines its components. <code>:=</code> supplies a definition. The following top-level fragment can precede the consumption blocks in <a href="../../03-field-equations/">Field equations</a>, replacing their corresponding declarations and utility functions:</p>
+<p>The colon <code>:</code> introduces type information, whose components are written with <code>@</code> between them. <code>:=</code> supplies a definition. The following top-level fragment can precede the consumption blocks in <a href="../../03-field-equations/">Field equations</a>, replacing their corresponding declarations and utility functions:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Xm := ℝ₊₊
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Xa := ℝ₊
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>ρ : (1, inf)
@@ -8044,63 +8104,71 @@
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>𝑑𝑢 := D_{c}(𝑢)
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)
 </code></pre></div>
-<p><code>D_{c}</code> differentiates the function with respect to its argument <code>c</code>. Applied to a value field with its perch mark, <code>D_{a}</code> forms the derivative term <code>D_{a}V[&gt;]</code>, in this one spelling and never <code>D_{a}(V[&gt;])</code>: the derivative of the value in the state coordinate <code>a</code> of the perch at which the value is read, the coordinate written without its mark. A subscript that names no state coordinate of that perch, or names a discrete coordinate, is refused. <code>Inv</code> denotes an inverse function on an appropriate domain. Here marginal utility is strictly decreasing from positive consumption onto the positive reals, because <code>ρ &gt; 1</code>; its inverse exists on positive arguments. A chosen name such as <code>𝑑𝑢</code> has no derivative meaning by itself. Similarly, a derivative term names the derivative of a value but differentiates nothing automatically.</p>
-<p>Typed function arguments are local names with domains; do not give them field roles or perch marks. The name a comprehension binds is local in the same way: <code>H := {i : ℤ | i &gt;= 0, i &lt;= 1}</code> defines the named set of the integers <code>i</code> that satisfy both conditions and declares no field <code>i</code> (<a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.2). Define functions at the top level. A function-like expression accepted inside a block is not by itself a supported construction rule for a complete stage.</p>
+<p><code>D_{c}</code> differentiates the function with respect to its argument <code>c</code>. Applied to a value field with its perch mark, <code>D_{a}</code> forms the derivative term <code>D_{a}V[&gt;]</code>, which may also be written <code>D_{a}(V[&gt;])</code> with the same meaning: the derivative of the value in the state coordinate <code>a</code> of the perch at which the value is read, the coordinate written without its mark. A subscript that names no state coordinate of that perch, or names a discrete coordinate, is refused. <code>Inv</code> denotes an inverse function on an appropriate domain. Here marginal utility is strictly decreasing from positive consumption onto the positive reals, because <code>ρ &gt; 1</code>; its inverse exists on positive arguments. A chosen name such as <code>𝑑𝑢</code> has no derivative meaning by itself. Similarly, a derivative term names the derivative of a value but differentiates nothing automatically.</p>
+<p>Typed function arguments are local names with domains; do not give them field roles or perch marks. The name a comprehension binds is local in the same way: <code>H := {i : ℤ | i &gt;= 0, i &lt;= 1}</code> defines the named set of the integers <code>i</code> that satisfy both conditions and declares no field <code>i</code> (<a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.2). Define functions at the top level. A function definition written inside a block, such as <code>𝑞(x : ℝ) := x^2</code>, is refused under the rule <a href="../../reference/refusals/#not-constructed"><code>not-constructed</code></a>, whether its body is a formula or a set. The refusal asks for the definition at the top level of the file. An equation inside a block whose left side is a call, such as <code>𝑞(a) = a^2</code>, defines no function <code>𝑞</code>. In a block that states a transition, such as <code>transform</code> in §3, the package reads this line as an equation that defines <code>a</code> from itself, and it refuses the block's law of motion under <a href="../../reference/refusals/#definition-order"><code>definition-order</code></a>.</p>
 <p>A function definition whose body is a set defines a feasibility correspondence. A product body keeps its factor order, <code>Γ(z : ℝ₊) := [0, z] × ℝ₊</code>. A comprehension binds its member locally and may use equality as well as inequalities:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Γ(z : ℝ₊) := {q : ℝ₊ × ℝ₊ × ℝ₊ | q[1] + q[2] = z, q[3] &lt;= z}
 </code></pre></div>
-<p>Both conditions hold together on the whole triple; <code>q[1]</code> selects its first component and <code>z</code> is the correspondence's argument. Equality is written in a comprehension only: a set that a declaration adds after <code>@</code>, as in <code>β : (0,1) @ (0, R^(ρ-1))</code>, is an interval. Parenthesized expression tuples remain distinct from product sets, so a body <code>(a, b)</code> still defines a numerical pair. <a href="../../10-constraints/#1-three-kinds-of-constraint-and-where-each-is-written">Constraints</a> §1 explains how a maximization statement uses the feasible set.</p>
+<p>Both conditions hold together on the whole triple; <code>q[1]</code> selects its first component and <code>z</code> is the correspondence's argument. Equality is written in a comprehension only. Several sets in one type, written with <code>@</code> between them as in <code>β : (0,1) @ (0, R^(ρ-1))</code>, declare their intersection, and at most one of them is written otherwise than as an interval with brackets. Several sets are read on a top-level declaration of one name only; on a field's listing in a block header they are refused under <code>readable-form</code> (<a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.2). Parenthesized expression tuples remain distinct from product sets, so a body <code>(a, b)</code> still defines a numerical pair. <a href="../../10-constraints/#1-three-kinds-of-constraint-and-where-each-is-written">Constraints</a> §1 explains how a maximization statement uses the feasible set.</p>
 <p>A definition without arguments whose right side is arithmetic defines a <strong>derived parameter</strong>, a constant of the stage computed from its parameters. Human wealth relative to permanent income, <code>h</code>, and the interest factor normalized by growth, <code>R_n</code>, for example, are computed from the gross interest factor <code>R</code> and the growth factor <code>Γ</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>R : ℝ₊₊
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Γ : ℝ₊₊
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>h := 1/(1 - Γ/R)
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>R_n := R/Γ
 </code></pre></div>
-<p>The outermost form of the right side decides that a definition is a derived parameter: a number, a sign, a sum, a difference, a product, a quotient, a power, a call of <code>log</code> or <code>exp</code>, or a name the stage defines as neither a set nor a function. Any other right side, such as <code>D_{c}(𝑢)</code> or <code>Inv(𝑑𝑢)</code> above, keeps its own reading. The definition of a derived parameter reads declared parameters, finite numbers and other derived parameters, and it is formed by signs, sums, differences, products, quotients, powers and the calls <code>log</code> and <code>exp</code>, each of one argument. Elaboration refuses, under the rule <code>derived-parameter</code> and at the definition, a derived parameter whose definition reads any other name, such as a setting, a shock, a field, a set, a function or <code>inf</code>, calls any other function, such as <code>sqrt</code> in <code>h := 1/sqrt(1 - Γ/R)</code>, writes any other form, such as an expectation, or writes a number that is not finite. A cycle among the definitions is refused under the rule <code>definition-order</code>.</p>
+<p>The outermost form of the right side decides that a definition is a derived parameter: a number, a sign, a sum, a difference, a product, a quotient, a power, a call of <code>log</code> or <code>exp</code>, or a name the stage defines as neither a set nor a function. Any other right side keeps its own reading. A set expression, such as <code>ℝ₊₊</code> or <code>Xm × Xa</code>, defines a named set, and <code>D_{c}(𝑢)</code>, <code>Inv(𝑑𝑢)</code> or the name of a function defines a function of the stage. No other right side is read as a definition. Elaboration refuses under the rule <a href="../../reference/refusals/#not-constructed"><code>not-constructed</code></a> a right side that is a call other than those of <code>log</code>, <code>exp</code>, <code>D</code> and <code>Inv</code>, such as <code>sqrt(R)</code>, <code>𝑢(R)</code> or the grid constructor <code>linspace(0, 1, 10)</code>; a tuple, such as <code>(R, Γ)</code>; an expectation, such as <code>E_{y}(y)</code>; or the bare name of a set the file defines, such as <code>Xm</code>. The definition of a derived parameter reads declared parameters, finite numbers and other derived parameters, and it is formed by signs, sums, differences, products, quotients, powers and the calls <code>log</code> and <code>exp</code>, each of one argument. Elaboration refuses, under the rule <code>derived-parameter</code> and at the definition, a derived parameter whose definition reads any other name, such as a setting, a shock, a field, a set, a function or <code>inf</code>, calls any other function, such as <code>sqrt</code> in <code>h := 1/sqrt(1 - Γ/R)</code>, writes any other form, such as an expectation, or writes a number that is not finite. A cycle among the definitions is refused under the rule <code>definition-order</code>.</p>
 <p>Calibration supplies no value for a derived parameter, and a calibration source that names one is refused under <code>derived-parameter</code>. The value of a derived parameter is its definition evaluated at the calibration values, after the derived parameters it reads, by the rules of real arithmetic. A divisor is not zero. The argument of <code>log</code> is positive. A power with an integer exponent is defined at every base except zero, where the exponent must be positive, and a power with a noninteger exponent requires a positive base. Every value is a finite real number, and a number that floating-point arithmetic rounds to zero from a nonzero result does not count as positive. A calibration at which a definition has no value is refused under <code>derived-parameter</code>, at that definition, with the operation that fails and the numbers it reads. <a href="../../API/stage/06-par-and-settings/">Parameters and settings</a> §1.1 shows the derived parameters in <code>stage.par</code>, and <a href="../../reference/refusals/#derived-parameter">Refusals</a> states the rule.</p>
+<p>A derived parameter may declare the set in which its value lies, on the line of its definition, in a stage file or in a methods file. The return impatience condition of a perfect foresight consumption problem, for example, requires the return patience factor <code>q</code>, the growth factor of consumption divided by the gross interest factor, to be below one, and the declared set <code>(0,1)</code> states that condition:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>β : (0,1)
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>ρ : (1, inf)
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>R : ℝ₊₊
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>q : (0,1) := (β*R)^(1/ρ)/R
+</code></pre></div>
+<p>The line declares one name with sets alone and no type word (<a href="../../reference/symbols-conventions/">Symbol conventions</a> §9.3), and its right side is the definition of a derived parameter as above. <code>&lt;-</code> is a second spelling of <code>:=</code>, here as in every definition. Two forms close to this one are refused. A declaration whose right side reads no name, <code>ρ : ℝ := 2</code>, is refused under <code>readable-form</code>: it gives a parameter a value, which the calibration supplies. The set written on a line of its own beside the definition, <code>q : (0,1)</code> and <code>q := (β*R)^(1/ρ)/R</code>, gives one name two meanings and is refused under <code>one-name-one-meaning</code>. The declared set of a derived parameter reads no setting, since calibration judges the derived value before any setting has a value, and a set that reads one is refused under <code>derived-parameter</code>.</p>
+<p>Calibration first judges the value of each declared parameter against its declared set, then computes the derived values, and then judges each derived value against the set its definition declares. In the last step it also decides each condition of a declared set that reads a derived parameter, so the membership of a value in such a set, as in <code>β : (0,1) @ (0, 1/q)</code>, is decided at calibration. A bound that holds an expectation over a shock is not decided, and <code>stage.obligations()</code> lists the membership as required. A calibration at which a derived value lies outside its declared set is refused, with a sentence that names the derived parameter, its definition, the set and the values read. At <code>β = 0.99</code>, <code>ρ = 2</code> and <code>R = 0.9</code>, for example, the value of <code>q</code> is about <code>1.049</code>, and the calibration is refused. <code>configure</code> judges a setting whose declared set reads a derived parameter at the derived value (<a href="../../API/stage/09-binding-verbs/">The binding verbs</a> §3).</p>
 <h2 id="3-functions-and-collections">3 Functions and collections<a class="headerlink" href="#3-functions-and-collections" title="Permanent link">&para;</a></h2>
 <p>A function uses parentheses for application. This complete transition fragment defines <code>𝑞</code> and applies it:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>@stage: square
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>𝑞(x : ℝ) := x^2
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>[id=transform, (a : ℝ) : !dcsn -&gt; (y : ℝ) : !cntn] {
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    y = 𝑞(a)
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>@stage: square
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>𝑞(x : ℝ) := x^2
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>[id=transform, (a : ℝ) : !dcsn -&gt; (y : ℝ) : !cntn] {
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    y = 𝑞(a)
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>}
 </code></pre></div>
 <p>The function argument <code>x</code> is bound by its definition, while <code>a</code> is a stage field. External functions require a declared type for each argument and a supplied interpretation; a parser accepting a name does not provide that function.</p>
 <p>Ordinary square brackets select a member of a declared collection. They do not define a function's domain. This fragment instead has one product-valued input and two scalar outputs:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>@stage: coordinates
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>[id=components, (x : ℝ × ℝ) : !dcsn -&gt; (y : ℝ, q : ℝ) : !cntn] {
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    y = x[1]
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    q = x[2]
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>@stage: coordinates
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>[id=components, (x : ℝ × ℝ) : !dcsn -&gt; (y : ℝ, q : ℝ) : !cntn] {
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    y = x[1]
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    q = x[2]
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>}
 </code></pre></div>
 <p>The positions are one-based. Thus <code>x[1]</code> and <code>x[2]</code> select the first and second components. A position is a whole number, so <code>x[2.5]</code> is refused. On a collection declared on a set of functions, <code>δ : L_J → ℝ</code>, the key is a name declared on its finite integer or label set, <code>δ[j]</code>, never a position; <code>dist[j][i]</code> selects by the ordered pair, the first key on the first factor. The entries may be real-valued. <a href="../../reference/symbols-conventions/#92-domains">Symbols and conventions</a> gives the domain forms and the numerical compilation rules. In <code>q[a]</code>, <code>q</code> must be a declared collection and <code>a</code> an admissible selection key; the expression is not an alternative spelling of <code>q(a)</code>. For discrete choices, tuple entries are ordered by the declared branch labels; see <a href="../../05-branching/">Branching</a>.</p>
-<p>A tuple of two fields and one field with a product domain are distinct declarations. <code>(w, c) : S</code> jointly constrains two fields by <code>S</code>, whereas <code>x : ℝ × ℝ</code> declares one product-valued field. In <code>(w, c : ℝ₊₊)</code>, the domain after the colon applies to <code>c</code> alone.</p>
+<p>A tuple of two fields and one field with a product domain are distinct declarations. <code>(w, c) : S</code> declares two fields and is read where <code>S</code> is a product with one factor for each name, written out, <code>(w, c) : ℝ₊ × ℝ₊</code>, or named, <code>S := ℝ₊ × ℝ₊</code>; each field then lies in its own factor. Any other <code>S</code> is refused. A named set that couples the two fields, <code>S := {p : ℝ₊ × ℝ₊ | p[1] &lt;= p[2]}</code>, and a set that is not such a product, such as <code>ℝ₊</code>, are refused under <code>readable-form</code>. A comprehension is read only after <code>:=</code>, so the same comprehension written directly after the colon, <code>(w, c) : {p : ℝ₊ × ℝ₊ | p[1] &lt;= p[2]}</code>, is refused under <code>syntax</code>. A feasibility constraint that couples two controls is written in the feasible set of the maximization statement (<a href="../../10-constraints/#1-three-kinds-of-constraint-and-where-each-is-written">Constraints</a> §1). <code>x : ℝ × ℝ</code>, by contrast, declares one product-valued field. In <code>(w, c : ℝ₊₊)</code>, the domain after the colon applies to <code>c</code> alone.</p>
 <h2 id="4-shock-laws">4 Shock laws<a class="headerlink" href="#4-shock-laws" title="Permanent link">&para;</a></h2>
 <p>We declare a shock's domain separately from its law. This complete arrival-to-decision transition fragment uses nonnegative income, including a possible zero realization:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>@stage: income
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Y := ℝ₊
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>R : ℝ₊₊
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>μ_y : ℝ
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>σ_y : ℝ₊₊
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>p_zero : [0,1]
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>y : Y
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>y ~ Mixture((p_zero, 0), (1-p_zero, LogNormal(μ_y, σ_y)))
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>[id=resources, (b : ℝ₊, y) : !arvl -&gt; (w : ℝ₊) : !dcsn] {
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>    w = y + b*R
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>@stage: income
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Y := ℝ₊
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>R : ℝ₊₊
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>μ_y : ℝ
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>σ_y : ℝ₊₊
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>p_zero : [0,1]
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>y : Y
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>y ~ Mixture((p_zero, 0), (1-p_zero, LogNormal(μ_y, σ_y)))
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>[id=resources, (b : ℝ₊, y) : !arvl -&gt; (w : ℝ₊) : !dcsn] {
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>    w = y + b*R
+<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>}
 </code></pre></div>
 <p>The <code>~</code> line declares a mixture with probability <code>p_zero</code> at zero and the remaining probability on a lognormal income draw. Here <code>R</code> is the gross return on assets. In this example, <code>μ_y</code> and <code>σ_y</code> are the mean and standard deviation of the logarithm of the positive income component; the atom at zero is outside that component. Its support agrees with <code>Y</code>. The law, rather than the domain declaration alone, establishes <code>y</code> as a shock; use <code>y : !shck @ Y</code> when declaring a shock before supplying its law.</p>
 <p>For the IID reading, the displayed law is the conditional law of the draw given earlier information, and does not vary with that information. A marginal distribution with constant parameters alone would not establish independence from earlier information. Listing <code>y</code> beside arrival inputs does not say it is observed at arrival.</p>
-<p>A joint distribution such as <code>(ε, η) ~ N((0, 0), ((1, 0.5), (0.5, 1)))</code> must follow declarations of both real shocks and preserve their written order. The covariance is positive definite, with eigenvalues <code>0.5</code> and <code>1.5</code>.</p>
-<p>Separate declarations define the joint distribution as the product of the declared conditional distributions, each given its named parent shocks and the source coordinates. Two shocks declared separately with no shock argument are conditionally independent given the source state and control. A declaration that names another shock, as <code>Ψ ~ LogNormal(ν, σ_Ψ)</code> names <code>ν</code>, is conditional on that shock. Elaboration records this factorization as an assumption beside the operators. Do not combine an ordinary normal distribution of positive variance with a strictly positive domain.</p>
-<p>A discretization is a method, not the model. The stage declares the process the paper states: a continuous law such as <code>z ~ N(μ, σ^2)</code>, whose second argument is the variance, or <code>z ~ LogNormal(μ, σ)</code> where the paper writes a continuous process, and a finite chain such as <code>(z, q) ~ MarkovChain(Q, (Z, Q), z_prev)</code> where the paper's own process is a finite chain. Replacing a continuous first-order autoregression by a chain of a chosen number of states, by Tauchen's or Rouwenhorst's construction, approximates the distribution the stage declares; it is the choice of a numerical method, and it belongs in the methods file with the grids and the tolerances (see <a href="../../04-methodization/">Methodization</a>), not in the stage. The distinction matters because the stage is the statement of the model that every method must agree with: a reader of the stage should see the paper's process, and two methods that discretize it differently should still be methods of one model.</p>
+<p>A joint distribution such as <code>(ε, η) ~ N((0, 0), ((1, 0.5), (0.5, 1)))</code> writes its mean and its covariance in the order of the shocks in the tuple, so the first entry of the mean and the first row of the covariance belong to <code>ε</code>. Each shock's set is declared on its own line, <code>ε : ℝ</code> and <code>η : ℝ</code>, before or after the law. Elaboration does not refuse a joint law whose shocks no line declares, and such a shock has no declared set. The covariance of this example is positive definite, with eigenvalues <code>0.5</code> and <code>1.5</code>. A covariance must be symmetric and positive semidefinite, so a singular covariance is read; any other is refused under <code>distribution-domain</code>, at elaboration where its entries are numbers and at calibration where they read parameters (<a href="../../reference/laws/">Shock distributions</a> §3).</p>
+<p>Separate declarations define the joint distribution as the product of the declared conditional distributions, each given its named parent shocks and the source coordinates. Two shocks declared separately with no shock argument are conditionally independent given the source state and control. A declaration that names another shock, as <code>Ψ ~ LogNormal(ν, σ_Ψ)</code> names <code>ν</code>, is conditional on that shock. Elaboration records this factorization as an assumption beside the operators. Do not combine an ordinary normal distribution of positive variance with a strictly positive domain. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). Elaboration records the agreement of each law's support with the shock's declared set as the condition <code>law-support</code>, which <code>stage.obligations()</code> lists and which calibration decides for a truncated lognormal law alone (<a href="../../reference/laws/">Shock distributions</a> §3).</p>
+<p>A discretization is a method, not the model. The stage declares the process the paper states: a continuous law such as <code>z ~ N(μ, σ^2)</code>, whose second argument is the variance, or <code>z ~ LogNormal(μ, σ)</code> where the paper writes a continuous process, and a finite chain such as <code>(z, q) ~ MarkovChain(Π, (Z, Q), z_prev)</code>, with <code>Π</code> the transition probabilities, <code>Z</code> and <code>Q</code> the sets of <code>z</code> and <code>q</code>, and <code>z_prev</code> the previous state, where the paper's own process is a finite chain. Replacing a continuous first-order autoregression by a chain of a chosen number of states, by Tauchen's or Rouwenhorst's construction, approximates the distribution the stage declares; it is the choice of a numerical method, and it belongs in the methods file with the grids and the tolerances (see <a href="../../04-methodization/">Methodization</a>), not in the stage. The distinction matters because the stage is the statement of the model that every method must agree with: a reader of the stage should see the paper's process, and two methods that discretize it differently should still be methods of one model.</p>
 <h2 id="5-operators-and-binding">5 Operators and binding<a class="headerlink" href="#5-operators-and-binding" title="Permanent link">&para;</a></h2>
 <p>An <strong>operator</strong> acts on an expression or function, with any subscript specifying the variable over which it acts. Its parentheses delimit the expression under that operation.</p>
 <table>
@@ -8137,7 +8205,7 @@
 </tr>
 </tbody>
 </table>
-<p>In expectation and maximization, the designated shock or control is <strong>bound</strong>, meaning local to the operator's expression; other dependencies remain free. In <code>D_{c}(𝑢)</code>, <code>c</code> identifies the declared function's formal argument, not an unrelated stage control with the same name. Substitution must retain both kinds. In particular, <code>E_{y}(V + y)</code> differs from <code>E_{y}(V) + y</code> when <code>y</code> is not observed in the output context.</p>
+<p>In expectation and maximization, the designated shock or control is <strong>bound</strong>, meaning local to the operator's expression; other dependencies remain free. In <code>D_{c}(𝑢)</code>, the subscript names a formal argument of the declared function: <code>c</code> identifies that argument, not an unrelated stage control with the same name. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). Substitution must retain both kinds. In particular, <code>E_{y}(V + y)</code> differs from <code>E_{y}(V) + y</code> when <code>y</code> is not observed in the output context.</p>
 <p>An implicit equation such as <code>c = c[&gt;]</code> identifies an unknown through the declared transitions; it is not a universal assignment shorthand or a claim that a numerical root is optimal. <a href="../../03-field-equations/#3-an-implicit-policy-relation">Field equations</a> gives its complete consumption context. Use that authored relation when it is the intended mathematical condition; selecting a solution method does not author missing conditions.</p>
 <h2 id="6-expression-and-annotation-checks">6 Expression and annotation checks<a class="headerlink" href="#6-expression-and-annotation-checks" title="Permanent link">&para;</a></h2>
 <p>Write multiplication explicitly as <code>*</code> and group powers and denominators with parentheses, for example <code>c^(-ρ)</code> and <code>c^(1-ρ)/(1-ρ)</code>. Parenthesize a nested power rather than relying on an unstated associativity convention. Domain declarations use intervals such as <code>(0,1)</code> and <code>[0,1]</code>, and named sets such as <code>ℝ₊</code> and <code>ℝ₊₊</code>.</p>

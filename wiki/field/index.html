@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A named quantity at a perch; its stochastic interpretation after shocks are declared, and the distinctions from a representing function and a realized value.">
+        <meta name="description" content="A named quantity of a stage with a declared set, at a perch unless it is a shock; its stochastic interpretation after shocks are declared, and the distinctions from a representing function and a realized value.">
       
       
       
@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7988,28 +8048,28 @@
 
 
 <h1 id="field">Field<a class="headerlink" href="#field" title="Permanent link">&para;</a></h1>
-<p>A <strong>field</strong> is a named quantity at a <a href="../perch/">perch</a>, with a declared set: a state, a control, a shock, or a value. In the buffer-stock <a href="../stage/">stage</a>, beginning assets are a field at arrival; resources and consumption are fields at decision; savings and the continuation value are fields at continuation. Once a stage declares shocks, its fields may be interpreted as random variables on an underlying probability space. The field, a function representing it in state coordinates, and the value of that function at one state are distinct objects. <a href="../../Bellman-Sym/01-stage/">Stages</a> §2 explains declarations, and <a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §2 gives their interpretation.</p>
+<p>A <strong>field</strong> is a named quantity of a <a href="../stage/">stage</a> with a declared set: a state, a control, a value or the multiplier of a constraint, each at a <a href="../perch/">perch</a>, or a shock, which belongs to no perch. In the buffer-stock <a href="../stage/">stage</a>, beginning assets are a field at arrival; resources and consumption are fields at decision; savings and the continuation value are fields at continuation. Once a stage declares shocks, its fields may be interpreted as random variables on an underlying probability space. The field, a function representing it in state coordinates, and the value of that function at one state are distinct objects. <a href="../../Bellman-Sym/01-stage/">Stages</a> §2 explains declarations, <a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §2 gives their interpretation, and <a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §5 classifies fields.</p>
 <p>A field name is local to its stage occurrence. The same spelling in another stage denotes another field, even when both stages stand in one <a href="../period/">period</a>. An equation uses its own stage's declarations; a <a href="../connector/">connector</a> selects eligible continuation and arrival fields for composition without changing their names. All branches of one stage share that stage's field names, so distinct branch states require distinct names. A <a href="../parameters/">parameter</a> follows a different rule: two stages in one period that declare the same parameter name share one period parameter.</p>
 <h2 id="1-what-the-word-replaces">1 What the word replaces<a class="headerlink" href="#1-what-the-word-replaces" title="Permanent link">&para;</a></h2>
 <p>The word "variable" does five jobs in a written economic model. It is a symbol in an equation; a coordinate of the state space; a random quantity whose value depends on the history of shocks; a realized number; and, once the model is solved, a function of the state such as <span class="arithmatex">\(v(x)\)</span>. An economist moves between these readings without noticing, and in a paper that costs nothing. A <a href="../stage/">stage file</a> cannot afford the ambiguity, because the checks the construction performs each ask a question that only one of the five readings can answer: is this quantity known at arrival or only at decision? is this the value or the value function? is the <code>w</code> on the output side of one <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">block</a> the same object as the <code>w[&gt;]</code> on the input side of the next?</p>
-<p>"Field" names the declared quantity at a perch. Under a stochastic interpretation it is a random quantity at an information set. The other readings keep their own words: a <strong>set</strong> for the values a coordinate may take, a <strong>realization</strong> for a number, and a <strong>representing function</strong> for a function of state coordinates. The symbol is the field's name.</p>
+<p>"Field" names the declared quantity, which stands at a perch unless it is a shock. Under a stochastic interpretation it is a random quantity, and its perch is an information set. The other readings keep their own words: a <strong>set</strong> for the values a coordinate may take, a <strong>realization</strong> for a number, and a <strong>representing function</strong> for a function of state coordinates. The symbol is the field's name.</p>
 <h2 id="2-why-the-word-is-field">2 Why the word is "field"<a class="headerlink" href="#2-why-the-word-is-field" title="Permanent link">&para;</a></h2>
 <p>In physics a field is a quantity attached to every point of a region: the temperature at each point of a room, the electric field at each point of space. Three features of that usage carry over. The field has a value at each point, and the value at a point is what an observer there can measure. The field is not any one of its values. And the field is not the law that determines it; Maxwell's equations relate the values of the electromagnetic field at neighboring points, but the field is the thing the equations are about, not the equations.</p>
 <p>In a stage the points are the perches, the three information contexts of arrival, decision and continuation. Under the stochastic interpretation, measurability with respect to a perch's sigma-algebra states that the field's value can be read from the information available there. The same written base name at two perches, <code>w</code> and <code>w[&gt;]</code>, identifies two fields, equal only when a statement says so (<a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §1). The equations inside a block relate fields at neighboring perches, <span class="arithmatex">\(X_\sim = \mathrm g_\prec(X_\prec,\zeta)\)</span> almost surely under that interpretation.</p>
-<p>The probabilist's usage supplies one interpretation rather than the definition. A random field is a family of random variables indexed by a set of points. After shocks and an underlying probability space have been specified, the fields of a stage can be read as such a family indexed by name and perch.</p>
+<p>The probabilist's usage supplies one interpretation rather than the definition. A random field is a family of random variables indexed by a set of points. After shocks and an underlying probability space have been specified, the fields of a stage can be read as such a family indexed by name and perch, a shock by its name alone.</p>
 <p>Economists already work with this object under another name. Stokey and Lucas define a plan as "a value <span class="arithmatex">\(\pi_0 \in X\)</span> and a sequence of measurable functions <span class="arithmatex">\(\pi_t : Z^t \to X\)</span>" (Stokey and Lucas 1989, <em>Recursive Methods in Economic Dynamics</em>, chapter 9 §9.1): a choice that is a measurable function of the history of shocks observed so far. A field is that object, given a name and placed at an information set inside a <a href="../period/">period</a> of the model's <a href="../trellis/">trellis</a> rather than at a date.</p>
 <h2 id="3-two-senses-the-word-does-not-have">3 Two senses the word does not have<a class="headerlink" href="#3-two-senses-the-word-does-not-have" title="Permanent link">&para;</a></h2>
 <p>The word has no connection with the algebraic field, the structure that makes <span class="arithmatex">\(\mathbb R\)</span> a field. Nor does it mean the field of a record in a data structure, a named position holding a value.</p>
 <h2 id="4-what-the-word-buys">4 What the word buys<a class="headerlink" href="#4-what-the-word-buys" title="Permanent link">&para;</a></h2>
 <p>Four things become statable and checkable.</p>
 <ol>
-<li><strong>Where a quantity is known.</strong> A field has one declared or inferred perch. A shock field is known at the perch after its draw, according to the stage timing; a control is at decision wherever it is listed; a perch is never guessed (<a href="../../Bellman-Sym/appendices/13-perch-tagging-rules/">Perch tagging rules</a>).</li>
+<li><strong>Where a quantity is known.</strong> A field other than a shock has one declared or inferred perch. A shock belongs to no perch: it is drawn between two perches and is known at the perch after its draw, according to the stage timing; a control is at decision wherever it is listed; a perch is never guessed (<a href="../../Bellman-Sym/appendices/13-perch-tagging-rules/">Perch tagging rules</a>).</li>
 <li><strong>A field and its representing function are distinct objects.</strong> Under the stochastic interpretation, the continuation value <code>V[&gt;]</code> is a random variable measurable at continuation. A representing function <span class="arithmatex">\(\mathrm v_\succ : \mathsf X_\succ \to \mathsf L\)</span> satisfies <span class="arithmatex">\(V_\succ = \mathrm v_\succ(X_\succ)\)</span> almost surely, and it exists only when a version of the field is measurable with respect to the information generated by the state. The <a href="../semgraph/">initial diagrams</a> are drawn on fields; the <a href="../semgraph/">builders graph</a> of the <a href="../backward_builder/">backward builders</a> is drawn on functions.</li>
 <li><strong>Sameness across perches is asserted, not assumed.</strong> <code>w[&gt;] = a + c[&gt;]</code> is a statement the modeler writes; without it the two fields are unrelated.</li>
-<li><strong>A domain is not integrability.</strong> A field declared in <span class="arithmatex">\(\mathbb R\)</span> is not thereby integrable or square-integrable, and its representative is not thereby continuous; those remain obligations the construction records rather than facts it assumes (<a href="../../bellman-calculus/08-periods-and-trellis/">Periods and trellis</a> §3).</li>
+<li><strong>A domain is not integrability.</strong> A field declared in <span class="arithmatex">\(\mathbb R\)</span> is not thereby integrable or square-integrable, and its representative is not thereby continuous; those remain obligations the construction records rather than facts it assumes (<a href="../../bellman-calculus/08-periods-and-trellis/">Periods and trellis</a> §6).</li>
 </ol>
 <h2 id="5-classification">5 Classification<a class="headerlink" href="#5-classification" title="Permanent link">&para;</a></h2>
-<p>A field is classified by its perch, its role and its value set, and its <a href="../sort/">sort</a> combines those declarations. The roles are state, control, shock and value. A <a href="../parameters/">parameter</a> and a declared function are not fields. In one stage's semgraph, a field is a <a href="../semgraph/">wire</a> of an initial diagram with local identity <code>&lt;stage&gt;:&lt;perch&gt;:&lt;field&gt;</code>; in a trellis, its stage occurrence address distinguishes it from the same local wire of another occurrence. A <a href="../statement/">statement</a> is represented by a box between field wires, and a <a href="../builder/">builder</a> acts on the functions or the measures that represent fields.</p>
+<p>A field is classified by its role, its declared set and, unless it is a shock, its perch, and its type names the <a href="../sort/">sort</a> that is the intersection of the sorts these name (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §5). The roles are state, control, value, shock and multiplier. A <a href="../parameters/">parameter</a> and a declared function are not fields. In one stage's semgraph, a field is a <a href="../semgraph/">wire</a> of an initial diagram with local identity <code>&lt;stage&gt;:&lt;perch&gt;:&lt;field&gt;</code>, the word <code>shck</code> standing in the place of the perch for a shock; in a trellis, its stage occurrence address distinguishes it from the same local wire of another occurrence. A <a href="../statement/">statement</a> is represented by a box between field wires, and a <a href="../builder/">builder</a> acts on the functions or the measures that represent fields.</p>
 
 
 

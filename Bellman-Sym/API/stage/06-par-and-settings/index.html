@@ -2586,6 +2586,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2756,6 +2760,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8027,7 +8087,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>"stage 'cons': 'rho' is no parameter of the stage; a parameter is read by the name the file declares, and the parameters are ρ"
 </code></pre></div>
 <h3 id="11-derived-parameters">1.1 Derived parameters<a class="headerlink" href="#11-derived-parameters" title="Permanent link">&para;</a></h3>
-<p>A <strong>derived parameter</strong> is a constant of the stage that a definition without arguments writes from the stage's parameters, such as human wealth <code>h := 1/(1 - Γ/R)</code>; <a href="../../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2 gives the form, what its definition may read and the order in which the definitions are evaluated. <code>stage.par</code> lists the derived parameters after the declared ones, in file order, each with its definition in the column <code>set</code> and the description the file gives. Before calibration the value of a derived parameter is <code>unbound</code>. After calibration its value is its definition evaluated at the calibration values, computed each time the table is asked for and stored nowhere. The record of one derived parameter prints its definition after <code>:=</code>. The consumption stage file defines no derived parameter, so the listings of this section read the perfect-foresight stage file, which defines three from its four parameters: the return patience factor <code>q</code>, human wealth <code>h</code> and the natural borrowing limit <code>L</code>. A methods file may define a derived parameter as well, as the methods file beside that stage file defines the marginal propensity to consume <code>κ := 1 - q</code> (<a href="../08-definitions/">The definitions table</a> §3). A definition in an addition, a methods file read with the stage file (<a href="../09-binding-verbs/">The binding verbs</a> §3), is read as the stage file's own, and it leaves the table when the addition is removed.</p>
+<p>A <strong>derived parameter</strong> is a constant of the stage that a definition without arguments writes from the stage's parameters, such as human wealth <code>h := 1/(1 - Γ/R)</code>; <a href="../../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2 gives the form, what its definition may read and the order in which the definitions are evaluated. <code>stage.par</code> lists the derived parameters after the declared ones, in file order, each with its definition in the column <code>set</code> and the description the file gives; where the definition declares the set in which its value lies, as that of <code>q</code> below declares <code>(0,1)</code>, the set stands before <code>:=</code> and the definition after it. Before calibration the value of a derived parameter is <code>unbound</code>. After calibration its value is its definition evaluated at the calibration values, computed each time the table is asked for and stored nowhere. The record of one derived parameter prints its definition after <code>:=</code>. The consumption stage file defines no derived parameter, so the listings of this section read the perfect-foresight stage file, which defines three from its four parameters: the return patience factor <code>q</code>, human wealth <code>h</code> and the natural borrowing limit <code>L</code>. A methods file may define a derived parameter as well, as the methods file beside that stage file defines the marginal propensity to consume <code>κ := 1 - q</code> (<a href="../08-definitions/">The definitions table</a> §3). A definition in an addition, a methods file read with the stage file (<a href="../09-binding-verbs/">The binding verbs</a> §3), is read as the stage file's own, and it leaves the table when the addition is removed.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">derived</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="s2">"applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl"</span><span class="p">))</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">derived</span><span class="o">.</span><span class="n">par</span><span class="p">)</span>
@@ -8037,19 +8097,19 @@
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">derived</span><span class="o">.</span><span class="n">par</span><span class="p">[</span><span class="s2">"h"</span><span class="p">])</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>name  set                      value    describes
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>β     (0, 1) @ (0, R^(ρ - 1))  unbound  discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>β     ℝ₊₊ @ (0, R^(ρ - 1))     unbound  discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ρ     (1, inf)                 unbound  coefficient of relative risk aversion, greater than one
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>R     ℝ₊₊                      unbound  gross interest factor
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Γ     (0, R)                   unbound  permanent income growth factor; its upper bound R is the finite human wealth condition
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>q     (β*R)^(1/ρ)/R            unbound  the return patience factor; the return impatience condition is q &lt; 1
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>q     (0, 1) := (β*R)^(1/ρ)/R  unbound  the return patience factor; the return impatience condition is q &lt; 1
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>h     1/(1 - Γ/R)              unbound  human wealth, the present discounted value of permanent income
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>L     1 - h                    unbound  the natural borrowing limit on market resources, above which total wealth m - L is positive
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>name  set                      value                describes
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>β     (0, 1) @ (0, R^(ρ - 1))  0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
 <a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>R     ℝ₊₊                      1.04                 gross interest factor
 <a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>q     (β*R)^(1/ρ)/R            0.9615384615384615   the return patience factor; the return impatience condition is q &lt; 1
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q &lt; 1
 <a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
 <a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
 <a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>h = 51.999999999999886 := 1/(1 - Γ/R)

@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8160,9 +8220,9 @@
 <p>“Operator algebra” here concerns composition of the Bellman calculus's operations, not a functional-analytic algebra of bounded operators. We state which additional structures each interpretation uses.</p>
 <p><a id="f1-signature-objects-and-morphisms"></a></p>
 <h2 id="1-signatures-and-operator-types">1. Signatures and operator types<a class="headerlink" href="#1-signatures-and-operator-types" title="Permanent link">&para;</a></h2>
-<p>A stage has a mathematical many-sorted signature, together with model data and an interpretation. Its <strong>sorts</strong> name domains of values, functions or distributions, while <strong>operation symbols</strong> have ranks <span class="arithmatex">\(\omega:s_1\times\cdots\times s_n\to s\)</span>. In a categorical presentation, objects represent these types and a <strong>morphism</strong> is a typed operation between them. A signature alone does not supply categorical products or coproducts.</p>
-<p>At perch <span class="arithmatex">\(p\)</span>, write <span class="arithmatex">\(\mathsf V_p\)</span> for a chosen value-function space on state space <span class="arithmatex">\(\mathsf X_p\)</span>, and <span class="arithmatex">\(\mathsf M_p\)</span> for probability measures on that state space. Let <span class="arithmatex">\(\mathsf L\)</span> be the scalar value domain, <span class="arithmatex">\(\Gamma(x)\)</span> the feasible actions, <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> a chosen space of measurable choice-value functions on those pairs. The spaces must satisfy the closure and integrability requirements of the displayed operations.</p>
-<p>Operators have domain and codomain types. A first-order signature can treat them solely as operation symbols, without declaring an additional carrier of operator-valued data. This is a choice of signature, not a claim that functions can never be elements of a function space. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> states the local typing conventions.</p>
+<p>A stage has two mathematical many-sorted signatures, together with model data and an interpretation. The <strong>sorts</strong> of its state signature name state spaces, and those of its operator signature name spaces of value functions, spaces of measures and the set of policies. The <strong>operation symbols</strong> of a signature have ranks <span class="arithmatex">\(\omega:s_1\times\cdots\times s_n\to s\)</span>. In a categorical presentation, objects represent these sorts and a <strong>morphism</strong> is a typed operation between them. A signature alone does not supply categorical products or coproducts.</p>
+<p>At perch <span class="arithmatex">\(p\)</span>, write <span class="arithmatex">\(\mathsf V_p\)</span> for a chosen value-function space on state space <span class="arithmatex">\(\mathsf X_p\)</span>, and <span class="arithmatex">\(\mathsf M_p\)</span> for the finite measures on that state space, of which the probability measures are those of mass one (<a href="../03-Stages%20and%20perches/">Stages and perches</a> §1.2). Let <span class="arithmatex">\(\mathsf L\)</span> be the value line, the declared set of a value field, <span class="arithmatex">\(\Gamma(x)\)</span> the feasible actions, <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> a chosen space of measurable choice-value functions on those pairs. The spaces must satisfy the closure and integrability requirements of the displayed operations.</p>
+<p>Operators have domain sorts and a codomain sort, which together form the operator's rank. A first-order signature can treat them solely as operation symbols, without declaring an additional carrier of operator-valued data. This is a choice of signature, not a claim that functions can never be elements of a function space. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3, D1, defines the signature and the rank, and §6 there gives the two signatures of a stage.</p>
 <p><a id="f2-the-operator-category"></a></p>
 <h2 id="2-composition-and-builders">2. Composition and builders<a class="headerlink" href="#2-composition-and-builders" title="Permanent link">&para;</a></h2>
 <p>A categorical presentation must declare its generators, their types, the allowed composition operations and equations. For deterministic functions, product domains support pairing and copying of common inputs. A disjoint union represents labeled alternatives; its injections put each alternative into that union. These descriptions do not prove that every Bellman graph supports all the stated operations and identities.</p>
@@ -8258,7 +8318,7 @@ Q=\mathbb E[\mathrm G_\succ(V_\succ,X,A,\eta)\mid\mathcal F_\sim].
 \longrightarrow\text{reference approximation}
 \longrightarrow\text{package computation}.
 \]</div>
-<p>Calibration fixes parameter values in the model. Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A <strong>reference approximation</strong> is the numerical map defined by that procedure and its settings, independently of one implementation. A <strong>handler</strong> is the package routine intended to compute it. Equations and stages are authored in <code>.bl</code>; methods, settings and calibration remain YAML, as Bellman-SYM's rules for <a href="../../wiki/methodization/">methodization</a> describe.</p>
+<p>Calibration fixes parameter values in the model, at one point of their admissible set (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4). Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A <strong>reference approximation</strong> is the numerical map defined by that procedure and its settings, independently of one implementation. A <strong>handler</strong> is the package routine intended to compute it. Equations and stages are authored in <code>.bl</code>, and so are the methods, in a methods file that declares the settings they read; the calibration and the values of the settings are YAML, as Bellman-SYM's rules for <a href="../../wiki/methodization/">methodization</a> describe.</p>
 <h3 id="61-conditions-on-realization">6.1 Conditions on realization<a class="headerlink" href="#61-conditions-on-realization" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>L1 — Types.</strong> A numerical representation must state its own input and output domains and any maps between grid and exact objects. Equal mathematical ranks do not make different numerical representations identical.</li>
@@ -8271,7 +8331,7 @@ Q=\mathbb E[\mathrm G_\succ(V_\succ,X,A,\eta)\mid\mathcal F_\sim].
 <p>Nested endogenous-grid methods and candidate-envelope methods may use different decompositions. Some methods compare outer choices while solving an inner conditional problem; others compare several candidate controls or values at the same state. Their dimensionality, interpolation and selection rules depend on the declared model and the method. A numerical envelope step need not be an authored <code>upper_env</code> equation, and a method name alone does not establish a particular rank or convergence theorem. The supported authoring boundaries are specified in Bellman-SYM's Appendix D.</p>
 <p><a id="f7-typing-operators"></a></p>
 <h2 id="7-types-and-identities">7. Types and identities<a class="headerlink" href="#7-types-and-identities" title="Permanent link">&para;</a></h2>
-<p>An operator's mathematical type is its domain and codomain. Its declared name identifies an occurrence or definition in the source; equal denotations need not collapse distinct authored names, and equal names in different contexts need not identify one operation. Locally bound functions retain typed parameters and results. A numerical method record additionally states the representation and settings used by its handler.</p>
+<p>An operator's mathematical type is its rank, its domain and codomain. Its declared name identifies an occurrence or definition in the source; equal denotations need not collapse distinct authored names, and equal names in different contexts need not identify one operation. Locally bound functions retain typed arguments and results. A numerical method record additionally states the representation and settings used by its handler.</p>
 <p>For a differentiable scalar function on a product domain, the gradient collects partial derivatives:</p>
 <div class="arithmatex">\[
 \nabla f=\langle\partial_{x_i}f\rangle_i.
@@ -8279,7 +8339,7 @@ Q=\mathbb E[\mathrm G_\succ(V_\succ,X,A,\eta)\mid\mathcal F_\sim].
 <p>The result has one component per coordinate, on the common domain where those derivatives exist. A scalar partial derivative alone does not specify that gradient.</p>
 <p><a id="f8-data-not-operators"></a></p>
 <h2 id="8-model-data-and-induced-operations">8. Model data and induced operations<a class="headerlink" href="#8-model-data-and-induced-operations" title="Permanent link">&para;</a></h2>
-<p>The transitions <span class="arithmatex">\(\mathrm g_\prec,\mathrm g_\succ\)</span>, local aggregators <span class="arithmatex">\(\mathrm G_\prec,\mathrm G_\succ\)</span>, feasibility correspondence <span class="arithmatex">\(\Gamma\)</span>, and shock laws are model data. A coarse signature may use them as parameters defining its builder interpretations. A finer signature may expose the functions as typed operations or values in declared function spaces. The distinction depends on the chosen signature; it is not an absolute division between functions that may and may not be operators.</p>
+<p>The transitions <span class="arithmatex">\(\mathrm g_\prec,\mathrm g_\succ\)</span>, local aggregators <span class="arithmatex">\(\mathrm G_\prec,\mathrm G_\succ\)</span>, feasibility correspondence <span class="arithmatex">\(\Gamma\)</span>, and shock laws are model data. A coarse signature may use them only as the data that define its builders' interpretations. A finer signature may expose the functions as typed operations or values in chosen function spaces. The distinction depends on the chosen signature; it is not an absolute division between functions that may and may not be operators.</p>
 <p>Transition expectations require measurable transitions and conditional laws. Value evaluation requires integrable local payoffs on its stated domain. Optimization additionally needs an appropriate objective, feasible actions, and selection conditions when a policy is required. A general recursive preference cannot be inferred from one pointwise integrand if it uses additional normalization or a different order of expectation and aggregation. The extension to such preferences remains unfinished. #todo</p>
 <p>With identity payoff aggregation and one feasible action, the decision builder reduces to its transition expectation. When the transition kernel is the point mass at the current state, this expectation is the identity. A scalar-multiplication method is not implied by the absence of choice.</p>
 <p><a id="f9-cuts"></a></p>

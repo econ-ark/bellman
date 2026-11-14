@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8292,7 +8352,7 @@
 <h1 id="operators-and-builders">Operators and builders<a class="headerlink" href="#operators-and-builders" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>These unfinished notes distinguish transition expectation, reward aggregation, policy selection, and a builder at a policy. They record the operator types and the assumptions needed when an implicit equation is interpreted as a function. The outline and its placeholders remain incomplete.</p>
+<p>These unfinished notes distinguish transition expectation, reward aggregation, policy selection, and a builder at a policy. They record the inputs and outputs of the operators and the assumptions needed when an implicit equation is interpreted as a function. The outline and its placeholders remain incomplete.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -8304,8 +8364,8 @@
 <p class="admonition-title">Not yet drafted — stub notes only</p>
 <p>Structural outline and placeholders only; not yet a finished chapter.</p>
 </div>
-<p>An <strong>operator</strong> maps objects in a specified domain to objects in a specified codomain. A <strong>builder</strong> composes simpler operators into a value-recursion step. We use <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span> for decision evaluation under a fixed policy, <span class="arithmatex">\(\mathbb T_\succ\)</span> for optimization, and <span class="arithmatex">\(\mathbb T_\prec\)</span> for arrival evaluation. The corresponding stage compositions are <span class="arithmatex">\(\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}\)</span> and <span class="arithmatex">\(\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ\)</span>. A <strong>handler</strong> is a numerical routine attached to an operator.</p>
-<p>Here <span class="arithmatex">\(\mathsf L\)</span> is the scalar value domain, <span class="arithmatex">\(\eta\)</span> and <span class="arithmatex">\(\zeta\)</span> are the post-decision and pre-decision shocks on spaces <span class="arithmatex">\(\mathsf Z_\eta\)</span> and <span class="arithmatex">\(\mathsf Z_\zeta\)</span>, and <span class="arithmatex">\(\Upsilon\)</span> interprets the declared equations as mathematical operations. At perch <span class="arithmatex">\(p\)</span>, <span class="arithmatex">\(\mathsf V_p\)</span> is a chosen space of value functions on state space <span class="arithmatex">\(\mathsf X_p\)</span>. The feasible state–action pairs form <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> is a chosen space of choice-value functions on those pairs. Policies in <span class="arithmatex">\(\Pi_\Gamma\)</span> are measurable and feasible. These domains must make each displayed operation defined and closed under the required compositions. Every expectation below requires absolute integrability on its stated domain; fixed shock laws in the displays are conditional laws independent of the source information. State-dependent laws retain their conditioning arguments.</p>
+<p>An <strong>operator</strong> maps objects in a specified domain to objects in a specified codomain. A <strong>builder</strong> composes simpler operators into the operator of one edge of the stage, or into the policy builder or the optimizing decision builder, which are the image of no edge: a backward builder is a value-recursion step, and a forward builder maps a distribution at one perch to a distribution at the next. We use <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span> for decision evaluation under a fixed policy, <span class="arithmatex">\(\mathbb T_\succ\)</span> for optimization, and <span class="arithmatex">\(\mathbb T_\prec\)</span> for arrival evaluation. The corresponding stage compositions are <span class="arithmatex">\(\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}\)</span> and <span class="arithmatex">\(\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ\)</span>. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6 derives the builders <span class="arithmatex">\(\mathbb T_\prec\)</span> and <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>, and the forward builders of §9 below, as the images of the transitions of a stage under its models, where a transition is a law of motion with its shock law. A <strong>handler</strong> is a numerical routine attached to an operator.</p>
+<p>Here <span class="arithmatex">\(\mathsf L\)</span> is the value line (the declared set of a value field), <span class="arithmatex">\(\eta\)</span> and <span class="arithmatex">\(\zeta\)</span> are the post-decision and pre-decision shocks on spaces <span class="arithmatex">\(\mathsf Z_\eta\)</span> and <span class="arithmatex">\(\mathsf Z_\zeta\)</span>, and <span class="arithmatex">\(\Upsilon\)</span> interprets the declared equations as mathematical operations. At perch <span class="arithmatex">\(p\)</span>, <span class="arithmatex">\(\mathsf V_p\)</span> is a chosen space of value functions on state space <span class="arithmatex">\(\mathsf X_p\)</span>. The feasible state–action pairs form <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> is a chosen space of choice-value functions on those pairs. Policies in <span class="arithmatex">\(\Pi_\Gamma\)</span> are measurable and feasible. These domains must make each displayed operation defined and closed under the required compositions. Every expectation below requires absolute integrability on its stated domain; fixed shock laws in the displays are conditional laws independent of the source information. State-dependent laws retain their conditioning arguments.</p>
 <h2 id="1-the-forward-reading">1. The forward reading<a class="headerlink" href="#1-the-forward-reading" title="Permanent link">&para;</a></h2>
 <p>Forward operators act on <strong>distributions</strong> over state vectors; measurable transitions with specified shock laws induce <strong>pushforwards</strong>, the resulting distributions. <em>(Placeholder.)</em> Defines the push-forward (transfer / Perron–Frobenius operator); states the running example forward (the buffer-stock population transition).</p>
 <h2 id="2-the-backward-reading">2. The backward reading<a class="headerlink" href="#2-the-backward-reading" title="Permanent link">&para;</a></h2>
@@ -8319,7 +8379,7 @@ B_\succ(x,a,v_\succ)
 =\int_{\mathsf Z_\eta}G_\succ\bigl(v_\succ(g_\succ(x,a,\eta)),x,a,\eta\bigr)\,\mu_\eta(\mathrm d\eta).
 \]</div>
 <p>This is the form with the aggregation inside the integral. A statement may also apply a map outside it, <span class="arithmatex">\(B_\succ=G^{\mathrm{out}}_\succ(\int\cdots)\)</span>, the two-map form of <a href="../03-Stages%20and%20perches/">Stages and perches</a> §2.3a.</p>
-<p>The corresponding almost-sure representation requires <span class="arithmatex">\(\mathrm V_\succ=v_\succ(\mathrm X_\succ)\)</span> and state-generated measurability, as in <a href="../03-Stages%20and%20perches/">Stages and perches</a> §2.2. A value-domain declaration alone supplies no square-integrability claim. Selection chooses a policy; the transition, conditional shock law and aggregator indexed by that policy define the builder at the policy.</p>
+<p>The corresponding almost-sure representation requires <span class="arithmatex">\(\mathrm V_\succ=v_\succ(\mathrm X_\succ)\)</span> and state-generated measurability, as in <a href="../03-Stages%20and%20perches/">Stages and perches</a> §2.2. The declared set of a value field alone supplies no square-integrability claim. Selection chooses a policy; the transition, conditional shock law and aggregator indexed by that policy define the builder at the policy.</p>
 <table>
 <thead>
 <tr>
@@ -8361,7 +8421,7 @@ B_\succ(x,a,v_\succ)
 <p>The same authored <code>.bl</code> equations specify transitions, laws, and value evaluation. <em>(Placeholder.)</em> Explain how forward propagation uses the transitions and a supplied policy, while backward evaluation additionally uses the reward and policy rule. The field and function diagrams are representations of that model under their stated assumptions; a bare transition graph does not determine preferences.</p>
 <p><a id="5-operators-point-kernels-induced-aggregators-selection-and-evaluation"></a></p>
 <h2 id="5-evaluating-and-selecting-actions">5. Evaluating and selecting actions<a class="headerlink" href="#5-evaluating-and-selecting-actions" title="Permanent link">&para;</a></h2>
-<p><strong>How a builder becomes a term.</strong> A builder equation is not a single edge but a typed composition inserted by the meaning map. The continuation-to-decision builder <span class="arithmatex">\(\mathbb{T}_{\succ}\)</span> factors through:</p>
+<p><strong>How a builder becomes a term.</strong> A builder equation is not a single operation but a composition of operations, each with stated inputs and outputs, inserted by the meaning map. The continuation-to-decision builder <span class="arithmatex">\(\mathbb{T}_{\succ}\)</span> factors through:</p>
 <ol>
 <li>
 <p>the <strong>point backward kernel</strong></p>
@@ -8411,7 +8471,7 @@ G_{\succ,\pi}\bigl(v_\succ(g_{\succ,\pi}(x,\eta)),x,\eta\bigr)\,
 \]</div>
 <p>The maximum is recovered on this attained-selection domain. Without attainment the optimizing value is a supremum and this selection formula need not be defined. For additive expected utility with constant discount, <span class="arithmatex">\(B_\succ\)</span> can be decomposed internally into pullback along <span class="arithmatex">\(g_\succ\)</span>, Markov expectation over <span class="arithmatex">\(\eta\)</span>, and reward aggregation. In the nonlinear-kernel case, that separation is not generally valid: <span class="arithmatex">\(B_\succ\)</span> is the displayed integral of the pointwise aggregator.</p>
 <p>Numerical methods may approximate expectations by quadrature, simulation, or finite summation. A first-order inversion approximates the same optimum as direct maximization only under its feasibility, optimality, selection, and domain-coverage conditions. Interpolation and candidate-envelope comparisons may be internal steps of a numerical method; choosing that method does not add an authored envelope equation or change exact Evaluation. An authored envelope operation has its own mathematical meaning and assumptions. Supported attachment forms are specified by Bellman-SYM's rules for <a href="../../wiki/methodization/">methodization</a>.</p>
-<p>The transition maps, shock laws, feasibility graph, and aggregator kernels are model data. They generate operators under <span class="arithmatex">\(\Upsilon\)</span>, but their mathematical content is fixed by the stage declaration. A handler may fuse neighboring operators in the realized computation, but the model-side term remains the same. Which operators become separate code and which are lumped is a methodization choice — a <em>cut</em> through the operator hierarchy — not something the calculus fixes.</p>
+<p>The transition maps, shock laws, feasibility graph, and aggregator kernels are model data. They generate operators under <span class="arithmatex">\(\Upsilon\)</span>, but their mathematical content is fixed by the stage file and its calibration. A handler may fuse neighboring operators in the realized computation, but the model-side term remains the same. Which operators become separate code and which are lumped is a methodization choice — a <em>cut</em> through the operator hierarchy — not something the calculus fixes.</p>
 <p>The decision-to-arrival builder <span class="arithmatex">\(\mathbb{T}_\prec\)</span> is the policy-free induced aggregator</p>
 <div class="arithmatex">\[
 \mathbb{T}_\prec=B_\prec:\mathsf V_\sim\to\mathsf V_\prec,
@@ -8429,14 +8489,14 @@ or may expose the induced aggregator and policy separately:
 <span class="arithmatex">\(v_\sim=B_{\succ,\pi}v_\succ\)</span>. These denote the same exact Bellman operator when the selection is greedy and measurable. Named equations can provide attachment points for methods that use post-decision values or marginal relations. A numerical recipe may instead compute intermediate objects internally; they need not all be authored equations.</p>
 <p><a id="6-builders-mathbbt_succpi-and-mathbbt_prec"></a></p>
 <h2 id="6-backward-builders">6. Backward builders<a class="headerlink" href="#6-backward-builders" title="Permanent link">&para;</a></h2>
-<p>A <strong>builder</strong> is a named composition of operators that constitutes a stage's input-to-output interface. The continuation-to-decision builder is</p>
+<p>A <strong>backward builder</strong> is a named composition of operators that maps the value functions at one perch to those at the preceding perch. The continuation-to-decision builder is</p>
 <div class="arithmatex">\[
-\mathbb{T}_{\succ}v_\succ
-=B_{\succ,s(B_\succ v_\succ)}v_\succ,
+(\mathbb{T}_{\succ}v_\succ)(x)
+=\sup_{a\in\Gamma(x)}(B_\succ v_\succ)(x,a),
 \qquad
-\mathbb T_\succ:\mathsf V_\succ\to\mathsf V_\sim,
+\mathbb T_\succ:\mathsf V_\succ\rightharpoonup\mathsf V_\sim,
 \]</div>
-<p>and the decision-to-arrival builder is</p>
+<p>defined at each <span class="arithmatex">\(v_\succ\)</span> at which this function lies in <span class="arithmatex">\(\mathsf V_\sim\)</span>. Where <span class="arithmatex">\(s(B_\succ v_\succ)\)</span> is defined, <span class="arithmatex">\(\mathbb T_\succ v_\succ=B_{\succ,s(B_\succ v_\succ)}v_\succ\)</span>. The decision-to-arrival builder is</p>
 <div class="arithmatex">\[
 \mathbb{T}_\prec=B_\prec:\mathsf V_\sim\to\mathsf V_\prec.
 \]</div>
@@ -8445,11 +8505,11 @@ or may expose the induced aggregator and policy separately:
 \mathbb T_{\succ,\pi}v_\succ=B_{\succ,\pi}v_\succ.
 \]</div>
 <p>At the supplied continuation function, the fixed-policy builder equals the optimizing value whenever the policy selects a maximizer at every decision state. This need not be the particular selection supplied by <span class="arithmatex">\(s\)</span>, and does not identify the two operators on all continuation functions. The selection and indexed-builder layer of a controlled-field builder is the subject of §7.</p>
-<p><strong>The builder at a policy and the policy layer.</strong> The builder at a policy is <span class="arithmatex">\(\mathbb T_{\succ,\pi} \colon \mathsf V_\succ \to \mathsf V_\sim\)</span>, one operator for each <span class="arithmatex">\(\pi \in \Pi_\Gamma\)</span>; <span class="arithmatex">\(\mathbb T_\succ\)</span> keeps its meaning above, the optimizing builder. The policy layer is a second operator, typed by its route. On the selection route, <span class="arithmatex">\(s \circ B_\succ \colon \mathsf V_\succ \rightharpoonup \Pi_\Gamma\)</span>, where <span class="arithmatex">\(s(B_\succ v_\succ)\in\operatorname{argmax}(B_\succ v_\succ)\)</span> under the measurable-maximizer condition of §7.3. On the relation route, the method supplies a selection into <span class="arithmatex">\(\Pi_\Gamma\)</span> from the solution of an authored relation.</p>
+<p><strong>The builder at a policy and the policy layer.</strong> The builder at a policy is <span class="arithmatex">\(\mathbb T_{\succ,\pi} \colon \mathsf V_\succ \to \mathsf V_\sim\)</span>, one operator for each <span class="arithmatex">\(\pi \in \Pi_\Gamma\)</span>; <span class="arithmatex">\(\mathbb T_\succ\)</span> keeps its meaning above, the optimizing builder. The policy layer is a second operator, whose inputs and outputs depend on its route. On the selection route, <span class="arithmatex">\(s \circ B_\succ \colon \mathsf V_\succ \rightharpoonup \Pi_\Gamma\)</span>, where <span class="arithmatex">\(s(B_\succ v_\succ)\in\operatorname{argmax}(B_\succ v_\succ)\)</span> under the measurable-maximizer condition of §7.3. On the relation route, the method supplies a selection into <span class="arithmatex">\(\Pi_\Gamma\)</span> from the solution of an authored relation.</p>
 <p>The semantic graph constructs the builder at a policy and the policy layer and does not compose them. In this construction, the decision builder is the operator at a policy, its signature the inputs and outputs of <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>. The policy is a free name used by its indexed pullback, aggregation or conditional distribution, typed on the output of the policy builder and carried on no input wire. The policy builder stands in the same graph as its own part, inputs and output. Where a policy block reads a value the backward builders produce, that wire joins the two parts; no wire runs from the policy builder into a backward builder.</p>
 <p>A method states how the two parts are combined: the optimizing rule <span class="arithmatex">\(v_\succ\mapsto B_{\succ,s(B_\succ v_\succ)}v_\succ\)</span> of value-function iteration, the alternation of policy evaluation and policy improvement of Howard, or a route through a first-order condition such as the endogenous grid. The abstract dynamic programs of Sargent and Stachurski have the same two-part form: a value poset with a family of policy operators <span class="arithmatex">\(\{T_\sigma\}_{\sigma \in \Sigma}\)</span> and a selection made outside the family. Their Bellman operator is <span class="arithmatex">\(Tv = \bigvee_\sigma T_\sigma v\)</span> whenever the supremum exists, and it equals the optimizing rule under the attainment and measurable-selection conditions of §7.3. In their recursive decision process <span class="arithmatex">\((\Gamma, V, B)\)</span>, the policy operator is <span class="arithmatex">\(T_\sigma v = B(\cdot, \sigma(\cdot), v)\)</span> and a greedy selector satisfies <span class="arithmatex">\(\sigma(x) \in \arg\max_{a \in \Gamma(x)} B(x, a, v)\)</span>. Their operators are self-maps of one value space, so the counterpart of <span class="arithmatex">\(T_\sigma\)</span> is the stage composite <span class="arithmatex">\(\mathbb T_\prec \circ \mathbb T_{\succ,\pi}\)</span> under the period identification (Sargent and Stachurski 2025, <em>Dynamic Programming</em>, vol. 2, chapters "Abstract Decision Processes", sections "ADPs on Posets" and "The Bellman Equation", and "Recursive Decision Processes", sections "Definition" and "Existence of Greedy Policies"). A fixed-policy calculation uses the operator at a policy supplied from outside.</p>
 <h2 id="7-policy-selection-and-the-builder-at-a-policy">7. Policy selection and the builder at a policy<a class="headerlink" href="#7-policy-selection-and-the-builder-at-a-policy" title="Permanent link">&para;</a></h2>
-<p>A controlled backward step separates the induced aggregator <span class="arithmatex">\(Q=B_\succ(v_\succ)\in\mathsf Q_\Gamma\)</span>, the maximizing set <span class="arithmatex">\(\operatorname{argmax}Q\subseteq\Pi_\Gamma\)</span>, a selected policy <span class="arithmatex">\(\pi=s(Q)\in\operatorname{argmax}Q\)</span>, and the decision value <span class="arithmatex">\(v_\sim=B_{\succ,\pi}v_\succ\)</span>. The surface may expose these as separate blocks or lines, but the semantic split is typed: <span class="arithmatex">\(B_\succ\)</span> constructs the objective, <span class="arithmatex">\(\operatorname{argmax}\)</span> gives its maximizing policies, <span class="arithmatex">\(s\)</span> selects one when the required selection exists, and <span class="arithmatex">\(B_{\succ,\pi}\)</span> contains the policy in its indexed transition, aggregator and conditional distribution.</p>
+<p>A controlled backward step separates the induced aggregator <span class="arithmatex">\(Q=B_\succ(v_\succ)\in\mathsf Q_\Gamma\)</span>, the maximizing set <span class="arithmatex">\(\operatorname{argmax}Q\subseteq\Pi_\Gamma\)</span>, a selected policy <span class="arithmatex">\(\pi=s(Q)\in\operatorname{argmax}Q\)</span>, and the decision value <span class="arithmatex">\(v_\sim=B_{\succ,\pi}v_\succ\)</span>. The surface may expose these as separate blocks or lines, but each part of the semantic split has its own inputs and outputs: <span class="arithmatex">\(B_\succ\)</span> constructs the objective, <span class="arithmatex">\(\operatorname{argmax}\)</span> gives its maximizing policies, <span class="arithmatex">\(s\)</span> selects one when the required selection exists, and <span class="arithmatex">\(B_{\succ,\pi}\)</span> contains the policy in its indexed transition, aggregator and conditional distribution.</p>
 <p><a id="71-the-objective-qb_succmathrm-v_succ"></a></p>
 <h3 id="71-the-choice-value-function">7.1 The choice-value function<a class="headerlink" href="#71-the-choice-value-function" title="Permanent link">&para;</a></h3>
 <p>The objective is the induced aggregator applied to the continuation value:</p>
@@ -8476,7 +8536,7 @@ v_\sim(x)=Q(x,\pi(x)).
 <p>The recipes are extensionally equivalent only under the usual optimality, monotonicity/concavity or envelope, and measurable-selection assumptions. The recipe specifies a numerical method for the stated mathematical operator.</p>
 <p>The source can specify maximization or an implicit policy relation. After a continuation candidate has been defined, <code>c = c[&gt;]</code> may identify the decision control implicitly through the saving transition. That equation remains a relation until a unique solution or a specified measurable selection determines a policy. The endogenous grid method approximates the relation by candidate pairs and interpolation; its numerical steps are not automatically authored operations. Bellman-SYM's Appendix D, §7, states the distinction.</p>
 <h3 id="73-why-split-selection-from-the-indexed-builder">7.3 Why split selection from the indexed builder<a class="headerlink" href="#73-why-split-selection-from-the-indexed-builder" title="Permanent link">&para;</a></h3>
-<p>The traditional Bellman equation <span class="arithmatex">\(v(x)=\sup_a B_\succ(x,a,v_\succ)\)</span> gives the optimal value. Policy selection and the indexed builder provide its displayed decomposition under the stated attainment assumptions. The split keeps their types distinct. Direct search and first-order inversion can approximate the same selection target under the conditions stated above; their policies then index the law of motion, aggregator and conditional distribution. The bundled max form is recovered as</p>
+<p>The traditional Bellman equation <span class="arithmatex">\(v(x)=\sup_a B_\succ(x,a,v_\succ)\)</span> gives the optimal value. Policy selection and the indexed builder provide its displayed decomposition under the stated attainment assumptions. The split keeps their inputs and outputs distinct. Direct search and first-order inversion can approximate the same selection target under the conditions stated above; their policies then index the law of motion, aggregator and conditional distribution. The bundled max form is recovered as</p>
 <div class="arithmatex">\[
 (\max Q)(x)
 =Q(x,s(Q)(x)),
@@ -8530,7 +8590,7 @@ G_\succ\bigl(v_\succ(g_2(g_1(x,a),\eta)),x,a,\eta\bigr)\,\mu_\eta(d\eta).
 <p>This is the operator-level reading of EGM: the handler may expose the post-decision expectation or marginal node, solve for a candidate policy, optionally apply <span class="arithmatex">\(\operatorname{upper\_env}\)</span> to the candidate representation, and then use that policy in the indexed builder.</p>
 <p><a id="11-granularity--option-b-lite"></a></p>
 <h2 id="11-numerical-decomposition">11. Numerical decomposition<a class="headerlink" href="#11-numerical-decomposition" title="Permanent link">&para;</a></h2>
-<p>An EGM recipe needs the relevant transition and marginal information. It may obtain these from a builder or from supported named intermediate places, and may perform interpolation, envelope comparisons, and evaluation internally. <em>(Placeholder.)</em> This is the partial-decomposition setting: the builder may remain opaque except for the named intermediate nodes a handler needs. The explanation of supported intermediate places remains unfinished; Bellman-SYM's Appendix D defines current source marks and numerical attachment boundaries.</p>
+<p>An EGM recipe needs the relevant transition and marginal information. It may obtain these from a builder or from supported named intermediate places, and may perform interpolation, envelope comparisons, and evaluation internally. <em>(Placeholder.)</em> This is the case of partial decomposition: the builder may remain opaque except for the named intermediate nodes a handler needs. The explanation of supported intermediate places remains unfinished; Bellman-SYM's Appendix D defines current source marks and numerical attachment boundaries.</p>
 <h2 id="12-correspondence-with-sargentstachurski">12. Correspondence with Sargent–Stachurski<a class="headerlink" href="#12-correspondence-with-sargentstachurski" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

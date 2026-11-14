@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7922,7 +7982,7 @@
 
 
 <h1 id="methodization">Methodization<a class="headerlink" href="#methodization" title="Permanent link">&para;</a></h1>
-<p><strong>Methodization</strong> binds numerical methods to the operators of a <a href="../stage/">stage</a>. A <a href="../../Bellman-Sym/reference/methods/">method</a> names a technique and is a component of the <a href="../signature/">signature</a> of the <a href="../operator/">operator</a> it serves, written as a typing of the operator's name; a <a href="../handler/">handler</a> identifies the routine that performs it; the <a href="../settings/">settings</a> are the values the methods read. None supplies a missing model equation or proves that a computed policy is optimal.</p>
+<p><strong>Methodization</strong> binds numerical methods to the operators of a <a href="../stage/">stage</a>. A <a href="../../Bellman-Sym/reference/methods/">method</a> names a technique and is a label on the <a href="../operator/">operator</a> it serves, beside the operator's <a href="../signature/">inputs and outputs</a>, written as a typing of the operator's name; a <a href="../handler/">handler</a> identifies the routine that performs it; the <a href="../settings/">settings</a> are the declared names whose values the methods read. None supplies a missing model equation or proves that a computed policy is optimal.</p>
 <p>The methods of a stage are written in its methods file, the <a href="../addition/">addition</a> to the stage file: a <code>.bl</code> file read by the stage grammar and unioned with the stage file before elaboration. The buffer-stock addition binds the endogenous grid method on the policy <a href="../builder/">builder</a>, with the method's grid of savings, and piecewise linear interpolation on the Evaluation that stores the policy:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>@methods: buffer_stock
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -7939,7 +7999,7 @@
 </code></pre></div>
 <p>The method stands on the policy builder, <code>policy</code>: the block of the addition names the stage's block by its <code>id</code>, its entry <code>policy.method : !egm</code> types the builder's method component, its entry <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> types the builder's <a href="../grid/">grid</a> component, the group <code>| evaluate.method : !Linear</code> types the Evaluation inside the block, and its three lines are the rows by which the method computes the policy at the operative level, the stage keeping the declared maximization in <code>stage.declared</code> (<a href="../addition/">addition</a> §3). <code>stage.methods["policy"]</code> answers the method by the place it binds at. A handler is written as a binding in the same form, <code>policy.handler : "cons-port:egm"</code>, with or without a method word. The settings the entries name are declared in the addition with their domains and valued in the settings file.</p>
 <h2 id="where-a-method-stands">Where a method stands<a class="headerlink" href="#where-a-method-stands" title="Permanent link">&para;</a></h2>
-<p>A method type states the kinds of operator it admits and the keyword arguments it reads (<a href="../../Bellman-Sym/reference/methods/">method types</a>). A place is an operator <code>stage.places()</code> lists: a whole builder; the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes a builder, where a representation of what it stores stands; a line marked <code>!node</code> or any other <a href="../statement/">statement</a> with an id; a function the <a href="../stage/">stage file</a> defines; or one occurrence of an operator inside a line. The path written before <code>.method</code> names it:</p>
+<p>A method type states the kinds of place it admits and the keyword arguments it reads (<a href="../../Bellman-Sym/reference/methods/">method types</a>). A place is what <code>stage.places()</code> lists: a whole builder; the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes a builder, where a representation of what it stores stands; a line marked <code>!node</code> or any other <a href="../statement/">statement</a> with an id; a function the <a href="../stage/">stage file</a> defines; or one occurrence of an operator inside a line. The path written before <code>.method</code> names it:</p>
 <table>
 <thead>
 <tr>
@@ -7976,7 +8036,7 @@
 </table>
 <p><code>stage.places()</code> lists the places of a stage with the kind of each. A <a href="../term_address/">term address</a> can be inspectable without admitting a method; the derivative operator <code>D</code> admits none. Interpolation or an upper-envelope routine does not create an authored equation. The constrained part of the policy must be declared, as the clause on the candidate line of the consumption stage's methods file declares the corner, or an added numerical boundary segment identified as an extension outside the interior equality (<a href="../../Bellman-Sym/10-constraints/">Constraints</a> §4.3).</p>
 <h2 id="specification-contract">Specification contract<a class="headerlink" href="#specification-contract" title="Permanent link">&para;</a></h2>
-<p>The stage verb <code>stage.methodize</code> reads its additions into the stage, which is elaborated anew from the union, so that the stage carries the method and grid components and the handlers the additions type. In a <a href="../trellis/">trellis</a>, <code>elaborate_trellis</code> reads at every position the additions the <a href="../spec_factory/">recipe</a> names for the <a href="../stage/">stage occurrence</a>, in order, with the stage text, and <code>methodize_trellis</code> binds nothing more. A component typed by two files with different content is refused, an unknown method word and an unresolved path are refused, and a method at an operator of a kind it does not admit is refused naming the place.</p>
+<p>The stage verb <code>stage.methodize</code> reads its additions into the stage, which is elaborated anew from the union, so that the stage carries the method and grid components and the handlers the additions type. In a <a href="../trellis/">trellis</a>, <code>elaborate_trellis</code> reads at every position the additions the <a href="../spec_factory/">recipe</a> names for the <a href="../stage/">stage occurrence</a>, in order, with the stage text, and <code>methodize_trellis</code> binds nothing more. A component typed by two files with different content is refused, an unknown method word and an unresolved path are refused, and a method at a place of a kind it does not admit is refused naming the place.</p>
 <p>The entry <a href="../specified_stage/">specified stage</a> states the order of the bindings. The <a href="../spec_factory/">specification factory</a> states how the recipe combines its sources, and it creates no mathematical object. Whether a handler can carry a method out requires checks of the implementation in addition to the declared contract. See <a href="../../Bellman-Sym/04-methodization/">Methodization</a> and <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
 
 

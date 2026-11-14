@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8387,43 +8447,46 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>Xm := ℝ
 <a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>Xa := ℝ
 <a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>β : (0,1) @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1"]
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1"]
 <a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
 <a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>R : ℝ₊₊                    :: ["gross interest factor"]
 <a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>Γ : (0, R)                 :: ["permanent income growth factor; its upper bound R is the finite human wealth condition"]
 <a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>q := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q &lt; 1"]
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q &lt; 1"]
 <a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
 <a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>L := 1 - h           :: ["the natural borrowing limit on market resources, above which total wealth m - L is positive"]
 <a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>Γ_c(x : Xm) := {c : ℝ₊₊ | c &lt; x - L}   :: [id=feasible_consumption]
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>[id=arvl_to_dcsn, (k : Xa) : !arvl -&gt; (m : Xm) : !dcsn] {
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    m = R*k/Γ + 1                   :: [id=market_resources]
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>}
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -&gt; (a : Xa) : !cntn] {
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    a = m - c                       :: [id=savings]
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>}
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>    V = 𝑢(c) + β*V[&gt;]               :: [id=value]
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>}
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>[id=dcsn_to_arvl, (V) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] {
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>    V[&lt;] = Γ^(1-ρ) * V              :: [id=value]
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>}
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])     :: [id=optimality]
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>}
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a># q needs to be fixed as a condition. 
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a># 12 November 2026: the definition of q above now carries the set (0,1), which calibration holds.
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>Γ_c(x : Xm) := {c : ℝ₊₊ | c &lt; x - L}   :: [id=feasible_consumption]
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>[id=arvl_to_dcsn, (k : Xa) : !arvl -&gt; (m : Xm) : !dcsn] {
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    m = R*k/Γ + 1                   :: [id=market_resources]
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>}
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -&gt; (a : Xa) : !cntn] {
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    a = m - c                       :: [id=savings]
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>}
+<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
+<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>    V = 𝑢(c) + β*V[&gt;]               :: [id=value]
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>}
+<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>[id=dcsn_to_arvl, (V) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] {
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>    V[&lt;] = Γ^(1-ρ) * V              :: [id=value]
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>}
+<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
+<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])     :: [id=optimality]
+<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>}
 </code></pre></div>
 <h3 id="61-arrival-transition">6.1 Arrival transition<a class="headerlink" href="#61-arrival-transition" title="Permanent link">&para;</a></h3>
 <p>The arrival block <code>arvl_to_dcsn</code> writes <span class="arithmatex">\(m = Rk/\Gamma + 1\)</span>: the return <span class="arithmatex">\(R\)</span> on the saving <span class="arithmatex">\(k\)</span>, divided by the growth factor <span class="arithmatex">\(\Gamma\)</span> to normalize by this period's permanent income, plus this period's income, which is one. The decision block <code>dcsn_to_cntn</code> is the saving, <span class="arithmatex">\(a = m - c\)</span>. Neither line has a shock.</p>
 <h3 id="62-derived-parameters">6.2 Derived parameters<a class="headerlink" href="#62-derived-parameters" title="Permanent link">&para;</a></h3>
-<p>The lines <code>q := …</code>, <code>h := …</code> and <code>L := …</code> define three <strong>derived parameters</strong>, constants that the stage defines from its parameters and that the calibration does not supply: the return patience factor <span class="arithmatex">\(q\)</span>, human wealth <span class="arithmatex">\(h\)</span> and the natural borrowing limit <span class="arithmatex">\(L\)</span>. Their definitions follow the rule <a href="../../../Bellman-Sym/reference/refusals/#derived-parameter"><code>derived-parameter</code></a>, and a calibration that names one of them is refused. <code>stage.par</code> lists them after the four declared parameters, with their definitions and, once a calibration is bound, their values (§7.3). The declared set of the growth factor, <code>Γ : (0, R)</code>, is an interval whose upper endpoint is the interest factor: the bound is the finite human wealth condition, and <code>calibrate</code> refuses a growth factor at or above the interest factor, naming the set (§11).</p>
+<p>The lines <code>q : (0,1) := …</code>, <code>h := …</code> and <code>L := …</code> define three <strong>derived parameters</strong>, constants that the stage defines from its parameters and that the calibration does not supply: the return patience factor <span class="arithmatex">\(q\)</span>, human wealth <span class="arithmatex">\(h\)</span> and the natural borrowing limit <span class="arithmatex">\(L\)</span>. Their definitions follow the rule <a href="../../../Bellman-Sym/reference/refusals/#derived-parameter"><code>derived-parameter</code></a>, and a calibration that names one of them is refused. The definition of <span class="arithmatex">\(q\)</span> declares the set <code>(0,1)</code> in which its value lies, which is the return impatience condition, and <code>calibrate</code> refuses a calibration at which the value of <span class="arithmatex">\(q\)</span> lies outside that set (§11). <code>stage.par</code> lists them after the four declared parameters, with their definitions and, once a calibration is bound, their values (§7.3). The declared set of the growth factor, <code>Γ : (0, R)</code>, is an interval whose upper endpoint is the interest factor: the bound is the finite human wealth condition, and <code>calibrate</code> refuses a growth factor at or above the interest factor, naming the set (§11).</p>
 <h3 id="63-builders">6.3 Builders<a class="headerlink" href="#63-builders" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>cntn_to_dcsn</code>, the decision value builder: <span class="arithmatex">\(V = u(c) + \beta V^{&gt;}\)</span>, at the consumption the policy chooses.</li>
@@ -8526,16 +8589,16 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">par</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>name  set                      value                describes
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>β     (0, 1) @ (0, R^(ρ - 1))  0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>R     ℝ₊₊                      1.04                 gross interest factor
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>q     (β*R)^(1/ρ)/R            0.9615384615384615   the return patience factor; the return impatience condition is q &lt; 1
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q &lt; 1
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>κ     1 - q                    0.03846153846153855  the marginal propensity to consume, one minus the return patience factor
 </code></pre></div>
-<p><code>stage.par</code> lists the four declared parameters with their sets and values, then the three derived parameters of the stage file and the coefficient <code>κ</code> of the methods file, each with its definition in place of a set and its value at the calibration: <span class="arithmatex">\(q = 1/1.04\)</span>, <span class="arithmatex">\(h = 52\)</span>, <span class="arithmatex">\(L = -51\)</span> and <span class="arithmatex">\(\kappa = 0.04/1.04\)</span>, evaluated in floating point. <code>stage.methods</code> lists the three builders typed <code>!explicit</code> and the closed form of each builder's Evaluation, generated from the builder's method entry:</p>
+<p><code>stage.par</code> lists the four declared parameters with their sets and values, then the three derived parameters of the stage file and the coefficient <code>κ</code> of the methods file, each with its definition in the column of the sets, after the declared set <code>(0, 1)</code> in the row of <code>q</code>, and its value at the calibration: <span class="arithmatex">\(q = 1/1.04\)</span>, <span class="arithmatex">\(h = 52\)</span>, <span class="arithmatex">\(L = -51\)</span> and <span class="arithmatex">\(\kappa = 0.04/1.04\)</span>, evaluated in floating point. <code>stage.methods</code> lists the three builders typed <code>!explicit</code> and the closed form of each builder's Evaluation, generated from the builder's method entry:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">methods</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cntn_to_dcsn            !explicit
@@ -8559,7 +8622,7 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 <li><strong>Arrival marginal</strong> (the derivative line of <code>dcsn_to_arvl</code>): <span class="arithmatex">\(dV^{&lt;}(k) = R\,\Gamma^{-\rho}\, dV(Rk/\Gamma + 1)\)</span>, which is the next iteration's continuation marginal value at <span class="arithmatex">\(k = a\)</span>.</li>
 <li><strong>Iterate</strong> until convergence.</li>
 </ol>
-<p>Calibration refuses a calibration at which <span class="arithmatex">\(q \ge 1\)</span>, by the declared set of the discount factor. The module refuses a return patience factor that computes to one or more, a grid of savings that starts at or below <span class="arithmatex">\(L\)</span>, an intermediate value that is not finite, an extrapolation that leaves the feasible set and an iteration that reaches its limit without converging. The consumption function is linear in <span class="arithmatex">\(m\)</span>, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook <code>code/closed-form-and-grid.ipynb</code> shows each step and each comparison.</p>
+<p>Calibration refuses a calibration at which <span class="arithmatex">\(q \ge 1\)</span>, by the declared set of the discount factor and by the set that the definition of <span class="arithmatex">\(q\)</span> declares. The module refuses a return patience factor that computes to one or more, a grid of savings that starts at or below <span class="arithmatex">\(L\)</span>, an intermediate value that is not finite, an extrapolation that leaves the feasible set and an iteration that reaches its limit without converging. The consumption function is linear in <span class="arithmatex">\(m\)</span>, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook <code>code/closed-form-and-grid.ipynb</code> shows each step and each comparison.</p>
 <h2 id="10-calibration">10 Calibration<a class="headerlink" href="#10-calibration" title="Permanent link">&para;</a></h2>
 <p>The calibration file, <code>declaration/calibration/perfect_foresight.yml</code>, holds the example of the chapter's section 4.1, an interest rate <span class="arithmatex">\(r = 0.04\)</span>, a time preference rate <span class="arithmatex">\(\vartheta = 0.04\)</span>, income growth <span class="arithmatex">\(g = 0.02\)</span> and <span class="arithmatex">\(\rho = 2\)</span>, written as the factors the stage declares: <span class="arithmatex">\(R = 1 + r\)</span>, <span class="arithmatex">\(\beta = 1/(1 + \vartheta)\)</span> and <span class="arithmatex">\(\Gamma = 1 + g\)</span>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># The calibration of the perfect foresight stage: the example of Carroll and</span>
@@ -8631,7 +8694,7 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 </tr>
 <tr>
 <td><span class="arithmatex">\(q &lt; 1\)</span></td>
-<td>the declared set of the discount factor, <code>β : (0,1) @ (0, R^(ρ-1))</code>, whose upper bound <span class="arithmatex">\(R^{\rho-1}\)</span> is the condition written for <span class="arithmatex">\(\beta\)</span></td>
+<td>the declared set of the discount factor, <code>β : ℝ₊₊ @ (0, R^(ρ-1))</code>, whose upper bound <span class="arithmatex">\(R^{\rho-1}\)</span> is the condition written for <span class="arithmatex">\(\beta\)</span>, and the set that the definition of the return patience factor declares, <code>q : (0,1) := (β*R)^(1/ρ)/R</code></td>
 <td><code>calibrate</code>, under each methods file</td>
 </tr>
 <tr>

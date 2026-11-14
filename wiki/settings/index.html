@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7924,7 +7984,7 @@
 <h1 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p><strong>Settings</strong> are the values a numerical method reads: the bounds and the count of a <a href="../grid/">grid</a>, a tolerance, an iteration limit, the number of quadrature nodes, a rule chosen among finitely many labels. They configure how a computation is approximated; <a href="../parameters/">parameters</a> define the economic model. A setting is declared with its domain in the methods file, the <a href="../addition/">addition</a> to the stage file, and its value, written in the settings file, is bound by <code>configure</code>, which refuses a value outside the declared set.</p>
+<p><strong>Settings</strong> are the numerical choices a method reads: the bounds and the count of a <a href="../grid/">grid</a>, a tolerance, an iteration limit, the number of quadrature nodes, a rule chosen among finitely many labels. They configure how a computation is approximated; <a href="../parameters/">parameters</a> define the economic model. A <strong>setting</strong> is a name declared with a set in a methods file, the <a href="../addition/">addition</a> to the stage file, and its value, written in the settings file, is bound by <code>configure</code>, which refuses a value outside the declared set.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -7932,7 +7992,7 @@
 <strong>Builds on</strong> — <a href="../grid/">Grid</a>: the component whose factors name settings; <a href="../../Bellman-Sym/reference/methods/">Methods</a>: the words whose keyword arguments name them.
 <strong>Used by</strong> — <a href="../../Bellman-Sym/API/stage/06-par-and-settings/">Parameters and settings</a>: the table <code>stage.settings</code>; <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>: the verb <code>configure</code>.</p>
 </details>
-<p>A setting is told from a parameter by the file that declares it: a parameter is declared by the <a href="../stage/">stage file</a> and defines the model, including any discrete domain that is part of the model; a setting is declared by the methods file and configures a method. A methods file may also define a <a href="../parameters/">derived parameter</a> from the parameters, which is a parameter and no setting.</p>
+<p>A setting is told from a parameter by the file that declares it: a parameter is declared by the <a href="../stage/">stage file</a> and defines the model, including any discrete domain that is part of the model; a setting is declared by the methods file and configures a method. A methods file may also define a <a href="../parameters/">derived parameter</a> by <code>:=</code> from the parameters, with or without a declared set, which is a parameter and no setting.</p>
 <h2 id="1-declared-with-their-domains">1 Declared with their domains<a class="headerlink" href="#1-declared-with-their-domains" title="Permanent link">&para;</a></h2>
 <p>A methods file declares each setting it reads at file level, in the form the stage file declares a parameter, with its set and a description:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>n_a : ℕ              :: ["number of points of the savings grid"]
@@ -7941,11 +8001,11 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>tol_v : ℝ₊₊          :: ["tolerance of value function iteration"]
 </code></pre></div>
-<p>A bound of a grid is a point of the set the stage declares for the coordinate, <code>Xa</code> for the savings <code>a</code> or a literal set such as <code>ℝ₊</code>; a count is a natural number; a tolerance is a positive real; a setting valued in a finite set of labels, such as a tie-breaking rule, is declared on that set. A name is declared once in a stage, and two declarations of one name with different sets are refused. The scope of a declaration is the addition and the stage it is unioned with; where two stages of one <a href="../period/">period</a> each declare one name, they denote one setting of that period, as a parameter name does. A grid entry names settings and holds no number: <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> names three. A method word's keyword argument names a declared setting where the choice is to be configured, <code>!gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)</code>, and may hold a number or a quoted string where the method's catalogue row admits one. An undeclared name is refused as any other is.</p>
+<p>A bound of a grid is a point of the set the stage declares for the coordinate, <code>Xa</code> for the savings <code>a</code> or a literal set such as <code>ℝ₊</code>; a count is a natural number; a tolerance is a positive real; a setting valued in a finite set of labels, such as a tie-breaking rule, is declared on that set. A declared set may name a parameter or a derived parameter, as <code>tol_s : (0, ρ)</code> does. A name is declared once in a stage, and two declarations of one name with different sets are refused. The scope of a declaration is the addition and the stage it is unioned with; where two stages of one <a href="../period/">period</a> each declare one name, they denote one setting of that period, as a parameter name does. A grid entry names settings and holds no number: <code>policy.grid : !Cartesian(a=(a_min, a_max, n_a))</code> names three. A method word's keyword argument names a declared setting where the choice is to be configured, <code>!gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)</code>, and may hold a number or a quoted string where the method's catalogue row admits one. An undeclared name is refused as any other is.</p>
 <h2 id="2-bound-by-configure">2 Bound by configure<a class="headerlink" href="#2-bound-by-configure" title="Permanent link">&para;</a></h2>
-<p>The values stand in the settings file, and the <a href="../stage/">stage</a> verb <code>stage.configure(settings_source)</code>, with a path or a mapping, binds them as <code>calibrate</code>, the verb of <a href="../calibration/">calibration</a>, binds a parameter's value; <code>configure_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a>. Configuration follows the union of the stage file with its additions and the elaboration of the unioned stage, so that the settings it binds are those the methods file declares, read against the methods and grids that name them. It refuses a value outside the declared set, naming the line of the methods file where the setting is declared, and a name with no value. A key of a shared settings file that no declaration names binds nothing and declares no new setting, so a spelling mistake in a key is found at configuration and not hidden. The bound values stand in the stage's record of bindings; no value is part of a signature.</p>
-<p><code>stage.settings</code> lists every declared setting with its value, the <a href="../operator/">operator</a> that reads it, the method there and, where the setting is a factor of that operator's grid or the declared points of <code>!Points</code>, the grid's kind; <code>stage.settings["n_a"]</code> answers one setting's record, whose <code>value</code> is the configured value (<a href="../../Bellman-Sym/API/stage/06-par-and-settings/">Parameters and settings</a> §2). <code>stage.par</code> lists the parameters and no setting.</p>
-<p>An empty settings mapping is admissible for a stage whose methods declare no setting; it chooses no method. Recording a grid size demonstrates neither numerical accuracy nor adequate treatment of the bounds: at configuration the package checks each bound pair ordered and inside the coordinate's set, each count at least two, each node set strictly increasing, the shape, finite coordinates and decidable membership of declared points, and the requirements written after <code>require=</code> that the bound values decide, and nothing more (<a href="../../bellman-calculus/06-Methods/">Methods</a> §5). The entry <a href="../specified_stage/">specified stage</a> states the order in which the three bindings, calibration, <a href="../methodization/">methodization</a> and configuration, are made, and the <a href="../spec_factory/">specification factory</a> states how the sources of a <a href="../spec_factory/">recipe</a> combine. Exact configuration behavior is in <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
+<p>The values stand in the settings file, and the <a href="../stage/">stage</a> verb <code>stage.configure(settings_source)</code>, with a path or a mapping, binds them as <code>calibrate</code>, the verb of <a href="../calibration/">calibration</a>, binds a parameter's value; <code>configure_trellis(elaborated, syntactic)</code> applies it at every position of a <a href="../trellis/">trellis</a>. In the recommended order configuration follows the union of the stage file with its additions and the elaboration of the unioned stage, so that the settings it binds are those the methods file declares, read against the methods and grids that name them. It judges each value against the setting's declared set, reading each parameter that the set names at its calibrated value, and each derived parameter at the value its definition takes at the calibration. It refuses a value outside the declared set, naming the line of the methods file where the setting is declared, and a name with no value. A value inside its declared set is still refused where the method or the grid that reads it does not admit it: a keyword's value outside the domain the method's row names, or a bound or a count of a grid that fails the checks stated below (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a> §3). A key of a shared settings file that no declaration names declares no new setting and is read by no method: <code>configure</code> binds its value, and <code>stage.settings</code> lists it after the declared settings with no set, which is where a misspelled key shows. A configuration with a misspelled key is refused, under <code>setting-unvalued</code>, only where the setting the key was meant for has no value from the source and none from an earlier configuration; after an earlier configuration the earlier value stays bound, and the misspelled key is bound beside it. The bound values stand in the stage's record of bindings; no value is part of a signature.</p>
+<p><code>stage.settings</code> lists every declared setting with its value, the <a href="../operator/">operator</a> that reads it, the method there and, where the setting is a factor of that operator's grid or the declared points of <code>!Points</code>, the grid constructor; <code>stage.settings["n_a"]</code> answers one setting's record, whose <code>value</code> is the configured value (<a href="../../Bellman-Sym/API/stage/06-par-and-settings/">Parameters and settings</a> §2). <code>stage.par</code> lists the parameters and no setting.</p>
+<p>An empty settings mapping is admissible for a stage whose methods declare no setting; it chooses no method. Recording a grid size demonstrates neither numerical accuracy nor adequate treatment of the bounds: at configuration the package checks each bound pair ordered and inside the coordinate's set, each count at least two, each node set strictly increasing, the shape, finite coordinates and decidable membership of declared points, the requirements written after <code>require=</code> that the bound values decide and the equality of the points of a grid beside an authored table with the table's knots, where both are known exactly at configuration, and nothing more (<a href="../../bellman-calculus/06-Methods/">Methods</a> §5). Where the coordinate's set names a parameter, as a definition <code>Xa := [a_lo, inf)</code> would, a bound must lie in that set at the parameter's calibrated value. The package does not yet check this (<a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). It decides the membership from the set's definition alone, so it refuses such a bound under <code>grid-bounds</code>. The entry <a href="../specified_stage/">specified stage</a> states the order in which the three bindings, calibration, <a href="../methodization/">methodization</a> and configuration, are made, and the <a href="../spec_factory/">specification factory</a> states how the sources of a <a href="../spec_factory/">recipe</a> combine. Exact configuration behavior is in <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
 
 
 

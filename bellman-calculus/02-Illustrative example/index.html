@@ -2480,6 +2480,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2650,6 +2654,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8020,7 +8080,7 @@ a_t = m_t - c_t.
 \]</div>
 <p>The transition operators <span class="arithmatex">\(P\)</span> are linear on bounded measurable test functions, and on other integrable domains where the formulas are defined. Policy evaluation is affine: it is a linear map plus the fixed reward function. The supremum generally makes optimization nonlinear.</p>
 <blockquote>
-<p><strong>Forward builders.</strong> A <strong>pushforward</strong> is the distribution induced by a transition. Write <span class="arithmatex">\(\mathbb M_\prec\)</span> for the operator taking an arrival law <span class="arithmatex">\(\mu_\prec\)</span> to the decision law under <span class="arithmatex">\(m=Rk+y\)</span>, and <span class="arithmatex">\(\mathbb M_{\succ,\pi}\)</span> for the operator taking a decision law <span class="arithmatex">\(\mu\)</span> to the continuation law under <span class="arithmatex">\(a=m-\pi(m)\)</span>. These operators act on probability measures on their respective state spaces. Their composition is <span class="arithmatex">\(\mathbb M_\pi=\mathbb M_{\succ,\pi}\circ\mathbb M_\prec\)</span>.</p>
+<p><strong>Forward builders.</strong> A <strong>pushforward</strong> is the distribution induced by a transition. Write <span class="arithmatex">\(\mathbb M_\prec\)</span> for the operator taking an arrival law <span class="arithmatex">\(\mu_\prec\)</span> to the decision law under <span class="arithmatex">\(m=Rk+y\)</span>, and <span class="arithmatex">\(\mathbb M_{\succ,\pi}\)</span> for the operator taking a decision law <span class="arithmatex">\(\mu\)</span> to the continuation law under <span class="arithmatex">\(a=m-\pi(m)\)</span>. These operators act on the finite measures on their respective state spaces, of which the probability measures are those of mass one (<a href="../03-Stages%20and%20perches/">Stages and perches</a> §1.2). Their composition is <span class="arithmatex">\(\mathbb M_\pi=\mathbb M_{\succ,\pi}\circ\mathbb M_\prec\)</span>.</p>
 </blockquote>
 <p>With <span class="arithmatex">\(\langle\mu,f\rangle=\int f\,\mathrm d\mu\)</span>, the pairing identities for bounded measurable test functions are</p>
 <div class="arithmatex">\[

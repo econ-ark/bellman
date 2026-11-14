@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7966,14 +8026,14 @@
 
 
 <h1 id="operator">Operator<a class="headerlink" href="#operator" title="Permanent link">&para;</a></h1>
-<p>An <strong>operation symbol</strong> names an operation in a <a href="../signature/">signature</a> and has a declared input/output type, or <a href="../rank/">rank</a>. Its interpretation is a mathematical map on the chosen domains. For example, the <a href="../builder/">pullback</a> maps a continuation function to its composition with the law of motion.</p>
+<p>An <strong>operation symbol</strong> names an operation in a <a href="../signature/">signature</a> and has a <a href="../rank/">rank</a>, its input sorts and its output sort (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3). Its interpretation is a mathematical map on the chosen domains. For example, the <a href="../builder/">pullback</a> maps a continuation function to its composition with the law of motion.</p>
 <p>The symbol and its interpretation are distinct. A first-order signature can treat an operation solely as a symbol without introducing operator-valued data. This is a choice of signature, not a claim that a mathematical operator can never be a function or an element of a function space. In a specified category, a typed operation may be represented as a morphism.</p>
 <h2 id="primitive-and-composite-operations">Primitive and composite operations<a class="headerlink" href="#primitive-and-composite-operations" title="Permanent link">&para;</a></h2>
 <p>An operation is <strong>primitive relative to a signature</strong> when it is taken as a generator. It is <strong>composite</strong> when it is expressed using other operations. A whole builder can be primitive in a coarse signature and have a composite expansion in a finer one. Calling a transition-induced operation “induced” describes how its meaning is supplied; it does not by itself determine whether the chosen signature treats it as primitive.</p>
 <p>For the graphs and the inspection <a href="../semgraph/">grains</a> of the <a href="../semgraph/">semgraph</a> (semantic graph), see that entry. Natural Bellman primitives include whole law-of-motion and scalar aggregator definitions. Authored nodes can contain several primitives or name part of one; arithmetic remains inside the complete definitions, not an additional advertised grain. Primitive status in a mathematical signature and the named primitive inspection grain should not be treated as a proof of the same representation at every level.</p>
 <p>The <a href="../../bellman-calculus/catalogues/operators/">operator catalogue</a> lists the mathematical operations. The entries <a href="../backward_builder/">backward builder</a> and <a href="../forward_builder/">forward builder</a> explain their value and probability domains. A selected maximum is a composite of choice-value construction, a selection from the maximizing set and the insertion of the selected policy, defined only on a domain where the stated selection exists.</p>
 <h2 id="the-operations-of-a-builder">The operations of a builder<a class="headerlink" href="#the-operations-of-a-builder" title="Permanent link">&para;</a></h2>
-<p>In a <a href="../stage/">stage</a>, an operator is what a box of the backward or the forward builders graph denotes, and inside a <a href="../builder/">builder</a> the word means a <strong>primitive operator</strong>, the finest box. Each primitive operator is of one kind, the name under which the package lists it among the operations of a builder: <code>Pullback</code>, <code>Aggregation</code>, <code>Expectation</code>, <code>Evaluation</code> and <a href="../../Bellman-Sym/reference/operations/#argmax"><code>Argmax</code></a> in the backward builders graph, and <code>Pushforward</code> and <code>DistributionExtension</code> in the forward one (<a href="../../Bellman-Sym/reference/operations/">operations</a> §2; <a href="../../bellman-calculus/catalogues/operators/">Operators</a> §4). A relation, the rule of an <code>Aggregation</code> or a <code>Pullback</code> whose output is among its own unknowns, is no kind of its own. The package's table also defines <code>PolicyInsertion</code>, the insertion of a policy into a choice-value function, which no stage of the applications forms as a row of its own: at a policy the insertion is part of the indexed pullback or push-forward. The builder is the operator of a whole <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">block</a>, and a <a href="../sub_builder/">sub-builder</a> is the one box inside a builder that is not primitive.</p>
+<p>In a <a href="../stage/">stage</a>, an operator is what a box of the backward or the forward builders graph denotes, and inside a <a href="../builder/">builder</a> the word means a <strong>primitive operator</strong>, the finest box. Each primitive operator is of one operation kind, the name under which the package lists it among the operations of a builder: <code>Pullback</code>, <code>Aggregation</code>, <code>Expectation</code>, <code>Evaluation</code> and <a href="../../Bellman-Sym/reference/operations/#argmax"><code>Argmax</code></a> in the backward builders graph, and <code>Pushforward</code> and <code>DistributionExtension</code> in the forward one (<a href="../../Bellman-Sym/reference/operations/">operations</a> §2; <a href="../../bellman-calculus/catalogues/operators/">Operators</a> §4). A relation, the rule of an <code>Aggregation</code> or a <code>Pullback</code> whose output is among its own unknowns, is no operation kind of its own. The package's table also defines <code>PolicyInsertion</code>, the insertion of a policy into a choice-value function, which no stage of the applications forms as a row of its own: at a policy the insertion is part of the indexed pullback or push-forward. The builder is the operator of a whole <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">block</a>, and a <a href="../sub_builder/">sub-builder</a> is the one box inside a builder that is not primitive.</p>
 <h2 id="kernels">Kernels<a class="headerlink" href="#kernels" title="Permanent link">&para;</a></h2>
 <p>A <strong>kernel</strong> is the mathematical data an operator uses: a law of motion for a pullback or a push-forward; a <a href="../aggregation/">value aggregator</a> for an aggregation; a <strong>shock probability distribution</strong>, the distribution a <code>~</code> line of the <a href="../stage/">stage file</a> declares for a shock, read as conditional on the information at the edge's source perch (<a href="../../Bellman-Sym/reference/laws/">Shock distributions</a>), for an expectation or a distribution extension; a correspondence; or a policy reference, which at a policy is part of the indexed law of motion, aggregator or distribution. A <strong>law of motion</strong> is the map from the states of a <a href="../perch/">perch</a>, with the control and the shock where the edge has them, to the states of the next perch; the forward block of the edge declares it. A kernel's <a href="../signature/">inputs and outputs</a> are its arguments, which are points, while an operator's are its <a href="../semgraph/">wires</a>, which carry functions or measures. <code>kernel()</code> on an operation answers the kernel's line with its defining records under <code>origins</code>, and <code>compile_kernel()</code> the plain Python function made from the kernel's text, <code>kernel().python</code>, whose arguments are the kernel's own and then the parameters it reads (<a href="../../Bellman-Sym/API/stage/05-piece/">A piece</a> §2). In Backus's sense a kernel is the parameter of the operator's form, never an economic <a href="../parameters/">parameter</a>.</p>
 <h2 id="mathematical-interpretation">Mathematical interpretation<a class="headerlink" href="#mathematical-interpretation" title="Permanent link">&para;</a></h2>

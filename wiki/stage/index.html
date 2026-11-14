@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7927,7 +7987,7 @@
 <p>A household begins with assets <span class="arithmatex">\(b\)</span>, observes income <span class="arithmatex">\(y\)</span>, and chooses consumption <span class="arithmatex">\(c\)</span> from resources <span class="arithmatex">\(w=Rb+y\)</span>, leaving savings <span class="arithmatex">\(a=w-c\)</span>. Arrival information precedes income, decision information includes observed income, and continuation information includes the consumption choice. Assume resources suffice for the consumption decision and savings suffice for continuation value; the household's information can be richer than these scalar states.</p>
 <p>For an admissible continuation function <span class="arithmatex">\(W\)</span>, the objective is <span class="arithmatex">\(Q(w,c)=u(c)+\beta W(w-c)\)</span>. A policy selects a feasible maximizer, and arrival value averages the resulting decision value over income. Existence of that maximizer, measurability, and finiteness of the expectation are assumptions to check. The <a href="../../Bellman-Sym/01-stage/">complete walkthrough</a> states domains, a conditional distribution of income, and sufficient conditions.</p>
 <h2 id="a-stage-file-and-its-stage-occurrences">A stage file and its stage occurrences<a class="headerlink" href="#a-stage-file-and-its-stage-occurrences" title="Permanent link">&para;</a></h2>
-<p>A <strong>stage occurrence</strong> is one use of the stage file in a <a href="../period/">period</a> at a particular position in the model: the file elaborated there, with its own three bindings. Its <a href="../field/">fields</a>, policy and numerical choices remain local to that occurrence. A parameter name declared by two stages of the same period, however, names one <a href="../parameters/">period parameter</a> with one reconciled declaration and value; the same name in another period names another parameter. The construction gives each stage occurrence its own semgraph and specification, prints the file's declared name for every one, and records the position in the occurrence's provenance. Each binding adds to the elaborated object in place and returns it; a <strong>stage version</strong> is the stage occurrence as it stands after elaboration or after one of its bindings.</p>
+<p>A <strong>stage occurrence</strong> is one use of the stage file in a <a href="../period/">period</a> at a particular position in the model: the file elaborated there, with its own three bindings. Its <a href="../field/">fields</a>, policy and numerical choices remain local to that occurrence. A parameter name declared by two stages of the same period, however, names one <a href="../parameters/">period parameter</a> with one reconciled declaration and value; the same name in another period names another parameter. The construction gives each stage occurrence its own semgraph and specification, prints the file's declared name for every one, and records the position in the occurrence's provenance. Each binding adds to the elaborated object in place and returns it; a <strong>stage version</strong> is the stage occurrence as it stands after elaboration or after one of its bindings (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6).</p>
 <p>The stage's <a href="../semgraph/">semgraph (semantic graph)</a> retains its interpreted equations and definitions. Whole <a href="../builder/">builders</a>, named Bellman operations, and authored <code>!node</code> computations provide inspection boundaries. Scalar arithmetic inside a state transition or <a href="../aggregation/">value aggregator</a> is not another advertised level of that semgraph.</p>
 <p>The <a href="../../Bellman-Sym/03-field-equations/">field-equation tutorial</a> develops consumption as a separate stage file, which can then be joined to discounting and portfolio choice through compatible <a href="../connector/">connectors</a>.</p>
 

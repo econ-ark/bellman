@@ -2582,6 +2582,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2752,6 +2756,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7950,7 +8010,7 @@
 <h1 id="the-stage">The stage<a class="headerlink" href="#the-stage" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>We use a simple buffer-stock model to introduce the structure of a stage, a self-contained decision problem with three perches corresponding to the information sets at arrival, decision and continuation. Its economic quantities are fields, classified by perch, role and domain, and related across perches by two laws of motion and a value aggregator. The stage file states this theoretical model alone, as a <strong>symbolic stage</strong>.</p>
+<p>We use a simple buffer-stock model to introduce the structure of a stage, a self-contained decision problem with three perches corresponding to the information sets at arrival, decision and continuation. Its economic quantities are fields, classified by role, by declared set and, except for shocks, by perch, and related across perches by two laws of motion and a value aggregator. The stage file states this theoretical model alone, as a <strong>symbolic stage</strong>.</p>
 </div>
 <p>A <strong>stage</strong> is a self-contained decision problem whose description uses no information or notation from elsewhere in the model. It can be viewed as a description of a <strong>Bellman operator</strong>, expressed through objects typed according to the <strong>Bellman calculus</strong>, Project Bellman’s type system. These types are general enough to represent any Bellman operator of a recursive decision process.</p>
 <h2 id="1-structure-of-a-stage">1 Structure of a stage<a class="headerlink" href="#1-structure-of-a-stage" title="Permanent link">&para;</a></h2>
@@ -7968,8 +8028,8 @@
 <p>The perch indices are <code>&lt;</code> (<span class="arithmatex">\(\prec\)</span>) for arrival, <code>&gt;</code> (<span class="arithmatex">\(\succ\)</span>) for continuation and <code>~</code> (<span class="arithmatex">\(\sim\)</span>) for decision, with the decision mark usually omitted.</p>
 <h3 id="12-fields">1.2 Fields<a class="headerlink" href="#12-fields" title="Permanent link">&para;</a></h3>
 <p>The economic quantities of a stage—assets <code>b</code>, income <code>y</code>, resources <code>m</code>, consumption <code>c</code>, savings <code>a</code> and the value at each perch—are called <strong>fields</strong>. A field appears in stage equations much as a variable does in a paper, but the term makes its mathematical classification explicit. In conventional notation, a <em>variable</em> may be a number, a vector, a random variable, a realization or a function of the state, with the distinction left to context.<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup></p>
-<p>For a stage file to determine a Bellman problem, each object must instead have a well-defined type. A field is classified by its <strong>perch</strong>, its <strong>role</strong>—state, control, shock, value or marginal value—and the <strong>domain</strong> of its values. Its type supplies the necessary and sufficient information to construct the stage’s <a href="../../wiki/semgraph/">semantic graph</a> and kernels.</p>
-<p>In the buffer-stock model, the value field is written <code>V[&lt;]</code> at arrival, <code>V</code> at decision and <code>V[&gt;]</code> at continuation. Parameters such as <code>β</code> and <code>R</code>, by contrast, are not fields: they are declared with their domains and receive values at <a href="../../wiki/calibration/">calibration</a>.</p>
+<p>For a stage file to determine a Bellman problem, each object must instead have a well-defined type. A field is classified by its <strong>role</strong>, which is state, control, shock, value or the multiplier of a constraint (<a href="../../Bellman-Sym/10-constraints/">Constraints</a> §4.2), by its <strong>declared set</strong>, the set in which its values lie, and, unless it is a shock, by its <strong>perch</strong>. Its type states this classification. Together with the stage’s equations, which state the kernels (§1.3), the types of the fields determine the stage’s <a href="../../wiki/semgraph/">semantic graph</a>.</p>
+<p>In the buffer-stock model, the value field is written <code>V[&lt;]</code> at arrival, <code>V</code> at decision and <code>V[&gt;]</code> at continuation. Parameters such as <code>β</code> and <code>R</code>, by contrast, are not fields: they are declared with their sets and receive values at <a href="../../wiki/calibration/">calibration</a>.</p>
 <p>The table summarizes the fields of the example.</p>
 <table>
 <thead>
@@ -7977,7 +8037,7 @@
 <th>Field</th>
 <th>Perch</th>
 <th>Role</th>
-<th>Domain</th>
+<th>Declared set</th>
 </tr>
 </thead>
 <tbody>

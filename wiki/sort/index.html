@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -7900,12 +7960,12 @@
 
 
 <h1 id="sort">Sort<a class="headerlink" href="#sort" title="Permanent link">&para;</a></h1>
-<p>A <strong>sort</strong> identifies a kind of object in a typed mathematical vocabulary. Its <strong>carrier</strong> is the set of objects assigned to that sort by an interpretation. The sort and its carrier are distinct: one is an index, the other a set.</p>
-<p>An operation's type lists ordered input sorts and an output sort. Its interpretation maps the corresponding carriers. This is the many-sorted definition in Goguen, Thatcher, Wagner and Wright (1977), <em>Initial Algebra Semantics and Continuous Algebras</em>, §2 p. 70; see <a href="../signature/">signature</a>.</p>
+<p>A <strong>sort</strong> is a name, or the condition that a written type states, interpreted by a subset of the carrier of one kind (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3). A <strong>kind</strong> is a name for the objects of one nature, such as the <a href="../field/">fields</a> that a <a href="../stage/">stage</a> declares or its <a href="../operator/">operators</a>, and its <strong>carrier</strong> is the set of those objects. The carrier of a sort is the subset that interprets it. The type <code>!ctrl @ ℝ₊₊</code>, for example, names the sort whose carrier holds the controls with a declared set inside <span class="arithmatex">\(\mathbb R_{++}\)</span>. The sort and its carrier are distinct: one is a name or a condition, the other a set.</p>
+<p>An operation's <a href="../rank/">rank</a> lists ordered input sorts and an output sort. Its interpretation maps the corresponding carriers. This is the many-sorted definition in Goguen, Thatcher, Wagner and Wright (1977), <em>Initial Algebra Semantics and Continuous Algebras</em>, §2 p. 70, who call the pair the operation's type; see <a href="../signature/">signature</a>.</p>
 <h2 id="distinctions-in-a-stage">Distinctions in a stage<a class="headerlink" href="#distinctions-in-a-stage" title="Permanent link">&para;</a></h2>
-<p>In a <a href="../stage/">stage</a>, a grammar sort classifies a source constructor. A <a href="../field/">field</a> domain constrains the quantity it denotes. An economic role, such as control or value, and an information context supply further meaning. A state value, a scalar payoff, a function on states and a measure over states therefore cannot be interchanged merely because a diagram connects them.</p>
-<p>The <a href="../semgraph/">builders graphs</a>, the graphs of the <a href="../builder/">builders</a>, keep state-space, value and function-space types explicit: the sort of a function <a href="../semgraph/">wire</a> holds its coordinates and its value set. A numerical <a href="../grid/">grid</a> representation is not automatically a subsort of the exact function space: such a claim needs an embedding and its interpretation. Method labels alone do not establish carrier inclusion or derivative agreement.</p>
-<p>See <a href="../semgraph/">initial diagrams</a>, <a href="../parameters/">parameters</a>, <a href="../settings/">settings</a> and <a href="../../Bellman-Sym/reference/symbols-conventions/">Fields and types</a>.</p>
+<p>In a <a href="../stage/">stage</a>, a grammar sort, a sort of the <a href="../../bellman-calculus/11-abstract-grammar/">abstract grammar</a> and no sort of the stage's signatures, classifies a source constructor. The type of a <a href="../field/">field</a> names a sort of fields: the intersection of the sorts named by its role, such as control or value, by its <a href="../perch/">perch</a>, where it has one, and by its declared set (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §5). Functions and measures are objects of two further kinds, with sorts of their own. A state value, a scalar payoff, a function on states and a measure over states therefore cannot be interchanged merely because a diagram connects them.</p>
+<p>The <a href="../semgraph/">builders graphs</a>, the graphs of the <a href="../builder/">builders</a>, keep the sorts of their wires explicit: the package's <code>Sort</code> record of a function <a href="../semgraph/">wire</a> holds its coordinates and the declared set of the value it carries. At the builder <a href="../semgraph/">grain</a>, a wire that carries a value function or a measure has a sort of the stage's <a href="../signature/">operator signature</a>, whose carriers are spaces of value functions and of measures (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6). A function stored at the points of a numerical <a href="../grid/">grid</a> is no member of the exact function space, and it becomes one only through the interpolant that extends it (<a href="../../bellman-calculus/06-Methods/">Methods</a> §5). The grids form a kind of their own, and sorts are ordered by inclusion inside one kind only, so no sort of grids lies below a sort of functions. Method labels alone do not establish carrier inclusion or derivative agreement.</p>
+<p>See <a href="../semgraph/">initial diagrams</a>, <a href="../parameters/">parameters</a>, <a href="../settings/">settings</a>, <a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> and <a href="../../Bellman-Sym/reference/symbols-conventions/">Fields and types</a>.</p>
 
 
 
@@ -8013,6 +8073,9 @@
         <script src="../../_javascripts/figure_sequences.js"></script>
       
     
+  
+    <script src="../../_javascripts/mathjax.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
   
 
   </body>

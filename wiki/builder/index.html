@@ -2482,6 +2482,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -2652,6 +2656,62 @@
     
   
     Refusals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/rules/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rules and their code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Bellman-Sym/reference/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
   
 
     
@@ -8056,10 +8116,11 @@
 <h1 id="builder">builder<a class="headerlink" href="#builder" title="Permanent link">&para;</a></h1>
 <p>A <strong>builder</strong> is the <a href="../operator/">operator</a> a block of a <a href="../stage/">stage</a> <a href="../semantics/">denotes</a>. The block is
 the authored text of the <code>.bl</code> file; the builder is what that text means,
-and the two words are kept apart. The calculus defines a builder as a named
-composition of operators constituting a stage's input-to-output interface
+and the two words are kept apart. The calculus defines a backward builder as
+a named composition of operators that maps the value functions at one perch
+to those at the preceding perch
 (<a href="../../bellman-calculus/05-Operators%20and%20builders/">Operators and builders</a> §6).
-In the <a href="../semgraph/">semgraph</a> it is one box at the builder <a href="../semgraph/">grain</a>, a <code>Builder</code> bubble
+In the <a href="../semgraph/">semgraph</a> a builder is one box at the builder <a href="../semgraph/">grain</a>, a <code>Builder</code> bubble
 whose name is the block's identifier, and opening the bubble shows the operators
 it composes. A builder is reached from the stage by the ordered pair of
 perches it joins, the key the package resolves whatever the block's
@@ -8078,12 +8139,14 @@ forward builders <code>arvl_to_dcsn</code> and <code>dcsn_to_cntn</code>, at
 pair of perches its builder joins or, for the policy builder, the key
 <code>"policy"</code>: <code>stage.dcsn.builder.bwd</code> is <code>stage.builder["cntn", "dcsn"]</code>.</p>
 <p>The two directions act on different objects. A <a href="../backward_builder/">backward builder</a> carries
-value functions backward: <span class="arithmatex">\(\mathbb T_\succ\)</span> on the decision edge,
-<span class="arithmatex">\(\mathbb T_\prec\)</span> on the arrival edge, composing into the stage operator
-<span class="arithmatex">\(\mathbb T = \mathbb T_\prec \circ \mathbb T_\succ\)</span>, with
-<span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span> the <strong>builder at a policy</strong>, one operator for each
-policy, whose signature is its inputs and its outputs and which is wired to
-the policy builder at no level. A
+value functions backward: <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>, the <strong>builder at a policy</strong>,
+on the decision edge, one operator for each policy, whose signature is its
+inputs and its outputs and which is wired to the policy builder at no level,
+and <span class="arithmatex">\(\mathbb T_\prec\)</span> on the arrival edge, composing into
+<span class="arithmatex">\(\mathbb T_\pi = \mathbb T_\prec \circ \mathbb T_{\succ,\pi}\)</span>. The optimizing
+decision builder <span class="arithmatex">\(\mathbb T_\succ\)</span> is the image of no transition, and the
+<a href="../bellman_operator/">Bellman operator</a> is
+<span class="arithmatex">\(\mathbb T = \mathbb T_\prec \circ \mathbb T_\succ\)</span>. A
 <a href="../forward_builder/">forward builder</a> transports probability measures along the same declared
 transitions, <span class="arithmatex">\(\mathbb M_\prec\)</span> and <span class="arithmatex">\(\mathbb M_{\succ,\pi}\)</span>, composing into
 <span class="arithmatex">\(\mathbb M_\pi = \mathbb M_{\succ,\pi} \circ \mathbb M_\prec\)</span>. The policy
