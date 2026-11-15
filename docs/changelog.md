@@ -10,6 +10,18 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.04
 
+### 2026-11-15 — The Workbench requires ipywidgets 8 or later
+
+- The Workbench's package requires version 8 or later of ipywidgets, the widget library that Solara builds on (AAS, 15 November 2026). `packages/bellman-workbench/pyproject.toml` names `ipywidgets>=8`. Before, Solara's own requirement applied, version 7.7 or later. The Workbench can no longer be installed beside ipywidgets 7.
+- The package no longer holds the five files that Solara's page reads under ipywidgets 7, 5.1 million bytes: the script, its two parts loaded on demand, its license file and the stylesheet. The folder of Solara's interface files, `packages/bellman-workbench/bellman_workbench/solara-cdn/`, holds 38 files, 6.7 million bytes, where it held 43 files, 11.8 million bytes.
+- Under ipywidgets 8 the page is drawn as before. The script `packages/bellman-workbench/js/solara-cdn/fetch.py` copies the files for version 8 alone, and the file `README.md` beside it records the fetch. The package's version stays 0.1.0.
+
+### 2026-11-15 — The Workbench's package leaves out the font files that no current browser requests
+
+- The Workbench's package no longer holds the font files that no current browser requests (AAS, 15 November 2026). They are 55 files, 4.1 million bytes, of the folder of Solara's interface files, `packages/bellman-workbench/bellman_workbench/solara-cdn/`: the Embedded OpenType, TrueType, WOFF and SVG files of Roboto, Material Design Icons, Material Icons, KaTeX and Font Awesome. The folder holds 43 files, 11.8 million bytes, where it held 98 files, 15.9 million bytes.
+- The page is drawn as before. A browser requests the first source of a font face whose format it reads. Every current browser, that is, every browser that can run the page, reads WOFF2, and each face is still served from the package in that format. Each file that stays holds the bytes its package publishes.
+- The script `packages/bellman-workbench/js/solara-cdn/fetch.py` selects the files by that rule in its function `fallback_sources`, and the file `README.md` beside it records the fetch of 15 November 2026. The package's version stays 0.1.0.
+
 ### 2026-11-15 — The comparator's package holds the comparator alone
 
 - The package `meaning-map-training` (`packages/meaning-map-training`) keeps the comparator, the items reader, the form check, the composition reader and the mutation program, with the commands `meaning-map-compare` and `meaning-map-mutate` (AAS, 15 November 2026). The programs that measure a training pass, and their five commands, left it for the training's own repository and import it from there.

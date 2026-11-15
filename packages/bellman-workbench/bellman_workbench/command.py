@@ -11,9 +11,11 @@ reporting off; `SOLARA_THEME_SHOW_BANNER=False`, which leaves the server's
 own banner, "This website runs on Solara", off the page;
 `SOLARA_THEME_LOADER=solara` selects the markup styled by `public/custom.css`,
 and `SOLARA_THEME_TITLE` names the page before the model opens;
-`SOLARA_ASSETS_PROXY_CACHE_DIR`, the package folder holding all of Solara's
-interface files (G-D12), overriding an inherited cache location so that
-Solara need not fetch and write a missing file;
+`SOLARA_ASSETS_PROXY_CACHE_DIR`, the package folder holding every interface
+file of Solara that a browser able to run the page requests (G-D12;
+`js/solara-cdn/fetch.py` leaves out the font sources that none requests),
+overriding an inherited cache location so that Solara need not fetch and
+write a missing file;
 `SOLARA_SERVER_HTTP_GZIP=False`, which makes the server send every response
 uncompressed: the server answers the browser of the same machine, where
 compressing the graph's scripts costs the server more time than the
@@ -69,9 +71,11 @@ def server_environment(
     `BELLMAN_WORKBENCH_FOLDER` set to `folder`, Solara's usage reporting,
     its banner and its compression of responses turned off, and
     its startup loader and title selected for the Workbench. The
-    `SOLARA_ASSETS_PROXY_CACHE_DIR` is set to the complete package folder of
+    `SOLARA_ASSETS_PROXY_CACHE_DIR` is set to the package folder of
     Solara's interface files, overriding any inherited cache. Solara fetches
-    and writes a missing file, so that folder must be complete (G-D12).
+    and writes a missing file, so that folder must hold every file that a
+    browser able to run the page requests (G-D12). It holds no font source
+    that such a browser does not request (`js/solara-cdn/fetch.py`).
     Responses go uncompressed because the server answers the browser of the
     same machine, where compressing the graph's scripts costs the server
     more time than the transfer saves (G-R77).

@@ -149,7 +149,7 @@ THE SOFTWARE.
 
 @widgetti/solara-vuetify3-app@5.2.0
 license: MIT
-A package of Solara's repository, github.com/widgetti/solara, whose license follows; the notices of the packages its scripts hold stand beside them in dist/, solara-vuetify-app7.min.js.LICENSE.txt and solara-vuetify-app8.min.js.LICENSE.txt.
+A package of Solara's repository, github.com/widgetti/solara, whose license follows; the notices of the packages its scripts hold stand beside them in dist/, in solara-vuetify-app8.min.js.LICENSE.txt.
 
 The MIT License (MIT)
 

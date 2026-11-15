@@ -21,6 +21,11 @@ dependencies = [
     "filelock<3.30",
     "ipyvue>=3,<4",
     "ipyvuetify>=3,<4",
+    # version 8 or later: Solara's page asks for its script and its
+    # stylesheet by the major version of ipywidgets, the package holds those
+    # of version 8 alone (js/solara-cdn/README.md), and Solara fetches a file
+    # that the package lacks from the network
+    "ipywidgets>=8",
     # PyYAML reads the YAML that creation.py reads itself, its composer giving
     # the positions of the recipe's slots for the checklist; the package
     # bellman pins its version (packages/bellman/pyproject.toml)
