@@ -204,10 +204,6 @@ body:has(.bellman-home) .md-top {
   left: 41.9549%;
 }
 
-.bellman-home__art-loop--decision * {
-  animation: none !important;
-}
-
 .bellman-home__loop {
   display: block;
   width: 100%;
