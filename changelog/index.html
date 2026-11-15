@@ -7811,6 +7811,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2026-11-15-the-workbench-requires-ipywidgets-8-or-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-15 — The Workbench requires ipywidgets 8 or later
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-15-the-workbenchs-package-leaves-out-the-font-files-that-no-current-browser-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-15 — The Workbench's package leaves out the font files that no current browser requests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-15-the-comparators-package-holds-the-comparator-alone" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11170,6 +11192,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2026-11-15-the-workbench-requires-ipywidgets-8-or-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-15 — The Workbench requires ipywidgets 8 or later
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-15-the-workbenchs-package-leaves-out-the-font-files-that-no-current-browser-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-15 — The Workbench's package leaves out the font files that no current browser requests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-15-the-comparators-package-holds-the-comparator-alone" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14513,6 +14557,18 @@
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <p>The one changelog of the project, published as the Changelog page of the documentation site. Each entry is a dated heading followed by bullets that state what changed and where; the newest entry stands first. An entry of the release names the lane whose work it records, and an entry of the work before the release names its subject. The entries of the release 0.01 stand under its heading, and the entries of the work before it under the heading "Before the release".</p>
 <h2 id="after-the-release-004">After the release 0.04<a class="headerlink" href="#after-the-release-004" title="Permanent link">&para;</a></h2>
+<h3 id="2026-11-15-the-workbench-requires-ipywidgets-8-or-later">2026-11-15 — The Workbench requires ipywidgets 8 or later<a class="headerlink" href="#2026-11-15-the-workbench-requires-ipywidgets-8-or-later" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The Workbench's package requires version 8 or later of ipywidgets, the widget library that Solara builds on (AAS, 15 November 2026). <code>packages/bellman-workbench/pyproject.toml</code> names <code>ipywidgets&gt;=8</code>. Before, Solara's own requirement applied, version 7.7 or later. The Workbench can no longer be installed beside ipywidgets 7.</li>
+<li>The package no longer holds the five files that Solara's page reads under ipywidgets 7, 5.1 million bytes: the script, its two parts loaded on demand, its license file and the stylesheet. The folder of Solara's interface files, <code>packages/bellman-workbench/bellman_workbench/solara-cdn/</code>, holds 38 files, 6.7 million bytes, where it held 43 files, 11.8 million bytes.</li>
+<li>Under ipywidgets 8 the page is drawn as before. The script <code>packages/bellman-workbench/js/solara-cdn/fetch.py</code> copies the files for version 8 alone, and the file <code>README.md</code> beside it records the fetch. The package's version stays 0.1.0.</li>
+</ul>
+<h3 id="2026-11-15-the-workbenchs-package-leaves-out-the-font-files-that-no-current-browser-requests">2026-11-15 — The Workbench's package leaves out the font files that no current browser requests<a class="headerlink" href="#2026-11-15-the-workbenchs-package-leaves-out-the-font-files-that-no-current-browser-requests" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The Workbench's package no longer holds the font files that no current browser requests (AAS, 15 November 2026). They are 55 files, 4.1 million bytes, of the folder of Solara's interface files, <code>packages/bellman-workbench/bellman_workbench/solara-cdn/</code>: the Embedded OpenType, TrueType, WOFF and SVG files of Roboto, Material Design Icons, Material Icons, KaTeX and Font Awesome. The folder holds 43 files, 11.8 million bytes, where it held 98 files, 15.9 million bytes.</li>
+<li>The page is drawn as before. A browser requests the first source of a font face whose format it reads. Every current browser, that is, every browser that can run the page, reads WOFF2, and each face is still served from the package in that format. Each file that stays holds the bytes its package publishes.</li>
+<li>The script <code>packages/bellman-workbench/js/solara-cdn/fetch.py</code> selects the files by that rule in its function <code>fallback_sources</code>, and the file <code>README.md</code> beside it records the fetch of 15 November 2026. The package's version stays 0.1.0.</li>
+</ul>
 <h3 id="2026-11-15-the-comparators-package-holds-the-comparator-alone">2026-11-15 — The comparator's package holds the comparator alone<a class="headerlink" href="#2026-11-15-the-comparators-package-holds-the-comparator-alone" title="Permanent link">&para;</a></h3>
 <ul>
 <li>The package <code>meaning-map-training</code> (<code>packages/meaning-map-training</code>) keeps the comparator, the items reader, the form check, the composition reader and the mutation program, with the commands <code>meaning-map-compare</code> and <code>meaning-map-mutate</code> (AAS, 15 November 2026). The programs that measure a training pass, and their five commands, left it for the training's own repository and import it from there.</li>
@@ -14615,7 +14671,7 @@
 </ul>
 <h3 id="2026-11-11-homepage-type-spacing-and-layout">2026-11-11 — Homepage type, spacing and layout<a class="headerlink" href="#2026-11-11-homepage-type-spacing-and-layout" title="Permanent link">&para;</a></h3>
 <ul>
-<li>The <a href="../wiki/">homepage</a> sets its text in five sizes, stated for a window 1440 px wide: 96 px for the headline, 56 px for section headings, 24 px for titles and statements, 16 px for text, links and buttons, and 12 px for labels in capitals. Its distances are taken from eight steps between 4 px and 96 px, and every section stands on one grid of twelve columns. The sizes are stated at the head of <code>docs/_stylesheets/home.css</code>.</li>
+<li>The <a href="../asva/">homepage</a> sets its text in five sizes, stated for a window 1440 px wide: 96 px for the headline, 56 px for section headings, 24 px for titles and statements, 16 px for text, links and buttons, and 12 px for labels in capitals. Its distances are taken from eight steps between 4 px and 96 px, and every section stands on one grid of twelve columns. The sizes are stated at the head of <code>docs/_stylesheets/home.css</code>.</li>
 <li>The opening section shows the two triangles as one drawing at the left; the headline, the standfirst and the two buttons start on the centre line. The column of the lower triangle runs to its top corner, the top bar meets the column's side, and the orange block is the column's lowest block. The standfirst reads "A declarative, modular and machine verifiable language system for dynamic economics."</li>
 <li>The three tiles of the second section are Bellman language, Semantic ontology and AI interface, each with a new description.</li>
 <li>Applications shows Housing, Pensions and Buffer-stock saving as three tabs in a row above the model, which takes the full width of the page. The sentence that described each model and its link to the example page are removed; the links to all examples and to the Workbench guide remain. The left and right arrow keys move between the tabs, as the up and down keys do.</li>
