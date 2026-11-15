@@ -7798,10 +7798,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-take-part" class="md-nav__link">
+  <a href="#3-acknowledgments" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3 Take part
+        3 Acknowledgments
       
     </span>
   </a>
@@ -7809,10 +7809,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-homepage-media" class="md-nav__link">
+  <a href="#4-take-part" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 Homepage media
+        4 Take part
       
     </span>
   </a>
@@ -7820,10 +7820,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-typefaces" class="md-nav__link">
+  <a href="#5-homepage-media" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5 Typefaces
+        5 Homepage media
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-typefaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6 Typefaces
       
     </span>
   </a>
@@ -7916,10 +7927,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-take-part" class="md-nav__link">
+  <a href="#3-acknowledgments" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3 Take part
+        3 Acknowledgments
       
     </span>
   </a>
@@ -7927,10 +7938,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-homepage-media" class="md-nav__link">
+  <a href="#4-take-part" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 Homepage media
+        4 Take part
       
     </span>
   </a>
@@ -7938,10 +7949,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-typefaces" class="md-nav__link">
+  <a href="#5-homepage-media" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5 Typefaces
+        5 Homepage media
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-typefaces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6 Typefaces
       
     </span>
   </a>
@@ -7981,13 +8003,21 @@
 
 
 <h1 id="about-us">About us<a class="headerlink" href="#about-us" title="Permanent link">&para;</a></h1>
-<p>Project Bellman is an <a href="https://econ-ark.org">Econ-ARK</a> project for making
-economic models easier to express, inspect and reuse.</p>
+<p>Project Bellman provides a <a href="../wiki/declarative_language/">declarative</a>, modular
+and expressive language system for recursive dynamic programming, in economics
+and in other fields. It is an <a href="https://econ-ark.org">Econ-ARK</a> project.</p>
 <h2 id="1-the-project">1 The project<a class="headerlink" href="#1-the-project" title="Permanent link">&para;</a></h2>
-<p>Our aim is to keep an economic model understandable as it grows. In
-Bellman-SYM, a <strong>stage</strong> is one self-contained decision problem. Stages can
-be connected to form a model, while parameter values and numerical methods
-are specified separately.</p>
+<p>A dynamic programming model in economics is usually written twice: once as
+mathematics, and again as the code that solves it. That code is particular to
+the one model. The author of the next model therefore starts again, and another
+person's model is hard to read.</p>
+<p>In the <a href="../Bellman-Sym/">Bellman language</a>, an economist writes the model
+once, as stages. A <a href="../wiki/stage/"><strong>stage</strong></a> is one self-contained decision
+problem, written as one stage file. Stages written separately join into a
+model, and a new model reuses them. The same four stage files, for example,
+build a portfolio–consumption model with consumption chosen first or with the
+portfolio chosen first. Parameter values and numerical methods are attached to
+a stage afterwards, so a change of method leaves the stage files unchanged.</p>
 <p>We develop the language, its mathematical foundations and worked examples
 together. The model's equations and structure remain available for people
 and software to inspect.</p>
@@ -7995,21 +8025,47 @@ and software to inspect.</p>
 <a href="../examples/">worked model</a>, or follow the
 <a href="../bellman-calculus/">mathematical foundations</a>.</p>
 <h2 id="2-people-and-support">2 People and support<a class="headerlink" href="#2-people-and-support" title="Permanent link">&para;</a></h2>
-<p>The project's authors are <a href="https://github.com/llorracc">Christopher Carroll</a>,
-<a href="https://github.com/alanlujan91">Alan Lujan</a> and
-<a href="https://github.com/akshayshanker">Akshay Shanker</a>.</p>
-<p>Project Bellman is part of <a href="https://econ-ark.org">Econ-ARK</a> and is supported
-by the <a href="https://sloan.org">Alfred P. Sloan Foundation</a>.
-Meet the <a href="https://econ-ark.org/team">wider Econ-ARK team</a>.</p>
-<h2 id="3-take-part">3 Take part<a class="headerlink" href="#3-take-part" title="Permanent link">&para;</a></h2>
+<p>The Bellman language was created by Christopher D. Carroll and Akshay Shanker.
+It is named in honor of Richard Bellman, whose ideas on breaking a dynamic
+program into stages, linked by functional equations, are the foundation of the
+language.<sup id="fnref:bellman"><a class="footnote-ref" href="#fn:bellman">1</a></sup></p>
+<table>
+<thead>
+<tr>
+<th>Contributors</th>
+<th>Institution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://www.econ2.jhu.edu/people/ccarroll/">Christopher D. Carroll</a></td>
+<td>Johns Hopkins University</td>
+</tr>
+<tr>
+<td><a href="https://alujan.dev">Alan Lujan</a></td>
+<td>Johns Hopkins University</td>
+</tr>
+<tr>
+<td><a href="https://github.com/akshayshanker">Akshay Shanker</a></td>
+<td>Johns Hopkins University</td>
+</tr>
+</tbody>
+</table>
+<p>Project Bellman is a sub-project of <a href="https://econ-ark.org">Econ-ARK</a> and is
+supported by the <a href="https://sloan.org">Alfred P. Sloan Foundation</a>.</p>
+<h2 id="3-acknowledgments">3 Acknowledgments<a class="headerlink" href="#3-acknowledgments" title="Permanent link">&para;</a></h2>
+<p>The grammar of the Bellman language is derived from dynspec, the grammar of
+<a href="https://github.com/EconForge/dyno.py">Dyno</a>, a library written by Pablo Winant
+and Ousema Bouaneni.<sup id="fnref:dynspec"><a class="footnote-ref" href="#fn:dynspec">2</a></sup></p>
+<h2 id="4-take-part">4 Take part<a class="headerlink" href="#4-take-part" title="Permanent link">&para;</a></h2>
 <p>Questions, corrections and contributions to the code, documentation and
 examples are welcome on <a href="https://github.com/econ-ark/bellman">GitHub</a>.
 To report a problem or suggest an improvement,
 <a href="https://github.com/econ-ark/bellman/issues">open an issue</a>.
-For a model example, include the equations and the behaviour you expect.</p>
+For a model example, include the equations and the behavior you expect.</p>
 <p>The software is available under the
 <a href="https://github.com/econ-ark/bellman/blob/main/LICENSE">Apache License 2.0</a>.</p>
-<h2 id="4-homepage-media">4 Homepage media<a class="headerlink" href="#4-homepage-media" title="Permanent link">&para;</a></h2>
+<h2 id="5-homepage-media">5 Homepage media<a class="headerlink" href="#5-homepage-media" title="Permanent link">&para;</a></h2>
 <p>The Mile 12 market sequence combines drone footage with a wider photograph of the same market in Lagos, both taken by Ayorinde Ogundele on 8 March 2025. The edit uses an animated crop and a navy-to-ice color treatment. Both sources and the edited sequence are licensed under CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Market_Movements.webm">Market Movements</a> · <a href="https://commons.wikimedia.org/wiki/File:Drone_shot_of_a_section_of_the_Mile_12_food_market.jpg">Mile 12 market photograph</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/">License</a></p>
 <p>The night-light sequence uses twelve annual satellite composites from 2012 to 2023 with the same crop and color treatment throughout. Credit to NASA’s Scientific Visualization Studio. <a href="https://svs.gsfc.nasa.gov/5276">Change in Night Lights between 2012 and 2023</a></p>
 <p>Henderson, Storeygard and Weil (2012) show how satellite observations of night lights can supplement official estimates of income growth, especially where national accounts are poor. <a href="https://doi.org/10.1257/aer.102.2.994">Measuring Economic Growth from Outer Space</a></p>
@@ -8017,8 +8073,19 @@ For a model example, include the equations and the behaviour you expect.</p>
 <ul>
 <li>Xabier Cañas. Video, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Piragua_Oria_ibaian.webm">A single scull on the river Oria at Orio from the air, 2023</a></li>
 </ul>
-<h2 id="5-typefaces">5 Typefaces<a class="headerlink" href="#5-typefaces" title="Permanent link">&para;</a></h2>
+<h2 id="6-typefaces">6 Typefaces<a class="headerlink" href="#6-typefaces" title="Permanent link">&para;</a></h2>
 <p>The site sets its display line in Syne, its statements and headings in Space Grotesk, its text in Archivo and its code in IBM Plex Mono. All four are published under the SIL Open Font License and served from the site itself, with each family's license text beside its files.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:bellman">
+<p>Richard Bellman, <em>Dynamic Programming</em> (Princeton University Press, 1957), Preface, pp. vii and xi–xii, and Chapter I, §§4–5, pp. 7–9.&#160;<a class="footnote-backref" href="#fnref:bellman" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:dynspec">
+<p>Pablo Winant and Ousema Bouaneni, <em>Dyno</em>, EconForge, <a href="https://github.com/EconForge/dyno.py">https://github.com/EconForge/dyno.py</a>. The dynspec grammar is the file <a href="https://github.com/EconForge/dyno.py/blob/312e8eaa456f5d9c23cfecdb09d979a58ec7acc4/src/dyno/dynspec/grammars/grammar.lark"><code>src/dyno/dynspec/grammars/grammar.lark</code></a>, cited at commit <code>312e8ea</code>.&#160;<a class="footnote-backref" href="#fnref:dynspec" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
 
 
