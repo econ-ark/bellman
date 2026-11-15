@@ -11,8 +11,8 @@ topic: [applications]
 > `examples/housing_renting/config_HR/`).
 > FUES owns the housing-renting model registry (on its older
 > config-driven schema; not dolo-plus stages). bellman-ddsl carries
-> only the prose, stage docs, period diagrams, and converged-output
-> markdown that you see in this folder.
+> only the prose, stage docs and period diagrams
+> that you see in this folder.
 
 An agent lives for $T$ periods holding assets $a \geq 0$ and a housing stock $H \geq 0$.  Each period she receives a Markov income shock $y$ and then decides whether to **own** or **rent** housing.  On the ownership path she adjusts her housing stock $H'$ (paying a transaction cost $\phi$ when $H' \neq H$) and consumes; on the rental path she liquidates housing into cash and rents services $S$ at unit price $P_r$.
 

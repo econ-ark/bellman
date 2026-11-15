@@ -6,7 +6,7 @@ topic: [applications]
 # Port-with-Shocks Model
 
 > [!note] Source
-> The YAML stages of this page are the earlier form of the portfolio–consumption model, kept as recorded sources of its fixed reference under [`applications/cons-port/reference/legacy/syntax/`](../../../applications/cons-port/reference/legacy/syntax). The model's current stage files are the `.bl` files under `applications/cons-port/declaration/stages/`, written with the maximization alone, and its recipes and trellis files stand beside them in `applications/cons-port/declaration/` ([Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md)).
+> The YAML stages of this page are the earlier form of the portfolio–consumption model, kept as recorded sources of its fixed reference under [`applications/cons-port/reference/legacy/syntax/`](https://github.com/econ-ark/bellman/tree/main/applications/cons-port/reference/legacy/syntax). The model's current stage files are the `.bl` files under `applications/cons-port/declaration/stages/`, written with the maximization alone, and its recipes and trellis files stand beside them in `applications/cons-port/declaration/` ([Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md)).
 > Earlier reference notebook: `applications/cons-port/notebooks/port-cons/solve_port_cons_ffp.ipynb`
 
 **A modular lifecycle model with portfolio choice and correlated shocks.**

@@ -39,7 +39,7 @@ The formal MDP pages state selected examples as Markov decision processes (MDPs)
 | **Housing Owner** | Two-stage discrete housing choice + continuous consumption; branching stage | 2 | [Historical YAML](housing_renting/housing_owner.md) | [housing](housing_renting/housing_choice_mdp.md), [cons](housing_renting/housing_cons_choice_mdp.md) |
 | **Retirement Choice (DCEGM)** | Branching model with discrete retirement decision and continuous consumption; EGM for discrete-continuous choice (DC-EGM) with the fast upper envelope scan (FUES) | 3 | [Application](retirement/retirement_choice.md) | — |
 | **Smooth-Ambiguity Savings** | Savings with an uncertain mean log return: risk aversion, ambiguity aversion and intertemporal substitution are separate parameters, with two nested certainty equivalents | 1 | [Stage](smooth-ambiguity/smooth_ambiguity_savings.md) | — |
-| **Unemployment Branching Portfolio-Consumption** | Exogenous employment branching into worker and unemployed portfolio stages with fan-in to a shared consumption stage | 4 | [Historical YAML](unemployment/index.md) | [MDP](unemployment_branching_mdp.md) |
+| **Unemployment Branching Portfolio-Consumption** | Exogenous employment branching into worker and unemployed portfolio stages with fan-in to a shared consumption stage | 4 | [Historical YAML](unemployment/index.md) | [MDP](unemployment/unemployment_branching_mdp.md) |
 
 ### Portfolio-consumption stages
 
@@ -48,8 +48,8 @@ The portfolio-consumption family illustrates the core idea of Bellman calculus: 
 | Stage | Description | Historical source page | Formal MDP |
 |:------|:-----------|:-----------------------|:-----------|
 | **cons_stage** | Deterministic consumption choice (EGM-compatible) | [Historical YAML](cons-port-stages/cons_stage.md) | [MDP](formal-mdps/cons_stage_mdp.md) |
-| **port_stage** | Portfolio allocation with correlated shocks | [Historical YAML](cons-port-stages/port_stage.md) | [MDP](port_stage_mdp.md) |
-| **noport_stage** | No-portfolio-choice income stage | [Historical YAML](cons-port-stages/noport_stage.md) | [MDP](noport_stage_mdp.md) |
+| **port_stage** | Portfolio allocation with correlated shocks | [Historical YAML](cons-port-stages/port_stage.md) | [MDP](cons-port-stages/port_stage_mdp.md) |
+| **noport_stage** | No-portfolio-choice income stage | [Historical YAML](cons-port-stages/noport_stage.md) | [MDP](cons-port-stages/noport_stage_mdp.md) |
 
 See also: [Solving via conjugation](cons-port-stages/solving-conjugates.md) — how semi-conjugacy relates the four period configurations.
 

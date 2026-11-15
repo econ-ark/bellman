@@ -6,7 +6,7 @@ topic: [applications]
 # Buffer Stock Consumption Model (Normalized)
 
 > [!note] Source
-> Application folder: [`applications/buffer-stock/`](../../../applications/buffer-stock/), which holds the model's stage file, `declaration/stages/buffer_stock/buffer_stock.bl`, beside it its methods file, `methods.bl`, an addition to the stage file, and its settings file, `declaration/settings/buffer_stock.yml`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). A related single-stage model, whose income is drawn independently each period and has no permanent component, is the application [`applications/consumption-savings-iid/`](../../../applications/consumption-savings-iid/).
+> Application folder: [`applications/buffer-stock/`](https://github.com/econ-ark/bellman/tree/main/applications/buffer-stock), which holds the model's stage file, `declaration/stages/buffer_stock/buffer_stock.bl`, beside it its methods file, `methods.bl`, an addition to the stage file, and its settings file, `declaration/settings/buffer_stock.yml`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). A related single-stage model, whose income is drawn independently each period and has no permanent component, is the application [`applications/consumption-savings-iid/`](https://github.com/econ-ark/bellman/tree/main/applications/consumption-savings-iid).
 
 **The canonical consumption-savings model with permanent and transitory income shocks, normalized by permanent income.**
 

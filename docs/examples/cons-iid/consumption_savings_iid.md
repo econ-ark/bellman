@@ -6,7 +6,7 @@ topic: [applications]
 # Consumption-Savings with IID Shocks
 
 > [!note] Source
-> Application folder: [`applications/consumption-savings-iid/`](../../../applications/consumption-savings-iid), which holds the model's stage file, `declaration/stages/cons_savings_iid/cons_savings_iid.bl`, beside it its methods file, `methods.bl`, an addition to the stage file, and its settings file, `declaration/settings/cons_savings_iid.yml`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
+> Application folder: [`applications/consumption-savings-iid/`](https://github.com/econ-ark/bellman/tree/main/applications/consumption-savings-iid), which holds the model's stage file, `declaration/stages/cons_savings_iid/cons_savings_iid.bl`, beside it its methods file, `methods.bl`, an addition to the stage file, and its settings file, `declaration/settings/cons_savings_iid.yml`, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
 
 **A single-stage lifecycle model solved via EGM.**
 

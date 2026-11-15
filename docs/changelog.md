@@ -10,6 +10,11 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.04
 
+### 2026-11-15 — The comparator's package holds the comparator alone
+
+- The package `meaning-map-training` (`packages/meaning-map-training`) keeps the comparator, the items reader, the form check, the composition reader and the mutation program, with the commands `meaning-map-compare` and `meaning-map-mutate` (AAS, 15 November 2026). The programs that measure a training pass, and their five commands, left it for the training's own repository and import it from there.
+- The package is version 0.1.11. The Matsya service is 0.1.15 and requires it; the service's code is that of 0.1.14.
+
 ### 2026-11-15 — The about page credits the media that the homepage shows
 
 - §4 of [About](about.md) credits the media that the homepage shows: the market sequence, the night-light sequence and the sculling video. The credits of four photographs that the homepage no longer shows are removed (AAS, 15 November 2026).

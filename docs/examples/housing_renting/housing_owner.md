@@ -6,7 +6,7 @@ topic: [applications]
 # Housing model
 
 > [!note] Source
-> Application folder: [`applications/housing-owner/`](../../../applications/housing-owner), which holds the model's two stage files, `declaration/stages/housing_choice/housing_choice.bl` and `declaration/stages/consumption_choice/consumption_choice.bl`, each with its methods file `methods.bl` beside it, an addition to the stage file that the package reads with it, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
+> Application folder: [`applications/housing-owner/`](https://github.com/econ-ark/bellman/tree/main/applications/housing-owner), which holds the model's two stage files, `declaration/stages/housing_choice/housing_choice.bl` and `declaration/stages/consumption_choice/consumption_choice.bl`, each with its methods file `methods.bl` beside it, an addition to the stage file that the package reads with it, in the layout of [Model directory layout](../../Bellman-Sym/reference/model-directory-layout.md). The YAML files shown on this page are the model's earlier dolo-plus form, which is no longer in the repository.
 
 **Sequential composition and branching in a housing tenure-choice model.**
 

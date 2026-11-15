@@ -190,8 +190,8 @@ LANGUAGE_GROUPS = {
     "Reference": "reference",
 }
 # the pages that stand outside the navigation on main when lane D builds: the
-# pages of question 16 of the decisions record, the HARK experiments, the
-# output under housing_renting/converged_output/ and the unemployment pages,
+# pages of question 16 of the decisions record, the HARK experiments and the
+# output under housing_renting/converged_output/,
 # wait for the follow-up after the release, "After the internal developer
 # release 0.01: what waits", AAS having deferred the question on 28 September;
 # the wiki's entries and the two formal pages that the architecture's §2
@@ -217,7 +217,6 @@ OUTSIDE_THE_NAV_TODAY = (
     "examples/housing_renting/converged_output/renter_cons.md",
     "examples/housing_renting/converged_output/renter_housing.md",
     "examples/housing_renting/converged_output/tenure_choice.md",
-    "examples/unemployment/stucture.md",
 )
 
 # --- the reference catalogues (brief §§3 and 4) ---
