@@ -10,6 +10,11 @@ The one changelog of the project, published as the Changelog page of the documen
 
 ## After the release 0.04
 
+### 2026-11-15 — The about page credits the media that the homepage shows
+
+- §4 of [About](about.md) credits the media that the homepage shows: the market sequence, the night-light sequence and the sculling video. The credits of four photographs that the homepage no longer shows are removed (AAS, 15 November 2026).
+- Twenty-five files that no page used left the site's files: five photographs of the earlier homepage, the eight logo files of `_assets/sloane/`, two earlier logo images and ten earlier drawings.
+
 ### 2026-11-14 — The refusal of a control defined by itself gives its reason alone
 
 - A line of a backward block that defines a control by itself, `c = c`, is refused under [`definition-order`](Bellman-Sym/reference/refusals.md#definition-order) with its reason, and the refusal names no marked spelling to write (AAS, 14 November 2026). The sentence of 13 November advised `c = c[>]` with `c[>]` listed in the header, and the header of such a block refuses a marked control under [`field-perch`](Bellman-Sym/reference/refusals.md#field-perch).

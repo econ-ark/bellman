@@ -55,13 +55,9 @@ The night-light sequence uses twelve annual satellite composites from 2012 to 20
 
 Henderson, Storeygard and Weil (2012) show how satellite observations of night lights can supplement official estimates of income growth, especially where national accounts are poor. [Measuring Economic Growth from Outer Space](https://doi.org/10.1257/aer.102.2.994)
 
-The other photographs and the sculling video come from Wikimedia Commons and are shown in navy and ice. Adaptations of share-alike works retain their sources' licenses.
+The sculling video comes from Wikimedia Commons and is shown in navy and ice. An adaptation of a share-alike work retains its source's license.
 
 - Xabier Cañas. Video, CC BY-SA 4.0. [A single scull on the river Oria at Orio from the air, 2023](https://commons.wikimedia.org/wiki/File:Piragua_Oria_ibaian.webm)
-- TudorTulok. CC0. [A quadruple scull at dawn, 2023](https://commons.wikimedia.org/wiki/File:Fluidesign_Quad_Rowing_Team_At_Dawn.jpg)
-- Bmzuckerman. Photograph, CC BY 4.0. [The National Farmers' Bank, Owatonna, Minnesota, by Louis H. Sullivan, 1908](https://commons.wikimedia.org/wiki/File:Louis_H._Sullivan_-_National_Farmer%27s_Bank_Interior_(A),_Owatonna,_MN.jpg)
-- John Shorten. CC BY-SA 2.0. [Glendora Avenue from the air, 2022](https://commons.wikimedia.org/wiki/File:Aerial_View_of_Glendora_Ave_-_geograph.org.uk_-_7187713.jpg)
-- Rudolph A. Furtado. CC0. [A vegetable seller's boat on Dal Lake, Srinagar, 2013](https://commons.wikimedia.org/wiki/File:Vegetable_seller_on_Dal_Lake..JPG)
 
 ## 5 Typefaces
 
