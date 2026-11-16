@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3734,6 +3736,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8138,10 +8168,10 @@
 <strong>See also</strong> — <a href="../../06-Methods/">Methods</a> discusses numerical procedures.</p>
 </details>
 <p>An <strong>operator</strong> maps objects in a specified domain, such as a space of functions or of measures, to objects in a specified codomain. Its <strong>rank</strong> lists its input and output sorts (<a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3). In a first-order signature, operators can be operation symbols without an additional carrier of operator-valued data; they nevertheless have ranks. Whether a builder is primitive or a named composite depends on the chosen signature.</p>
-<p>At perch <span class="arithmatex">\(p\)</span>, <span class="arithmatex">\(\mathsf X_p\)</span> is the state space, <span class="arithmatex">\(\mathsf V_p\)</span> a chosen value-function space, and <span class="arithmatex">\(\mathsf M_p\)</span> the finite measures on <span class="arithmatex">\(\mathsf X_p\)</span>, of which the probability measures are those of mass one. Let <span class="arithmatex">\(\mathsf L\)</span> be the declared set of the scalar value fields, <span class="arithmatex">\(\Gamma(x)\)</span> the feasible actions, <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> the choice-value functions on <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\Pi_\Gamma\)</span> the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.</p>
+<p>At perch <span class="arithmatex">\(p\)</span>, <span class="arithmatex">\(\mathsf X_p\)</span> is the state space, <span class="arithmatex">\(\mathsf B_p\)</span> the tuple carrier of the representing functions of all value-type fields, and <span class="arithmatex">\(\mathsf M_p\)</span> the finite measures on <span class="arithmatex">\(\mathsf X_p\)</span>, of which the probability measures are those of mass one. The scalar formulas below use the one-field specialization <span class="arithmatex">\(\mathsf V_p\)</span>. Let <span class="arithmatex">\(\mathsf L\)</span> be the declared set of that scalar value field, <span class="arithmatex">\(\Gamma(x)\)</span> the feasible actions, <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> the choice-value functions on <span class="arithmatex">\(\operatorname{Gr}(\Gamma)=\{(x,a):a\in\Gamma(x)\}\)</span>, and <span class="arithmatex">\(\Pi_\Gamma\)</span> the feasible measurable policies. Domains below are restricted so the operations are defined, integrable when required, and closed under the stated compositions.</p>
 <p><a id="structural-morphisms-category-plumbing"></a></p>
 <h2 id="1-structural-operations">1. Structural operations<a class="headerlink" href="#1-structural-operations" title="Permanent link">&para;</a></h2>
-<p>These operations describe composition of inputs and alternatives. They do not alone prove that a software graph has a categorical universal property. Here <span class="arithmatex">\(s,t\)</span> denote sorts, <span class="arithmatex">\(I\)</span> the one-point sort, <span class="arithmatex">\(\otimes\)</span> a product in the deterministic interpretation, and <span class="arithmatex">\(\bigsqcup\)</span> a labeled disjoint union.</p>
+<p>These operations describe composition of inputs and alternatives. The product interpretation here is for total deterministic functions; ordinary products of tuple coordinates assert no categorical-product property for arbitrary partial maps. They do not alone prove that a software graph has a categorical universal property. Here <span class="arithmatex">\(s,t\)</span> denote sorts, <span class="arithmatex">\(I\)</span> the one-point sort, <span class="arithmatex">\(\otimes\)</span> a product in the deterministic interpretation, and <span class="arithmatex">\(\bigsqcup\)</span> a labeled disjoint union.</p>
 <table>
 <thead>
 <tr>
@@ -8207,31 +8237,32 @@
 <tbody>
 <tr>
 <td><span class="arithmatex">\(\mathbb T_\succ\)</span></td>
-<td><span class="arithmatex">\(\mathsf V_\succ\to\mathsf V_\sim\)</span></td>
-<td>optimize the pointwise choice value over feasible actions</td>
+<td><span class="arithmatex">\(\mathsf B_\succ\to\mathsf B_\sim\)</span></td>
+<td>evaluate all fields at the selected measurable maximizer</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span></td>
-<td><span class="arithmatex">\(\mathsf V_\succ\to\mathsf V_\sim\)</span></td>
-<td>evaluate that choice value under a supplied policy</td>
+<td><span class="arithmatex">\(\mathsf B_\succ\to\mathsf B_\sim\)</span></td>
+<td>evaluate every decision field under the supplied policy</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(\mathbb T_\prec\)</span></td>
-<td><span class="arithmatex">\(\mathsf V_\sim\to\mathsf V_\prec\)</span></td>
-<td>arrival aggregation and pre-decision shock integration</td>
+<td><span class="arithmatex">\(\mathsf B_\sim\to\mathsf B_\prec\)</span></td>
+<td>evaluate the arrival field equations, with their authored expectations</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ\)</span></td>
-<td><span class="arithmatex">\(\mathsf V_\succ\to\mathsf V_\prec\)</span></td>
+<td><span class="arithmatex">\(\mathsf B_\succ\to\mathsf B_\prec\)</span></td>
 <td>optimizing stage evaluation</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}\)</span></td>
-<td><span class="arithmatex">\(\mathsf V_\succ\to\mathsf V_\prec\)</span></td>
+<td><span class="arithmatex">\(\mathsf B_\succ\to\mathsf B_\prec\)</span></td>
 <td>fixed-policy stage evaluation</td>
 </tr>
 </tbody>
 </table>
+<p>Each backward operator reads and returns the complete tuple of value-type fields. Its partial domain requires every coordinate and operation to be defined. A supplied constant may select a law or a forward transition. The scalar formulas in §4 describe the maximized coordinate; the other coordinates follow their own equations at the same selected policy.</p>
 <p>These are mathematical names, not prescribed block identifiers. Stage equations are <code>.bl</code>; current block and method-place forms belong to Bellman-SYM's pages on field equations and methodization.</p>
 <p><a id="forward-builders-measure-side"></a></p>
 <h2 id="3-forward-builders-and-transition-expectations">3. Forward builders and transition expectations<a class="headerlink" href="#3-forward-builders-and-transition-expectations" title="Permanent link">&para;</a></h2>
@@ -8275,8 +8306,8 @@
 <div class="arithmatex">\[
 \operatorname{argmax}Q=\bigl\{\pi\in\Pi_\Gamma : Q(x,\pi(x))\ge Q(x,a)\ \text{for every } x\in\mathsf X_\sim \text{ and every } a\in\Gamma(x)\bigr\},
 \]</div>
-<p>the feasible measurable policies that attain the maximum of <span class="arithmatex">\(Q(x,\cdot)\)</span> over <span class="arithmatex">\(\Gamma(x)\)</span> at every state. It is empty when that maximum is not attained at some state, and also when no measurable policy attains it at every state. A <strong>selection</strong> is a partial map <span class="arithmatex">\(s:\mathsf Q_\Gamma\rightharpoonup\Pi_\Gamma\)</span> with <span class="arithmatex">\(s(Q)\in\operatorname{argmax}Q\)</span> for every <span class="arithmatex">\(Q\)</span> in its domain <span class="arithmatex">\(\operatorname{dom}s\)</span>, which is therefore contained in <span class="arithmatex">\(\{Q:\operatorname{argmax}Q\neq\varnothing\}\)</span>. The maximizing set supplies no selection; a composite that needs one policy names its selection.</p>
-<p>Every member <span class="arithmatex">\(\pi\)</span> of <span class="arithmatex">\(\operatorname{argmax}Q\)</span> gives <span class="arithmatex">\(Q(x,\pi(x))=\max_{a\in\Gamma(x)}Q(x,a)\)</span> at every state, so a composite of the form below takes the same value whichever selection it names. The optimizing decision builder, <span class="arithmatex">\((\mathbb T_\succ v)(x)=\sup_{a\in\Gamma(x)}(B_\succ v)(x,a)\)</span> where that supremum lies in <span class="arithmatex">\(\mathsf L\)</span>, is an explicit selection from the maximizing set followed by the insertion of the selected policy into the choice-value function:</p>
+<p>the feasible measurable policies that attain the maximum of <span class="arithmatex">\(Q(x,\cdot)\)</span> over <span class="arithmatex">\(\Gamma(x)\)</span> at every state. It is empty when that maximum is not attained at some state, and also when no measurable policy attains it at every state. A <strong>selection</strong> is a partial map <span class="arithmatex">\(s:\mathsf Q_\Gamma\rightharpoonup\Pi_\Gamma\)</span> with <span class="arithmatex">\(s(Q)\in\operatorname{argmax}Q\)</span> for every <span class="arithmatex">\(Q\)</span> in its domain <span class="arithmatex">\(\operatorname{dom}s\)</span>, which is therefore contained in <span class="arithmatex">\(\{Q:\operatorname{argmax}Q\neq\varnothing\}\)</span>. The maximizing set supplies no selection; a composite that needs one policy names its selection. A policy builder returns the one policy defined by its rule. An implicit equation or an explicit formula can also define that rule, without claiming a maximizer.</p>
+<p>Every member <span class="arithmatex">\(\pi\)</span> of <span class="arithmatex">\(\operatorname{argmax}Q\)</span> gives <span class="arithmatex">\(Q(x,\pi(x))=\max_{a\in\Gamma(x)}Q(x,a)\)</span> at every state, so the scalar maximized coordinate takes the same value whichever selection it names. Other fields evaluated at the selected action need not agree across maximizing selections. The optimizing decision builder, <span class="arithmatex">\((\mathbb T_\succ v)(x)=\sup_{a\in\Gamma(x)}(B_\succ v)(x,a)\)</span> where that supremum lies in <span class="arithmatex">\(\mathsf L\)</span>, is an explicit selection from the maximizing set followed by the insertion of the selected policy into the choice-value function:</p>
 <div class="arithmatex">\[
 \mathbb T_\succ=\iota^{*}\circ\langle B_\succ,s\circ B_\succ\rangle\ \text{on}\ \{v\in\mathsf V_\succ:B_\succ v\in\operatorname{dom}s\},
 \qquad

@@ -2919,6 +2919,8 @@
       
         
       
+        
+      
     
     
     
@@ -3655,6 +3657,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7978,8 +8008,8 @@
 </tr>
 <tr>
 <td><strong>Specifying the stages</strong></td>
-<td><a href="../../wiki/calibration/">Parameter values</a>, <a href="../../wiki/methodization/">numerical methods</a> for the operators and <a href="../../wiki/settings/">settings</a> are attached, in that order (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a>).</td>
-<td><code>stage.calibrate</code>, <code>stage.methodize</code> and <code>stage.configure</code> for one stage; <code>bellman.trellis.calibrate_trellis</code>, <code>bellman.trellis.methodize_trellis</code> and <code>bellman.trellis.configure_trellis</code> for a trellis, each given the dictionary of records it binds with; or the single call <code>bellman.trellis.assemble_trellis(directory, recipe)</code> for a registry and its recipe</td>
+<td>For one stage, attach <a href="../../wiki/methodization/">numerical methods</a>, <a href="../../wiki/calibration/">parameter values</a> and <a href="../../wiki/settings/">settings</a>. The trellis factory retains calibration before methodization (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a>).</td>
+<td><code>stage.methodize</code>, <code>stage.calibrate</code> and <code>stage.configure</code> for one stage; <code>bellman.trellis.calibrate_trellis</code>, <code>bellman.trellis.methodize_trellis</code> and <code>bellman.trellis.configure_trellis</code> for a trellis, each given the dictionary of records it binds with; or the single call <code>bellman.trellis.assemble_trellis(directory, recipe)</code> for a registry and its recipe</td>
 </tr>
 <tr>
 <td><strong>Realization</strong></td>
@@ -8028,6 +8058,7 @@
 </tr>
 </tbody>
 </table>
+<p>Recipe ranges select calibration, methods and settings by position, and <code>periods: [lo, hi]</code> restricts a stage's occurrences. These operations remain available. A <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a> instead keeps each repeated declaration's calibration sources fixed and supplies age-dependent quantities through fields. Methods and settings may differ between occurrences.</p>
 <p>A finite grid approximates a function on its mathematical domain; it does not replace the domain declared in the stage file.</p>
 <p>The files above, kept in a registry, which in a model folder is its subfolder <code>declaration/</code>, are read in one call: <code>load_recipe(directory, recipe)</code> of <code>bellman.trellis</code> reads the registry through its recipe and returns the <a href="../../wiki/trellis/">syntactic trellis</a>, the model as written, a dictionary of records in which every adjustment is made, a value that differs by period among them; <code>elaborate_trellis</code> and the three trellis verbs, which <code>bellman.trellis</code> also holds, then construct and bind it, and its <code>assemble_trellis(directory, recipe)</code> returns in one call the trellis those calls make. A fill, a dictionary bound by keyword to a slot of the recipe, changes parameter values or settings without editing a file, and only the stages whose mapping changed are bound again. <a href="../../Bellman-Sym/08-bellman-factory/">The Bellman factory</a> is the route through these calls on the durables model, and the <a href="../../Bellman-Sym/API/factory/">factory API</a> lists them. #spec_factory</p>
 <div class="admonition tip">

@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8011,7 +8041,7 @@
 <details class="info">
 <summary>Relationship with other documents</summary>
 <p><strong>Formal account</strong> — <a href="../../bellman-calculus/06-Methods/">Methods</a> §5: the grid as a finite subset of the domain and a representation as a section over it.
-<strong>Builds on</strong> — <a href="../../Bellman-Sym/reference/methods/">Methods</a>: the method component the grid stands beside; <a href="../settings/">Settings</a>: the declared names a factor reads.
+<strong>Builds on</strong> — <a href="../methods/">Methods</a>: the method component the grid stands beside; <a href="../settings/">Settings</a>: the declared names a factor reads.
 <strong>Used by</strong> — <a href="../../Bellman-Sym/04-methodization/">Methodization</a>: the written form of a methods file; <a href="../../Bellman-Sym/reference/methods/">Method types</a>: the method words that read a grid and the grid constructors.</p>
 </details>
 <h2 id="1-what-is-written">1 What is written<a class="headerlink" href="#1-what-is-written" title="Permanent link">&para;</a></h2>
@@ -8022,12 +8052,12 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>risk_ce.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m), ν=E_ν)
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>policy.grid : !Cartesian(c=(Γ_c, n_c))
 </code></pre></div>
-<p>A factor takes one of four shapes. A triple of declared settings gives the lower bound, the upper bound and the count of evenly spaced points, with an optional fourth element naming an uneven spacing by a word with its own keyword arguments: <code>!expmult(nest=grid_phi)</code>, the multi-exponential spacing, denser near the lower bound, whose nesting factor is the setting <code>grid_phi</code>, or <code>!geometric</code>, the geometric spacing. A declared node set, <code>m=M_nodes</code>, lists the points. The expectation operator whose quadrature nodes the coordinate takes, <code>ν=E_ν</code>, stands for a coordinate represented on a shock, as the smooth-ambiguity application's <code>risk_ce</code> is represented on resources and on the ambiguity shock. A control's factor is its feasible set with a count, <code>c=(Γ_c, n_c)</code>, where <code>Γ_c</code> is the set of feasible consumption the stage defines: the grid of a maximization lies in the states and the control it searches, so the feasible set at each state is discretized with that count. Written in <code>!Cartesian</code> without <code>!Fibred</code>, such a factor states a family of grids of the control indexed by the states, one at each state, and no one grid of pairs. The spelling follows the EconForge interpolation library, whose uniform Cartesian grid is a tuple of lower bound, upper bound and count, one per axis.</p>
+<p>A factor takes one of four shapes. A triple of declared settings gives the lower bound, the upper bound and the count of evenly spaced points, with an optional fourth element naming an uneven spacing by a word with its own keyword arguments: <code>!expmult(nest=grid_phi)</code>, the multi-exponential spacing, denser near the lower bound, whose nesting factor is the setting <code>grid_phi</code>, or <code>!geometric</code>, the geometric spacing. A bound of the triple may also be the sum of one constant that the stage takes in and one declared setting, as in <code>a=(L + extra_grid, a_max, n_a)</code>. A declared node set, <code>m=M_nodes</code>, lists the points. The expectation operator whose quadrature nodes the coordinate takes, <code>ν=E_ν</code>, stands for a coordinate represented on a shock, as the smooth-ambiguity application's <code>risk_ce</code> is represented on resources and on the ambiguity shock. A control's factor is its feasible set with a count, <code>c=(Γ_c, n_c)</code>, where <code>Γ_c</code> is the set of feasible consumption the stage defines: the grid of a maximization lies in the states and the control it searches, so the feasible set at each state is discretized with that count. Written in <code>!Cartesian</code> without <code>!Fibred</code>, such a factor states a family of grids of the control indexed by the states, one at each state, and no one grid of pairs. The spelling follows the EconForge interpolation library, whose uniform Cartesian grid is a tuple of lower bound, upper bound and count, one per axis.</p>
 <p>The constructor <code>!Points(nodes=P)</code> is the finite set of the declared points <code>P</code>, each point written in the domain's declared coordinate order, and <code>!Points</code> alone is the empty grid. The points are a set the stage defines by its finite members, <code>B := {1, 2}</code>, or a setting declared on a fixed finite product of points, <code>P : ℝ₊ × ℝ₊ × ℝ₊</code>, which the settings file values by the list of its points; on a domain of two coordinates each point is a pair, declared through a product set, <code>X2 := ℝ × ℝ</code> and <code>P : X2 × X2 × X2</code>. Repeated points collapse in the set, and an interpolation may still require at least two points.</p>
 <p>The constructor <code>!Fibred(base=!Points(nodes=B), fibre=!Cartesian(c=(Γ_c, n_c)))</code> pairs each state of the base grid with <code>n_c</code> points of the control's feasible set <code>Γ_c</code> at that state, so that its points lie in the graph of the feasible set, the set of feasible pairs of states and controls. The base is <code>!Points</code> or a <code>!Cartesian</code> term without feasible factors, and the fibre a <code>!Cartesian</code> term of feasible factors. At each state the package places the count of evenly spaced points on the closed feasible interval, both endpoints included: with <code>B := {1, 2}</code>, <code>Γ_c(m) := [0, m]</code> and <code>n_c = 2</code>, the grid is the four pairs (1, 0), (1, 1), (2, 0) and (2, 2). A feasible interval that is open or unbounded, and a fibre of several controls, whose joint sampling is not supported, are reported as unresolved and not sampled.</p>
 <p><code>!Cartesian</code> and <code>!Points</code> stand wherever a method reads a grid, and at a place with no method word whose <a href="../handler/">handler</a> reads it. <code>!Fibred</code> stands where the domain of the problem is the base's states followed by the fibre's controls: at a solution method that chooses over the controls on the states of its output perch, such as value function iteration, and at a representation only of a function of those states and those controls. It is refused at the continuation grid of the endogenous grid method, which holds no control, and at a representation of a function of the states alone.</p>
 <p>Each constructor may end with <code>require=</code> and one predicate word, or a tuple of them, that the resulting grid must satisfy: <code>!Empty</code>, the grid holds no point; <code>!Cartesian</code>, the grid is nonempty and holds every combination of its projected coordinate values; <code>!NonCartesian</code>, the grid is nonempty and misses some combination of them; and <code>!UniformCartesian</code>, the grid is Cartesian on at least one real coordinate, with at least two distinct, equally spaced values in every coordinate. A requirement is a property of the grid and no further component, and the predicate <code>!Cartesian</code> is distinct from the constructor of the same name. Outside the fibre of <code>!Fibred</code> a requirement concerns the joint grid, and inside it the grid of the control at each state. The fibred grid above is <code>!NonCartesian</code>, since it misses the combination (1, 2) of its projected values, and the requirement <code>!Cartesian</code> there is refused at configuration. An unknown word, and two words that contradict each other, are refused where they are written.</p>
-<p>Every name in a factor is a declared setting, a declared node set, the feasible set of a control or an expectation operator of the stage, and the points of <code>!Points</code> are a declared setting or a set the stage defines; a number is refused. The settings are declared in the methods file with their domains, <code>n_a : ℕ</code>, <code>a_min : Xa</code>, and the values stand in the settings file (<a href="../settings/">settings</a>). At configuration the package checks each bound pair ordered and inside the coordinate's declared set, each count at least two, each node set strictly increasing, each declared point's shape and finite coordinates, inside the coordinates' declared sets where that is decided, and each requirement that the bound values decide; it checks nothing about accuracy. A declared set that reads a parameter is read at the <a href="../calibration/">calibration</a> that is bound.</p>
+<p>Every name in a factor is a declared setting, a declared node set, the feasible set of a control or an expectation operator of the stage, except that a bound may be the sum of one constant that the stage takes in and one declared setting, as in <code>a=(L + extra_grid, a_max, n_a)</code>; the points of <code>!Points</code> are a declared setting or a set the stage defines; a number is refused. The settings are declared in the methods file with their domains, <code>n_a : ℕ</code>, <code>a_min : Xa</code>, and the values stand in the settings file (<a href="../settings/">settings</a>). At configuration the package checks each bound pair ordered and inside the coordinate's declared set, each count at least two, each node set strictly increasing, each declared point's shape and finite coordinates, inside the coordinates' declared sets where that is decided, and each requirement that the bound values decide; it checks nothing about accuracy. A bound that reads a constant is checked for its order and for its place inside the coordinate's declared set when the grid is constructed at the supplied constant. A declared set that reads a parameter is read at the <a href="../calibration/">calibration</a> that is bound.</p>
 <p>Once the settings are bound, the package constructs each grid at their values, and a builder's <code>kernels().grids</code> holds, for each place within the builder that types a grid, the realized grid, with its coordinates in declared order and its finite points, or the reason the construction cannot establish them and every required property, such as a coordinate that no factor names; no default is supplied (<a href="../../Bellman-Sym/API/stage/04-builder/">A builder</a> §5).</p>
 <h2 id="2-the-default-and-what-lies-outside">2 The default and what lies outside<a class="headerlink" href="#2-the-default-and-what-lies-outside" title="Permanent link">&para;</a></h2>
 <p>An operator that writes no grid entry has a grid built by the constructor <code>!Cartesian</code> over every state coordinate of the domain of the function it holds, in declared order: for the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that stores a builder's result, the states of the <a href="../perch/">perch</a> at which the stored function stands; for a solution method, the states its rows name, which for the endogenous grid method are the states of the continuation perch, the input perch of the policy <a href="../builder/">builder</a>, since the method's grid is the predetermined grid of end-of-period assets from which the points of the policy are generated (Carroll 2006, §2.2, p. 315). The default fixes the constructor and the coordinates and supplies no number; where a method needs bounds and counts, the entry writes them. The representation of the policy at the closing Evaluation of an <code>!egm</code> builder writes no grid entry, and one written there is refused: it reads the pairs of resources and consumption that the endogenous grid method computes at the savings on its grid, which give its nodes.</p>

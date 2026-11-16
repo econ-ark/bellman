@@ -2954,6 +2954,8 @@
       
         
       
+        
+      
     
     
     
@@ -3690,6 +3692,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8087,7 +8117,7 @@
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>}
 </code></pre></div>
 <p>This complete transition fragment states the two identities; it does not infer them from a shared name. The declaration establishes unmarked <code>a</code> as an arrival input in the first block, whereas <code>a[&gt;]</code> explicitly identifies the continuation output in the second. The decision state is named <code>a_d</code>. Bare references are resolved from declarations and the expression's context; the parser's identical treatment of a bare token and <code>[~]</code> does not itself determine its economic role.</p>
-<p>In a header, a mark must agree with the perch word of its side, <code>: !arvl</code>, <code>: !dcsn</code> or <code>: !cntn</code>. Construction checks this for <code>[&lt;]</code> and <code>[&gt;]</code>: the listing <code>(a[&gt;] : Xa) : !arvl</code> is refused under <a href="../../reference/refusals/#field-perch"><code>field-perch</code></a>. The mark <code>[~]</code> names the decision perch and is optional. The package reads <code>x[~]</code> as the bare name <code>x</code>. A state or a value written without a mark takes the perch of the header side that lists it, so the listing <code>(a[~] : Xa) : !arvl</code>, which breaks the rule, is read as the arrival field <code>a</code> and nothing is refused. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
+<p>In a header, a mark must agree with the perch word of its side, <code>: !arvl</code>, <code>: !dcsn</code> or <code>: !cntn</code>, with one exception: the input side of a forward block may list a constant that the stage takes in at its continuation perch, spelled as the backward header that takes it in spells it, as <code>age[&gt;]</code> in <code>(m, c : !ctrl @ ℝ₊, age[&gt;]) : !dcsn</code>, and the constant stays at the continuation perch. Construction checks this for <code>[&lt;]</code> and <code>[&gt;]</code>: the listing <code>(a[&gt;] : Xa) : !arvl</code> is refused under <a href="../../reference/refusals/#field-perch"><code>field-perch</code></a>. The mark <code>[~]</code> names the decision perch and is optional. The package reads <code>x[~]</code> as the bare name <code>x</code>. A state or a value written without a mark takes the perch of the header side that lists it, so the listing <code>(a[~] : Xa) : !arvl</code>, which breaks the rule, is read as the arrival field <code>a</code> and nothing is refused. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
 <p>We use <code>[&lt;]</code>, <code>[~]</code>, and <code>[&gt;]</code> for stage information. Although <code>.bl</code> inherits syntax from <strong>dynspec</strong>, an expression language, we do not transfer its steady-state reading of <code>[~]</code> into these equations, or use ordinary component indices such as <code>[1]</code> as alternative perch marks.</p>
 <h2 id="2-how-headers-establish-context">2 How headers establish context<a class="headerlink" href="#2-how-headers-establish-context" title="Permanent link">&para;</a></h2>
 <p>A new field requires a declared set and an established information context. A top-level declaration or a header listing supplies the set. A block header alone supplies the context of a state or a value: the perch word of the side that lists the field, or the perch word or mark in the field's own listing. A control stands at the decision perch by its role, and a shock belongs to no perch. Construction refuses a state or a value that nothing places at a perch, under <code>field-perch</code>. It admits a field to which no declaration and no header gives a set, and that field has no declared set. The package does not yet check this (<a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
@@ -8111,14 +8141,16 @@
 <p><strong>Denotes.</strong> The header specifies the inputs and outputs of the block's equations, interpreted under <a href="../14-appendix-c-syntax-to-semantics/">Appendix C</a> §2.2.</p>
 <p><strong>Status.</strong> The grammar records the header's shape. Construction checks role and perch agreement, output definitions, and the exceptions below; it rejects a contradictory declaration at the offending header or declaration's <a href="../../../wiki/source_span/">source span</a>.</p>
 </details>
-<p>The side annotation normally supplies the information context of its state or value coordinates. There are three exceptions:</p>
+<p>The side annotation normally supplies the information context of its state or value coordinates. There are four exceptions:</p>
 <ul>
 <li>A decision control remains a decision control when listed beside continuation inputs. Listed there, it is the coordinate at which the block's lines are read, not an input of the block; it does not redefine the control as a continuation-state coordinate.</li>
 <li>A shock listed as a transition argument is not thereby known at the input perch. Its law and transition use establish the relevant uncertainty and timing.</li>
 <li>A state of the perch at which a backward block's output stands is a coordinate of that output and is listed on no backward header; a line of the block reads it without a listing, and a listed state is refused under <code>header-coordinate</code>. A state of the block's input perch is reached through the law of motion alone. A backward header therefore lists the value fields the block reads and writes and the controls at which its lines are read (<a href="../14-appendix-c-syntax-to-semantics/#r1-blocks-and-their-headers">Appendix C</a> R1).</li>
+<li>A constant that the stage takes in at its continuation perch stays at that perch where the input side of a forward block lists it; the block's law of motion or a shock law reads it there.</li>
 </ul>
 <p>For example, the consumption backward block lists <code>(V[&gt;], c)</code> on its continuation side. The role <code>!ctrl</code> established for <code>c</code> still identifies a decision control. The calculation of value uses the chosen control and continuation value together. The continuation calculation must retain any decision information it needs; a smaller continuation state vector alone need not encode the control.</p>
 <p>Parameters are constant with respect to stage uncertainty and have no perch. They still require declarations and admissible values. A parameter name declared by two stages of one period denotes one period parameter; this does not identify either stage's fields. Numerical settings are supplied separately and are not economic fields.</p>
+<p>A backward header can keep a field by listing its bare name on both sides and writing no equation for it. For a nonconstant field, the corresponding forward block must keep every state coordinate its representing function reads. <code>L</code> on both sides can keep a constant, while <code>L[&gt;]</code> and <code>L</code> are different fields. See <a href="../../01-stage/#31-fields-sent-backward">Fields sent backward</a>.</p>
 <h2 id="3-shocks-and-expectations">3 Shocks and expectations<a class="headerlink" href="#3-shocks-and-expectations" title="Permanent link">&para;</a></h2>
 <p>In the <a href="../12-equation-parsing-rules/#4-shock-laws">income transition</a>, <code>y</code> is listed beside arrival assets <code>b</code>, but income is realized between arrival and decision. The state equation <code>w = y + b*R</code> makes income available in decision cash on hand. The backward equation <code>V[&lt;] = E_{y}(V)</code> uses the shock's conditional law to form arrival value.</p>
 <p>Writing an explicit perch mark cannot make an unobserved shock known. For example, replacing that arrival equation by <code>V[&lt;] = E_{y}(V) + y</code> leaves an unintegrated shock outside the expectation. Construction must reject this use when <code>y</code> is unobserved at arrival, identifying the statement and offending occurrence. The nested expression <code>E_{y}(V + y)</code> has a different scope: both terms are integrated, subject to integrability.</p>

@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3672,6 +3674,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8017,6 +8047,7 @@
 \qquad m_{t+1} \;=\; R\,(m_t - c_t) + y_{t+1},
 \]</div>
 <p>where the next period's state <span class="arithmatex">\(m_{t+1}\)</span> is produced by a transition from the current state, the savings choice <span class="arithmatex">\(a_t = m_t - c_t\)</span>, and the <strong>next-period shock</strong> <span class="arithmatex">\(y_{t+1}\)</span> realised at the start of next period. The expectation is taken over <span class="arithmatex">\(y_{t+1}\)</span>, a <em>fresh, next-period</em> draw of the same income process that produced the current <span class="arithmatex">\(m_t\)</span> through <span class="arithmatex">\(m_t = R\, k_t + y_t\)</span>, not the <span class="arithmatex">\(y_t\)</span> already baked into <span class="arithmatex">\(m_t\)</span>. In the running example this same draw becomes the next stage's <em>pre-decision</em> shock.</p>
+<p>These date subscripts distinguish successive value fields. Each backward step applies the same declared operator to the next tuple; the operator itself has no date argument. The terminal tuple is supplied when the model is realized.</p>
 </div>
 <p><strong>Two readings.</strong> Under a fixed consumption policy, the transition describes the state sequence <span class="arithmatex">\(k_t \to m_t \to a_t \to k_{t+1}\)</span>, with <span class="arithmatex">\(m_t = R\,k_t + y_t\)</span>, <span class="arithmatex">\(a_t = m_t - c_t\)</span>, and <span class="arithmatex">\(k_{t+1} = a_t\)</span>. Backward recursion uses the same law to evaluate next period's value at <span class="arithmatex">\(m_{t+1}=R\,a_t+y_{t+1}\)</span>. The shock occurs at the start of the next period in both readings. Its expectation appears in the current choice value because the agent evaluates future income risk before consuming.</p>
 <p><strong>Why factor the equation.</strong> The equation defines a Bellman operator on a suitable function space.<sup id="fnref:slp-operator"><a class="footnote-ref" href="#fn:slp-operator">2</a></sup> Writing the income transition and the consumption transition separately makes their reuse explicit. We may form an expected continuation function before optimizing, provided that it retains every state argument needed for the conditional income law. This does not allow an expectation to be moved arbitrarily through a supremum: the choice must still use only information available when it is made.</p>
@@ -8027,7 +8058,7 @@
 </details>
 <p><a id="modular-representation-of-the-problem"></a></p>
 <h2 id="2-modular-representation-of-the-problem">2. Modular representation of the problem<a class="headerlink" href="#2-modular-representation-of-the-problem" title="Permanent link">&para;</a></h2>
-<p>First we split the bundled transition <span class="arithmatex">\(m_{t+1} = R\,(m_t - c_t) + y_{t+1}\)</span> into the two events it conflates, and rename the resulting states by their <em>position in the stage</em> rather than by date. Then we drop the time subscripts, name the operators that act on the value functions defined at each position, and introduce the structure that makes the stage modular, developed in full in <a href="../03-Stages%20and%20perches/">Stages and perches</a>.</p>
+<p>First we split the bundled transition <span class="arithmatex">\(m_{t+1} = R\,(m_t - c_t) + y_{t+1}\)</span> into the two events it conflates, and rename the resulting states by their <em>position in the stage</em> rather than by date. Then we drop the time subscripts. The stage has no date input; any quantity that differs between repeated uses is supplied as a field. We name the operators that act on the value functions defined at each position, and introduce the structure that makes the stage modular, developed in full in <a href="../03-Stages%20and%20perches/">Stages and perches</a>.</p>
 <p><strong>Forward transitions.</strong> The primitive transition form above bundles return-and-income with the consumption choice. Let's split it as follows: at the start of period <span class="arithmatex">\(t\)</span>, return and income realize on yesterday's assets,</p>
 <div class="arithmatex">\[
 m_t = R\,a_{t-1} + y_t,
@@ -8114,7 +8145,7 @@ a_t = m_t - c_t.
 <p><strong>Counter-point.</strong> The operator representation makes the inputs and composition explicit. Evaluating a function at a random state is valid; its result is a random variable. Evaluating it at a realized state gives a value. A state-space declaration alone does not establish that either evaluation is integrable. Keeping these distinctions explicit helps the numerical method use the intended conditional law and continuation function.</p>
 <p>Mathematical properties can be stated for an operator even when source code does not give it a separate name. Monotonicity (preservation of pointwise order) and contraction (reduction of distances in a specified function norm) require the appropriate assumptions on rewards, discounting, transitions, and function spaces; the notation does not prove them. Naming operators makes those assumptions and compositions easier to connect to a written model. It does not replace the mathematical argument.</p>
 </details>
-<p><strong>Wiring.</strong> For the identity boundary <span class="arithmatex">\(k_{t+1}=a_t\)</span>, the continuation function supplied to a stage is its successor's arrival value, <span class="arithmatex">\(v_\succ=v_\prec^{\text{next}}\)</span>. The successor's arrival integration has already accounted for next period's income, so the current decision builder evaluates that function without integrating the same shock again. Backward composition of the optimizing operators, with the terminal condition stated above, reproduces the buffer-stock recursion. Composition of <span class="arithmatex">\(\mathbb T_\pi\)</span> instead evaluates specified policies. <a href="../03-Stages%20and%20perches/">Stages and perches</a> develops the interface; <a href="../10-semi-conjugacy/">Semi-conjugacy</a> discusses the relation between alternative placements of the expectation.</p>
+<p><strong>Wiring.</strong> For the identity boundary <span class="arithmatex">\(k_{t+1}=a_t\)</span>, the continuation function supplied to a stage is its successor's arrival value, <span class="arithmatex">\(v_\succ=v_\prec^{\text{next}}\)</span>. If the stage also requires age, a borrowing bound or another value-type field, the successor supplies its representing function too. The successor's arrival integration has already accounted for next period's income, so the current decision builder evaluates that function without integrating the same shock again. Backward composition of the optimizing operators, with the terminal condition stated above, reproduces the buffer-stock recursion. Composition of <span class="arithmatex">\(\mathbb T_\pi\)</span> instead evaluates specified policies. <a href="../03-Stages%20and%20perches/">Stages and perches</a> develops the interface; <a href="../10-semi-conjugacy/">Semi-conjugacy</a> discusses the relation between alternative placements of the expectation.</p>
 <p><a href="../03-Stages%20and%20perches/">Next → 03. Stages and perches</a></p>
 <div class="footnote">
 <hr />

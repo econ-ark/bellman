@@ -2963,6 +2963,8 @@
       
         
       
+        
+      
     
     
     
@@ -3699,6 +3701,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8040,7 +8070,8 @@
 
 
 <h1 id="create-and-connect-stages">Create and connect stages<a class="headerlink" href="#create-and-connect-stages" title="Permanent link">&para;</a></h1>
-<p>A <strong>trellis</strong> is the model's arrangement of stages across periods. A <strong>stage occurrence</strong> is one use of a stage in one period. To connect two occurrences, pair a continuation state field of the writing stage with an arrival state field of the reading stage. The <a href="../../Bellman-Sym/01-stage/">stage</a> defines the equations. The <a href="../../Bellman-Sym/06-period/#2-connectors">connector</a> identifies which state field supplies which.</p>
+<p>A <strong>trellis</strong> is a diagram of periods joined by connections. A <strong>stage occurrence</strong> is one use of a stage in one period. To connect two occurrences, pair a continuation state field of the writing stage with an arrival state field of the reading stage. The <a href="../../Bellman-Sym/01-stage/">stage</a> defines the equations. The <a href="../../Bellman-Sym/06-period/#2-connectors">connector</a> identifies which state field supplies which.</p>
+<p>Repeated occurrences have separate stage objects. In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, occurrences of one declaration retain its operators and calibration sources. Quantities that differ with age are supplied as fields; numerical methods and settings may differ by occurrence. Recipe ranges also permit positional calibration without enforcing this condition.</p>
 <h2 id="1-create-the-model-folder">1 Create the model folder<a class="headerlink" href="#1-create-the-model-folder" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Save any unsaved work before switching folders. In <strong>Files</strong>, choose <strong>New trellis</strong>. Enter a <strong>Name</strong>, the number of <strong>Periods</strong>, and a <strong>Parent folder</strong> outside any existing model folder. The form shows the destination. <strong>Period label (optional)</strong> names the repeated period.</li>
@@ -8061,7 +8092,7 @@
 <ol>
 <li>In <strong>Trellis → Operator → Forward</strong>, choose <strong>+ Period</strong> before the earliest period or between two periods. If the target period is outside the current range, select <strong>all</strong> in the period selector, then <strong>Fit</strong>. Open a collapsed period with its chevron. You can also drop a stage from <strong>Stages</strong> on that control to select it for the new period.</li>
 <li>In <strong>Add period</strong>, enter a <strong>Label</strong>, choose at least one stage, and select <strong>Add the period</strong>. The form writes <code>declaration/period.&lt;label&gt;.yml</code> immediately. It adds the reference to the trellis in the editor. Save that tab to keep the reference. In a trellis that lists stage records directly, the control inserts a period with the neighbouring period's stages.</li>
-<li>Inspect the new joins. Inserting between two periods increases the indices of periods on the earlier side and adjusts the recipe's corresponding ranges. Check any age or calibration schedule keyed by period index. To add a period after the terminal period, edit the trellis file directly. <a href="../../Bellman-Sym/07-trellis/">Trellis syntax and period numbering</a>.</li>
+<li>Inspect the new joins. Inserting between two periods increases the indices of periods on the earlier side and adjusts the recipe's corresponding ranges. Check positional calibration ranges and the terminal data you supply at realization. Where stages compute age backward, a changed horizon changes the ages reached by that recurrence; the position labels do not compute them. To add a period after the terminal period, edit the trellis file directly. <a href="../../Bellman-Sym/07-trellis/">Trellis syntax and period numbering</a>.</li>
 </ol>
 <h2 id="4-connect-two-stages">4 Connect two stages<a class="headerlink" href="#4-connect-two-stages" title="Permanent link">&para;</a></h2>
 <ol>
@@ -8079,6 +8110,7 @@
 <li>Inspect the edited source line and the affected periods before saving. Command+Z on macOS or Ctrl+Z on Windows and Linux reverses the latest edit in the editor. For a graph gesture that changes several files, undo from one of the affected tabs while the files still hold the gesture's edits. <strong>Save</strong> writes the open file. Open and save each file marked <strong>unsaved</strong> to keep the whole change. New stage and period files created by placement are already on disk.</li>
 <li>After undo, let the graph finish updating before dragging the same connection again.</li>
 </ul>
+<p>A move is refused if it would leave an authored backward value pairing, such as an age pairing, without the state connection it belongs to. Edit the coupled state and value pairings in the connector source, then inspect the complete connection again. The graph gesture does not rewrite backward pairings for you.</p>
 <h2 id="6-remove-a-stage-or-period">6 Remove a stage or period<a class="headerlink" href="#6-remove-a-stage-or-period" title="Permanent link">&para;</a></h2>
 <p>Select a stage card in the forward trellis. In <strong>Details</strong>, <strong>Remove from periods …</strong> removes the stage from the period list shown. A shared period file can affect several occurrences. <strong>Remove stage</strong> removes it from the active recipe and the periods that use it. To remove a period, select its frame and choose <strong>Remove period</strong> where offered. Check the affected files, mappings and period ranges in the status line.</p>
 <p>Workbench marks unused files <strong>deleted on save</strong> when a removal would leave them without a reference. Review those marks before saving. Use <strong>Keep</strong> to withdraw a file removal offered in <strong>Files</strong>, or undo the model edit before saving. A file that another recipe still uses stays in the project.</p>

@@ -855,10 +855,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-elaboration-builds" class="md-nav__link">
+  <a href="#1-the-elaborated-stage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1 What elaboration builds
+        1 The elaborated stage
       
     </span>
   </a>
@@ -921,10 +921,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-what-a-specified-stage-is-not" class="md-nav__link">
+  <a href="#7-numerical-requirements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7 What a specified stage is not
+        7 Numerical requirements
       
     </span>
   </a>
@@ -2974,6 +2974,8 @@
       
         
       
+        
+      
     
     
     
@@ -3710,6 +3712,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7917,10 +7947,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-elaboration-builds" class="md-nav__link">
+  <a href="#1-the-elaborated-stage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1 What elaboration builds
+        1 The elaborated stage
       
     </span>
   </a>
@@ -7983,10 +8013,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-what-a-specified-stage-is-not" class="md-nav__link">
+  <a href="#7-numerical-requirements" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7 What a specified stage is not
+        7 Numerical requirements
       
     </span>
   </a>
@@ -8125,21 +8155,23 @@
 </tbody>
 </table>
 </details>
-<p>We read the repository's buffer-stock stage, <code>applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl</code>. It is the normalized buffer-stock model: the household arrives with assets <code>k</code>, a permanent income shock <code>ψ</code> and a transitory shock <code>ξ</code> give its market resources <code>m</code>, it chooses consumption <code>c</code>, and it saves <code>a = m - c</code>. Each <a href="../../wiki/perch/">perch</a> carries a value, and the derivative of a value is read where it is needed by a derivative term, <code>D_{a}V[&gt;]</code> for the derivative of the continuation value in savings. The policy block states the maximization alone, <code>c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])</code>. The three lines of the endogenous grid method stand in the methods file beside the stage file, <code>applications/buffer-stock/declaration/stages/buffer_stock/methods.bl</code>, an addition to the stage file that is read together with it (<a href="../../Bellman-Sym/04-methodization/">Methodization</a> §1), appended to the policy block: consumption from the inverted Euler equation at each level of savings, <code>c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;])</code>, the resources at which that consumption is chosen, <code>m[&gt;] = a + c[&gt;]</code>, and the line <code>c[~] = c[&gt;]</code>, which states that the policy at those resources is that consumption. The derivatives of the decision value and of the arrival value stand in the same file, each appended to the block of the value builder that writes the value (§6).</p>
-<h2 id="1-what-elaboration-builds">1 What elaboration builds<a class="headerlink" href="#1-what-elaboration-builds" title="Permanent link">&para;</a></h2>
-<p><strong>Elaboration</strong> reads the stage file and constructs one object, the <strong>stage object</strong>. The object is a <strong>stage occurrence</strong>: the file elaborated at one position of a <a href="../../wiki/period/">period</a>, with its own parameter values, methods and settings. One file may be elaborated at several positions, and each elaboration is a separate object that shares nothing with the others. The file is parsed once, and the parsed syntax tree is discarded once the object is constructed: everything the rest of this page describes is read from the object, never from the text again.</p>
+<p>We read the repository's buffer-stock stage, <code>applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl</code>. It is the normalized buffer-stock model: the household arrives with assets <code>k</code>, a permanent income shock <code>ψ</code> and a transitory shock <code>ξ</code> give its market resources <code>m</code>, it chooses consumption <code>c</code>, and it saves <code>a = m - c</code>. Each <a href="../../wiki/perch/">perch</a> carries a value, and the derivative of a value is read where it is needed by a derivative term, <code>D_{a}V[&gt;]</code> for the derivative of the continuation value in savings. The policy block states the maximization alone, <code>c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])</code>. The three lines of the endogenous grid method stand in the methods file beside the stage file, <code>applications/buffer-stock/declaration/stages/buffer_stock/methods.bl</code>, an addition to the stage file that is read together with it (<a href="../../Bellman-Sym/04-methodization/">Methodization</a> §1), appended to the policy block: consumption from the inverted Euler equation at each level of savings, <code>c[&gt;] = (β*D_{a}V[&gt;])^(-1/ρ)</code>, the resources at which that consumption is chosen, <code>m[&gt;] = a + c[&gt;]</code>, and the line <code>c[~] = c[&gt;]</code>, which states that the policy at those resources is that consumption. The derivatives of the decision value and of the arrival value stand in the same file, each appended to the block of the value builder that writes the value (§6).</p>
+<p><a id="1-what-elaboration-builds"></a></p>
+<h2 id="1-the-elaborated-stage">1 The elaborated stage<a class="headerlink" href="#1-the-elaborated-stage" title="Permanent link">&para;</a></h2>
+<p><strong>Elaboration</strong> reads the stage file and constructs one object, the <strong>stage object</strong>. The object is a <strong>stage occurrence</strong>: the file elaborated at one position of a <a href="../../wiki/period/">period</a>, with its own parameter values, methods and settings. One file may be elaborated at several positions, and each occurrence is a separate object. In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated declarations share operators and calibration sources; their field inputs, methods and settings may differ. Separate object identity does not imply different mathematics. The position is an address, not an input to the stage. The file is parsed once, and the parsed syntax tree is discarded once the object is constructed: everything the rest of this page describes is read from the object, never from the text again.</p>
 <p>The object holds the stage's declared name, the file's other <code>@</code> lines, a table of definitions, four graphs, the bindings and the provenance, which records the file, its digest and where each binding was read from. The table and the four graphs together are the stage's <a href="../../wiki/semgraph/">semgraph</a>, its semantic graph. A <strong>graph</strong> here is made of <strong>boxes</strong> joined by <strong>wires</strong>, each wire carrying one typed object, and the package stores each graph as a hypergraph of the diagram library DisCoPy, a graph whose wires may join several boxes. Nothing else is stored: whatever the table and the graphs determine is computed when it is asked for.</p>
 <p>For a model of several stages, each stage file is held in a <strong>record</strong>, a dictionary with the file's text and the three mappings of methods, settings and calibration, and a <a href="../../wiki/trellis/">trellis</a> arranges the records into periods (<a href="../04-periods-and-trellis/">Periods and trellis</a>). Elaborating a trellis constructs one stage occurrence at each position and attaches nothing yet.</p>
 <h2 id="2-the-definitions">2 The definitions<a class="headerlink" href="#2-the-definitions" title="Permanent link">&para;</a></h2>
 <p>Every name the file declares is kept once, as a record with a kind and an identity of the form <code>&lt;stage&gt;:&lt;kind&gt;:&lt;name&gt;</code>, and the graphs refer to the records by identity. A line of a block is a record too, named by its address, such as <code>cntn_to_dcsn.value</code>. The sets, the parameters, the distributions of the two shocks, the utility function, its marginal utility, the inverse of that marginal utility and the correspondence of feasible consumption each have one record.</p>
-<p>A block is <strong>forward</strong> when it writes the states of a later perch and <strong>backward</strong> when it writes values or the control, and two kinds of record are made from the blocks. The <strong>law of motion</strong> <code>𝑔</code> of a forward block is the map from the fields it reads to the fields it defines: for the saving block, <code>(m, c) ↦ m − c</code>, whose declared sets state the borrowing constraint. The <strong>value aggregator</strong> <code>𝐺</code> of a backward block is the map that combines the continuation value with current quantities into the block's value: for the decision block, <code>(V[&gt;], m, c) ↦ 𝑢(c) + β V[&gt;]</code>. Each record prints its own <strong>card</strong>, the printed description the package gives of one piece of the stage: the function it denotes under <code>Defines</code>, any conditions on its values under <code>Conditions</code>, the statements of the file it comes from under <code>Source</code>, and the key of each declared name it writes, the parameters among them, under <code>Definitions referenced</code>.</p>
+<p>A block is <strong>forward</strong> when it writes the states of a later perch and <strong>backward</strong> when it writes values or the control, and two kinds of record are made from the blocks. The <strong>law of motion</strong> <code>𝑔</code> of a forward block is the map from the fields it reads to the fields it defines: for the saving block, <code>(m, c) ↦ m − c</code>. The feasibility correspondence reads the supplied borrowing bound <code>L</code>. The <strong>value aggregator</strong> <code>𝐺</code> of a backward block is the map that combines the continuation value with current quantities into the block's value: for the decision block, <code>(V[&gt;], m, c) ↦ 𝑢(c) + β V[&gt;]</code>. Each record prints its own <strong>card</strong>, the printed description the package gives of one piece of the stage: the function it denotes under <code>Defines</code>, any conditions on its values under <code>Conditions</code>, the statements of the file it comes from under <code>Source</code>, and the key of each declared name it writes, the parameters among them, under <code>Definitions referenced</code>.</p>
 <p>The equations keep the names of the parameters; their values arrive later, with calibration (§6). Each argument of <code>𝐺</code> is a number, not a function, and is written in roman type; the functions the operators read are written in italic. A declared set imposes a condition that a reader or a routine must check: the construction states the condition and does not establish it.</p>
 <h2 id="3-the-two-initial-diagrams">3 The two initial diagrams<a class="headerlink" href="#3-the-two-initial-diagrams" title="Permanent link">&para;</a></h2>
 <p>An <strong>initial diagram</strong> has one box per block of one direction, wired by the <a href="../../wiki/field/">fields</a> those blocks share, so that every wire is a field. The forward diagram is supplied with the arrival assets <code>k[&lt;]</code> and the two shocks, and produces the continuation assets <code>a[&gt;]</code>. The backward diagram is supplied with the continuation value <code>V[&gt;]</code> and produces the arrival value <code>V[&lt;]</code> and the policy <code>c</code>.</p>
 <p>Consumption is written by the policy block, and no wire carries it to another block. The decision block and the saving block list <code>c</code> among their inputs, but a control that a block lists among its inputs is a <strong>coordinate</strong>, the variable its lines are written in, not a field that another block supplies. Neither block has an input wire for it, and the <code>Signature</code> section of each block's card, which lists the wires, does not list it.</p>
 <p>The two diagrams are read separately. The forward one is not supplied with the continuation value, the backward one is not supplied with the arrival state, and neither computes what the other computes.</p>
+<p>The buffer-stock stage also takes in the constant borrowing bound <code>L</code>. Its backward block <code>cntn_to_dcsn</code> keeps <code>L</code>, and its backward block <code>dcsn_to_arvl</code> computes <code>L[&lt;]</code>. These are value-type field wires in the initial backward diagram and representing-function wires in its builders graph. The policy reads <code>L</code> in the feasibility correspondence. The value calculations below describe the value component of this larger tuple. <a href="../../examples/buffer-stock/buffer_stock/">The running example</a> states the complete equations.</p>
 <h2 id="4-the-backward-builders">4 The backward builders<a class="headerlink" href="#4-the-backward-builders" title="Permanent link">&para;</a></h2>
-<p>In the <strong>backward builders graph</strong> every wire carries a function and every box is an operator on functions. At the <strong>builder grain</strong> each block is one box, its <a href="../../wiki/builder/">builder</a>, the operator the block denotes. The decision builder takes the continuation value function <code>𝑉[&gt;]</code> and returns the decision value <code>𝑉</code>; the arrival builder takes <code>𝑉</code> and returns the arrival value <code>𝑉[&lt;]</code>; the policy builder takes <code>𝑉[&gt;]</code>, the one function its maximization reads, and returns the policy <code>𝑐</code>. The two derivative lines of <code>methods.bl</code>, each appended to the block of the value builder that writes the value, state the derivative of the decision value in resources, <code>D_{m}V = 𝑑𝑢(c)</code>, and the derivative of the arrival value in assets, with the factor of the law of motion; methodization records each at the Evaluation of the builder that writes the value, and neither adds a box (§6).</p>
+<p>In the <strong>backward builders graph</strong> every wire carries a function and every box is an operator on functions. At the <strong>builder grain</strong> each block is one box, its <a href="../../wiki/builder/">builder</a>, the operator the block denotes. The decision builder takes the continuation value function <code>𝑉[&gt;]</code> and returns the decision value <code>𝑉</code>; the arrival builder takes <code>𝑉</code> and returns the arrival value <code>𝑉[&lt;]</code>; the policy builder takes the representing functions of <code>V[&gt;]</code> and the constant bound <code>L</code>, which its maximization and feasibility correspondence read, and returns the policy <code>𝑐</code>. The two derivative lines of <code>methods.bl</code>, each appended to the block of the value builder that writes the value, state the derivative of the decision value in resources, <code>D_{m}V = 𝑑𝑢(c)</code>, and the derivative of the arrival value in assets, with the factor of the law of motion; methodization records each at the Evaluation of the builder that writes the value, and neither adds a box (§6).</p>
 <p>The decision builder is a <strong>builder at a policy</strong>. Its equations are written in the control, and the policy <code>𝑐</code> stands in place of the control wherever it appears, in the law of motion and in the aggregator, so each policy gives one operator, all with the same inputs and outputs. The policy is no input wire of the decision builder: it is a name the builder's operations refer to, and its type is printed once, on the output of the policy builder.</p>
 <p>A <strong>grain</strong> chooses which boxes are opened without changing what the graph represents. At the <strong>primitive grain</strong> each builder is opened into its <strong>primitive operators</strong>, the finest boxes the construction makes. A value statement becomes a chain of boxes of a few kinds. The <strong>pullback</strong> composes the continuation function with the block's law of motion, so that <code>𝑉[&gt;]</code> becomes <code>𝑉[&gt;] ∘ 𝑔</code>. The <strong>expectation</strong> integrates over the shocks the distribution declarations name. The <strong>aggregation</strong> applies the block's <code>𝐺</code> at each point. The <strong>evaluation</strong> returns the result unchanged, under the field's name and in the set the file declares for it. Arithmetic, parameters and named functions are not boxes: they are part of the rule of the box that applies them. In the policy block, the maximization becomes a pullback of the continuation value along the law of motion, an aggregation that forms the choice value, an argmax and the evaluation. Once the methods file's block <code>policy</code> brings the lines of the endogenous grid method (§6), the operative policy builder's operations are those lines instead: the inverted Euler equation and the line that gives resources become one aggregation on functions of savings, and the line <code>c = c[&gt;]</code> becomes a pullback of the policy along the map from savings to resources, a relation that the policy must satisfy at the resources that map reaches.</p>
 <p>Read the decision builder from the top. The pullback gives the continuation value at savings, a function of resources and consumption; the aggregation adds current utility to the discounted continuation value, which is the choice value</p>
@@ -8152,10 +8184,11 @@ Q(m,c)=u(c)+\beta\,W(m-c),
 <p>In the <strong>forward builders graph</strong> each wire carries a finite measure over the states of a perch, the distribution of the population, whose total mass need not be one; a shock's own distribution remains a probability measure. Each box carries a measure forward through the same equations. Only the two forward blocks appear. The <strong>distribution extension</strong> extends a measure over the states by the distribution of a shock, giving the joint measure of the states and the shock; this stage has two, one for <code>ψ</code> and one for <code>ξ</code>. The <strong>push-forward</strong> carries the joint measure through the law of motion <code>m = R*k/(Γ*ψ) + ξ</code>.</p>
 <p>The second forward builder is one push-forward at the policy: it carries the decision measure through <code>a = m − 𝑐(m)</code> to the continuation measure <code>μ[&gt;]</code>, referring to the policy as the decision builder does, and no wire joins it to the policy builder. The forward graph can therefore be evaluated only once a policy has been chosen, by the backward graph or by the user. The two graphs are two readings of one set of equations, on functions and on measures, and <a href="../../bellman-calculus/05-Operators%20and%20builders/">Operators and builders</a> states the duality that relates them.</p>
 <h2 id="6-specifying-the-stage">6 Specifying the stage<a class="headerlink" href="#6-specifying-the-stage" title="Permanent link">&para;</a></h2>
-<p>Three steps <strong>specify</strong> a stage. <strong>Calibration</strong> supplies a value for every declared parameter. <strong>Methodization</strong> types a numerical method at a <strong>place</strong> of the stage, the written address of one of its operators: a block, a named statement, an operator occurrence such as the expectation <code>E_ψ_ξ</code>, a definition, or the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes a builder, such as <code>policy.evaluate</code>, where a representation is written. <strong>Configuration</strong> supplies the <a href="../../wiki/settings/">settings</a> the attached methods read, such as the size of a grid. We make them in that order, and each adds its binding to the stage it is called on and returns that stage; nothing is copied, and a later binding replaces the earlier one of its kind (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a>). The equations keep the names of the parameters, so a sweep over <code>β</code> binds each value in turn to the one stage, whose graphs no binding changes. The buffer-stock methods file, <code>methods.bl</code> beside the stage file, names the endogenous grid method on the policy builder and appends the method's three lines to the policy block under the method <code>!egm</code>, so that the operative builder's operations are the three lines of the method while the stage keeps the maximization as the builder it declares, and appends one derivative line to each of the decision and arrival builders' blocks, which is recorded at that builder's Evaluation as the stated derivative of the value. The stage lists the condition under which the method's lines give the policy the maximization defines, <code>egm-eligibility</code>, and the reading of each derivative line, <code>marginal-reading</code>, among its obligations, and checks neither.</p>
-<p>For a trellis, the three trellis verbs bind every stage occurrence from the mappings its record holds (<a href="../06-workflow/">Workflow</a> §1). A <strong>specified stage</strong> is the result: constructed, calibrated, methodized and configured. #specification</p>
-<h2 id="7-what-a-specified-stage-is-not">7 What a specified stage is not<a class="headerlink" href="#7-what-a-specified-stage-is-not" title="Permanent link">&para;</a></h2>
-<p>Nothing above has solved the household's problem, and a specified stage does not contain a solution. It contains no numerical routine: an entry of a methods file names a technique and a routine without running them. It contains no terminal data: the continuation value <code>𝑉[&gt;]</code> is an input the stage leaves open, supplied by the next period or by a terminal value function. And it has established none of the analytic conditions of §4. Solving requires the routines, the composed model and the continuation or terminal data. <a href="../../Bellman-Sym/04-methodization/">Methodization</a> describes the routines, and <a href="../../Bellman-Sym/07-trellis/">Trellises</a> the terminal data.</p>
+<p>Three steps <strong>specify</strong> a stage. <strong>Calibration</strong> supplies a value for every declared parameter. <strong>Methodization</strong> types a numerical method at a <strong>place</strong> of the stage, the written address of one of its operators: a block, a named statement, an operator occurrence such as the expectation <code>E_ψ_ξ</code>, a definition, or the <a href="../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> that closes a builder, such as <code>policy.evaluate</code>, where a representation is written. <strong>Configuration</strong> supplies the <a href="../../wiki/settings/">settings</a> the attached methods read, such as the size of a grid. For one stage, the examples apply methodization, calibration and configuration after elaboration. Each adds its binding to the stage it is called on and returns that stage; nothing is copied, and a later binding replaces the earlier one of its kind (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a>). The equations keep the names of the parameters, so a sweep over <code>β</code> binds each value in turn to the one stage, whose retained symbolic equations calibration leaves unchanged. The buffer-stock methods file, <code>methods.bl</code> beside the stage file, names the endogenous grid method on the policy builder and appends the method's three lines to the policy block under the method <code>!egm</code>, so that the operative builder's operations are the three lines of the method while the stage keeps the maximization as the builder it declares, and appends one derivative line to each of the decision and arrival builders' blocks, which is recorded at that builder's Evaluation as the stated derivative of the value. The stage lists the condition under which the method's lines give the policy the maximization defines, <code>egm-eligibility</code>, and the reading of each derivative line, <code>marginal-reading</code>, among its obligations, and checks neither.</p>
+<p>For a trellis, the three trellis verbs retain the order calibration, methodization and configuration, binding every stage occurrence from the mappings its record holds (<a href="../06-workflow/">Workflow</a> §1). A <strong>specified stage</strong> is the result: constructed, calibrated, methodized and configured. #specification</p>
+<p><a id="7-what-a-specified-stage-is-not"></a></p>
+<h2 id="7-numerical-requirements">7 Numerical requirements<a class="headerlink" href="#7-numerical-requirements" title="Permanent link">&para;</a></h2>
+<p>Nothing above has solved the household's problem, and a specified stage does not contain a solution. It contains no numerical routine: an entry of a methods file names a technique and a routine without running them. It contains no terminal data: each continuation value-type field is an input supplied by the next stage or by the user at realization. The buffer-stock stage takes both the value field <code>V[&gt;]</code>, represented by <code>𝑉[&gt;]</code>, and the constant borrowing bound <code>L</code>. A terminal value function alone does not supply that bound. And it has established none of the analytic conditions of §4. Solving requires the routines, the composed model and the continuation or terminal data. <a href="../../Bellman-Sym/04-methodization/">Methodization</a> describes the routines, and <a href="../../Bellman-Sym/07-trellis/">Trellises</a> the terminal data.</p>
 
 
 

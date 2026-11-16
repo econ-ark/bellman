@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -6872,10 +6902,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-syntactic-trellis-the-recipe-defines" class="md-nav__link">
+  <a href="#the-syntactic-trellis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The syntactic trellis the recipe defines
+        The syntactic trellis
       
     </span>
   </a>
@@ -7899,10 +7929,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-syntactic-trellis-the-recipe-defines" class="md-nav__link">
+  <a href="#the-syntactic-trellis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The syntactic trellis the recipe defines
+        The syntactic trellis
       
     </span>
   </a>
@@ -8006,6 +8036,7 @@
 <h1 id="specification-factory">Specification factory<a class="headerlink" href="#specification-factory" title="Permanent link">&para;</a></h1>
 <p>The specification factory merges parameter, numerical-setting and method sources according to an ordered YAML <strong>recipe</strong>, <code>spec.yml</code>. A recipe names every file it reads by its path from its own folder, the <strong>registry</strong> directory: the <a href="../trellis/">trellis</a> file under <code>trellis:</code>, each <a href="../stage/">stage</a>'s file under <code>stage:</code> in the stage's entry, and the sources of its source lists; nothing is read in place of a path it does not write. In a model folder of the repository the registry is the subfolder <code>declaration/</code>, which holds every file the language reads, each stage's files in a folder of their own, so that <code>load_recipe("applications/durables/declaration", "spec.yml")</code> reads the durables model (<a href="../../Bellman-Sym/reference/model-directory-layout/">Model directory layout</a>). <code>load_recipe(directory, recipe, **fills)</code> reads the recipe and the registry and returns the <a href="../trellis/">syntactic trellis</a>; it constructs no <a href="../stage/">stage</a> and no <a href="../semgraph/">semgraph</a> (semantic graph), and reads the <a href="../stage/">stage files</a>' declarations only to check the names a fill gives.</p>
 <p>Each recipe stage names its stage file and supplies <code>all</code> <strong>source lists</strong> for calibration, settings and methods. Resolution applies those sources in order, then any matching inclusive <a href="../period/">period</a>-range overrides. Binding ranges do not themselves restrict stage activity; an optional stage <code>periods</code> interval does that separately. Ranges within one stage and binding kind must not overlap.</p>
+<p>In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations. Recipe ranges remain available for all three bindings. Choosing different calibration sources by position can define a model outside this modularity condition; methods and settings do not affect the condition.</p>
 <h2 id="source-composition">Source composition<a class="headerlink" href="#source-composition" title="Permanent link">&para;</a></h2>
 <p>Mappings merge recursively, and later scalars and ordinary lists replace earlier values. A methods list is not merged: the <code>.bl</code> additions it names are unioned with the stage file in the order written, so that the whole list is the stage occurrence's selection. This preserves omitted bindings without asserting a general categorical or algebraic theorem about arbitrary merge inputs.</p>
 <p>Source names are relative to the registry directory. A parent source is read before its child's entries; parent cycles are rejected and recursion is limited. These rules resolve data, leaving the checks of method places and of <a href="../parameters/">parameter</a> and setting completeness to the stage operations. The current reference specifies path resolution and accepted wrappers in detail.</p>
@@ -8014,7 +8045,8 @@
 <p><code>load_recipe</code> is one step of the <strong>Bellman factory</strong>, the part of the package from the files to the specified trellis; a <strong>sweep</strong> is a family of fills, one expression over them, such as <code>[assemble_trellis(directory, recipe, fill=f) for f in fills]</code>, with <code>assemble_trellis</code> of <code>bellman.trellis</code>.</p>
 <p>A flat mapping supplies entries directly. A mapping whose top-level keys are all among <code>calibration</code> and <code>settings</code> is interpreted by specification kind; a mixture with other keys is treated as flat. A methods list takes no slot: a change of methods is a replacing selection, another addition named in the list. The shape must match the recipe's intended use.</p>
 <p>An unfilled slot contributes an empty mapping. A keyword naming no slot is refused with <code>FactoryError</code> under the rule <code>recipe-slot-unknown</code>. Extra keys inside a declared slot do not become model declarations. Slots are not the only source of user data: files and direct stage bindings are separate supported routes. A recipe slot is also distinct from an <a href="../asdl/">ASDL field</a>, an economic <a href="../field/">field</a> or an operation's argument.</p>
-<h2 id="the-syntactic-trellis-the-recipe-defines">The syntactic trellis the recipe defines<a class="headerlink" href="#the-syntactic-trellis-the-recipe-defines" title="Permanent link">&para;</a></h2>
+<p><a id="the-syntactic-trellis-the-recipe-defines"></a></p>
+<h2 id="the-syntactic-trellis">The syntactic trellis<a class="headerlink" href="#the-syntactic-trellis" title="Permanent link">&para;</a></h2>
 <p><code>syntactic["periods"][h]["stages"][key]["calibration"]</code>, and the settings and methods beside it, are the merged mappings of that stage at period <code>h</code>, <code>h</code> counting periods before the terminal one; the record holds bindings as data, not a stage, and no policy or solved stage. <code>elaborate_trellis</code> constructs the <a href="../stage/">stage occurrences</a>, one for each stage file at each position, from the records, and <code>calibrate_trellis</code>, <code>methodize_trellis</code> and <code>configure_trellis</code> bind them, completing the lifecycle of a <a href="../specified_stage/">specified stage</a>.</p>
 <p>Source precedence first determines each stage's record. When stages in one
 period declare the same <a href="../parameters/">parameter</a> name, calibration then

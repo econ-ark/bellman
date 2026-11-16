@@ -3153,6 +3153,8 @@
       
         
       
+        
+      
     
     
     
@@ -3889,6 +3891,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8494,14 +8524,14 @@
 <td><code>syntax/lower.py</code>: <code>intersection_of_sets</code>, <code>_one_set</code><br><code>stage/calibration_requirements.py</code>: <code>_conditioned</code></td>
 <td><code>syntax/lower.py</code>: <code>_several_sets_refusal</code><br><code>typing/declarations.py</code>: <code>Declarations.classify</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written[two sets of one type that are no intervals]</code></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_form_the_parser_reads_but_the_language_does_not_is_refused_where_it_is_written[two sets of one type that are no intervals]</code></td>
 </tr>
 <tr>
 <td>The several sets in the type of one name have a number in common, which the package decides from the endpoints that are numbers or ratios of two integers, <code>1/3</code>.</td>
 <td>—</td>
 <td><code>syntax/lower.py</code>: <code>_several_sets_refusal</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_5_the_corrections_hold</code></td>
+<td><code>packages/bellman/tests/test_declared_sets.py</code><br><code>test_sets_with_ratio_endpoints_are_refused_only_where_they_leave_no_number_quoting_them</code></td>
 </tr>
 <tr>
 <td>A name declared at the top level is a parameter where no block header lists it and a field where one does, and no line writes a parameter.</td>
@@ -8515,7 +8545,7 @@
 <td><code>stage/calibration_requirements.py</code>: <code>membership</code></td>
 <td><code>stage/calibration_requirements.py</code>: <code>calibration_requirements</code></td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_calibrate_refuses_a_parameter_without_a_value_and_a_value_outside_its_declared_set</code></td>
+<td><code>packages/bellman/tests/test_calibration_and_settings.py</code><br><code>test_calibrate_refuses_a_value_outside_the_declared_set_of_its_parameter</code></td>
 </tr>
 <tr>
 <td>A declared function binds its formal arguments, and its body reads its arguments, the names its operators bind and the names the stage declares.</td>
@@ -8543,126 +8573,126 @@
 <td><code>stage/kernels.py</code>: <code>compile_kernel</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_names_in_scope</code></td>
 <td><a href="../refusals/#name-in-scope"><code>name-in-scope</code></a></td>
-<td><code>packages/bellman/tests/test_category_codes.py</code><br><code>test_item_3_kernels_read_through_the_denoted_map_keep_their_outcomes_under_a_full_recoding</code></td>
+<td><code>packages/bellman/tests/test_category_codes.py</code><br><code>test_the_compiled_law_of_motion_and_value_aggregation_compute_with_the_integer_codes</code></td>
 </tr>
 <tr>
 <td>A law statement gives its shock, or the shocks of a tuple subject jointly, one law.</td>
 <td><code>typing/declarations.py</code>: <code>Declarations.read_distribution</code><br><code>distributions/edges.py</code>: <code>distribution_declarations</code>, <code>joint_distribution</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.read_distribution</code></td>
 <td><a href="../refusals/#declared-once"><code>declared-once</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_partial_expectation_uses_the_joint_normal_conditional_and_the_outer_one_the_marginal</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_an_expectation_over_both_shocks_of_a_joint_normal_law_integrates_the_joint_law</code></td>
 </tr>
 <tr>
 <td>Separate law statements on one edge declare the product of their conditional laws, each given its parent shocks, and the product is recorded as a condition.</td>
 <td><code>distributions/edges.py</code>: <code>dependency_order</code>, <code>joint_distribution</code>, <code>factorization_obligation</code><br><code>fold/stage_fold.py</code>: <code>_distribution_obligations</code></td>
 <td><code>distributions/edges.py</code>: <code>dependency_order</code></td>
 <td><a href="../refusals/#distribution-dependency"><code>distribution-dependency</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_separate_declarations_are_a_product_and_a_hierarchy_states_no_independence_of_its_children</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_a_factorization_states_the_independence_of_separate_laws_and_none_in_a_hierarchy</code></td>
 </tr>
 <tr>
 <td>A declared name holds no colon and is none of the words <code>result</code>, <code>declared</code> and <code>merged</code>, which the identities of the stage's objects reserve.</td>
 <td><code>native/identity.py</code>: <code>refuse_colliding_name</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_identity_collisions</code></td>
 <td><a href="../refusals/#identity-collision"><code>identity-collision</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_name_that_would_collide_with_the_spelling_of_an_identity_is_refused_where_it_is_written</code></td>
+<td><code>packages/bellman/tests/test_parsing.py</code><br><code>test_a_name_that_would_collide_with_the_spelling_of_an_identity_is_refused_where_it_is_written</code></td>
 </tr>
 <tr>
 <td>The set of a parameter, of a setting or of a derived parameter reads parameters, derived parameters, named sets and numbers, and no field; a shock is read inside an expectation over it where its law reads no field.</td>
 <td><code>typing/declarations.py</code>: <code>Declarations.field_read_in_set</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_parameter_sets</code></td>
 <td><a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_5_the_corrections_hold</code></td>
+<td><code>packages/bellman/tests/test_declared_sets_at_calibration.py</code><br><code>test_the_set_of_a_parameter_is_refused_only_where_it_reads_a_field</code></td>
 </tr>
 <tr>
 <td>Each endpoint of a parameter's set has a value at the calibration; a bound whose arithmetic has no value there refuses the calibration.</td>
 <td><code>stage/calibration_requirements.py</code>: <code>_bound_at</code></td>
 <td><code>stage/calibration_requirements.py</code>: <code>judged</code></td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_5_the_corrections_hold</code></td>
+<td><code>packages/bellman/tests/test_declared_sets_at_calibration.py</code><br><code>test_a_bound_refuses_the_calibration_only_at_values_where_it_divides_by_zero</code></td>
 </tr>
 <tr>
 <td>The set that a derived parameter's definition declares is a set of numbers that reads no setting, a definition that declares a set reads at least one parameter or derived parameter, by cases as otherwise, and no separate declaration of the name stands beside its definition.</td>
 <td><code>typing/declarations.py</code>: <code>declared_definition</code>, <code>derived_parameter_declaration</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_names</code>, <code>Declarations.read_declaration</code>, <code>Declarations.declared_value_refusal</code>, <code>Declarations.check_derived_parameters</code>, <code>Declarations.declared_set_fault</code></td>
 <td><a href="../refusals/#one-name-one-meaning"><code>one-name-one-meaning</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a>, <a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_3_a_derived_parameter_may_carry_a_declared_set</code></td>
+<td><code>packages/bellman/tests/test_derived_parameters.py</code><br><code>test_a_definition_on_a_declared_set_in_a_form_that_the_language_does_not_read_is_refused</code></td>
 </tr>
 <tr>
 <td>A derived parameter's definition may call <code>log</code> and <code>exp</code>, each of one argument, and <code>min</code> and <code>max</code>, each of one argument or more, and a call of any other function, or of one of the four with another number of arguments, is refused.</td>
 <td><code>typing/declarations.py</code>: <code>derived_parameter_call</code>, <code>derived_parameter_body</code><br><code>fold/derived_parameters.py</code>: <code>derived_value</code></td>
 <td><code>syntax/parse.py</code>: <code>syntax_refusal</code><br><code>typing/declarations.py</code>: <code>derived_parameter_fault</code>, <code>Declarations.check_derived_parameters</code><br><code>typing/context.py</code>: <code>TypingContext._typed_function</code></td>
 <td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a>, <a href="../refusals/#not-constructed"><code>not-constructed</code></a>, <a href="../refusals/#syntax"><code>syntax</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_1_a_derived_parameter_calls_min_and_max_and_is_defined_by_cases</code></td>
+<td><code>packages/bellman/tests/test_derived_parameters.py</code><br><code>test_a_definition_may_call_min_max_log_and_exp_and_no_other_function</code></td>
 </tr>
 <tr>
-<td>A derived parameter's definition may be written by cases, <code>if test then a else b</code>, with or without a declared set; the conditional stands as the whole right side of the definition or as a branch of another conditional, and inside a formula, in a function's body, in a line of a block or as an endpoint of a set it is refused.</td>
+<td>A derived parameter's definition may be written by cases, <code>if test then a else b</code>, with or without a declared set. A formula by cases may also stand on the right side of an equation. The syntax refuses the form inside arithmetic, in a function's body and at a declared set endpoint.</td>
 <td><code>syntax/lower.py</code>: <code>ToAst.conditional</code>, <code>ToAst.declared_value</code><br><code>typing/declarations.py</code>: <code>derived_parameter_body</code>, <code>derived_parameter_declaration</code></td>
 <td><code>syntax/parse.py</code>: <code>syntax_refusal</code><br><code>typing/declarations.py</code>: <code>derived_parameter_fault</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_conditional_stands_as_the_whole_right_side_of_a_definition_and_nowhere_else</code></td>
+<td><code>packages/bellman/tests/test_derived_parameters.py</code><br><code>test_a_conditional_out_of_its_place_is_refused_with_the_advice_on_where_it_stands</code></td>
 </tr>
 <tr>
 <td>The words <code>if</code>, <code>then</code> and <code>else</code> are no names, and a file that writes one of them as a name, in a declaration, a definition, a binder, a block header or a formula, is refused.</td>
 <td><code>syntax/lower.py</code>: <code>ToAst.name</code></td>
 <td><code>syntax/lower.py</code>: <code>ToAst.name</code><br><code>syntax/parse.py</code>: <code>syntax_refusal</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_the_three_words_of_a_definition_by_cases_are_no_names</code></td>
+<td><code>packages/bellman/tests/test_derived_parameters.py</code><br><code>test_if_then_or_else_written_as_a_name_is_refused_at_the_word</code></td>
 </tr>
 <tr>
 <td>In a derived parameter's definition <code>log</code>, <code>exp</code>, <code>min</code> and <code>max</code> are the functions of the language, and a definition that calls one of them where the stage defines a function of that name is refused.</td>
 <td>—</td>
 <td><code>typing/declarations.py</code>: <code>derived_parameter_fault</code>, <code>Declarations.check_derived_parameters</code></td>
 <td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_derived_parameter_is_refused_at_its_definition[a call of min where the stage defines min]</code></td>
+<td><code>packages/bellman/tests/test_derived_parameters.py</code><br><code>test_a_derived_parameter_is_refused_at_its_definition[a call of min where the stage defines min]</code></td>
 </tr>
 <tr>
 <td>The test of a definition by cases reads what a branch reads, parameters, derived parameters and finite numbers: a set, a field or a function there is refused, and so is a label of a finite set, as it is in arithmetic.</td>
 <td><code>typing/context.py</code>: <code>TypingContext._typed_expression</code></td>
 <td><code>typing/context.py</code>: <code>TypingContext._numeric_arguments</code><br><code>typing/declarations.py</code>: <code>derived_parameter_fault</code></td>
 <td><a href="../refusals/#well-typed"><code>well-typed</code></a>, <a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_in_arithmetic</code></td>
+<td><code>packages/bellman/tests/test_derived_parameters.py</code><br><code>test_a_label_in_the_test_of_a_definition_by_cases_is_refused_as_it_is_in_arithmetic</code></td>
 </tr>
 <tr>
 <td>A derived parameter's value is its definition evaluated at the calibration, which for a definition by cases is the branch that its test chooses, the other branch not evaluated, and a branch written <code>inf</code> or <code>-inf</code> gives that infinity; a definition that reads a name valued at an infinity where it is evaluated, in a formula, a call or a test, as the branch that its test chooses or as its whole right side, has no value, and the calibration is refused at that definition.</td>
 <td><code>fold/derived_parameters.py</code>: <code>derived_value</code>, <code>_conditional</code></td>
 <td><code>fold/derived_parameters.py</code>: <code>derived_values</code></td>
 <td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_2_the_value_is_the_branch_the_test_chooses</code></td>
+<td><code>packages/bellman/tests/test_derived_parameter_values.py</code><br><code>test_calibration_computes_human_wealth_from_its_definition_and_keeps_no_value_of_it</code></td>
 </tr>
 <tr>
 <td>A branch written <code>inf</code> or <code>-inf</code> is admitted only in a definition whose declared set can hold that infinity, as the form of the set decides, and the set ℝ of a definition that declares none holds neither; calibration holds the value, finite or infinite, to the declared set.</td>
 <td><code>typing/declarations.py</code>: <code>infinities_written</code><br><code>syntax/source.py</code>: <code>may_hold_infinity</code></td>
 <td><code>typing/declarations.py</code>: <code>infinite_branch_fault</code>, <code>Declarations.check_derived_parameters</code><br><code>fold/derived_parameters.py</code>: <code>derived_order</code><br><code>stage/calibration_requirements.py</code>: <code>calibration_requirements</code></td>
 <td><a href="../refusals/#derived-parameter"><code>derived-parameter</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_3_an_infinite_branch_needs_a_declared_set_that_holds_it</code></td>
+<td><code>packages/bellman/tests/test_derived_parameters.py</code><br><code>test_an_infinite_branch_is_admitted_only_where_its_declared_set_can_hold_it</code></td>
 </tr>
 <tr>
 <td>An endpoint of an interval, or a side of a condition of a set, that is the bare name of a parameter or of a derived parameter valued at an infinity is read as that infinity.</td>
 <td><code>stage/calibration_requirements.py</code>: <code>_infinite_value</code>, <code>_endpoint_at</code>, <code>_side_at</code>, <code>_infinity_in</code></td>
 <td><code>stage/calibration_requirements.py</code>: <code>membership</code>, <code>predicate_value</code></td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_4_one_reading_of_an_infinite_value</code></td>
+<td><code>packages/bellman/tests/test_derived_parameter_values.py</code><br><code>test_an_endpoint_that_is_the_bare_name_of_a_parameter_reads_as_its_value_finite_or_infinite</code></td>
 </tr>
 <tr>
 <td>A bound of a declared set may call <code>log</code>, <code>exp</code>, <code>min</code> and <code>max</code>, which calibration evaluates as in a derived parameter's definition, and a bound that computes with a name valued at an infinity, or with the written <code>inf</code>, has no value and refuses the calibration; a bound that calls another function is not decided, whatever it computes with.</td>
 <td><code>stage/calibration_requirements.py</code>: <code>_bound_at</code></td>
 <td><code>stage/calibration_requirements.py</code>: <code>judged</code></td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_amd_gram_006.py</code><br><code>test_item_4_one_reading_of_an_infinite_value</code></td>
+<td><code>packages/bellman/tests/test_derived_parameter_values.py</code><br><code>test_a_bound_that_calls_min_is_decided_at_calibration</code></td>
 </tr>
 <tr>
 <td>An interval of numbers holds at least one number.</td>
 <td><code>typing/sets.py</code>: <code>literal_faults</code></td>
 <td><code>typing/context.py</code>: <code>_refuse_literal_faults</code></td>
 <td><a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_5_the_corrections_hold</code></td>
+<td><code>packages/bellman/tests/test_declared_sets.py</code><br><code>test_an_interval_of_numbers_that_holds_no_number_is_refused_and_one_of_one_number_is_read</code></td>
 </tr>
 <tr>
 <td>A difference of sets holds at least one number: one whose left side lies within its right side, <code>(0,1) \ ℝ₊</code>, is refused where the package's rules of inclusion decide it, and a difference inside a union is not judged.</td>
 <td><code>typing/sets.py</code>: <code>literal_faults</code>, <code>within</code></td>
 <td><code>typing/context.py</code>: <code>_refuse_literal_faults</code></td>
 <td><a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_amd_gram_005.py</code><br><code>test_item_5_the_corrections_hold</code></td>
+<td><code>packages/bellman/tests/test_declared_sets.py</code><br><code>test_a_difference_is_refused_as_empty_only_where_its_left_side_lies_within_its_right</code></td>
 </tr>
 </tbody>
 </table>
@@ -8691,7 +8721,7 @@
 <td>—</td>
 <td><code>syntax/lower.py</code>: <code>parse_with_spans</code><br><code>typing/declarations.py</code>: <code>Declarations.check_block_id</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a>, <a href="../refusals/#declared-once"><code>declared-once</code></a></td>
-<td><code>packages/bellman/tests/sym/test_stage_source_spans.py</code><br><code>test_addresses_follow_authored_identifiers_and_item_positions</code></td>
+<td><code>packages/bellman/tests/test_terms.py</code><br><code>test_addresses_follow_authored_identifiers_and_item_positions</code></td>
 </tr>
 <tr>
 <td>The perch word after a side places the coordinates that the side lists, and a mark <code>[&lt;]</code> or <code>[&gt;]</code> on a listing agrees with it.</td>
@@ -8712,14 +8742,14 @@
 <td><code>typing/declarations.py</code>: <code>Declarations.shock_perch</code>, <code>Declarations.note_shock</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.shock_perch</code></td>
 <td><a href="../refusals/#field-perch"><code>field-perch</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_kernel_line_names_the_edge_that_draws_the_shocks</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_the_printed_kernel_of_an_expectation_names_the_edge_that_draws_its_shocks</code></td>
 </tr>
 <tr>
 <td>A control stands at the decision perch wherever a header lists it.</td>
 <td><code>typing/declarations.py</code>: <code>Declarations.control_perch</code>, <code>Declarations.perches_of_side</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.control_perch</code></td>
 <td><a href="../refusals/#field-perch"><code>field-perch</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_control_listed_at_a_perch_that_is_neither_the_decision_perch_nor_its_side_s_is_refused</code></td>
+<td><code>packages/bellman/tests/test_parsing.py</code><br><code>test_a_control_listed_at_the_arrival_perch_on_the_continuation_side_is_refused</code></td>
 </tr>
 <tr>
 <td>A derivative line states the derivative of the value that its block writes, once for each derivative term, and adds no field and no output.</td>
@@ -8748,14 +8778,14 @@
 <td><code>typing/line_unknowns.py</code>: <code>annotation_entries</code>, <code>statement_id</code></td>
 <td><code>syntax/lower.py</code>: <code>parse_with_spans</code><br><code>typing/declarations.py</code>: <code>Declarations.check_line_id</code><br><code>typing/line_unknowns.py</code>: <code>annotation_entries</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a>, <a href="../refusals/#declared-once"><code>declared-once</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_form_the_lowering_reads_no_term_from_is_refused_where_it_is_written[two lines under one id]</code></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_form_the_parser_reads_but_the_language_does_not_is_refused_where_it_is_written[two lines under one id]</code></td>
 </tr>
 <tr>
 <td>A statement marked <code>!doc</code> defines no equation of its block, and the binder of a documentary maximization declares the feasible set of its control.</td>
 <td><code>stage/construction.py</code>: <code>_line_role</code><br><code>fold/block_lines.py</code>: <code>doc_lines</code><br><code>stage/carriers.py</code>: <code>_maximisations</code><br><code>fold/stage_fold.py</code>: <code>_selected_controls</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_the_doc_line_forms_no_piece_and_is_held_on_the_builder</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_the_doc_line_of_cons_forms_no_operation_of_its_policy_builder</code></td>
 </tr>
 <tr>
 <td>A statement marked <code>!node</code> is an authored node, which carries an id and forms an operator of its own.</td>
@@ -8769,21 +8799,21 @@
 <td><code>typing/category_codes.py</code>: <code>reserved_entries</code></td>
 <td><code>fold/stage_fold.py</code>: <code>_misplaced_marker</code></td>
 <td><a href="../refusals/#category-codes"><code>category-codes</code></a></td>
-<td><code>packages/bellman/tests/test_category_codes.py</code><br><code>test_item_2_category_codes_refuses_each_invalid_form_and_unmarked_sets_keep_their_meaning</code></td>
+<td><code>packages/bellman/tests/test_category_codes.py</code><br><code>test_the_marker_of_categories_is_refused_on_a_field_declaration_a_function_a_line_or_a_header</code></td>
 </tr>
 <tr>
 <td>A clause after <code>⟂</code> carries one bound, written with the bounded quantity first, or, after an equation, two bounds in ascending order.</td>
 <td><code>typing/declarations.py</code>: <code>Declarations.clause_reads</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.clause_reads</code></td>
 <td><a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_refused_under_its_rule</code></td>
+<td><code>packages/bellman/tests/test_constraints.py</code><br><code>test_a_malformed_multiplier_declaration_or_clause_is_refused_under_its_rule</code></td>
 </tr>
 <tr>
 <td>A multiplier is declared in the body of a block, once, by a name marked <code>[&gt;]</code>, one set and a clause with one bound.</td>
 <td><code>typing/declarations.py</code>: <code>Declarations.read_multiplier</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.read_multiplier</code></td>
 <td><a href="../refusals/#multiplier-declaration"><code>multiplier-declaration</code></a>, <a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_malformed_declaration_of_a_multiplier_or_clause_of_a_line_is_refused_under_its_rule</code></td>
+<td><code>packages/bellman/tests/test_constraints.py</code><br><code>test_a_malformed_multiplier_declaration_or_clause_is_refused_under_its_rule</code></td>
 </tr>
 </tbody>
 </table>
@@ -8812,7 +8842,7 @@
 <td><code>stage/construction.py</code>: <code>_field_sorts</code><br><code>typing/sets.py</code>: <code>meet</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_fields_carry_the_meet_of_the_sets_a_field_is_declared_with</code></td>
+<td><code>packages/bellman/tests/test_declared_sets.py</code><br><code>test_a_field_carries_the_intersection_of_the_sets_of_its_listings</code></td>
 </tr>
 <tr>
 <td>The set on which a block writes a field lies in the set on which each other block reads it.</td>
@@ -8862,14 +8892,14 @@
 <td><code>fold/policy.py</code>: <code>_chosen</code>, <code>_substitute_arguments</code></td>
 <td><code>fold/policy.py</code>: <code>_chosen</code><br><code>typing/context.py</code>: <code>TypingContext._typed_line</code></td>
 <td><a href="../refusals/#not-constructed"><code>not-constructed</code></a>, <a href="../refusals/#well-typed"><code>well-typed</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_joint_control_spellings_preserve_the_objective_and_order</code></td>
+<td><code>packages/bellman/tests/test_joint_choices.py</code><br><code>test_a_subscript_in_another_order_than_the_left_side_is_refused</code></td>
 </tr>
 <tr>
 <td>A subscript binds each name once, and a name under nested operators is bound by the innermost.</td>
 <td><code>typing/context.py</code>: <code>TypingContext._subscript</code>, <code>TypingContext._input_named</code></td>
 <td><code>typing/context.py</code>: <code>TypingContext._subscript</code></td>
 <td><a href="../refusals/#declared-once"><code>declared-once</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_fault_the_typing_walk_finds_is_refused_where_it_is_found[a binder named twice]</code></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_fault_found_when_a_line_is_typed_is_refused_at_the_line_under_its_rule[a binder named twice]</code></td>
 </tr>
 <tr>
 <td>A derivative <code>D_{c}(𝑢)</code> of a function names one of its formal arguments, a scalar one.</td>
@@ -8883,7 +8913,7 @@
 <td><code>typing/typed_expressions.py</code>: <code>substitute</code>, <code>renamed_bound</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_continuous_distributions.py</code><br><code>test_item_5_existing_families_mixtures_factorization_and_unknown_providers_keep_their_meaning</code></td>
+<td><code>packages/bellman/tests/test_shock_distributions.py</code><br><code>test_a_bound_variable_of_a_definition_is_primed_where_an_argument_reads_its_name</code></td>
 </tr>
 </tbody>
 </table>
@@ -8906,7 +8936,7 @@
 <td><code>fold/block_lines.py</code>: <code>block_direction</code><br><code>typing/declarations.py</code>: <code>Declarations.block_is_backward</code>, <code>Declarations.backward_perches</code><br><code>stage/builder_pairs.py</code>: <code>builder_pairs</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/cat/test_builder_pairs.py</code><br><code>test_a_builder_is_read_by_the_perches_it_joins_whatever_its_block_id</code></td>
+<td><code>packages/bellman/tests/test_builders.py</code><br><code>test_a_builder_is_read_by_the_pair_that_its_header_joins_whatever_its_block_id</code></td>
 </tr>
 <tr>
 <td>A line of a backward value block acts on a value input that its header lists.</td>
@@ -8969,7 +8999,7 @@
 <td><code>fold/backward.py</code>: <code>perch_domain</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_multipliers_unlisted</code></td>
 <td><a href="../refusals/#multiplier-declaration"><code>multiplier-declaration</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_multiplier_is_a_coordinate_of_its_block_alone_and_no_wire</code></td>
+<td><code>packages/bellman/tests/test_constraints.py</code><br><code>test_a_declared_multiplier_is_no_wire_of_the_policy_builder</code></td>
 </tr>
 </tbody>
 </table>
@@ -8991,21 +9021,21 @@
 <td><code>stage/construction.py</code>: <code>_output_equations</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_names_in_scope</code><br><code>stage/construction.py</code>: <code>_refuse_circular_outputs</code></td>
 <td><a href="../refusals/#name-in-scope"><code>name-in-scope</code></a>, <a href="../refusals/#output-defined"><code>output-defined</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_sequential_transition_outputs_and_target_states_compile</code></td>
+<td><code>packages/bellman/tests/test_kernels.py</code><br><code>test_a_law_whose_second_output_reads_the_first_compiles_to_both_outputs_in_order</code></td>
 </tr>
 <tr>
 <td>An alias, or a line marked <code>!node</code>, is read through its defining expression, with the shocks and the controls on which that expression depends.</td>
 <td><code>typing/line_unknowns.py</code>: <code>free_names_with_shocks</code>, <code>mentions_after_aliases</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_forward_reading</code></td>
 <td><a href="../refusals/#shock-observed"><code>shock-observed</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_policy_expectations_in_aliases_keep_their_integrand_and_are_shared_by_reference</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_an_expectation_in_an_alias_is_a_piece_of_its_own_reading_the_aggregation_of_its_integrand</code></td>
 </tr>
 <tr>
 <td>An explicit statement is solved for a name that occurs in it once and affinely, with a coefficient that is not zero on the declared sets.</td>
 <td><code>typing/ranges.py</code>: <code>solved_for</code>, <code>law_solved_for</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_grid_line_is_compared_with_the_law_of_motion_solved_for_its_decision_state</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_a_grid_line_is_accepted_only_where_the_solved_law_of_motion_gives_it[refused-an-identity-of-declared-functions]</code></td>
 </tr>
 </tbody>
 </table>
@@ -9027,21 +9057,21 @@
 <td><code>typing/declarations.py</code>: <code>Declarations.read_side</code><br><code>fold/stage_fold.py</code>: <code>law_of_motion_equations</code><br><code>stage/defining_expressions.py</code>: <code>law_outputs_rule</code></td>
 <td><code>stage/construction.py</code>: <code>_check_block_outputs</code></td>
 <td><a href="../refusals/#output-defined"><code>output-defined</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_sequential_transition_outputs_and_target_states_compile</code></td>
+<td><code>packages/bellman/tests/test_kernels.py</code><br><code>test_a_law_whose_second_output_reads_the_first_compiles_to_both_outputs_in_order</code></td>
 </tr>
 <tr>
 <td>A tuple left side names the outputs that one <code>argmax</code> or one <code>solve</code> determines together.</td>
 <td><code>typing/line_unknowns.py</code>: <code>outputs_and_unknowns</code></td>
 <td><code>typing/line_unknowns.py</code>: <code>outputs_and_unknowns</code></td>
 <td><a href="../refusals/#not-constructed"><code>not-constructed</code></a>, <a href="../refusals/#declared-once"><code>declared-once</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_joint_control_spellings_preserve_the_objective_and_order</code></td>
+<td><code>packages/bellman/tests/test_joint_choices.py</code><br><code>test_a_joint_choice_writes_its_outputs_in_the_order_of_its_left_side</code></td>
 </tr>
 <tr>
 <td>A tuple of names typed on a product declares one field for each factor, and a name typed on a product is one field whose coordinates a selection reads.</td>
 <td><code>typing/line_unknowns.py</code>: <code>group_coordinates</code><br><code>typing/context.py</code>: <code>TypingContext._selected_type</code></td>
 <td><code>typing/line_unknowns.py</code>: <code>group_coordinates</code></td>
 <td><a href="../refusals/#readable-form"><code>readable-form</code></a></td>
-<td><code>packages/bellman/tests/test_finite_indexed_data.py</code><br><code>test_item_5_labels_and_positions_keep_their_meaning_and_a_fractional_position_is_refused</code></td>
+<td><code>packages/bellman/tests/test_kernels_on_index_sets.py</code><br><code>test_a_position_selects_a_factor_of_a_product_and_a_fractional_position_is_refused</code></td>
 </tr>
 <tr>
 <td>A selection takes a member of a family by a position within the family or by a key of a finite set with as many members.</td>
@@ -9099,14 +9129,14 @@
 <td><code>stage/carriers.py</code>: <code>_wire_type</code>, <code>coordinate_domain</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_backward_value_builder_reads_a_decision_state_as_a_coordinate_of_its_kernel</code></td>
+<td><code>packages/bellman/tests/test_kernels.py</code><br><code>test_a_backward_aggregation_reads_a_state_of_its_output_perch_as_an_argument_of_its_kernel</code></td>
 </tr>
 <tr>
 <td>A value line composes each value input with the law of motion of the edge across which it is read, and its kernel keeps the control as an argument.</td>
 <td><code>fold/backward.py</code>: <code>backward_block</code>, <code>pullback_wire</code>, <code>aggregation_row</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.block_between</code></td>
 <td><a href="../refusals/#forward-composite"><code>forward-composite</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_policy_objective_retains_transition_integrand_and_control</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_a_policy_kernel_of_a_portfolio_choice_reads_the_share_and_gives_its_value_at_a_point</code></td>
 </tr>
 <tr>
 <td>A decision state read at the continuation perch is supplied by a coordinate line, <code>m_d[&gt;] = a + c[&gt;]</code>, and no other field of an earlier perch is read at a later one.</td>
@@ -9120,7 +9150,7 @@
 <td><code>fold/backward.py</code>: <code>expectation_rows</code>, <code>pullback_wire</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_shock_stays_active_through_a_sibling_input_a_constant_is_extended_and_every_path_is_integrated</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_a_shock_stays_an_argument_through_a_sibling_input_until_an_expectation_integrates_it</code></td>
 </tr>
 </tbody>
 </table>
@@ -9142,7 +9172,7 @@
 <td><code>fold/conditions.py</code>: <code>domain_conditions</code>, <code>_call_conditions</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_named_function_conditions_are_recorded_once_on_the_function</code></td>
+<td><code>packages/bellman/tests/test_field_equations.py</code><br><code>test_the_conditions_of_a_function_body_stand_once_on_the_definition_that_carries_the_body</code></td>
 </tr>
 <tr>
 <td>A divisor written as a number is not zero, and a division that the declared sets do not decide is recorded as a condition.</td>
@@ -9156,7 +9186,7 @@
 <td><code>stage/stage_answers.py</code>: <code>obligations</code>, <code>_symbolic_obligations</code></td>
 <td><code>stage/binding_verbs.py</code>: <code>calibrated_obligations</code></td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_calibration_reports_evidence_and_preserves_pending_conditions</code></td>
+<td><code>packages/bellman/tests/test_calibration_judgment_and_conditions.py</code><br><code>test_calibration_establishes_the_condition_of_the_utility_with_the_value_as_evidence</code></td>
 </tr>
 </tbody>
 </table>
@@ -9178,7 +9208,7 @@
 <td><code>fold/backward.py</code>: <code>aggregation_row</code><br><code>fold/policy.py</code>: <code>fold_policy_block</code><br><code>fold/stage_fold.py</code>: <code>block_rows_of</code><br><code>fold/value_bundles.py</code>: <code>primitive_grain_rows</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/cat/test_policy_kinds.py</code><br><code>test_item_1_no_output_of_a_core_application_names_a_retired_kind_and_each_operative_argmax_line_forms_an_argmax_row</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_the_argmax_operations_of_a_stage_are_its_argmax_lines_not_marked_doc</code></td>
 </tr>
 <tr>
 <td>Arithmetic and calls act pointwise on values of the kinds they take, and a function is applied to as many arguments as it declares.</td>
@@ -9192,14 +9222,14 @@
 <td><code>typing/declarations.py</code>: <code>Declarations.defines_a_function</code><br><code>typing/primitive_definitions.py</code>: <code>_derivative</code>, <code>_inverse</code><br><code>fold/conditions.py</code>: <code>_call_conditions</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_definition_operator</code><br><code>typing/context.py</code>: <code>TypingContext._typed_call</code></td>
 <td><a href="../refusals/#definition-order"><code>definition-order</code></a>, <a href="../refusals/#well-typed"><code>well-typed</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_fault_the_typing_walk_finds_is_refused_where_it_is_found[Inv of a number]</code></td>
+<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_fault_found_when_a_line_is_typed_is_refused_at_the_line_under_its_rule[Inv of a number]</code></td>
 </tr>
 <tr>
 <td>An expectation integrates shocks drawn on the edge of its block, under the conditional law that it selects from the joint law of that edge: a declared conditional, a product of declared conditionals, or a marginal or a conditional of a joint normal law.</td>
 <td><code>fold/backward.py</code>: <code>expectation_rows</code>, <code>_selected_conditional</code><br><code>distributions/conditionals.py</code>: <code>conditioning_shocks</code></td>
 <td><code>distributions/conditionals.py</code>: <code>select_conditional</code>, <code>check_conditioning_covariance</code></td>
 <td><a href="../refusals/#conditional-not-declared"><code>conditional-not-declared</code></a>, <a href="../refusals/#distribution-edge"><code>distribution-edge</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_the_reversed_order_of_the_expectations_is_refused_naming_the_undeclared_conditional</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_the_reversed_order_of_the_expectations_is_refused_naming_the_undeclared_conditional</code></td>
 </tr>
 <tr>
 <td>A line does not read a shock again beside a term whose expectation has integrated it.</td>
@@ -9213,42 +9243,49 @@
 <td>—</td>
 <td><code>fold/backward.py</code>: <code>check_output_shocks</code></td>
 <td><a href="../refusals/#shock-observed"><code>shock-observed</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_shock_stays_active_through_a_sibling_input_a_constant_is_extended_and_every_path_is_integrated</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_a_term_whose_path_integrates_some_shocks_may_read_a_constant_but_not_a_shock</code></td>
 </tr>
 <tr>
 <td>A maximization on a line not marked <code>!doc</code> forms an <code>Argmax</code> operation whose output is the set of maximizing policies, and the closing <code>Evaluation</code> selects no member of it.</td>
 <td><code>fold/policy.py</code>: <code>_output_rows</code>, <code>_objective</code>, <code>_policy_evaluation</code><br><code>typing/primitive_definitions.py</code>: <code>_argmax</code></td>
 <td><code>fold/policy.py</code>: <code>_chosen</code></td>
 <td><a href="../refusals/#not-constructed"><code>not-constructed</code></a></td>
-<td><code>packages/bellman/tests/cat/test_policy_kinds.py</code><br><code>test_item_2_cons_argmax_prints_its_property_under_the_argmax_row_as_no_row_no_address_and_no_method_place</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_the_policy_builder_of_a_maximization_with_a_property_lists_four_operations</code></td>
 </tr>
 <tr>
 <td>A feasibility correspondence is a product of sets or a product restricted by conditions, and a call <code>Γ(x)</code> puts <code>x</code> for its formal argument.</td>
 <td><code>stage/defining_expressions.py</code>: <code>definition_expression</code><br><code>stage/carriers.py</code>: <code>choice_sets</code>, <code>_feasible_domain</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_simple_set_expressions.py</code><br><code>test_item_2_joint_feasibility_retains_all_coordinates_and_conditions</code></td>
+<td><code>packages/bellman/tests/test_constraints.py</code><br><code>test_the_maximization_of_a_joint_choice_binds_the_correspondence_at_its_state</code></td>
 </tr>
 <tr>
 <td><code>solve_{c}(r_1, …, r_k)</code> forms one <code>Aggregation</code> operation whose rule holds the residuals and whose unknowns are the outputs of its line.</td>
 <td><code>fold/policy.py</code>: <code>_output_rows</code>, <code>_relation_row</code></td>
 <td><code>fold/policy.py</code>: <code>_chosen</code></td>
 <td><a href="../refusals/#not-constructed"><code>not-constructed</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_law_with_several_outputs_names_them_and_a_joint_solve_is_headed_by_its_unknowns</code></td>
+<td><code>packages/bellman/tests/test_field_equations.py</code><br><code>test_a_joint_solve_is_one_aggregation_headed_by_its_unknowns_after_its_residual_lines</code></td>
 </tr>
 <tr>
 <td>An authored <code>evaluate(knots, values, x)</code> reads a table, which a representation typed at its place makes a function between the knots.</td>
 <td><code>typing/context.py</code>: <code>TypingContext._typed_call</code><br><code>stage/representations.py</code>: <code>_holds_authored_table</code>, <code>_node_table</code></td>
 <td><code>stage/representation_checks.py</code>: <code>check_sources</code></td>
 <td><a href="../refusals/#representation-source"><code>representation-source</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_node_reads_an_authored_table_as_its_data_only_where_the_table_is_its_function</code></td>
+<td><code>packages/bellman/tests/test_representations.py</code><br><code>test_only_the_places_of_a_node_that_a_table_alone_defines_read_the_table_as_their_data</code></td>
 </tr>
 <tr>
 <td>A method is typed at a block, at a line marked <code>!node</code> or at an occurrence of an operation, and changes neither the graph nor what the block denotes.</td>
 <td><code>stage/places.py</code>: <code>inventory</code><br><code>fold/backward.py</code>: <code>sub_builder_rows</code></td>
 <td><code>stage/places.py</code>: <code>_check_admission</code></td>
 <td><a href="../refusals/#method-admission"><code>method-admission</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_method_choices_leave_graphs_types_and_equations_unchanged</code></td>
+<td><code>packages/bellman/tests/test_two_levels_and_several_methods_files.py</code><br><code>test_a_method_choice_leaves_the_graphs_of_the_stage_unchanged</code></td>
+</tr>
+<tr>
+<td>The policy card prints the set that a binder names in the statement of the maximization, also where the binder names a named set.</td>
+<td><code>stage/defining_expressions.py</code>: <code>_resolved_declared_operator</code>, <code>_resolved_symbol</code></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
 </tr>
 </tbody>
 </table>
@@ -9270,7 +9307,7 @@
 <td><code>fold/backward.py</code>: <code>backward_block</code>, <code>_policies</code><br><code>stage/denotations.py</code>: <code>_policy_denoted</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_the_law_at_the_policy_is_written_out_and_the_builder_is_at_the_policy</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_the_decision_builder_is_at_the_policy</code></td>
 </tr>
 <tr>
 <td>A candidate line of a policy block writes, under the continuation mark, a control or a state of the decision perch, and a later line of the block reads each candidate.</td>
@@ -9291,14 +9328,14 @@
 <td><code>fold/backward.py</code>: <code>stated_derivatives</code><br><code>stage/levels.py</code>: <code>operative_level</code><br><code>stage/stage_answers.py</code>: <code>_symbolic_obligations</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_amd_mb_001.py</code><br><code>test_item_1a_the_oracle_stage_file_elaborates_with_values_alone_and_the_policy_reads_the_value</code></td>
+<td><code>packages/bellman/tests/test_backward_blocks.py</code><br><code>test_the_evaluation_of_a_builder_records_its_derivative_line_as_a_stated_derivative</code></td>
 </tr>
 <tr>
 <td>The lines of a solution method typed on the policy builder are the rows of the operative builder, the declared builder keeps the maximization, and the endogenous grid method records the condition <code>egm-eligibility</code>.</td>
 <td><code>stage/levels.py</code>: <code>operative_level</code>, <code>construct</code>, <code>declared_version</code></td>
 <td><code>stage/levels.py</code>: <code>_refuse_formula_only</code></td>
 <td><a href="../refusals/#explicit-solution"><code>explicit-solution</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_quadrature_adds_no_condition_and_a_solution_method_adds_its_own</code></td>
+<td><code>packages/bellman/tests/test_two_levels_and_several_methods_files.py</code><br><code>test_egm_on_the_policy_builder_adds_the_condition_egm_eligibility_and_no_other</code></td>
 </tr>
 </tbody>
 </table>
@@ -9320,14 +9357,14 @@
 <td><code>fold/stage_fold.py</code>: <code>block_rows_of</code>, <code>_forward_edges</code><br><code>stage/denotations.py</code>: <code>_policy_denoted</code><br><code>graphs/builders_graphs.py</code>: <code>_forward_inputs_outputs</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_forward_measure_expressions_reference_the_supplied_policy</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_the_forward_push_forward_reads_the_policy_and_the_law_of_motion_by_identity</code></td>
 </tr>
 <tr>
 <td>Each edge extends the measure by the law of each shock drawn on it, a parent before its children, and pushes it forward through the law of motion to the joint law of the output coordinates.</td>
 <td><code>distributions/edges.py</code>: <code>joint_distribution</code>, <code>dependency_order</code><br><code>fold/block_lines.py</code>: <code>shock_edges</code><br><code>fold/stage_fold.py</code>: <code>block_rows_of</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_a_kernel_line_names_the_edge_that_draws_the_shocks</code></td>
+<td><code>packages/bellman/tests/test_shock_expectations.py</code><br><code>test_the_printed_kernel_of_an_expectation_names_the_edge_that_draws_its_shocks</code></td>
 </tr>
 <tr>
 <td>Each shock is drawn on the edge of one forward builder, and law statements that read one another are drawn on one edge.</td>
@@ -9341,7 +9378,7 @@
 <td><code>distributions/edges.py</code>: <code>distribution_declarations</code><br><code>fold/stage_fold.py</code>: <code>_forward_edges</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_forward_reading</code></td>
 <td><a href="../refusals/#forward-composite"><code>forward-composite</code></a>, <a href="../refusals/#shock-observed"><code>shock-observed</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_decision_and_conditional_kernels_reference_the_supplied_policy_function</code></td>
+<td><code>packages/bellman/tests/test_kernels.py</code><br><code>test_the_forward_extension_by_a_law_of_the_control_reads_the_control_through_the_policy</code></td>
 </tr>
 <tr>
 <td>A branching block writes one measure for each label, routed by the policy or by the drawn label, and the law of a label shock gives one probability to each label.</td>
@@ -9377,35 +9414,35 @@
 <td><code>typing/line_unknowns.py</code>: <code>candidates_of_statement</code>, <code>systems_by_shared_candidate</code><br><code>fold/policy.py</code>: <code>candidate_systems</code><br><code>stage/construction.py</code>: <code>_system_solves</code></td>
 <td><code>fold/policy.py</code>: <code>_check_system</code></td>
 <td><a href="../refusals/#not-constructed"><code>not-constructed</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_system_with_fewer_statements_than_unknowns_is_refused</code></td>
+<td><code>packages/bellman/tests/test_policy.py</code><br><code>test_a_system_with_fewer_statements_than_unknowns_is_refused</code></td>
 </tr>
 <tr>
 <td>A candidate statement with no candidate, and an inequality whose left side is no name, are retained as relations that no operation realizes.</td>
 <td><code>fold/policy.py</code>: <code>_forms_no_row</code><br><code>fold/wire_terms.py</code>: <code>names_no_field</code><br><code>fold/backward.py</code>: <code>retained_relations</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_relations_types_and_definitions_keep_non_snapshot_semantics</code></td>
+<td><code>packages/bellman/tests/test_graphs_and_grains.py</code><br><code>test_a_relation_that_no_operator_realizes_is_retained_with_an_obligation_on_its_line</code></td>
 </tr>
 <tr>
 <td>A system forms one <code>Aggregation</code> operation of the policy builder, whose rule reads each statement at the decision state, with each continuation value on its right side composed with the law of motion at the policy.</td>
 <td><code>fold/policy.py</code>: <code>_output_rows</code>, <code>_relation_row</code>, <code>_residual_inputs</code>, <code>_value_wires</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/cat/test_candidate_clause.py</code><br><code>test_item_1_the_policy_card_of_cons_prints_as_drawn_and_the_identification_answers_the_relation_over_the_admitted_pairs</code></td>
+<td><code>packages/bellman/tests/test_constraints.py</code><br><code>test_a_first_order_condition_with_its_clause_forms_one_aggregation_read_at_the_point</code></td>
 </tr>
 <tr>
 <td>A clause pairs the residual of its line with the slack of its bound: the residual is zero where the bound is slack, nonnegative where a lower bound binds and nonpositive where an upper bound binds.</td>
 <td><code>stage/term_operations.py</code>: <code>kuhn_tucker</code>, <code>slack</code>, <code>residual</code><br><code>typing/ranges.py</code>: <code>clause_regions</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_kuhn_tucker_states_the_sign_table_of_each_bound</code></td>
+<td><code>packages/bellman/tests/test_constraints.py</code><br><code>test_kuhn_tucker_pairs_the_residual_with_the_slack_of_each_kind_of_bound</code></td>
 </tr>
 <tr>
 <td>The identification <code>c = c[&gt;]</code> states, at the continuation perch, that the policy at the value of the coordinate line equals the candidate, over the pairs that the candidate line admits.</td>
 <td><code>fold/policy.py</code>: <code>_output_rows</code><br><code>stage/defining_expressions.py</code>: <code>_identification_wires</code>, <code>_admitted_values</code>, <code>_grid_rules</code></td>
 <td>—</td>
 <td>—</td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_inverse_euler_lines_form_one_policy_kernel_on_the_saving_grid_and_the_identification_remains_a_relation</code></td>
+<td><code>packages/bellman/tests/test_kernels.py</code><br><code>test_compile_kernel_refuses_the_identification_of_the_policy_block_as_a_relation</code></td>
 </tr>
 <tr>
 <td>The coordinate line agrees with the law of motion solved for the decision coordinate at the candidates.</td>
@@ -9420,6 +9457,13 @@
 <td><code>typing/declarations.py</code>: <code>Declarations.check_bound_names</code></td>
 <td><a href="../refusals/#multiplier-declaration"><code>multiplier-declaration</code></a></td>
 <td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_the_smallest_example_breaking_a_rule_of_construction_is_refused_under_it[multiplier-declaration]</code></td>
+</tr>
+<tr>
+<td>A derivative term on a line, <code>D_{a}V[&gt;]</code> or <code>D_{w}V</code>, denotes the derivative of the value function that it names in the named coordinate, read at the point of the line: at the continuation coordinate on a candidate line, and at the image of the law of motion on a line of an earlier perch.</td>
+<td><code>stage/defining_expressions.py</code>: <code>_resolved_derivative</code></td>
+<td>—</td>
+<td>—</td>
+<td><code>packages/bellman/tests/test_life_cycle_derivative_cards.py</code><br><code>test_derivative_rules_apply_the_partial_at_the_forward_coordinates</code></td>
 </tr>
 </tbody>
 </table>
@@ -9448,7 +9492,7 @@
 <td><code>fold/backward.py</code>: <code>expectation_rows</code>, <code>reduced_term</code></td>
 <td><code>typing/line_unknowns.py</code>: <code>_references</code></td>
 <td><a href="../refusals/#not-constructed"><code>not-constructed</code></a></td>
-<td><code>packages/bellman/tests/test_behaviour.py</code><br><code>test_compiled_kernels_with_analytic_expectation_inputs_reproduce_ce_amb_and_the_ces_value</code></td>
+<td><code>packages/bellman/tests/test_kernels.py</code><br><code>test_the_kernels_of_the_ambiguity_certainty_equivalent_give_its_closed_form</code></td>
 </tr>
 </tbody>
 </table>
@@ -9470,7 +9514,7 @@
 <td><code>typing/declarations.py</code>: <code>Declarations.read_branch</code><br><code>fold/stage_fold.py</code>: <code>_branches</code></td>
 <td><code>typing/declarations.py</code>: <code>Declarations.check_branch_form</code>, <code>Declarations.read_branch</code>, <code>Declarations.check_branches</code></td>
 <td><a href="../refusals/#branch-form"><code>branch-form</code></a>, <a href="../refusals/#branch-labels"><code>branch-labels</code></a>, <a href="../refusals/#not-constructed"><code>not-constructed</code></a></td>
-<td><code>packages/bellman/tests/test_refusals.py</code><br><code>test_a_malformed_branching_block_is_refused_under_its_rule</code></td>
+<td><code>packages/bellman/tests/test_branching.py</code><br><code>test_a_malformed_branching_block_is_refused_under_its_rule</code></td>
 </tr>
 <tr>
 <td>The value line selects by one tuple indexed by the label, the policy maximizes over the same tuple, and each continuation value stands at the position of its branch.</td>
@@ -9511,6 +9555,26 @@
 <tr>
 <td><a href="../refusals/#distribution-domain"><code>distribution-domain</code></a></td>
 <td><a href="../laws/">Shock distributions</a></td>
+</tr>
+<tr>
+<td><a href="../refusals/#constant-dependence"><code>constant-dependence</code></a></td>
+<td><a href="../../01-stage/">Stages</a></td>
+</tr>
+<tr>
+<td><a href="../refusals/#continuation-input"><code>continuation-input</code></a></td>
+<td><a href="../../API/stage/01-the-stage/">The stage</a></td>
+</tr>
+<tr>
+<td><a href="../refusals/#law-requirement"><code>law-requirement</code></a></td>
+<td><a href="../../API/stage/04-builder/">A builder</a></td>
+</tr>
+<tr>
+<td><a href="../refusals/#policy-feasibility"><code>policy-feasibility</code></a></td>
+<td><a href="../../10-constraints/">Constraints</a></td>
+</tr>
+<tr>
+<td><a href="../refusals/#policy-objective"><code>policy-objective</code></a></td>
+<td><a href="../../03-field-equations/">Field equations</a></td>
 </tr>
 <tr>
 <td><a href="../refusals/#method-admission"><code>method-admission</code></a></td>

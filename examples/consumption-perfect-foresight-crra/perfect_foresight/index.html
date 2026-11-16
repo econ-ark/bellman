@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3581,6 +3583,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8330,7 +8360,7 @@
 <h1 id="perfect-foresight-consumption-with-crra-utility">Perfect foresight consumption with CRRA utility<a class="headerlink" href="#perfect-foresight-consumption-with-crra-utility" title="Permanent link">&para;</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Source</p>
-<p>Application folder: <a href="https://github.com/econ-ark/bellman/tree/main/applications/consumption-perfect-foresight-crra"><code>applications/consumption-perfect-foresight-crra/</code></a>, which holds the model's stage file, <code>declaration/stages/perfect_foresight/perfect_foresight.bl</code>, beside it two methods files, <code>methods.bl</code>, an addition to the stage file that solves the model in closed form, and <code>methods.egm.bl</code>, which solves it by the endogenous grid method, and its calibration file, <code>declaration/calibration/perfect_foresight.yml</code>, in the layout of <a href="../../../Bellman-Sym/reference/model-directory-layout/">Model directory layout</a>. The folder's <code>economics.md</code> states the economics in full: the problem in levels and normalized by permanent income, the closed-form solution and its domain, and the conditions under which the solution exists.</p>
+<p>The <a href="https://github.com/econ-ark/bellman/tree/main/applications/consumption-perfect-foresight-crra">application folder</a> holds the stage, both methods selections, and calibration in the <a href="../../../Bellman-Sym/reference/model-directory-layout/">model directory layout</a>. Its <code>economics.md</code> gives the problem in levels and normalized units, the stationary solution, and its domain and conditions.</p>
 </div>
 <p><strong>The consumption-savings model without uncertainty, normalized by permanent income, whose consumption function is known in closed form.</strong></p>
 <p>This example presents the perfect foresight consumption model with constant relative risk aversion (CRRA) utility in its normalized form. A household knows its future income with certainty. Each period it chooses its consumption out of its market resources, saves the rest at a fixed gross return, and may borrow against the income it will receive, whose present value is its human wealth. The stage is the <a href="../../buffer-stock/buffer_stock/">buffer stock stage</a> without its two income shocks, and its notation follows that stage. Its consumption function is a fixed fraction of total wealth. The same stage file is solved in two ways, by the closed form that one methods file types and by the endogenous grid method that the other selects, and the two solutions are compared.</p>
@@ -8424,121 +8454,97 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 </code></pre></div>
 <p>A single stage per period: the arrival state <span class="arithmatex">\(k\)</span>, the saving of the previous period normalized by that period's permanent income, becomes market resources <span class="arithmatex">\(m = Rk/\Gamma + 1\)</span> with no shock; consumption <span class="arithmatex">\(c\)</span> determines the end-of-period assets <span class="arithmatex">\(a = m - c\)</span>.</p>
 <h2 id="6-stage-file">6 Stage file<a class="headerlink" href="#6-stage-file" title="Permanent link">&para;</a></h2>
-<p>The stage file, <code>declaration/stages/perfect_foresight/perfect_foresight.bl</code>, states the model: the sets of resources and savings, which are the whole real line since the household may borrow against its future income, the four parameters with their descriptions, the three derived parameters, utility and the set of feasible consumption, the two forward blocks, the two value blocks and the policy block, whose line is the maximization alone.</p>
+<p>The stage file declares resources and savings on the real line, since the household may borrow against future income. It states four parameters, the derived return patience factor, utility, and feasible consumption. Its blocks give two forward transitions, two backward value operations, and the consumption choice.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>@stage: perfect_foresight
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a># The unconstrained perfect foresight consumption model with CRRA utility,
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a># normalized by permanent income: one state, market resources m, one control,
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a># consumption c, and no shock. It is the buffer-stock stage of
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a># applications/buffer-stock/ without its two income shocks. Two declared sets
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a># state the model's two conditions: the upper bound R^(ρ-1) of the discount
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a># factor is the return impatience condition, and the upper bound R of the
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a># growth factor is the finite human wealth condition. Three derived
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a># parameters, constants the stage defines from its parameters and the
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a># calibration does not supply, state the model's quantities: the return
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a># patience factor q, which is below one exactly under the return impatience
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a># condition, human wealth h, the present value of permanent income, and the
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a># natural borrowing limit L = 1 - h. Total wealth m - L, resources less this
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a># period's income plus human wealth, is positive exactly above the limit, and
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a># the feasible set is consumption below total wealth. The consumption
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a># function is known in closed form, c = κ(m - L) with κ = 1 - q, on m &gt; L
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a># (economics.md).
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a># Perfect foresight consumption with human wealth sent backward.
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a># The decision field h includes this period's income; h[&gt;] is the present
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a># value of the next period's human wealth. The stage sends h*Γ/R backward.
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a># The last period takes in zero. Feasibility reads h[&gt;], with bound -h[&gt;].
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>Xm := ℝ
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>Xa := ℝ
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1"]
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>R : ℝ₊₊                    :: ["gross interest factor"]
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>Γ : ℝ₊₊                    :: ["permanent income growth factor"]
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q &lt; 1"]
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>Xm := ℝ
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>Xa := ℝ
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
-<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>β : ℝ₊₊ @ (0, R^(ρ-1))   :: ["discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1"]
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>ρ : (1, inf)               :: ["coefficient of relative risk aversion, greater than one"]
-<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>R : ℝ₊₊                    :: ["gross interest factor"]
-<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>Γ : (0, R)                 :: ["permanent income growth factor; its upper bound R is the finite human wealth condition"]
-<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
-<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>q : (0,1) := (β*R)^(1/ρ)/R   :: ["the return patience factor; the return impatience condition is q &lt; 1"]
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>h := 1/(1 - Γ/R)     :: ["human wealth, the present discounted value of permanent income"]
-<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>L := 1 - h           :: ["the natural borrowing limit on market resources, above which total wealth m - L is positive"]
-<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>
-<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a># q needs to be fixed as a condition. 
-<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a># 12 November 2026: the definition of q above now carries the set (0,1), which calibration holds.
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>Γ_c(x : Xm) := {c : ℝ₊₊ | c &lt; x + h[&gt;]}   :: [id=feasible_consumption]
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>[id=arvl_to_dcsn, (k : Xa) : !arvl -&gt; (m : Xm) : !dcsn] {
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>    m = R*k/Γ + 1                   :: [id=market_resources]
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>}
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -&gt; (a : Xa) : !cntn] {
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    a = m - c                       :: [id=savings]
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>}
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, h[&gt;] : ℝ₊ @ !vlu @ !cnst, c) : !cntn -&gt; (V : ℝ @ !vlu, h : ℝ₊ @ !vlu @ !cnst) : !dcsn] {
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    V = 𝑢(c) + β*V[&gt;]               :: [id=value]
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>    h = 1 + h[&gt;]                    :: [id=human_wealth]
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>}
 <a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
-<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
-<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
-<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>Γ_c(x : Xm) := {c : ℝ₊₊ | c &lt; x - L}   :: [id=feasible_consumption]
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
-<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>[id=arvl_to_dcsn, (k : Xa) : !arvl -&gt; (m : Xm) : !dcsn] {
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    m = R*k/Γ + 1                   :: [id=market_resources]
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>}
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -&gt; (a : Xa) : !cntn] {
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    a = m - c                       :: [id=savings]
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>}
-<a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
-<a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a>    V = 𝑢(c) + β*V[&gt;]               :: [id=value]
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a>}
-<a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a>[id=dcsn_to_arvl, (V) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] {
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a>    V[&lt;] = Γ^(1-ρ) * V              :: [id=value]
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a>}
-<a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
-<a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-<a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])     :: [id=optimality]
-<a id="__codelineno-1-57" name="__codelineno-1-57" href="#__codelineno-1-57"></a>}
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>[id=dcsn_to_arvl, (V, h) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu, h[&lt;] : ℝ₊ @ !vlu @ !cnst) : !arvl] {
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    V[&lt;] = Γ^(1-ρ) * V              :: [id=value]
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    h[&lt;] = h*Γ/R                    :: [id=human_wealth]
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>}
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>[id=policy, (V[&gt;] : ℝ @ !vlu, h[&gt;] : ℝ₊ @ !vlu @ !cnst) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])     :: [id=optimality]
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>}
 </code></pre></div>
 <h3 id="61-arrival-transition">6.1 Arrival transition<a class="headerlink" href="#61-arrival-transition" title="Permanent link">&para;</a></h3>
 <p>The arrival block <code>arvl_to_dcsn</code> writes <span class="arithmatex">\(m = Rk/\Gamma + 1\)</span>: the return <span class="arithmatex">\(R\)</span> on the saving <span class="arithmatex">\(k\)</span>, divided by the growth factor <span class="arithmatex">\(\Gamma\)</span> to normalize by this period's permanent income, plus this period's income, which is one. The decision block <code>dcsn_to_cntn</code> is the saving, <span class="arithmatex">\(a = m - c\)</span>. Neither line has a shock.</p>
 <h3 id="62-derived-parameters">6.2 Derived parameters<a class="headerlink" href="#62-derived-parameters" title="Permanent link">&para;</a></h3>
-<p>The lines <code>q : (0,1) := …</code>, <code>h := …</code> and <code>L := …</code> define three <strong>derived parameters</strong>, constants that the stage defines from its parameters and that the calibration does not supply: the return patience factor <span class="arithmatex">\(q\)</span>, human wealth <span class="arithmatex">\(h\)</span> and the natural borrowing limit <span class="arithmatex">\(L\)</span>. Their definitions follow the rule <a href="../../../Bellman-Sym/reference/refusals/#derived-parameter"><code>derived-parameter</code></a>, and a calibration that names one of them is refused. The definition of <span class="arithmatex">\(q\)</span> declares the set <code>(0,1)</code> in which its value lies, which is the return impatience condition, and <code>calibrate</code> refuses a calibration at which the value of <span class="arithmatex">\(q\)</span> lies outside that set (§11). <code>stage.par</code> lists them after the four declared parameters, with their definitions and, once a calibration is bound, their values (§7.3). The declared set of the growth factor, <code>Γ : (0, R)</code>, is an interval whose upper endpoint is the interest factor: the bound is the finite human wealth condition, and <code>calibrate</code> refuses a growth factor at or above the interest factor, naming the set (§11).</p>
+<p>The stage defines one derived parameter, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>. Its declared set imposes return impatience. Calibration supplies the four underlying parameters, and refuses a supplied value for <code>q</code>.</p>
+<p>Human wealth is a constant field: <code>!cnst</code> states that it does not depend on state. The stage takes in <code>h[&gt;]</code>, computes <code>h = 1 + h[&gt;]</code>, and sends <code>h[&lt;] = h*Γ/R</code>. Feasibility reads the supplied continuation wealth. The stationary constants <code>h_lim</code> and <code>L_lim</code> belong to the closed-form methods (§7.1).</p>
 <h3 id="63-builders">6.3 Builders<a class="headerlink" href="#63-builders" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>cntn_to_dcsn</code>, the decision value builder: <span class="arithmatex">\(V = u(c) + \beta V^{&gt;}\)</span>, at the consumption the policy chooses.</li>
-<li><code>policy</code>, the policy builder: the maximization of <span class="arithmatex">\(u(c') + \beta V^{&gt;}\)</span> over consumption <span class="arithmatex">\(0 &lt; c' &lt; m - L\)</span>.</li>
-<li><code>dcsn_to_arvl</code>, the arrival value builder: <span class="arithmatex">\(V^{&lt;} = \Gamma^{1-\rho}\, V\)</span>, which puts the decision value in the units of the previous period's permanent income, as the buffer stock stage writes <span class="arithmatex">\((\Gamma\psi)^{1-\rho}\)</span> inside its expectation; here there is nothing to take an expectation over.</li>
+<li><code>cntn_to_dcsn</code>, the decision value builder: <span class="arithmatex">\(V = u(c) + \beta V^{&gt;}\)</span> at the chosen consumption, and <code>h = 1 + h[&gt;]</code>.</li>
+<li><code>policy</code>, the policy builder: the maximization of <span class="arithmatex">\(u(c') + \beta V^{&gt;}\)</span> over consumption <code>0 &lt; cp &lt; m + h[&gt;]</code>.</li>
+<li><code>dcsn_to_arvl</code>, the arrival value builder: <span class="arithmatex">\(V^{&lt;} = \Gamma^{1-\rho}\, V\)</span> puts value in the previous period's income units. It also sends <code>h[&lt;] = h*Γ/R</code>. There is no expectation because income growth is known.</li>
 </ul>
 <p>The stage file states no derivative and no numerical method: the two methods files beside it state the solutions, as the next section shows.</p>
 <h2 id="7-methods-and-settings">7 Methods and settings<a class="headerlink" href="#7-methods-and-settings" title="Permanent link">&para;</a></h2>
-<p>Two methods files stand beside the stage file. Each is a <code>.bl</code> file read by the same grammar, whose blocks name the stage's blocks by their ids and add to them (<a href="../../../Bellman-Sym/04-methodization/">Methodization</a>), and the stage is bound with one of them at a time: <code>methods.egm.bl</code> is given to the stage in place of <code>methods.bl</code>, not beside it.</p>
+<p>Two methods files stand beside the stage. Each uses the same grammar and names the stage's blocks by their ids (<a href="../../../Bellman-Sym/04-methodization/">Methodization</a>). The stage binds one selection at a time: <code>methods.egm.bl</code> replaces <code>methods.bl</code>.</p>
 <h3 id="71-closed-form">7.1 Closed form<a class="headerlink" href="#71-closed-form" title="Permanent link">&para;</a></h3>
-<p>The addition <code>methods.bl</code> defines the marginal propensity to consume <code>κ = 1 - q</code>, the method's coefficient, as a derived parameter, and types <a href="../../../Bellman-Sym/reference/methods/#explicit"><code>!explicit</code></a> on the policy builder and on the two value builders. The line of each block writes the builder's output as an explicit function of the state of its own perch, the parameters and the derived parameters: the consumption function at the policy builder, the decision value at <code>cntn_to_dcsn</code> and the arrival value at <code>dcsn_to_arvl</code>, the last with the law of motion and the normalization <span class="arithmatex">\(\Gamma^{1-\rho}\)</span> written out. Each value block also writes its marginal in closed form, <span class="arithmatex">\(\kappa^{-\rho}(m - L)^{-\rho}\)</span> at the decision perch and <span class="arithmatex">\(R\,\Gamma^{-\rho}\)</span> times it at the resources <span class="arithmatex">\(Rk/\Gamma + 1\)</span> at the arrival perch, since a representation offers a derivative only where a line writes it. At the operative level, the builders the stage computes with, each line stands in place of the builder's declared line, the maximization or the value aggregation, which <code>stage.declared</code> keeps (<a href="../../../Bellman-Sym/04-methodization/">Methodization</a> §5). <code>!explicit</code> gives the <a href="../../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> of each of these builders the closed form, <a href="../../../Bellman-Sym/reference/methods/#closed-form"><code>!closed_form</code></a>. The power <code>κ^(-ρ)</code> is defined for every <span class="arithmatex">\(\rho &gt; 1\)</span> only at <span class="arithmatex">\(\kappa &gt; 0\)</span>, so <code>calibrate</code> refuses a calibration at which the return impatience condition <span class="arithmatex">\(q &lt; 1\)</span> fails. The closed form reads no setting, and the folder holds no settings file.</p>
+<p>The addition <code>methods.bl</code> defines <code>κ = 1 - q</code>, <code>h_lim</code>, and <code>L_lim</code> as derived parameters. Its positive <code>h_lim</code> requires <code>Γ &lt; R</code>. It types <a href="../../../Bellman-Sym/reference/methods/#explicit"><code>!explicit</code></a> on the policy builder and both value builders.</p>
+<p>Each block writes its outputs as functions of its own perch's state and the parameters. The policy block gives consumption. The value blocks give decision and arrival values, their marginals, and stationary human wealth. The arrival formula includes the law of motion and the normalization <span class="arithmatex">\(\Gamma^{1-\rho}\)</span>.</p>
+<p>The operative equations replace the declared equations for computation. <code>stage.declared</code> retains the maximization and original value equations (<a href="../../../Bellman-Sym/04-methodization/">Methodization</a> §5). Each builder's <a href="../../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a> uses <a href="../../../Bellman-Sym/reference/methods/#closed-form"><code>!closed_form</code></a>. Derivatives are available only where the file supplies their equations.</p>
+<p>The power <code>κ^(-ρ)</code> requires <code>κ &gt; 0</code>. Calibration therefore enforces return impatience, <code>q &lt; 1</code>. The closed form reads no setting.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>@methods: perfect_foresight
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a># The closed-form solution of the perfect foresight stage, an addition to
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a># perfect_foresight.bl, the stage file beside this one (economics.md, "The
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a># solution in closed form"). The marginal propensity to consume κ = 1 - q is
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a># the method's coefficient and is defined here; the return patience factor q,
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a># human wealth h and the natural borrowing limit L = 1 - h are the stage's.
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a># Each of the three builders that the closed form solves is typed !explicit,
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a># and the lines of its block write its outputs as explicit functions of its
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a># own perch's state: the consumption function c = κ(m - L) at the policy
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a># builder, the decision value κ^(-ρ) (m - L)^(1-ρ)/(1-ρ) and its marginal at
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a># the decision value builder, and the arrival value, the decision value at
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a># the resources R*k/Γ + 1 normalized by Γ^(1-ρ), and its marginal at the
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a># arrival value builder, whose id arrival_marginal the module reads. At the
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a># operative level each line stands in place of the builder's declared line,
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a># which stage.declared keeps. !explicit gives the Evaluation of each builder
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a># the closed form, !closed_form. The power κ^(-ρ) is defined for every ρ &gt; 1
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a># only at κ &gt; 0, which is the return impatience condition q &lt; 1, the upper
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a># bound of the discount factor in the stage file: calibrate refuses a
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a># calibration outside that bound, and one at which the computed κ is not
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a># positive. The functions hold on total wealth
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a># m - L &gt; 0, and at the arrival perch on k &gt; L; the application's module
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a># refuses an evaluation elsewhere.
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>κ := 1 - q    :: ["the marginal propensity to consume, one minus the return patience factor"]
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>[id=policy, policy.method : !explicit] {
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    c = κ*(m - L)                                        :: [id=consumption]
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>}
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>[id=cntn_to_dcsn, cntn_to_dcsn.method : !explicit] {
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    V = κ^(-ρ)*(m - L)^(1-ρ)/(1-ρ)                       :: [id=closed_value]
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>    D_{m}V = κ^(-ρ)*(m - L)^(-ρ)                         :: [id=marginal]
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>}
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>[id=dcsn_to_arvl, dcsn_to_arvl.method : !explicit] {
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>    V[&lt;] = Γ^(1-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(1-ρ)/(1-ρ)    :: [id=closed_value]
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>    D_{k}V[&lt;] = R*Γ^(-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L)^(-ρ)     :: [id=arrival_marginal]
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>}
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a># The stationary closed form. The stage defines human wealth recursively;
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a># these methods state its fixed point. The declared set of h_lim requires Γ &lt; R.
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>κ := 1 - q    :: ["the marginal propensity to consume, one minus the return patience factor"]
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>h_lim : ℝ₊₊ := 1/(1 - Γ/R)   :: ["human wealth at the infinite horizon, the value that h = 1 + h*Γ/R maps to itself; positive exactly where Γ &lt; R, the finite human wealth condition"]
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>L_lim := 1 - h_lim           :: ["the natural borrowing limit on market resources at the infinite horizon"]
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>[id=policy, policy.method : !explicit] {
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    c = κ*(m - L_lim)                                        :: [id=consumption]
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>}
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>[id=cntn_to_dcsn, cntn_to_dcsn.method : !explicit] {
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    V = κ^(-ρ)*(m - L_lim)^(1-ρ)/(1-ρ)                       :: [id=closed_value]
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    D_{m}V = κ^(-ρ)*(m - L_lim)^(-ρ)                         :: [id=marginal]
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>    h = h_lim                                                :: [id=closed_human_wealth]
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>}
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>[id=dcsn_to_arvl, dcsn_to_arvl.method : !explicit] {
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    V[&lt;] = Γ^(1-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L_lim)^(1-ρ)/(1-ρ)    :: [id=closed_value]
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>    D_{k}V[&lt;] = R*Γ^(-ρ)*κ^(-ρ)*(R*k/Γ + 1 - L_lim)^(-ρ)     :: [id=arrival_marginal]
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    h[&lt;] = h_lim*Γ/R                                         :: [id=closed_human_wealth]
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>}
 </code></pre></div>
 <h3 id="72-endogenous-grid-method">7.2 Endogenous grid method<a class="headerlink" href="#72-endogenous-grid-method" title="Permanent link">&para;</a></h3>
-<p>The methods file <code>methods.egm.bl</code> declares the three settings of the grid of savings with their sets, a count in ℕ and a bound a point of <code>Xa</code>, and names the endogenous grid method, <a href="../../../Bellman-Sym/reference/methods/#egm"><code>!egm</code></a>, as the policy builder's method, with the exogenous grid of savings, <code>!Cartesian(a=(a_min, a_max, n_a))</code>, as its grid. Its three lines, the inverted Euler equation with the inverse marginal utility written out, the inverted law of motion and the identification of the chosen consumption with the candidate, stand in place of the maximization when the stage is solved. The consumption function is read by linear interpolation at the policy builder's Evaluation, <code>policy.evaluate</code>, between the pairs the method computes; those pairs give its nodes, so the entry writes no grid there. Each value builder gains its derivative line: the envelope condition <code>D_{m}V = c^(-ρ)</code> of the decision value, and the derivative of the arrival value, whose factor <span class="arithmatex">\(R\,\Gamma^{-\rho}\)</span> comes from the factor <span class="arithmatex">\(R/\Gamma\)</span> of the law of motion and the normalization <span class="arithmatex">\(\Gamma^{1-\rho}\)</span> of the value. The application's module supplies the three settings, so the folder holds no settings file.</p>
+<p>The methods file <code>methods.egm.bl</code> declares the savings grid's bounds and count. Its policy builder uses the endogenous grid method, <a href="../../../Bellman-Sym/reference/methods/#egm"><code>!egm</code></a>, on <code>!Cartesian(a=(a_min, a_max, n_a))</code>. The program supplies those three settings.</p>
+<p>The method writes the inverse Euler equation, computes resources from savings and candidate consumption, and selects those pairs. Linear interpolation evaluates consumption between the pairs. Its Evaluation reads the pairs as nodes, so no separate grid is needed there.</p>
+<p>The decision value builder gains the envelope equation <code>D_{m}V = c^(-ρ)</code>. The arrival derivative is <code>D_{k}V[&lt;] = R*Γ^(-ρ)*D_{m}V</code>. The factor combines the derivative <code>R/Γ</code> of the law of motion with the normalization <code>Γ^(1-ρ)</code>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>@methods: perfect_foresight
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a># The gridded methods of the perfect foresight stage, a replacing selection
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a># beside methods.bl. The endogenous grid method stands on the policy builder
@@ -8576,29 +8582,28 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 <a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a>}
 </code></pre></div>
 <h3 id="73-binding-the-closed-form">7.3 Binding the closed form<a class="headerlink" href="#73-binding-the-closed-form" title="Permanent link">&para;</a></h3>
-<p>The folder holds no recipe, so <code>load_stage</code> is given the stage file and its addition <code>methods.bl</code> together; <code>calibrate</code> then binds the calibration file, and <code>configure</code> binds an empty settings source, since the closed form reads no setting:</p>
+<p>The application binds the four steps separately. The methods file supplies the stationary constants as well as the explicit expressions:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">elaborate_stage</span><span class="p">,</span> <span class="n">load_stage</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">declaration</span> <span class="o">=</span> <span class="s2">"applications/consumption-perfect-foresight-crra/declaration"</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">declaration</span><span class="si">}</span><span class="s2">/stages/perfect_foresight/perfect_foresight.bl"</span><span class="p">,</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">declaration</span><span class="si">}</span><span class="s2">/stages/perfect_foresight/methods.bl"</span><span class="p">],</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="p">))</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">stage</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">declaration</span><span class="si">}</span><span class="s2">/calibration/perfect_foresight.yml"</span><span class="p">)</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="n">stage</span><span class="o">.</span><span class="n">configure</span><span class="p">({</span><span class="s2">"settings"</span><span class="p">:</span> <span class="p">{}})</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">par</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">declaration</span><span class="si">}</span><span class="s2">/stages/perfect_foresight/perfect_foresight.bl"</span><span class="p">))</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">stage</span><span class="o">.</span><span class="n">methodize</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">declaration</span><span class="si">}</span><span class="s2">/stages/perfect_foresight/methods.bl"</span><span class="p">)</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">stage</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">declaration</span><span class="si">}</span><span class="s2">/calibration/perfect_foresight.yml"</span><span class="p">)</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">stage</span><span class="o">.</span><span class="n">configure</span><span class="p">({</span><span class="s2">"settings"</span><span class="p">:</span> <span class="p">{}})</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">par</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>name  set                      value                describes
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>R     ℝ₊₊                      1.04                 gross interest factor
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q &lt; 1
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>κ     1 - q                    0.03846153846153855  the marginal propensity to consume, one minus the return patience factor
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>name   set                      value                describes
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>β      ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>ρ      (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>R      ℝ₊₊                      1.04                 gross interest factor
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>Γ      ℝ₊₊                      1.02                 permanent income growth factor
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>q      (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q &lt; 1
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>κ      1 - q                    0.03846153846153855  the marginal propensity to consume, one minus the return patience factor
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>h_lim  ℝ₊₊ := 1/(1 - Γ/R)       51.999999999999886   human wealth at the infinite horizon, the value that h = 1 + h*Γ/R maps to itself; positive exactly where Γ &lt; R, the finite human wealth condition
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>L_lim  1 - h_lim                -50.999999999999886  the natural borrowing limit on market resources at the infinite horizon
 </code></pre></div>
-<p><code>stage.par</code> lists the four declared parameters with their sets and values, then the three derived parameters of the stage file and the coefficient <code>κ</code> of the methods file, each with its definition in the column of the sets, after the declared set <code>(0, 1)</code> in the row of <code>q</code>, and its value at the calibration: <span class="arithmatex">\(q = 1/1.04\)</span>, <span class="arithmatex">\(h = 52\)</span>, <span class="arithmatex">\(L = -51\)</span> and <span class="arithmatex">\(\kappa = 0.04/1.04\)</span>, evaluated in floating point. <code>stage.methods</code> lists the three builders typed <code>!explicit</code> and the closed form of each builder's Evaluation, generated from the builder's method entry:</p>
+<p>The stage defines <code>q</code>; the methods define <code>κ</code>, <code>h_lim</code>, and <code>L_lim</code>. Human wealth <code>h</code> is a field, so <code>stage.par["h"]</code> is no longer a parameter query. <code>stage.methods</code> lists the three builders typed <code>!explicit</code> and the closed form of each builder's Evaluation, generated from the builder's method entry:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">methods</span><span class="p">)</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>cntn_to_dcsn            !explicit
@@ -8610,9 +8615,13 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 </code></pre></div>
 <p>The endogenous grid method is bound in the same way from <code>methods.egm.bl</code>, with the three settings of the grid of savings given to <code>configure</code> as <code>{"settings": {"n_a": ..., "a_min": ..., "a_max": ...}}</code>.</p>
 <h2 id="8-period-and-trellis">8 Period and trellis<a class="headerlink" href="#8-period-and-trellis" title="Permanent link">&para;</a></h2>
-<p>The model is stationary: every period holds the one stage with the same parameters, and the saving <span class="arithmatex">\(a\)</span> of one period is the arrival state <span class="arithmatex">\(k\)</span> of the next. The application holds no recipe and no trellis file; <a href="../../../Bellman-Sym/07-trellis/">Trellises</a> states how a trellis is written. Over a finite horizon of <span class="arithmatex">\(N\)</span> periods, human wealth and the marginal propensity to consume depend on <span class="arithmatex">\(N\)</span>, and in the last period the household consumes its resources, <span class="arithmatex">\(c = m\)</span>; repeating the stationary stage with constant <span class="arithmatex">\(h\)</span> and <span class="arithmatex">\(\kappa\)</span> does not construct that problem, and the application makes no claim about a finite horizon.</p>
+<p>The stationary solution repeats one stage declaration with the same calibration sources and requires every backward field at its fixed point, including human wealth and the value field. Savings from one period become arrival assets in the next. The application holds no recipe or trellis file; <a href="../../../Bellman-Sym/07-trellis/">Trellises</a> describes that declaration.</p>
+<p>Human wealth also has a finite backward recursion. With zero supplied continuation wealth, the stage computes <code>h = 1</code>. Each preceding period adds current income to discounted future wealth. At the stationary calibration, the recursion is <code>51 → 52 → 51</code>.</p>
+<p>The strict feasibility inequality excludes consuming all resources in the last period. With increasing utility and zero continuation value, that problem has no maximizer. The stationary coefficient <code>κ</code> also differs from its finite-horizon counterpart. The human-wealth check alone does not solve finite-horizon consumption.</p>
 <h2 id="9-solution-methods">9 Solution methods<a class="headerlink" href="#9-solution-methods" title="Permanent link">&para;</a></h2>
-<p><strong>Closed form.</strong> The module <code>code/closed_form_check.py</code> of the application binds <code>methods.bl</code> through <code>elaborate</code>, <code>methodize</code>, <code>calibrate</code> and <code>configure</code>, and reads the consumption function, the decision value and the arrival value from the compiled kernels of the three explicit blocks, the numerical functions the package compiles from their lines (<a href="../../../Bellman-Sym/API/stage/04-builder/">A builder</a> §5); it writes no formula of them. It checks them against the stage file's own blocks, through their compiled kernels: the residual of the Bellman equation, the residual of the arrival value's normalization, the relative residual of the Euler equation, feasibility and the present-value budget. The three functions hold on total wealth <span class="arithmatex">\(m - L &gt; 0\)</span>, and at the arrival perch on <span class="arithmatex">\(k &gt; L\)</span>, and the module refuses an evaluation elsewhere.</p>
+<p>Every route checks the complete continuation mapping before constructing kernels or grids, including under <code>!explicit</code>. The mapping supplies <code>V[&gt;]</code> and <code>h[&gt;]</code>. The returned <code>input_conditions</code> retain callable conditions that the package cannot decide.</p>
+<p><strong>Closed form.</strong> The module <code>code/closed_form_check.py</code> binds all four construction steps. It evaluates consumption, decision value, and arrival value through compiled kernels (<a href="../../../Bellman-Sym/API/stage/04-builder/">A builder</a> §5).</p>
+<p>The module compares the solution with the declared Bellman equation and arrival normalization. It also checks the relative Euler residual, feasibility, and present-value budget. The value functions require positive total wealth, <span class="arithmatex">\(m &gt; L\)</span> at decision and <span class="arithmatex">\(k &gt; L\)</span> at arrival. The module refuses evaluations elsewhere.</p>
 <p><strong>Endogenous grid method.</strong> The module binds <code>methods.egm.bl</code> with the three settings of the grid of savings and iterates the method to its fixed point on the compiled kernels of its lines, from a first iterate that consumes half of total wealth. One iteration applies the lines in the stage's backward order:</p>
 <ol>
 <li><strong>Start</strong> with the continuation marginal value <span class="arithmatex">\(dV^{&gt;}(a)\)</span> on the exogenous grid of savings <span class="arithmatex">\(\{a_1, \dots, a_n\}\)</span>, whose first point lies above <span class="arithmatex">\(L\)</span>.</li>
@@ -8622,7 +8631,8 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 <li><strong>Arrival marginal</strong> (the derivative line of <code>dcsn_to_arvl</code>): <span class="arithmatex">\(dV^{&lt;}(k) = R\,\Gamma^{-\rho}\, dV(Rk/\Gamma + 1)\)</span>, which is the next iteration's continuation marginal value at <span class="arithmatex">\(k = a\)</span>.</li>
 <li><strong>Iterate</strong> until convergence.</li>
 </ol>
-<p>Calibration refuses a calibration at which <span class="arithmatex">\(q \ge 1\)</span>, by the declared set of the discount factor and by the set that the definition of <span class="arithmatex">\(q\)</span> declares. The module refuses a return patience factor that computes to one or more, a grid of savings that starts at or below <span class="arithmatex">\(L\)</span>, an intermediate value that is not finite, an extrapolation that leaves the feasible set and an iteration that reaches its limit without converging. The consumption function is linear in <span class="arithmatex">\(m\)</span>, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook <code>code/closed-form-and-grid.ipynb</code> shows each step and each comparison.</p>
+<p>Calibration refuses a calibration at which <span class="arithmatex">\(q \ge 1\)</span>, by the declared set of the discount factor and by the set that the definition of <span class="arithmatex">\(q\)</span> declares. The module refuses savings grids that start at or below <span class="arithmatex">\(L\)</span> and intermediate values that are not finite. It also refuses infeasible extrapolation and iterations that exhaust their limit without convergence. The consumption function is linear in <span class="arithmatex">\(m\)</span>, and the linear interpolant of a linear function is exact, so the gridded route reaches the closed form on a grid of five points as on one of five hundred. The test of interpolation accuracy is therefore the comparison of the value function's interpolation by the module's linear and PCHIP (piecewise cubic Hermite) evaluators on 5, 50 and 500 nodes. The notebook <code>code/closed-form-and-grid.ipynb</code> shows each step and each comparison.</p>
+<p>The function <code>gridded_step</code> computes one backward step for supplied continuation value, human wealth, and marginal value. It admits finite inputs when <code>Γ &gt;= R</code>. The stationary function <code>gridded_route</code> and the closed-form methods require <code>Γ &lt; R</code>.</p>
 <h2 id="10-calibration">10 Calibration<a class="headerlink" href="#10-calibration" title="Permanent link">&para;</a></h2>
 <p>The calibration file, <code>declaration/calibration/perfect_foresight.yml</code>, holds the example of the chapter's section 4.1, an interest rate <span class="arithmatex">\(r = 0.04\)</span>, a time preference rate <span class="arithmatex">\(\vartheta = 0.04\)</span>, income growth <span class="arithmatex">\(g = 0.02\)</span> and <span class="arithmatex">\(\rho = 2\)</span>, written as the factors the stage declares: <span class="arithmatex">\(R = 1 + r\)</span>, <span class="arithmatex">\(\beta = 1/(1 + \vartheta)\)</span> and <span class="arithmatex">\(\Gamma = 1 + g\)</span>.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># The calibration of the perfect foresight stage: the example of Carroll and</span>
@@ -8682,15 +8692,15 @@ V^{&lt;}(k) = \Gamma^{1-\rho}\, v(Rk/\Gamma + 1) = R^{1-\rho}\,\kappa^{-\rho}\,\
 <thead>
 <tr>
 <th>Condition</th>
-<th>How it is stated</th>
-<th>Where it is refused</th>
+<th>Declaration</th>
+<th>Refusal</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><span class="arithmatex">\(\Gamma &lt; R\)</span></td>
-<td>the declared set of the growth factor, <code>Γ : (0, R)</code></td>
-<td><code>calibrate</code></td>
+<td><code>h_lim : ℝ₊₊ := 1/(1 - Γ/R)</code> in the closed-form methods</td>
+<td><code>calibrate</code> with those methods; the stationary grid route also requires this condition</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(q &lt; 1\)</span></td>

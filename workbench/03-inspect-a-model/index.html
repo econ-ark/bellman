@@ -1172,10 +1172,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-check-what-the-model-still-needs" class="md-nav__link">
+  <a href="#4-required-inputs-and-checks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 Check what the model still needs
+        4 Required inputs and checks
       
     </span>
   </a>
@@ -2941,6 +2941,8 @@
       
         
       
+        
+      
     
     
     
@@ -3677,6 +3679,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7917,10 +7947,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-check-what-the-model-still-needs" class="md-nav__link">
+  <a href="#4-required-inputs-and-checks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 Check what the model still needs
+        4 Required inputs and checks
       
     </span>
   </a>
@@ -7998,7 +8028,7 @@
 <h1 id="inspect-a-model">Inspect a model<a class="headerlink" href="#inspect-a-model" title="Permanent link">&para;</a></h1>
 <p>Use the <a href="../../wiki/semgraph/">semantic graph</a> to trace how a stage uses its inputs and how one stage supplies the next. Open a specific occurrence to check the parameter values and methods used at that point in the model.</p>
 <h2 id="1-choose-a-stage-and-period">1 Choose a stage and period<a class="headerlink" href="#1-choose-a-stage-and-period" title="Permanent link">&para;</a></h2>
-<p>Open <strong>Trellis</strong> to see the model’s periods and stages together. A <a href="../../wiki/trellis/">trellis</a> describes the stages in each period and the connections between them. In a long model, use the period selector above the graph to restrict the view. Choose <strong>all</strong> to show every period again.</p>
+<p>Open <strong>Trellis</strong> to see the model’s periods and stages together. A <a href="../../wiki/trellis/">trellis</a> is a diagram of periods joined by connections. The period labels show positions, not ages; the viewer is not given terminal age. In a long model, use the period selector above the graph to restrict the view. Choose <strong>all</strong> to show every period again.</p>
 <p>Double-click a stage card in the trellis, or select it and choose <strong>Open the stage</strong> in <strong>Details</strong>. This opens the stage file and its graph for that occurrence, meaning that stage at that position in the trellis. Check the path in the main bar for the recipe, period and stage.</p>
 <p>You can also open a stage file from <strong>Files</strong>. If the current recipe uses it, Workbench initially shows its first occurrence. When the path offers a list of positions, choose another one to inspect its bindings. Use <strong>Stage</strong> for the open stage and <strong>Trellis</strong> to return to the period view.</p>
 <h2 id="2-choose-a-graph">2 Choose a graph<a class="headerlink" href="#2-choose-a-graph" title="Permanent link">&para;</a></h2>
@@ -8012,9 +8042,10 @@
 <li>Select a connection in the trellis to see the stages it joins, its branch where applicable, and the paired fields. Follow a source link when the pairing is written in a file. Check that the quantities agree in economic meaning and units, as when end-of-period saving supplies the next period’s opening wealth. Widen the period selection if a route ends at a marker for a stage outside the view.</li>
 <li>Under the stage editor, open <strong>Inspector</strong> and choose <strong>Fields</strong>, <strong>Parameters</strong>, <strong>Settings</strong> or <strong>Methods</strong>. <strong>Fields</strong> lists the declarations at each information set. The other tabs show the parameter values, numerical settings and attached methods for the selected occurrence. Where a row links to a source, follow it to see the file that supplies the value or method.</li>
 </ol>
-<h2 id="4-check-what-the-model-still-needs">4 Check what the model still needs<a class="headerlink" href="#4-check-what-the-model-still-needs" title="Permanent link">&para;</a></h2>
+<p><a id="4-check-what-the-model-still-needs"></a></p>
+<h2 id="4-required-inputs-and-checks">4 Required inputs and checks<a class="headerlink" href="#4-required-inputs-and-checks" title="Permanent link">&para;</a></h2>
 <p>Open <strong>Problems</strong> at the upper right of the graph. The list separates errors from checks. <strong>Unjoined fields</strong> identifies internal arrivals that still need a connection. <strong>Headers to check</strong> flags value inputs listed in a header that no equation reads. Follow the file and line link when one is available. Expand <strong>More</strong> in the status line to see the file or buffer Workbench read, the occurrence it used, and the fingerprints of its source files. A fingerprint identifies the specific text Workbench read.</p>
-<p>Inspect the terminal period, indexed 0, in <strong>Backward</strong>. If a backward block reads the terminal continuation value <code>V[&gt;]</code>, the model needs a function on that block’s continuation-state domain when it is made numerical. Supply any derivatives that the block reads as well. A bequest equation and a successfully constructed graph leave this input explicit. A zero terminal function is a choice you supply. <a href="../../Bellman-Sym/07-trellis/#2-inter-period-connectors">Inter-period connectors and terminal data</a></p>
+<p>Inspect the terminal period, indexed 0, in <strong>Backward</strong>. Supply data for every value-type field the terminal stage takes in when you make the model numerical. The value field <code>V[&gt;]</code> needs its representing function and any derivatives the block reads; a constant such as age or a borrowing bound needs its own value. These data are supplied by the user, not stored in the trellis file. A bequest equation and a successfully constructed graph leave those inputs explicit. A zero terminal value is a choice you supply. <a href="../../Bellman-Sym/07-trellis/#2-inter-period-connectors">Inter-period connectors and terminal data</a></p>
 
 
 

@@ -2850,6 +2850,8 @@
       
         
       
+        
+      
     
     
     
@@ -3586,6 +3588,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7855,7 +7885,7 @@
 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>The overview pages give an informal account of the written Bellman-SYM language and its semantics. We start by reviewing Project Bellman's core concepts and terminology, including the stage, perches and fields, and how stages join into a larger structure, the trellis. We then turn to how a stage file (a <code>.bl</code> file) is written, and to the project workflow. We also describe what elaboration builds from a stage file, how parameter values, methods and settings are attached to a stage, and which fields a stage returns as functions.</p>
+<p>The overview pages give an informal account of the written Bellman-SYM language and its semantics. We start by reviewing Project Bellman's core concepts and terminology, including the stage, perches and fields, and the trellis, a diagram of periods joined by connections. We then turn to how a stage file (a <code>.bl</code> file) is written, and to the project workflow. We also describe what elaboration builds from a stage file, how parameter values, methods and settings are attached to a stage, and the functions that represent the fields a stage returns.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -7885,7 +7915,7 @@
 </tr>
 <tr>
 <td><a href="04-periods-and-trellis/">Periods and trellis</a></td>
-<td>Shows how connectors join stage files into periods, and periods into a trellis. We build a two-period trellis from the repository's portfolio application.</td>
+<td>Shows how connectors join stage files into periods, and periods into a trellis. We inspect a six-period reference variant from the repository's portfolio application.</td>
 </tr>
 <tr>
 <td><a href="05-semantics/">Semantics</a></td>
@@ -7937,7 +7967,7 @@
 </tr>
 <tr>
 <td>Specifying a stage</td>
-<td>The three bindings, <a href="../wiki/calibration/">calibration</a>, <a href="../wiki/methodization/">methodization</a> and configuration, made in that order, which attach parameter values, methods and settings to a stage (<a href="01-concepts/">Core concepts</a> §3; <a href="../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a>).</td>
+<td>The three bindings, <a href="../wiki/methodization/">methodization</a>, <a href="../wiki/calibration/">calibration</a> and configuration, which attach methods, parameter values and settings to a stage; the trellis factory retains calibration before methodization (<a href="01-concepts/">Core concepts</a> §3; <a href="../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a>).</td>
 </tr>
 <tr>
 <td>Initial diagram</td>

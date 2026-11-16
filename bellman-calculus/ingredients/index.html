@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3666,6 +3668,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8156,13 +8186,25 @@
 <tr>
 <td><span class="arithmatex">\(\mathbb T_{\mathrm{period}}\)</span></td>
 <td>composition across a period's compatible boundaries</td>
-<td>maps end-boundary functions to start-boundary functions; a self-map only under the required identification</td>
+<td>maps complete continuation tuples to arrival tuples on the domain of the composite; includes the field pairings</td>
 <td><a href="../07-stage-composition/">Stage composition</a> §2</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\tau\)</span></td>
+<td>backward update of state-independent fields</td>
+<td>maps their values using their equations and fixed parameters</td>
+<td><a href="../08-periods-and-trellis/">Periods</a> §3</td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\Phi\)</span></td>
+<td>partial map on pairs</td>
+<td><span class="arithmatex">\((\varsigma,v)\mapsto(\tau\varsigma,\mathbb T_\varsigma v)\)</span> where both outputs exist</td>
+<td><a href="../08-periods-and-trellis/">Periods</a> §3</td>
 </tr>
 <tr>
 <td><span class="arithmatex">\(v^\star\)</span></td>
 <td>stationary infinite-horizon fixed point when established</td>
-<td><span class="arithmatex">\(\mathbb T_{\mathrm{period}}v^\star=v^\star\)</span>; existence/uniqueness/optimality require hypotheses</td>
+<td><span class="arithmatex">\(\Phi(\varsigma^*,v^*)=(\varsigma^*,v^*)\)</span>; all fields sent backward are fixed; existence, uniqueness and optimality need hypotheses</td>
 <td><a href="../08-periods-and-trellis/">Periods</a> §4</td>
 </tr>
 <tr>

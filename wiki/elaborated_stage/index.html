@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -5948,10 +5978,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-what-an-identity-string-is" class="md-nav__link">
+  <a href="#3-identity-strings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3 What an identity string is
+        3 Identity strings
       
     </span>
   </a>
@@ -5959,10 +5989,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-how-the-queries-read-them" class="md-nav__link">
+  <a href="#4-queries" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 How the queries read them
+        4 Queries
       
     </span>
   </a>
@@ -7921,10 +7951,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-what-an-identity-string-is" class="md-nav__link">
+  <a href="#3-identity-strings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3 What an identity string is
+        3 Identity strings
       
     </span>
   </a>
@@ -7932,10 +7962,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-how-the-queries-read-them" class="md-nav__link">
+  <a href="#4-queries" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 How the queries read them
+        4 Queries
       
     </span>
   </a>
@@ -8059,10 +8089,11 @@
 <strong>See also</strong> — <a href="../semgraph/">semgraph</a>: the four graphs the object holds; <a href="../ffp/">Functional programming and FFP</a>: the reading of §2.</p>
 </details>
 <p>The <strong>elaborated stage</strong> (<code>ElaboratedStage</code>) is the object <code>elaborate_stage</code> and <code>elaborate_trellis</code> produce from a <code>.bl</code> <a href="../stage/">stage file</a>. It is a <a href="../stage/">stage occurrence</a>, that file elaborated at one position of a <a href="../period/">period</a> with its own three bindings; each binding adds to it in place and returns it, and a text derived from the file is elaborated as its own stage occurrence with its origin recorded. It has seven attributes and nothing else: <code>name</code>, <code>metadata</code>, <code>definitions</code>, <code>initial</code>, <code>_builders</code>, <code>bindings</code> and <code>provenance</code> (<a href="../../Bellman-Sym/API/stage/01-the-stage/">The stage</a> §2). <code>initial</code> holds the two <a href="../semgraph/">initial diagrams</a>, <code>stage.initial.backward</code> and <code>stage.initial.forward</code>, the backward and the forward <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">blocks</a> on field wires, two separate graphs; <code>_builders</code> holds the two <a href="../semgraph/">builders graphs</a> under a private name, and a reader reaches them through <code>stage.builder</code>: <code>stage.builder.bwd</code>, the <a href="../backward_builder/">backward builders</a> and the policy builder on function wires, and <code>stage.builder.fwd</code>, the <a href="../forward_builder/">forward builders</a> on measure wires, with each <a href="../builder/">builder</a> read by the ordered pair of <a href="../perch/">perches</a> it joins, <code>stage.builder["cntn", "dcsn"]</code>, the policy builder by its own key, <code>policy</code>, or from the perch its edge leaves, <code>stage.dcsn.builder.bwd</code> (<a href="../../Bellman-Sym/API/stage/03-build/">The builders graphs</a> §§1 and 2). The word for the seven is <em>attributes</em>, never fields, since a <a href="../field/">field</a> is a named quantity of a stage, at a <a href="../perch/">perch</a> unless it is a shock. Everything the seven determine is a query, never a stored member.</p>
+<p>In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations.</p>
 <h2 id="1-the-complete-typed-statement-of-the-problem">1 The complete typed statement of the problem<a class="headerlink" href="#1-the-complete-typed-statement-of-the-problem" title="Permanent link">&para;</a></h2>
 <p>The elaborated stage is the complete typed statement of the problem the stage file states, and the problem is of higher order, because its entities include functions on the sets of the <a href="../perch/">perches</a> and the operators between them: every <a href="../field/">field</a> with its perch and its set, every shock with its timing, every law, every <a href="../builder/">builder</a> as a typed map between function spaces, and the kernel of every box. In the round trip of Matsya, the project's service that writes a model's declaration from source material, the object that the elaboration of a declaration constructs is written <span class="arithmatex">\(E\)</span> and named ElaboratedSemanticObject: it is an elaborated stage when the declaration is one stage file, and an <a href="../trellis/#the-syntactic-and-the-elaborated-trellis">elaborated trellis</a>, whose stages are elaborated stages, when the declaration states several. Neither the stage file nor a description of the model in prose is such a statement. The stage file declares a field's set and perch where it introduces the field and leaves the rest to be resolved: the sort of a wire, the domain of a function, the coordinates a function is written in, the perch at which a shock is available, and the operators a block's lines fold to are derived by the construction and written nowhere in the file. A prose description states them informally. The <strong>elaborator</strong>, the computed step of <a href="../upsilon/">Υ</a>, makes every such commitment explicit in the elaborated stage or refuses the file, so that two agents cannot agree falsely on an ambiguous text: an ambiguity in the file is a refusal, and an agreement on the elaborated stage is an agreement on the complete statement.</p>
 <p>In the sense of formal ontology, the elaborated stage is the problem's ontology made explicit. Guizzardi and Guarino (2024, §2.1) define an ontology as "a specific theory about the kinds of entity and their ties that are assumed to exist by a given description of reality"; the kinds of entity here are the sets, the fields, the functions, the laws, the operators and the parameters, and their ties are the typed wires and the kernels that join them. The word <em>elaboration</em> is used in the sense of programming-language theory, the translation of a surface syntax into a fully explicit, typed core form, which fails where the source does not type-check (Pfenning 2021, §§1 and 4; Ferreira and Pientka 2014, abstract), as <a href="../upsilon/">Υ</a> §1 states.</p>
-<p>The elaborated stage is therefore the object that is compared and described. Two stage files that differ in spelling or in the order of their blocks elaborate to one stage; a comparison of two declarations is made on their elaborated stages, up to a renaming of names (<a href="../judge/">Judge</a> §4), and a description of a declaration in words, by the <a href="../prose_writer/">prose writer</a>, is written from the elaborated stage's printed form and from nothing else. Nothing reads a stage file as text once it can be elaborated.</p>
+<p>The elaborated stage is therefore the object that is compared and described. Consistent renaming preserves a declaration when it preserves sorts, equations and parameter roles; reordering blocks likewise need not change the declared problem. These claims concern the mathematical declaration, not Python object identity or equality; a comparison of two declarations is made on their elaborated stages, up to a renaming of names (<a href="../judge/">Judge</a> §4), and a description of a declaration in words, by the <a href="../prose_writer/">prose writer</a>, is written from the elaborated stage's printed form and from nothing else. Nothing reads a stage file as text once it can be elaborated.</p>
 <h2 id="2-the-object-read-as-an-ffp-system">2 The object read as an FFP system<a class="headerlink" href="#2-the-object-read-as-an-ffp-system" title="Permanent link">&para;</a></h2>
 <p>Backus's FFP has three tiers: objects, functions on objects, and functional forms that make functions from functions (<a href="../ffp/">Functional programming and FFP</a>, <a href="../functional_form/">functional form</a>). The elaborated stage is an implementation of that reading.</p>
 <ul>
@@ -8071,9 +8102,11 @@
 <li><strong>Boxes are functional forms applied to kernels.</strong> A <a href="../operator/">primitive operator</a> is a <code>Box</code> whose <code>data</code> is a tuple of references to definitions: a <a href="../builder/">pullback</a> refers to a <code>g</code> record, an aggregation to a <code>G</code> record, an expectation to a <code>distribution</code> record. What the box denotes is the image of its kernel under a fixed functional form, precomposition for a pullback, postcomposition for an aggregation, integration for an expectation (<a href="../operator/">operator</a>); a builder is a <code>Bubble</code> composing them (<a href="../builder/">builder</a>).</li>
 <li><strong>Queries are functions on the object.</strong> <code>denote()</code>, <code>view()</code> on the stage, <code>fields()</code>, <code>kernel()</code>, <code>compile_kernel()</code>, <code>par</code>, <code>settings</code> and the rest read the graphs and the table and store nothing. Each piece answers for itself: <code>stage.dcsn.builder.bwd["pullback"].denote()</code> answers the record whose printed form is that box's card, and <code>stage.definitions.denote("&lt;identity&gt;")</code> answers it for that definition; <code>stage.view()</code> is the stage's own <a href="../../Bellman-Sym/API/stage/01-the-stage/#3-the-printed-view">sheet</a>. A query that takes a box as an argument is implementation and is bound as no method. The graphs themselves are <code>stage.builder.bwd.graph</code> and <code>stage.initial.backward.graph</code>, and <code>stage.builder.bwd.primitives</code> and <code>stage.builder.bwd.sub_builders</code> are the same graph at the two <a href="../semgraph/">grains</a> a reader is offered (<a href="../../Bellman-Sym/API/">API</a> §1).</li>
 </ul>
-<h2 id="3-what-an-identity-string-is">3 What an identity string is<a class="headerlink" href="#3-what-an-identity-string-is" title="Permanent link">&para;</a></h2>
+<p><a id="3-what-an-identity-string-is"></a></p>
+<h2 id="3-identity-strings">3 Identity strings<a class="headerlink" href="#3-identity-strings" title="Permanent link">&para;</a></h2>
 <p>An identity has the form <code>&lt;stage&gt;:&lt;kind&gt;:&lt;name&gt;</code>: <code>cons:set:Xm</code>, <code>cons:parameter:ρ</code>, <code>cons:g:dcsn_to_cntn</code>, <code>cons:correspondence:Γ</code>. The middle segment is the <em>kind of the record</em>, the package's word for what the record defines: <code>set</code> says the record defines a set, <code>g</code> that it defines a law of motion. It is no sort: the package's <code>Sort</code> records stand on wires, and the record kinds are a different list from the kinds of <a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3. <code>Sort.domain</code> retains the set term or <code>None</code>, including named-set references, inline intervals and intersections; <code>Sort.coordinates</code> contains coordinate identities. A record's kind is not its domain. A field wire's identity is <code>&lt;stage&gt;:&lt;perch&gt;:&lt;field&gt;</code> (<code>cons:arvl:m</code>), with the word <code>shck</code> in the place of the perch for a shock, which belongs to no perch; a function wire's names the perch and the value it carries (<code>cons:function:cntn:V</code>), and a box's name is its block and operation kind, with the statement's address in place of the block for an operator belonging to one statement (<code>cntn_to_dcsn:Pullback</code>, <code>policy.InvEuler:Aggregation</code>).</p>
-<h2 id="4-how-the-queries-read-them">4 How the queries read them<a class="headerlink" href="#4-how-the-queries-read-them" title="Permanent link">&para;</a></h2>
+<p><a id="4-how-the-queries-read-them"></a></p>
+<h2 id="4-queries">4 Queries<a class="headerlink" href="#4-queries" title="Permanent link">&para;</a></h2>
 <p><code>stage.fields()</code> walks the blocks of the two initial diagrams in file order and reads the sorts on their input and output wires; it keeps no table. <code>stage.par</code> reads the <code>parameter</code> records of <code>definitions</code> and joins each with the value the <a href="../calibration/">calibration</a> bound, <code>unbound</code> where there is none, and then the <code>derived_parameter</code> records, each with its declared set where it declares one and its definition evaluated at the calibration (<a href="../parameters/">parameters</a>); <code>stage.par["ρ"]</code> answers one parameter's record, whose <code>value</code> is the number. A box's <code>kernel().origins</code> resolves its <code>data</code> through <code>definitions</code>. A box's own <code>denote()</code> builds its record from three sources: the <code>line</code> records for the statements the kernel denotes, the <code>g</code>, <code>G</code> or <code>distribution</code> record for the object those statements denote, and the box's <code>dom</code> and <code>cod</code> for the typed wires; the card is that record printed and is not made by taking a printed line apart. Its <code>compile_kernel()</code> executes the kernel's Python text, <code>kernel().python</code>, and answers one plain function of the kernel's arguments and then the parameters it reads, on a symbolic version as well, <code>kernel().parameter_values</code> giving the calibration's values in that order; a row whose rule has no explicit side, such as the identification of a policy block, is refused under the rule <code>kernel-target</code>. Nothing a query returns is stored as a member of the object: an answer is kept on the stage it was asked of, and a binding discards the kept answers it changes.</p>
 <h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
 <p><a href="../semgraph/">semgraph</a> · <a href="../builder/">builder</a> · <a href="../operator/">operator</a> · <a href="../field/">field</a> · <a href="../upsilon/">Υ</a> · <a href="../prose_writer/">prose writer</a> · <a href="../judge/">judge</a> · <a href="../ffp/">Functional programming and FFP</a> · <a href="../functional_form/">Functional form</a></p>

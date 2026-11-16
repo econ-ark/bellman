@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3581,6 +3583,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8094,7 +8124,7 @@ V(m_d) = \sup_{0 &lt; c &lt; m_d} \Bigl( (1-\beta)\, c^{1-\rho} + \beta\, \mathr
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>}
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>[id=policy, (V[&gt;]) : !cntn -&gt; c] {
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) + β*E_{ν}(E_{Ψ}(V[&gt;]^(1-γ))^((1-η)/(1-γ)))^((1-ρ)/(1-η)))^(1/(1-ρ))) :: [id=objective]
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    c = argmax_{c : Γ(m_d)}(((1-β)*c^(1-ρ) + β*(E_{ν}((E_{Ψ}(V[&gt;]^(1-γ))^(1/(1-γ)))^(1-η))^(1/(1-η)))^(1-ρ))^(1/(1-ρ))) :: [id=objective]
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>}
 </code></pre></div>
 <p><code>N(κ_1, σ_ν^2)</code> is written with its variance and <code>LogNormal(ν, σ_Ψ)</code> with the standard deviation of the logarithm. The declaration of <code>η</code> writes a second set after <code>@</code>, the interval <code>[γ, inf)</code>: ambiguity aversion is no less than risk aversion, which covers the two cases of §2, <span class="arithmatex">\(\eta = \gamma\)</span> and <span class="arithmatex">\(\eta &gt; \gamma\)</span>. The feasible set <code>{c : ℝ₊₊ | c &lt; x}</code> is open at both ends: at <span class="arithmatex">\(c = m_d\)</span> the continuation state is zero and its negative powers are undefined. Each group of equations between braces is a <strong>block</strong>, and its <strong>header</strong>, the bracketed list before the braces, names its inputs and outputs. The header of the forward block <code>dcsn_to_cntn</code> names only the shock the law of motion reads, <code>Ψ</code>; the mean <code>ν</code> is drawn on the same edge because the declaration of <code>Ψ</code> names it.</p>

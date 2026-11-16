@@ -3274,6 +3274,8 @@
       
         
       
+        
+      
     
     
     
@@ -4010,6 +4012,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8762,7 +8792,7 @@
 <p><strong>Declaration.</strong> <code>&lt;place&gt;.method : !egm</code>, at a whole builder and an occurrence of the operator <code>argmax</code>.</p>
 <p><strong>Type parameters.</strong> <code>X</code> is inferred from the attachment site. It is the set of states on which the method's grid lies; the place and the method's row determine it. A type parameter is no source keyword.</p>
 <p><strong>Arguments.</strong> No registered arguments; unlisted keywords are retained for the numerical handler.</p>
-<p><strong>Compatibility.</strong> Its grid lies on the states of the continuation perch; the grid constructors its place admits are <a href="#cartesian"><code>!Cartesian</code></a> and <a href="#points"><code>!Points</code></a>. The obligation <code>egm-eligibility</code> states that the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable on (0, ∞) with a finite positive right derivative at 0. Its grid lies on the continuation states, written by the builder's grid entry or taken as the default product over those states. Its block's lines stand in place of the declared lines at the operative level. A representation at the builder's closing Evaluation reads the pairs it selects and takes no grid there. A block of explicit formulas that reads no value input is refused, naming <code>!explicit</code>. The condition <code>egm-eligibility</code> is listed among the obligations and checked by nothing.</p>
+<p><strong>Compatibility.</strong> Its grid lies on the states of the continuation perch; the grid constructors its place admits are <a href="#cartesian"><code>!Cartesian</code></a> and <a href="#points"><code>!Points</code></a>. The obligation <code>egm-eligibility</code> states that the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable above the savings bound, with a positive right derivative at the bound, finite or infinite; an infinite derivative gives zero consumption as the interpolation endpoint, outside a strictly positive consumption domain. Its grid lies on the continuation states, written by the builder's grid entry or taken as the default product over those states. Its block's lines stand in place of the declared lines at the operative level. A representation at the builder's closing Evaluation reads the pairs it selects and takes no grid there. A block of explicit formulas that reads no value input is refused, naming <code>!explicit</code>. The condition <code>egm-eligibility</code> is listed among the obligations and checked by nothing.</p>
 <p><strong>Example.</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>policy.method : !egm
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>policy.grid : !Cartesian(a=(a_min, a_max, n_a))
@@ -9378,7 +9408,7 @@
 </code></pre></div>
 <p>The grid of savings of !egm: n_a equally spaced points from a_min to a_max, both included, required to be uniform, which the construction establishes.</p>
 <p><strong>Availability.</strong> Admission: a grid constructor of the language, admitted by the lowering and the grid checks. Numerical implementation: The core constructs equally spaced and listed nodes at the configured settings, which a builder's <code>kernels().grids</code> holds. A spacing word is retained for its handler, of which the cons-port application implements the argument-free !expmult, and quadrature nodes come from the expectation's handler.</p>
-<p><strong>Links.</strong> <a href="../../../bellman-calculus/06-Methods/#5-the-grid-as-the-discretized-domain">formal definition</a>; related entries <a href="#points"><code>!Points</code></a> and <a href="#fibred"><code>!Fibred</code></a>; source <code>stage/grids.py</code>, <code>_DEFINED</code>, line 353; public link unavailable until an exported revision holds the definition; read from <code>stage/grids.py</code>, <code>GRID_CONSTRUCTORS</code>, <code>"Cartesian"</code>.</p>
+<p><strong>Links.</strong> <a href="../../../bellman-calculus/06-Methods/#5-the-grid-as-the-discretized-domain">formal definition</a>; related entries <a href="#points"><code>!Points</code></a> and <a href="#fibred"><code>!Fibred</code></a>; source <code>stage/grids.py</code>, <code>_DEFINED</code>, line 369; public link unavailable until an exported revision holds the definition; read from <code>stage/grids.py</code>, <code>GRID_CONSTRUCTORS</code>, <code>"Cartesian"</code>.</p>
 <p><a id="points"></a></p>
 <h3 id="32-points">3.2 <code>!Points</code><a class="headerlink" href="#32-points" title="Permanent link">&para;</a></h3>
 <p>The finite support of declared points of the place's domain, each point given in the domain's declared coordinate order; !Points alone is the empty grid.</p>
@@ -9418,7 +9448,7 @@
 </code></pre></div>
 <p>The grid of savings of !egm is the set of the configured points of the setting A_points, declared <code>A_points : ℝ₊ × ℝ₊ × ℝ₊</code>: three points of the one coordinate a.</p>
 <p><strong>Availability.</strong> Admission: a grid constructor of the language, admitted by the lowering and the grid checks. Numerical implementation: The core constructs the support at the configured settings, which a builder's <code>kernels().grids</code> holds.</p>
-<p><strong>Links.</strong> <a href="../../../bellman-calculus/06-Methods/#5-the-grid-as-the-discretized-domain">formal definition</a>; related entries <a href="#cartesian"><code>!Cartesian</code></a> and <a href="#fibred"><code>!Fibred</code></a>; source <code>stage/grids.py</code>, <code>_DEFINED</code>, line 409; public link unavailable until an exported revision holds the definition; read from <code>stage/grids.py</code>, <code>GRID_CONSTRUCTORS</code>, <code>"Points"</code>.</p>
+<p><strong>Links.</strong> <a href="../../../bellman-calculus/06-Methods/#5-the-grid-as-the-discretized-domain">formal definition</a>; related entries <a href="#cartesian"><code>!Cartesian</code></a> and <a href="#fibred"><code>!Fibred</code></a>; source <code>stage/grids.py</code>, <code>_DEFINED</code>, line 425; public link unavailable until an exported revision holds the definition; read from <code>stage/grids.py</code>, <code>GRID_CONSTRUCTORS</code>, <code>"Points"</code>.</p>
 <p><a id="fibred"></a></p>
 <h3 id="33-fibred">3.3 <code>!Fibred</code><a class="headerlink" href="#33-fibred" title="Permanent link">&para;</a></h3>
 <p>Each state of a finite base paired with the finite feasible grid of the control at that state: a grid of feasible pairs of states and controls.</p>
@@ -9465,7 +9495,7 @@
 </code></pre></div>
 <p>With B = {1, 2}, Γ_c(m) = [0, m] and n_c = 2, the grid of value function iteration is the four pairs (1, 0), (1, 1), (2, 0) and (2, 2).</p>
 <p><strong>Availability.</strong> Admission: a grid constructor of the language, admitted by the lowering and the grid checks. Numerical implementation: The core constructs the case of one control: at each base state it evaluates the control's feasible interval at the arguments the stage applies it to and places the declared count of equally spaced points, both closed finite endpoints included. An open or unbounded interval reports an unresolved numerical requirement, and several controls or a coupled restriction report unsupported joint sampling.</p>
-<p><strong>Links.</strong> <a href="../../../bellman-calculus/06-Methods/#5-the-grid-as-the-discretized-domain">formal definition</a>; related entries <a href="#points"><code>!Points</code></a> and <a href="#cartesian"><code>!Cartesian</code></a>; source <code>stage/grids.py</code>, <code>_DEFINED</code>, line 459; public link unavailable until an exported revision holds the definition; read from <code>stage/grids.py</code>, <code>GRID_CONSTRUCTORS</code>, <code>"Fibred"</code>.</p>
+<p><strong>Links.</strong> <a href="../../../bellman-calculus/06-Methods/#5-the-grid-as-the-discretized-domain">formal definition</a>; related entries <a href="#points"><code>!Points</code></a> and <a href="#cartesian"><code>!Cartesian</code></a>; source <code>stage/grids.py</code>, <code>_DEFINED</code>, line 475; public link unavailable until an exported revision holds the definition; read from <code>stage/grids.py</code>, <code>GRID_CONSTRUCTORS</code>, <code>"Fibred"</code>.</p>
 <!-- /reference-table -->
 
 

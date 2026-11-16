@@ -2637,6 +2637,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="1 Reading a declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-laws-with-local-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Laws with local arguments
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2892,6 +2909,8 @@
       
         
           
+        
+      
         
       
         
@@ -3668,6 +3687,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7883,6 +7930,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="1 Reading a declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-laws-with-local-arguments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Laws with local arguments
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -8014,6 +8078,10 @@
 <p class="admonition-title">The second argument</p>
 <p><code>N(μ, v)</code> takes the variance, not the standard deviation: <code>sa_savings.bl</code> writes <code>ν ~ N(κ_1, σ_ν^2)</code>. <code>LogNormal(μ, σ)</code> takes the mean and the standard deviation of the logarithm of the draw, so <code>μ</code> is not the mean of the draw: <code>buffer_stock.bl</code> writes <code>ψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)</code>, whose mean is one. <code>TruncatedNormal(μ, σ, l, u)</code> takes the mean and the standard deviation of the normal law before the truncation to [l, u], so that <code>σ</code> is a standard deviation, not a variance as in <code>N</code>, and neither <code>μ</code> nor <code>σ</code> is the mean or the standard deviation of the draw. <code>TruncatedLogNormal(μ, σ, l, u)</code> takes the mean and the standard deviation of the logarithm, as <code>LogNormal</code> does, and its two endpoints in the draw's own units, so that <code>TruncatedLogNormal(μ, σ, 0, inf)</code> is <code>LogNormal(μ, σ)</code> and a bound stated as k standard deviations of the logarithm is written <code>exp(μ + k·σ)</code>. <code>TypeIExtremeValue(μ, s)</code> takes a location and a scale, and the mean of the draw is μ + γs, γ ≈ 0.5772 being Euler's constant. A numerical routine written in another convention needs its arguments converted.</p>
 </div>
+<h3 id="11-laws-with-local-arguments">1.1 Laws with local arguments<a class="headerlink" href="#11-laws-with-local-arguments" title="Permanent link">&para;</a></h3>
+<p>The declaration <code>y(_age) ~ LogNormal(μ_tab[_age], σ_y)</code> gives the shock a local argument. The right side may also call a declared function, as in <code>LogNormal(μ_fn(_age), σ_y)</code>. Leading underscores are allowed in the law's argument names and their occurrences within the right side.</p>
+<p>List <code>y</code> and the incoming constant in the forward header and write <code>y(age)</code> or <code>y[age]</code> on that edge. The constant's declared set types <code>_age</code> and must fit the table's index set. Before an edge supplies the field, the formal domain remains unresolved and a table entry still requires membership of the key in the table's index set. Each shock uses one ordered list of constant arguments on the edge. Repeating the same arguments reads the same draw. The forward measure and <code>E_{y}</code> use the same applied law.</p>
+<p>The builder's <a href="../../API/stage/04-builder/#51-detached-numerical-data">numerical record</a> substitutes supplied constants and bound parameters into the declared law. Its detached <code>DistributionDeclaration</code> can still use coordinates such as a parent shock. Pass those values to <code>bellman.distributions.families.specialize_distribution(declaration, values)</code> to specialize the law and check the family parameters those values determine.</p>
 <h2 id="2-the-families">2 The families<a class="headerlink" href="#2-the-families" title="Permanent link">&para;</a></h2>
 <p>The table has one row for each family of the package's table of families, <code>FAMILY_ARGUMENTS</code> in <code>distributions/families.py</code>, in that table's order. The column <strong>law</strong> names the family, and <strong>written</strong> gives its calls as the module docstring of <code>distributions/families.py</code> spells them. <strong>arguments</strong> gives how many arguments the family takes and what they are, and <strong>meaning</strong> gives the distribution a declaration gives, in the words of the same docstring. <strong>definition</strong> gives, for the seven families the package's table of definitions defines, <code>N</code> for one shock, <code>LogNormal</code>, <code>Uniform</code>, <code>TruncatedNormal</code>, <code>TruncatedLogNormal</code>, <code>TypeIExtremeValue</code> and <code>Mixture</code>, the defining expression, the measure as a function of the arguments; the other rows hold a dash. <strong>denotes</strong> links to the section of <a href="../../../bellman-calculus/catalogues/operators/">Appendix E.3</a> that defines the conditional distribution of a shock and the expectation that integrates against it. <strong>read from</strong> names the module, the table and the key of the family's arguments and, for the six families the table of definitions defines, of its definition.</p>
 <!-- The table between the two markers below is written by docs/_hooks/reference_pages.py from the package's table of the families; change the package's table and run the script, never the table by hand. -->

@@ -2951,6 +2951,8 @@
       
         
       
+        
+      
     
     
     
@@ -3687,6 +3689,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8050,7 +8080,7 @@
 <h1 id="parameters-and-settings">Parameters and settings<a class="headerlink" href="#parameters-and-settings" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p><code>stage.par</code> answers a table of the parameters of a stage, the derived parameters the stage defines from them standing after the declared ones, and <code>stage.settings</code> a table of its settings; each entry is read by the name the file declares, <code>stage.par["ρ"]</code> and <code>stage.settings["n_a"]</code>, and neither table can be edited. A parameter is part of the economic problem and is declared in the stage file; a setting is a numerical choice of a method, declared with its set in the methods file and valued by configuration. Every listing is printed by the package from <code>applications/portfolio-choice/declaration/stages/cons/cons.bl</code>, calibrated by <code>applications/portfolio-choice/declaration/calibration/portfolio.yml</code>, configured by <code>applications/portfolio-choice/declaration/settings/cons.yml</code>, and methodized by <code>applications/portfolio-choice/declaration/stages/cons/methods.bl</code>, the methods file beside the stage file, whose declarations fill the settings table's <code>set</code> column and whose entries fill its last three columns: the place at which each setting is read, the method there and, where the setting is a bound or a count of that place's grid, the grid's kind. The listings of §1.1 read instead the perfect-foresight stage file, <code>applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl</code>, which defines three derived parameters, calibrated by <code>applications/consumption-perfect-foresight-crra/declaration/calibration/perfect_foresight.yml</code>.</p>
+<p><code>stage.par</code> answers a table of the parameters of a stage, the derived parameters the stage defines from them standing after the declared ones, and <code>stage.settings</code> a table of its settings; each entry is read by the name the file declares, <code>stage.par["ρ"]</code> and <code>stage.settings["n_a"]</code>, and neither table can be edited. A parameter is part of the economic problem and is declared in the stage file; a setting is a numerical choice of a method, declared with its set in the methods file and valued by configuration. Every listing is printed by the package from <code>applications/portfolio-choice/declaration/stages/cons/cons.bl</code>, calibrated by <code>applications/portfolio-choice/declaration/calibration/portfolio.yml</code>, configured by <code>applications/portfolio-choice/declaration/settings/cons.yml</code>, and methodized by <code>applications/portfolio-choice/declaration/stages/cons/methods.bl</code>, the methods file beside the stage file, whose declarations fill the settings table's <code>set</code> column and whose entries fill its last three columns: the place at which each setting is read, the method there and, where the setting is a bound or a count of that place's grid, the grid's kind. The listings of §1.1 read instead the perfect-foresight stage file, <code>applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl</code>, which defines the return patience factor, calibrated by <code>applications/consumption-perfect-foresight-crra/declaration/calibration/perfect_foresight.yml</code>.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -8087,115 +8117,101 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>"stage 'cons': 'rho' is no parameter of the stage; a parameter is read by the name the file declares, and the parameters are ρ"
 </code></pre></div>
 <h3 id="11-derived-parameters">1.1 Derived parameters<a class="headerlink" href="#11-derived-parameters" title="Permanent link">&para;</a></h3>
-<p>A <strong>derived parameter</strong> is a constant of the stage that a definition without arguments writes from the stage's parameters, such as human wealth <code>h := 1/(1 - Γ/R)</code>; <a href="../../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2 gives the form, what its definition may read and the order in which the definitions are evaluated. <code>stage.par</code> lists the derived parameters after the declared ones, in file order, each with its definition in the column <code>set</code> and the description the file gives; where the definition declares the set in which its value lies, as that of <code>q</code> below declares <code>(0,1)</code>, the set stands before <code>:=</code> and the definition after it. Before calibration the value of a derived parameter is <code>unbound</code>. After calibration its value is its definition evaluated at the calibration values, computed each time the table is asked for and stored nowhere. The record of one derived parameter prints its definition after <code>:=</code>. The consumption stage file defines no derived parameter, so the listings of this section read the perfect-foresight stage file, which defines three from its four parameters: the return patience factor <code>q</code>, human wealth <code>h</code> and the natural borrowing limit <code>L</code>. A methods file may define a derived parameter as well, as the methods file beside that stage file defines the marginal propensity to consume <code>κ := 1 - q</code> (<a href="../08-definitions/">The definitions table</a> §3). A definition in an addition, a methods file read with the stage file (<a href="../09-binding-verbs/">The binding verbs</a> §3), is read as the stage file's own, and it leaves the table when the addition is removed.</p>
+<p>A <strong>derived parameter</strong> is a constant defined from calibrated parameters without arguments. The perfect-foresight stage defines the return patience factor <code>q : (0,1) := (β*R)^(1/ρ)/R</code>. <a href="../../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2 states the allowed definitions and their evaluation order.</p>
+<p><code>stage.par</code> lists derived parameters after the calibrated ones. Each row gives the definition, declared set, description, and current value. Before calibration the value is <code>unbound</code>. The table evaluates a derived definition when queried; it stores no duplicate value.</p>
+<p>The stage's human wealth is a field sent backward. Its closed-form methods instead define the stationary constants <code>h_lim</code>, <code>L_lim</code>, and <code>κ</code> (<a href="../08-definitions/">The definitions table</a> §3). Those derived parameters appear only while those methods are bound.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">derived</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="s2">"applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl"</span><span class="p">))</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">derived</span><span class="o">.</span><span class="n">par</span><span class="p">)</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">derived</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s2">"applications/consumption-perfect-foresight-crra/declaration/calibration/perfect_foresight.yml"</span><span class="p">)</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nb">print</span><span class="p">(</span><span class="n">derived</span><span class="o">.</span><span class="n">par</span><span class="p">)</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">derived</span><span class="o">.</span><span class="n">par</span><span class="p">[</span><span class="s2">"h"</span><span class="p">])</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">derived</span><span class="o">.</span><span class="n">par</span><span class="p">[</span><span class="s2">"q"</span><span class="p">])</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>name  set                      value    describes
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>β     ℝ₊₊ @ (0, R^(ρ - 1))     unbound  discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ρ     (1, inf)                 unbound  coefficient of relative risk aversion, greater than one
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>R     ℝ₊₊                      unbound  gross interest factor
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Γ     (0, R)                   unbound  permanent income growth factor; its upper bound R is the finite human wealth condition
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>Γ     ℝ₊₊                      unbound  permanent income growth factor
 <a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>q     (0, 1) := (β*R)^(1/ρ)/R  unbound  the return patience factor; the return impatience condition is q &lt; 1
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>h     1/(1 - Γ/R)              unbound  human wealth, the present discounted value of permanent income
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>L     1 - h                    unbound  the natural borrowing limit on market resources, above which total wealth m - L is positive
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>name  set                      value                describes
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616   discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>ρ     (1, inf)                 2.0                  coefficient of relative risk aversion, greater than one
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>R     ℝ₊₊                      1.04                 gross interest factor
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>Γ     (0, R)                   1.02                 permanent income growth factor; its upper bound R is the finite human wealth condition
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615   the return patience factor; the return impatience condition is q &lt; 1
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>h     1/(1 - Γ/R)              51.999999999999886   human wealth, the present discounted value of permanent income
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>L     1 - h                    -50.999999999999886  the natural borrowing limit on market resources, above which total wealth m - L is positive
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>h = 51.999999999999886 := 1/(1 - Γ/R)
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>name  set                      value               describes
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>β     ℝ₊₊ @ (0, R^(ρ - 1))     0.9615384615384616  discount factor; its upper bound R^(ρ-1) is the return impatience condition, q &lt; 1
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>ρ     (1, inf)                 2.0                 coefficient of relative risk aversion, greater than one
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>R     ℝ₊₊                      1.04                gross interest factor
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>Γ     ℝ₊₊                      1.02                permanent income growth factor
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>q     (0, 1) := (β*R)^(1/ρ)/R  0.9615384615384615  the return patience factor; the return impatience condition is q &lt; 1
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>q = 0.9615384615384615 : (0, 1) := (β*R)^(1/ρ)/R
 </code></pre></div>
-<p>The calibration supplies no value for a derived parameter, since its definition gives the value. A calibration source that names a derived parameter is refused under <code>derived-parameter</code>, at the definition, and the refused binding leaves the stage as it was; the calibration the stage keeps holds the declared parameters alone. A definition that has no value at the calibration values, such as one that divides by zero there, is refused under the same rule, at that definition (<a href="../../../reference/refusals/#derived-parameter">Refusals</a>):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.refusals</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConstructionError</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">derived</span><span class="o">.</span><span class="n">calibrate</span><span class="p">({</span><span class="s2">"calibration"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"β"</span><span class="p">:</span> <span class="mf">0.9615384615384616</span><span class="p">,</span> <span class="s2">"ρ"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span> <span class="s2">"R"</span><span class="p">:</span> <span class="mf">1.04</span><span class="p">,</span> <span class="s2">"Γ"</span><span class="p">:</span> <span class="mf">1.02</span><span class="p">,</span> <span class="s2">"h"</span><span class="p">:</span> <span class="mf">50.0</span><span class="p">}})</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">except</span> <span class="n">ConstructionError</span> <span class="k">as</span> <span class="n">refusal</span><span class="p">:</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">refusal</span><span class="p">)</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nb">print</span><span class="p">(</span><span class="n">derived</span><span class="o">.</span><span class="n">par</span><span class="p">[</span><span class="s2">"h"</span><span class="p">])</span>
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>address 'applications/consumption-perfect-foresight-crra/declaration/stages/perfect_foresight/perfect_foresight.bl:29': stage 'perfect_foresight', derived parameter 'h': the calibration source supplies the value 50.0 for h, which the stage defines as `1/(1 - Γ/R)`; a derived parameter takes its value from its definition at the calibration, and the calibration supplies none (rule derived-parameter)
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  write: Remove h from the calibration source
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>h = 51.999999999999886 := 1/(1 - Γ/R)
-</code></pre></div>
+<p>Calibration supplies no value for a derived parameter. A source that supplies <code>q</code> is refused under <code>derived-parameter</code>, and leaves the stage unchanged. A definition with no value at the calibration is also refused. For example, the closed-form definition of <code>h_lim</code> divides by zero when <code>Γ = R</code>.</p>
 <h2 id="2-the-settings">2 The settings<a class="headerlink" href="#2-the-settings" title="Permanent link">&para;</a></h2>
 <p><code>stage.settings</code> answers one row per setting, with the setting's name, the set the methods file declares it on, its configured value or the word <code>unbound</code>, the place at which it is read, the method typed there and, where the setting is a bound or a count of a factor of that place's grid, the grid's kind. The settings the methods file declares come first, in declaration order; a key of the settings file that no declaration names follows, with its value and the other columns empty, since it binds nothing (the last listing of this section). A method reads a setting by its name: here the grid of the representation at the decision builder's Evaluation, <code>cntn_to_dcsn.evaluate.grid : !Cartesian(m_d=(m_min, m_max, n_m))</code>, reads <code>n_m</code>, <code>m_min</code> and <code>m_max</code> as the count and the bounds of its grid of resources, and the grid of the endogenous grid method on the policy builder, <code>grid : !Cartesian(a=(a_min, a_max, n_a))</code>, reads <code>n_a</code>, <code>a_min</code> and <code>a_max</code> as its grid of savings (<a href="../../../04-methodization/">Methodization</a> §3.2). <code>stage.settings["n_m"]</code> answers the record of one setting, and its <code>value</code> is the configured value.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">specified</span> <span class="o">=</span> <span class="p">(</span><span class="n">calibrated</span><span class="o">.</span><span class="n">methodize</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/methods.bl"</span><span class="p">)</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>             <span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/cons.yml"</span><span class="p">))</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_m"</span><span class="p">])</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_m"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">specified</span> <span class="o">=</span> <span class="p">(</span><span class="n">calibrated</span><span class="o">.</span><span class="n">methodize</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/methods.bl"</span><span class="p">)</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>             <span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/cons.yml"</span><span class="p">))</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_m"</span><span class="p">])</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_m"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>name   set  value  read at                by       grid
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>n_a    ℕ    800    policy                 !egm     !Cartesian
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>a_min  Xa   1e-06  policy                 !egm     !Cartesian
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>a_max  Xa   100.0  policy                 !egm     !Cartesian
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>n_m    ℕ    100    cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>m_min  Xm   0.01   cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>m_max  Xm   10.0   cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>n_m = 100 : ℕ, read at cntn_to_dcsn.evaluate by !Linear for its grid !Cartesian
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>100
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>name   set  value  read at                by       grid
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>n_a    ℕ    800    policy                 !egm     !Cartesian
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>a_min  Xa   1e-06  policy                 !egm     !Cartesian
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>a_max  Xa   100.0  policy                 !egm     !Cartesian
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>n_m    ℕ    100    cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>m_min  Xm   0.01   cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>m_max  Xm   10.0   cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>n_m = 100 : ℕ, read at cntn_to_dcsn.evaluate by !Linear for its grid !Cartesian
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>100
 </code></pre></div>
 <p>Each record is read from the setting's declaration in the methods file, the value configuration binds and the entries that name the setting. A stage elaborated from its stage file alone holds no setting, and a key the stage does not hold is refused with the reason:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">bare</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/cons.bl"</span><span class="p">))</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bare</span><span class="o">.</span><span class="n">settings</span><span class="p">))</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">bare</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_a"</span><span class="p">]</span>
-<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">refusal</span><span class="p">:</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">refusal</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">bare</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/cons.bl"</span><span class="p">))</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bare</span><span class="o">.</span><span class="n">settings</span><span class="p">))</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="n">bare</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s2">"n_a"</span><span class="p">]</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">refusal</span><span class="p">:</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">refusal</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>0
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>"stage 'cons': 'n_a' is no setting of this version; its settings are none; a setting is declared in the methods file, and configure(stage, source) values it"
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>0
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>"stage 'cons': 'n_a' is no setting of this version; its settings are none; a setting is declared in the methods file, and configure(stage, source) values it"
 </code></pre></div>
 <p>Before configuration a declared setting stands in the table with the value <code>unbound</code>, as a parameter does before calibration, with the place that reads it; <code>configure</code> refuses a value outside the declared set, under <code>setting-outside-set</code>, and a declared setting that neither the settings file nor an earlier configuration of the version values, under <code>setting-unvalued</code>; a later configuration keeps the values bound before and replaces those it names again (<a href="../09-binding-verbs/">The binding verbs</a> §3; <a href="../../../reference/refusals/#setting-unvalued">Refusals</a>). The listing reads a second elaboration of the stage file with its methods file, since the verbs bind the stage they are called on and <code>stage</code> above is configured already:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">methodized</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/cons.bl"</span><span class="p">,</span>
-<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>                                        <span class="p">[</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/methods.bl"</span><span class="p">]))</span>
-<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">methodized</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/cons.bl"</span><span class="p">,</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>                                        <span class="p">[</span><span class="s2">"applications/portfolio-choice/declaration/stages/cons/methods.bl"</span><span class="p">]))</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>name   set  value    read at                by       grid
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>n_a    ℕ    unbound  policy                 !egm     !Cartesian
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>a_min  Xa   unbound  policy                 !egm     !Cartesian
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>a_max  Xa   unbound  policy                 !egm     !Cartesian
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>n_m    ℕ    unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>m_min  Xm   unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>m_max  Xm   unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>name   set  value    read at                by       grid
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>n_a    ℕ    unbound  policy                 !egm     !Cartesian
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>a_min  Xa   unbound  policy                 !egm     !Cartesian
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>a_max  Xa   unbound  policy                 !egm     !Cartesian
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>n_m    ℕ    unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>m_min  Xm   unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>m_max  Xm   unbound  cntn_to_dcsn.evaluate  !Linear  !Cartesian
 </code></pre></div>
 <p>A settings file may hold the values of other stages of the application as well, so a stage can be given values that none of its declarations names. <code>configure</code> binds such a value, and <code>stage.settings</code> lists it after the declared settings, with no set and no place that reads it, which is where a misspelled key shows. A second configuration adds its values to those bound before, so the consumption stage configured by its own settings file and then by the settings file of the portfolio stage, <code>applications/portfolio-choice/declaration/settings/port.yml</code>, lists that file's keys, among them <code>n_k</code>, <code>n_Ψ_nodes</code> and <code>n_θ_nodes</code>, the grid and quadrature sizes of the portfolio stage:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/cons.yml"</span><span class="p">)</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/port.yml"</span><span class="p">)</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/cons.yml"</span><span class="p">)</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/port.yml"</span><span class="p">)</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>name       set  value   read at                by       grid
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>n_a        ℕ    800     policy                 !egm     !Cartesian
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>a_min      Xa   1e-06   policy                 !egm     !Cartesian
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>a_max      Xa   100.0   policy                 !egm     !Cartesian
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>n_m        ℕ    100     cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>m_min      Xm   0.01    cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>m_max      Xm   10.0    cntn_to_dcsn.evaluate  !Linear  !Cartesian
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>n_k             800
-<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>k_min           1e-10
-<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>k_max           1000.0
-<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>n_Ψ_nodes       7
-<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>n_θ_nodes       7
-<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>n_ς             50
-<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>n_sim           10000
-<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>sim_seed        12345
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>name       set  value   read at                by       grid
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>n_a        ℕ    800     policy                 !egm     !Cartesian
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>a_min      Xa   1e-06   policy                 !egm     !Cartesian
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>a_max      Xa   100.0   policy                 !egm     !Cartesian
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>n_m        ℕ    100     cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>m_min      Xm   0.01    cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>m_max      Xm   10.0    cntn_to_dcsn.evaluate  !Linear  !Cartesian
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>n_k             800
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>k_min           1e-10
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a>k_max           1000.0
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>n_Ψ_nodes       7
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a>n_θ_nodes       7
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a>n_ς             50
+<a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>n_sim           10000
+<a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>sim_seed        12345
 </code></pre></div>
 <h2 id="3-one-value-by-its-name">3 One value by its name<a class="headerlink" href="#3-one-value-by-its-name" title="Permanent link">&para;</a></h2>
 <p>Each table also answers one value alone, read by its name as an attribute: <code>calibrated.par.ρ</code> answers the number <code>calibrated.par["ρ"].value</code> holds and <code>specified.settings.n_a</code> the configured value of <code>n_a</code>, except that a parameter or a setting whose name is one of the table's own attributes, such as <code>list</code>, <code>view</code> or <code>values</code>, is read by its key alone.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">calibrated</span><span class="o">.</span><span class="n">par</span><span class="o">.</span><span class="n">ρ</span><span class="p">)</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">n_a</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">calibrated</span><span class="o">.</span><span class="n">par</span><span class="o">.</span><span class="n">ρ</span><span class="p">)</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nb">print</span><span class="p">(</span><span class="n">specified</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">n_a</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a>6.0
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>800
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>6.0
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>800
 </code></pre></div>
 
 

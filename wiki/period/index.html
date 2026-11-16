@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8004,7 +8034,7 @@
 
 
 <h1 id="period">Period<a class="headerlink" href="#period" title="Permanent link">&para;</a></h1>
-<p>A <strong>period</strong> collects <a href="../stage/">stage occurrences</a> and their within-period <a href="../connector/">connections</a>. Its fields remain local to each stage, while a <a href="../parameters/">parameter</a> name declared by more than one stage denotes one parameter of that period. It also supplies a boundary through which the period joins its successor. The outer description is YAML; individual stage equations are written in <code>.bl</code>.</p>
+<p>A <strong>period</strong> collects <a href="../stage/">stage occurrences</a> and their within-period <a href="../connector/">connections</a>. Its fields remain local to each stage, while a <a href="../parameters/">parameter</a> name declared by more than one stage denotes one parameter of that period. Its unjoined inputs and outputs determine how it can join its successor. The outer description is YAML; individual stage equations are written in <code>.bl</code>.</p>
 <h2 id="the-period-file">The period file<a class="headerlink" href="#the-period-file" title="Permanent link">&para;</a></h2>
 <p>The outer description of a period is the <strong>period file</strong>, <code>period.yml</code>, a template that a <a href="../trellis/">trellis file</a> names under <code>template:</code> and repeats. Its <code>stages</code> take one of two shapes. Written as a list of stage keys, the file binds nothing, and the <a href="../spec_factory/">recipe</a> <code>spec.yml</code> of the specification factory supplies each stage's file and its values, <a href="../settings/">settings</a> and methods. Written as a mapping from each key to a record that names the <a href="../stage/">stage file</a> under <code>stage</code> and its three mappings, the file carries the bindings and needs no recipe. The two shapes are not mixed in one file, and a variant of the period stands beside it as <code>period.&lt;name&gt;.yml</code>. <a href="../../Bellman-Sym/06-period/">Period Syntax</a> §1 writes the template, and <a href="../../Bellman-Sym/07-trellis/">Trellis Syntax</a> §3 states the two shapes.</p>
 <h2 id="economic-order">Economic order<a class="headerlink" href="#economic-order" title="Permanent link">&para;</a></h2>
@@ -8013,8 +8043,8 @@
 <h2 id="backward-composition">Backward composition<a class="headerlink" href="#backward-composition" title="Permanent link">&para;</a></h2>
 <p>For a chain of stage <a href="../operator/">operators</a> <span class="arithmatex">\(T_1,\ldots,T_K\)</span> listed in forward economic order, and after the identifications its connectors make, the period's backward operator is</p>
 <div class="arithmatex">\[T_{\mathrm{period}}=T_1\circ\cdots\circ T_K.\]</div>
-<p>The rightmost operator acts first on continuation value. This formula assumes compatible value domains and well-defined component operators. Branching structures require their declared routes and continuation inputs rather than an arbitrary linear ordering.</p>
-<p>A <a href="../trellis/">trellis</a> assembles period occurrences across dates. The choice of a period boundary is part of the decomposition of the model; terminal conditions and numerical choices remain explicit.</p>
+<p>The rightmost operator acts first on the tuple of representing functions of all continuation value-type fields, including any constants such as age or a borrowing bound. This formula assumes compatible domains and well-defined component operators. Branching structures require their declared routes and continuation inputs rather than an arbitrary linear ordering.</p>
+<p>A <a href="../trellis/">trellis</a> is the diagram of periods joined by connections. In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations. The user supplies the terminal data for every required backward field when the model is realized.</p>
 
 
 

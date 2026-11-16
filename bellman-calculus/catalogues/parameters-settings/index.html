@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3646,6 +3648,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7965,7 +7995,7 @@
 <thead>
 <tr>
 <th>Role</th>
-<th>What the value determines</th>
+<th>Affected object</th>
 <th>Source</th>
 </tr>
 </thead>
@@ -7982,7 +8012,9 @@
 </tr>
 </tbody>
 </table>
-<p>A parameter or a setting has a declared set, the set in which it takes its values, and that set may name parameters, as the set of a growth factor does in <code>Γ : (0, R)</code>. The parameter lines of a file, with its definitions of derived parameters, together define one admissible set of parameter vectors, each line adding one condition, and not one domain for each parameter. The settings of a methods file have an admissible set of their own at each parameter vector (<a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4). A declared set is written as a set expression, such as an interval, a set of integers, a finite set of names, a product, or a union or a difference of sets of numbers (§2 there). A written type names a sort, and several written types can name one sort. No subsort relation is declared: one sort lies below another when its condition implies the other's in every stage and at every parameter vector (§3 there). A parameter supplied to a stage occurrence is held fixed in that occurrence's equations, even when stage occurrences in other periods use different values; two stages of one period that declare one parameter contribute their conditions to one admissible set (§6 there).</p>
+<p>A parameter or a setting has a declared set, the set in which it takes its values, and that set may name parameters, as the set of a growth factor does in <code>Γ : (0, R)</code>. The parameter lines of a file, with its definitions of derived parameters, together define one admissible set of parameter vectors, each line adding one condition, and not one domain for each parameter. The settings of a methods file have an admissible set of their own at each parameter vector (<a href="../../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4).</p>
+<p>A declared set is written as a set expression, such as an interval, a set of integers, a finite set of names, a product, or a union or a difference of sets of numbers (§2 there). A written type names a sort, and several written types can name one sort. No subsort relation is declared: one sort lies below another when its condition implies the other's in every stage and at every parameter vector (§3 there).</p>
+<p>A parameter supplied to a stage occurrence is held fixed in its equations. In a modular model, repeated declarations use their recorded calibration sources. Two stages of one period declaring one parameter contribute their conditions to one admissible set (§6 there).</p>
 <p>The calibration and settings files and the methods file supply calibration, methods and settings through the bindings of a stage occurrence. The stage equations themselves are <code>.bl</code>. The specified construction of Bellman-SYM's Appendix C retains interpreted equations and definitions; a completed numerical solution additionally needs admissible inputs and supported methods.</p>
 <div class="admonition note">
 <p class="admonition-title">Choosing the file for an input</p>
@@ -8013,7 +8045,7 @@
 </tr>
 <tr>
 <td>Vector or array</td>
-<td>Wage-profile coefficients, a shock mean vector.</td>
+<td>Wage-profile coefficients, a shock mean vector, or a fixed wage table read at the supplied age.</td>
 <td>Parameters when they determine the economic equations or law; numerical arrays can instead be settings.</td>
 </tr>
 <tr>
@@ -8031,9 +8063,10 @@
 <p>A numerical grid can be supplied as points or specified through a construction using sizes and bounds, according to the method's supported representation. A mathematical state or action space is a domain, and a function or distribution is a mathematical object; none is reduced to a scalar constant merely because it appears in a data file. <a href="../fields/">Fields</a> and <a href="../functions/">Functions</a> describe them.</p>
 <p>The same Boolean domain can have two roles. A flag changing an algorithm's jump handling is a setting; a flag adding a tax schedule to the budget changes the economic problem. These are conceptual examples, not new reserved YAML keys.</p>
 <div class="admonition note">
-<p class="admonition-title">Horizon and estimation bounds</p>
-<p>An economic finite horizon changes the decision problem; a numerical truncation of an infinite-horizon problem is an approximation choice. How to record the horizon in source remains open in this inventory; that question is separate from its mathematical role. A parameter's declared set, such as <span class="arithmatex">\(\beta\in(0,1)\)</span>, is also distinct from a narrower search interval chosen for an estimation procedure. The latter is a choice of the estimation procedure and no setting of the stage, and the parameter vectors it searches must lie in the admissible set of the parameters.</p>
+<p class="admonition-title">Horizon and terminal data</p>
+<p>An economic finite horizon changes the decision problem; a numerical truncation of an infinite-horizon problem is an approximation choice. The horizon is the number of period applications from the supplied terminal tuple. Terminal age and value data are supplied during realization. A stationary problem requires a fixed point of all fields sent backward (<a href="../../08-periods-and-trellis/">Periods and the trellis</a>).</p>
 </div>
+<p>A parameter's declared set, such as <span class="arithmatex">\(\beta\in(0,1)\)</span>, is distinct from a narrower search interval chosen for estimation. That interval belongs to the estimation procedure, and the parameter vectors it searches must lie in the admissible parameter set.</p>
 <p>A method's documented options, the keyword arguments of its method word, describe the inputs and domains it accepts. A number that an option takes is written in the entry as the name of a declared setting and never as the number; the option itself is no setting, and neither is the choice of a method, which a typing entry of a methods file writes (<a href="../../06-Methods/">Methods</a> §§2, 4 and 6). A <strong>handler</strong>, the implementation of that procedure, must map those inputs to the package arguments it supports. A method type records the options it admits and the set in which the value of each lies; recording an option does not show that a handler reads it.</p>
 
 

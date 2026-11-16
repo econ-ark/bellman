@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7982,7 +8012,7 @@
 
 
 <h1 id="bellman-calculus">Bellman calculus<a class="headerlink" href="#bellman-calculus" title="Permanent link">&para;</a></h1>
-<p>The <strong>Bellman calculus</strong> describes how the equations of a dynamic decision problem define mathematical operations and how those operations compose. A <a href="../stage/">stage</a> records transitions, value calculations, and policy relations at three <a href="../perch/">information sets</a>. Compatible stages form <a href="../period/">periods</a>, and period occurrences can form a finite <a href="../trellis/">trellis</a>.</p>
+<p>The <strong>Bellman calculus</strong> describes how the equations of a dynamic decision problem define mathematical operations and how those operations compose. A <a href="../stage/">stage</a> records transitions, value calculations, and policy relations at three <a href="../perch/">information sets</a>. Compatible stages form <a href="../period/">periods</a>, and a <a href="../trellis/">trellis</a> is a diagram of periods joined by connections.</p>
 <h2 id="the-objects-being-related">The objects being related<a class="headerlink" href="#the-objects-being-related" title="Permanent link">&para;</a></h2>
 <p>A <a href="../field/">field</a> is a quantity interpreted in its declared information context. A <strong>state vector</strong> is a chosen collection of coordinates that may summarize that information. Representing a field by a function of those coordinates requires a sufficiency assumption; a type declaration does not prove it. <a href="../field/">The entry on fields</a> distinguishes these descriptions.</p>
 <p>A <a href="../backward_builder/">backward builder</a> constructs values from continuation values. A <a href="../forward_builder/">forward builder</a> constructs a distribution of later states from a distribution of earlier states under a policy. Both are <a href="../builder/">builders</a>, the operators the <a href="../../Bellman-Sym/01-stage/#3-builder-blocks">blocks</a> of a stage denote. Their relationship depends on the transition, the conditional distribution of the shocks, and the reward structure. In particular, the distribution transition is dual to the reward-free expectation <a href="../operator/">operator</a>, not to the whole reward-bearing <a href="../bellman_operator/">Bellman operator</a>.</p>

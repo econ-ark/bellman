@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7911,13 +7941,14 @@
 <td>Earlier decisions and states precede later ones. Dependencies determine this order.</td>
 </tr>
 <tr>
-<td>Trellis index <span class="arithmatex">\(h\)</span></td>
-<td>Zero is terminal; a larger index is earlier in economic time.</td>
+<td>Trellis position <span class="arithmatex">\(h\)</span></td>
+<td>An address: zero is terminal; a larger index is earlier in economic time. The position supplies no age or parameter to a stage.</td>
 </tr>
 </tbody>
 </table>
 <p>A <strong>backward calculation</strong> starts from supplied continuation values. In a chain with stage <a href="../operator/">operators</a> <span class="arithmatex">\(T_1,\ldots,T_K\)</span> named in forward economic order, <span class="arithmatex">\(T_1\circ\cdots\circ T_K\)</span> applies <span class="arithmatex">\(T_K\)</span> first. Function composition is read right to left.</p>
 <p>A <strong>forward calculation</strong> starts from a distribution and a specified policy, then follows transitions in economic order. It is not obtained by applying an inverse <a href="../bellman_operator/">Bellman operator</a>. <a href="../backward_builder/">Backward builders</a> and <a href="../forward_builder/">forward builders</a>, the two directions of <a href="../builder/">builder</a>, define the two operations.</p>
+<p>If a stage reads age, the user supplies its terminal value and the stage equations compute earlier ages. A forward equation that needs the current age reads the incoming constant and its authored update, for example <code>age_next - 1</code>; it does not infer age from the trellis position or invert the backward value operator.</p>
 <p><a href="../perch/">Perch</a> marks <code>[&lt;]</code> and <code>[&gt;]</code> describe information within one stage; they do not mean calendar lags and leads. YAML list order does not replace <a href="../field/">field</a> dependencies. The <a href="../period/">period</a> and <a href="../trellis/">trellis</a> entries give the respective composition and index rules.</p>
 
 

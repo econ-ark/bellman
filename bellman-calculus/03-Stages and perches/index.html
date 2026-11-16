@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3049,10 +3051,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#111-what-the-perches-do" class="md-nav__link">
+  <a href="#111-perch-information" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.1.1 What the perches do
+        1.1.1 Perch information
       
     </span>
   </a>
@@ -3827,6 +3829,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8058,10 +8088,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#111-what-the-perches-do" class="md-nav__link">
+  <a href="#111-perch-information" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1.1.1 What the perches do
+        1.1.1 Perch information
       
     </span>
   </a>
@@ -8305,8 +8335,8 @@
 <p><strong>Builds on</strong> — <a href="../02-Illustrative%20example/">Illustrative example</a> gives the consumption–savings factorization.
 <strong>Used by</strong> — <a href="../04-fields%2C%20functions%20and%20types/">Fields, functions and types</a> develops the fields and functions at each perch; Bellman-SYM's <a href="../../Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> states the representation and binding conditions for written equations; <a href="../../Bellman-Sym/01-stage/">Stages</a> and <a href="../../Bellman-Sym/03-field-equations/">Field equations</a> give the <code>.bl</code> syntax of the stage defined here.</p>
 </details>
-<p>The <a href="../02-Illustrative%20example/">illustrative example</a> separates the optimizing decision builder <span class="arithmatex">\(\mathbb T_\succ\)</span> from the fixed-policy builder <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>. With arrival builder <span class="arithmatex">\(\mathbb T_\prec\)</span>, their stage compositions are <span class="arithmatex">\(\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ\)</span> and <span class="arithmatex">\(\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}\)</span>. A <strong>builder</strong> is the operator of one edge of the stage, or one of the two operators that are the image of no edge, the policy builder and the optimizing decision builder (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6): a backward builder specifies how a value function at one perch determines a value function at an earlier perch, and a forward builder how a measure at one perch determines a measure at the next. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6 derives the builders <span class="arithmatex">\(\mathbb T_\prec\)</span> and <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>, and the forward builders of §1.2 below, as the images of the transitions of a stage under its models, where a transition is a law of motion with its shock law.</p>
-<p>Section 1 defines the stage's mathematical data and the inputs and outputs of its operators; §2 defines the operators, and §3 states their information requirements. Authored stage declarations and equations use the <code>.bl</code> stage syntax of <a href="../../wiki/sym/">Bellman-SYM</a>. The mathematical tuple below describes their interpretation at one calibration at which the stage is well posed (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §§4 and 6), not a second source file or a retained parsing object.</p>
+<p>The <a href="../02-Illustrative%20example/">illustrative example</a> separates the optimizing decision builder <span class="arithmatex">\(\mathbb T_\succ\)</span> from the fixed-policy builder <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>. With arrival builder <span class="arithmatex">\(\mathbb T_\prec\)</span>, their stage compositions are <span class="arithmatex">\(\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ\)</span> and <span class="arithmatex">\(\mathbb T_\pi=\mathbb T_\prec\circ\mathbb T_{\succ,\pi}\)</span>. A <strong>builder</strong> is the operator of one edge of the stage, or one of the two operators that are the image of no edge, the policy builder and the optimizing decision builder (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6): a backward builder maps a tuple of representing functions at one perch to the tuple at an earlier perch, and a forward builder how a measure at one perch determines a measure at the next. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6 derives the builders <span class="arithmatex">\(\mathbb T_\prec\)</span> and <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span>, and the forward builders of §1.2 below, as the images of the transitions of a stage under its models, where a transition is a law of motion with its shock law.</p>
+<p>Section 1 defines the stage's mathematical data and the inputs and outputs of its operators; §2 defines the operators, and §3 states their information requirements. Authored stage declarations and equations use the <code>.bl</code> stage syntax of <a href="../../wiki/sym/">Bellman-SYM</a>. The mathematical tuple below describes their interpretation at one calibration and supplied continuation tuple at which the stage is well posed (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §§4 and 6), not a second source file or a retained parsing object.</p>
 <h2 id="1-the-general-stage">1. The general stage<a class="headerlink" href="#1-the-general-stage" title="Permanent link">&para;</a></h2>
 <h3 id="11-basic-setup-of-the-symbolic-stage">1.1 Basic setup of the symbolic stage<a class="headerlink" href="#11-basic-setup-of-the-symbolic-stage" title="Permanent link">&para;</a></h3>
 <p>The setup below fixes the mathematical data used in this representation. A <strong>stage</strong> is a tuple</p>
@@ -8319,10 +8349,10 @@ g_{\prec},\ g_{\succ};\quad
 G_{\prec},\ G_{\succ}
 \;\bigr),
 \]</div>
-<p>of eleven primitive objects, counting each shock pair as one entry:</p>
+<p>of eleven primitive objects, counting each shock pair as one entry. The tuple is taken at fixed values of any supplied constants read by a law or a forward equation:</p>
 <ul>
 <li>three <strong>state spaces</strong> <span class="arithmatex">\(\mathsf{X}_\prec, \mathsf{X}_\sim, \mathsf{X}_\succ\)</span>, one at each of three indices that we call <strong>perches</strong> (arrival, decision, continuation);</li>
-<li>an <strong>action space</strong> <span class="arithmatex">\(\mathsf{A}\)</span> with a <strong>feasibility correspondence</strong> <span class="arithmatex">\(\Gamma : \mathsf{X}_\sim \rightrightarrows \mathsf{A}\)</span> that pins down which choices are admissible at each decision state;</li>
+<li>an <strong>action space</strong> <span class="arithmatex">\(\mathsf{A}\)</span> with a <strong>feasibility correspondence</strong> <span class="arithmatex">\(\Gamma : \mathsf{X}_\sim \rightrightarrows \mathsf{A}\)</span> that states the feasible actions at each decision state; it may read a supplied value-type field;</li>
 <li>two <strong>shock pairs</strong> <span class="arithmatex">\((\mathsf{Z}_\zeta, \mu_\zeta)\)</span>, <span class="arithmatex">\((\mathsf{Z}_\eta, \mu_\eta)\)</span>, each a measurable shock space with a declared probability law, <strong>pre-decision</strong> (<span class="arithmatex">\(\zeta\)</span>) and <strong>post-decision</strong> (<span class="arithmatex">\(\eta\)</span>), describing within-stage randomness;</li>
 <li>two <strong>forward transition maps</strong> <span class="arithmatex">\(g_\prec : \mathsf{X}_\prec \times \mathsf{Z}_\zeta \to \mathsf{X}_\sim\)</span> and <span class="arithmatex">\(g_\succ : \operatorname{Gr}(\Gamma) \times \mathsf{Z}_\eta \to \mathsf{X}_\succ\)</span>, the first determining the decision state and the second the continuation state. Each jointly measurable transition map, together with its shock law, induces a <strong>probability kernel</strong>, indexed by an arrival state on the first edge and a feasible state–action pair on the second;</li>
 <li>
@@ -8336,12 +8366,14 @@ G_\prec : \mathsf{L} \times \mathsf{X}_\prec \times \mathsf{Z}_\zeta \to \mathsf
 </li>
 </ul>
 <p>We use standard Borel state, action, and shock spaces: measurable spaces equivalent to Borel subsets of complete separable metric spaces, including real domains and finite products. The displayed fixed laws describe shocks independent of information at their source perch. This is a specialization used below, not a requirement of the Bellman calculus. More generally, replace them by specified probability kernels <span class="arithmatex">\(\mu_\zeta(\mathrm dz\mid x_\prec)\)</span> and <span class="arithmatex">\(\mu_\eta(\mathrm dz\mid x,a)\)</span> on every required source state and feasible state–action pair, retaining their conditioning arguments in every integral. A marginal law alone does not assert independence.</p>
+<p>For the domain calculations of <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6, an excluded action has choice value <span class="arithmatex">\(-\infty\)</span>. Feasibility remains a separate relation: a feasible action can also have that value. The soundness result there states its additional restriction on this case.</p>
 <details class="note">
 <summary>The backward kernel and preferences</summary>
 <p>In expected utility, <span class="arithmatex">\(G_\succ(w,x,a,\eta)=r(x,a,\eta)+\beta w\)</span>, where <span class="arithmatex">\(r\)</span> is the one-stage reward and <span class="arithmatex">\(0&lt;\beta&lt;1\)</span> is the discount factor. State- or action-dependent discounting can instead be declared explicitly. These maps are affine in <span class="arithmatex">\(w\)</span>: they add a reward to a linear continuation term. Integrating them yields an affine policy-evaluation operator, not the undiscounted Markov expectation operator.</p>
 <p>Nonlinear preferences are written with each map placed where it belongs relative to the shock integral. A statement may apply one pointwise map inside the integral and another outside it, and an Epstein–Zin certainty equivalent, whose normalization sits outside the integral, is the case with both maps nonlinear; §2.3a gives the general form. The aggregator entry of the tuple for an edge is read as that pair of maps, the outer map being the identity in the form of §2.2. #todo resolved 12 September 2026: the extension is §2.3a.</p>
 </details>
-<h4 id="111-what-the-perches-do">1.1.1 What the perches do<a class="headerlink" href="#111-what-the-perches-do" title="Permanent link">&para;</a></h4>
+<p><a id="111-what-the-perches-do"></a></p>
+<h4 id="111-perch-information">1.1.1 Perch information<a class="headerlink" href="#111-perch-information" title="Permanent link">&para;</a></h4>
 <p>A stage constitutes one self-contained decision episode, and its <strong>perches</strong> can be viewed as the decision maker's vantage points, ordered by how much the agent knows:</p>
 <ul>
 <li><strong>arrival</strong> (<span class="arithmatex">\(\prec\)</span>) — entry to the stage, before any within-stage shock or decision;</li>
@@ -8411,19 +8443,22 @@ v(x) = \sup_{a \in \Gamma(x)}\bigl\{r(x, a) + \beta\, \mathbb{E}[v(x') \mid x, a
 <p>Two devices make this timing visible. The <strong>perch indices</strong> name arrival, decision and continuation as the nested filtration of <span class="arithmatex">\(\S 3\)</span>; and because the pre-decision shock is observed before the action, the choice falls on a state already carrying the within-period information, with the continuation perch the <strong>post-decision state</strong> of approximate dynamic programming when the post-decision shock is trivial (Powell 2011). #check-details</p>
 </div>
 <h3 id="12-wiring-the-stage">1.2 Wiring the stage<a class="headerlink" href="#12-wiring-the-stage" title="Permanent link">&para;</a></h3>
-<p>The Bellman calculus stage records compositions through the inputs and outputs of its operators. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6 collects them in the operator signature of the stage, whose sorts name the spaces of value functions and of measures defined below and the set of policies, and whose symbols are the builders. First, note that intuitively, to use the stage to solve, we read it as an <em>operator</em>: hand it a continuation value, and it returns an arrival value,</p>
+<p>The Bellman calculus stage records compositions through the inputs and outputs of its operators. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6 collects them in the operator signature of the stage, whose sorts name the spaces of value functions and of measures defined below and the set of policies, and whose symbols are the builders. The backward operator takes the tuple of continuation fields and returns the tuple sent back at arrival. In the scalar specialization below, the tuple has one value field, so its representing functions satisfy</p>
 <div class="arithmatex">\[
 \mathbb{T}_{\pi}\;\colon\; v_\succ \longmapsto v_\prec,
 \]</div>
-<p>a <em>continuation value in, arrival value out</em> contract that does not refer to the stage's internals nor any of the details of the syntactic declarations. The stages represented here have this input–output form; what changes between applications is the <strong>state space</strong> at each perch, the form of the transitions and their shock distributions, the feasibility correspondence, and the methods used to realize the builders.</p>
-<p><strong>Backward spaces and wiring</strong> For each perch <span class="arithmatex">\(m \in \{\prec, \sim, \succ\}\)</span> we now add one additional space: the <em>value functions at perch <span class="arithmatex">\(m\)</span></em>, simply written <span class="arithmatex">\(\mathsf{V}_m\)</span>. We can think of these as the space of <span class="arithmatex">\(\mathsf{L}\)</span>-valued functions on <span class="arithmatex">\(\mathsf{X}_m\)</span>, so that evaluating a value function at a state, <span class="arithmatex">\(v(x) \in \mathsf{L}\)</span>, is ordinary function application. The chosen function domains must make the declared operations well-defined and closed under their compositions. Boundedness, continuity, integrability, and equivalence-class conventions are additional mathematical choices, not consequences of the declared set of a value field. The backward builders are named operations between these spaces,</p>
+<p>a continuation-input and arrival-output relation. Additional value-type fields are additional inputs and outputs, with their own representing functions and domains. The stages represented here have this input–output form; what changes between applications is the <strong>state space</strong> at each perch, the form of the transitions and their shock distributions, the feasibility correspondence, and the methods used to realize the builders.</p>
+<p><strong>Backward spaces and wiring.</strong> For each perch <span class="arithmatex">\(m \in \{\prec, \sim, \succ\}\)</span> we now add one additional space: the <em>value functions at perch <span class="arithmatex">\(m\)</span></em>, simply written <span class="arithmatex">\(\mathsf{V}_m\)</span>. We can think of these as the space of <span class="arithmatex">\(\mathsf{L}\)</span>-valued functions on <span class="arithmatex">\(\mathsf{X}_m\)</span>, so that evaluating a value function at a state, <span class="arithmatex">\(v(x) \in \mathsf{L}\)</span>, is ordinary function application. With several fields, use the product <span class="arithmatex">\(\mathsf B_m\)</span> of their representing-function spaces, as Appendix D §6 defines. Its coordinates may have measurable domains smaller than the state space; operators are partial maps and compose only where each application is defined. The scalar notation below is their one-field specialization. Boundedness, continuity, integrability, and equivalence-class conventions are additional mathematical choices, not consequences of the declared set of a value field. The backward builders are named operations between these spaces,</p>
 <div class="arithmatex">\[
 \mathbb{T}_{\succ,\pi} \;\colon\; \mathsf{V}_\succ \to \mathsf{V}_\sim,
 \qquad
 \mathbb{T}_{\prec} \;\colon\; \mathsf{V}_\sim \to \mathsf{V}_\prec.
 \]</div>
-<p>The subscript <span class="arithmatex">\(\pi\)</span> means that the policy is fixed: <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span> is one operator for each <span class="arithmatex">\(\pi \in \Pi_\Gamma\)</span>, and the family <span class="arithmatex">\(\pi \mapsto \mathbb T_{\succ,\pi}\)</span> is a map <span class="arithmatex">\(\Pi_\Gamma \to [\mathsf V_\succ \to \mathsf V_\sim]\)</span>, which currying, the correspondence between a map of two arguments and a map of the first argument alone whose value is a map of the second, identifies with a map <span class="arithmatex">\(\Pi_\Gamma \times \mathsf V_\succ \to \mathsf V_\sim\)</span> in the category of sets, the spaces <span class="arithmatex">\(\mathsf V_\succ\)</span> and <span class="arithmatex">\(\mathsf V_\sim\)</span> being sets of functions. The policy is therefore not an input in a space of value functions and not an argument of the operator at a policy: it names the member of the family, and the semantic graph records it so, the operator at a policy answering the inputs and outputs of that member and the policy typed where the stage text defines it, on the output of the policy builder (see <a href="../05-Operators%20and%20builders/">Operators and builders</a> §6). The optimizing builder has the same input and output spaces but is denoted <span class="arithmatex">\(\mathbb T_\succ\)</span>, without <span class="arithmatex">\(\pi\)</span>. Its stage composite is <span class="arithmatex">\(\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ\)</span>. The undiscounted expectation operators <span class="arithmatex">\(P_\prec\)</span>, <span class="arithmatex">\(P_{\succ,\pi}\)</span>, and <span class="arithmatex">\(P_\pi\)</span> are defined separately in §2; only these have the plain distribution pairing.</p>
-<p><strong>Forward spaces and wiring</strong> The forward direction gets the same treatment: adjoin at each perch one further space <span class="arithmatex">\(\mathsf{M}_m\)</span>, the finite measures over perch-<span class="arithmatex">\(m\)</span> states. A finite measure is specified by its integrals: for <span class="arithmatex">\(f\)</span> a measurable real-valued function integrable under <span class="arithmatex">\(\mu\)</span> on <span class="arithmatex">\(\mathsf{X}_m\)</span>,</p>
+<p>For this currying statement, fix common scalar spaces on which the displayed operators are total. The subscript <span class="arithmatex">\(\pi\)</span> means that the policy is fixed: <span class="arithmatex">\(\mathbb T_{\succ,\pi}\)</span> is one operator for each <span class="arithmatex">\(\pi \in \Pi_\Gamma\)</span>, and the family <span class="arithmatex">\(\pi \mapsto \mathbb T_{\succ,\pi}\)</span> is a map <span class="arithmatex">\(\Pi_\Gamma \to [\mathsf V_\succ \to \mathsf V_\sim]\)</span>, which currying, the correspondence between a map of two arguments and a map of the first argument alone whose value is a map of the second, identifies with a map <span class="arithmatex">\(\Pi_\Gamma \times \mathsf V_\succ \to \mathsf V_\sim\)</span> in the category of sets, the spaces <span class="arithmatex">\(\mathsf V_\succ\)</span> and <span class="arithmatex">\(\mathsf V_\sim\)</span> being sets of functions.</p>
+<p>The policy is therefore not an input in a space of value functions and not an argument of the operator at a policy: it names the member of the family, and the semantic graph records it so, the operator at a policy answering the inputs and outputs of that member and the policy typed where the stage text defines it, on the output of the policy builder (see <a href="../05-Operators%20and%20builders/">Operators and builders</a> §6).</p>
+<p>For a maximizing policy rule with an attained measurable maximizer, the optimizing builder has the same input and output spaces but is denoted <span class="arithmatex">\(\mathbb T_\succ\)</span>, without <span class="arithmatex">\(\pi\)</span>. Its stage composite is <span class="arithmatex">\(\mathbb T=\mathbb T_\prec\circ\mathbb T_\succ\)</span>. The undiscounted expectation operators <span class="arithmatex">\(P_\prec\)</span>, <span class="arithmatex">\(P_{\succ,\pi}\)</span>, and <span class="arithmatex">\(P_\pi\)</span> are defined separately in §2; only these have the plain distribution pairing. A field value of <span class="arithmatex">\(-\infty\)</span> does not define feasibility: a feasible action may still have that value. The domain results of Appendix D §6 explicitly state their narrower assumptions.</p>
+<p><strong>Fields and policy indices.</strong> A policy indexes a decision edge; a field sent backward is a coordinate of the operator's input and output. Suppose a partial map has the form <span class="arithmatex">\(\Phi(\varsigma,v)=(\tau\varsigma,\mathbb T_\varsigma v)\)</span>, with first component depending only on <span class="arithmatex">\(\varsigma\)</span>. It determines <span class="arithmatex">\(\tau\)</span> on the projection of its domain and each <span class="arithmatex">\(\mathbb T_\varsigma\)</span> on that fibre's domain. It determines no value of <span class="arithmatex">\(\tau\)</span> where no pair is in its domain. Conversely, a specified <span class="arithmatex">\(\tau\)</span> and these partial maps determine <span class="arithmatex">\(\Phi\)</span>. This is the argument-by-argument correspondence of currying, with explicit domains. The family alone does not determine the base update: identity maps on one common fibre can accompany different updates.</p>
+<p><strong>Forward spaces and wiring.</strong> The forward direction gets the same treatment: adjoin at each perch one further space <span class="arithmatex">\(\mathsf{M}_m\)</span>, the finite measures over perch-<span class="arithmatex">\(m\)</span> states. A finite measure is specified by its integrals: for <span class="arithmatex">\(f\)</span> a measurable real-valued function integrable under <span class="arithmatex">\(\mu\)</span> on <span class="arithmatex">\(\mathsf{X}_m\)</span>,</p>
 <div class="arithmatex">\[
 \langle \mu,\, f \rangle_m \;=\; \int_{\mathsf{X}_m} f\; d\mu \;\in\; \bar{\mathbb{R}},
 \]</div>
@@ -8586,7 +8621,7 @@ P_\pi=P_\prec\circ P_{\succ,\pi},
 <summary>The information-set reading, formally</summary>
 <p>On <span class="arithmatex">\((\Omega,\Sigma,\mathbb P)\)</span> the perches form a <strong>filtration</strong>, a nested family <span class="arithmatex">\(\mathcal F_\prec\subseteq\mathcal F_\sim\subseteq\mathcal F_\succ\)</span> of information sets. A state <span class="arithmatex">\(X_p\)</span> measurable at perch <span class="arithmatex">\(p\)</span> satisfies <span class="arithmatex">\(\sigma(X_p)\subseteq\mathcal F_p\)</span>. <strong>State sufficiency</strong> means that the relevant payoffs and conditional future laws can be expressed using that state. It does not imply equality of these information sets: the agent may remember an old shock that no longer affects any payoff or transition.</p>
 <p>A real-valued field <span class="arithmatex">\(Z\)</span> has a measurable representation <span class="arithmatex">\(Z=z(X_p)\)</span> almost surely when it is measurable with respect to <span class="arithmatex">\(\sigma(X_p)\)</span>. Measurability with respect to the larger <span class="arithmatex">\(\mathcal F_p\)</span> alone is insufficient. Its representative is determined only almost everywhere under the law of <span class="arithmatex">\(X_p\)</span>, unless a pointwise domain-defined function is supplied. The precise representation requirements are in Bellman-SYM's Appendix C, §1.2 and rule R5.</p>
-<p>In a history-based construction, observed pre-decision shocks enlarge arrival information, and post-decision shocks enlarge decision information. A deterministic measurable policy action adds no information to the decision state on which it depends. Randomized policies require their additional randomization and its timing to be specified. #check-details-aas</p>
+<p>In a history-based construction, observed pre-decision shocks enlarge arrival information, and post-decision shocks enlarge decision information. On histories that hold the action as a coordinate, the choice counts as made after the decision perch. A field whose equation reads that choice, such as assets after consumption, is therefore known from continuation. Restricting histories to a deterministic policy can make that action measurable in decision information; it does not change the authored origin classification. Randomized policies require their additional randomization and its timing to be specified. #check-details-aas</p>
 </details>
 <p>In the surface syntax a perch is written as a perch word after a side of a block header, <code>!arvl</code>, <code>!dcsn</code> or <code>!cntn</code>, or as a mark on a name, <code>[&lt;]</code>, <code>[~]</code> or <code>[&gt;]</code>, where the decision mark is usually omitted; with marks, an arrival variable is written <code>m[&lt;]</code>, a decision variable <code>m</code>, a continuation variable <code>a[&gt;]</code>. The tags say what is known where: <code>m[&lt;]</code> asserts "<span class="arithmatex">\(m\)</span> is settled on arrival," a declared control <code>c</code> is chosen at decision information, <code>a[&gt;]</code> asserts "<span class="arithmatex">\(a\)</span> is determined by the time we continue."</p>
 <p><a href="../04-fields%2C%20functions%20and%20types/">Next → 04. Fields, functions and types</a></p>

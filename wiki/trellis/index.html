@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A finite sequence of period occurrences with inter-period connections.">
+        <meta name="description" content="A diagram of periods joined by connections.">
       
       
       
@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7102,10 +7132,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#index-and-boundary-data" class="md-nav__link">
+  <a href="#positions-and-terminal-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Index and boundary data
+        Positions and terminal data
       
     </span>
   </a>
@@ -7888,10 +7918,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#index-and-boundary-data" class="md-nav__link">
+  <a href="#positions-and-terminal-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Index and boundary data
+        Positions and terminal data
       
     </span>
   </a>
@@ -8026,15 +8056,16 @@
 
 
 <h1 id="trellis">Trellis<a class="headerlink" href="#trellis" title="Permanent link">&para;</a></h1>
-<p>A <strong>trellis</strong> is a finite ordered collection of <a href="../period/">period occurrences</a> and their inter-period <a href="../connector/">connections</a>. It records uses of <a href="../stage/">stage files</a> across dates. It is not a grid of individual state points and does not by itself assert one stored semgraph (semantic graph) for the entire horizon.</p>
-<h2 id="index-and-boundary-data">Index and boundary data<a class="headerlink" href="#index-and-boundary-data" title="Permanent link">&para;</a></h2>
+<p>A <strong>trellis</strong> is a diagram of <a href="../period/">periods</a> joined by <a href="../connector/">connections</a>. Its finite Python representation lists period occurrences and their inter-period connections. It records uses of <a href="../stage/">stage files</a> across dates. It is not a grid of individual state points and does not by itself assert one stored semgraph (semantic graph) for the entire horizon.</p>
+<p><a id="index-and-boundary-data"></a></p>
+<h2 id="positions-and-terminal-data">Positions and terminal data<a class="headerlink" href="#positions-and-terminal-data" title="Permanent link">&para;</a></h2>
 <p>The index <span class="arithmatex">\(h\)</span> counts backwards from terminal: <code>periods[0]</code> is terminal and <code>periods[h+1]</code> is one period earlier than <code>periods[h]</code>. An <a href="../connector/">inter-period connector</a> indexed by <span class="arithmatex">\(h\)</span> joins the earlier period's continuation to the later period's arrival. Backward calculation uses terminal continuation data first, then proceeds to increasing <span class="arithmatex">\(h\)</span>. The trellis is counted this way because it is built this way, the terminal period appended first and each earlier period after it, so that appending a period changes no index already present and the horizon is the number of periods built.</p>
-<p>Terminal continuation data must match the terminal stage's declared inputs and domains. Calling an entry terminal does not automatically supply zero value, a terminal policy, or compatible derivatives. An infinite-horizon fixed-point condition is a different boundary problem.</p>
+<p>The user supplies terminal data when the model is realized, outside the trellis file. These data must match every terminal value-type field, a field typed <code>!vlu</code>, and its representing function's domain. They include age or a bound where the stage takes one in. Calling an entry terminal supplies no values. An infinite-horizon stationary problem requires a fixed point for every field sent backward, not only the value field; a finite trellis does not assert that fixed point.</p>
 <h2 id="the-three-files-and-the-two-routes">The three files and the two routes<a class="headerlink" href="#the-three-files-and-the-two-routes" title="Permanent link">&para;</a></h2>
 <p>A trellis is written in files or in Python. The <strong>trellis file</strong> lists the periods, the terminal period first, each written out or given as a period template repeated, together with the inter-period connectors; the <strong>period file</strong> is the template of one period; and the <strong>recipe</strong>, <code>spec.yml</code>, names for each stage key the stage's file and the ordered sources of its <a href="../calibration/">calibration</a>, <a href="../settings/">settings</a> and methods, every path relative to the recipe's own folder. The recipe is the file of the <a href="../spec_factory/">specification factory</a>.</p>
 <p>The shape of a period's <code>stages</code> decides the route. Written as a list of keys, a period binds nothing, and <code>load_recipe(directory, "spec.yml")</code> reads the trellis file through the recipe, which supplies each key's file and mappings. Written as a mapping from each key to a record that names the stage file under <code>stage</code> and its three mappings inline or as paths, a period carries its bindings, and <code>load_trellis(file)</code> reads it with no recipe. The two shapes are not mixed in one file. A variant route is a second set of the three files beside the first, <code>spec.&lt;name&gt;.yml</code>, <code>trellis.&lt;name&gt;.yml</code> and <code>period.&lt;name&gt;.yml</code>. Without any file, <code>accrete</code> appends one period at a time to <code>{"periods": [], "inter_connectors": []}</code>, the terminal period first. <a href="../../Bellman-Sym/07-trellis/">The trellis guide</a> §§1, 3, 5 and 6 state the three files, the two shapes, the paths and the Python route; what a recipe does with the files it names is <a href="../../Bellman-Sym/08-bellman-factory/">the factory guide</a> §3.</p>
 <h2 id="reusing-stage-files">Reusing stage files<a class="headerlink" href="#reusing-stage-files" title="Permanent link">&para;</a></h2>
-<p>The same stage file may be parsed once and used for several <a href="../stage/">stage occurrences</a>. Each stage occurrence receives its own semgraph, methods, and <a href="../settings/">settings</a>. Stages in one period share a parameter when they declare it under the same name; the same name in another period denotes another parameter. A value that differs by period is written in the recipe, as <a href="../../Bellman-Sym/08-bellman-factory/">the factory guide</a> §3 states, or into the records by the application. The stage file itself need not encode a calendar date.</p>
+<p>The same stage file may be parsed once and used for several <a href="../stage/">stage occurrences</a>. Each stage occurrence receives its own semgraph, methods, and <a href="../settings/">settings</a>. Stages in one period share a parameter when they declare it under the same name; the same name in another period denotes another parameter. In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations. A quantity that differs with age is read from a fixed table or function at an age field. For example, <code>age = age_next - 1</code> computes age from the supplied continuation age. The package also permits recipes to select calibration, methods and settings by position; it does not enforce modularity (<a href="../../Bellman-Sym/08-bellman-factory/">the factory guide</a> §3).</p>
 <h2 id="the-syntactic-and-the-elaborated-trellis">The syntactic and the elaborated trellis<a class="headerlink" href="#the-syntactic-and-the-elaborated-trellis" title="Permanent link">&para;</a></h2>
 <p>The <strong>syntactic trellis</strong> is the model as written: the dictionary <code>{"periods": [{"stages": {key: record}, "connectors": [...]}], "inter_connectors": [...]}</code>, each record holding the stage's source and its three mappings, <a href="../calibration/">calibration</a>, settings and methods, as data. <code>load_trellis(file)</code> and <code>load_recipe(directory, recipe, **fills)</code> return it, and every adjustment to a model, a fill of a <a href="../spec_factory/">recipe</a>'s slot, a value that differs by period or a replacing selection, another methods file named in a stage's methods list, is made in it before elaboration and binding. The <strong>elaborated trellis</strong> is the same dictionary with an <a href="../elaborated_stage/">elaborated stage</a> at every key: <code>elaborate_trellis(syntactic)</code> returns it symbolic, and <code>calibrate_trellis</code>, <code>methodize_trellis</code> and <code>configure_trellis</code>, each given the syntactic trellis as its second argument, return it specified. Neither dictionary holds a graph; the only graphs are the <a href="../semgraph/">semgraphs</a> inside the stages.</p>
 <p><a href="../../Bellman-Sym/07-trellis/">The trellis guide</a> shows the files, the records and the construction sequence. <a href="../ordering_conventions/">Ordering conventions</a> distinguishes this backward index from forward economic time and ordinary function-composition order.</p>

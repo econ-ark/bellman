@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3581,6 +3583,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7954,7 +7984,7 @@
 <h1 id="pensions-and-retirement">Pensions and retirement<a class="headerlink" href="#pensions-and-retirement" title="Permanent link">&para;</a></h1>
 <p>A worker holds financial and pension assets and receives uncertain earnings. The worker chooses consumption and pension contributions before deciding whether to work or retire next period. Retirement is irreversible. On retirement, the pension balance is paid out once, while a benefit continues each period.</p>
 <h2 id="1-the-decision-sequence">1 The decision sequence<a class="headerlink" href="#1-the-decision-sequence" title="Permanent link">&para;</a></h2>
-<p>The declaration separates three <a href="../../wiki/stage/">stages</a>, each stating one decision problem. <code>worker_saving</code> writes consumption and contributions; <code>retire_choice</code> writes the choice of next period's employment status; <code>retiree_saving</code> writes consumption and saving after retirement. A terminal stage specifies the end of the horizon.</p>
+<p>The declaration separates three <a href="../../wiki/stage/">stages</a>, each stating one decision problem. <code>worker_saving</code> writes consumption and contributions; <code>retire_choice</code> writes the choice of next period's employment status; <code>retiree_saving</code> writes consumption and saving after retirement. A terminal stage specifies the final decision or bequest calculation. The user still supplies every terminal backward field it reads when realizing the model; the trellis file supplies none.</p>
 <p>The retirement-choice stage passes financial and pension balances to the work or retire branch. The connections between periods determine which saving stage follows. This makes the order of saving and retirement decisions available for inspection separately from any numerical method.</p>
 <h2 id="2-inspect-the-declaration">2 Inspect the declaration<a class="headerlink" href="#2-inspect-the-declaration" title="Permanent link">&para;</a></h2>
 <p>Read <a href="https://github.com/econ-ark/bellman/blob/main/applications/pension-retirement/declaration/stages/retire_choice/retire_choice.bl">the retirement-choice stage</a> and the <a href="https://github.com/econ-ark/bellman/blob/main/applications/pension-retirement/economics.md">model's source notes</a>. The files are in <code>applications/pension-retirement/</code>; <a href="../../overview/07-workbench/">Bellman Workbench</a> displays their equations, quantities and diagrams.</p>

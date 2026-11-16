@@ -2967,6 +2967,8 @@
       
         
       
+        
+      
     
     
     
@@ -3703,6 +3705,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8209,7 +8239,8 @@
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a>Operator('cons', 'dcsn_to_cntn:Pushforward')
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>range-compatibility   m_d − c(m_d) ∈ Xa   [established]
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>none
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>continuation-input    The representing function for V[&gt;] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>none
 </code></pre></div>
 <p>The one condition here is established: the declared sets decide that the law of motion at the policy takes its values in <code>Xa</code>, and the declaration is its evidence.</p>
 <h2 id="4-an-authored-line">4 An authored line<a class="headerlink" href="#4-an-authored-line" title="Permanent link">&para;</a></h2>
@@ -8221,9 +8252,15 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>Line('cons', 'policy.optimality')
 <a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>STAGE cons / POLICY BLOCK policy / optimality
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>Source  cons.bl
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>Conditions
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[&gt;] ∈ [−∞, −∞])
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>──────────────────────────────────────────────────────────────────────────────
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>Source  cons.bl
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>Definitions referenced
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>  𝑢     cons:function:𝑢
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 </code></pre></div>
 <h2 id="5-reading-a-card">5 Reading a card<a class="headerlink" href="#5-reading-a-card" title="Permanent link">&para;</a></h2>
 <p>These conventions are read across every card and every printed signature, and written on none of them.</p>

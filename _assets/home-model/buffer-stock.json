@@ -70,6 +70,70 @@
             "config": null
           },
           {
+            "id": "buffer_stock:cntn:L",
+            "label": "L≻",
+            "namespace": "cntn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "cntn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "(-inf, 0]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 34"
+              }
+            ],
+            "incomingEdges": [],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:cntn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
             "id": "buffer_stock:dcsn:V",
             "label": "V",
             "namespace": "dcsn",
@@ -153,6 +217,102 @@
                   {
                     "key": "set",
                     "value": "ℝ"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
+            "id": "buffer_stock:dcsn:L",
+            "label": "L",
+            "namespace": "dcsn",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "dcsn"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "(-inf, 0]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 34"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn",
+                "sourceNodeOutputId": "buffer_stock:dcsn:L",
+                "targetNodeInputId": "buffer_stock:dcsn:L"
+              }
+            ],
+            "outputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
+                  }
+                ]
+              }
+            ],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:dcsn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
                   }
                 ]
               }
@@ -306,6 +466,76 @@
             "config": null
           },
           {
+            "id": "buffer_stock:arvl:L",
+            "label": "L≺",
+            "namespace": "arvl",
+            "subgraphIds": [],
+            "attrs": [
+              {
+                "key": "kind",
+                "value": "field"
+              },
+              {
+                "key": "perch",
+                "value": "arvl"
+              },
+              {
+                "key": "role",
+                "value": "value"
+              },
+              {
+                "key": "set",
+                "value": "(-inf, 0]"
+              },
+              {
+                "key": "lines",
+                "value": "buffer_stock.bl 38"
+              }
+            ],
+            "incomingEdges": [
+              {
+                "sourceNodeId": "dcsn_to_arvl",
+                "sourceNodeOutputId": "buffer_stock:arvl:L",
+                "targetNodeInputId": "buffer_stock:arvl:L"
+              }
+            ],
+            "outputsMetadata": [],
+            "inputsMetadata": [
+              {
+                "id": "buffer_stock:arvl:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
+                  }
+                ]
+              }
+            ],
+            "style": {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#172A52",
+              "hoveredBorderColor": "#214EDA",
+              "textColor": "#172A52"
+            },
+            "config": null
+          },
+          {
             "id": "cntn_to_dcsn",
             "label": "cntn_to_dcsn",
             "namespace": "",
@@ -317,7 +547,7 @@
               },
               {
                 "key": "header",
-                "value": "(V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn"
+                "value": "(V[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, L) : !dcsn"
               },
               {
                 "key": "statement",
@@ -333,6 +563,11 @@
                 "sourceNodeId": "buffer_stock:cntn:V",
                 "sourceNodeOutputId": "buffer_stock:cntn:V",
                 "targetNodeInputId": "buffer_stock:cntn:V"
+              },
+              {
+                "sourceNodeId": "buffer_stock:cntn:L",
+                "sourceNodeOutputId": "buffer_stock:cntn:L",
+                "targetNodeInputId": "buffer_stock:cntn:L"
               }
             ],
             "outputsMetadata": [
@@ -358,6 +593,31 @@
                   {
                     "key": "set",
                     "value": "ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "buffer_stock:dcsn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
                   }
                 ]
               }
@@ -387,6 +647,31 @@
                     "value": "ℝ"
                   }
                 ]
+              },
+              {
+                "id": "buffer_stock:cntn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
+                  }
+                ]
               }
             ],
             "style": {
@@ -409,15 +694,19 @@
               },
               {
                 "key": "header",
-                "value": "(V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl"
+                "value": "(V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl"
               },
               {
-                "key": "statement",
-                "value": "39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)  :: [id=value]"
+                "key": "statement 1",
+                "value": "39  V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)      :: [id=value]"
+              },
+              {
+                "key": "statement 2",
+                "value": "40  L[<] = if σ_ψ > 0 then 0 else Γ*L/R  :: [id=borrowing_bound]"
               },
               {
                 "key": "lines",
-                "value": "buffer_stock.bl 38–39"
+                "value": "buffer_stock.bl 38–40"
               }
             ],
             "incomingEdges": [
@@ -425,6 +714,11 @@
                 "sourceNodeId": "buffer_stock:dcsn:V",
                 "sourceNodeOutputId": "buffer_stock:dcsn:V",
                 "targetNodeInputId": "buffer_stock:dcsn:V"
+              },
+              {
+                "sourceNodeId": "buffer_stock:dcsn:L",
+                "sourceNodeOutputId": "buffer_stock:dcsn:L",
+                "targetNodeInputId": "buffer_stock:dcsn:L"
               }
             ],
             "outputsMetadata": [
@@ -450,6 +744,31 @@
                   {
                     "key": "set",
                     "value": "ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "buffer_stock:arvl:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L≺"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L≺"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
                   }
                 ]
               }
@@ -479,6 +798,31 @@
                     "value": "ℝ"
                   }
                 ]
+              },
+              {
+                "id": "buffer_stock:dcsn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
+                  }
+                ]
               }
             ],
             "style": {
@@ -501,15 +845,15 @@
               },
               {
                 "key": "header",
-                "value": "(V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn"
+                "value": "(V[>] : ℝ @ !vlu, L) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn"
               },
               {
                 "key": "statement",
-                "value": "43  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]"
+                "value": "44  c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])  :: [id=optimality]"
               },
               {
                 "key": "lines",
-                "value": "buffer_stock.bl 42–43"
+                "value": "buffer_stock.bl 43–44"
               }
             ],
             "incomingEdges": [
@@ -517,6 +861,11 @@
                 "sourceNodeId": "buffer_stock:cntn:V",
                 "sourceNodeOutputId": "buffer_stock:cntn:V",
                 "targetNodeInputId": "buffer_stock:cntn:V"
+              },
+              {
+                "sourceNodeId": "buffer_stock:cntn:L",
+                "sourceNodeOutputId": "buffer_stock:cntn:L",
+                "targetNodeInputId": "buffer_stock:cntn:L"
               }
             ],
             "outputsMetadata": [
@@ -569,6 +918,31 @@
                   {
                     "key": "set",
                     "value": "ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "buffer_stock:cntn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "L≻"
+                  },
+                  {
+                    "key": "label",
+                    "value": "L≻"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "set",
+                    "value": "(-inf, 0]"
                   }
                 ]
               }
@@ -1235,7 +1609,7 @@
             "attrs": [
               {
                 "key": "inputs",
-                "value": "𝑉≻ : Xa → ℝ"
+                "value": "𝑉≻ : Xa → ℝ, 𝐿≻ : {()} → (−∞, 0]"
               }
             ],
             "incomingEdges": [],
@@ -1262,6 +1636,31 @@
                   {
                     "key": "type",
                     "value": "Xa → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "buffer_stock:function:cntn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝐿≻()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝐿≻()"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{()} → (−∞, 0]"
                   }
                 ]
               }
@@ -1386,16 +1785,20 @@
                 "value": "𝑐"
               },
               {
-                "key": "rule",
+                "key": "rule 1",
                 "value": "𝑉(m) = 𝑢(𝑐(m)) + β · 𝑉≻(𝑔≻(m, 𝑐(m)))"
               },
               {
+                "key": "rule 2",
+                "value": "𝐿(m) = 𝐿≻()"
+              },
+              {
                 "key": "kernel 1",
-                "value": "𝐺 of cntn_to_dcsn: 𝐺(V≻, m, c) = 𝑢(c) + β*V≻"
+                "value": "𝐺 of cntn_to_dcsn: 𝐺(V≻, L, m, c) = (𝑢(c) + β*V≻, L)"
               },
               {
                 "key": "kernel 2",
-                "value": "output V; unused m"
+                "value": "outputs (V, L); unused m; V reads V≻, c; L reads L"
               },
               {
                 "key": "lines",
@@ -1407,6 +1810,11 @@
                 "sourceNodeId": "cntn_to_dcsn:Pullback",
                 "sourceNodeOutputId": "buffer_stock:function:cntn:V:g",
                 "targetNodeInputId": "buffer_stock:function:cntn:V:g"
+              },
+              {
+                "sourceNodeId": "GraphInputs",
+                "sourceNodeOutputId": "buffer_stock:function:cntn:L",
+                "targetNodeInputId": "buffer_stock:function:cntn:L"
               }
             ],
             "outputsMetadata": [
@@ -1428,6 +1836,27 @@
                   {
                     "key": "type",
                     "value": "Xm → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "cntn_to_dcsn:Aggregation:L:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m ↦ 𝐿≻()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m ↦ 𝐿≻()"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → (−∞, 0]"
                   }
                 ]
               }
@@ -1457,6 +1886,31 @@
                     "value": "Xm → ℝ"
                   }
                 ]
+              },
+              {
+                "id": "buffer_stock:function:cntn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝐿≻()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝐿≻()"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "cntn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{()} → (−∞, 0]"
+                  }
+                ]
               }
             ],
             "style": {
@@ -1469,7 +1923,7 @@
           },
           {
             "id": "cntn_to_dcsn:Evaluation",
-            "label": "𝑉(m)",
+            "label": "𝑉(m), buffer_stock:function:dcsn:L",
             "namespace": "cntn_to_dcsn",
             "subgraphIds": [],
             "attrs": [
@@ -1478,8 +1932,12 @@
                 "value": "Evaluation"
               },
               {
-                "key": "rule",
+                "key": "rule 1",
                 "value": "𝑉 : Xm → ℝ"
+              },
+              {
+                "key": "rule 2",
+                "value": "𝐿 : {()} → (−∞, 0]"
               },
               {
                 "key": "kernel",
@@ -1491,6 +1949,11 @@
                 "sourceNodeId": "cntn_to_dcsn:Aggregation",
                 "sourceNodeOutputId": "cntn_to_dcsn:Aggregation:V:result",
                 "targetNodeInputId": "cntn_to_dcsn:Aggregation:V:result"
+              },
+              {
+                "sourceNodeId": "cntn_to_dcsn:Aggregation",
+                "sourceNodeOutputId": "cntn_to_dcsn:Aggregation:L:result",
+                "targetNodeInputId": "cntn_to_dcsn:Aggregation:L:result"
               }
             ],
             "outputsMetadata": [
@@ -1518,6 +1981,31 @@
                     "value": "Xm → ℝ"
                   }
                 ]
+              },
+              {
+                "id": "buffer_stock:function:dcsn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝐿()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝐿()"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{()} → (−∞, 0]"
+                  }
+                ]
               }
             ],
             "inputsMetadata": [
@@ -1539,6 +2027,27 @@
                   {
                     "key": "type",
                     "value": "Xm → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "cntn_to_dcsn:Aggregation:L:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "m ↦ 𝐿≻()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "m ↦ 𝐿≻()"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xm → (−∞, 0]"
                   }
                 ]
               }
@@ -1834,23 +2343,32 @@
                 "value": "Aggregation"
               },
               {
-                "key": "rule",
+                "key": "rule 1",
                 "value": "𝑉≺(k) = E_{ψ, ξ}[(Γ · ψ)^(1 − ρ) · 𝑉(𝑔≺(k, ψ, ξ))]"
               },
               {
+                "key": "rule 2",
+                "value": "𝐿≺(k) = (if σ_ψ > 0 then 0 else Γ · 𝐿/R)"
+              },
+              {
                 "key": "kernel 1",
-                "value": "𝐺 of dcsn_to_arvl: 𝐺(E_{ψ, ξ}((Γ*ψ)^(1 - ρ)*V), k) = E_{ψ, ξ}((Γ*ψ)^(1 - ρ)*V)"
+                "value": "𝐺 of dcsn_to_arvl: 𝐺(L, E_{ψ, ξ}((Γ*ψ)^(1 - ρ)*V), k) = (E_{ψ, ξ}((Γ*ψ)^(1 - ρ)*V), if σ_ψ > 0 then 0 else Γ*L/R)"
               },
               {
                 "key": "kernel 2",
-                "value": "output V; unused k"
+                "value": "outputs (V, L); unused k; V reads E_{ψ, ξ}((Γ*ψ)^(1 - ρ)*V); L reads L"
               },
               {
                 "key": "lines",
-                "value": "buffer_stock.bl 39"
+                "value": "buffer_stock.bl 39–40"
               }
             ],
             "incomingEdges": [
+              {
+                "sourceNodeId": "cntn_to_dcsn:Evaluation",
+                "sourceNodeOutputId": "buffer_stock:function:dcsn:L",
+                "targetNodeInputId": "buffer_stock:function:dcsn:L"
+              },
               {
                 "sourceNodeId": "dcsn_to_arvl.value:Expectation:1",
                 "sourceNodeOutputId": "dcsn_to_arvl.value:Expectation:1:result",
@@ -1878,9 +2396,55 @@
                     "value": "Xa → ℝ"
                   }
                 ]
+              },
+              {
+                "id": "dcsn_to_arvl:Aggregation:L:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k ↦ if σ_ψ > 0 then 0 else Γ · 𝐿()/R"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k ↦ if σ_ψ > 0 then 0 else Γ · 𝐿()/R"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → (−∞, 0]"
+                  }
+                ]
               }
             ],
             "inputsMetadata": [
+              {
+                "id": "buffer_stock:function:dcsn:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝐿()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝐿()"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "dcsn"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{()} → (−∞, 0]"
+                  }
+                ]
+              },
               {
                 "id": "dcsn_to_arvl.value:Expectation:1:result",
                 "attrs": [
@@ -1913,7 +2477,7 @@
           },
           {
             "id": "dcsn_to_arvl:Evaluation",
-            "label": "𝑉≺(k)",
+            "label": "𝑉≺(k), buffer_stock:function:arvl:L",
             "namespace": "dcsn_to_arvl",
             "subgraphIds": [],
             "attrs": [
@@ -1922,8 +2486,12 @@
                 "value": "Evaluation"
               },
               {
-                "key": "rule",
+                "key": "rule 1",
                 "value": "𝑉≺ : Xa → ℝ"
+              },
+              {
+                "key": "rule 2",
+                "value": "𝐿≺ : {()} → (−∞, 0]"
               },
               {
                 "key": "kernel",
@@ -1935,6 +2503,11 @@
                 "sourceNodeId": "dcsn_to_arvl:Aggregation",
                 "sourceNodeOutputId": "dcsn_to_arvl:Aggregation:V:result",
                 "targetNodeInputId": "dcsn_to_arvl:Aggregation:V:result"
+              },
+              {
+                "sourceNodeId": "dcsn_to_arvl:Aggregation",
+                "sourceNodeOutputId": "dcsn_to_arvl:Aggregation:L:result",
+                "targetNodeInputId": "dcsn_to_arvl:Aggregation:L:result"
               }
             ],
             "outputsMetadata": [
@@ -1962,6 +2535,31 @@
                     "value": "Xa → ℝ"
                   }
                 ]
+              },
+              {
+                "id": "buffer_stock:function:arvl:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝐿≺()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝐿≺()"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{()} → (−∞, 0]"
+                  }
+                ]
               }
             ],
             "inputsMetadata": [
@@ -1983,6 +2581,27 @@
                   {
                     "key": "type",
                     "value": "Xa → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "dcsn_to_arvl:Aggregation:L:result",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "k ↦ if σ_ψ > 0 then 0 else Γ · 𝐿()/R"
+                  },
+                  {
+                    "key": "label",
+                    "value": "k ↦ if σ_ψ > 0 then 0 else Γ · 𝐿()/R"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "Xa → (−∞, 0]"
                   }
                 ]
               }
@@ -2111,7 +2730,7 @@
               },
               {
                 "key": "lines",
-                "value": "buffer_stock.bl 43"
+                "value": "buffer_stock.bl 44"
               }
             ],
             "incomingEdges": [
@@ -2199,7 +2818,7 @@
               },
               {
                 "key": "lines",
-                "value": "buffer_stock.bl 43"
+                "value": "buffer_stock.bl 44"
               }
             ],
             "incomingEdges": [
@@ -2351,7 +2970,7 @@
             "attrs": [
               {
                 "key": "outputs",
-                "value": "𝑉≺ : Xa → ℝ, 𝑐(m) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})"
+                "value": "𝑉≺ : Xa → ℝ, 𝐿≺ : {()} → (−∞, 0], 𝑐(m) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})"
               }
             ],
             "incomingEdges": [
@@ -2359,6 +2978,11 @@
                 "sourceNodeId": "dcsn_to_arvl:Evaluation",
                 "sourceNodeOutputId": "buffer_stock:function:arvl:V",
                 "targetNodeInputId": "buffer_stock:function:arvl:V"
+              },
+              {
+                "sourceNodeId": "dcsn_to_arvl:Evaluation",
+                "sourceNodeOutputId": "buffer_stock:function:arvl:L",
+                "targetNodeInputId": "buffer_stock:function:arvl:L"
               },
               {
                 "sourceNodeId": "policy:Evaluation",
@@ -2390,6 +3014,31 @@
                   {
                     "key": "type",
                     "value": "Xa → ℝ"
+                  }
+                ]
+              },
+              {
+                "id": "buffer_stock:function:arvl:L",
+                "attrs": [
+                  {
+                    "key": "__tensor_tag",
+                    "value": "𝐿≺()"
+                  },
+                  {
+                    "key": "label",
+                    "value": "𝐿≺()"
+                  },
+                  {
+                    "key": "perch",
+                    "value": "arvl"
+                  },
+                  {
+                    "key": "role",
+                    "value": "value"
+                  },
+                  {
+                    "key": "type",
+                    "value": "{()} → (−∞, 0]"
                   }
                 ]
               },
@@ -2426,14 +3075,14 @@
         ],
         "groupNodeAttributes": {
           "cntn_to_dcsn": {
-            "inputs": "𝑉≻ : Xa → ℝ",
-            "outputs": "𝑉 : Xm → ℝ",
+            "inputs": "𝑉≻ : Xa → ℝ, 𝐿≻ : {()} → (−∞, 0]",
+            "outputs": "𝑉 : Xm → ℝ, 𝐿 : {()} → (−∞, 0]",
             "parameter 1": "β : (0, 1), unbound",
             "parameter 2": "ρ : (1, inf), unbound"
           },
           "dcsn_to_arvl": {
-            "inputs": "𝑉 : Xm → ℝ",
-            "outputs": "𝑉≺ : Xa → ℝ",
+            "inputs": "𝑉 : Xm → ℝ, 𝐿 : {()} → (−∞, 0]",
+            "outputs": "𝑉≺ : Xa → ℝ, 𝐿≺ : {()} → (−∞, 0]",
             "parameter 1": "ρ : (1, inf), unbound",
             "parameter 2": "R : ℝ₊₊, unbound",
             "parameter 3": "Γ : ℝ₊₊, unbound",
@@ -2442,9 +3091,9 @@
             "parameter 6": "p_zero : (0, 1), unbound"
           },
           "policy": {
-            "inputs": "𝑉≻ : Xa → ℝ",
+            "inputs": "𝑉≻ : Xa → ℝ, 𝐿≻ : {()} → (−∞, 0]",
             "outputs": "𝑐(m) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m) ∈ Γ_c(m)})",
-            "feasible set": "Γ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}",
+            "feasible set": "Γ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}",
             "parameter 1": "β : (0, 1), unbound",
             "parameter 2": "ρ : (1, inf), unbound"
           }
@@ -3054,5 +3703,5 @@
     }
   },
   "source_path": "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
-  "source_sha256": "065c530b2187e5bee4a28f968560bfc590b02c2272b45db9fd291aea67a0416f"
+  "source_sha256": "4cc62f9aba4c322b23be29e7050f9d6ff838150851b756aeb6dc42d8744034e4"
 }

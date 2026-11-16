@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3666,6 +3668,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7987,18 +8017,19 @@
 <p>The <strong>Bellman calculus</strong> is a mathematical account of staged <strong>recursive dynamic programs</strong>, sequential decision problems specified by states, feasible actions, rewards, transitions and continuation values. The modeler writes stage equations in <code>.bl</code>, with supporting YAML for composition and numerical choices. Their <a href="../../wiki/semantics/">semantics</a> states what those expressions mean. Numerical methods approximate the resulting operations under separate assumptions.</p>
 <div class="admonition info">
 <p class="admonition-title">Recursive dynamic programs</p>
-<p>A fixed-policy operator <span class="arithmatex">\(\mathbb T_\pi\)</span> evaluates a specified policy <span class="arithmatex">\(\pi\)</span>; an optimizing Bellman operator <span class="arithmatex">\(\mathbb T\)</span> takes the supremum over feasible actions. Finite-horizon problems use backward recursion from a terminal value. In a stationary infinite-horizon problem, a value can be characterized by a fixed point under suitable existence and optimality conditions. A type signature alone does not establish those conditions; see <a href="../08-periods-and-trellis/">Periods and the trellis</a>.</p>
+<p>A fixed-policy operator <span class="arithmatex">\(\mathbb T_\pi\)</span> evaluates a specified policy <span class="arithmatex">\(\pi\)</span>; an optimizing Bellman operator <span class="arithmatex">\(\mathbb T\)</span> takes the supremum over feasible actions. Finite-horizon problems use backward recursion from terminal data for every field taken in. In a stationary infinite-horizon problem, all fields sent backward must be at a fixed point under suitable existence and optimality conditions. A type signature alone does not establish those conditions; see <a href="../08-periods-and-trellis/">Periods and the trellis</a>.</p>
 </div>
-<p>A <a href="../03-Stages%20and%20perches/">stage</a> organizes a local decision around its available information, transitions, rewards and controls. Stages compose into <a href="../07-stage-composition/">periods</a>, and periods compose across time into a <a href="../08-periods-and-trellis/">trellis</a>, the declared sequence of period occurrences and their inter-period connections. A stage can be examined separately once its continuation input and other required inputs have been supplied. Replacing it in a larger model requires compatible boundaries and may change values elsewhere in that model.</p>
+<p>A <a href="../03-Stages%20and%20perches/">stage</a> organizes a local decision around its available information, transitions, rewards and controls. Stages compose into <a href="../07-stage-composition/">periods</a>, and periods compose across time into a <a href="../08-periods-and-trellis/">trellis</a>, a diagram of periods joined by connections. A stage can be examined separately once its continuation fields have been supplied, including any age, bound or other value-type input. Replacing it in a larger model requires compatible boundaries and may change values elsewhere in that model.</p>
 <p><a id="modularity"></a></p>
 <h2 id="1-modularity">1. Modularity<a class="headerlink" href="#1-modularity" title="Permanent link">&para;</a></h2>
+<p><a href="../APPX-H-MODULARITY/">Appendix H</a> defines modularity: repeated occurrences share a declaration's operators and calibration rule.</p>
 <p>Dynamic programming studies operators on value functions; their composition makes the dependence between local problems explicit.<sup id="fnref:dp-tradition"><a class="footnote-ref" href="#fn:dp-tradition">1</a></sup> Consider two fixed-policy operators</p>
 <div class="arithmatex">\[
 \mathbb T_{A,\pi}:\mathsf V_0\to\mathsf V_1,
 \qquad
 \mathbb T_{B,\pi}:\mathsf V_1\to\mathsf V_2.
 \]</div>
-<p>Here each <span class="arithmatex">\(\mathsf V_i\)</span> is a specified class of functions on the corresponding state space, and <span class="arithmatex">\(\pi\)</span> collects the relevant fixed policies. With primitives and other free inputs held fixed, define <span class="arithmatex">\(v_A=\mathbb T_{A,\pi}v\)</span> and <span class="arithmatex">\(v_B=\mathbb T_{B,\pi}v_A\)</span>. The second operation receives the first operation's result as its continuation input. More generally, <span class="arithmatex">\(K\)</span> operators with matching types <span class="arithmatex">\(\mathbb T_{k,\pi}:\mathsf V_{k-1}\to\mathsf V_k\)</span> compose as</p>
+<p>In this scalar specialization, each <span class="arithmatex">\(\mathsf V_i\)</span> is a specified class of functions on the corresponding state space. With several value-type fields, use the tuple carrier of <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6. The index <span class="arithmatex">\(\pi\)</span> collects the relevant fixed policies. With primitives and other free inputs held fixed, define <span class="arithmatex">\(v_A=\mathbb T_{A,\pi}v\)</span> and <span class="arithmatex">\(v_B=\mathbb T_{B,\pi}v_A\)</span>. The second operation receives the first operation's result as its continuation input. More generally, <span class="arithmatex">\(K\)</span> operators with matching types <span class="arithmatex">\(\mathbb T_{k,\pi}:\mathsf V_{k-1}\to\mathsf V_k\)</span> compose as</p>
 <div class="arithmatex">\[
 \mathbb T_\pi=\mathbb T_{K,\pi}\circ\mathbb T_{K-1,\pi}\circ\cdots\circ\mathbb T_{1,\pi},
 \qquad
@@ -8020,7 +8051,7 @@ v_k=\mathbb T_{k,\pi}v_{k-1},\quad k=1,\ldots,K.
 <p><a id="overview-of-t-calculus-semantics"></a></p>
 <h2 id="2-mathematical-interpretation">2. Mathematical interpretation<a class="headerlink" href="#2-mathematical-interpretation" title="Permanent link">&para;</a></h2>
 <p>A <a href="../../wiki/semantics/">denotational semantics</a> assigns mathematical meanings to expressions, with a compound expression interpreted from its constituents and the relevant input environment.<sup id="fnref:stoy-denotation"><a class="footnote-ref" href="#fn:stoy-denotation">4</a></sup> The environment assigns values to free inputs, such as a continuation function. In the specified construction, arithmetic in <code>.bl</code> equations is parsed; the temporary <strong>abstract syntax tree</strong>, a record of the source's grammatical structure, and the recorded source locations are used during interpretation. Retained stage equations, local definitions and typed diagrams record the interpreted structure. This is the specified construction rather than a statement that every runtime component already implements it.</p>
-<p>YAML declarations of <a href="../../wiki/period/">periods</a> and the <a href="../../wiki/trellis/">trellis</a> retain the outer model organization, and each occurrence has fresh stage objects. A connector identifies compatible boundary quantities by declared renaming; a nonidentity economic transformation requires an authored equation. No single stored graph of the entire trellis is required by these statements.</p>
+<p>YAML declarations of <a href="../../wiki/period/">periods</a> and the <a href="../../wiki/trellis/">trellis</a> retain the outer model organization, and each occurrence has fresh stage objects. In a modular model, those objects reuse their declaration’s recorded calibration sources and operator family. Their supplied field arguments may differ; methods and settings are outside this condition. A connector identifies compatible boundary quantities by declared renaming; a nonidentity economic transformation requires an authored equation. No single stored graph of the entire trellis is required by these statements.</p>
 <p>Several related calculations may be derived from a model. Under a fixed feasible policy <span class="arithmatex">\(\pi\)</span>, the backward transition expectation <span class="arithmatex">\(P_\pi\)</span> and forward distribution operator <span class="arithmatex">\(\mathbb M_\pi\)</span> satisfy the restricted expectation–measure pairing described in <a href="../05-Operators%20and%20builders/">Operators and builders</a> §3. A reward-bearing or optimizing Bellman operator <span class="arithmatex">\(\mathbb T\)</span> does not have that linear-distribution pairing in general. Relations between alternative value representations require their own conditions; see <a href="../10-semi-conjugacy/">Semi-conjugacy</a>.</p>
 <p>A typed diagram records which operations can compose. It does not by itself establish that states are sufficient, integrals finite, maximizing policies measurable, fixed points unique or numerical approximations convergent. Those properties can be stated mathematically and checked under explicit hypotheses. They do not depend on whether source code gives every intermediate operation a name.</p>
 <p><a id="components-of-t-calculus"></a></p>

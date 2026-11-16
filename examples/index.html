@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://bellman.io/examples/">
       
       
-        <link rel="prev" href="../bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING/">
+        <link rel="prev" href="../bellman-calculus/APPX-H-MODULARITY/">
       
       
         <link rel="next" href="housing-frictions/">
@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3581,6 +3583,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7911,7 +7941,7 @@
 
 
 <h1 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h1>
-<p>The examples below include individual stages and applications that compose several stages into periods. A stage is one decision episode, with its arrival state, shocks, transitions, constraints and preferences. An application specifies one or more stage occurrences, each a stage file placed at one position of a <a href="../wiki/period/">period</a>, and the <a href="../wiki/connector/">connectors</a> that join them by identifying or renaming the quantities one stage passes to the next.</p>
+<p>The examples below include individual stages and applications that compose several stages into periods. A stage is one decision episode, with its arrival state, shocks, transitions, constraints and preferences. An application specifies one or more stage occurrences, each a stage file placed at one position of a <a href="../wiki/period/">period</a>, and the <a href="../wiki/connector/">connectors</a> that pair their fields without renaming them. A <a href="../wiki/trellis/">trellis</a> is a diagram of periods joined by these connections.</p>
 <p>Each stage is structured around three <strong>perches</strong> — information sets at which the agent's state is observed:</p>
 <ul>
 <li><strong>Arrival</strong> — the agent enters with the states of the arrival perch (e.g., beginning-of-period assets before shocks resolve).</li>
@@ -7987,7 +8017,7 @@
 <tr>
 <td style="text-align: left;"><strong>Retirement Choice (DCEGM)</strong></td>
 <td style="text-align: left;">Branching model with discrete retirement decision and continuous consumption; EGM for discrete-continuous choice (DC-EGM) with the fast upper envelope scan (FUES)</td>
-<td style="text-align: left;">3</td>
+<td style="text-align: left;">3 + terminal</td>
 <td style="text-align: left;"><a href="retirement/retirement_choice/">Application</a></td>
 <td style="text-align: left;">—</td>
 </tr>
@@ -8093,7 +8123,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Appendix G: Functional programming">
+          <a href="../bellman-calculus/APPX-H-MODULARITY/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Appendix H: Modularity">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -8103,7 +8133,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Appendix G: Functional programming
+                Appendix H: Modularity
               </div>
             </div>
           </a>

@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7984,13 +8014,13 @@
 <h1 id="specified-stage">Specified stage<a class="headerlink" href="#specified-stage" title="Permanent link">&para;</a></h1>
 <p>A <strong>specified stage</strong> is a constructed <a href="../stage/">stage</a> with its method, numerical-setting and parameter values supplied, the version that <a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6 lists as configured. The name distinguishes the resulting <a href="../stage/">stage occurrence</a> from the <a href="../spec_factory/">recipe</a> and partial source mappings used to prepare them. It is not a synonym for a solved model or a callable numerical implementation.</p>
 <h2 id="specification-order">Specification order<a class="headerlink" href="#specification-order" title="Permanent link">&para;</a></h2>
-<p>The recommended order of the bindings is calibrate, methodize, configure:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>construction → calibration → methodization → configuration
+<p>For one stage, the examples retain four explicit steps:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>elaboration → methodization → calibration → configuration
 </code></pre></div>
 <p>Calibration requires a value for every declared parameter and refuses values at which it finds a condition of the parameter lines or of the definitions of <a href="../parameters/">derived parameters</a> to fail (<a href="../calibration/">calibration</a>). Methodization reads the stage's methods files: the methods, grids and handlers they type and the lines they add. Configuration values the settings those files declare and checks each value against its declared set and the methods that read it, so it is made after methodization; calibration may also come after either of the others. Each binding adds to the <a href="../stage/">stage occurrence</a> it is called on and returns it; nothing is copied, and a later binding replaces the earlier binding made by the same verb (<a href="../../Bellman-Sym/API/stage/09-binding-verbs/">The binding verbs</a> §1). This does not imply that the operations commute.</p>
-<p>The four stopping points, the symbolic trellis and the trellis after each verb, are the results of the four calls: <code>elaborate_trellis</code>, then <code>calibrate_trellis</code>, <code>methodize_trellis</code> and <code>configure_trellis</code>, each reading its mapping from the <a href="../trellis/">syntactic trellis</a> given as its second argument. Each binding verb with its source held fixed is a <strong>binding map</strong>, written <span class="arithmatex">\(\mathcal C_c\)</span>, <span class="arithmatex">\(M_m\)</span> and <span class="arithmatex">\(K_s\)</span> in <a href="../../bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING/">Appendix G</a> §7, so that a specified stage is <span class="arithmatex">\(K_s\,M_m\,\mathcal C_c(S)\)</span>.</p>
+<p>The trellis factory uses calibration before methodization. Its four stopping points, the symbolic trellis and the trellis after each verb, are the results of the four calls: <code>elaborate_trellis</code>, then <code>calibrate_trellis</code>, <code>methodize_trellis</code> and <code>configure_trellis</code>, each reading its mapping from the <a href="../trellis/">syntactic trellis</a> given as its second argument. Each binding verb with its source held fixed is a <strong>binding map</strong>, written <span class="arithmatex">\(\mathcal C_c\)</span>, <span class="arithmatex">\(M_m\)</span> and <span class="arithmatex">\(K_s\)</span> in <a href="../../bellman-calculus/APPX-G-FUNCTIONAL-PROGRAMMING/">Appendix G</a> §7, so that a specified stage is <span class="arithmatex">\(K_s\,M_m\,\mathcal C_c(S)\)</span>.</p>
 <h2 id="meaning-and-numerical-execution">Meaning and numerical execution<a class="headerlink" href="#meaning-and-numerical-execution" title="Permanent link">&para;</a></h2>
-<p>A method word typed without a handler leaves the routine unspecified even when the required mappings exist. Numerical use additionally needs compatible <a href="../handler/">handlers</a>, representations, continuation or terminal data, feasible boundary treatment and accuracy checks. Analytic assumptions are not supplied by settings or calibration.</p>
+<p>A method word typed without a handler leaves the routine unspecified even when the required mappings exist. Numerical use additionally needs compatible <a href="../handler/">handlers</a>, representations, supplied data for every continuation value-type field, feasible boundary treatment and accuracy checks. The user supplies terminal data at realization; the trellis file holds none. Analytic assumptions are not supplied by settings or calibration.</p>
 <p>The <a href="../spec_factory/">specification factory</a> resolves inputs to these operations; the syntactic trellis it returns is a dictionary of bindings, not the stage's mathematical graph. The entries <a href="../symbolic_stage/">symbolic stage</a>, <a href="../methodization/">methodization</a>, <a href="../settings/">settings</a>, <a href="../calibration/">calibration</a> and <a href="../parameters/">parameters</a> explain the individual concepts. Exact signatures and the behavior at the places are in <a href="../../Bellman-Sym/API/factory/stage-factory/">Stage functions</a>.</p>
 
 

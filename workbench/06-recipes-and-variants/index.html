@@ -2941,6 +2941,8 @@
       
         
       
+        
+      
     
     
     
@@ -3677,6 +3679,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8013,13 +8043,15 @@
 <li>Inspect the recipe's edited text and save it. If <strong>New file</strong> opened a source, fill and save that file, then return to the recipe and save its changed reference. Reopen an occurrence to check the applied bindings. <strong>Problems</strong> links to any binding refusal and the source it names.</li>
 </ol>
 <p>See <a href="../../Bellman-Sym/08-bellman-factory/#32-the-source-lists-and-the-merge">Source order, slots and period ranges</a> for the rules on merging sources.</p>
+<p>In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated declarations keep their calibration sources. A fixed table or function gives an age profile, read at an age field supplied through the model. The recipe still permits positional calibration; methods and settings can vary independently of modularity.</p>
+<p>To change an existing table or matrix, follow its parameter-name source link in <strong>Parameters</strong>, edit the YAML in the source file, and save it. The value-entry control can add a missing list or matrix, but refuses to replace an existing entry with a list. Reopen the occurrence to inspect the bound result.</p>
 <h2 id="3-create-a-variant">3 Create a variant<a class="headerlink" href="#3-create-a-variant" title="Permanent link">&para;</a></h2>
 <ol>
 <li>In <strong>Files</strong>, choose <strong>New variant</strong>. It starts from <code>declaration/spec.yml</code>, even if another recipe is open. Save pending changes to the recipe, its trellis file, or a period template it uses before copying.</li>
 <li>Enter a <strong>Name</strong> such as <code>high-risk</code>, using letters, digits, and hyphens, and choose <strong>Write the variant</strong>. The Workbench creates <code>spec.high-risk.yml</code>, <code>trellis.high-risk.yml</code>, and copies of the period templates the base trellis names. It opens the new recipe and shows its trellis.</li>
 <li>Edit period lists or connectors through the variant's files. To vary a calibration, setting, or method independently, give the variant its own source file and choose that file in the variant recipe. To vary an equation, copy the stage declaration to a separate stage folder and point the variant's stage row to it.</li>
 </ol>
-<p>The copy shares the original stage files and the calibration, settings, methods, and registry sources they reference until you change those paths. Editing a shared source affects every recipe that names it. The <strong>New variant</strong> form lists the registry sources the copy keeps, such as an age schedule. Check those sources if the variant changes the periods they describe. <a href="../../Bellman-Sym/reference/model-directory-layout/#3-variants">Variants in the model directory</a>.</p>
+<p>The copy shares the original stage files and the calibration, settings, methods, and registry sources they reference until you change those paths. Editing a shared source affects every recipe that names it. The <strong>New variant</strong> form lists the registry sources the copy keeps, such as an age-profile table. Check its domain and the terminal data you supply if the variant changes the ages its recurrence reaches. <a href="../../Bellman-Sym/reference/model-directory-layout/#3-variants">Variants in the model directory</a>.</p>
 <h2 id="4-give-a-variant-its-own-calibration">4 Give a variant its own calibration<a class="headerlink" href="#4-give-a-variant-its-own-calibration" title="Permanent link">&para;</a></h2>
 <p>Change the safe return in a disposable copy of <code>applications/cons-port</code>:</p>
 <ol>

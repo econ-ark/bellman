@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8070,29 +8100,29 @@
 
 
 <h1 id="accretion-modules">Accretion modules<a class="headerlink" href="#accretion-modules" title="Permanent link">&para;</a></h1>
-<p><strong>Accretion</strong> constructs a finite-horizon model backwards, adding one <a href="../period/">period</a> at a time to the periods already specified. In <a href="../sym/">Bellman-SYM</a> the resulting sequence is a <a href="../trellis/">trellis</a>: periods together with explicit connections between them. The reusable components are <a href="../stage/">stage files</a>, which state the equations, and period descriptions, which specify how the <a href="../stage/">stage occurrences</a>, the elaborations of a stage file at the positions of a period, are connected.</p>
-<p>For example, we can first specify the final year of a household's life, then add the preceding retirement years, and finally the working years. Each addition supplies the equations and <a href="../parameters/">parameter</a> values for that year and connects it to its successor. A longer model can reuse the same stage files while changing the income process, survival probabilities or available decisions across periods.</p>
+<p><strong>Accretion</strong> constructs a finite-horizon model backwards, adding one <a href="../period/">period</a> at a time to the periods already specified. In <a href="../sym/">Bellman-SYM</a> the resulting <a href="../trellis/">trellis</a> is a diagram of periods joined by connections. The reusable components are <a href="../stage/">stage files</a>, which state the equations, and period descriptions, which specify how the <a href="../stage/">stage occurrences</a>, the elaborations of a stage file at the positions of a period, are connected.</p>
+<p>For example, we can first specify the final year of a household's life, then add the preceding retirement years, and finally the working years. Each addition connects a period to its successor. In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, a repeated declaration keeps its operators and calibration sources. Income or survival profiles are fixed tables or functions read at an age field. A period with different available decisions may use different stages.</p>
 <h2 id="backward-construction">Backward construction<a class="headerlink" href="#backward-construction" title="Permanent link">&para;</a></h2>
 <p>We start with an empty sequence and construct the model in the following order.</p>
 <ol>
-<li>Specify the terminal period, including any continuation data required after its decisions, and add it to the sequence.</li>
+<li>Specify the terminal period and add it to the sequence. Separately supply, at realization, the terminal data for every backward field its stages require after their decisions.</li>
 <li>Construct the preceding period from its stage files, with the parameter values and the numerical choices, its methods and <a href="../settings/">settings</a>, appropriate to that period.</li>
 <li>Declare the <a href="../connector/">inter-period connector</a>, which identifies compatible outgoing <a href="../field/">fields</a> of the earlier period with incoming fields of its successor. Add the new period and its connection to the sequence.</li>
 <li>Repeat until the sequence includes every period to be modeled.</li>
 </ol>
 <p>A period can contain several stages. Within-period connectors state which stage outputs supply which subsequent inputs; inter-period connectors do the same across dates. A connector identifies or renames compatible fields. Changes in resources, income or other quantities require equations in the stages, rather than an implicit transformation inside the connector.</p>
-<p>The period records are ordinary dictionaries and lists, which can be assembled interactively or generated in a loop from a parameter schedule. A stage file need not receive the horizon or its position in the sequence: those belong to the model assembly. Each use of a file creates a separate stage occurrence with its own parameter values and numerical choices.</p>
+<p>The period records are ordinary dictionaries and lists, assembled interactively or in a loop. Neither a stage file nor a period file receives the horizon or a position as an argument that adjusts a parameter. Each use of a stage file creates a separate stage occurrence. In a modular model, repeated declarations share calibration sources; their field inputs, methods and settings may differ. The recipe also permits positional calibration, methods and settings, without enforcing modularity.</p>
 <h2 id="relation-to-backward-induction">Relation to backward induction<a class="headerlink" href="#relation-to-backward-induction" title="Permanent link">&para;</a></h2>
 <p>Accretion assembles a model; <strong>backward induction</strong> solves its successive decision problems using the solution already obtained for the next period. The two can be interleaved: after specifying and solving the terminal period, we can add and solve one earlier period at a time. Alternatively, we can assemble the finite sequence before solving it. Assembly alone produces no policy function.</p>
 <p>Consider a final-period problem in which resources are nonnegative, any consumption between zero and available resources is feasible, utility is strictly increasing in consumption, and unspent resources have no terminal value. Its solution is to consume all resources. The preceding period's problem then uses that terminal rule to value saving. <a href="https://doi.org/10.1016/j.econlet.2005.09.013">Carroll (2006, §2)</a> describes the recursion from a final-period consumption rule to earlier rules. The choice of numerical method for each step is separate from the order of the recursion.</p>
 <p>HARK provides a related computational arrangement: its one-period solver receives the next period's solution and the inputs for the current period. Its <a href="https://docs.econ-ark.org/docs/overview/ARKitecture.html#agenttype-class">architecture guide</a> documents this separation. The accretion convention of the Bellman factory uses the same backward dependence, while keeping model assembly distinct from numerical solution.</p>
 <h2 id="period-indices">Period indices<a class="headerlink" href="#period-indices" title="Permanent link">&para;</a></h2>
 <p>Let the nonnegative integer <span class="arithmatex">\(h\)</span> count periods before the terminal period. A trellis stores its periods in accretion order: <code>periods[0]</code> is the terminal period, <code>periods[1]</code> is its predecessor, and so on. Chronological order is the reverse. If the sequence contains <span class="arithmatex">\(n \ge 1\)</span> periods, its inter-period joins have indices <span class="arithmatex">\(0 \le h &lt; n-1\)</span>: <code>inter_connectors[h]</code> joins the continuation fields of <code>periods[h + 1]</code> to the arrival fields of <code>periods[h]</code>. There is no inter-period join in a one-period model. Values used in backward induction are read in the opposite direction to the forward evolution of the state.</p>
-<p>The terminal period can contain decisions of its own. Any continuation value supplied after those decisions is separate terminal data, rather than an additional period or an inter-period connector. The <a href="../../Bellman-Sym/07-trellis/">trellis guide</a> states this convention.</p>
-<p>Appending an earlier period does not change the indices of periods already present. If economic age is measured in one-period units and terminal age is <span class="arithmatex">\(T\)</span>, the age at index <span class="arithmatex">\(h\)</span> is <span class="arithmatex">\(T-h\)</span>. Age-dependent wages or survival probabilities can therefore be supplied from a parameter schedule when each stage occurrence is constructed. Where age is itself a state of the economic model, the stage file declares it as a field.</p>
-<p>An extensible sequence is still a finite-horizon model. An infinite-horizon problem needs its own formulation or a justified limit of finite-horizon problems; numerical solutions also require convergence and accuracy checks. A terminal decision problem and a terminal value supplied to initialize a recursion are distinct modeling choices; HARK's <a href="https://docs.econ-ark.org/examples/Gentle-Intro/Cycles-Intro.html">discussion of terminal solutions</a> illustrates the distinction.</p>
+<p>The terminal period can contain decisions of its own. Every continuation field required after those decisions needs supplied terminal data, including age or a bound where declared. These data are not part of the trellis file, an additional period or an inter-period connector. The <a href="../../Bellman-Sym/07-trellis/">trellis guide</a> states this convention.</p>
+<p>Appending an earlier period does not change the indices of periods already present. An index is an address, not an age. If the stages compute <code>age = age_next - 1</code> and the user supplies terminal age <span class="arithmatex">\(T\)</span>, that recurrence gives the computed age <span class="arithmatex">\(T-h-1\)</span> at position <span class="arithmatex">\(h\)</span>, from the incoming age <span class="arithmatex">\(T-h\)</span>; the position alone does not imply it. A fixed table or function gives wages or survival probabilities at the computed age. A forward line reads the incoming <code>age_next</code> and evaluates <code>age_next - 1</code>, rather than reading the same stage's backward output. Where age is stochastic or chosen, the model must declare the corresponding information and transitions.</p>
+<p>An extensible sequence is still a finite-horizon model. An infinite-horizon problem needs its own formulation or a justified limit of finite-horizon problems. Stationarity requires every backward field at its fixed point, and numerical solutions require convergence and accuracy checks. A terminal decision problem and a terminal value supplied to initialize a recursion are distinct modeling choices; HARK's <a href="https://docs.econ-ark.org/examples/Gentle-Intro/Cycles-Intro.html">discussion of terminal solutions</a> illustrates the distinction.</p>
 <h2 id="reusing-model-components">Reusing model components<a class="headerlink" href="#reusing-model-components" title="Permanent link">&para;</a></h2>
-<p>The <a href="../spec_factory/">Bellman factory</a> organizes inputs for repeated construction. A <a href="../spec_factory/">registry</a> stores named sources of parameter values, numerical settings and methods; a <a href="../spec_factory/">recipe</a> selects and combines those sources for the required stage occurrences; <code>load_recipe(directory, recipe, **fills)</code> of <code>bellman.trellis</code> returns the <a href="../trellis/">syntactic trellis</a> whose records hold the merged mappings, and <code>assemble_trellis</code>, also of <code>bellman.trellis</code>, elaborates and binds it in one call. A model-building loop can use the resolved inputs for an age profile without putting the entire life cycle into each stage file.</p>
+<p>The <a href="../spec_factory/">Bellman factory</a> organizes inputs for repeated construction. A <a href="../spec_factory/">registry</a> stores named sources of parameter values, numerical settings and methods; a <a href="../spec_factory/">recipe</a> selects and combines those sources for the required stage occurrences; <code>load_recipe(directory, recipe, **fills)</code> of <code>bellman.trellis</code> returns the <a href="../trellis/">syntactic trellis</a> whose records hold the merged mappings, and <code>assemble_trellis</code>, also of <code>bellman.trellis</code>, elaborates and binds it in one call. A model-building loop can repeat a declaration whose equations read a fixed profile at its supplied age field, without writing the life cycle into that stage file.</p>
 <p>The registry and recipe are optional means of supplying these inputs. A modeler can instead construct the period records directly. The <a href="../../Bellman-Sym/07-trellis/">trellis guide</a> describes those records, and the <a href="../../Bellman-Sym/08-bellman-factory/">factory guide</a> describes the factory's calls. Neither route makes a terminal condition, an equation or a numerical method unnecessary.</p>
 <h2 id="current-implementation">Current implementation<a class="headerlink" href="#current-implementation" title="Permanent link">&para;</a></h2>
 <p>Accretion is how <code>accrete</code> and <code>elaborate_trellis</code> of <code>bellman.trellis</code> work. A trellis is a dictionary, <code>{"periods": [...], "inter_connectors": [...]}</code>, each period <code>{"stages": {key: record or stage}, "connectors": [...]}</code>; an empty one is <code>{"periods": [], "inter_connectors": []}</code>. <code>accrete(trellis, period, inter_connector)</code> appends a period and the mapping that joins it to the period appended before it, and rewrites no existing record. <code>elaborate_trellis(syntactic, previous=None)</code> constructs the stage occurrences from the records, copies those that are already elaborated and, given a second argument, those whose record is unchanged, and derives each period's joins from the fields; the three trellis verbs <code>calibrate_trellis</code>, <code>methodize_trellis</code> and <code>configure_trellis</code> bind every stage occurrence from the mapping the syntactic trellis holds at its key.</p>

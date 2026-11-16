@@ -2850,6 +2850,8 @@
       
         
       
+        
+      
     
     
     
@@ -3586,6 +3588,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7958,7 +7988,7 @@
 </tr>
 </tbody>
 </table>
-<p>The lesson solves with the model's own numerical tool; parsing or constructing a stage solves nothing. A <strong>stage occurrence</strong> is one use of a stage file at one position of a period. Each stage occurrence can have its own parameter values and numerical settings. Construction and specification prepare stage occurrences; solving additionally requires numerical routines and continuation or terminal data.</p>
+<p>The lesson solves with the model's own numerical tool; parsing or constructing a stage solves nothing. A <strong>stage occurrence</strong> is one use of a stage file at one position of a period. A general recipe can bind calibration, methods and settings by period position. In a <a href="../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated occurrences use their declaration's recorded calibration sources, and quantities such as age can change as fields. Solving also requires numerical routines and supplied continuation data.</p>
 <p>For discrete alternatives, read <a href="05-branching/">Branching</a>, which uses the separate work-or-retire example. Choosing a continuous portfolio share is not a discrete branch.</p>
 <p>For data indexed by a parameter-defined number of cities or shock outcomes, see <a href="01-stage/#21-indexed-data">Indexed data</a>. For an integer state whose values mean, for example, newborn or old, see <a href="01-stage/#22-category-codes">Category codes</a>; <a href="06-period/#2-connectors">Periods</a> explains how connections preserve those meanings.</p>
 <h2 id="2-files-and-authoring-reference">2 Files and authoring reference<a class="headerlink" href="#2-files-and-authoring-reference" title="Permanent link">&para;</a></h2>
@@ -8026,7 +8056,7 @@
 </tr>
 </tbody>
 </table>
-<p>For a new stage occurrence, loading and elaboration come first, then calibration, methodization and configuration, the order the factory uses. Each of the three bindings adds its binding to the stage occurrence it is called on and returns that stage; methodization must precede configuration, since the methods name the settings (<a href="04-methodization/">Methodization</a> §5). Inspecting the equations and attachments is separate from obtaining numerical policies.</p>
+<p>The trellis factory elaborates, calibrates, methodizes and configures, and this is the recommended order for one stage (<a href="04-methodization/">Methodization</a> §7). The stage API also permits calibration after methodization. Each binding returns the stage it binds; methodization must precede configuration, since the methods name the settings (<a href="04-methodization/">Methodization</a> §5). Inspecting the equations and attachments is separate from obtaining numerical policies.</p>
 <h2 id="4-mathematical-reference">4 Mathematical reference<a class="headerlink" href="#4-mathematical-reference" title="Permanent link">&para;</a></h2>
 <p>The <a href="../bellman-calculus/">Bellman calculus guide</a> explains the mathematical foundations. Within this language guide, <a href="appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> gives rules R1–R12 for interpreting equations, including the assumptions for representing fields as functions of states. <a href="appendices/15-appendix-d-node-tag-and-field-indexing/">Appendix D</a> explains computation boundaries, collection selection, and implicit policy relations.</p>
 <p>Folded abstract-grammar boxes use <a href="../wiki/asdl/">ASDL</a>, a notation describing syntax-tree structure. Their constructor listings do not prove the economic assumptions needed for an equation's interpretation. The <a href="../wiki/">concept wiki</a> defines recurring terms.</p>

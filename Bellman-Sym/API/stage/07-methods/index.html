@@ -2934,6 +2934,8 @@
       
         
       
+        
+      
     
     
     
@@ -3670,6 +3672,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8223,28 +8253,31 @@
 <a id="__codelineno-14-43" name="__codelineno-14-43" href="#__codelineno-14-43"></a>  grid:Aggregation  𝑚_d≻(a) ∈ Xm
 <a id="__codelineno-14-44" name="__codelineno-14-44" href="#__codelineno-14-44"></a>  policy            egm-eligibility: the construction satisfies the declared
 <a id="__codelineno-14-45" name="__codelineno-14-45" href="#__codelineno-14-45"></a>                      line where the continuation value 𝑉≻ is concave and
-<a id="__codelineno-14-46" name="__codelineno-14-46" href="#__codelineno-14-46"></a>                      continuously differentiable on (0, ∞) with a finite
-<a id="__codelineno-14-47" name="__codelineno-14-47" href="#__codelineno-14-47"></a>                      positive right derivative at 0   [required]
-<a id="__codelineno-14-48" name="__codelineno-14-48" href="#__codelineno-14-48"></a>
-<a id="__codelineno-14-49" name="__codelineno-14-49" href="#__codelineno-14-49"></a>Method
-<a id="__codelineno-14-50" name="__codelineno-14-50" href="#__codelineno-14-50"></a>  !egm   !Cartesian(a=(a_min, a_max, n_a))   "cons-port:egm"            policy
-<a id="__codelineno-14-51" name="__codelineno-14-51" href="#__codelineno-14-51"></a>──────────────────────────────────────────────────────────────────────────────
-<a id="__codelineno-14-52" name="__codelineno-14-52" href="#__codelineno-14-52"></a>Source  cons.bl
-<a id="__codelineno-14-53" name="__codelineno-14-53" href="#__codelineno-14-53"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
-<a id="__codelineno-14-54" name="__codelineno-14-54" href="#__codelineno-14-54"></a>
-<a id="__codelineno-14-55" name="__codelineno-14-55" href="#__codelineno-14-55"></a>Source  methods.bl
-<a id="__codelineno-14-56" name="__codelineno-14-56" href="#__codelineno-14-56"></a>  29  c[&gt;]   &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0          :: [id=InvEuler]
-<a id="__codelineno-14-57" name="__codelineno-14-57" href="#__codelineno-14-57"></a>  30  m_d[&gt;] = a + c[&gt;]                            :: [id=grid]
-<a id="__codelineno-14-58" name="__codelineno-14-58" href="#__codelineno-14-58"></a>  31  c      = c[&gt;]                                :: [id=identification]
-<a id="__codelineno-14-59" name="__codelineno-14-59" href="#__codelineno-14-59"></a>
-<a id="__codelineno-14-60" name="__codelineno-14-60" href="#__codelineno-14-60"></a>Definitions referenced
-<a id="__codelineno-14-61" name="__codelineno-14-61" href="#__codelineno-14-61"></a>  Xm     cons:set:Xm
-<a id="__codelineno-14-62" name="__codelineno-14-62" href="#__codelineno-14-62"></a>  Xa     cons:set:Xa
-<a id="__codelineno-14-63" name="__codelineno-14-63" href="#__codelineno-14-63"></a>  𝑢      cons:function:𝑢
-<a id="__codelineno-14-64" name="__codelineno-14-64" href="#__codelineno-14-64"></a>  Γ      cons:correspondence:Γ
-<a id="__codelineno-14-65" name="__codelineno-14-65" href="#__codelineno-14-65"></a>  𝑑𝑢𝑖𝑛𝑣  cons:function:𝑑𝑢𝑖𝑛𝑣  methods.bl:19
-<a id="__codelineno-14-66" name="__codelineno-14-66" href="#__codelineno-14-66"></a>  𝑔≻     cons:g:dcsn_to_cntn
-<a id="__codelineno-14-67" name="__codelineno-14-67" href="#__codelineno-14-67"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<a id="__codelineno-14-46" name="__codelineno-14-46" href="#__codelineno-14-46"></a>                      continuously differentiable above the savings bound,
+<a id="__codelineno-14-47" name="__codelineno-14-47" href="#__codelineno-14-47"></a>                      with a positive right derivative at the bound, finite or
+<a id="__codelineno-14-48" name="__codelineno-14-48" href="#__codelineno-14-48"></a>                      infinite; an infinite derivative gives zero consumption
+<a id="__codelineno-14-49" name="__codelineno-14-49" href="#__codelineno-14-49"></a>                      as the interpolation endpoint, outside a strictly
+<a id="__codelineno-14-50" name="__codelineno-14-50" href="#__codelineno-14-50"></a>                      positive consumption domain   [required]
+<a id="__codelineno-14-51" name="__codelineno-14-51" href="#__codelineno-14-51"></a>
+<a id="__codelineno-14-52" name="__codelineno-14-52" href="#__codelineno-14-52"></a>Method
+<a id="__codelineno-14-53" name="__codelineno-14-53" href="#__codelineno-14-53"></a>  !egm   !Cartesian(a=(a_min, a_max, n_a))   "cons-port:egm"            policy
+<a id="__codelineno-14-54" name="__codelineno-14-54" href="#__codelineno-14-54"></a>──────────────────────────────────────────────────────────────────────────────
+<a id="__codelineno-14-55" name="__codelineno-14-55" href="#__codelineno-14-55"></a>Source  cons.bl
+<a id="__codelineno-14-56" name="__codelineno-14-56" href="#__codelineno-14-56"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
+<a id="__codelineno-14-57" name="__codelineno-14-57" href="#__codelineno-14-57"></a>
+<a id="__codelineno-14-58" name="__codelineno-14-58" href="#__codelineno-14-58"></a>Source  methods.bl
+<a id="__codelineno-14-59" name="__codelineno-14-59" href="#__codelineno-14-59"></a>  29  c[&gt;]   &lt;= 𝑑𝑢𝑖𝑛𝑣(D_{a}V[&gt;]) ⟂ a &gt;= 0          :: [id=InvEuler]
+<a id="__codelineno-14-60" name="__codelineno-14-60" href="#__codelineno-14-60"></a>  30  m_d[&gt;] = a + c[&gt;]                            :: [id=grid]
+<a id="__codelineno-14-61" name="__codelineno-14-61" href="#__codelineno-14-61"></a>  31  c      = c[&gt;]                                :: [id=identification]
+<a id="__codelineno-14-62" name="__codelineno-14-62" href="#__codelineno-14-62"></a>
+<a id="__codelineno-14-63" name="__codelineno-14-63" href="#__codelineno-14-63"></a>Definitions referenced
+<a id="__codelineno-14-64" name="__codelineno-14-64" href="#__codelineno-14-64"></a>  Xm     cons:set:Xm
+<a id="__codelineno-14-65" name="__codelineno-14-65" href="#__codelineno-14-65"></a>  Xa     cons:set:Xa
+<a id="__codelineno-14-66" name="__codelineno-14-66" href="#__codelineno-14-66"></a>  𝑢      cons:function:𝑢
+<a id="__codelineno-14-67" name="__codelineno-14-67" href="#__codelineno-14-67"></a>  Γ      cons:correspondence:Γ
+<a id="__codelineno-14-68" name="__codelineno-14-68" href="#__codelineno-14-68"></a>  𝑑𝑢𝑖𝑛𝑣  cons:function:𝑑𝑢𝑖𝑛𝑣  methods.bl:19
+<a id="__codelineno-14-69" name="__codelineno-14-69" href="#__codelineno-14-69"></a>  𝑔≻     cons:g:dcsn_to_cntn
+<a id="__codelineno-14-70" name="__codelineno-14-70" href="#__codelineno-14-70"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 </code></pre></div>
 
 

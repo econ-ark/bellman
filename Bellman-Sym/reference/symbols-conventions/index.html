@@ -3076,6 +3076,8 @@
       
         
       
+        
+      
     
     
     
@@ -3812,6 +3814,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8319,7 +8349,7 @@
 <p>Here <code>a</code>, <code>a_d</code>, and <code>a[&gt;]</code> are assets at three information contexts. The transition equations state that their values agree in this stage. The stage writes no derivative line: its two backward lines are a scaling and an identity of the value, whose state passes unchanged, so the derivative of the value passes through them, and a stage before this one that reads <code>D_{a}V[&gt;]</code> of its continuation receives the derivative of the discounted value. No letters of a name establish a derivative; the derivative of a value is read by the term <code>D_{a}V[&gt;]</code>, which applies the operator <code>D</code> to the declared value in the named coordinate (§4).</p>
 <p>The block identifier <code>cntn_to_dcsn</code> provides an address. Renaming it changes references such as the path of a place in a methods file, but does not change multiplication by <code>β</code>. In a model with a separate discounting stage, do not insert a second discount factor into the beta-free consumption equations.</p>
 <h2 id="2-fields-functions-and-spaces">2 Fields, functions, and spaces<a class="headerlink" href="#2-fields-functions-and-spaces" title="Permanent link">&para;</a></h2>
-<p>A <strong>field</strong> is a named quantity of a stage: a state, a control, a value or a multiplier (<a href="../../10-constraints/">Constraints</a> §4.2) at one perch, or a shock, which belongs to no perch (§9.3). Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A <strong>state function</strong> represents such a quantity using explicit state arguments. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.</p>
+<p>A <strong>field</strong> is a named quantity of a stage: a state, a control, a value or a multiplier (<a href="../../10-constraints/">Constraints</a> §4.2) at one perch, or a shock, which belongs to no perch (§9.3). Once shocks are declared, fields may be interpreted as random variables on the underlying probability space. A <strong>representing function</strong> gives the field's value as a function of the state coordinates on which it depends. A domain describes the values an object may take; it is distinct from the space of functions on a state domain.</p>
 <table>
 <thead>
 <tr>
@@ -8369,6 +8399,7 @@
 <p>Sans-serif capitals denote spaces, italic letters denote functions, and roman letters denote the fields those functions represent, the same letter for both. These typography conventions help the reader; they do not type a source identifier. The source <code>V[&gt;]</code> is a value field because of its declaration. A name such as <code>V_fn</code> has no reserved function meaning.</p>
 <p>For example, if the continuation state field is <span class="arithmatex">\(x_\succ\)</span> and a value field is measurable with respect to that state, an appropriate measurable factorization gives <span class="arithmatex">\(\mathrm V_\succ=v_\succ(x_\succ)\)</span>. The factorization requires the measurable-space assumptions stated in <a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a>. It does not follow from choosing a font, and it need not specify a unique extension away from the states represented by <span class="arithmatex">\(x_\succ\)</span>.</p>
 <p>The notation <span class="arithmatex">\(L^2(\Omega,\mathcal F)\)</span> denotes square-integrable fields on a probability space with information <span class="arithmatex">\(\mathcal F\)</span>. Use it only when square integrability is assumed. A declaration allowing extended values does not automatically put a field in <span class="arithmatex">\(L^2\)</span>.</p>
+<p>A value-type field sent backward can be declared <code>!cnst</code>. The field then has no state coordinates in its representing function. If the field's whole value is itself a function, evaluating that function still takes its own arguments. See <a href="../../01-stage/#31-fields-sent-backward">Fields sent backward</a>.</p>
 <h2 id="3-perches-and-information">3 Perches and information<a class="headerlink" href="#3-perches-and-information" title="Permanent link">&para;</a></h2>
 <p>A <strong>perch</strong> is one of the three information contexts within a stage:</p>
 <table>
@@ -8401,7 +8432,7 @@
 </tr>
 </tbody>
 </table>
-<p>In a block's header a mark agrees with the perch word of its side: the listing <code>(a[&gt;] : Xa) : !arvl</code> is refused under <a href="../refusals/#field-perch"><code>field-perch</code></a>. The package reads <code>a[~]</code> as the bare name <code>a</code>, so the listing <code>(a[~] : Xa) : !arvl</code>, which breaks the rule, is read as the arrival field <code>a</code>. The package does not yet check this (<a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
+<p>In a block's header a mark agrees with the perch word of its side: the listing <code>(a[&gt;] : Xa) : !arvl</code> is refused under <a href="../refusals/#field-perch"><code>field-perch</code></a>. The one exception is a constant that the stage takes in at its continuation perch: the input side of a forward block lists it as the backward header spells it, <code>age[&gt;]</code>, and it stays at the continuation perch (<a href="../../01-stage/#21-indexed-data">Stages</a> §2.1). The package reads <code>a[~]</code> as the bare name <code>a</code>, so the listing <code>(a[~] : Xa) : !arvl</code>, which breaks the rule, is read as the arrival field <code>a</code>. The package does not yet check this (<a href="../../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3).</p>
 <p>When nested information is assumed, the information structure can be written <span class="arithmatex">\(\mathcal F_\prec\subseteq\mathcal F_\sim\subseteq\mathcal F_\succ\)</span>. Stage marks alone do not establish this assumption. These inclusions need not be strict: an identity transition can reveal no additional information. Nor must a list of current state coordinates alone generate all past information. State sufficiency is an assumption used when passing to functions of those coordinates.</p>
 <p>Information marks distinguish field references within the stage. They are not dates, and a perch is not an operator endpoint. In particular, a shock listed as a transition argument need not be observed before that transition. A decision control written beside continuation values is still a decision control. The rules for the sides of a block's header respect these role exceptions.</p>
 <p>The diagram below records information order and the usual directions of transition and value calculations; its circles denote information contexts:</p>
@@ -8462,16 +8493,18 @@
 </tr>
 </tbody>
 </table>
-<p>Terminal continuation values are separate boundary data for period zero. A connector renames corresponding fields between occurrences; matching names alone does not prove matching domains or information roles. The per-stage mathematical graph and the syntactic trellis, a dictionary of stage records, serve different purposes; the order of a period's stages is computed from the fields they join. <a href="../../06-period/">Periods</a> and <a href="../../07-trellis/">Trellises</a> give their composition rules.</p>
+<p>Terminal data supply all unconnected continuation fields of period zero at realization. A connector renames corresponding fields between occurrences; matching names alone does not prove matching domains or information roles. The per-stage mathematical graph and the syntactic trellis, a dictionary of stage records, serve different purposes; the order of a period's stages is computed from the fields they join. <a href="../../06-period/">Periods</a> and <a href="../../07-trellis/">Trellises</a> give their composition rules.</p>
 <h2 id="8-parameters-settings-and-interpretation">8 Parameters, settings, and interpretation<a class="headerlink" href="#8-parameters-settings-and-interpretation" title="Permanent link">&para;</a></h2>
 <p>A <strong>parameter</strong> defines the economic problem; a <strong>setting</strong> controls a numerical calculation. A finite menu of housing sizes is a mathematical domain, so changing its endpoints or number of available sizes changes the problem. A grid approximating a continuous housing domain is a numerical choice. A simulation grid need not equal the solution grid.</p>
-<p>A <strong>derived parameter</strong> is a constant of the economic problem that a definition without arguments writes from the declared parameters, such as human wealth <code>h := 1/(1 - Γ/R)</code>, so that it is a parameter and not a setting; its definition may be written by cases, <code>h : ℝ_{+∞} := if Γ &lt; R then 1/(1 - Γ/R) else inf</code>, with the declared set that its infinite branch requires (<a href="../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2; <a href="../../API/stage/06-par-and-settings/">Parameters and settings</a> §1.1). The line that defines a derived parameter may declare the set in which its value lies, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, and calibration then refuses values of the parameters at which the derived value lies outside that set (§9.2).</p>
+<p>A <strong>derived parameter</strong> is a constant defined from calibrated parameters without arguments. For example, <code>q : (0,1) := (β*R)^(1/ρ)/R</code> defines the return patience factor. Its value must lie in the declared set, which calibration checks (§9.2).</p>
+<p>A definition may use cases, such as <code>h : ℝ_{+∞} := if Γ &lt; R then 1/(1 - Γ/R) else inf</code>. The declared set must admit the infinite branch. This generic syntax example does not state the human-wealth declaration of the perfect-foresight application. That application sends human wealth backward as a field.</p>
+<p><a href="../../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2 gives the definition forms. <a href="../../API/stage/06-par-and-settings/">Parameters and settings</a> §1.1 shows the parameter table.</p>
 <p>The meaning map <span class="arithmatex">\(\Upsilon\)</span> interprets declarations and equations. The representation map Ρ denotes their numerical realization after the required choices and bindings. Lowercase <span class="arithmatex">\(\rho\)</span> remains available for an economic parameter, such as risk aversion. These names do not assert that interpretation or approximation is invertible, or that different numerical choices commute.</p>
 <p>Elaboration keeps the fields, with the interpreted equation bodies and definitions, in the two <a href="../../../wiki/semgraph/">initial diagrams</a>, and derives from them, under explicit assumptions, the two builders graphs, on functions and on measures. The temporary syntax tree and source spans are discarded; a second independently editable function model is not required. See <a href="../../09-from-syntax-to-formal-problem-definition/">From source to a formal problem</a>.</p>
 <h2 id="9-declarations-domains-and-type-words">9 Declarations, domains and type words<a class="headerlink" href="#9-declarations-domains-and-type-words" title="Permanent link">&para;</a></h2>
 <p>The reference page <a href="../types/">Types</a> lists the role words, the perch words, the reserved sets, the forms of a set expression and the limits on them.</p>
 <h3 id="91-punctuation">9.1 Punctuation<a class="headerlink" href="#91-punctuation" title="Permanent link">&para;</a></h3>
-<p>The examples are lines of the stage files under <code>applications/portfolio-choice/</code>: <code>disc.bl</code>, whose source §1 shows, <code>cons.bl</code> and <code>noport.bl</code>; the derived parameter <code>h</code> and the definition of <code>q</code> that declares its set are lines of <code>perfect_foresight.bl</code> under <code>applications/consumption-perfect-foresight-crra/</code>. The examples of the union and the difference are written for this table.</p>
+<p>The examples are lines of the stage files under <code>applications/portfolio-choice/</code>: <code>disc.bl</code>, whose source §1 shows, <code>cons.bl</code> and <code>noport.bl</code>; the definition of <code>q</code> that declares its set is a line of <code>perfect_foresight.bl</code> under <code>applications/consumption-perfect-foresight-crra/</code>. The examples of the union and the difference are written for this table.</p>
 <table>
 <thead>
 <tr>
@@ -8504,7 +8537,7 @@
 <tr>
 <td><code>:=</code>, also <code>&lt;-</code></td>
 <td>Define a named set, which may be written as a comprehension (§9.2), a function, or a derived parameter (§8), whose definition may declare its set, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>.</td>
-<td><code>Xa := ℝ₊</code>; <code>Xa := [0, ā]</code>; <code>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)</code>; <code>h := 1/(1 - Γ/R)</code></td>
+<td><code>Xa := ℝ₊</code>; <code>Xa := [0, ā]</code>; <code>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)</code>; <code>q : (0,1) := (β*R)^(1/ρ)/R</code></td>
 </tr>
 <tr>
 <td><code>=</code></td>
@@ -8618,7 +8651,7 @@
 <p>A stage constructed by <code>make_stage</code> from a syntax tree has no stage text. A marked set without an explicit category identifier therefore has no established category identity for connections in such a stage; supply the identifier when constructing it this way.</p>
 </details>
 <h3 id="93-type-words-and-statement-marks">9.3 Type words and statement marks<a class="headerlink" href="#93-type-words-and-statement-marks" title="Permanent link">&para;</a></h3>
-<p>A <strong>type word</strong> is a word after <code>!</code> that gives a field its role or its information context; the <code>!</code> sets it apart from a name the author chooses.</p>
+<p>A <strong>type word</strong> is a word after <code>!</code> that gives a field its role, its information context or, for <code>!cnst</code>, its independence of the state; the <code>!</code> sets it apart from a name the author chooses.</p>
 <table>
 <thead>
 <tr>
@@ -8642,6 +8675,10 @@
 <tr>
 <td><code>!vlu</code></td>
 <td>A value field.</td>
+</tr>
+<tr>
+<td><code>!cnst</code></td>
+<td>Written with <code>!vlu</code>: a constant, a value-type field whose value and declared set depend on no state, shock or control (§2).</td>
 </tr>
 <tr>
 <td><code>!arvl</code>, <code>!dcsn</code>, <code>!cntn</code></td>

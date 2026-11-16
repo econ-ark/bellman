@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3581,6 +3583,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8517,7 +8547,8 @@ Q_t(a) = \max_{0 &lt; c \le Ra + y} \bigl\{ \log c + \beta\, \mathcal W_{t+1}(Ra
 </div>
 
 <h2 id="5-the-trellis">5 The trellis<a class="headerlink" href="#5-the-trellis" title="Permanent link">&para;</a></h2>
-<p>A <strong>trellis</strong> is the sequence of periods, indexed backward from the last date: <code>periods[0]</code> is the terminal period, and <code>periods[h+1]</code> is the period one date before <code>periods[h]</code> (<a href="../../../Bellman-Sym/07-trellis/">Trellis syntax</a>). The trellis file is <code>applications/retirement-choice/declaration/trellis.yml</code>:</p>
+<p>A trellis is a diagram of periods joined by connections. Repeated uses of a period retain the same declarations and calibration sources in a <a href="../../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>. The user supplies terminal data for every backward field when realizing the model; this application declares no age field.</p>
+<p>The Python representation lists the periods backward from the last date: <code>periods[0]</code> is the terminal period, and <code>periods[h+1]</code> is the period one date before <code>periods[h]</code> (<a href="../../../Bellman-Sym/07-trellis/">Trellis syntax</a>). The trellis file is <code>applications/retirement-choice/declaration/trellis.yml</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kt">!trellis</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">retirement_lifecycle</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># periods[h] is the date T - h: periods[0] is the terminal period. The model</span>

@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8011,14 +8041,14 @@
 <details class="info">
 <summary>Relationship with other documents</summary>
 <p><strong>Formal account</strong> — <a href="../../bellman-calculus/06-Methods/">Methods</a> §§8, 9: the erasure of the addition and the two levels of a stage.
-<strong>Builds on</strong> — <a href="../../Bellman-Sym/reference/methods/">Methods</a> and <a href="../grid/">Grid</a>: the two components an addition's entries type; <a href="../settings/">Settings</a>: the declarations an addition carries.
+<strong>Builds on</strong> — <a href="../methods/">Methods</a> and <a href="../grid/">Grid</a>: the two components an addition's entries type; <a href="../settings/">Settings</a>: the declarations an addition carries.
 <strong>Used by</strong> — <a href="../../Bellman-Sym/04-methodization/">Methodization</a>: the written form; <a href="../../Bellman-Sym/08-bellman-factory/">The Bellman factory</a>: the recipe that names the additions of each stage occurrence.</p>
 </details>
 <h2 id="1-the-form">1 The form<a class="headerlink" href="#1-the-form" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>@methods: buffer_stock
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>n_a : ℕ              :: ["number of points of the savings grid"]
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>a_min : Xa           :: ["lower bound of the savings grid"]
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>extra_grid : ℝ₊     :: ["distance from the borrowing bound to the first savings point"]
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>a_max : Xa           :: ["upper bound of the savings grid"]
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>n_k : ℕ              :: ["number of points of the asset grid"]
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>k_min : Xa           :: ["lower bound of the asset grid"]
@@ -8026,9 +8056,9 @@
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    | evaluate.method : !Linear] {
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;])       :: [id=InvEuler]
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    c[&gt;] = (β*D_{a}V[&gt;])^(-1/ρ)       :: [id=InvEuler]
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    m[&gt;] = a + c[&gt;]                 :: [id=g_cntn_to_dcsn]
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    c[~] = c[&gt;]                     :: [id=cons_choice]
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>}

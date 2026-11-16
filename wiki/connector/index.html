@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -5870,10 +5900,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-a-pair-states" class="md-nav__link">
+  <a href="#field-pairings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What a pair states
+        Field pairings
       
     </span>
   </a>
@@ -5881,10 +5911,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#values-move-by-composition" class="md-nav__link">
+  <a href="#backward-composition" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Values move by composition
+        Backward composition
       
     </span>
   </a>
@@ -7877,10 +7907,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-a-pair-states" class="md-nav__link">
+  <a href="#field-pairings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What a pair states
+        Field pairings
       
     </span>
   </a>
@@ -7888,10 +7918,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#values-move-by-composition" class="md-nav__link">
+  <a href="#backward-composition" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Values move by composition
+        Backward composition
       
     </span>
   </a>
@@ -8005,10 +8035,13 @@
 
 <h1 id="connector">Connector<a class="headerlink" href="#connector" title="Permanent link">&para;</a></h1>
 <p>A <strong>connector</strong> selects an outgoing continuation state <a href="../field/">field</a> of one <a href="../stage/">stage occurrence</a> and an incoming arrival state field of another for composition. It does not rename either field. Within a <a href="../period/">period</a> it joins stages; between periods it is an <strong>inter-period connector</strong>.</p>
-<h2 id="what-a-pair-states">What a pair states<a class="headerlink" href="#what-a-pair-states" title="Permanent link">&para;</a></h2>
+<p><a id="what-a-pair-states"></a></p>
+<h2 id="field-pairings">Field pairings<a class="headerlink" href="#field-pairings" title="Permanent link">&para;</a></h2>
 <p>In the <a href="../../Bellman-Sym/06-period/">period example</a>, <code>{k_next: k}</code> pairs outgoing capital <code>k_next</code> with incoming capital <code>k</code>. The outgoing name is first. A bare name is admitted when exactly one eligible field of that name stands on its side of the connection; otherwise prefix that endpoint with its stage key, as in <code>{disc.k_next: port.k}</code>. The two endpoints must have compatible declared sets. The author remains responsible for their economic meaning, units, and information at the join; matching names or sets alone cannot establish those assumptions.</p>
 <p>A connector performs no calculation. A change of units, return, depreciation, or other state transformation must be authored as an equation. An authored pair takes precedence over any automatic same-name matching of its endpoints. Automatic matching selects a pair only when it is uniquely compatible without conflicting with other pairs or forming a cycle. A connection report records unresolved candidates and incomplete state routes.</p>
-<h2 id="values-move-by-composition">Values move by composition<a class="headerlink" href="#values-move-by-composition" title="Permanent link">&para;</a></h2>
+<p>A connection also pairs the value-type fields used in backward composition, including constants such as age or a bound. Equal base names, with perch marks removed, are the first candidates; pairing is not an assertion that the fields are identical. An authored value pairing can select different names. Every connection still joins the next stage's arrival perch, including where that perch coincides with its decision perch because neither intervening block is declared. <a href="../../Bellman-Sym/06-period/">Periods</a> states the selection rules.</p>
+<p><a id="values-move-by-composition"></a></p>
+<h2 id="backward-composition">Backward composition<a class="headerlink" href="#backward-composition" title="Permanent link">&para;</a></h2>
 <p>More generally, for a measurable state map <span class="arithmatex">\(\tau:X\to Y\)</span> and a value function <span class="arithmatex">\(v:Y\to\mathbb R\)</span>, the induced <strong>pullback</strong> is <span class="arithmatex">\(K_\tau v=v\circ\tau\)</span>. It needs no inverse of <span class="arithmatex">\(\tau\)</span>. A complete connector route pairs the ordered state coordinates as a permutation; partial or crossed pairs must be assessed together with the stage's joint law and backward value components. Neither matching type labels nor separate marginal laws alone establish that route.</p>
 <h2 id="between-periods">Between periods<a class="headerlink" href="#between-periods" title="Permanent link">&para;</a></h2>
 <p>The <a href="../trellis/">trellis</a> index counts backwards from terminal. An inter-period connector indexed by <span class="arithmatex">\(h\)</span> joins the continuation of period <span class="arithmatex">\(h+1\)</span> to the arrival of period <span class="arithmatex">\(h\)</span>. For the consumption–investment example, <code>{m_next: m}</code> belongs at this boundary. Placing this join inside the same period would instead close a cycle. See <a href="../../Bellman-Sym/07-trellis/#2-inter-period-connectors">inter-period connections</a>.</p>

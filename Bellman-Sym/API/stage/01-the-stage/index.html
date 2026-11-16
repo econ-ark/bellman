@@ -2109,6 +2109,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="5 The stage&#39;s questions about itself">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-supplied-continuation-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Supplied continuation fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2967,6 +2984,8 @@
       
         
       
+        
+      
     
     
     
@@ -3703,6 +3722,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7962,6 +8009,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="5 The stage&#39;s questions about itself">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-supplied-continuation-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Supplied continuation fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -8367,7 +8431,7 @@
 <a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>  backward
 <a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    in   𝑉≻  : Xa → [−∞, ∞)
 <a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>         ──────────────────────────────────────
-<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    out  𝑉≺  : Xm × ℝ₊ → ℝ
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>    out  𝑉≺  : Xm → ℝ
 <a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>         𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 <a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>  forward
 <a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    in   μ≺  : finite measure on Xm × ℝ₊
@@ -8393,48 +8457,51 @@
 <a id="__codelineno-19-30" name="__codelineno-19-30" href="#__codelineno-19-30"></a>       in: μ                            out: μ≻
 <a id="__codelineno-19-31" name="__codelineno-19-31" href="#__codelineno-19-31"></a>
 <a id="__codelineno-19-32" name="__codelineno-19-32" href="#__codelineno-19-32"></a>Conditions
-<a id="__codelineno-19-33" name="__codelineno-19-33" href="#__codelineno-19-33"></a>  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
-<a id="__codelineno-19-34" name="__codelineno-19-34" href="#__codelineno-19-34"></a>  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
-<a id="__codelineno-19-35" name="__codelineno-19-35" href="#__codelineno-19-35"></a>  𝑢                         ¬(1 − ρ = 0)
-<a id="__codelineno-19-36" name="__codelineno-19-36" href="#__codelineno-19-36"></a>  cntn_to_dcsn.marginal     marginal-reading: the right side of each
-<a id="__codelineno-19-37" name="__codelineno-19-37" href="#__codelineno-19-37"></a>                              derivative line equals the derivative, in the
-<a id="__codelineno-19-38" name="__codelineno-19-38" href="#__codelineno-19-38"></a>                              named coordinate, of the value the builder
-<a id="__codelineno-19-39" name="__codelineno-19-39" href="#__codelineno-19-39"></a>                              writes, under the envelope conditions: concavity
-<a id="__codelineno-19-40" name="__codelineno-19-40" href="#__codelineno-19-40"></a>                              of the continuation value, interiority of the
-<a id="__codelineno-19-41" name="__codelineno-19-41" href="#__codelineno-19-41"></a>                              maximizer or the multiplier's term at a binding
-<a id="__codelineno-19-42" name="__codelineno-19-42" href="#__codelineno-19-42"></a>                              constraint, differentiability of the reward in
-<a id="__codelineno-19-43" name="__codelineno-19-43" href="#__codelineno-19-43"></a>                              the control, a measurable selection of the
-<a id="__codelineno-19-44" name="__codelineno-19-44" href="#__codelineno-19-44"></a>                              policy, and differentiability of the value at
-<a id="__codelineno-19-45" name="__codelineno-19-45" href="#__codelineno-19-45"></a>                              the point read; listed and not checked
-<a id="__codelineno-19-46" name="__codelineno-19-46" href="#__codelineno-19-46"></a>                              [required]
-<a id="__codelineno-19-47" name="__codelineno-19-47" href="#__codelineno-19-47"></a>──────────────────────────────────────────────────────────────────────────────
-<a id="__codelineno-19-48" name="__codelineno-19-48" href="#__codelineno-19-48"></a>Source  cons.bl
-<a id="__codelineno-19-49" name="__codelineno-19-49" href="#__codelineno-19-49"></a>  13  m_d = m
-<a id="__codelineno-19-50" name="__codelineno-19-50" href="#__codelineno-19-50"></a>  17  a = m_d - c
-<a id="__codelineno-19-51" name="__codelineno-19-51" href="#__codelineno-19-51"></a>  21  V        = 𝑢(c) + V[&gt;]                       :: [id=value]
-<a id="__codelineno-19-52" name="__codelineno-19-52" href="#__codelineno-19-52"></a>  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
-<a id="__codelineno-19-53" name="__codelineno-19-53" href="#__codelineno-19-53"></a>  26  V[&lt;] = V                                     :: [id=value]
-<a id="__codelineno-19-54" name="__codelineno-19-54" href="#__codelineno-19-54"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
-<a id="__codelineno-19-55" name="__codelineno-19-55" href="#__codelineno-19-55"></a>
-<a id="__codelineno-19-56" name="__codelineno-19-56" href="#__codelineno-19-56"></a>Definitions referenced
-<a id="__codelineno-19-57" name="__codelineno-19-57" href="#__codelineno-19-57"></a>  Xm    cons:set:Xm
-<a id="__codelineno-19-58" name="__codelineno-19-58" href="#__codelineno-19-58"></a>  Xa    cons:set:Xa
-<a id="__codelineno-19-59" name="__codelineno-19-59" href="#__codelineno-19-59"></a>  ρ     cons:parameter:ρ
-<a id="__codelineno-19-60" name="__codelineno-19-60" href="#__codelineno-19-60"></a>  𝑢     cons:function:𝑢
-<a id="__codelineno-19-61" name="__codelineno-19-61" href="#__codelineno-19-61"></a>  Γ     cons:correspondence:Γ
-<a id="__codelineno-19-62" name="__codelineno-19-62" href="#__codelineno-19-62"></a>
-<a id="__codelineno-19-63" name="__codelineno-19-63" href="#__codelineno-19-63"></a>File
-<a id="__codelineno-19-64" name="__codelineno-19-64" href="#__codelineno-19-64"></a>  applications/portfolio-choice/declaration/stages/cons/cons.bl
+<a id="__codelineno-19-33" name="__codelineno-19-33" href="#__codelineno-19-33"></a>  cntn_to_dcsn:Aggregation       𝑉(m_d) ∈ [−∞, ∞)
+<a id="__codelineno-19-34" name="__codelineno-19-34" href="#__codelineno-19-34"></a>  dcsn_to_arvl:Aggregation       𝑉≺(m) ∈ ℝ
+<a id="__codelineno-19-35" name="__codelineno-19-35" href="#__codelineno-19-35"></a>  dcsn_to_arvl:Aggregation       𝑉≺(m, l) ∈ ℝ
+<a id="__codelineno-19-36" name="__codelineno-19-36" href="#__codelineno-19-36"></a>  policy.optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[&gt;] ∈ [−∞, −∞])
+<a id="__codelineno-19-37" name="__codelineno-19-37" href="#__codelineno-19-37"></a>  𝑢                              ¬(1 − ρ = 0)
+<a id="__codelineno-19-38" name="__codelineno-19-38" href="#__codelineno-19-38"></a>  cntn_to_dcsn.marginal          marginal-reading: the right side of each
+<a id="__codelineno-19-39" name="__codelineno-19-39" href="#__codelineno-19-39"></a>                                   derivative line equals the derivative, in
+<a id="__codelineno-19-40" name="__codelineno-19-40" href="#__codelineno-19-40"></a>                                   the named coordinate, of the value the
+<a id="__codelineno-19-41" name="__codelineno-19-41" href="#__codelineno-19-41"></a>                                   builder writes, under the envelope
+<a id="__codelineno-19-42" name="__codelineno-19-42" href="#__codelineno-19-42"></a>                                   conditions: concavity of the continuation
+<a id="__codelineno-19-43" name="__codelineno-19-43" href="#__codelineno-19-43"></a>                                   value, interiority of the maximizer or the
+<a id="__codelineno-19-44" name="__codelineno-19-44" href="#__codelineno-19-44"></a>                                   multiplier's term at a binding constraint,
+<a id="__codelineno-19-45" name="__codelineno-19-45" href="#__codelineno-19-45"></a>                                   differentiability of the reward in the
+<a id="__codelineno-19-46" name="__codelineno-19-46" href="#__codelineno-19-46"></a>                                   control, a measurable selection of the
+<a id="__codelineno-19-47" name="__codelineno-19-47" href="#__codelineno-19-47"></a>                                   policy, and differentiability of the value
+<a id="__codelineno-19-48" name="__codelineno-19-48" href="#__codelineno-19-48"></a>                                   at the point read; listed and not checked
+<a id="__codelineno-19-49" name="__codelineno-19-49" href="#__codelineno-19-49"></a>                                   [required]
+<a id="__codelineno-19-50" name="__codelineno-19-50" href="#__codelineno-19-50"></a>──────────────────────────────────────────────────────────────────────────────
+<a id="__codelineno-19-51" name="__codelineno-19-51" href="#__codelineno-19-51"></a>Source  cons.bl
+<a id="__codelineno-19-52" name="__codelineno-19-52" href="#__codelineno-19-52"></a>  13  m_d = m
+<a id="__codelineno-19-53" name="__codelineno-19-53" href="#__codelineno-19-53"></a>  17  a = m_d - c
+<a id="__codelineno-19-54" name="__codelineno-19-54" href="#__codelineno-19-54"></a>  21  V        = 𝑢(c) + V[&gt;]                       :: [id=value]
+<a id="__codelineno-19-55" name="__codelineno-19-55" href="#__codelineno-19-55"></a>  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
+<a id="__codelineno-19-56" name="__codelineno-19-56" href="#__codelineno-19-56"></a>  26  V[&lt;] = V                                     :: [id=value]
+<a id="__codelineno-19-57" name="__codelineno-19-57" href="#__codelineno-19-57"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
+<a id="__codelineno-19-58" name="__codelineno-19-58" href="#__codelineno-19-58"></a>
+<a id="__codelineno-19-59" name="__codelineno-19-59" href="#__codelineno-19-59"></a>Definitions referenced
+<a id="__codelineno-19-60" name="__codelineno-19-60" href="#__codelineno-19-60"></a>  Xm    cons:set:Xm
+<a id="__codelineno-19-61" name="__codelineno-19-61" href="#__codelineno-19-61"></a>  Xa    cons:set:Xa
+<a id="__codelineno-19-62" name="__codelineno-19-62" href="#__codelineno-19-62"></a>  ρ     cons:parameter:ρ
+<a id="__codelineno-19-63" name="__codelineno-19-63" href="#__codelineno-19-63"></a>  𝑢     cons:function:𝑢
+<a id="__codelineno-19-64" name="__codelineno-19-64" href="#__codelineno-19-64"></a>  Γ     cons:correspondence:Γ
 <a id="__codelineno-19-65" name="__codelineno-19-65" href="#__codelineno-19-65"></a>
-<a id="__codelineno-19-66" name="__codelineno-19-66" href="#__codelineno-19-66"></a>Perches
-<a id="__codelineno-19-67" name="__codelineno-19-67" href="#__codelineno-19-67"></a>  ≺  arrival, written [&lt;]
-<a id="__codelineno-19-68" name="__codelineno-19-68" href="#__codelineno-19-68"></a>  ≻  continuation, written [&gt;]
-<a id="__codelineno-19-69" name="__codelineno-19-69" href="#__codelineno-19-69"></a>     unmarked: decision
-<a id="__codelineno-19-70" name="__codelineno-19-70" href="#__codelineno-19-70"></a>
-<a id="__codelineno-19-71" name="__codelineno-19-71" href="#__codelineno-19-71"></a>Appendix
-<a id="__codelineno-19-72" name="__codelineno-19-72" href="#__codelineno-19-72"></a>  Bellman-SYM, Appendix C
-<a id="__codelineno-19-73" name="__codelineno-19-73" href="#__codelineno-19-73"></a>  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
-<a id="__codelineno-19-74" name="__codelineno-19-74" href="#__codelineno-19-74"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<a id="__codelineno-19-66" name="__codelineno-19-66" href="#__codelineno-19-66"></a>File
+<a id="__codelineno-19-67" name="__codelineno-19-67" href="#__codelineno-19-67"></a>  applications/portfolio-choice/declaration/stages/cons/cons.bl
+<a id="__codelineno-19-68" name="__codelineno-19-68" href="#__codelineno-19-68"></a>
+<a id="__codelineno-19-69" name="__codelineno-19-69" href="#__codelineno-19-69"></a>Perches
+<a id="__codelineno-19-70" name="__codelineno-19-70" href="#__codelineno-19-70"></a>  ≺  arrival, written [&lt;]
+<a id="__codelineno-19-71" name="__codelineno-19-71" href="#__codelineno-19-71"></a>  ≻  continuation, written [&gt;]
+<a id="__codelineno-19-72" name="__codelineno-19-72" href="#__codelineno-19-72"></a>     unmarked: decision
+<a id="__codelineno-19-73" name="__codelineno-19-73" href="#__codelineno-19-73"></a>
+<a id="__codelineno-19-74" name="__codelineno-19-74" href="#__codelineno-19-74"></a>Appendix
+<a id="__codelineno-19-75" name="__codelineno-19-75" href="#__codelineno-19-75"></a>  Bellman-SYM, Appendix C
+<a id="__codelineno-19-76" name="__codelineno-19-76" href="#__codelineno-19-76"></a>  docs/Bellman-Sym/appendices/14-appendix-c-syntax-to-semantics.md
+<a id="__codelineno-19-77" name="__codelineno-19-77" href="#__codelineno-19-77"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 </code></pre></div>
 <h2 id="5-the-stages-questions-about-itself">5 The stage's questions about itself<a class="headerlink" href="#5-the-stages-questions-about-itself" title="Permanent link">&para;</a></h2>
 <p><code>stage.fields()</code> answers every field of the stage by its identity, with its perch, its role and its declared set.</p>
@@ -8455,22 +8522,23 @@
 <a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="nb">print</span><span class="p">(</span><span class="n">stage</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">())</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>arithmetic-definedness      ¬(1 − ρ = 0)
-<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>finite-real-arithmetic      The operands of Add at policy.optimality must be finite real numbers.
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>finite-real-arithmetic      ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[&gt;] ∈ [−∞, −∞])
 <a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>aggregation-admissibility   V(m_d) ∈ [−∞, ∞)
 <a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>marginal-reading            the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
-<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>aggregation-admissibility   V≺(m, l) ∈ ℝ
-<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>finite-real-arithmetic      The operands of Add at policy must be finite real numbers.
-<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>range-compatibility         m_d − c(m_d) ∈ Xa   [established]
-<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>
-<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>complete_signature         True
-<a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>missing_builders           none
-<a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>exposed_inputs             none
-<a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>unused_outputs             none
-<a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>forward_map                none
-<a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>builder_choice             none
-<a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>external_calls             none
-<a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a>unread_inputs              none
-<a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a>ready_for_interpretation   True
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>aggregation-admissibility   V≺(m) ∈ ℝ
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>range-compatibility         m_d − c(m_d) ∈ Xa   [established]
+<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a>range-compatibility         V≺(m, l) ∈ ℝ
+<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>continuation-input          The representing function for V[&gt;] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
+<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>
+<a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>complete_signature         True
+<a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a>missing_builders           none
+<a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a>exposed_inputs             none
+<a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>unused_outputs             none
+<a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>forward_map                none
+<a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>builder_choice             none
+<a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a>external_calls             none
+<a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a>unread_inputs              none
+<a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a>ready_for_interpretation   True
 </code></pre></div>
 <p>Calibration establishes a condition at the bound values of the parameters (<a href="../09-binding-verbs/">The binding verbs</a> §2), and a condition that the symbols alone do not decide is recorded for calibration to settle. The weights of a mixture written as parameter names are one such condition: a mixture of distributions is a probability measure only if its weights lie between zero and one and sum to one. The consumption stage declares no shock, so this listing reads the consumption–savings stage <code>applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl</code>, whose income is a mixture of a point mass at zero with weight <code>p_zero</code> and a lognormal draw with weight <code>1 - p_zero</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">savings</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span><span class="s2">"applications/consumption-savings-iid/declaration/stages/cons_savings_iid/cons_savings_iid.bl"</span><span class="p">))</span>
@@ -8489,7 +8557,7 @@
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a>['bindings', 'builders', 'definitions', 'derived', 'diagnostics', 'initial_diagrams', 'metadata', 'name', 'obligations', 'package_version', 'provenance', 'schema', 'version']
 </code></pre></div>
-<p>The package holds one schema, <code>bellman/display/stage-encoding-2.6.schema.json</code>, whose identifier ends in <code>/stage-encoding/2.6</code>; it describes the whole document, and every document the package's tests store for a stage file is written under it. Under <code>derived</code> stand the answers the denotations give, each node with a kind spelled <code>&lt;namespace&gt;.&lt;Kind&gt;</code>, such as <code>records.Wire</code> or <code>terms.Sym</code>, in one of the five namespaces the schema lists, <code>terms</code>, <code>semantic</code>, <code>records</code>, <code>predicates</code> and <code>methods</code>. A namespace is a name of the schema and names no module of the package, so the modules may be rearranged without changing a stored document. The methods stand within the pieces where they are bound, with the values of the settings they name on a configured version, and the source text is not encoded. Each application stage that elaborates has its document <code>&lt;stage&gt;.bl.stage.json</code> in <code>packages/bellman/tests/snapshot/corpus/&lt;application&gt;/</code>, written on one line, and the specified consumption stage also has <code>cons.bl.specified.stage.json</code>. One record of the definitions table, the law of motion of <code>dcsn_to_cntn</code>, as the encoding writes it:</p>
+<p>The package holds one schema, <code>bellman/display/stage-encoding-2.6.schema.json</code>, whose identifier ends in <code>/stage-encoding/2.6</code>; it describes the whole document, and the package's tests validate the document of every application stage against it. Under <code>derived</code> stand the answers the denotations give, each node with a kind spelled <code>&lt;namespace&gt;.&lt;Kind&gt;</code>, such as <code>records.Wire</code> or <code>terms.Sym</code>, in one of the five namespaces the schema lists, <code>terms</code>, <code>semantic</code>, <code>records</code>, <code>predicates</code> and <code>methods</code>. A namespace is a name of the schema and names no module of the package, so the modules may be rearranged without changing a document. The methods stand within the pieces where they are bound, with the values of the settings they name on a configured version, and the source text is not encoded. One record of the definitions table, the law of motion of <code>dcsn_to_cntn</code>, as the encoding writes it:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a>
 <a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a><span class="n">held</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">encoding</span><span class="p">()[</span><span class="s2">"definitions"</span><span class="p">]</span>
@@ -8531,6 +8599,27 @@
 <p>A value an author writes, in a binding, in a method's settings or in the provenance, is encoded with one reserved key, so that <code>json.dumps(stage.encoding(), allow_nan=False)</code> also accepts the answer. A floating-point positive infinity is written <code>{"$bellman": ["float", "inf"]}</code>, and negative infinity and NaN <code>"-inf"</code> and <code>"nan"</code> in the same form, while the strings <code>"inf"</code>, <code>"-inf"</code> and <code>"nan"</code> stay strings. An authored mapping that holds the key <code>$bellman</code> is written <code>{"$bellman": ["mapping", …]}</code>, with the list of its entries in their order, each a pair of the key and its encoded value, so that it is never read as a float. The rule applies to such values alone: the fixed fields of the graphs, the definitions and the methods are written as they are, and no admissible number is added or removed.</p>
 <p>Within Python a version, and so a trellis of versions, is written and read back by the standard <code>pickle</code>, the form in which <code>multiprocessing</code> and <code>mpi4py</code> send an object from one process to another: what is read back equals what was written, and computes its answers again when they are asked for. Importing the module <code>bellman.native.hypergraphs</code>, which nearly every public name of the package imports (<code>load_stage</code>, <code>load_trellis</code>, the error classes and a bare <code>import bellman</code> do not) and which reading such a pickle imports, registers with the standard module <code>copyreg</code> a rule for <code>types.MappingProxyType</code> that holds in the whole Python process: <code>pickle</code> and <code>copy.deepcopy</code>, which otherwise refuse a read-only mapping, then accept any read-only mapping in that process and write it as a new read-only mapping over a copy of its entries.</p>
 <p>From a shell, <code>python -m bellman applications/portfolio-choice/declaration/stages/cons/cons.bl</code> prints the printed view of §3; <code>--encoding</code> prints the encoding, <code>--dossier</code> the printed answers of the stage with its source, and <code>--refusals</code> the catalogue of refusals. A command that succeeds exits with status zero; a refused stage exits with status one and its explanation.</p>
+<h3 id="51-supplied-continuation-fields">5.1 Supplied continuation fields<a class="headerlink" href="#51-supplied-continuation-fields" title="Permanent link">&para;</a></h3>
+<p><code>stage.check_inputs(values)</code> checks the fields received at the continuation perch. The mapping names every external input exactly as its owning backward header writes it: <code>V[&gt;]</code> keeps its mark, while a kept name such as <code>L</code> stays bare. Fields produced inside the stage are excluded. Selecting a method does not change these declared requirements.</p>
+<p>A field typed <code>!cnst</code> receives its whole value. A scalar or finite table is checked against its declared set, using calibrated parameters and supplied constants where its bounds read them. For example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">elaborate_text</span>
+<a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a>
+<a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a><span class="n">bound</span> <span class="o">=</span> <span class="n">elaborate_text</span><span class="p">(</span><span class="s2">"""@stage: bound</span>
+<a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a><span class="s2">[id=cntn_to_dcsn, (L : (-inf, 0] @ !vlu @ !cnst) : !cntn</span>
+<a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a><span class="s2">    -&gt; (B : ℝ @ !vlu @ !cnst) : !dcsn] {</span>
+<a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a><span class="s2">    B = L</span>
+<a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a><span class="s2">}</span>
+<a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="s2">"""</span><span class="p">,</span> <span class="s2">"bound.bl"</span><span class="p">)</span>
+<a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="k">assert</span> <span class="n">bound</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">({</span><span class="s2">"L"</span><span class="p">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">})</span> <span class="o">==</span> <span class="p">()</span>
+</code></pre></div>
+<p>Supplying <code>L = 2</code> raises <code>ConstructionError</code>, naming <code>L</code> and its declared set. Missing and unknown names also raise <code>ConstructionError</code>. These failures use the rule <a href="../../../reference/refusals/#continuation-input"><code>continuation-input</code></a>. The check preserves the supplied mapping, arrays and other values.</p>
+<p>An ordinary value field receives a function of its declared state coordinates. For the consumption stage used above:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="n">conditions</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">({</span><span class="s2">"V[&gt;]"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span>
+<a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+<a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+</code></pre></div>
+<p>The returned conditions remain <code>required</code>: the checker does not evaluate the function or prove its domain, range, dependence or measurability. A fixed callable supplied as the whole value of a function-valued constant likewise leaves membership unresolved. An empty tuple means that the supplied representation decided all input checks; it proves nothing about the stage's other conditions.</p>
+<p><code>stage.obligations()</code> lists the input requirements before data are supplied. Checking data does not change that list or any binding. Numerical callers retain the returned conditions and pass the same mapping to <a href="../04-builder/#5-the-kernels-of-a-builder">a builder's <code>kernels(inputs=values)</code></a> before constructing grids or numerical operators.</p>
 <h2 id="6-what-each-check-establishes">6 What each check establishes<a class="headerlink" href="#6-what-each-check-establishes" title="Permanent link">&para;</a></h2>
 <table>
 <thead>

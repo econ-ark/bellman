@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3581,6 +3583,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8293,7 +8323,7 @@ u_1(c, H') \geq \beta(1+r)\, \mathbb{E}_y\, u_1(c', H''),
 <li><strong>Decision</strong> (unmarked): perch on which the agent makes a decision.</li>
 <li><strong>Continuation</strong> (<span class="arithmatex">\(\succ\)</span>): perch after the choice and transition.</li>
 </ul>
-<p>Within a stage we use only perch indices; time subscripts are reserved for the inter-period connector that wires period <span class="arithmatex">\(t\)</span>'s continuation to period <span class="arithmatex">\(t{+}1\)</span>'s arrival. Greek letters denote arrival quantities (e.g. <span class="arithmatex">\(\xi\)</span> for the persistent income state at arrival); Roman letters denote quantities realized or chosen inside the period (e.g. <span class="arithmatex">\(z\)</span> once the income innovation resolves, <span class="arithmatex">\(\nu\)</span> for housing at the continuation perch). Housing at arrival is <span class="arithmatex">\(h\)</span>; the carried or chosen housing at the continuation perch is <span class="arithmatex">\(\nu\)</span>.</p>
+<p>Within a stage we use perch indices. The paper's time subscripts label periods in the mathematical exposition; a trellis position is only an address. The application sends age backward as a constant field and reads fixed income tables at that age. Greek letters denote arrival quantities (e.g. <span class="arithmatex">\(\xi\)</span> for the persistent income state at arrival); Roman letters denote quantities realized or chosen inside the period (e.g. <span class="arithmatex">\(z\)</span> once the income innovation resolves, <span class="arithmatex">\(\nu\)</span> for housing at the continuation perch). Housing at arrival is <span class="arithmatex">\(h\)</span>; the carried or chosen housing at the continuation perch is <span class="arithmatex">\(\nu\)</span>.</p>
 </div>
 <p>A household lives for <span class="arithmatex">\(T\)</span> periods, holding financial assets <span class="arithmatex">\(a \ge 0\)</span> and housing <span class="arithmatex">\(h \ge 0\)</span> at the start of each period.</p>
 <p>Each period it draws an i.i.d. innovation <span class="arithmatex">\(\varepsilon \sim N(0,1)\)</span>, updates the persistent income state via <span class="arithmatex">\(\log z = \rho \log \xi + \sigma \varepsilon\)</span>, earns income <span class="arithmatex">\(\mathrm{y}(z)\)</span>, and makes a discrete tenure choice <span class="arithmatex">\(d \in \{0, 1\}\)</span> — keep or adjust housing — followed by a non-durable consumption choice <span class="arithmatex">\(c\)</span> (plus, on the adjuster branch, a choice of the housing <span class="arithmatex">\(\nu\)</span> held at the continuation perch). Financial assets earn gross return <span class="arithmatex">\(R = 1+r\)</span>; adjusting housing costs <span class="arithmatex">\(\tau\,\nu\)</span>. The stage equations below keep <span class="arithmatex">\(\delta\)</span> (housing depreciation) and <span class="arithmatex">\(R_\nu\)</span> (housing gross return) as free parameters; the simplest case of the main text sets <span class="arithmatex">\(\delta = 0\)</span> and <span class="arithmatex">\(R_\nu = 1\)</span>.</p>
@@ -8313,6 +8343,7 @@ u_1(c, H') \geq \beta(1+r)\, \mathbb{E}_y\, u_1(c', H''),
 </ol>
 <p><code>keeper_cons</code> and <code>adjuster_cons</code> are the two alternatives of the same decision-to-continuation branching; neither precedes the other. The Bellman equations below are written conditional on the realized income state <span class="arithmatex">\(z\)</span>. Economically this is a one-dimensional EGM problem for each <span class="arithmatex">\((z, \nu)\)</span> slice of the keeper problem and a one-dimensional wealth problem for each <span class="arithmatex">\(z\)</span> slice of the adjuster problem.</p>
 <h3 id="stage-tenure-branching-and-the-income-shock">Stage <code>tenure</code> — branching and the income shock<a class="headerlink" href="#stage-tenure-branching-and-the-income-shock" title="Permanent link">&para;</a></h3>
+<p>The bequest takes in age 71. Each consumption stage keeps the age it takes in. The tenure stage sends back the keep branch's incoming age minus one. Each branch reads the wage and retirement tables at its incoming age to obtain the amounts for the age one year younger.</p>
 <table>
 <thead>
 <tr>

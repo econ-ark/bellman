@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -6906,10 +6936,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#a-consumption-example" class="md-nav__link">
+  <a href="#consumption-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A consumption example
+        Consumption example
       
     </span>
   </a>
@@ -6917,10 +6947,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-stage-file-and-its-stage-occurrences" class="md-nav__link">
+  <a href="#stage-files-and-occurrences" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A stage file and its stage occurrences
+        Stage files and occurrences
       
     </span>
   </a>
@@ -7866,10 +7896,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#a-consumption-example" class="md-nav__link">
+  <a href="#consumption-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A consumption example
+        Consumption example
       
     </span>
   </a>
@@ -7877,10 +7907,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-stage-file-and-its-stage-occurrences" class="md-nav__link">
+  <a href="#stage-files-and-occurrences" class="md-nav__link">
     <span class="md-ellipsis">
       
-        A stage file and its stage occurrences
+        Stage files and occurrences
       
     </span>
   </a>
@@ -7983,11 +8013,15 @@
 
 <h1 id="stage">Stage<a class="headerlink" href="#stage" title="Permanent link">&para;</a></h1>
 <p>A <strong>stage</strong> is a module of a Bellman problem with arrival, decision, and continuation <a href="../perch/">information contexts</a>. It declares the quantities relevant there and the equations for state transitions, value calculations, and policy relations. Its source is a <code>.bl</code> <strong>stage file</strong> in <a href="../sym/">Bellman-SYM</a>, and in Python it is the <a href="../elaborated_stage/">elaborated stage</a> that <code>elaborate_stage</code> of <code>bellman.stage</code> makes of the file.</p>
-<h2 id="a-consumption-example">A consumption example<a class="headerlink" href="#a-consumption-example" title="Permanent link">&para;</a></h2>
+<p><a id="a-consumption-example"></a></p>
+<h2 id="consumption-example">Consumption example<a class="headerlink" href="#consumption-example" title="Permanent link">&para;</a></h2>
 <p>A household begins with assets <span class="arithmatex">\(b\)</span>, observes income <span class="arithmatex">\(y\)</span>, and chooses consumption <span class="arithmatex">\(c\)</span> from resources <span class="arithmatex">\(w=Rb+y\)</span>, leaving savings <span class="arithmatex">\(a=w-c\)</span>. Arrival information precedes income, decision information includes observed income, and continuation information includes the consumption choice. Assume resources suffice for the consumption decision and savings suffice for continuation value; the household's information can be richer than these scalar states.</p>
 <p>For an admissible continuation function <span class="arithmatex">\(W\)</span>, the objective is <span class="arithmatex">\(Q(w,c)=u(c)+\beta W(w-c)\)</span>. A policy selects a feasible maximizer, and arrival value averages the resulting decision value over income. Existence of that maximizer, measurability, and finiteness of the expectation are assumptions to check. The <a href="../../Bellman-Sym/01-stage/">complete walkthrough</a> states domains, a conditional distribution of income, and sufficient conditions.</p>
-<h2 id="a-stage-file-and-its-stage-occurrences">A stage file and its stage occurrences<a class="headerlink" href="#a-stage-file-and-its-stage-occurrences" title="Permanent link">&para;</a></h2>
+<p>A stage may take several value-type fields, fields typed <code>!vlu</code>, from its continuation: the value field, age, human wealth or a bound. Its backward equations compute fields for the preceding stage. A field typed <code>!cnst</code> is constant across states of its perch; its supplied value may still differ between periods. The <a href="../field/">field entry</a> distinguishes a field from its representing function.</p>
+<p><a id="a-stage-file-and-its-stage-occurrences"></a></p>
+<h2 id="stage-files-and-occurrences">Stage files and occurrences<a class="headerlink" href="#stage-files-and-occurrences" title="Permanent link">&para;</a></h2>
 <p>A <strong>stage occurrence</strong> is one use of the stage file in a <a href="../period/">period</a> at a particular position in the model: the file elaborated there, with its own three bindings. Its <a href="../field/">fields</a>, policy and numerical choices remain local to that occurrence. A parameter name declared by two stages of the same period, however, names one <a href="../parameters/">period parameter</a> with one reconciled declaration and value; the same name in another period names another parameter. The construction gives each stage occurrence its own semgraph and specification, prints the file's declared name for every one, and records the position in the occurrence's provenance. Each binding adds to the elaborated object in place and returns it; a <strong>stage version</strong> is the stage occurrence as it stands after elaboration or after one of its bindings (<a href="../../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6).</p>
+<p>In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated declarations share their operators and calibration sources. Their supplied fields may differ, and methods and settings remain separate numerical choices. A stage occurrence's position is an address in the trellis, not an input to its equations.</p>
 <p>The stage's <a href="../semgraph/">semgraph (semantic graph)</a> retains its interpreted equations and definitions. Whole <a href="../builder/">builders</a>, named Bellman operations, and authored <code>!node</code> computations provide inspection boundaries. Scalar arithmetic inside a state transition or <a href="../aggregation/">value aggregator</a> is not another advertised level of that semgraph.</p>
 <p>The <a href="../../Bellman-Sym/03-field-equations/">field-equation tutorial</a> develops consumption as a separate stage file, which can then be joined to discounting and portfolio choice through compatible <a href="../connector/">connectors</a>.</p>
 

@@ -2852,6 +2852,8 @@
       
         
       
+        
+      
     
     
     
@@ -3588,6 +3590,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8320,6 +8350,13 @@
 <td><code>fold/block_lines.py</code>, <code>header_of</code></td>
 </tr>
 <tr>
+<td><a id="bellman-stage-header-fields"></a><code>bellman.stage.header_fields(text, origin)</code></td>
+<td>The field each listing of the block headers of a stage text names: a read-only mapping from the address the span table gives the listing, <code>&lt;block&gt;.in.&lt;field&gt;</code> or <code>&lt;block&gt;.&lt;label&gt;.out.&lt;field&gt;</code> (<code>source_spans</code>), to its <code>HeaderField</code>, in the order of the text.</td>
+<td><code>mappingproxy</code></td>
+<td><code>header_fields(text, "applications/portfolio-choice/declaration/stages/cons/cons.bl")</code>: <code>mappingproxy({'arvl_to_dcsn.in.m': HeaderField(identity='cons:arvl:m', role…</code></td>
+<td><code>factory/elaboration.py</code>, <code>header_fields</code></td>
+</tr>
+<tr>
 <td><a id="bellman-stage-branches"></a><code>bellman.stage.branches(stage)</code></td>
 <td>The branches of a branching stage, each label to the continuation fields its nested block writes; empty for a stage without branches.</td>
 <td><code>mappingproxy</code></td>
@@ -8433,7 +8470,7 @@
 </tr>
 <tr>
 <td><a id="bellman-trellis-read-trellis-file"></a><code>bellman.trellis.read_trellis_file(file)</code></td>
-<td>The periods and the inter-period mappings a trellis file writes, expanded: each entry of <code>periods</code> written out or given as <code>{template: &lt;period file&gt;, repeat: n}</code> and then repeated <code>n</code> times; <code>inter_connectors</code> one mapping per adjacent pair, or one mapping standing for every pair, or none, standing for empty mappings.</td>
+<td>The periods and the inter-period mappings a trellis file writes, expanded: each entry of <code>periods</code> written out or given as <code>{template: &lt;period file&gt;, repeat: n}</code> and then repeated <code>n</code> times.</td>
 <td><code>dict</code></td>
 <td><code>read_trellis_file("applications/cons-port/declaration/trellis.port-cons-vfi.yml")</code>: <code>{'periods': [{'stages': {'port': {'stage': 'stages/port/port.bl', 'calibrat…</code></td>
 <td><code>factory/loading.py</code>, <code>read_trellis_file</code></td>
@@ -8505,7 +8542,7 @@
 <td><a id="bellman-trellis-assemble-trellis"></a><code>bellman.trellis.assemble_trellis(directory, recipe)</code></td>
 <td>The specified trellis of a registry and a recipe, <code>specify_trellis(load_recipe(directory, recipe, **fills))</code>: the trellis the calls <code>load_recipe</code>, <code>elaborate_trellis</code>, <code>calibrate_trellis</code>, <code>methodize_trellis</code>, <code>configure_trellis</code> make, in that order, each stage occurrence copied once.</td>
 <td><code>dict</code></td>
-<td><code>assemble_trellis("applications/durables/declaration", "spec.two-stages.yml")</code>: <code>{'registry': {'calibration': {'wage_coefficients': [4.329982, 0.610214, -0.…</code></td>
+<td><code>assemble_trellis("applications/durables/declaration", "spec.two-stages.yml")</code>: <code>{'registry': {}, 'provenance': {'recipe': {'path': 'applications/durables/d…</code></td>
 <td><code>factory/trellis.py</code>, <code>assemble_trellis</code></td>
 </tr>
 <tr>
@@ -8927,6 +8964,13 @@
 <td><code>Diagnostics</code></td>
 <td><code>complete_signature True …</code></td>
 <td><code>stage/stage_answers.py</code>, <code>diagnostics</code></td>
+</tr>
+<tr>
+<td><a id="stage-check-inputs-values"></a><code>stage.check_inputs(values)</code></td>
+<td>Check complete continuation data and return the undecided conditions.</td>
+<td><code>tuple</code></td>
+<td><code>check_inputs({"V[&gt;]": abs})</code>: <code>(Condition(condition='continuation-input', entries=(Identity(kind='field', …</code></td>
+<td><code>stage/input_requirements.py</code>, <code>check_inputs</code></td>
 </tr>
 <tr>
 <td><a id="stage-denote"></a><code>stage.denote()</code></td>

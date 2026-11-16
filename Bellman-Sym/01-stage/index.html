@@ -1491,6 +1491,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="3 Builder blocks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-fields-sent-backward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Fields sent backward
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2982,6 +2999,8 @@
       
         
       
+        
+      
     
     
     
@@ -3718,6 +3737,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7983,6 +8030,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="3 Builder blocks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-fields-sent-backward" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Fields sent backward
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -8173,6 +8237,10 @@ AI: Apply it to the example already stated in 00
 <td>The name is a value.</td>
 </tr>
 <tr>
+<td><code>!cnst</code></td>
+<td>Written with <code>!vlu</code>: the field and its admissible domain are independent of state, shock and choice (§3.1).</td>
+</tr>
+<tr>
 <td><code>!shck</code></td>
 <td>The name is a shock; a restatement where the name has a law, since the law makes the name a shock.</td>
 </tr>
@@ -8201,8 +8269,8 @@ in another period denotes another parameter. <a href="../../wiki/field/">Fields<
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>y ~ LogNormal(μ_y, σ_y)
 </code></pre></div>
 <p>The fused form <code>y : ℝ₊₊ ~ LogNormal(…)</code> is not admitted. The distribution declaration makes <code>y</code> a shock; <code>!shck</code> may restate that role on the line of its set, <code>y : ℝ₊₊ @ !shck</code>. A joint distribution takes a tuple subject, <code>(Ψ, θ) ~ N(…)</code>. Separate declarations imply conditional independence given the source coordinates unless one names the other as an argument. The stage records this factorization as an assumption. <a href="../reference/laws/">Shock distributions</a> lists the families a shock's distribution may take, <a href="../reference/laws/#log-normal"><code>LogNormal</code></a> among them.</p>
-<p><strong>Block signatures are typed the same way.</strong> In <code>[id=arvl_to_dcsn, (b : ℝ₊, y) : !arvl -&gt; (w : ℝ₊₊) : !dcsn]</code>, the word after each parenthesized side names the perch of every coordinate listed on that side, with two exceptions: a shock listed on a side is an argument of the block's equations and belongs to no perch, and a control is at decision wherever it is listed. A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which the block's output stands is a coordinate of that output, which a line reads without listing it, and a listed state is refused under <code>header-coordinate</code>. It lists no marginal value either: a line reads the derivative of a value the header lists by the term <code>D_{a}V[&gt;]</code>, and a line of a value builder's block may state the derivative of the value the block writes, <code>D_{m_d}V = 𝑑𝑢(c)</code>, with nothing listed for it (<a href="../03-field-equations/">Field equations</a> §2). A value field the header lists and no line of the block reads is admitted. Where a line of the block reads another listed value, the unread one is left out of the block's builder, and the elaboration records it as a diagnostic, <code>the header lists V[&gt;], which no line of the block reads</code>, in place of a refusal. A block whose lines read none of its listed values keeps them all as the inputs of its builder and records no diagnostic.</p>
-<p>A state or a value is placed at a perch by each of its listings: by the perch word of the side, by a perch word in its own type, or by its mark <code>[&lt;]</code> or <code>[&gt;]</code>. Where a listing carries two of these they agree, and a disagreement is refused under <code>field-perch</code>. The same name listed at another perch is another field with its own set, as <code>a</code> at arrival and <code>a[&gt;]</code> at continuation in the portfolio application's <code>disc.bl</code>. Where one name stands at both the arrival and the continuation perch, a line of a backward block names either state with its mark, <code>a[&lt;]</code> or <code>a[&gt;]</code>; the bare name there is refused under <code>name-in-scope</code>. A field's set may be written at any of its occurrences, in a top-level declaration or on a side, and several occurrences that write a set declare their intersection (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §2.4). With <code>w : ℝ₊₊</code> on the side that writes <code>w</code> and <code>w : ℝ₊</code> on a side that reads it, <code>w</code> lies in <code>ℝ₊₊</code>. The other direction, <code>ℝ₊</code> written and <code>ℝ₊₊</code> read, is refused under <code>set-mismatch</code>, because the set written where a block writes a field must lie in the set written where another block reads it. The package does not yet check this where it cannot compare the two sets, as with an endpoint that names a parameter (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). Every field, a shock included, has a declared set. The package does not yet check this (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). The sets written for a field at several occurrences have a value in common. The package does not yet check this, except between a block that writes the field and a block that reads it (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). A side may omit its perch word only when every coordinate on it is a shock, a control, or carries its own perch word or the mark <code>[&lt;]</code> or <code>[&gt;]</code>, as the output side of the portfolio application's policy signature <code>(V[&gt;]) : !cntn -&gt; ς</code> does. On a side without a perch word, a field that an earlier side placed must still carry its own perch word or its mark <code>[&lt;]</code> or <code>[&gt;]</code>, so a perch is never guessed. <a href="../appendices/13-perch-tagging-rules/">Perch tagging rules</a> gives the information-set reading of these rules.</p>
+<p><strong>Block signatures are typed the same way.</strong> In <code>[id=arvl_to_dcsn, (b : ℝ₊, y) : !arvl -&gt; (w : ℝ₊₊) : !dcsn]</code>, the word after each parenthesized side names the perch of every coordinate listed on that side, with three exceptions: a shock listed on a side is an argument of the block's equations and belongs to no perch, a control is at decision wherever it is listed, and a constant that the stage takes in at its continuation perch stays at that perch where the input side of a forward block lists it (§2.1). A backward block's header lists the value fields it reads and writes and the controls at which its lines are read, and no state: a state of the perch at which the block's output stands is a coordinate of that output, which a line reads without listing it, and a listed state is refused under <code>header-coordinate</code>. It lists no marginal value either: a line reads the derivative of a value the header lists by the term <code>D_{a}V[&gt;]</code>, and a line of a value builder's block may state the derivative of the value the block writes, <code>D_{m_d}V = 𝑑𝑢(c)</code>, with nothing listed for it (<a href="../03-field-equations/">Field equations</a> §2). A value field the header lists and no line of the block reads is admitted. Where a line of the block reads another listed value, the unread one is left out of the block's builder, and the elaboration records it as a diagnostic, <code>the header lists V[&gt;], which no line of the block reads</code>, in place of a refusal. A field that the header keeps (§3.1) is no such unread value: it stays in the block's builder, and no diagnostic names it. A block whose lines read none of its listed values keeps them all as the inputs of its builder and records no diagnostic.</p>
+<p>A state or a value is placed at a perch by each of its listings: by the perch word of the side, by a perch word in its own type, or by its mark <code>[&lt;]</code> or <code>[&gt;]</code>. Where a listing carries two of these they agree, and a disagreement is refused under <code>field-perch</code>, except for such a constant on the input side of a forward block, as <code>age[&gt;]</code> in <code>(m : Xa, c : !ctrl @ ℝ₊, age[&gt;]) : !dcsn</code>. A forward block lists no field that a backward block of the same stage writes; such a listing is refused under <a href="../reference/refusals/#header-coordinate"><code>header-coordinate</code></a>. The same name listed at another perch is another field with its own set, as <code>a</code> at arrival and <code>a[&gt;]</code> at continuation in the portfolio application's <code>disc.bl</code>. Where one name stands at both the arrival and the continuation perch, a line of a backward block names either state with its mark, <code>a[&lt;]</code> or <code>a[&gt;]</code>; the bare name there is refused under <code>name-in-scope</code>. A field's set may be written at any of its occurrences, in a top-level declaration or on a side, and several occurrences that write a set declare their intersection (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §2.4). With <code>w : ℝ₊₊</code> on the side that writes <code>w</code> and <code>w : ℝ₊</code> on a side that reads it, <code>w</code> lies in <code>ℝ₊₊</code>. The other direction, <code>ℝ₊</code> written and <code>ℝ₊₊</code> read, is refused under <code>set-mismatch</code>, because the set written where a block writes a field must lie in the set written where another block reads it. The package does not yet check this where it cannot compare the two sets, as with an endpoint that names a parameter (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). Every field, a shock included, has a declared set. The package does not yet check this (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). The sets written for a field at several occurrences have a value in common. The package does not yet check this, except between a block that writes the field and a block that reads it (<a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> §5.3). A side may omit its perch word only when every coordinate on it is a shock, a control, or carries its own perch word or the mark <code>[&lt;]</code> or <code>[&gt;]</code>, as the output side of the portfolio application's policy signature <code>(V[&gt;]) : !cntn -&gt; ς</code> does. On a side without a perch word, a field that an earlier side placed must still carry its own perch word or its mark <code>[&lt;]</code> or <code>[&gt;]</code>, so a perch is never guessed. <a href="../appendices/13-perch-tagging-rules/">Perch tagging rules</a> gives the information-set reading of these rules.</p>
 <p><strong>Definitions and binders use the same colon.</strong> A named set is defined with <code>:=</code>, as <code>Xa := ℝ₊</code> or <code>Xa := [0, ā]</code>. A function is defined with typed arguments, <code>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)</code>, whose <code>c</code> is local to the definition and is not the stage's control. A definition without arguments whose right side is arithmetic in the parameters, <code>h := 1/(1 - Γ/R)</code>, or is written by cases (<a href="../appendices/12-equation-parsing-rules/">Equation parsing rules</a> §2), defines a derived parameter: calibration computes its value from the definition and refuses a value supplied for it (<a href="../../wiki/parameters/">Parameters</a>). The definition may declare the set its value lies in, as <code>h : ℝ₊₊ := 1/(1 - Γ/R)</code>, and calibration then refuses values of the parameters at which the computed value lies outside that set. The set is written on the line of the definition: <code>h : ℝ₊₊</code> on a line of its own beside <code>h := 1/(1 - Γ/R)</code> is refused under <code>one-name-one-meaning</code>. Similarly, the binder of a maximization ranges over a feasible set written after a colon, <code>argmax_{c : Γ(w)}(…)</code>, with the bare binder <code>argmax_{c}</code> when the control's declared set is its feasible set (<a href="../10-constraints/">Constraints</a>).</p>
 <p><strong>A parameter's set may be a union or a difference of sets of numbers.</strong> The union is written <code>A \/ B</code> and the difference <code>A \ B</code>. <code>ρ : (0,1) \/ (1, inf)</code> declares a risk aversion that is positive and is not one: a value lies in a union when it lies in at least one of its members. <code>ρ : ℝ₊₊ \ {1}</code> declares the same set as a difference: a value lies in a difference when it lies in the left set and outside the right. The signs <code>∪</code> and <code>∖</code> are second spellings of the two. A union or a difference is read in the declared set of a parameter, of a derived parameter and of a setting, which a methods file declares with its set (<a href="../04-methodization/">Methodization</a> §4). It is refused in the set of a field, of a shock and of a function's argument, and it is not read after <code>:=</code>, in the definition of a named set or of a function. <a href="../reference/types/">Types</a> lists the role words, the perch words, the reserved sets, the forms a set may take and the limits on them.</p>
 <p>These sets describe admissible economic values. A numerical grid used to approximate a continuous domain is written separately, in the methods file (<a href="../04-methodization/">Methodization</a> §3.2).</p>
@@ -8258,6 +8326,7 @@ in another period denotes another parameter. <a href="../../wiki/field/">Fields<
 <p>Every destination leads to the same successor stage, so the choice is one block and not a <a href="../05-branching/">branching stage</a>: <code>[id=dcsn_to_cntn, (i_d, j : !ctrl @ L_J) : !dcsn -&gt; (i_n : L_J) : !cntn] { i_n = j }</code> retains the chosen city as the integer continuation state, and the number of cities stays the parameter <code>J</code>.</p>
 <p>A numerical key must be integer-valued, including when a parameter determines it. A listed set such as <code>S_θ := {0, θ} ⊂ ℤ</code> is also admitted, with an integer-valued parameter <code>θ</code>; its keys need not be consecutive. By contrast, entries such as payoffs, distances and wages may be real-valued. In <code>q[s]</code> with <code>s : S_θ</code>, the value of <code>s</code> identifies a key; it is not a position in the list supplied at calibration. Positions counted from one select components of a fixed tuple, as in <code>x[1]</code> and <code>x[2]</code> for <code>x : ℝ × ℝ</code>.</p>
 <p>Calibration supplies the values of <code>J</code>, <code>δ</code> and <code>dist</code>, checking the integer bounds and the number and domains of their entries. A different <code>J</code> uses the same stage declaration with correspondingly sized data. <a href="../reference/symbols-conventions/#921-finite-indexed-data">Symbol conventions §9.2.1</a> gives the admitted index sets, data order and a calibration example. Each index's declared domain must fit the corresponding table domain: a state ranging over cities and an outside option cannot directly select from a table defined only on cities (<a href="../appendices/15-appendix-d-node-tag-and-field-indexing/#52-collection-and-family-selection">Appendix D §5.2</a>).</p>
+<p>A numerical key may also be a constant that the stage takes in. In the application of Benhabib, Bisin and Luo, <code>applications/benhabib-2019/declaration/stages/benhabib_bellman/benhabib_bellman.bl</code>, the header of the forward block <code>dcsn_to_cntn</code> lists the incoming <code>age[&gt;]</code>, and its line reads the wage table as <code>wage_fn[age[&gt;]][tau]</code>. The same calibration table is used at every age. Its row under the incoming age gives the wage for the year the stage computes.</p>
 <h3 id="22-category-codes">2.2 Category codes<a class="headerlink" href="#22-category-codes" title="Permanent link">&para;</a></h3>
 <p>A household's status can be an integer state whose codes have recorded meanings. Define the set and give each member a category name:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>HouseholdStatus := {i : ℤ | i &gt;= 0, i &lt;= 1} :: [!categories household_status, newborn=0, old=1]
@@ -8286,6 +8355,11 @@ Explain the annodation
 <p>Read the first signature from left to right: beginning assets and the income shock determine decision resources. Here <code>ℝ₊</code> means nonnegative real numbers and <code>ℝ₊₊</code> means strictly positive real numbers. Income and the return parameter are declared elsewhere in the same file. The second signature declares <code>c</code> as a <strong>control</strong>, a quantity the household chooses at decision, and <code>a</code> as nonnegative continuation savings. Its equation and domains jointly impose the borrowing constraint; the maximization in §4 ranges over these feasible choices.</p>
 <p>The words <code>!arvl</code>, <code>!dcsn</code>, and <code>!cntn</code> identify the three information sets, the perches. A shock listed on a signature side is an argument of the transition: listing <code>y</code> on the arrival side does not say that income has already been observed. Similarly, a control retains its decision role when a later block lists it with continuation inputs. <a href="../appendices/13-perch-tagging-rules/">Perch tagging rules</a> explains both exceptions.</p>
 <p>The identifiers <code>arvl_to_dcsn</code>, <code>resources</code>, and <code>savings</code> supply addresses for inspection and supported numerical methods. Their names do not supply mathematical equations. Renaming <code>resources</code> consistently changes its address but preserves <code>w = R*b + y</code>.</p>
+<h3 id="31-fields-sent-backward">3.1 Fields sent backward<a class="headerlink" href="#31-fields-sent-backward" title="Permanent link">&para;</a></h3>
+<p>A backward header lists the value-type fields, the fields typed <code>!vlu</code>, that the block takes in and gives back. A field's <strong>representing function</strong> gives its value at the state coordinates on which it depends. The block may take in several fields, such as a continuation value <code>V[&gt;]</code>, age <code>age[&gt;]</code> and a borrowing bound <code>L</code>. The policy block determines one policy. The block that gives the decision fields, <code>cntn_to_dcsn</code> in the file of §4, evaluates its field equations at that policy.</p>
+<p>A header may keep a field by listing the same unmarked name on both sides and writing no equation for it. A kept nonconstant field retains its representing function, and the corresponding forward block must keep every state coordinate it depends on. A constant has no state coordinates to keep. A block that keeps every output writes no line, and its body is empty, <code>{}</code>. A marked input such as <code>age[&gt;]</code> and the bare output <code>age</code> name different fields, so an equation such as <code>age = age[&gt;] - 1</code> states the change explicitly. See <a href="../appendices/13-perch-tagging-rules/">Perch tagging rules</a>.</p>
+<p>Write <code>!cnst</code> after <code>!vlu</code> for a value-type field whose value and admissible domain are independent of states, shocks and controls. Its whole value can be a number, a table or a function. For example, an incoming field <code>f : Xa → ℝ @ !vlu @ !cnst</code> takes one fixed function on <code>Xa</code>. A line can read the field whole. A call <code>f(a)</code> also depends on the argument <code>a</code>. A table lookup likewise depends on its key. The package refuses a declaration that violates this independence under <a href="../reference/refusals/#constant-dependence"><code>constant-dependence</code></a>. A declared state set itself reads no field. A value field's admissible domain may depend on supplied continuation data.</p>
+<p>In a <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a>, repeated uses of a declaration share its operators and calibration sources. Data such as age can change through a field on each use. A recipe can still select calibration, methods and settings by position for a general model. The package checks their declarations and values and leaves the modularity judgment to the author. See <a href="../07-trellis/">Trellises</a>.</p>
 <h2 id="4-a-complete-stage-file">4 A complete stage file<a class="headerlink" href="#4-a-complete-stage-file" title="Permanent link">&para;</a></h2>
 <p>Save this source as <code>buffer_stock.bl</code>. The final three blocks add current utility to continuation value, average over income before it is observed, and choose a feasible consumption maximizer:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>@stage: buffer_stock

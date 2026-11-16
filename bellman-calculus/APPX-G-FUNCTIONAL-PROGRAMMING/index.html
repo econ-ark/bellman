@@ -16,7 +16,7 @@
         <link rel="prev" href="../APPX-F-OPERATOR-ALGEBRA/">
       
       
-        <link rel="next" href="../../examples/">
+        <link rel="next" href="../APPX-H-MODULARITY/">
       
       
         
@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3763,6 +3765,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -8217,7 +8247,8 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)
 </code></pre></div>
 <p>The symbol <code>ρ</code> is an economic parameter. The <code>c</code> in this definition is a local argument, distinct from a control with the same spelling in another scope. The definition represents the parameterized family <span class="arithmatex">\(u_\rho:\mathbb R_{++}\to\mathbb R\)</span>, with <span class="arithmatex">\(u_\rho(c)=c^{1-\rho}/(1-\rho)\)</span>. Calibration at <span class="arithmatex">\(\rho=2\)</span> selects <span class="arithmatex">\(u_2(c)=-1/c\)</span>. It supplies no particular consumption argument.</p>
-<p>The earlier function-object account can also describe a declared constant through a <strong>nullary operation</strong>, one with no arguments. Formally, a symbol of rank <span class="arithmatex">\(()\to A\)</span> is interpreted by an element of <span class="arithmatex">\(A\)</span>, or equivalently by a function <span class="arithmatex">\(1\to A\)</span>, where <span class="arithmatex">\(1\)</span> is a singleton. A named space can be treated this way in an algebra whose relevant carrier consists of spaces. A parameter could be treated in the same way, as a named nullary symbol to which calibration gives its interpretation. This is a precise way to express the declaration idea; it does not identify a space with a scalar or require the program to store a separate function for each name. <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4 does not treat a parameter so. There a parameter is no symbol of a signature: the parameters of a file form one parameter vector, and each parameter denotes one coordinate of it. The stage as declared is then a family indexed by the admissible set of such vectors, and calibration chooses the index (§6 below).</p>
+<p>The earlier function-object account can also describe a declared constant through a <strong>nullary operation</strong>, one with no arguments. Formally, a symbol of rank <span class="arithmatex">\(()\to A\)</span> is interpreted by an element of <span class="arithmatex">\(A\)</span>, or equivalently by a function <span class="arithmatex">\(1\to A\)</span>, where <span class="arithmatex">\(1\)</span> is a singleton. A named space can be treated this way in an algebra whose relevant carrier consists of spaces. A parameter could be treated in the same way, as a named nullary symbol to which calibration gives its interpretation. This is a precise way to express the declaration idea; it does not identify a space with a scalar or require the program to store a separate function for each name.</p>
+<p><a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4 does not treat a parameter so. There a parameter is no symbol of a signature: the parameters of a file form one parameter vector, and each parameter denotes one coordinate of it. The stage as declared is then a family indexed by the admissible set of such vectors, and calibration chooses the index. A supplied field is an argument of its operators, not the calibration index. In a modular model, the chosen calibration sources apply at every occurrence of the declaration (§6 below).</p>
 <p>An unbound economic parameter and a free continuation function are declared inputs of different kinds (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3). In the construction above, a parameter's name, declared set and binding remain inspectable even after calibration. It is not replaced everywhere by an anonymous numeric literal. Local argument binding is likewise retained in interpreted definitions so that substitution respects scope.</p>
 <p><strong>Parameters are not separate semgraph wires.</strong> A <strong>semgraph</strong>, the semantic graph of the constructed stage, retains the full definitions using their named parameters, along with parameter declarations and calibration. For example, <span class="arithmatex">\(u_\rho\)</span> still has the consumption argument <span class="arithmatex">\(c\)</span>; <span class="arithmatex">\(\rho\)</span> determines which function it is. The graph can display that function without a separate parameter input wire. This applies to the two initial diagrams, forward and backward, as well as to the two builders graphs. Parameters must be accounted for in the constructed graph's definitions, rather than removed from the drawing afterward.</p>
 <h2 id="3-a-stage-as-a-declaration-unit">3 A stage as a declaration unit<a class="headerlink" href="#3-a-stage-as-a-declaration-unit" title="Permanent link">&para;</a></h2>
@@ -8226,7 +8257,7 @@
 s=\bigl(D;\ (b,I_b,O_b,e_b)_{b\in B}\bigr).
 \]</div>
 <p>Here <span class="arithmatex">\(B\)</span> is the finite collection of authored builder identifiers; <span class="arithmatex">\(I_b\)</span> and <span class="arithmatex">\(O_b\)</span> are the ordered declared inputs and outputs of builder <span class="arithmatex">\(b\)</span>; and <span class="arithmatex">\(e_b\)</span> is its collection of equations, local definitions and conditions. A <strong>builder</strong> is the operator that an authored typed block defines, the block stating a transition, a value calculation or a policy relation. This record describes information already present in a stage, not a proposed software class. An individual implicit equation can denote a relation until conditions make it a function.</p>
-<p>The stage is <strong>closed with respect to declarations</strong>: every name used is supplied by the language, declared in the stage or bound locally. That does not make it a closed numerical calculation. A declared continuation function remains an input to the backward problem, and declared parameters still need values. Nor does closure prove that every output is well defined: equations and their domains must determine the outputs as functions or specified relations under the interpretation rules of Bellman-SYM's Appendix C.</p>
+<p>The stage is <strong>closed with respect to declarations</strong>: every name used is supplied by the language, declared in the stage or bound locally. That does not make it a closed numerical calculation. Every declared continuation value-type field remains an input to the backward problem, represented by a function on its own domain, and declared parameters still need values. Nor does closure prove that every output is well defined: equations and their domains must determine the outputs as functions or specified relations under the interpretation rules of Bellman-SYM's Appendix C.</p>
 <p>The ordinary economic stage has the data</p>
 <div class="arithmatex">\[
 \bigl(X_\prec,X_\sim,X_\succ;\ A,\Gamma;\
@@ -8234,7 +8265,7 @@ s=\bigl(D;\ (b,I_b,O_b,e_b)_{b\in B}\bigr).
 g_\prec,g_\succ;\ G_\prec,G_\succ\bigr).
 \]</div>
 <p>The three <span class="arithmatex">\(X_p\)</span> are state spaces at arrival, decision and continuation. The action space is <span class="arithmatex">\(A\)</span>, and <span class="arithmatex">\(\Gamma(x)\subseteq A\)</span> is the set of feasible actions at decision state <span class="arithmatex">\(x\)</span>. Each <span class="arithmatex">\(Z\)</span> is a shock space with its law <span class="arithmatex">\(\mu\)</span>, conditional on the relevant state or state–action pair when required. The transitions <span class="arithmatex">\(g_\prec,g_\succ\)</span> determine the next state; the pointwise aggregators <span class="arithmatex">\(G_\prec,G_\succ\)</span> combine a scalar continuation value with current quantities. <a href="../03-Stages%20and%20perches/">Stages and perches</a> §1 gives their complete domains. The perches are information sets; state arguments summarize what is needed from that information.</p>
-<p>These economic primitives determine operations on value functions and distributions. They are distinct from the stage's source expressions and from the language's supplied primitive symbols. A stage occurrence supplies the equations, declarations and bindings needed for its particular position in a model. Different occurrences of the same source can have different parameter values or methods. Compatible stages compose through declared identifications of outgoing and incoming fields; those identifications do not supply a missing transition equation.</p>
+<p>These economic primitives determine operations on value functions and distributions. They are distinct from the stage's source expressions and from the language's supplied primitive symbols. A stage occurrence supplies the equations, declarations and bindings needed for its particular position in a model. The package permits occurrences with different calibration sources or methods. A modular model imposes the additional condition that every repeated declaration uses its recorded calibration sources and operator family. Methods and settings remain outside that condition. Compatible stages compose through declared identifications of outgoing and incoming fields; those identifications do not supply a missing transition equation.</p>
 <h3 id="31-income-and-consumption">3.1 Income and consumption<a class="headerlink" href="#31-income-and-consumption" title="Permanent link">&para;</a></h3>
 <p>Use the stage of §4 of Bellman-SYM's Stages page. Beginning assets are <span class="arithmatex">\(b\geq0\)</span>, observed income is <span class="arithmatex">\(y&gt;0\)</span>, resources are <span class="arithmatex">\(w&gt;0\)</span>, consumption satisfies <span class="arithmatex">\(0&lt;c\leq w\)</span>, and continuation savings are <span class="arithmatex">\(a\geq0\)</span>. Its economic parameter vector is</p>
 <div class="arithmatex">\[
@@ -8319,7 +8350,7 @@ R&gt;0,\quad0&lt;\beta&lt;1,\quad\rho&gt;1,\quad\mu_y\in\mathbb R,\quad\sigma_y\
 <p>A <strong>category</strong> consists of objects, arrows, identities and associative composition of compatible arrows. For sets and total functions, its objects are sets and its arrows are functions. A categorical object is therefore a whole domain, whereas the represented objects in §1 are particular data or expressions. A <strong>functor</strong> assigns objects and arrows to another category, preserving domains, codomains, identities and composition.</p>
 <p>For the structural statements below, use the checked first-order operation signature of <a href="../APPX-B-INITIAL-ALGEBRA/">Initial-algebra semantics</a>. “First-order” means that terms are formed by applying declared operation symbols to terms: a function space can interpret one of the sorts, with evaluation or selection supplied as a typed operation. It does not supply a rule for binding a function argument. Local definitions are elaborated with their binding checked before this operation presentation is used.</p>
 <p>Let <span class="arithmatex">\(\mathsf{Term}(\Sigma)\)</span> have finite products of the sorts as objects and finite tuples of these well-typed operation terms, in listed input variables, as arrows. Composition substitutes terms for those variables; identity is the tuple of input variables. Arrows are identified by the structural rules for composition and tuple formation; renaming bound variables in retained definitions does not change their meaning. This is the free category with finite products on the signature; where every symbol has one input, its arrows from one sort to another are the paths that <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6 calls terms. The functor claims below concern this represented operation category, rather than every raw source expression containing a binder. Additional economic equations require separate verification in a target interpretation.</p>
-<p>The categorical product <span class="arithmatex">\(A\times B\)</span> has projections selecting its components; <span class="arithmatex">\([f,g]\)</span> is the unique function whose projections are <span class="arithmatex">\(f\)</span> and <span class="arithmatex">\(g\)</span>. This justifies typed construction, without importing every product identity into Backus's different strict-sequence convention.</p>
+<p>The categorical product <span class="arithmatex">\(A\times B\)</span> has projections selecting its components; <span class="arithmatex">\([f,g]\)</span> is the unique function whose projections are <span class="arithmatex">\(f\)</span> and <span class="arithmatex">\(g\)</span>. This statement concerns sets and total functions. Ordinary set products also form the representing-function tuples. The whole-builder interpretation in partial maps has the domain rule of <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6; no categorical-product property for all partial maps is asserted. A formula by cases evaluates only the selected branch.</p>
 <p>This construction is the setting in which calibration and methodization can be called functorial; §7 states methodization for paths of operation symbols, in which no tuple is formed. Their formulas specify the object and arrow assignments. It is not a claim that every transformation of program records, or every interpretation of stochastic diagrams, preserves all categorical structure.</p>
 <h2 id="6-calibration">6 Calibration<a class="headerlink" href="#6-calibration" title="Permanent link">&para;</a></h2>
 <p>Let <span class="arithmatex">\(P\)</span> be the declared economic parameter names. A <strong>calibration</strong> <span class="arithmatex">\(\theta\)</span> is a point of their admissible set <span class="arithmatex">\(\Theta\)</span>, the assignments of a value to every name in <span class="arithmatex">\(P\)</span> at which every condition of the parameter lines and of the definitions holds, joint restrictions included (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4). For the stage in §3.1, <span class="arithmatex">\(P=\{R,\beta,\rho,\mu_y,\sigma_y\}\)</span>. Writing only <span class="arithmatex">\(P\to\mathbb O_P\)</span> describes a name-to-value assignment; functoriality concerns its extension to the represented operations and their compositions.</p>
@@ -8353,9 +8384,11 @@ R&gt;0,\quad0&lt;\beta&lt;1,\quad\rho&gt;1,\quad\mu_y\in\mathbb R,\quad\sigma_y\
  Q_{\bar\theta}[W](w,c)=-\frac1c+0.96W(w-c),\qquad
  y=\exp(0.1Z).
 \]</div>
-<p>The transition still takes beginning assets and income; the choice value still takes a continuation function, resources and consumption. Calibration selects the economic instance without supplying those arguments or solving the stage. When two stages share one economic parameter, compatible composition uses the same binding for it. Distinct stage-local parameters may instead have distinct calibrations.</p>
+<p>The transition still takes beginning assets and income; the choice value still takes a continuation function, resources and consumption. Calibration selects the economic instance without supplying those arguments or solving the stage. When two stages share one economic parameter, compatible composition uses the same binding for it. Distinct stage-local parameters may instead have distinct calibrations. The modularity condition concerns repeated uses of one declaration and their recorded sources; it does not identify parameters belonging to distinct declarations.</p>
 <h2 id="7-the-binding-maps">7 The binding maps<a class="headerlink" href="#7-the-binding-maps" title="Permanent link">&para;</a></h2>
-<p>The three binding verbs with a source held fixed are maps from stage versions to stage versions, each writing one binding: <span class="arithmatex">\(\mathcal C_c(S) = \mathrm{calibrate}(S, c)\)</span>, <span class="arithmatex">\(M_m(S) = \mathrm{methodize}(S, m)\)</span> and <span class="arithmatex">\(K_s(S) = \mathrm{configure}(S, s)\)</span>. Here a <strong>source</strong> is the set of assignments that one verb binds, parameter values <span class="arithmatex">\(c\)</span>, a method assignment <span class="arithmatex">\(m\)</span> or settings <span class="arithmatex">\(s\)</span>; a <strong>stage version</strong> is a stage as it stands after its construction or after one of its bindings (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6); and <span class="arithmatex">\(\mathcal C_c\)</span> is the calibration of §6 with <span class="arithmatex">\(\bar\theta = c\)</span>. The bindings are made in the order calibrate, methodize, configure, so a specified stage is <span class="arithmatex">\(S^{\mathrm{spec}} = K_s\, M_m\, \mathcal C_c(S)\)</span>. <span class="arithmatex">\(\mathcal C\)</span> commutes with <span class="arithmatex">\(M\)</span> and with <span class="arithmatex">\(K\)</span> in bindings and graphs; <span class="arithmatex">\(K\)</span> is defined on methodized versions only, since settings are read against the methods that name them; <span class="arithmatex">\(M\)</span> is applied once, a version holding one methods binding. Three laws hold, verified on <code>cons.bl</code> and <code>port.bl</code>: a verb binds once from a merged source and refuses one that values fewer names than the stage requires; for complete sources <span class="arithmatex">\(c_1, c_2\)</span> the versions <span class="arithmatex">\(\mathcal C_{c_2}(\mathcal C_{c_1}(S))\)</span> and <span class="arithmatex">\(\mathcal C_{c_2}(S)\)</span> have equal bindings and graphs; a binding changes neither the initial diagrams nor the declared builders, and what a solution method changes stands in the operative builders alone (<a href="../06-Methods/">Methods</a> §9).</p>
+<p>The three binding verbs with a source held fixed are maps from stage versions to stage versions, each writing one binding: <span class="arithmatex">\(\mathcal C_c(S) = \mathrm{calibrate}(S, c)\)</span>, <span class="arithmatex">\(M_m(S) = \mathrm{methodize}(S, m)\)</span> and <span class="arithmatex">\(K_s(S) = \mathrm{configure}(S, s)\)</span>. Here a <strong>source</strong> is the set of assignments that one verb binds, parameter values <span class="arithmatex">\(c\)</span>, a method assignment <span class="arithmatex">\(m\)</span> or settings <span class="arithmatex">\(s\)</span>; a <strong>stage version</strong> is a stage as it stands after its construction or after one of its bindings (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6); and <span class="arithmatex">\(\mathcal C_c\)</span> is the calibration of §6 with <span class="arithmatex">\(\bar\theta = c\)</span>.</p>
+<p>These maps compare stage descriptions at given bindings. The public stage verbs update and return the same stage object; the trellis factory copies occurrences. The stage API admits calibration before or after methodization, while the trellis factory uses calibrate, methodize, configure. In that order a specified stage is <span class="arithmatex">\(S^{\mathrm{spec}} = K_s\, M_m\, \mathcal C_c(S)\)</span>. Permitted call orders alone establish no commutation law. Configuration checks the settings against the selected methods.</p>
+<p>The mathematical comparisons below hold the equations and assignments fixed. A method that supplies replacement equations is interpreted by its operative builder; the authored builder remains available at the declared level (<a href="../06-Methods/">Methods</a> §9).</p>
 <p>A <strong>method assignment</strong> <span class="arithmatex">\(m\)</span> is the set of entries of a methods file, read after its union with the stage file: for each operator occurrence it names, a method with its keyword arguments and a grid (<a href="../06-Methods/">Methods</a> §§2, 5), together with the closed form an <code>!explicit</code> entry generates at its builder's Evaluation where no entry names a representation. Fix the occurrences and their identities, and write <span class="arithmatex">\(\omega_i\)</span> for one such operation symbol. The <strong>methodized signature</strong> <span class="arithmatex">\(\Sigma_m\)</span> is the category of parametrized morphisms <span class="arithmatex">\(\mathrm{Para}_{\mathcal M}(\Sigma)\)</span> of <a href="../06-Methods/">Methods</a> §2, taken over the free category <span class="arithmatex">\(\Sigma\)</span> on the stage's operation symbols with the free monoid <span class="arithmatex">\(\mathcal M\)</span> on the labels, a label being a pair of a method and a grid, acting trivially: a methodized morphism is a path of operation symbols carrying the list of its labels, so that the mathematical inputs and outputs are unchanged and the settings a method reads are named by its label and valued at configuration. Distinct occurrences can be distinguished even when they denote the same mathematical operation.</p>
 <p>Methodization acts on generators by</p>
 <div class="arithmatex">\[
@@ -8389,7 +8422,7 @@ R&gt;0,\quad0&lt;\beta&lt;1,\quad\rho&gt;1,\quad\mu_y\in\mathbb R,\quad\sigma_y\
 <thead>
 <tr>
 <th>Object</th>
-<th>What determines it</th>
+<th>Determining data</th>
 </tr>
 </thead>
 <tbody>
@@ -8517,13 +8550,13 @@ R&gt;0,\quad0&lt;\beta&lt;1,\quad\rho&gt;1,\quad\mu_y\in\mathbb R,\quad\sigma_y\
         
         
           
-          <a href="../../examples/" class="md-footer__link md-footer__link--next" aria-label="Next: Examples">
+          <a href="../APPX-H-MODULARITY/" class="md-footer__link md-footer__link--next" aria-label="Next: Appendix H: Modularity">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Examples
+                Appendix H: Modularity
               </div>
             </div>
             <div class="md-footer__button md-icon">

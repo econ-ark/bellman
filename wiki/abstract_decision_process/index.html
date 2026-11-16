@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3583,6 +3585,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7993,6 +8023,7 @@ Tv=\sup_{\sigma\in\Sigma}T_\sigma v,
 <p>Sargent and Stachurski's fixed-point-to-optimality result assumes well-posed policy maps, a fixed point <span class="arithmatex">\(\bar v\)</span> of <span class="arithmatex">\(T\)</span>, a <span class="arithmatex">\(\bar v\)</span>-greedy policy, and the implication <span class="arithmatex">\(T_\sigma v\leq v\Rightarrow v_\sigma\leq v\)</span>. These assumptions connect the operator equation to optimal policy values. They are not consequences of declaring an ADP.</p>
 <h2 id="relation-to-staged-models">Relation to staged models<a class="headerlink" href="#relation-to-staged-models" title="Permanent link">&para;</a></h2>
 <p>The <a href="../recursive_decision_process/">recursive decision process (RDP)</a> adds feasible actions and a choice-value aggregator that constructs the policy maps. A stationary composition of <a href="../stage/">stages</a> can define an ADP when it preserves a specified value space and order. An individual stage may instead map between the value spaces of different <a href="../perch/">perches</a>, and a finite-horizon problem requires terminal data rather than a stationary fixed point.</p>
+<p>When a period also sends constants backward, its operator acts on the tuple of representing functions of all backward fields. A stationary fixed point requires each component to be fixed. A finite-horizon model instead follows the iterates from the user's terminal data wherever each composition is defined; a periodic model requires a cycle of the complete tuple. These interpretations do not by themselves provide the order or optimality hypotheses of an ADP. <a href="../../bellman-calculus/08-periods-and-trellis/">Periods and trellis</a> states the construction.</p>
 <p>Value-function iteration applies <span class="arithmatex">\(T\)</span> repeatedly. Policy iteration alternates policy evaluation and greedy policy selection. Their convergence requires additional assumptions; assigning a numerical method does not establish them. <a href="../semiconjugacy/">semiconjugacy (strong / order)</a> describes specified relations between alternative <a href="../operator/">operator</a> forms.</p>
 <p><strong>Reference:</strong> Sargent and Stachurski, <em>Dynamic Programming, Volume II: General States</em>, 10 April 2026 edition, Definition 2.1.1, §2.1.1, and Theorem 2.1.7 and Corollary 2.1.8, pp. 66–67.</p>
 

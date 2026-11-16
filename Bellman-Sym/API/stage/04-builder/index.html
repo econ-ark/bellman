@@ -2193,6 +2193,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="5 The kernels of a builder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-detached-numerical-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Detached numerical data
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -2916,6 +2933,8 @@
       
         
           
+        
+      
         
       
         
@@ -3692,6 +3711,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7951,6 +7998,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="5 The kernels of a builder">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-detached-numerical-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Detached numerical data
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -8298,20 +8362,64 @@
 <a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 </code></pre></div>
 <h2 id="5-the-kernels-of-a-builder">5 The kernels of a builder<a class="headerlink" href="#5-the-kernels-of-a-builder" title="Permanent link">&para;</a></h2>
+<p><code>builder.kernels(inputs=values)</code> accepts the complete mapping checked by <a href="../01-the-stage/#51-supplied-continuation-fields"><code>stage.check_inputs(values)</code></a>. With a mapping, the builder repeats decidable checks and refuses missing, unknown or incompatible inputs. Keep the conditions returned by <code>check_inputs</code> beside the numerical calculation. Calibration and settings are separate bindings. A call without <code>inputs</code> remains available. Where a grid or law needs an unsupplied constant, its entry is a <code>Refusal</code> under <code>grid-requirement</code> or <code>law-requirement</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.trellis</span><span class="w"> </span><span class="kn">import</span> <span class="n">assemble_trellis</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">trellis</span> <span class="o">=</span> <span class="n">assemble_trellis</span><span class="p">(</span><span class="s2">"applications/life-cycle/declaration"</span><span class="p">,</span> <span class="s2">"spec.yml"</span><span class="p">)</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">trellis</span><span class="p">[</span><span class="s2">"periods"</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s2">"stages"</span><span class="p">][</span><span class="s2">"mortality"</span><span class="p">]</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"V[&gt;]"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"age"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="n">conditions</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="n">kernels</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">builder</span><span class="p">[</span><span class="s2">"dcsn"</span><span class="p">,</span> <span class="s2">"cntn"</span><span class="p">]</span><span class="o">.</span><span class="n">kernels</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">values</span><span class="p">)</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="n">draw</span> <span class="o">=</span> <span class="n">kernels</span><span class="o">.</span><span class="n">laws</span><span class="p">[</span><span class="s2">"DistributionExtension:s"</span><span class="p">]</span>
+</code></pre></div>
+<p>The provided <code>age</code> selects the survival probabilities for this occurrence. The representing function for <code>V[&gt;]</code> still leaves conditions for the caller, even though this forward builder uses only the age.</p>
 <p><code>kernels()</code> answers one record of the builder's kernels, from which a numerical operator is built with no stage in hand: each operation in the order it is applied, with its printed kernel and the wires it reads and writes, and, where its kernel is an explicit function, its function with the names of its arguments and outputs, a derivative term the row reads standing among the arguments, <code>G_policy_InvEuler(V≻, a, D_{a}(V≻); ρ) → c≻</code> for the candidate line <code>InvEuler</code>, or, for a row that states a relation its output satisfies with no explicit side, such as the identification of a policy block, whose <code>compile_kernel()</code> is refused under <code>kernel-target</code> (<a href="../05-piece/">A piece</a> §2), its printed relation; then the parameters with their values and the declared sets its operations are read on. The record refers to no stage, so cloudpickle saves it and another process reads it. The endogenous-grid step of the portfolio–consumption application is built from two such records of a specified version by one call of <code>asva</code>, the numerical toolkit installed beside the package, <code>asva.egm(specified.dcsn.builder.policy.kernels(), specified.dcsn.builder.bwd.kernels(), savings, evaluation)</code>, the caller reading the savings grid and the evaluation grid from the settings. <a href="../05-piece/">A piece</a> §2 gives one operation's kernel as a function, and the lesson <code>tutorials/topics/kernels.ipynb</code> of the repository composes one step of the decision builder from its two kernels, compiles them with Numba and passes the values of a second calibration without compiling again; <a href="../../../11-solutions-at-the-perches/">Solutions at the perches</a> describes the dictionaries in which a solver keeps what the kernels compute.</p>
 <p><code>kernels().grids</code> holds the realized grid of each place within the builder that types a grid, by the address of the place: the grid's points at the bound settings and calibration, a <code>RealizedGrid</code> with the word of its outer constructor, its coordinates in their declared order and its finite points in the order they are constructed, a repeated point held once (<a href="../../../04-methodization/">Methodization</a> §3.2 gives the grid entry). For a sub-builder it holds the places of the sub-builder's own node, and a grid typed at a declared function, outside every builder, stands in the record of no builder. On a version with no bound settings <code>grids</code> is <code>None</code>, since the counts and the bounds of a grid are settings. Where the construction cannot establish a grid's points and every property the grid requires, the place holds instead the <code>Refusal</code> that says why, under the rule <a href="../../../reference/refusals/#grid-requirement"><code>grid-requirement</code></a> and at the position of the entry, and the record prints it after <code>not constructed:</code>. Among the reasons are a coordinate of the place that no factor names; a factor of a feasible control written in <code>!Cartesian</code> without <code>!Fibred</code>, which is a family of grids, one at each state, and no one grid; and a fibre of two controls, whose joint sampling is unsupported. The construction supplies no default in any of these cases. The listing reads the version <code>methodized</code> of §2, calibrated and configured here:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">bwd</span><span class="o">.</span><span class="n">kernels</span><span class="p">()</span><span class="o">.</span><span class="n">grids</span><span class="p">)</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">methodized</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/calibration/portfolio.yml"</span><span class="p">)</span>
-<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/cons.yml"</span><span class="p">)</span>
-<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="k">for</span> <span class="n">builder</span> <span class="ow">in</span> <span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">policy</span><span class="p">,</span> <span class="n">methodized</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">bwd</span><span class="p">):</span>
-<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>    <span class="k">for</span> <span class="n">address</span><span class="p">,</span> <span class="n">grid</span> <span class="ow">in</span> <span class="n">builder</span><span class="o">.</span><span class="n">kernels</span><span class="p">()</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">address</span><span class="si">:</span><span class="s2">&lt;22</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">grid</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="nb">print</span><span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">bwd</span><span class="o">.</span><span class="n">kernels</span><span class="p">()</span><span class="o">.</span><span class="n">grids</span><span class="p">)</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="n">methodized</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/calibration/portfolio.yml"</span><span class="p">)</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">methodized</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/portfolio-choice/declaration/settings/cons.yml"</span><span class="p">)</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="k">for</span> <span class="n">builder</span> <span class="ow">in</span> <span class="p">(</span><span class="n">methodized</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">policy</span><span class="p">,</span> <span class="n">methodized</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">bwd</span><span class="p">):</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>    <span class="k">for</span> <span class="n">address</span><span class="p">,</span> <span class="n">grid</span> <span class="ow">in</span> <span class="n">builder</span><span class="o">.</span><span class="n">kernels</span><span class="p">()</span><span class="o">.</span><span class="n">grids</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">address</span><span class="si">:</span><span class="s2">&lt;22</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">grid</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>None
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>policy                 !Cartesian on (a), 800 points: (1e-06,), (0.12515744430538173,), (0.2503138886107635,), …, (100,)
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>cntn_to_dcsn.evaluate  !Cartesian on (m_d), 100 points: (0.01,), (0.11090909090909092,), (0.21181818181818182,), …, (10,)
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>None
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>policy                 !Cartesian on (a), 800 points: (1e-06,), (0.12515744430538173,), (0.2503138886107635,), …, (100,)
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>cntn_to_dcsn.evaluate  !Cartesian on (m_d), 100 points: (0.01,), (0.11090909090909092,), (0.21181818181818182,), …, (10,)
 </code></pre></div>
 <p>The grid of savings of the endogenous grid method, <code>!Cartesian(a=(a_min, a_max, n_a))</code>, is the 800 equally spaced points from <code>a_min</code> to <code>a_max</code> that the settings give, and the grid of resources at the decision builder's Evaluation, <code>!Cartesian(m_d=(m_min, m_max, n_m))</code>, is the 100 equally spaced points from <code>m_min</code> to <code>m_max</code>; a coordinate prints as an integer where its value is one.</p>
+<h3 id="51-detached-numerical-data">5.1 Detached numerical data<a class="headerlink" href="#51-detached-numerical-data" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Record field</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grids</code></td>
+<td>Realized points or a refusal, by the address of the grid entry.</td>
+</tr>
+<tr>
+<td><code>grid_factors</code></td>
+<td>Operands, coordinate domain and requirements for a supported one-factor grid whose points a handler places. A feasible factor also includes its bound feasibility correspondence. The handler checks its points against these data.</td>
+</tr>
+<tr>
+<td><code>laws</code></td>
+<td>The conditional law of each expectation, including a separately recorded derivative integrand, and the joint law of each distribution extension. Entries use the piece's key.</td>
+</tr>
+<tr>
+<td><code>guards</code></td>
+<td>Predicates and compiled Boolean functions that select where a piece output or derivative argument is needed. Entries use the piece's key and then identify each guarded object. An output without a guard is used unconditionally.</td>
+</tr>
+<tr>
+<td><code>output_kernels</code></td>
+<td>Explicit kernels for individual outputs, by piece key and output identity. A kernel for one output only reads its own arguments.</td>
+</tr>
+</tbody>
+</table>
+<p>The law records substitute bound parameters and the supplied constants. They retain any state, control or parent-shock coordinates still needed by the law. If a supplied table or callable still needs such an argument, the detached declaration retains its value and declared set in <code>bindings</code>. A numeric handler may <a href="../../../reference/laws/">specialize the declaration</a> at those coordinates.</p>
+<p>When evaluating a formula by cases, the handler uses the guard before evaluating a continuation function or starting an expectation. A pullback guard uses the coordinates before the law of motion. A guard within an expectation selects integrand values at the shock points under the original law. The handler keeps the original weights. An extracted expectation's result is an argument of the enclosing kernel, and <code>PieceKernel.fallback</code> supplies the part valid where its local expectations are inactive. The raw <code>PieceKernel.function</code> still takes the values in <code>arguments</code> followed by <code>parameter_values</code>.</p>
 
 
 

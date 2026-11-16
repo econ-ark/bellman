@@ -2934,6 +2934,8 @@
       
         
       
+        
+      
     
     
     
@@ -3670,6 +3672,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8074,17 +8104,17 @@
 </code></pre></div>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>ElaboratedStage('cons', specified) ρ = 2.0 : [1, inf)
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>arithmetic-definedness               ¬(1 − ρ = 0)   [established]
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>finite-real-arithmetic               The operands of Add at policy.optimality must be finite real numbers.
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>finite-real-arithmetic               ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[&gt;] ∈ [−∞, −∞])
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>aggregation-admissibility            V(m_d) ∈ [−∞, ∞)
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>marginal-reading                     the right side of each derivative line equals the derivative, in the named coordinate, of the value the builder writes, under the envelope conditions: concavity of the continuation value, interiority of the maximizer or the multiplier's term at a binding constraint, differentiability of the reward in the control, a measurable selection of the policy, and differentiability of the value at the point read; listed and not checked
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>aggregation-admissibility            V≺(m, l) ∈ ℝ
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>finite-real-arithmetic               The operands of Add at policy must be finite real numbers.
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>finite-real-arithmetic               The operands of Add at policy.grid must be finite real numbers.
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>aggregation-admissibility            m_d≻(a) ∈ Xm
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>range-compatibility                  m_d − c(m_d) ∈ Xa   [established]
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>function-argument-domain-inclusion   The argument for x of cons:function:𝑑𝑢𝑖𝑛𝑣 at policy.InvEuler, from ℝ, must belong to ℝ₊₊.
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>egm-eligibility                      the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable on (0, ∞) with a finite positive right derivative at 0
-<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>evaluation-domain                    The representation is evaluated inside the interval its nodes span, or outside it through an identified extension; the node interval does not replace the domain of the represented function.
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>aggregation-admissibility            V≺(m) ∈ ℝ
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>aggregation-admissibility            m_d≻(a) ∈ Xm
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>range-compatibility                  m_d − c(m_d) ∈ Xa   [established]
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>range-compatibility                  V≺(m, l) ∈ ℝ
+<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>function-argument-domain-inclusion   The argument for x of cons:function:𝑑𝑢𝑖𝑛𝑣 at policy.InvEuler, from ℝ, must belong to ℝ₊₊.
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>egm-eligibility                      the construction satisfies the declared line where the continuation value 𝑉≻ is concave and continuously differentiable above the savings bound, with a positive right derivative at the bound, finite or infinite; an infinite derivative gives zero consumption as the interpolation endpoint, outside a strictly positive consumption domain
+<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>evaluation-domain                    The representation is evaluated inside the interval its nodes span, or outside it through an identified extension; the node interval does not replace the domain of the represented function.
+<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>continuation-input                   The representing function for V[&gt;] must be measurable on its declared domain, depend only on (a) in that order, and take values in [-inf, inf).
 </code></pre></div>
 <h2 id="3-methodization-and-configuration">3 Methodization and configuration<a class="headerlink" href="#3-methodization-and-configuration" title="Permanent link">&para;</a></h2>
 <p><code>methodize</code> holds each entry of an addition at the place its path names: a method must admit the kind of place it is typed at, and an unknown method word, a path that names no place and a method at a place it does not admit are each refused. <code>configure</code> requires a value for every setting the methods files declare and for every name a bound method writes, and judges each value against its declared set, reading each parameter that the set names at its calibrated value, and each derived parameter at the value its definition takes at the calibration. A value outside its declared set is refused under <code>setting-outside-set</code>, and a declared setting with no value under <code>setting-unvalued</code>. <code>configure</code> then judges the values where the methods read them, so that a value inside its declared set can still be refused. A keyword's value outside the domain the method's row names is refused under <code>method-option-value</code>, as <code>tol_v : ℝ</code> valued at <code>-1.0</code> is for <code>!vfi(tol=tol_v)</code>. A grid whose bounds are out of order or outside the coordinate's declared set, whose count is below two or whose node set is not strictly increasing is refused under <code>grid-bounds</code>. A requirement written after <code>require=</code> that the grid built at the bound values does not meet is refused under <code>grid-requirement</code>. A grid beside an authored table is refused under <code>representation-source</code> where its points and the table's knots are both known exactly at configuration and differ (<a href="../../../../wiki/settings/">Settings</a> §2; <a href="../../../reference/refusals/">Refusals</a>).</p>

@@ -2993,6 +2993,8 @@
       
         
       
+        
+      
     
     
     
@@ -3729,6 +3731,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8118,7 +8148,7 @@
 <h1 id="types">Types<a class="headerlink" href="#types" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
-<p>A <strong>type</strong> is what a <a href="../../../wiki/stage/">stage file</a> or a <a href="../../04-methodization/">methods file</a> writes after a colon, such as <code>ℝ₊₊ @ !ctrl</code> in the declaration <code>c : ℝ₊₊ @ !ctrl</code>. Its components are sets, a role word and a perch word, written with <code>@</code> between them, and several sets in one type declare their intersection. This page lists the objects of a stage with the type that each declaration writes, the role words, the perch words and their marks, the reserved sets, the forms in which a set is written, and the limits of the language on a type. Every table is printed from the package's own tables, so the page states each type as the package reads it.</p>
+<p>A <strong>type</strong> is what a <a href="../../../wiki/stage/">stage file</a> or a <a href="../../04-methodization/">methods file</a> writes after a colon, such as <code>ℝ₊₊ @ !ctrl</code> in the declaration <code>c : ℝ₊₊ @ !ctrl</code>. Its components are sets, a role word, a perch word and the word <code>!cnst</code>, written with <code>@</code> between them, and several sets in one type declare their intersection. This page lists the objects of a stage with the type that each declaration writes, the role words, the perch words and their marks, the reserved sets, the forms in which a set is written, and the limits of the language on a type. Every table is printed from the package's own tables, so the page states each type as the package reads it.</p>
 </div>
 <details class="info">
 <summary>Relationship with other documents</summary>
@@ -8127,11 +8157,12 @@
 <strong>See also</strong> — <a href="../refusals/">Refusals</a>: every refusal rule, with the smallest example that breaks it; <a href="../rules/">Rules and their code</a>: the rules of the language beside the functions that check them.</p>
 </details>
 <h2 id="1-what-a-type-is">1 What a type is<a class="headerlink" href="#1-what-a-type-is" title="Permanent link">&para;</a></h2>
-<p>A <strong>declaration</strong> is a name, a colon and a type. In <code>c : ℝ₊₊ @ !ctrl</code> the name is <code>c</code> and the type is <code>ℝ₊₊ @ !ctrl</code>. A type has up to three kinds of component, written in any order with <code>@</code> between them.</p>
+<p>A <strong>declaration</strong> is a name, a colon and a type. In <code>c : ℝ₊₊ @ !ctrl</code> the name is <code>c</code> and the type is <code>ℝ₊₊ @ !ctrl</code>. A type has up to four kinds of component, written in any order with <code>@</code> between them.</p>
 <ul>
 <li>A <strong>set</strong> states the values that the name may take. Several sets in one type declare their intersection: <code>β : (0,1) @ (0, R^(ρ-1))</code> declares a discount factor that lies in both intervals.</li>
 <li>A <strong>role word</strong> states what the name is in the decision problem: a state, a control, a value or a shock.</li>
 <li>A <strong>perch word</strong> states the <a href="../../../wiki/perch/">perch</a> at which the name stands, one of the three information sets of a stage.</li>
+<li>The word <code>!cnst</code> states that a value-type field is a constant: its value and its declared set depend on no state, shock or control. It is written with the role word <code>!vlu</code>, as in <code>L : (-inf, 0] @ !vlu @ !cnst</code> (<a href="../../01-stage/#31-fields-sent-backward">Stages</a> §3.1).</li>
 </ul>
 <p>A type holds at most one role word and at most one perch word. The components that a declaration writes depend on the object that it declares: a parameter is declared with sets alone, while a <a href="../../../wiki/field/">field</a> has a set, a role and a perch.</p>
 <h2 id="2-the-tables">2 The tables<a class="headerlink" href="#2-the-tables" title="Permanent link">&para;</a></h2>
@@ -8160,7 +8191,7 @@
 <td><a id="field"></a>field</td>
 <td>A named quantity at a perch, with a declared set: a state, a control or a value.</td>
 <td><code>[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -&gt; (a : Xa) : !cntn] {</code><br>in <code>perfect_foresight.bl</code></td>
-<td><code>ℝ₊₊ @ !ctrl</code> for <code>c</code>: a set and a role word. The word <code>!dcsn</code> after the side gives the perch. A field listed with a set and no role word, <code>a : Xa</code>, is a state.</td>
+<td><code>ℝ₊₊ @ !ctrl</code> for <code>c</code>: a set and a role word. The word <code>!dcsn</code> after the side gives the perch. A field listed with a set and no role word, <code>a : Xa</code>, is a state. For a value-type field, <code>!vlu @ !cnst</code> specifies independence from states, shocks and choices.</td>
 <td><code>native/records.py</code>: <code>Sort</code></td>
 <td><code>stage.fields()["perfect_foresight:dcsn:c"]</code></td>
 </tr>
@@ -8183,10 +8214,10 @@
 <tr>
 <td><a id="derived-parameter"></a>derived parameter</td>
 <td>A constant that the file defines from parameters, numbers and other derived parameters; the calibration supplies no value for it.</td>
-<td><code>h := 1/(1 - Γ/R)</code><br>in <code>perfect_foresight.bl</code></td>
-<td>No type on this line. A definition may declare a set before <code>:=</code>, <code>q : (0,1) := (β*R)^(1/ρ)/R</code>, and calibration holds the value to that set. The declared set is the set written there, or <code>ℝ</code> where none is written; a definition by cases that writes the branch <code>inf</code> or <code>-inf</code> declares a set that can hold that infinity, as its form decides, as in <code>h : ℝ_{+∞} := if Γ &lt; R then 1/(1 - Γ/R) else inf</code>.</td>
+<td><code>q : (0,1) := (β*R)^(1/ρ)/R</code><br>in <code>perfect_foresight.bl</code></td>
+<td>A declared set goes before <code>:=</code>. Calibration checks the computed value in that set. With no declared set it checks membership in <code>ℝ</code>. A definition by cases that writes <code>inf</code> or <code>-inf</code> declares a set that can hold that infinity.</td>
 <td><code>native/records.py</code>: <code>Definition</code></td>
-<td><code>stage.par["h"]</code></td>
+<td><code>stage.par["q"]</code></td>
 </tr>
 <tr>
 <td><a id="setting"></a>setting</td>
@@ -8207,8 +8238,8 @@
 <tr>
 <td><a id="operator"></a>operator</td>
 <td>The operator that a block denotes, called a builder: it takes the functions, or the measures, at one perch to those at another.</td>
-<td><code>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {</code><br>in <code>perfect_foresight.bl</code></td>
-<td>The two sides of the header: the fields that the block reads, <code>(V[&gt;] : ℝ @ !vlu, c) : !cntn</code>, and the fields that it writes, <code>(V : ℝ @ !vlu) : !dcsn</code>.</td>
+<td><code>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, h[&gt;] : ℝ₊ @ !vlu @ !cnst, c) : !cntn -&gt; (V : ℝ @ !vlu, h : ℝ₊ @ !vlu @ !cnst) : !dcsn] {</code><br>in <code>perfect_foresight.bl</code></td>
+<td>The header lists the continuation fields <code>V[&gt;]</code> and <code>h[&gt;]</code> and the decision control <code>c</code> as inputs. Its outputs are the decision fields <code>V</code> and <code>h</code>.</td>
 <td><code>native/hypergraphs.py</code>: <code>Builder</code></td>
 <td><code>stage.builder["cntn", "dcsn"]</code></td>
 </tr>
@@ -8431,7 +8462,7 @@
 <tr>
 <td><a id="functions"></a><code>Functions</code></td>
 <td><code>δ : {1, …, 5} → ℝ</code></td>
-<td>The collections that hold one entry of the second set for each member of the first, which is a finite index set.</td>
+<td>The collections that hold one entry of the second set for each member of the finite index set. A function-valued constant may also have a continuous domain.</td>
 <td><a href="#field">field</a>, <a href="#shock">shock</a>, <a href="#parameter">parameter</a>, <a href="#setting">setting</a> and <a href="#function">function</a></td>
 </tr>
 <tr>
@@ -8505,7 +8536,7 @@
 <td><a href="../refusals/#readable-form"><code>readable-form</code></a></td>
 </tr>
 <tr>
-<td>A conditional, <code>if … then … else …</code>, stands as the whole right side of a definition without arguments or as a branch of another conditional, and inside no formula, no function's body, no line of a block and no endpoint of a set.</td>
+<td>A formula by cases may stand on the right side of an equation or of a derived parameter definition, including as a nested branch. A declared set endpoint admits no formula by cases.</td>
 <td><code>x : (0, if 1 &lt; 2 then 1 else 2)</code></td>
 <td><a href="../refusals/#syntax"><code>syntax</code></a></td>
 </tr>

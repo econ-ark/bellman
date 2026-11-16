@@ -1662,10 +1662,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-reuse-the-consumption-module" class="md-nav__link">
+  <a href="#4-the-reusable-consumption-stage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 Reuse the consumption module
+        4 The reusable consumption stage
       
     </span>
   </a>
@@ -1673,10 +1673,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-inspect-equations-and-then-solve" class="md-nav__link">
+  <a href="#5-inspection-and-numerical-solution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5 Inspect equations and then solve
+        5 Inspection and numerical solution
       
     </span>
   </a>
@@ -2954,6 +2954,8 @@
       
         
       
+        
+      
     
     
     
@@ -3690,6 +3692,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7930,10 +7960,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-reuse-the-consumption-module" class="md-nav__link">
+  <a href="#4-the-reusable-consumption-stage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4 Reuse the consumption module
+        4 The reusable consumption stage
       
     </span>
   </a>
@@ -7941,10 +7971,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-inspect-equations-and-then-solve" class="md-nav__link">
+  <a href="#5-inspection-and-numerical-solution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        5 Inspect equations and then solve
+        5 Inspection and numerical solution
       
     </span>
   </a>
@@ -8111,14 +8141,17 @@ B(b)=\int v(Rb+y)\,\nu_y(dy),\qquad b\geq0,
 \]</div>
 <p>where <span class="arithmatex">\(B\)</span> is arrival value. Require <span class="arithmatex">\(\int|v(Rb+y)|\,\nu_y(dy)&lt;\infty\)</span>. Bounded continuous <span class="arithmatex">\(W\)</span> is one sufficient case under the stated lognormal law, which has the required negative income moment. <a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> R7–R8 gives the integration and policy conditions.</p>
 <p>The order matters: consumption responds to realized income inside the expectation. Maximizing before income were observed would describe a different decision problem. The supplied <span class="arithmatex">\(W\)</span> comes from an adjoining period or terminal boundary; the equation does not silently set <span class="arithmatex">\(W=B\)</span>. Stationary closure would be an additional model assumption.</p>
-<h2 id="4-reuse-the-consumption-module">4 Reuse the consumption module<a class="headerlink" href="#4-reuse-the-consumption-module" title="Permanent link">&para;</a></h2>
+<p><a id="4-reuse-the-consumption-module"></a></p>
+<h2 id="4-the-reusable-consumption-stage">4 The reusable consumption stage<a class="headerlink" href="#4-the-reusable-consumption-stage" title="Permanent link">&para;</a></h2>
 <p>The separate <code>cons.bl</code> in <a href="../03-field-equations/#1-consumption-and-savings">Field equations</a> begins with observed resources <span class="arithmatex">\(m&gt;0\)</span>, sets decision resources <span class="arithmatex">\(m_d=m\)</span>, and uses the same savings equation. Let <span class="arithmatex">\(H:[0,\infty)\to\mathbb R\)</span> be its supplied continuation function. Because its value equation contains no beta, the choice value is</p>
 <div class="arithmatex">\[
 Q_H(m_d,c)=u(c)+H(m_d-c),\qquad 0&lt;c\leq m_d.
 \]</div>
 <p>Apply the continuity, attainment, and measurable-selection conditions above to <span class="arithmatex">\(H\)</span>. Arrival resources are already observed, so the module evaluates its policy without taking another income expectation. When the adjoining discount and investment stages supply <span class="arithmatex">\(H=\beta P_v\)</span>, where <span class="arithmatex">\(P_v\)</span> is investment value given next-period resource value <span class="arithmatex">\(v\)</span>, discounting appears exactly once. <a href="../06-period/#31-choosing-the-period-boundary">Periods</a> derives the composed problem and states the additional conditions on <span class="arithmatex">\(P_v\)</span>.</p>
 <p>The separate <code>cons_interior.bl</code> uses the endogenous grid method's candidate relation, described in <a href="../03-field-equations/#3-an-implicit-policy-relation">Field equations</a>. Its equation <code>c = c[&gt;]</code> becomes a relation through savings, not an assignment or a guarantee of global optimality. Its inverse-marginal formula requires a finite strictly positive continuation derivative agreeing with the supplied value function. The first-order boundary criterion uses the finite right derivative at zero. To declare the full constrained policy, write the Kuhn–Tucker condition in one of its three spellings, the clause <code>⟂ m_d - c &gt;= 0</code> on the decision-perch first-order condition using the forward law <code>a = m_d - c</code>, a multiplier declared in the policy block, or the clause <code>⟂ a &gt;= 0</code> on the continuation-marked candidate line written as an inequality, which the loading software reads as the corner (<a href="../10-constraints/">Constraints</a> §4); or restrict the equality to the interior and declare the boundary branch separately, or retain constrained maximization. A numerical boundary extension is not a solution of the unrestricted interior equality. Candidate coordinates must determine a measurable policy on the required domain. Those additional conditions do not belong to the value-only constrained source used above.</p>
-<h2 id="5-inspect-equations-and-then-solve">5 Inspect equations and then solve<a class="headerlink" href="#5-inspect-equations-and-then-solve" title="Permanent link">&para;</a></h2>
+<p>For a stationary model the <a href="../01-stage/#31-fields-sent-backward">representing functions</a> of all fields sent backward must be a joint fixed point. If a stage takes in both a value and a borrowing bound, their returned pair must reproduce both supplied values. See <a href="../../bellman-calculus/08-periods-and-trellis/">Periods and trellises</a>.</p>
+<p><a id="5-inspect-equations-and-then-solve"></a></p>
+<h2 id="5-inspection-and-numerical-solution">5 Inspection and numerical solution<a class="headerlink" href="#5-inspection-and-numerical-solution" title="Permanent link">&para;</a></h2>
 <p>A stage is inspected through the queries of the constructed object: its fields, its definitions table, its graphs, whose boxes open from whole builders down to their single operations, the conditions its construction states, and the card that <code>denote()</code> prints for any piece or definition (<a href="../API/">API</a>). A builder's card prints each of its operations with its rule written at a point, the state arguments explicit (<a href="../API/stage/04-builder/">A builder</a> §1), so the functions of §§2 and 3 are read from the constructed stage itself. On <code>buffer_stock.bl</code>:</p>
 <table>
 <thead>

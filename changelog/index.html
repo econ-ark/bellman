@@ -2843,6 +2843,8 @@
       
         
       
+        
+      
     
     
     
@@ -3579,6 +3581,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7811,6 +7841,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2026-11-16-supplied-fields-and-age-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-16 — Supplied fields and age profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-15-the-definition-of-modularity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-15 — The definition of modularity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-15-the-workbench-requires-ipywidgets-8-or-later" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11192,6 +11244,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2026-11-16-supplied-fields-and-age-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-16 — Supplied fields and age profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-15-the-definition-of-modularity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2026-11-15 — The definition of modularity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-15-the-workbench-requires-ipywidgets-8-or-later" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -14557,6 +14631,24 @@
 <h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
 <p>The one changelog of the project, published as the Changelog page of the documentation site. Each entry is a dated heading followed by bullets that state what changed and where; the newest entry stands first. An entry of the release names the lane whose work it records, and an entry of the work before the release names its subject. The entries of the release 0.01 stand under its heading, and the entries of the work before it under the heading "Before the release".</p>
 <h2 id="after-the-release-004">After the release 0.04<a class="headerlink" href="#after-the-release-004" title="Permanent link">&para;</a></h2>
+<h3 id="2026-11-16-supplied-fields-and-age-profiles">2026-11-16 — Supplied fields and age profiles<a class="headerlink" href="#2026-11-16-supplied-fields-and-age-profiles" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A stage can keep a field unchanged by listing its name on both sides of a block without an identity equation. <code>!cnst</code> types a field whose value and domain are independent of the states of its perch; its value may be a number, table or function.</li>
+<li>Equation lines admit formulas by cases. Shock laws can take supplied constants as arguments, grids can read constant fields with settings, and branch fields can be combined outside a selection tuple when their suppliers are defined.</li>
+<li>A block that keeps every output may have an empty body, <code>{}</code>.</li>
+<li><code>stage.check_inputs(values)</code> checks supplied continuation data and retains conditions that cannot be decided from an arbitrary callable. <code>builder.kernels(inputs=values)</code> binds those inputs for numerical laws and grids without changing the stage.</li>
+<li>Perfect foresight sends human wealth backward. Benhabib, Durables, the life-cycle example and the pension inspection fixtures read fixed profiles at supplied ages. Buffer-stock takes in its borrowing bound as the constant field <code>L</code>. The numerical tool of cons-port takes the complete mapping of its supplied continuation fields and checks it with <code>stage.check_inputs</code> before it constructs kernels and grids. Trellis drawings and Workbench show period positions without inferring economic ages.</li>
+<li>The calculus distinguishes repeated declarations, their calibration sources and their supplied fields. Recipes continue to admit positional calibration; the mathematical definition of modularity is a stricter condition on a model.</li>
+<li><a href="../bellman-calculus/APPX-D-KINDS-AND-SORTS/">Appendix D</a>, §6, states that a representing function is written on the states that its field depends on. With the arrival states <code>m</code> and <code>l</code>, a value that reads <code>m</code> alone has the type <code>𝑉≺ : Xm → ℝ</code>.</li>
+<li><code>bellman.stage.header_fields(text, origin)</code> answers the field that each listing of a block header names, read from a text without constructing the stage. The Fields tab of Bellman Workbench reads it while the construction of a text is refused. A constant that a forward block lists among its inputs then stands at the continuation perch, as in the constructed stage.</li>
+<li>Five refusal rules are new. <a href="../Bellman-Sym/reference/refusals/#constant-dependence"><code>constant-dependence</code></a> refuses <code>!cnst</code> on a field that is no value-type field, and on a field whose value or declared set depends on a state, a shock or a control. <a href="../Bellman-Sym/reference/refusals/#policy-objective"><code>policy-objective</code></a> refuses a maximization whose objective is the right side of no decision field, or of several, after the bound candidate is renamed. <a href="../Bellman-Sym/reference/refusals/#policy-feasibility"><code>policy-feasibility</code></a> refuses a feasibility correspondence that reads a field computed from the choice. <a href="../Bellman-Sym/reference/refusals/#continuation-input"><code>continuation-input</code></a> is raised by <code>stage.check_inputs(values)</code> and by <code>builder.kernels(inputs=values)</code> where the supplied names or values do not meet the declared inputs. Under <a href="../Bellman-Sym/reference/refusals/#law-requirement"><code>law-requirement</code></a> the entry of a numerical law is a refusal where the law reads a constant that was not supplied.</li>
+<li>The package now refuses forms that it read before. A maximization whose objective is written differently from the right side of its value line is refused under <code>policy-objective</code>, also where the two expressions are equal as functions. The smooth-ambiguity stage file now states its policy objective as its value line does. A feasibility correspondence that reads a field which depends on the choice, such as <code>V</code>, is refused under <code>policy-feasibility</code>. A declared state set that reads a field, as <code>Xm := {x : ℝ | x &gt; V}</code>, is refused under <a href="../Bellman-Sym/reference/refusals/#readable-form"><code>readable-form</code></a>. An implicit policy equation that reads the derivative of a continuation value across a shock of its edge, with no expectation over that shock, is refused under <a href="../Bellman-Sym/reference/refusals/#shock-observed"><code>shock-observed</code></a>. A line that defines a bare name by its own expectation, <code>L = E_{ψ}(L)</code>, is refused under <a href="../Bellman-Sym/reference/refusals/#definition-order"><code>definition-order</code></a>. A forward block that lists a field which a backward block of the same stage writes is refused under <a href="../Bellman-Sym/reference/refusals/#header-coordinate"><code>header-coordinate</code></a>.</li>
+<li>A connector may write a pair of fields sent backward, <code>{earlier.input: later.output}</code>. Where it writes none, the package pairs equal names first and then the one field left on each side, unless the earlier stage keeps the field that it takes in. A kept field is paired only by its name or by a pair that the connector writes (<a href="../Bellman-Sym/06-period/">Periods</a> §2).</li>
+</ul>
+<h3 id="2026-11-15-the-definition-of-modularity">2026-11-15 — The definition of modularity<a class="headerlink" href="#2026-11-15-the-definition-of-modularity" title="Permanent link">&para;</a></h3>
+<ul>
+<li><a href="../bellman-calculus/APPX-H-MODULARITY/">Modularity</a> defines when occurrences of a stage or period use the same declared operators and calibration sources. Fields remain arguments of those operators; methods and numerical settings are excluded. The accompanying <a href="../wiki/modularity/">wiki entry</a> states the definition in words. These pages change no package behavior.</li>
+</ul>
 <h3 id="2026-11-15-the-workbench-requires-ipywidgets-8-or-later">2026-11-15 — The Workbench requires ipywidgets 8 or later<a class="headerlink" href="#2026-11-15-the-workbench-requires-ipywidgets-8-or-later" title="Permanent link">&para;</a></h3>
 <ul>
 <li>The Workbench's package requires version 8 or later of ipywidgets, the widget library that Solara builds on (AAS, 15 November 2026). <code>packages/bellman-workbench/pyproject.toml</code> names <code>ipywidgets&gt;=8</code>. Before, Solara's own requirement applied, version 7.7 or later. The Workbench can no longer be installed beside ipywidgets 7.</li>
@@ -14671,7 +14763,7 @@
 </ul>
 <h3 id="2026-11-11-homepage-type-spacing-and-layout">2026-11-11 — Homepage type, spacing and layout<a class="headerlink" href="#2026-11-11-homepage-type-spacing-and-layout" title="Permanent link">&para;</a></h3>
 <ul>
-<li>The <a href="../asva/">homepage</a> sets its text in five sizes, stated for a window 1440 px wide: 96 px for the headline, 56 px for section headings, 24 px for titles and statements, 16 px for text, links and buttons, and 12 px for labels in capitals. Its distances are taken from eight steps between 4 px and 96 px, and every section stands on one grid of twelve columns. The sizes are stated at the head of <code>docs/_stylesheets/home.css</code>.</li>
+<li>The <a href="../wiki/">homepage</a> sets its text in five sizes, stated for a window 1440 px wide: 96 px for the headline, 56 px for section headings, 24 px for titles and statements, 16 px for text, links and buttons, and 12 px for labels in capitals. Its distances are taken from eight steps between 4 px and 96 px, and every section stands on one grid of twelve columns. The sizes are stated at the head of <code>docs/_stylesheets/home.css</code>.</li>
 <li>The opening section shows the two triangles as one drawing at the left; the headline, the standfirst and the two buttons start on the centre line. The column of the lower triangle runs to its top corner, the top bar meets the column's side, and the orange block is the column's lowest block. The standfirst reads "A declarative, modular and machine verifiable language system for dynamic economics."</li>
 <li>The three tiles of the second section are Bellman language, Semantic ontology and AI interface, each with a new description.</li>
 <li>Applications shows Housing, Pensions and Buffer-stock saving as three tabs in a row above the model, which takes the full width of the page. The sentence that described each model and its link to the example page are removed; the links to all examples and to the Workbench guide remain. The left and right arrow keys move between the tabs, as the up and down keys do.</li>

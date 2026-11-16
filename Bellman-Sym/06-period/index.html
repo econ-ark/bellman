@@ -2999,6 +2999,8 @@
       
         
       
+        
+      
     
     
     
@@ -3735,6 +3737,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8231,7 +8261,7 @@ K(d\psi,d\theta)=\nu_\Psi(d\psi)\nu_\theta(d\theta),
 <p>For capital <span class="arithmatex">\(k\geq0\)</span> and share <span class="arithmatex">\(s\in[0,1]\)</span>, next resources are <span class="arithmatex">\(M(k,s,\Psi,\theta)=k(s\Psi+(1-s)R)+\theta\)</span>. Given a continuation function <span class="arithmatex">\(v:(0,\infty)\to\mathbb R\)</span> of next resources, the portfolio objective is <span class="arithmatex">\(E[v(M(k,s,\Psi,\theta))]\)</span>. Assume it is finite, jointly measurable in capital and share, and continuous in the share; select a measurable maximizer. Continuity on the compact share interval then gives attainment. Continuous <span class="arithmatex">\(v\)</span> with a suitable integrable bound can justify the required expectation continuity; finite pointwise expectations alone do not.</p>
 <p>At zero capital every share gives resources <code>θ</code>; choose share zero there. The operative <code>argmax</code> includes both share endpoints, unlike an interior first-order equation. This documented variant also admits zero capital and uses positive shocks with the joint law above. The repository's <code>applications/portfolio-choice/declaration/stages/port/port.bl</code> declares the joint law as one lognormal declaration with correlation ρ_ζ and continues to <code>m_next</code>, as here. A no-risky-asset variant fixes the share to zero and removes its policy and unused return-shock declarations; it still uses the same nonnegative-capital and positive-resource boundaries.</p>
 <h2 id="2-connectors">2 Connectors<a class="headerlink" href="#2-connectors" title="Permanent link">&para;</a></h2>
-<p>A <strong>connector</strong> selects eligible continuation and arrival state fields for a stage join. In the main period, the outgoing field is written first and the incoming field second:</p>
+<p>A <strong>connector</strong> selects eligible continuation and arrival fields for a stage join. For a state pair, the outgoing field is written first and the incoming field second:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">connectors</span><span class="p">:</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">k_next</span><span class="p">:</span><span class="w"> </span><span class="nv">k</span><span class="p p-Indicator">}</span>
 </code></pre></div>
@@ -8263,6 +8293,7 @@ K(d\psi,d\theta)=\nu_\Psi(d\psi)\nu_\theta(d\theta),
 </tbody>
 </table>
 <p>The stage declarations establish direction. Reversing the pair is not another spelling of the same join. The second authored pair belongs in the <a href="../07-trellis/#2-inter-period-connectors">inter-period connector</a>, not alongside the first: placing both in this period would close a cycle.</p>
+<p>A connection also pairs the value-type fields sent backward. A connector writes such a pair as <code>{earlier.input: later.output}</code>, using stage keys when an endpoint is ambiguous. When no pair is written, the package first matches names after removing perch marks. A single remaining pair can be inferred unless the incoming name is kept by the earlier stage. That field needs an equal name or an authored pair. The package compares the supplied set and dependence with those of the required field. It applies the same checks to constants, which have no state coordinates.</p>
 <p>The pair performs no calculation. Interest, income, depreciation, discounting, and unit conversion must appear in a stage equation. Equal domain labels alone do not establish compatibility: the fields must denote compatible quantities with matching economic roles and information at the join. Their continuation and arrival tags refer to different stages, but describe the same boundary information after identification. <a href="../appendices/13-perch-tagging-rules/">Perch tagging rules</a> explains why tags within a stage do not by themselves identify quantities across stages.</p>
 <p>Declared sets are <strong>compatible</strong> when the set of the outgoing field is contained in the set of the incoming field, so that every value the preceding stage can write is one the receiving stage accepts. The two sets need not be equal: a declared set states where a field's values may lie and does not claim that every member is reached. A field on <code>ℝ₊₊</code> can therefore be copied into one on <code>ℝ₊</code>, and the reverse is marked incompatible, because <code>ℝ₊</code> contains zero. Two sets written alike in one period are one set. Otherwise, where a bound names a parameter, the sets are compared at the parameters' values, and the connection is not established until a calibration supplies them.</p>
 <p>For a field with <a href="../01-stage/#22-category-codes">category codes</a>, a connection checks both the admissible integers and their recorded meanings. Every code the preceding stage can write must be accepted by the receiving stage with the same meaning. This applies to authored pairs, inferred pairs and connections between periods, and to each coordinate of a product. A domain with category meanings is incompatible with an ordinary integer domain that records none.</p>
@@ -8352,7 +8383,7 @@ to inspect unresolved or incompatible connections.</p>
 <p>None of these calls solves the model.</p>
 <h2 id="5-independent-stage-occurrences">5 Independent stage occurrences<a class="headerlink" href="#5-independent-stage-occurrences" title="Permanent link">&para;</a></h2>
 <p>Two uses of <code>cons.bl</code> may share source text, but each constructed stage occurrence is a separate object with its own graphs and its own specification, and the two share no object. What the stages of one period do share is the parameters they declare under one name: <code>β</code> declared in two stages of a period is one parameter of the period, whose declared sets must agree and which the period's calibration sources supply once, each declaring stage then binding that value (<a href="../API/factory/trellis-factory/">The trellis factory</a> §4). A calibration change in one period does not alter another, since the same spelling in another period is another parameter, and no stage occurrence is adjusted in place. Reusing a stage file or caching its parse therefore does not justify sharing mutable stage annotations.</p>
-<p>If a stage file occurs twice inside one period, give the two uses distinct keys and supply a source entry for each. Distinct keys identify the occurrences; their field interfaces must still make every join unambiguous. Across periods, the same local key may recur because the period index distinguishes its uses. The application evaluates a parameter schedule for each index when assembling that occurrence's record.</p>
+<p>If a stage file occurs twice inside one period, give the two uses distinct keys and supply a source entry for each. Distinct keys identify the occurrences; their field interfaces must still make every join unambiguous. Across periods, the same local key may recur because the period index distinguishes its uses. A recipe may attach calibration, methods or settings to an index. A <a href="../../bellman-calculus/APPX-H-MODULARITY/">modular model</a> takes its calibration from the declaration's sources. Data that vary over repeated uses of the same declaration can pass through fields.</p>
 
 
 

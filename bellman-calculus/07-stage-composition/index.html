@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3677,6 +3679,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8010,12 +8040,18 @@
 <p class="admonition-title">Not yet drafted — stub notes only</p>
 <p>Structural outline only; the within-period composition chapter is not yet written.</p>
 </div>
-<p>Consider a period whose stage dependencies form a chain, indexed in forward economic order by <span class="arithmatex">\(k=1,\ldots,K\)</span>. The continuation fields of stage <span class="arithmatex">\(\mathbb{S}_k\)</span> and the arrival fields of <span class="arithmatex">\(\mathbb{S}_{k+1}\)</span> have separate stage-local identities. Selected pairs relate their eligible uses; an authored <strong>connector</strong> states a pair explicitly. If the ordered state coordinates form a compatible complete route and the stage operators are well defined on the required function spaces, the backward period operator for this chain is the composite <span class="arithmatex">\(\mathbb{T}_{\text{period}} = \mathbb{T}_{\mathbb{S}_1} \circ \ldots \circ \mathbb{T}_{\mathbb{S}_K}\)</span>, where each <span class="arithmatex">\(\mathbb T_{\mathbb S_k}\)</span> is that stage's backward value operator. This conditional display is not a general composition theorem for all period shapes.</p>
+<p>Consider a period whose stage dependencies form a chain, indexed in forward economic order by <span class="arithmatex">\(k=1,\ldots,K\)</span>. The continuation fields of stage <span class="arithmatex">\(\mathbb{S}_k\)</span> and the arrival fields of <span class="arithmatex">\(\mathbb{S}_{k+1}\)</span> have separate stage-local identities. Selected pairs relate their eligible uses; an authored <strong>connector</strong> states a pair explicitly. Suppose the ordered state coordinates form a compatible complete route and each stage operator is defined on the required tuples. Let <span class="arithmatex">\(C_k\)</span> be the backward connection from stage <span class="arithmatex">\(k+1\)</span> to stage <span class="arithmatex">\(k\)</span>. The backward period operator is</p>
+<div class="arithmatex">\[
+\mathbb T_{\mathrm{period}}=\mathbb T_{\mathbb S_1}\circ C_1\circ\mathbb T_{\mathbb S_2}\circ\cdots\circ C_{K-1}\circ\mathbb T_{\mathbb S_K}.
+\]</div>
+<p>Each stage operator acts on the complete tuple of representing functions. Each earlier stage reads the fields returned by its successor. Every composite is restricted to the domain where successive applications are defined. This conditional display is not a general composition theorem for all period shapes.</p>
 <h2 id="1-connectors">1. Connectors<a class="headerlink" href="#1-connectors" title="Permanent link">&para;</a></h2>
-<p>A <strong>connector</strong> pairs an eligible continuation state field of one stage occurrence with an eligible arrival state field of another. It does not change either stage's field name or equations. <em>(Placeholder.)</em> A simple pairing is <span class="arithmatex">\(a'\mapsto a\)</span> when the two fields have compatible declared sets and the author establishes their common economic meaning, units and boundary information. Declared sets are compatible when the continuation field's set is contained in the arrival field's. In the terms of <a href="../APPX-D-KINDS-AND-SORTS/">Appendix D</a>, the continuation declaration <span class="arithmatex">\(f\)</span> lies in <span class="arithmatex">\(\mathrm{Dom}[D_g]\)</span> for the arrival declaration <span class="arithmatex">\(g\)</span>, that is, <span class="arithmatex">\(D_f\subseteq D_g\)</span> (D6), so that the pairing sends every value of the continuation field to a value the arrival field admits. Equality <span class="arithmatex">\(D_f=D_g\)</span> is not required: a declared set contains a field's values and need not be exhausted by them. When a route pairs whole ordered state tuples, the induced coordinate map reads the destination coordinates from those of the source; a crossed pairing can therefore be a permutation without an inverse state transition. A nonidentity economic transformation must appear in an authored stage equation. Equal names or domains alone do not identify arbitrary fields.</p>
+<p>A <strong>connector</strong> pairs an eligible continuation state field with an arrival state field of the following stage. It also pairs the following stage’s arrival value-type fields with the earlier stage’s continuation inputs. These pairings have opposite directions. It does not change either stage's field name or equations. <em>(Placeholder.)</em> A simple pairing is <span class="arithmatex">\(a'\mapsto a\)</span> when the two fields have compatible declared sets and the author establishes their common economic meaning, units and boundary information.</p>
+<p>Declared sets are compatible when the continuation field's set is contained in the arrival field's. In the terms of <a href="../APPX-D-KINDS-AND-SORTS/">Appendix D</a>, the continuation declaration <span class="arithmatex">\(f\)</span> lies in <span class="arithmatex">\(\mathrm{Dom}[D_g]\)</span> for the arrival declaration <span class="arithmatex">\(g\)</span>, that is, <span class="arithmatex">\(D_f\subseteq D_g\)</span> (D6), so that the pairing sends every value of the continuation field to a value the arrival field admits. Equality <span class="arithmatex">\(D_f=D_g\)</span> is not required: a declared set contains a field's values and need not be exhausted by them.</p>
+<p>When a route pairs whole ordered state tuples, the induced coordinate map reads the destination coordinates from those of the source; a crossed pairing can therefore be a permutation without an inverse state transition. A nonidentity economic transformation must appear in an authored stage equation. Equal names or domains alone do not identify arbitrary fields.</p>
 <h2 id="2-composing-stages-into-periods">2. Composing stages into periods<a class="headerlink" href="#2-composing-stages-into-periods" title="Permanent link">&para;</a></h2>
 <p>The input-to-output signature is also the rule for joining stages. A <strong>period</strong> is
-a collection of stage occurrences (uses of stage modules) with selected connections. In the chain considered here, joining compatible boundary fields pairs the continuation state coordinates of one stage with the arrival state coordinates of its successor. The successor's arrival value then supplies the predecessor's continuation value under that coordinate map, provided the required value components agree and the declared set of each continuation state field lies in that of the arrival state field paired with it. Separate marginal shock laws do not establish the joint forward law needed for a complete route.</p>
+a collection of stage occurrences (uses of stage modules) with selected connections. In the chain considered here, joining compatible boundary fields pairs the continuation state coordinates of one stage with the arrival state coordinates of its successor. The successor's arrival tuple supplies the predecessor's continuation fields under that coordinate map, field by field. Each supplied value-type field must satisfy the recipient's declared set and dependence requirements. Each continuation state field's declared set must lie in that of its paired arrival state field. Separate marginal shock laws do not establish the joint forward law needed for a complete route.</p>
 <figure>
   <img alt="Two stages composed into a period: the continuation perch ≻⁰ of the first stage is joined by a double line to the arrival perch ≺¹ of the second, identifying the shared boundary." src="../../_assets/stage-period-diagram.svg" width="700" />
 <br />
@@ -8024,7 +8060,7 @@ a collection of stage occurrences (uses of stage modules) with selected connecti
 <p>The double line denotes the boundary identification in this example. Operators compose right to left in the backward calculation, provided their domains and codomains agree after that identification. The equations, feasible sets and conditional laws retain their stage-specific assumptions.</p>
 <p>Changing the order of names in a period's YAML list does not change the economic dependencies. Reordering the economic stages or changing a successor can instead change information, feasibility or rewards, and requires the model to be checked again. A stage can be reused with a compatible continuation problem; the composition rule is not a general invariance theorem for arbitrary swaps. Branch-specific successors require their explicit routes, as in <a href="../09-branching/">Branching</a>.</p>
 <h2 id="3-intra-period-vs-inter-period-connectors">3. Intra-period vs inter-period connectors<a class="headerlink" href="#3-intra-period-vs-inter-period-connectors" title="Permanent link">&para;</a></h2>
-<p>This file covers <strong>intra-period</strong> wiring (stage-to-stage within one period). Inter-period wiring (period-to-period, with occurrence-specific boundary identifications) is covered in <a href="../08-periods-and-trellis/">Periods and the trellis</a>.</p>
+<p>This file covers <strong>intra-period</strong> wiring (stage-to-stage within one period). Inter-period wiring (period-to-period, reusing the same connection where the declarations and pairings repeat) is covered in <a href="../08-periods-and-trellis/">Periods and the trellis</a>.</p>
 <p><a id="see-also"></a></p>
 <h2 id="4-related-documents">4. Related documents<a class="headerlink" href="#4-related-documents" title="Permanent link">&para;</a></h2>
 <ul>

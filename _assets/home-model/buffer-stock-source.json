@@ -1,7 +1,7 @@
 {
   "path": "applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl",
-  "sha256": "065c530b2187e5bee4a28f968560bfc590b02c2272b45db9fd291aea67a0416f",
-  "text": "@stage: buffer_stock\n\nXm := ℝ₊₊\nXa := ℝ₊₊\n\nβ : (0,1)        :: [\"discount factor\"]\nρ : (1, inf)     :: [\"coefficient of relative risk aversion, greater than one\"]\nR : ℝ₊₊          :: [\"gross interest rate\"]\nΓ : ℝ₊₊          :: [\"deterministic permanent income growth factor\"]\nσ_ψ : ℝ₊         :: [\"standard deviation of the log permanent shock\"]\nσ_ξ : ℝ₊         :: [\"standard deviation of the log transitory shock, conditional on a positive draw\"]\np_zero : (0,1)   :: [\"probability ℘ of a zero transitory draw\"]\nμ_ξ := -log(1 - p_zero) - σ_ξ^2/2   :: [\"log-mean of the positive transitory draw, at which E[ξ] = 1\"]\n\nψ : ℝ₊₊\nψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)\nξ : ℝ₊\nξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))\n\n𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]\n𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]\n𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]\n\nΓ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c < x}   :: [id=feasible_consumption]\n\n[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {\n    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]\n}\n\n[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {\n    a = m - c                       :: [id=savings]\n}\n\n[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, c) : !cntn -> (V : ℝ @ !vlu) : !dcsn] {\n    V = 𝑢(c) + β*V[>]               :: [id=value]\n}\n\n[id=dcsn_to_arvl, (V) : !dcsn -> (V[<] : ℝ @ !vlu) : !arvl] {\n    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n}\n\n[id=policy, (V[>] : ℝ @ !vlu) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {\n    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]\n}\n",
+  "sha256": "4cc62f9aba4c322b23be29e7050f9d6ff838150851b756aeb6dc42d8744034e4",
+  "text": "@stage: buffer_stock\n\nXm := ℝ\nXa := ℝ\n\nβ : (0,1)        :: [\"discount factor\"]\nρ : (1, inf)     :: [\"coefficient of relative risk aversion, greater than one\"]\nR : ℝ₊₊          :: [\"gross interest rate\"]\nΓ : ℝ₊₊          :: [\"deterministic permanent income growth factor\"]\nσ_ψ : ℝ₊         :: [\"standard deviation of the log permanent shock\"]\nσ_ξ : ℝ₊         :: [\"standard deviation of the log transitory shock, conditional on a positive draw\"]\np_zero : (0,1)   :: [\"probability ℘ of a zero transitory draw\"]\nμ_ξ := -log(1 - p_zero) - σ_ξ^2/2   :: [\"log-mean of the positive transitory draw, at which E[ξ] = 1\"]\n\nψ : ℝ₊₊\nψ ~ LogNormal(-(σ_ψ^2)/2, σ_ψ)\nξ : ℝ₊\nξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))\n\n𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]\n𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marg_util]\n𝑑𝑢𝑖𝑛𝑣(v : ℝ₊₊) := v^(-1/ρ)     :: [id=inv_marg_util]\n\nΓ_c(x : Xm) := {c : ℝ₊₊ | c < x - L}   :: [id=feasible_consumption]\n\n[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -> (m : Xm) : !dcsn] {\n    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]\n}\n\n[id=dcsn_to_cntn, (m, c : ℝ₊₊ @ !ctrl) : !dcsn -> (a : Xa) : !cntn] {\n    a = m - c                       :: [id=savings]\n}\n\n[id=cntn_to_dcsn, (V[>] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn -> (V : ℝ @ !vlu, L) : !dcsn] {\n    V = 𝑢(c) + β*V[>]               :: [id=value]\n}\n\n[id=dcsn_to_arvl, (V, L) : !dcsn -> (V[<] : ℝ @ !vlu, L[<] : (-inf, 0] @ !vlu @ !cnst) : !arvl] {\n    V[<] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]\n    L[<] = if σ_ψ > 0 then 0 else Γ*L/R :: [id=borrowing_bound]\n}\n\n[id=policy, (V[>] : ℝ @ !vlu, L) : !cntn -> (c : ℝ₊₊ @ !ctrl) : !dcsn] {\n    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[>])     :: [id=optimality]\n}\n",
   "display": {
     "types": [
       {
@@ -11,18 +11,18 @@
       },
       {
         "line": 21,
-        "from": 44,
-        "to": 47
+        "from": 42,
+        "to": 45
       },
       {
         "line": 22,
-        "from": 47,
-        "to": 50
+        "from": 40,
+        "to": 43
       },
       {
         "line": 24,
-        "from": 40,
-        "to": 43
+        "from": 43,
+        "to": 46
       },
       {
         "line": 26,
@@ -62,7 +62,7 @@
       {
         "line": 34,
         "from": 16,
-        "to": 72
+        "to": 105
       },
       {
         "line": 35,
@@ -77,7 +77,7 @@
       {
         "line": 38,
         "from": 16,
-        "to": 58
+        "to": 94
       },
       {
         "line": 39,
@@ -85,17 +85,22 @@
         "to": 47
       },
       {
-        "line": 42,
+        "line": 40,
+        "from": 44,
+        "to": 47
+      },
+      {
+        "line": 43,
         "from": 1,
         "to": 4
       },
       {
-        "line": 42,
+        "line": 43,
         "from": 10,
-        "to": 66
+        "to": 69
       },
       {
-        "line": 43,
+        "line": 44,
         "from": 54,
         "to": 57
       }

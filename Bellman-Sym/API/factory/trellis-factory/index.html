@@ -2043,10 +2043,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-period-indices-and-the-terminal-value" class="md-nav__link">
+  <a href="#7-period-indices-and-terminal-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7 Period indices and the terminal value
+        7 Period indices and terminal data
       
     </span>
   </a>
@@ -2065,15 +2065,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#9-inspect-the-selected-connections" class="md-nav__link">
+  <a href="#9-the-connection-report" class="md-nav__link">
     <span class="md-ellipsis">
       
-        9 Inspect the selected connections
+        9 The connection report
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="9 Inspect the selected connections">
+    <nav class="md-nav" aria-label="9 The connection report">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -3045,6 +3045,8 @@
       
         
       
+        
+      
     
     
     
@@ -3781,6 +3783,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8082,10 +8112,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-period-indices-and-the-terminal-value" class="md-nav__link">
+  <a href="#7-period-indices-and-terminal-data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        7 Period indices and the terminal value
+        7 Period indices and terminal data
       
     </span>
   </a>
@@ -8104,15 +8134,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#9-inspect-the-selected-connections" class="md-nav__link">
+  <a href="#9-the-connection-report" class="md-nav__link">
     <span class="md-ellipsis">
       
-        9 Inspect the selected connections
+        9 The connection report
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="9 Inspect the selected connections">
+    <nav class="md-nav" aria-label="9 The connection report">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -8293,9 +8323,10 @@
 <h2 id="6-diagram_trellis">6 diagram_trellis<a class="headerlink" href="#6-diagram_trellis" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">bellman</span><span class="o">.</span><span class="n">trellis</span><span class="o">.</span><span class="n">diagram_trellis</span><span class="p">(</span><span class="n">trellis</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-<p>The call returns a drawing of the periods of an elaborated trellis, every one or those whose indices <code>periods</code> lists, of the kind a graph's <code>diagram()</code> returns. Each period is drawn as <code>diagram_period</code> draws it, inside a frame labeled <code>periods[h]</code> with <code>h</code> and, where the trellis's <code>registry</code> holds <code>last_age</code>, the age <code>last_age − h</code>; the drawing's <code>labels</code> name each stage <code>periods[h] &lt;key&gt;</code>, its period's address and its key. The terminal period stands at the right and the earlier periods to its left, so that economic time runs from left to right and the backward computation from right to left, the two directions written in the drawing's title. Every inter-period connector <code>inter_connectors[h]</code> whose two periods are drawn is drawn as <a href="../../stage/02-initial/">wires</a> from the continuation fields that leave <code>periods[h + 1]</code> to the arrival fields of <code>periods[h]</code>, each wire labeled with the mapping's index and its field pair; a period with no mapping to its neighbor is drawn with no wire. The drawing is built from the dictionary when it is asked for and stored nowhere; the trellis is not itself a graph object. The same trellis is read interactively in Google's Model Explorer, where each period and each stage occurrence inside it is a box that opens with a click, and each join is drawn between the wires of the two occurrences it joins (<a href="../../stage/10-model-explorer/">The view in Model Explorer</a> §5).</p>
-<h2 id="7-period-indices-and-the-terminal-value">7 Period indices and the terminal value<a class="headerlink" href="#7-period-indices-and-the-terminal-value" title="Permanent link">&para;</a></h2>
-<p>The index <code>h</code> counts periods before the terminal one. <code>periods[0]</code> is the terminal period, <code>periods[h + 1]</code> lies one period before <code>periods[h]</code>, and <code>inter_connectors[h]</code> joins the continuation fields that leave <code>periods[h + 1]</code> to the arrival fields of <code>periods[h]</code>, so that backward computation proceeds from <code>h = 0</code> to larger <code>h</code>. The <strong>terminal value</strong> is the continuation value that a stage of the terminal period reads, for the durables model the bequest stage, whose continuation value is zero and is supplied as boundary data at realization; no entry of <code>inter_connectors</code> is reserved for it, and <code>len(inter_connectors)</code> is <code>len(periods) - 1</code>.</p>
+<p>The call returns a drawing of the periods of an elaborated trellis, every one or those whose indices <code>periods</code> lists, of the kind a graph's <code>diagram()</code> returns. Each period is drawn as <code>diagram_period</code> draws it, inside a frame labeled <code>periods[h]</code> with its position <code>h</code>; the drawing's <code>labels</code> name each stage <code>periods[h] &lt;key&gt;</code>, its period's address and its key. The terminal period stands at the right and the earlier periods to its left, so that economic time runs from left to right and the backward computation from right to left, the two directions written in the drawing's title. Every inter-period connector <code>inter_connectors[h]</code> whose two periods are drawn is drawn as <a href="../../stage/02-initial/">wires</a> from the continuation fields that leave <code>periods[h + 1]</code> to the arrival fields of <code>periods[h]</code>, each wire labeled with the mapping's index and its field pair; a period with no mapping to its neighbor is drawn with no wire. The drawing is built from the dictionary when it is asked for and stored nowhere; the trellis is not itself a graph object. The same trellis is read interactively in Google's Model Explorer, where each period and each stage occurrence inside it is a box that opens with a click, and each join is drawn between the wires of the two occurrences it joins (<a href="../../stage/10-model-explorer/">The view in Model Explorer</a> §5).</p>
+<p><a id="7-period-indices-and-the-terminal-value"></a></p>
+<h2 id="7-period-indices-and-terminal-data">7 Period indices and terminal data<a class="headerlink" href="#7-period-indices-and-terminal-data" title="Permanent link">&para;</a></h2>
+<p>The index <code>h</code> counts periods before the terminal one. <code>periods[0]</code> is the terminal period, <code>periods[h + 1]</code> lies one period before <code>periods[h]</code>, and <code>inter_connectors[h]</code> joins the continuation fields that leave <code>periods[h + 1]</code> to the arrival fields of <code>periods[h]</code>, so that backward computation proceeds from <code>h = 0</code> to larger <code>h</code>. At realization the user supplies <a href="../../../07-trellis/#2-inter-period-connectors">terminal data</a> for every unconnected continuation field of the terminal period. This includes a zero value function where the terminal equation uses one, and any constants such as age. The trellis holds the joins and no terminal data: its <code>inter_connectors</code> list has one mapping for each adjacent pair of periods, so that <code>len(inter_connectors)</code> is <code>len(periods) - 1</code>.</p>
 <h2 id="8-the-entries-of-a-models-files">8 The entries of a model's files<a class="headerlink" href="#8-the-entries-of-a-models-files" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.trellis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">append_to_mapping</span><span class="p">,</span>
@@ -8318,15 +8349,18 @@
 The writer tries an available qualified spelling; if the proposed entry would
 replace an existing key, it returns <code>source-authored</code> and identifies that mapping.
 Correct or remove the existing entry before asking to replace it.</p>
-<h2 id="9-inspect-the-selected-connections">9 Inspect the selected connections<a class="headerlink" href="#9-inspect-the-selected-connections" title="Permanent link">&para;</a></h2>
+<p><a id="9-inspect-the-selected-connections"></a></p>
+<h2 id="9-the-connection-report">9 The connection report<a class="headerlink" href="#9-the-connection-report" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.trellis</span><span class="w"> </span><span class="kn">import</span> <span class="n">connection_report</span><span class="p">,</span> <span class="n">to_model_explorer</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">report</span> <span class="o">=</span> <span class="n">connection_report</span><span class="p">(</span><span class="n">trellis</span><span class="p">)</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">view</span> <span class="o">=</span> <span class="n">to_model_explorer</span><span class="p">(</span><span class="n">trellis</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">selection</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">selection</span><span class="p">)</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">report</span><span class="o">.</span><span class="n">obligations</span><span class="p">:</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="n">view</span> <span class="o">=</span> <span class="n">to_model_explorer</span><span class="p">(</span><span class="n">trellis</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">selection</span><span class="o">=</span><span class="n">report</span><span class="o">.</span><span class="n">selection</span><span class="p">)</span>
 </code></pre></div>
 <p><code>connection_report(trellis, *, periods=None, stages=None, selection=None)</code> returns pairs of resolved field uses, complete-state routes, diagnostics, rejected automatic candidates, unjoined fields, effective bindings, operation counts, the selected result and the source file. A <strong>route</strong> is one source stage's ordered continuation state on a branch mapped to one destination stage's ordered arrival state. A certified route has established the state map, joint law and required backward value components; a visible pair alone does not establish those claims.</p>
 <p>Each pair identifies both period indices, stage keys, local fields and perches, whether it was authored or inferred, and its compatibility judgment. An authored pair also records <code>source_address</code>, <code>source_key</code> and <code>source_value</code>: the expanded mapping address and exact written endpoints. <code>written_at(file, pair.source_address)</code> finds the physical mapping, including a shared period template. Inferred pairs have no authored source entry. The original <code>address</code> continues to name the connector group.</p>
-<p>A period or stage restriction filters the report's pairs, routes, diagnostics, rejected candidates, unjoined fields and bindings. Its <code>selection</code> and <code>counts</code> still describe the complete trellis. Reuse <code>selection</code> only with the exact stage occurrences, connectors and effective bindings that produced it; a changed reading requires a new selection. The report, Model Explorer view and <code>unpaired_joins</code> can share that result, so changing a display restriction does not require another selection or stage construction.</p>
+<p>A period or stage restriction filters the report's pairs, routes, diagnostics, rejected candidates, unjoined fields and bindings. Its <code>selection</code> and <code>counts</code> still describe the complete trellis. The tuple <code>obligations</code> includes the required <code>initial-law-supported</code> condition on the joint law of the external arrival coordinates of <code>periods[-1]</code>, the first period in time. The condition requires mass one on the period's admissible arrival set. A filter that includes any of those coordinates retains the entire joint condition, including the other coordinates. The report checks no supplied law and infers no independence. Reuse <code>selection</code> only with the exact stage occurrences, connectors and effective bindings that produced it; a changed reading requires a new selection. The report, Model Explorer view and <code>unpaired_joins</code> can share that result, so changing a display restriction does not require another selection or stage construction.</p>
 <h3 id="91-inspect-an-unfinished-model">9.1 Inspect an unfinished model<a class="headerlink" href="#91-inspect-an-unfinished-model" title="Permanent link">&para;</a></h3>
 <p>Ordinary construction returns an inspectable model when the stage declarations
 can be constructed but their connections are incomplete or invalid. There is

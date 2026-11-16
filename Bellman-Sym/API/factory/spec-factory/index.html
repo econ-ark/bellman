@@ -3017,6 +3017,8 @@
       
         
       
+        
+      
     
     
     
@@ -3753,6 +3755,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8277,7 +8307,7 @@
 </table>
 <p>A mapping whose every top-level key is one of <code>calibration</code> and <code>settings</code> is read by kind; any other mapping is flat. For a calibration fill a stage declares its parameters; for a settings fill it declares the keys of the settings files its settings list names and the settings its methods files declare, read as they apply at each period the stage occupies, since a stage file declares no setting. A methods list takes no slot and a fill no methods part, which is refused under <code>fill-names-nothing</code>: a change of methods is a replacing selection, another addition named in the stage's list. The record's provenance holds, for each slot of each list, an entry <code>{"slot": name, "bound": whether the keyword was given, "names": the fill's names the stage declares}</code>.</p>
 <h3 id="24-the-registry-block">2.4 The registry block<a class="headerlink" href="#24-the-registry-block" title="Permanent link">&para;</a></h3>
-<p>A source named under <code>registry:</code> assigns names that no stage declares. They stand under the trellis's top-level <code>registry</code> key, <code>{kind: {name: value}}</code>, with their sources under the trellis's <code>provenance</code>, are bound to no stage, and are copied unread by <code>elaborate_trellis</code> and the trellis verbs; a fill of such a name changes the <code>registry</code> mapping and nothing else. They are data for the application's own functions, such as the function that evaluates the durables model's wage schedule.</p>
+<p>A source named under <code>registry:</code> assigns names that no stage declares. They stand under the trellis's top-level <code>registry</code> key, <code>{kind: {name: value}}</code>, with their sources under the trellis's <code>provenance</code>, are bound to no stage, and are copied unread by <code>elaborate_trellis</code> and the trellis verbs; a fill of such a name changes the <code>registry</code> mapping and nothing else. These values are available to application code. The durables model's fixed income tables are calibration sources of the tenure stage, and age enters through a field.</p>
 <h3 id="25-files-and-parents">2.5 Files and parents<a class="headerlink" href="#25-files-and-parents" title="Permanent link">&para;</a></h3>
 <p>A source name resolves to the file spelled <code>.yml</code> or <code>.yaml</code>, and the file's kind is read from its top key, <code>calibration</code> or <code>settings</code>, not from its name or extension; an addition in a methods list is read whole, as the elaboration reads it, and a YAML file there is refused under <code>recipe-source</code>. A file may name a <code>parent:</code> source, which is read first and merged as an earlier entry of the same list; a parent chain is limited to ten files and may not cycle. The keys <code>parent</code>, <code>description</code>, <code>version</code> and <code>__comment__</code> of a source file are not part of the mapping it contributes.</p>
 <h3 id="26-refusals">2.6 Refusals<a class="headerlink" href="#26-refusals" title="Permanent link">&para;</a></h3>

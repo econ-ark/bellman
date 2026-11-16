@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-bellman-sym-works" class="md-skip">
+        <a href="#bellman-sym-concepts" class="md-skip">
           Skip to content
         </a>
       
@@ -743,10 +743,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-bellman-sym-does" class="md-nav__link">
+  <a href="#1-bellman-sym" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1 What Bellman-SYM does
+        1 Bellman-SYM
       
     </span>
   </a>
@@ -2980,6 +2980,8 @@
       
         
       
+        
+      
     
     
     
@@ -3716,6 +3718,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -7923,10 +7953,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-bellman-sym-does" class="md-nav__link">
+  <a href="#1-bellman-sym" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1 What Bellman-SYM does
+        1 Bellman-SYM
       
     </span>
   </a>
@@ -8073,13 +8103,13 @@
   
 
 
-<h1 id="how-bellman-sym-works">How Bellman-SYM works<a class="headerlink" href="#how-bellman-sym-works" title="Permanent link">&para;</a></h1>
+<h1 id="bellman-sym-concepts">Bellman-SYM concepts<a class="headerlink" href="#bellman-sym-concepts" title="Permanent link">&para;</a></h1>
 <div class="admonition abstract">
 <p class="admonition-title">Summary</p>
 <p>A model is written as stages, which are joined into periods and a trellis. Bellman-SYM elaborates the stage files into a semantic graph, a record of the model's operations and of their mathematical meaning that a person and a machine can read and that depends on no solver. The graph makes solver code verifiable, since every routine has a stated mathematical operation to compute, and a change of numerical method leaves the stage files unchanged.</p>
 </div>
 <p>Bellman-SYM is a highly expressive declarative functional programming system for dynamic recursive problems.</p>
-<h2 id="1-what-bellman-sym-does">1 What Bellman-SYM does<a class="headerlink" href="#1-what-bellman-sym-does" title="Permanent link">&para;</a></h2>
+<h2 id="1-bellman-sym">1 Bellman-SYM<a class="headerlink" href="#1-bellman-sym" title="Permanent link">&para;</a></h2>
 <p>Consider a household that arrives with assets, receives income, chooses consumption, and saves what remains. In <a href="../../wiki/sym/">Bellman-SYM</a>, this decision problem is written as a modular <strong><a href="../../wiki/stage/">stage</a></strong> in a stage file, a <code>.bl</code> file. Although an economist first describes the problem as relations between economic quantities such as consumption and income, its solution and simulation are <strong>higher-order</strong> operations, that is, operations on functions rather than on numbers. In the Bellman equation of such a problem, for instance, the expected continuation value function is combined with current utility and maximized over the feasible choices to obtain the decision value function. These operations define the stage's <strong>Bellman operator</strong>, but how they compose, and the numerical assumptions under which they are approximated, are usually left implicit or embedded in numerical procedures.</p>
 <p>Bellman-SYM makes the structure of solution and simulation explicit through <strong>elaboration</strong>, which turns the stage files into a <strong><a href="../../wiki/semgraph/">semantic graph</a></strong> that depends on no solver and that a person and a machine can both read. The semantic graph is a typed record of the <strong>meaning</strong> of the written model: it records the functional operations, the mathematical objects on which they act and which they produce, and how they compose<sup id="fnref:backus"><a class="footnote-ref" href="#fn:backus">3</a></sup> (in the terms of universal algebra, a many-sorted algebra<sup id="fnref:adj"><a class="footnote-ref" href="#fn:adj">2</a></sup>). The map that takes the stage files to their elaborated meaning is what we call the <strong>meaning map</strong>, <a href="../../wiki/upsilon/">Υ</a> (Upsilon, see Figure 1). The graph is then a single source from which the model can be implemented, in different numerical implementations and under different calibrations and settings, or its theoretical structure written out. </p>
 <figure>
@@ -8247,7 +8277,8 @@
 <p>Bellman-SYM can express <a href="../../wiki/recursive_decision_process/">recursive decision processes</a> in the sense of Sargent and Stachurski,<sup id="fnref:ss"><a class="footnote-ref" href="#fn:ss">4</a></sup> a class of dynamic programs more general than Markov decision processes. It includes life-cycle and infinite-horizon models, models with discrete choices and <a href="../../wiki/branch/">branches</a>, and the individual problems of heterogeneous-agent models together with the distributions they generate.</p>
 <h2 id="2-modularity">2 Modularity<a class="headerlink" href="#2-modularity" title="Permanent link">&para;</a></h2>
 <p>A stage represents a single decision problem as a <strong>Bellman operator</strong>, that is, as one recursive program. In the household's consumption and saving problem, the stage states what the household knows before its income is drawn, what it learns when the income is realized, what it chooses, and how its <strong>continuation value</strong> is formed. The three points at which its information is fixed, arrival, decision and continuation, are the stage's <a href="../../wiki/perch/">perches</a>.</p>
-<p>The internal structure of a stage follows the information available within its decision problem, not the model around it: <em>a stage is a self-contained program that refers neither to the rest of the model nor to its position in time.</em> Modularity means that stages can be joined into a <a href="../../wiki/period/">period</a>, the stages that together make up one step of the horizon, such as one year of a life cycle, and periods can be joined in turn into a <a href="../../wiki/trellis/">trellis</a>, the sequence of periods across the horizon. Provided that their inputs and outputs agree in type, stages can be rearranged or replaced within a period and reused across models, so a richer model is built by adding stages to an existing one rather than by rewriting it.</p>
+<p>The internal structure of a stage follows the information available within its decision problem, not the model around it: <em>a stage is a self-contained program that refers neither to the rest of the model nor to its position in time.</em> <a href="../../wiki/modularity/">Modularity</a> requires repeated declarations to retain their operators and calibration sources. Stages join into a <a href="../../wiki/period/">period</a>, one step of the horizon, such as one year of a life cycle, and a <a href="../../wiki/trellis/">trellis</a> is a diagram of periods joined by connections. With compatible inputs and outputs, stages can be rearranged, replaced or reused to form different models, so a richer model is built by adding stages to an existing one rather than by rewriting it.
+A stage receives what differs between periods as a <a href="../../wiki/field/">field</a>. Age, for example, can be a constant value-type field, typed <code>!vlu @ !cnst</code>, computed from the next period's age. The user supplies its terminal value when realizing the model. A fixed table or function gives income at that age. A trellis position is only an address: no stage or period file takes it as an argument that adjusts a parameter. Recipes nevertheless permit calibration, methods and settings to be selected by position; the package does not enforce <a href="../../bellman-calculus/APPX-H-MODULARITY/">modularity</a>. Methods and settings lie outside that condition.</p>
 <figure>
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 252" width="900" style="max-width:100%;height:auto;overflow:visible" role="img" aria-labelledby="fig-modularity" aria-describedby="md-desc">
     <!-- Drawn 20 September 2026 for docs/overview/01-concepts.md by make_modularity.py, from the period and trellis of applications/housing-renting, in the three-tone axonometric manner of architectural drawings of modular systems, with pegs and sockets at the joins in the manner of a construction kit. Econ-ARK palette by role: navy for structure, amber only for a part on its way into the assembly, the arrival green and the continuation cyan for the two ends. Colours are CSS variables set in docs/_stylesheets/extra.css; the fallbacks here are the light scheme. -->
@@ -8606,7 +8637,7 @@
 <h3 id="31-specifying-a-stage">3.1 Specifying a stage<a class="headerlink" href="#31-specifying-a-stage" title="Permanent link">&para;</a></h3>
 <p>The semantic graph denotes the mathematical operations required to solve and simulate the model, and a numerical implementation must approximate them. Bellman-SYM lets you declare the numerical assumptions explicitly as <strong>methods</strong>, such as linear interpolation, Monte Carlo simulation and the endogenous grid method.<sup id="fnref:carroll"><a class="footnote-ref" href="#fn:carroll">1</a></sup> Because the theory of the stage is written first and the methods are declared separately, the same stage can be implemented in different toolkits and with different numerical approaches, and each implementation can be checked against the mathematical model that it approximates.</p>
 <p>Each method is declared in a methods file and attached to a place in the stage: to a whole block, as the endogenous grid method is attached to the policy block; to an operation inside a block, as a quadrature rule is attached to an expectation; or to a named function that is to be stored, as linear interpolation is. The numerical options of a method, such as the size of a grid, are its <strong>settings</strong>, whose values are supplied separately.</p>
-<p>Settings are distinct from the model's <strong>parameters</strong>, the exogenous economic quantities that enter its theoretical description rather than its numerical methods. Parameter values are also supplied separately from the symbolic model, so that the theoretical model, its calibration and its numerical approximation remain distinct. Even without parameter values, methods or settings, elaboration produces a <strong>symbolic stage</strong>, whose semantic graph represents the theory with the parameters left symbolic. The stage is then <strong>specified</strong> by supplying parameter values through <strong>calibration</strong>, attaching methods through <strong>methodization</strong>, and supplying their settings through <strong>configuration</strong>, in that order (Figure 3).</p>
+<p>Settings are distinct from the model's <strong>parameters</strong>, the exogenous economic quantities that enter its theoretical description rather than its numerical methods. Parameter values are also supplied separately from the symbolic model, so that the theoretical model, its calibration and its numerical approximation remain distinct. Even without parameter values, methods or settings, elaboration produces a <strong>symbolic stage</strong>, whose semantic graph represents the theory with the parameters left symbolic. The stage is then <strong>specified</strong> by attaching methods through <strong>methodization</strong>, supplying parameter values through <strong>calibration</strong>, and supplying their settings through <strong>configuration</strong>. The stage API also permits calibration before methodization, the order retained by the trellis factory (Figure 3).</p>
 <figure>
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 183" width="900" style="max-width:100%;height:auto;overflow:visible" role="img" aria-labelledby="fig-specification" aria-describedby="sp-desc">
     <!-- Drawn 19 September 2026 for docs/overview/01-concepts.md by make_specification.py, in the vocabulary of the modularity figure. The three steps that specify a stage, in the order calibrate, methodize, configure: the parameter values into the stage itself, since a parameter changes the problem; a method on each operator; the method's settings on the method. Colours are CSS variables set in docs/_stylesheets/extra.css; the fallbacks here are the light scheme. -->
@@ -8751,7 +8782,7 @@
   </svg>
 
 <br />
-<figcaption id="fig-specification">Figure 3. Calibration, methodization and configuration produce successive versions of a stage, each leaving the preceding version unchanged; parameter values enter the stage itself because they determine the economic problem, whereas methods and settings can be changed without altering it.</figcaption>
+<figcaption id="fig-specification">Figure 3. Calibration, methodization and configuration supply the three bindings, in the order retained by the trellis factory. Stage binding verbs change the stage in place; trellis binding verbs return separate occurrences and preserve the earlier trellis. Parameter values define the economic problem; methods and settings define its numerical treatment.</figcaption>
 </figure>
 <h3 id="32-from-semantics-to-code">3.2 From semantics to code<a class="headerlink" href="#32-from-semantics-to-code" title="Permanent link">&para;</a></h3>
 <p>Once a stage has been specified, you can use its semantic graph to assemble code that solves and simulates the model. This step, <strong>realization</strong>, is the representation map <a href="../../wiki/rho/">Ρ</a> (Rho) of Figure 1, and it lies outside Bellman-SYM. The graph identifies the mathematical operation that each routine must implement, the method chosen for it, and how its inputs and outputs connect to the rest of the calculation, so you can draw on the routines of an existing toolkit or write your own while keeping an explicit account of the model that they are intended to approximate.</p>
@@ -8763,7 +8794,7 @@
 <ol>
 <li><strong>Write the stages.</strong> Describe each decision problem in a stage file, stating its timing, information, choices and equations, and state how the stages join into periods and how the periods form the model's trellis.</li>
 <li><strong>Elaborate and inspect the model.</strong> Bellman-SYM produces a semantic graph that makes the functional operations and their composition explicit. The resulting <strong>symbolic stage</strong> lets you check the mathematical problem before supplying parameter values, numerical methods or settings.</li>
-<li><strong>Specify the stages.</strong> Supply parameter values through <strong>calibration</strong>, attach numerical methods through <strong>methodization</strong>, and supply their settings through <strong>configuration</strong>, in that order. Each step adds its binding to the stage; the <strong>specified stage</strong>, the stage after the three, records the choices needed for implementation but is not yet solver code.</li>
+<li><strong>Specify the stages.</strong> For one stage, attach numerical methods through <strong>methodization</strong>, supply parameter values through <strong>calibration</strong>, and supply their settings through <strong>configuration</strong>. The trellis factory retains calibration before methodization. Each step adds its binding to the stage; the <strong>specified stage</strong>, the stage after the three, records the choices needed for implementation but is not yet solver code.</li>
 <li><strong>Realize and check the model.</strong> Implement the graph's operations with routines from the chosen toolkit or with your own code, and compose them to solve and simulate the model. Then check the numerical approximation against the mathematical description that the graph retains.</li>
 </ol>
 <div class="footnote">

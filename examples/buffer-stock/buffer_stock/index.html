@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#buffer-stock-consumption-model-normalized" class="md-skip">
+        <a href="#buffer-stock-consumption" class="md-skip">
           Skip to content
         </a>
       
@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3594,6 +3596,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -4035,7 +4065,7 @@
   <a href="#period-and-trellis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Period and Trellis
+        Period and trellis
       
     </span>
   </a>
@@ -4043,10 +4073,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#solution-method-egm" class="md-nav__link">
+  <a href="#endogenous-grid-method" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Solution Method: EGM
+        Endogenous grid method
       
     </span>
   </a>
@@ -4111,6 +4141,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#borrowing-bound-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Borrowing-bound check
+      
+    </span>
+  </a>
   
 </li>
       
@@ -8114,7 +8155,7 @@
   <a href="#period-and-trellis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Period and Trellis
+        Period and trellis
       
     </span>
   </a>
@@ -8122,10 +8163,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#solution-method-egm" class="md-nav__link">
+  <a href="#endogenous-grid-method" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Solution Method: EGM
+        Endogenous grid method
       
     </span>
   </a>
@@ -8190,6 +8231,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#borrowing-bound-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Borrowing-bound check
+      
+    </span>
+  </a>
   
 </li>
       
@@ -8261,12 +8313,11 @@
   
 
 
-<h1 id="buffer-stock-consumption-model-normalized">Buffer Stock Consumption Model (Normalized)<a class="headerlink" href="#buffer-stock-consumption-model-normalized" title="Permanent link">&para;</a></h1>
+<h1 id="buffer-stock-consumption">Buffer-stock consumption<a class="headerlink" href="#buffer-stock-consumption" title="Permanent link">&para;</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Source</p>
 <p>Application folder: <a href="https://github.com/econ-ark/bellman/tree/main/applications/buffer-stock"><code>applications/buffer-stock/</code></a>, which holds the model's stage file, <code>declaration/stages/buffer_stock/buffer_stock.bl</code>, beside it its methods file, <code>methods.bl</code>, an addition to the stage file, and its settings file, <code>declaration/settings/buffer_stock.yml</code>, in the layout of <a href="../../../Bellman-Sym/reference/model-directory-layout/">Model directory layout</a>. A related single-stage model, whose income is drawn independently each period and has no permanent component, is the application <a href="https://github.com/econ-ark/bellman/tree/main/applications/consumption-savings-iid"><code>applications/consumption-savings-iid/</code></a>.</p>
 </div>
-<p><strong>The canonical consumption-savings model with permanent and transitory income shocks, normalized by permanent income.</strong></p>
 <p>This example presents the buffer stock saving model (Carroll, 2024) in its normalized (ratio) form. Normalizing by permanent income reduces the state from two variables <span class="arithmatex">\((\mathbf{m}, \mathbf{P})\)</span> to one <span class="arithmatex">\((m = \mathbf{m}/\mathbf{P})\)</span>, yielding a stationary single-stage problem suitable for EGM.</p>
 <div class="admonition note">
 <p class="admonition-title">Source</p>
@@ -8319,7 +8370,7 @@ m' &amp;= \frac{R}{\Gamma \psi'}\, a + \xi'
 <li><span class="arithmatex">\(m\)</span> = market resources</li>
 <li><span class="arithmatex">\(c\)</span> = consumption</li>
 <li><span class="arithmatex">\(a\)</span> = end-of-period assets</li>
-<li><span class="arithmatex">\(\psi\)</span> = permanent income shock (<span class="arithmatex">\(\mathbb{E}[\psi] = 1\)</span>, <span class="arithmatex">\(\psi \in [\underline{\psi}, \bar{\psi}]\)</span>)</li>
+<li><span class="arithmatex">\(\psi\)</span> = permanent income shock (<span class="arithmatex">\(\mathbb{E}[\psi] = 1\)</span>, <span class="arithmatex">\(\psi &gt; 0\)</span>)</li>
 <li><span class="arithmatex">\(\xi\)</span> = transitory income shock (<span class="arithmatex">\(\mathbb{E}[\xi] = 1\)</span>; equals zero with probability <span class="arithmatex">\(\wp &gt; 0\)</span>)</li>
 <li><span class="arithmatex">\(R\)</span> = gross interest rate</li>
 <li><span class="arithmatex">\(\Gamma\)</span> = deterministic permanent income growth factor</li>
@@ -8341,11 +8392,11 @@ v'(m) = c(m)^{-\rho}
 </code></pre></div>
 <p>A single stage per period: the arrival state <span class="arithmatex">\(k\)</span>, the assets carried from the previous period, is transformed by two shocks into market resources <span class="arithmatex">\(m\)</span>; consumption <span class="arithmatex">\(c\)</span> determines the end-of-period assets <span class="arithmatex">\(a = m - c\)</span>.</p>
 <h2 id="stage-file">Stage File<a class="headerlink" href="#stage-file" title="Permanent link">&para;</a></h2>
-<p>The stage file, <code>declaration/stages/buffer_stock/buffer_stock.bl</code>, states the model: the sets of resources and assets, the parameters with their descriptions, the log-mean of the positive transitory draw as a derived parameter, the two shocks and their laws, utility and the set of feasible consumption, the two forward blocks, the two value blocks and the policy block, whose line is the maximization alone.</p>
+<p>The stage file states the income laws, utility, feasible consumption and the forward and backward equations. The bound <code>L</code> is a constant continuation input. The policy block maximizes the stated decision value.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>@stage: buffer_stock
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Xm := ℝ₊₊
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Xa := ℝ₊₊
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Xm := ℝ
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Xa := ℝ
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>β : (0,1)        :: ["discount factor"]
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>ρ : (1, inf)     :: ["coefficient of relative risk aversion, greater than one"]
@@ -8362,10 +8413,10 @@ v'(m) = c(m)^{-\rho}
 <a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>ξ ~ Mixture((p_zero, 0), (1 - p_zero, LogNormal(μ_ξ, σ_ξ)))
 <a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>
 <a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>𝑢(c : ℝ₊₊) := c^(1-ρ)/(1-ρ)         :: [id=util]
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>𝑑𝑢     := D_{c}(𝑢)                   :: [id=marg_util]
-<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>𝑑𝑢𝑖𝑛𝑣 := Inv(𝑑𝑢)                    :: [id=inv_marg_util]
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>𝑑𝑢(c : ℝ₊₊) := c^(-ρ)               :: [id=marg_util]
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>𝑑𝑢𝑖𝑛𝑣(v : ℝ₊₊) := v^(-1/ρ)     :: [id=inv_marg_util]
 <a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>Γ_c(x : ℝ₊₊) := {c : ℝ₊₊ | c &lt; x}   :: [id=feasible_consumption]
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>Γ_c(x : Xm) := {c : ℝ₊₊ | c &lt; x - L}   :: [id=feasible_consumption]
 <a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>
 <a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>[id=arvl_to_dcsn, (k : Xa, ψ, ξ) : !arvl -&gt; (m : Xm) : !dcsn] {
 <a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    m = R*k/(Γ*ψ) + ξ               :: [id=market_resources]
@@ -8375,17 +8426,18 @@ v'(m) = c(m)^{-\rho}
 <a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>    a = m - c                       :: [id=savings]
 <a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>}
 <a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>
-<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, c) : !cntn -&gt; (V : ℝ @ !vlu) : !dcsn] {
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>[id=cntn_to_dcsn, (V[&gt;] : ℝ @ !vlu, L : (-inf, 0] @ !vlu @ !cnst, c) : !cntn -&gt; (V : ℝ @ !vlu, L) : !dcsn] {
 <a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>    V = 𝑢(c) + β*V[&gt;]               :: [id=value]
 <a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>}
 <a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>
-<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>[id=dcsn_to_arvl, (V) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu) : !arvl] {
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>[id=dcsn_to_arvl, (V, L) : !dcsn -&gt; (V[&lt;] : ℝ @ !vlu, L[&lt;] : (-inf, 0] @ !vlu @ !cnst) : !arvl] {
 <a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>    V[&lt;] = E_{ψ,ξ}((Γ*ψ)^(1-ρ) * V)     :: [id=value]
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>}
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>
-<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>[id=policy, (V[&gt;] : ℝ @ !vlu) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
-<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])     :: [id=optimality]
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>}
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>    L[&lt;] = if σ_ψ &gt; 0 then 0 else Γ*L/R :: [id=borrowing_bound]
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a>}
+<a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
+<a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a>[id=policy, (V[&gt;] : ℝ @ !vlu, L) : !cntn -&gt; (c : ℝ₊₊ @ !ctrl) : !dcsn] {
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a>    c = argmax_{cp : Γ_c(m)}(𝑢(cp) + β*V[&gt;])     :: [id=optimality]
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a>}
 </code></pre></div>
 <h3 id="arrival-transition">Arrival Transition<a class="headerlink" href="#arrival-transition" title="Permanent link">&para;</a></h3>
 <p>The arrival block <code>arvl_to_dcsn</code> writes <span class="arithmatex">\(m = R\,k/(\Gamma\psi) + \xi\)</span>, which combines two steps from the levels problem:</p>
@@ -8396,12 +8448,15 @@ v'(m) = c(m)^{-\rho}
 <h3 id="builders">Builders<a class="headerlink" href="#builders" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>cntn_to_dcsn</code>, the decision value builder: <span class="arithmatex">\(V = u(c) + \beta V^{&gt;}\)</span>, at the consumption the policy chooses.</li>
-<li><code>policy</code>, the policy builder: the maximization of <span class="arithmatex">\(u(c') + \beta V^{&gt;}\)</span> over consumption <span class="arithmatex">\(c' &lt; m\)</span>.</li>
+<li><code>policy</code>, the policy builder: the maximization of <span class="arithmatex">\(u(c') + \beta V^{&gt;}\)</span> over consumption <span class="arithmatex">\(0 &lt; c' &lt; m-L\)</span>, with incoming bound <span class="arithmatex">\(L\)</span>.</li>
 <li><code>dcsn_to_arvl</code>, the arrival value builder: <span class="arithmatex">\(V^{&lt;} = \mathbb{E}_{\psi,\xi}[(\Gamma\psi)^{1-\rho}\, V]\)</span>, the decision value read at <span class="arithmatex">\(m = R\,k/(\Gamma\psi) + \xi\)</span>.</li>
 </ul>
-<p>The stage file states no derivative and no numerical method: the methods file beside it states the derivatives and selects the methods, as the next section shows.</p>
+<p>The stage file authors marginal utility and its inverse in closed form. It states no value derivative and no numerical method: the methods file beside it states the derivatives and selects the methods, as the next section shows.</p>
 <h2 id="methods-and-settings">Methods and Settings<a class="headerlink" href="#methods-and-settings" title="Permanent link">&para;</a></h2>
-<p>The methods file, <code>declaration/stages/buffer_stock/methods.bl</code>, stands beside the stage file and is an addition to it: a <code>.bl</code> file read by the same grammar, whose blocks name the stage's blocks by their ids and add to them, and which the package reads together with the stage file before it elaborates the stage (<a href="../../../Bellman-Sym/04-methodization/">Methodization</a>). The addition names the endogenous grid method, <code>!egm</code>, as the policy builder's method, with the exogenous grid of savings, <code>!Cartesian(a=(a_min, a_max, n_a))</code>, as its grid, and appends the method's three lines to the policy block: the inverted Euler equation, the grid line that gives the resources at each saving, and the identification of consumption with its candidate. When the stage is solved, the three lines stand in place of the maximization, which remains the stage's statement of the choice. The consumption function is read by linear interpolation at the policy builder's <a href="../../../Bellman-Sym/reference/operations/#evaluation">Evaluation</a>, <code>policy.evaluate</code>, between the pairs the method computes; those pairs give its nodes, so the entry writes no grid there, and a grid written there is refused. Each value builder gains its derivative line: the envelope condition <code>D_{m}V = 𝑑𝑢(c)</code> of the decision value, and the derivative of the arrival value, whose weight <span class="arithmatex">\(R\,(\Gamma\psi)^{-\rho}\)</span> inside the expectation comes from the factor <span class="arithmatex">\(R/(\Gamma\psi)\)</span> of the law of motion and the normalization <span class="arithmatex">\((\Gamma\psi)^{1-\rho}\)</span> of the value. At the arrival builder the expectation over the two shocks is taken by Gauss–Hermite quadrature, with one node count per shock, and the arrival value and its stated derivative are represented together, named once at that builder's Evaluation, by linear interpolation on the grid of assets, <code>!Cartesian(k=(k_min, k_max, n_k))</code>. The eight settings the entries read are declared at the top of the file with their sets, a count in ℕ and a bound a point of <code>Xa</code>; their values stand in the settings file.</p>
+<p>The methods file adds numerical choices and equations to the stage (<a href="../../../Bellman-Sym/04-methodization/">Methodization</a>). It chooses the endogenous grid method, <code>!egm</code>, on <code>policy</code>. Its savings grid is <code>!Cartesian(a=(L + extra_grid, a_max, n_a))</code>.</p>
+<p>Three policy lines state the inverted Euler equation, the inverse transition and the chosen consumption. Linear interpolation at <code>policy.evaluate</code> uses the pairs computed by those lines. It takes no separate grid.</p>
+<p>Each value builder gains an authored derivative equation. At the decision, marginal value equals marginal utility. At arrival, the expectation has weight <span class="arithmatex">\(R(\Gamma\psi)^{-\rho}\)</span>, from the forward transition and value normalization.</p>
+<p>Gauss–Hermite quadrature evaluates the income expectation with one node count per shock. Linear interpolation represents the arrival value and derivative on <code>!Cartesian(k=(k_min, k_max, n_k))</code>. The eight settings declare their counts, bounds and the nonnegative offset <code>extra_grid</code>; the settings file supplies their values.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>@methods: buffer_stock
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a># The methods of the buffer-stock stage, an addition to buffer_stock.bl, the
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a># stage file beside this one. The endogenous grid method stands on the policy
@@ -8422,42 +8477,45 @@ v'(m) = c(m)^{-\rho}
 <a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a># arrival value and its derivative are represented together, by linear
 <a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a># interpolation on the grid of assets k, named once at that builder's
 <a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a># Evaluation. The settings the entries read are declared first, with their
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a># sets: a count in ℕ and a bound a point of Xa, the set the stage declares for
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a># the savings and the assets. Their values are recorded in
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a># declaration/settings/buffer_stock.yml and are those of the HARK solution of
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a># this model in the QuantEcon community library
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a># (projects/HARK/buffer-stock/tutorial.ipynb, HARK 0.17.1): seven nodes per
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a># shock and 960 points from 0.001 to 20 for the savings and for the assets.
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a># HARK's seven values per shock are equiprobable conditional means and its
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a># grid is exponentially nested; here the rule is Gauss-Hermite and each grid
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a># is stated by its bounds and its count.
-<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>
-<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>n_a : ℕ              :: ["number of points of the savings grid"]
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>a_min : Xa           :: ["lower bound of the savings grid"]
-<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>a_max : Xa           :: ["upper bound of the savings grid"]
-<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>n_k : ℕ              :: ["number of points of the asset grid"]
-<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>k_min : Xa           :: ["lower bound of the asset grid"]
-<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>k_max : Xa           :: ["upper bound of the asset grid"]
-<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
-<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
-<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>
-<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(a_min, a_max, n_a))
-<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>    | policy.evaluate.method : !Linear] {
-<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>    c[&gt;] = 𝑑𝑢𝑖𝑛𝑣(β*D_{a}V[&gt;])       :: [id=InvEuler]
-<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>    m[&gt;] = a + c[&gt;]                 :: [id=g_cntn_to_dcsn]
-<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>    c[~] = c[&gt;]                     :: [id=cons_choice]
-<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>}
-<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>
-<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>[id=cntn_to_dcsn] {
-<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>    D_{m}V = 𝑑𝑢(c)                                  :: [id=marginal]
-<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>}
-<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>
-<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>[id=dcsn_to_arvl
-<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>    | E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)
-<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>    | evaluate.method : !Linear
-<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))] {
-<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>    D_{k}V[&lt;] = E_{ψ,ξ}(R * (Γ*ψ)^(-ρ) * D_{m}V)    :: [id=marginal]
-<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>}
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a># sets: a count in ℕ, a bound a point of Xa, the set the stage declares for
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a># the savings and the assets, and extra_grid in ℝ₊, the distance from the
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a># bound L, the field the stage takes in, to the first savings point, so that
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a># the savings grid starts at L + extra_grid. Their values are recorded in
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a># declaration/settings/buffer_stock.yml and are those of the HARK solution of
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a># this model in the QuantEcon community library
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a># (projects/HARK/buffer-stock/tutorial.ipynb, HARK 0.17.1): seven nodes per
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a># shock and 960 points from 0.001 to 20 for the assets and, where the bound
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a># L is 0, for the savings.
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a># HARK's seven values per shock are equiprobable conditional means and its
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a># grid is exponentially nested; here the rule is Gauss-Hermite and each grid
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a># is stated by its bounds and its count.
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a>n_a : ℕ              :: ["number of points of the savings grid"]
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a>extra_grid : ℝ₊     :: ["distance from the borrowing bound to the first savings point"]
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>a_max : Xa           :: ["upper bound of the savings grid"]
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>n_k : ℕ              :: ["number of points of the asset grid"]
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a>k_min : Xa           :: ["lower bound of the asset grid"]
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a>k_max : Xa           :: ["upper bound of the asset grid"]
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a>n_ψ_nodes : ℕ        :: ["quadrature nodes of the permanent shock"]
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a>n_ξ_nodes : ℕ        :: ["quadrature nodes of the transitory shock"]
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a>
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a>[id=policy, policy.method : !egm | policy.grid : !Cartesian(a=(L + extra_grid, a_max, n_a))
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a>    | policy.evaluate.method : !Linear] {
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a>    c[&gt;] = (β*D_{a}V[&gt;])^(-1/ρ)       :: [id=InvEuler]
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>    m[&gt;] = a + c[&gt;]                 :: [id=g_cntn_to_dcsn]
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a>    c[~] = c[&gt;]                     :: [id=cons_choice]
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a>}
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a>
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a>[id=cntn_to_dcsn] {
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a>    D_{m}V = 𝑑𝑢(c)                                  :: [id=marginal]
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a>}
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a>
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a>[id=dcsn_to_arvl
+<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a>    | E_ψ_ξ.method : !gauss_hermite(n_ψ=n_ψ_nodes, n_ξ=n_ξ_nodes)
+<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a>    | evaluate.method : !Linear
+<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a>    | evaluate.grid : !Cartesian(k=(k_min, k_max, n_k))] {
+<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a>    D_{k}V[&lt;] = E_{ψ,ξ}(R * (Γ*ψ)^(-ρ) * D_{m}V)    :: [id=marginal]
+<a id="__codelineno-2-59" name="__codelineno-2-59" href="#__codelineno-2-59"></a>}
 </code></pre></div>
 <p>The settings file, <code>declaration/settings/buffer_stock.yml</code>, gives the numbers of quadrature nodes of the two shocks, the exogenous grid of savings and the grid of assets:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># The buffer-stock stage's numerical settings: the quadrature nodes of the two</span>
@@ -8472,35 +8530,44 @@ v'(m) = c(m)^{-\rho}
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="w">  </span><span class="nt">n_ψ_nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">  </span><span class="nt">n_ξ_nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7</span>
 <a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">  </span><span class="nt">n_a</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">960</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="nt">a_min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">  </span><span class="nt">extra_grid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span><span class="nt">a_max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20.0</span>
 <a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">  </span><span class="nt">n_k</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">960</span>
 <a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="nt">k_min</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.001</span>
 <a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">  </span><span class="nt">k_max</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20.0</span>
 </code></pre></div>
-<p>The folder holds no recipe, so <code>load_stage</code> is given the stage file and its addition together, and <code>configure</code> then binds the settings:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">elaborate_stage</span><span class="p">,</span> <span class="n">load_stage</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">elaborate_stage</span><span class="p">(</span><span class="n">load_stage</span><span class="p">(</span>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="s2">"applications/buffer-stock/declaration/stages/buffer_stock/buffer_stock.bl"</span><span class="p">,</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="p">[</span><span class="s2">"applications/buffer-stock/declaration/stages/buffer_stock/methods.bl"</span><span class="p">],</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">))</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">configured</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"applications/buffer-stock/declaration/settings/buffer_stock.yml"</span><span class="p">)</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="nb">print</span><span class="p">(</span><span class="n">configured</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
+<p>The four construction steps are explicit. The continuation value and the bound are checked before the policy grid is constructed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">bellman.stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">elaborate_text</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">application</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"applications/buffer-stock"</span><span class="p">)</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">path</span> <span class="o">=</span> <span class="n">application</span> <span class="o">/</span> <span class="s2">"declaration/stages/buffer_stock/buffer_stock.bl"</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">elaborate_text</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(),</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">methodized</span> <span class="o">=</span> <span class="n">stage</span><span class="o">.</span><span class="n">methodize</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"methods.bl"</span><span class="p">))</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">calibrated</span> <span class="o">=</span> <span class="n">methodized</span><span class="o">.</span><span class="n">calibrate</span><span class="p">({</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="s2">"R"</span><span class="p">:</span> <span class="mf">1.03</span><span class="p">,</span> <span class="s2">"β"</span><span class="p">:</span> <span class="mf">0.96</span><span class="p">,</span> <span class="s2">"Γ"</span><span class="p">:</span> <span class="mf">1.03</span><span class="p">,</span> <span class="s2">"ρ"</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="s2">"σ_ψ"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s2">"σ_ξ"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s2">"p_zero"</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">,</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="p">})</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="n">configured</span> <span class="o">=</span> <span class="n">calibrated</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">application</span> <span class="o">/</span> <span class="s2">"declaration/settings/buffer_stock.yml"</span><span class="p">)</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"V[&gt;]"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">a</span><span class="p">),</span> <span class="s2">"L"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="n">conditions</span> <span class="o">=</span> <span class="n">configured</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="n">policy</span> <span class="o">=</span> <span class="n">configured</span><span class="o">.</span><span class="n">dcsn</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">kernels</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="nb">print</span><span class="p">(</span><span class="n">configured</span><span class="o">.</span><span class="n">settings</span><span class="p">)</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>name       set  value  read at                by              grid
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>n_a        ℕ    960    policy                 !egm            !Cartesian
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>a_min      Xa   0.001  policy                 !egm            !Cartesian
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>a_max      Xa   20.0   policy                 !egm            !Cartesian
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>n_k        ℕ    960    dcsn_to_arvl.evaluate  !Linear         !Cartesian
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>k_min      Xa   0.001  dcsn_to_arvl.evaluate  !Linear         !Cartesian
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>k_max      Xa   20.0   dcsn_to_arvl.evaluate  !Linear         !Cartesian
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>n_ψ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>n_ξ_nodes  ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
+<p>The returned conditions retain any property of the supplied value function that the package cannot decide. The callable above is an illustrative continuation value, not a solved stationary value.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>name        set  value  read at                by              grid
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>n_a         ℕ    960    policy                 !egm            !Cartesian
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>extra_grid  ℝ₊   0.001  policy                 !egm            !Cartesian
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>a_max       Xa   20.0   policy                 !egm            !Cartesian
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>n_k         ℕ    960    dcsn_to_arvl.evaluate  !Linear         !Cartesian
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>k_min       Xa   0.001  dcsn_to_arvl.evaluate  !Linear         !Cartesian
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>k_max       Xa   20.0   dcsn_to_arvl.evaluate  !Linear         !Cartesian
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>n_ψ_nodes   ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>n_ξ_nodes   ℕ    7      dcsn_to_arvl.E_ψ_ξ     !gauss_hermite
 </code></pre></div>
-<h2 id="period-and-trellis">Period and Trellis<a class="headerlink" href="#period-and-trellis" title="Permanent link">&para;</a></h2>
-<p>The model is stationary: every period holds the one stage with the same parameters, and the inter-period connector joins the end-of-period assets <span class="arithmatex">\(a\)</span> of one period to the arrival state <span class="arithmatex">\(k\)</span> of the next. The application holds no recipe and no trellis file; <a href="../../../Bellman-Sym/07-trellis/">Trellises</a> states how a trellis is written.</p>
-<h2 id="solution-method-egm">Solution Method: EGM<a class="headerlink" href="#solution-method-egm" title="Permanent link">&para;</a></h2>
+<h2 id="period-and-trellis">Period and trellis<a class="headerlink" href="#period-and-trellis" title="Permanent link">&para;</a></h2>
+<p>Each repeated period holds the same stage declaration and calibration sources. The inter-period connector joins the end-of-period assets <span class="arithmatex">\(a\)</span> to the next period's arrival assets <span class="arithmatex">\(k\)</span>; the resulting trellis is a diagram of periods joined by connections. A stationary solution requires every backward field at its fixed point, including the bound <code>L</code> as well as the value field. The user supplies terminal data for a finite recursion when realizing it. The application holds no recipe and no trellis file; <a href="../../../Bellman-Sym/07-trellis/">Trellises</a> states how a trellis is written.</p>
+<h2 id="endogenous-grid-method">Endogenous grid method<a class="headerlink" href="#endogenous-grid-method" title="Permanent link">&para;</a></h2>
 <p>The Endogenous Grid Method solves this model by inverting the Euler equation:</p>
 <ol>
 <li><strong>Start</strong> with continuation marginal value <span class="arithmatex">\(dV^{&gt;}(a)\)</span> on an exogenous grid of end-of-period assets <span class="arithmatex">\(\{a_1, \dots, a_n\}\)</span>.</li>
@@ -8535,9 +8602,13 @@ v'(m) = c(m)^{-\rho}
 <h3 id="permanent-income-normalization">Permanent Income Normalization<a class="headerlink" href="#permanent-income-normalization" title="Permanent link">&para;</a></h3>
 <p>Dividing by <span class="arithmatex">\(P_t\)</span> (for quantities) and <span class="arithmatex">\(P_t^{1-\rho}\)</span> (for the value function) eliminates the permanent income state. The cost is a growth-adjusted arrival transition and a normalization weight <span class="arithmatex">\((\Gamma\psi)^{1-\rho}\)</span> inside the expectation operator.</p>
 <h3 id="natural-borrowing-constraint">Natural Borrowing Constraint<a class="headerlink" href="#natural-borrowing-constraint" title="Permanent link">&para;</a></h3>
-<p>The transitory shock <span class="arithmatex">\(\xi\)</span> has a point mass at zero (probability <span class="arithmatex">\(\wp &gt; 0\)</span>): the agent may receive zero income. This prevents the agent from choosing <span class="arithmatex">\(c = m\)</span> (which would risk zero consumption next period), generating a natural borrowing constraint without an explicit lower bound on assets.</p>
+<p>The transitory shock <span class="arithmatex">\(\xi\)</span> has a point mass at zero (probability <span class="arithmatex">\(\wp &gt; 0\)</span>): the agent may receive zero income. With terminal bound <span class="arithmatex">\(L=0\)</span>, the backward transition preserves that bound, so positive consumption requires assets strictly above zero. The stage takes the bound as a constant field and writes feasibility as <span class="arithmatex">\(0&lt;c&lt;m-L\)</span>. The declared state sets are ℝ; the bound restricts the admissible resources and assets.</p>
 <h3 id="weighted-expectations-in-the-arrival-builder">Weighted Expectations in the Arrival Builder<a class="headerlink" href="#weighted-expectations-in-the-arrival-builder" title="Permanent link">&para;</a></h3>
 <p>The arrival builder <code>dcsn_to_arvl</code> writes the value, and its derivative line in the methods file states its derivative, each as a <span class="arithmatex">\((\Gamma\psi)\)</span>-weighted expectation. This weight is an artifact of the normalization, not an economic primitive: in the levels problem, the arrival builder would be a plain expectation <span class="arithmatex">\(V^{&lt;} = \mathbb{E}[V]\)</span>.</p>
+<h2 id="borrowing-bound-check">Borrowing-bound check<a class="headerlink" href="#borrowing-bound-check" title="Permanent link">&para;</a></h2>
+<p>For an incoming bound <span class="arithmatex">\(L \le 0\)</span>, the arrival bound is the supremum of <span class="arithmatex">\(\Gamma\psi(L-\xi)/R\)</span> over the support of the authored income laws. If <span class="arithmatex">\(\sigma_\psi&gt;0\)</span>, positive permanent shocks approach zero and this supremum is zero. If <span class="arithmatex">\(\sigma_\psi=0\)</span>, the permanent shock equals one and the zero transitory draw gives <span class="arithmatex">\(\Gamma L/R\)</span>. The stage states these two cases explicitly.</p>
+<p>At <code>L = 0</code>, the default <code>extra_grid = 0.001</code> preserves all 960 original savings points. With <code>extra_grid = 0</code>, the first point is zero. The power written in the Euler line maps an infinite marginal value to consumption zero. Infinity arithmetic applies to block lines; the named inverse marginal utility retains its finite positive domain. The inverse transition gives resources zero. This point is an interpolation endpoint; it is not an admissible positive-consumption choice.</p>
+<p>The executed notebook <code>applications/buffer-stock/notebooks/borrowing-bound.ipynb</code> shows the four construction steps, the retained input conditions, both bound cases, and the endpoint calculation. It leaves space for the reader's observations.</p>
 
 
 

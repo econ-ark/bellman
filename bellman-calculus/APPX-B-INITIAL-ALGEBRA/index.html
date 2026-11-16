@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3732,6 +3734,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8120,17 +8150,17 @@
 <p><a id="b1-signature-and-term-algebra"></a></p>
 <h2 id="1-signature-and-term-algebra">1. Signature and term algebra<a class="headerlink" href="#1-signature-and-term-algebra" title="Permanent link">&para;</a></h2>
 <p>A many-sorted <strong>signature</strong> <span class="arithmatex">\(\Sigma = \langle S, \Omega \rangle\)</span> declares a set <span class="arithmatex">\(S\)</span> of sorts and a family <span class="arithmatex">\(\Omega\)</span> of operator symbols, each with an arity (a string of input sorts) and an output sort, and nothing else: no carriers, no functions (ADJ 1977, §2; <a href="../../wiki/signature/">signature</a>). A <strong><span class="arithmatex">\(\Sigma\)</span>-algebra</strong> <span class="arithmatex">\(A\)</span> supplies a carrier set <span class="arithmatex">\(A_s\)</span> for each sort and an actual operation per symbol of matching rank. The rank of a symbol is its arity with its output sort, in the usage of Goguen and Meseguer (1992, Definition 2.1) that <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §3, D1, adopts. A <strong>homomorphism</strong> <span class="arithmatex">\(h : A \to A'\)</span> is a sort-indexed family of maps commuting with every operation.</p>
-<p>The <strong>coarse stage signature</strong> contains perch-indexed value-function sorts <span class="arithmatex">\(\mathsf V_p\)</span>, distribution sorts <span class="arithmatex">\(\mathsf M_p\)</span>, and typed backward and forward builder symbols. The model supplies state spaces, feasible actions, shock laws, transitions and local payoff functions. These data determine the operations under the conditions in <a href="../03-Stages%20and%20perches/">Stages and perches</a>. A diagram records a finite expression using those operations; the signature also specifies their ranks and cannot be inferred from unlabeled arrows alone.</p>
+<p>The <strong>coarse stage signature</strong> contains perch-indexed sorts of representing-function tuples with carriers <span class="arithmatex">\(\mathsf B_p\)</span>, distribution sorts with carriers <span class="arithmatex">\(\mathsf M_p\)</span>, and typed backward and forward builder symbols. The model supplies state spaces, feasible actions, shock laws, transitions and local payoff functions. These data determine the operations under the conditions in <a href="../03-Stages%20and%20perches/">Stages and perches</a>. A diagram records a finite expression using those operations; the signature also specifies their ranks and cannot be inferred from unlabeled arrows alone.</p>
 <p>The ground terms over <span class="arithmatex">\(\Sigma\)</span> form the <strong>term algebra</strong> <span class="arithmatex">\(T_\Sigma\)</span>, whose operations construct terms. Ground terms contain no free inputs. For a sort-indexed family of free input names <span class="arithmatex">\(X\)</span>, use the <strong>free algebra</strong> <span class="arithmatex">\(T_\Sigma(X)\)</span>. An environment <span class="arithmatex">\(e_s:X_s\to A_s\)</span> assigns a value to every free input of sort <span class="arithmatex">\(s\)</span>. The environment and the target operations together determine evaluation. A finite acyclic term graph can represent such an expression with shared subterms (§6); this is mathematical notation, not a claim that the parser's abstract syntax tree is retained.</p>
 <p><a id="b2-initiality"></a></p>
 <h2 id="2-initiality">2. Initiality<a class="headerlink" href="#2-initiality" title="Permanent link">&para;</a></h2>
 <p><strong>Definition (ADJ 1977, p. 68).</strong> An algebra <span class="arithmatex">\(S\)</span> is <em>initial</em> in a class <span class="arithmatex">\(\mathbf{C}\)</span> of algebras iff for every <span class="arithmatex">\(A \in \mathbf{C}\)</span> there exists a unique homomorphism <span class="arithmatex">\(h_A : S \to A\)</span>.</p>
 <p><strong>Theorem (ADJ 1977, §2, Proposition 2.1, p. 71).</strong> The term algebra <span class="arithmatex">\(T_\Sigma\)</span> is initial in the category of all <span class="arithmatex">\(\Sigma\)</span>-algebras. Any two initial algebras over <span class="arithmatex">\(\Sigma\)</span> are canonically isomorphic (ADJ Prop. 1.1), so one may speak of <em>the</em> initial algebra.</p>
-<p>Thus a fixed target algebra determines a unique interpretation of ground terms. For terms with free inputs, ADJ Propositions 2.3 and 2.6 (pp. 72, 75) give the unique homomorphism <span class="arithmatex">\(h_{A,e}:T_\Sigma(X)\to A\)</span> extending the environment <span class="arithmatex">\(e\)</span>. Neither the target operations nor the environment is chosen by initiality.</p>
+<p>Thus a fixed target algebra determines a unique interpretation of ground terms. For terms with free inputs, ADJ Propositions 2.3 and 2.6 (pp. 72, 75) give the unique homomorphism <span class="arithmatex">\(h_{A,e}:T_\Sigma(X)\to A\)</span> extending the environment <span class="arithmatex">\(e\)</span>. Neither the target operations nor the environment is chosen by initiality. This theorem is stated for total operations. For a partial map on pairs, repeated evaluation stops where a required application has no value; it does not silently make that map total. The whole-builder partial-map interpretation is instead the free-category construction in <a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §6.</p>
 <p><a id="b3-the-two-target-algebras-and-the-valuation"></a></p>
 <h2 id="3-value-and-measure-interpretations">3. Value and measure interpretations<a class="headerlink" href="#3-value-and-measure-interpretations" title="Permanent link">&para;</a></h2>
-<p>A target for the combined stage signature must interpret every declared sort and symbol. Its value-function part uses chosen spaces <span class="arithmatex">\(\mathsf V_p\)</span> on the perch state spaces; its measure part uses <span class="arithmatex">\(\mathsf M_p\)</span>. We may discuss these parts separately by restricting to their respective subsignatures. Reversing arrows alone does not turn a value algebra into a measure algebra of the same rank signature.</p>
-<p>Write <span class="arithmatex">\(\mathcal V\)</span> for the target algebra of the value-operation subsignature and <span class="arithmatex">\(\Pi_\Gamma\)</span> for its feasible measurable policies. For the value interpretation, let <span class="arithmatex">\(\operatorname{Gr}(\Gamma)\)</span> be the feasible state–action pairs and <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> the choice-value functions on those pairs. With an integrable payoff at every required pair, the pointwise objective is</p>
+<p>A target for the combined stage signature must interpret every declared sort and symbol. Its backward part uses the tuple carriers <span class="arithmatex">\(\mathsf B_p\)</span> of §1; its measure part uses <span class="arithmatex">\(\mathsf M_p\)</span>. We may discuss these parts separately by restricting to their respective subsignatures. Reversing arrows alone does not turn a value algebra into a measure algebra of the same rank signature.</p>
+<p>The formulas in this section specialize to a single scalar value field. Write <span class="arithmatex">\(\mathcal V\)</span> for the target algebra of the value-operation subsignature and <span class="arithmatex">\(\Pi_\Gamma\)</span> for its feasible measurable policies. For the value interpretation, let <span class="arithmatex">\(\operatorname{Gr}(\Gamma)\)</span> be the feasible state–action pairs and <span class="arithmatex">\(\mathsf Q_\Gamma\)</span> the choice-value functions on those pairs. With an integrable payoff at every required pair, the pointwise objective is</p>
 <div class="arithmatex">\[
 (B_\succ\mathrm v_\succ)(x,a)
 =\int \mathrm G_\succ\bigl(\mathrm v_\succ(\mathrm g_\succ(x,a,\eta)),x,a,\eta\bigr)\,\mu_\eta(d\eta).
@@ -8140,9 +8170,9 @@
 <div class="arithmatex">\[
 \mathbb T_\succ
 =\operatorname{evaluate}\circ
-\langle B_\succ,\operatorname{argmax}\circ B_\succ\rangle.
+\langle B_\succ,s\circ B_\succ\rangle.
 \]</div>
-<p>The fixed-policy builder instead satisfies <span class="arithmatex">\(\mathbb T_{\succ,\pi}v=\operatorname{evaluate}(B_\succ v,\pi)\)</span>. Evaluation means <span class="arithmatex">\(\operatorname{evaluate}(Q,\pi)(x)=Q(x,\pi(x))\)</span>. Arrival evaluation is the policy-free aggregator <span class="arithmatex">\(\mathbb T_\prec=B_\prec\)</span>. Domains must be chosen so all operations are defined and closed under these compositions; initiality supplies no selection or integrability theorem.</p>
+<p>Here <span class="arithmatex">\(s\)</span> is a specified measurable maximizing selection, defined on the choice-value functions for which the rule selects a maximizer. The maximizing set alone supplies no such selection (<a href="../catalogues/operators/">Operators</a> §4). The fixed-policy builder instead satisfies <span class="arithmatex">\(\mathbb T_{\succ,\pi}v=\operatorname{evaluate}(B_\succ v,\pi)\)</span>. Evaluation means <span class="arithmatex">\(\operatorname{evaluate}(Q,\pi)(x)=Q(x,\pi(x))\)</span>. Arrival evaluation is the policy-free aggregator <span class="arithmatex">\(\mathbb T_\prec=B_\prec\)</span>. With several value-type fields, one selected policy is used in every decision equation; only the designated objective is maximized. Domains must be chosen so all operations are defined and closed under these compositions; initiality supplies no selection or integrability theorem.</p>
 <p>The measure interpretation uses transition pushforwards <span class="arithmatex">\(\mathbb M_\prec\)</span> and <span class="arithmatex">\(\mathbb M_{\succ,\pi}\)</span>. Write <span class="arithmatex">\(P_\prec\)</span> and <span class="arithmatex">\(P_{\succ,\pi}\)</span> for the corresponding undiscounted Markov expectations and <span class="arithmatex">\(\langle\mu,f\rangle=\int f\,d\mu\)</span>. For bounded measurable <span class="arithmatex">\(f\)</span>, or when both sides are absolutely integrable, their pairing is</p>
 <div class="arithmatex">\[
 \langle\mathbb M_\prec\mu,f\rangle=\langle\mu,P_\prec f\rangle,
@@ -8155,7 +8185,7 @@
 <h2 id="4-exact-refinement">4. Exact refinement<a class="headerlink" href="#4-exact-refinement" title="Permanent link">&para;</a></h2>
 <p>Let <span class="arithmatex">\(\Sigma\)</span> be the coarse signature with optimizing builder <span class="arithmatex">\(\mathbb T_\succ\)</span> and arrival builder <span class="arithmatex">\(\mathbb T_\prec\)</span>, and <span class="arithmatex">\(\Sigma'\)</span> a finer signature containing the operations used to define them. A <strong>derived signature morphism</strong> <span class="arithmatex">\(\delta:\Sigma\to\Sigma'\)</span> assigns each coarse symbol a fine term of the same rank. The sorts are held fixed here, and the term's formal inputs are explicit. Composition and pairing below abbreviate substitution into ordinary many-sorted terms. For the stage builders, the assignment is</p>
 <div class="arithmatex">\[
-\delta(\mathbb T_\succ)=\operatorname{evaluate}\circ\langle B_\succ,\operatorname{argmax}\circ B_\succ\rangle,
+\delta(\mathbb T_\succ)=\operatorname{evaluate}\circ\langle B_\succ,s\circ B_\succ\rangle,
 \qquad
 \delta(\mathbb T_\prec)=B_\prec.
 \]</div>
@@ -8164,7 +8194,7 @@
 <div class="arithmatex">\[
 \mathrm{tr}_\delta : T_\Sigma \to T_{\Sigma'}|_\delta,
 \]</div>
-<p>the <strong>term translation</strong>: the map that expands every occurrence of every builder symbol into its assigned sub-term. Uniqueness is the coherence claim of <a href="../04-fields%2C%20functions%20and%20types/">Fields, functions and types</a> §5: a homomorphism uses the same interpretation for repeated occurrences of a symbol. Occurrence-specific data must therefore be supplied as inputs or distinguished in the signature.</p>
+<p>the <strong>term translation</strong>: the map that expands every occurrence of every builder symbol into its assigned sub-term. Uniqueness is the coherence claim of <a href="../04-fields%2C%20functions%20and%20types/">Fields, functions and types</a> §5: a homomorphism uses the same interpretation for repeated occurrences of a symbol. Occurrence-specific data must therefore be supplied as inputs or distinguished in the signature. A modular declaration uses field arguments for quantities such as age and a borrowing bound, while retaining one family of operators. A signature distinguishing period declarations also has a term interpretation; initiality alone does not impose modularity.</p>
 <p><strong>Factorization theorem.</strong> For every <span class="arithmatex">\(\Sigma'\)</span>-algebra <span class="arithmatex">\(A'\)</span>, the unique <span class="arithmatex">\(\Sigma\)</span>-homomorphism <span class="arithmatex">\(T_\Sigma \to A'|_\delta\)</span> factors through the fine term algebra:</p>
 <div class="arithmatex">\[
 h_{A'|_\delta} \;=\; \bigl(h_{A'}\bigr)\big|_\delta \circ\, \mathrm{tr}_\delta .

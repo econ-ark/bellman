@@ -2956,6 +2956,8 @@
       
         
       
+        
+      
     
     
     
@@ -3692,6 +3694,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8258,7 +8288,7 @@
 <a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>2  dcsn_to_arvl  builder  → 𝑉≺
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>3  policy        builder  → 𝑐
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>in         𝑉≻ : Xa → [−∞, ∞)
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>out        𝑉≺ : Xm × ℝ₊ → ℝ
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>out        𝑉≺ : Xm → ℝ
 <a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>out        𝑐(m_d) : 𝒫({c ∈ (Xm → ℝ₊₊) | c(m_d) ∈ Γ(m_d)})
 <a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
 <a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>1  arvl_to_dcsn  builder  → μ
@@ -8278,7 +8308,7 @@
 <a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>Signature
 <a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>  in   𝑉≻  : Xa → [−∞, ∞)
 <a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>       ──────────────────────────────────────────────────────────────────────
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>  out  𝑉≺  : Xm × ℝ₊ → ℝ
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>  out  𝑉≺  : Xm → ℝ
 <a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>       𝑐   : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 <a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
 <a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>At
@@ -8309,7 +8339,7 @@
 <a id="__codelineno-18-34" name="__codelineno-18-34" href="#__codelineno-18-34"></a>      dcsn_to_arvl
 <a id="__codelineno-18-35" name="__codelineno-18-35" href="#__codelineno-18-35"></a>      in: 𝑉                             out: 𝑉≺
 <a id="__codelineno-18-36" name="__codelineno-18-36" href="#__codelineno-18-36"></a>      ───────────────────────────────────────────────────────────────────────
-<a id="__codelineno-18-37" name="__codelineno-18-37" href="#__codelineno-18-37"></a>      rule: 𝑉≺ : Xm × ℝ₊ → ℝ
+<a id="__codelineno-18-37" name="__codelineno-18-37" href="#__codelineno-18-37"></a>      rule: 𝑉≺ : Xm → ℝ
 <a id="__codelineno-18-38" name="__codelineno-18-38" href="#__codelineno-18-38"></a>
 <a id="__codelineno-18-39" name="__codelineno-18-39" href="#__codelineno-18-39"></a>   4    Pullback
 <a id="__codelineno-18-40" name="__codelineno-18-40" href="#__codelineno-18-40"></a>        in: 𝑉                           out: 𝑉 ∘ 𝑔≺
@@ -8324,7 +8354,7 @@
 <a id="__codelineno-18-49" name="__codelineno-18-49" href="#__codelineno-18-49"></a>   6    Evaluation
 <a id="__codelineno-18-50" name="__codelineno-18-50" href="#__codelineno-18-50"></a>        in: 𝑉≺                          out: 𝑉≺
 <a id="__codelineno-18-51" name="__codelineno-18-51" href="#__codelineno-18-51"></a>        ─────────────────────────────────────────────────────────────────────
-<a id="__codelineno-18-52" name="__codelineno-18-52" href="#__codelineno-18-52"></a>        rule: 𝑉≺ : Xm × ℝ₊ → ℝ
+<a id="__codelineno-18-52" name="__codelineno-18-52" href="#__codelineno-18-52"></a>        rule: 𝑉≺ : Xm → ℝ
 <a id="__codelineno-18-53" name="__codelineno-18-53" href="#__codelineno-18-53"></a>
 <a id="__codelineno-18-54" name="__codelineno-18-54" href="#__codelineno-18-54"></a>      policy
 <a id="__codelineno-18-55" name="__codelineno-18-55" href="#__codelineno-18-55"></a>      in: 𝑉≻                            out: 𝑐
@@ -8352,39 +8382,42 @@
 <a id="__codelineno-18-77" name="__codelineno-18-77" href="#__codelineno-18-77"></a>        rule: 𝑐 : Xm → ℝ₊₊,  𝑐(m_d) ∈ Γ(m_d)
 <a id="__codelineno-18-78" name="__codelineno-18-78" href="#__codelineno-18-78"></a>
 <a id="__codelineno-18-79" name="__codelineno-18-79" href="#__codelineno-18-79"></a>Conditions
-<a id="__codelineno-18-80" name="__codelineno-18-80" href="#__codelineno-18-80"></a>  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
-<a id="__codelineno-18-81" name="__codelineno-18-81" href="#__codelineno-18-81"></a>  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
-<a id="__codelineno-18-82" name="__codelineno-18-82" href="#__codelineno-18-82"></a>  𝑢                         ¬(1 − ρ = 0)
-<a id="__codelineno-18-83" name="__codelineno-18-83" href="#__codelineno-18-83"></a>  cntn_to_dcsn.marginal     marginal-reading: the right side of each
-<a id="__codelineno-18-84" name="__codelineno-18-84" href="#__codelineno-18-84"></a>                              derivative line equals the derivative, in the
-<a id="__codelineno-18-85" name="__codelineno-18-85" href="#__codelineno-18-85"></a>                              named coordinate, of the value the builder
-<a id="__codelineno-18-86" name="__codelineno-18-86" href="#__codelineno-18-86"></a>                              writes, under the envelope conditions: concavity
-<a id="__codelineno-18-87" name="__codelineno-18-87" href="#__codelineno-18-87"></a>                              of the continuation value, interiority of the
-<a id="__codelineno-18-88" name="__codelineno-18-88" href="#__codelineno-18-88"></a>                              maximizer or the multiplier's term at a binding
-<a id="__codelineno-18-89" name="__codelineno-18-89" href="#__codelineno-18-89"></a>                              constraint, differentiability of the reward in
-<a id="__codelineno-18-90" name="__codelineno-18-90" href="#__codelineno-18-90"></a>                              the control, a measurable selection of the
-<a id="__codelineno-18-91" name="__codelineno-18-91" href="#__codelineno-18-91"></a>                              policy, and differentiability of the value at
-<a id="__codelineno-18-92" name="__codelineno-18-92" href="#__codelineno-18-92"></a>                              the point read; listed and not checked
-<a id="__codelineno-18-93" name="__codelineno-18-93" href="#__codelineno-18-93"></a>                              [required]
-<a id="__codelineno-18-94" name="__codelineno-18-94" href="#__codelineno-18-94"></a>──────────────────────────────────────────────────────────────────────────────
-<a id="__codelineno-18-95" name="__codelineno-18-95" href="#__codelineno-18-95"></a>Source  cons.bl
-<a id="__codelineno-18-96" name="__codelineno-18-96" href="#__codelineno-18-96"></a>  13  m_d = m
-<a id="__codelineno-18-97" name="__codelineno-18-97" href="#__codelineno-18-97"></a>  17  a = m_d - c
-<a id="__codelineno-18-98" name="__codelineno-18-98" href="#__codelineno-18-98"></a>  21  V        = 𝑢(c) + V[&gt;]                       :: [id=value]
-<a id="__codelineno-18-99" name="__codelineno-18-99" href="#__codelineno-18-99"></a>  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
-<a id="__codelineno-18-100" name="__codelineno-18-100" href="#__codelineno-18-100"></a>  26  V[&lt;] = V                                     :: [id=value]
-<a id="__codelineno-18-101" name="__codelineno-18-101" href="#__codelineno-18-101"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
-<a id="__codelineno-18-102" name="__codelineno-18-102" href="#__codelineno-18-102"></a>
-<a id="__codelineno-18-103" name="__codelineno-18-103" href="#__codelineno-18-103"></a>Definitions referenced
-<a id="__codelineno-18-104" name="__codelineno-18-104" href="#__codelineno-18-104"></a>  Xm    cons:set:Xm
-<a id="__codelineno-18-105" name="__codelineno-18-105" href="#__codelineno-18-105"></a>  Xa    cons:set:Xa
-<a id="__codelineno-18-106" name="__codelineno-18-106" href="#__codelineno-18-106"></a>  ρ     cons:parameter:ρ
-<a id="__codelineno-18-107" name="__codelineno-18-107" href="#__codelineno-18-107"></a>  𝑢     cons:function:𝑢
-<a id="__codelineno-18-108" name="__codelineno-18-108" href="#__codelineno-18-108"></a>  𝑑𝑢    cons:function:𝑑𝑢
-<a id="__codelineno-18-109" name="__codelineno-18-109" href="#__codelineno-18-109"></a>  Γ     cons:correspondence:Γ
-<a id="__codelineno-18-110" name="__codelineno-18-110" href="#__codelineno-18-110"></a>  𝑔≺    cons:g:arvl_to_dcsn
-<a id="__codelineno-18-111" name="__codelineno-18-111" href="#__codelineno-18-111"></a>  𝑔≻    cons:g:dcsn_to_cntn
-<a id="__codelineno-18-112" name="__codelineno-18-112" href="#__codelineno-18-112"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<a id="__codelineno-18-80" name="__codelineno-18-80" href="#__codelineno-18-80"></a>  cntn_to_dcsn:Aggregation       𝑉(m_d) ∈ [−∞, ∞)
+<a id="__codelineno-18-81" name="__codelineno-18-81" href="#__codelineno-18-81"></a>  dcsn_to_arvl:Aggregation       𝑉≺(m) ∈ ℝ
+<a id="__codelineno-18-82" name="__codelineno-18-82" href="#__codelineno-18-82"></a>  dcsn_to_arvl:Aggregation       𝑉≺(m, l) ∈ ℝ
+<a id="__codelineno-18-83" name="__codelineno-18-83" href="#__codelineno-18-83"></a>  policy.optimality:Aggregation  ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[&gt;] ∈ [−∞, −∞])
+<a id="__codelineno-18-84" name="__codelineno-18-84" href="#__codelineno-18-84"></a>  𝑢                              ¬(1 − ρ = 0)
+<a id="__codelineno-18-85" name="__codelineno-18-85" href="#__codelineno-18-85"></a>  cntn_to_dcsn.marginal          marginal-reading: the right side of each
+<a id="__codelineno-18-86" name="__codelineno-18-86" href="#__codelineno-18-86"></a>                                   derivative line equals the derivative, in
+<a id="__codelineno-18-87" name="__codelineno-18-87" href="#__codelineno-18-87"></a>                                   the named coordinate, of the value the
+<a id="__codelineno-18-88" name="__codelineno-18-88" href="#__codelineno-18-88"></a>                                   builder writes, under the envelope
+<a id="__codelineno-18-89" name="__codelineno-18-89" href="#__codelineno-18-89"></a>                                   conditions: concavity of the continuation
+<a id="__codelineno-18-90" name="__codelineno-18-90" href="#__codelineno-18-90"></a>                                   value, interiority of the maximizer or the
+<a id="__codelineno-18-91" name="__codelineno-18-91" href="#__codelineno-18-91"></a>                                   multiplier's term at a binding constraint,
+<a id="__codelineno-18-92" name="__codelineno-18-92" href="#__codelineno-18-92"></a>                                   differentiability of the reward in the
+<a id="__codelineno-18-93" name="__codelineno-18-93" href="#__codelineno-18-93"></a>                                   control, a measurable selection of the
+<a id="__codelineno-18-94" name="__codelineno-18-94" href="#__codelineno-18-94"></a>                                   policy, and differentiability of the value
+<a id="__codelineno-18-95" name="__codelineno-18-95" href="#__codelineno-18-95"></a>                                   at the point read; listed and not checked
+<a id="__codelineno-18-96" name="__codelineno-18-96" href="#__codelineno-18-96"></a>                                   [required]
+<a id="__codelineno-18-97" name="__codelineno-18-97" href="#__codelineno-18-97"></a>──────────────────────────────────────────────────────────────────────────────
+<a id="__codelineno-18-98" name="__codelineno-18-98" href="#__codelineno-18-98"></a>Source  cons.bl
+<a id="__codelineno-18-99" name="__codelineno-18-99" href="#__codelineno-18-99"></a>  13  m_d = m
+<a id="__codelineno-18-100" name="__codelineno-18-100" href="#__codelineno-18-100"></a>  17  a = m_d - c
+<a id="__codelineno-18-101" name="__codelineno-18-101" href="#__codelineno-18-101"></a>  21  V        = 𝑢(c) + V[&gt;]                       :: [id=value]
+<a id="__codelineno-18-102" name="__codelineno-18-102" href="#__codelineno-18-102"></a>  22  D_{m_d}V = 𝑑𝑢(c)                             :: [id=marginal]
+<a id="__codelineno-18-103" name="__codelineno-18-103" href="#__codelineno-18-103"></a>  26  V[&lt;] = V                                     :: [id=value]
+<a id="__codelineno-18-104" name="__codelineno-18-104" href="#__codelineno-18-104"></a>  30  c      = argmax_{cp : Γ(m_d)}(𝑢(cp) + V[&gt;])  :: [id=optimality]
+<a id="__codelineno-18-105" name="__codelineno-18-105" href="#__codelineno-18-105"></a>
+<a id="__codelineno-18-106" name="__codelineno-18-106" href="#__codelineno-18-106"></a>Definitions referenced
+<a id="__codelineno-18-107" name="__codelineno-18-107" href="#__codelineno-18-107"></a>  Xm    cons:set:Xm
+<a id="__codelineno-18-108" name="__codelineno-18-108" href="#__codelineno-18-108"></a>  Xa    cons:set:Xa
+<a id="__codelineno-18-109" name="__codelineno-18-109" href="#__codelineno-18-109"></a>  ρ     cons:parameter:ρ
+<a id="__codelineno-18-110" name="__codelineno-18-110" href="#__codelineno-18-110"></a>  𝑢     cons:function:𝑢
+<a id="__codelineno-18-111" name="__codelineno-18-111" href="#__codelineno-18-111"></a>  𝑑𝑢    cons:function:𝑑𝑢
+<a id="__codelineno-18-112" name="__codelineno-18-112" href="#__codelineno-18-112"></a>  Γ     cons:correspondence:Γ
+<a id="__codelineno-18-113" name="__codelineno-18-113" href="#__codelineno-18-113"></a>  𝑔≺    cons:g:arvl_to_dcsn
+<a id="__codelineno-18-114" name="__codelineno-18-114" href="#__codelineno-18-114"></a>  𝑔≻    cons:g:dcsn_to_cntn
+<a id="__codelineno-18-115" name="__codelineno-18-115" href="#__codelineno-18-115"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 </code></pre></div>
 <p>The card names the policy under <code>At</code> and writes the law of motion at that policy out in its rules, <code>𝑉≻(𝑔≻(m_d, 𝑐(m_d)))</code>; on a version whose policy builder holds the lines of a solution method, it states the stage file's maximization under <code>Declared</code>, with the constructed output substituted (<a href="../04-builder/">A builder</a> §2). The graph holds the chain of the two backward builders and, beside it, the policy builder, which reads a copy of the continuation functions. No wire joins the policy builder's output to the decision builder, whose pullback, aggregation or conditional distribution refers to the policy by a free name (<a href="../04-builder/">A builder</a> §1), so the pieces form no chain: they stand in the order of their dependencies, each after every piece that writes a wire it reads, and the drawing shows the wiring.</p>
 <p>The forward graph is the operator on measures that a simulation, or the computation of a stationary distribution, iterates, and it is a chain: <code>arvl_to_dcsn</code> carries the arrival measure to the decision measure, and <code>dcsn_to_cntn</code> pushes that measure forward through the law of motion at the policy, the map <code>m_d ↦ 𝑔≻(m_d, 𝑐(m_d))</code>, taking as kernel data any conditional distribution of a shock that depends on the policy. Its printed record, the pieces of each builder in order of application:</p>
@@ -8423,33 +8456,35 @@
 <a id="__codelineno-20-31" name="__codelineno-20-31" href="#__codelineno-20-31"></a>
 <a id="__codelineno-20-32" name="__codelineno-20-32" href="#__codelineno-20-32"></a>Conditions
 <a id="__codelineno-20-33" name="__codelineno-20-33" href="#__codelineno-20-33"></a>  𝑢                         ¬(1 − ρ = 0)
-<a id="__codelineno-20-34" name="__codelineno-20-34" href="#__codelineno-20-34"></a>  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
-<a id="__codelineno-20-35" name="__codelineno-20-35" href="#__codelineno-20-35"></a>  cntn_to_dcsn.marginal     marginal-reading: the right side of each
-<a id="__codelineno-20-36" name="__codelineno-20-36" href="#__codelineno-20-36"></a>                              derivative line equals the derivative, in the
-<a id="__codelineno-20-37" name="__codelineno-20-37" href="#__codelineno-20-37"></a>                              named coordinate, of the value the builder
-<a id="__codelineno-20-38" name="__codelineno-20-38" href="#__codelineno-20-38"></a>                              writes, under the envelope conditions: concavity
-<a id="__codelineno-20-39" name="__codelineno-20-39" href="#__codelineno-20-39"></a>                              of the continuation value, interiority of the
-<a id="__codelineno-20-40" name="__codelineno-20-40" href="#__codelineno-20-40"></a>                              maximizer or the multiplier's term at a binding
-<a id="__codelineno-20-41" name="__codelineno-20-41" href="#__codelineno-20-41"></a>                              constraint, differentiability of the reward in
-<a id="__codelineno-20-42" name="__codelineno-20-42" href="#__codelineno-20-42"></a>                              the control, a measurable selection of the
-<a id="__codelineno-20-43" name="__codelineno-20-43" href="#__codelineno-20-43"></a>                              policy, and differentiability of the value at
-<a id="__codelineno-20-44" name="__codelineno-20-44" href="#__codelineno-20-44"></a>                              the point read; listed and not checked
-<a id="__codelineno-20-45" name="__codelineno-20-45" href="#__codelineno-20-45"></a>                              [required]
-<a id="__codelineno-20-46" name="__codelineno-20-46" href="#__codelineno-20-46"></a>  dcsn_to_arvl:Aggregation  𝑉≺(m, l) ∈ ℝ
-<a id="__codelineno-20-47" name="__codelineno-20-47" href="#__codelineno-20-47"></a>──────────────────────────────────────────────────────────────────────────────
-<a id="__codelineno-20-48" name="__codelineno-20-48" href="#__codelineno-20-48"></a>Source  cons.bl
-<a id="__codelineno-20-49" name="__codelineno-20-49" href="#__codelineno-20-49"></a>  13  m_d = m
-<a id="__codelineno-20-50" name="__codelineno-20-50" href="#__codelineno-20-50"></a>  17  a = m_d - c
-<a id="__codelineno-20-51" name="__codelineno-20-51" href="#__codelineno-20-51"></a>
-<a id="__codelineno-20-52" name="__codelineno-20-52" href="#__codelineno-20-52"></a>Definitions referenced
-<a id="__codelineno-20-53" name="__codelineno-20-53" href="#__codelineno-20-53"></a>  Xm    cons:set:Xm
-<a id="__codelineno-20-54" name="__codelineno-20-54" href="#__codelineno-20-54"></a>  Xa    cons:set:Xa
-<a id="__codelineno-20-55" name="__codelineno-20-55" href="#__codelineno-20-55"></a>  ρ     cons:parameter:ρ
-<a id="__codelineno-20-56" name="__codelineno-20-56" href="#__codelineno-20-56"></a>  𝑢     cons:function:𝑢
-<a id="__codelineno-20-57" name="__codelineno-20-57" href="#__codelineno-20-57"></a>  Γ     cons:correspondence:Γ
-<a id="__codelineno-20-58" name="__codelineno-20-58" href="#__codelineno-20-58"></a>  𝑔≺    cons:g:arvl_to_dcsn
-<a id="__codelineno-20-59" name="__codelineno-20-59" href="#__codelineno-20-59"></a>  𝑔≻    cons:g:dcsn_to_cntn
-<a id="__codelineno-20-60" name="__codelineno-20-60" href="#__codelineno-20-60"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<a id="__codelineno-20-34" name="__codelineno-20-34" href="#__codelineno-20-34"></a>  policy.optimality         ¬(𝑢(cp) ∈ [∞, ∞] ∧ V[&gt;] ∈ [−∞, −∞])
+<a id="__codelineno-20-35" name="__codelineno-20-35" href="#__codelineno-20-35"></a>  cntn_to_dcsn:Aggregation  𝑉(m_d) ∈ [−∞, ∞)
+<a id="__codelineno-20-36" name="__codelineno-20-36" href="#__codelineno-20-36"></a>  cntn_to_dcsn.marginal     marginal-reading: the right side of each
+<a id="__codelineno-20-37" name="__codelineno-20-37" href="#__codelineno-20-37"></a>                              derivative line equals the derivative, in the
+<a id="__codelineno-20-38" name="__codelineno-20-38" href="#__codelineno-20-38"></a>                              named coordinate, of the value the builder
+<a id="__codelineno-20-39" name="__codelineno-20-39" href="#__codelineno-20-39"></a>                              writes, under the envelope conditions: concavity
+<a id="__codelineno-20-40" name="__codelineno-20-40" href="#__codelineno-20-40"></a>                              of the continuation value, interiority of the
+<a id="__codelineno-20-41" name="__codelineno-20-41" href="#__codelineno-20-41"></a>                              maximizer or the multiplier's term at a binding
+<a id="__codelineno-20-42" name="__codelineno-20-42" href="#__codelineno-20-42"></a>                              constraint, differentiability of the reward in
+<a id="__codelineno-20-43" name="__codelineno-20-43" href="#__codelineno-20-43"></a>                              the control, a measurable selection of the
+<a id="__codelineno-20-44" name="__codelineno-20-44" href="#__codelineno-20-44"></a>                              policy, and differentiability of the value at
+<a id="__codelineno-20-45" name="__codelineno-20-45" href="#__codelineno-20-45"></a>                              the point read; listed and not checked
+<a id="__codelineno-20-46" name="__codelineno-20-46" href="#__codelineno-20-46"></a>                              [required]
+<a id="__codelineno-20-47" name="__codelineno-20-47" href="#__codelineno-20-47"></a>  dcsn_to_arvl:Aggregation  𝑉≺(m) ∈ ℝ
+<a id="__codelineno-20-48" name="__codelineno-20-48" href="#__codelineno-20-48"></a>  dcsn_to_arvl.value        𝑉≺(m, l) ∈ ℝ
+<a id="__codelineno-20-49" name="__codelineno-20-49" href="#__codelineno-20-49"></a>──────────────────────────────────────────────────────────────────────────────
+<a id="__codelineno-20-50" name="__codelineno-20-50" href="#__codelineno-20-50"></a>Source  cons.bl
+<a id="__codelineno-20-51" name="__codelineno-20-51" href="#__codelineno-20-51"></a>  13  m_d = m
+<a id="__codelineno-20-52" name="__codelineno-20-52" href="#__codelineno-20-52"></a>  17  a = m_d - c
+<a id="__codelineno-20-53" name="__codelineno-20-53" href="#__codelineno-20-53"></a>
+<a id="__codelineno-20-54" name="__codelineno-20-54" href="#__codelineno-20-54"></a>Definitions referenced
+<a id="__codelineno-20-55" name="__codelineno-20-55" href="#__codelineno-20-55"></a>  Xm    cons:set:Xm
+<a id="__codelineno-20-56" name="__codelineno-20-56" href="#__codelineno-20-56"></a>  Xa    cons:set:Xa
+<a id="__codelineno-20-57" name="__codelineno-20-57" href="#__codelineno-20-57"></a>  ρ     cons:parameter:ρ
+<a id="__codelineno-20-58" name="__codelineno-20-58" href="#__codelineno-20-58"></a>  𝑢     cons:function:𝑢
+<a id="__codelineno-20-59" name="__codelineno-20-59" href="#__codelineno-20-59"></a>  Γ     cons:correspondence:Γ
+<a id="__codelineno-20-60" name="__codelineno-20-60" href="#__codelineno-20-60"></a>  𝑔≺    cons:g:arvl_to_dcsn
+<a id="__codelineno-20-61" name="__codelineno-20-61" href="#__codelineno-20-61"></a>  𝑔≻    cons:g:dcsn_to_cntn
+<a id="__codelineno-20-62" name="__codelineno-20-62" href="#__codelineno-20-62"></a>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 </code></pre></div>
 <h2 id="4-the-grains">4 The grains<a class="headerlink" href="#4-the-grains" title="Permanent link">&para;</a></h2>
 <p>The <strong>grain</strong> of a graph is how far its boxes are opened. The stored graphs are at the builder grain, one box per block. <code>primitives</code> answers the same graph with every builder opened into its <strong>primitive operators</strong>, the finest boxes the construction makes, and <code>sub_builders</code> the graph with each line marked <code>!node</code> kept as a box of its own, a <strong>sub-builder</strong>. Each answers the same verbs as the graph, and a box at a finer grain is read by its whole name as a key of the graph at that grain.</p>

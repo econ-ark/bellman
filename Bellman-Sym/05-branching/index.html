@@ -2965,6 +2965,8 @@
       
         
       
+        
+      
     
     
     
@@ -3701,6 +3703,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8116,6 +8146,8 @@
 <p>The continuation state space is a <strong>disjoint union</strong> of the branches' state spaces: each continuation state is a state of one branch together with that branch's label. Thus a working state consists of <code>work</code> and its <code>a_w</code>, while a retired state consists of <code>retire</code> and its <code>a_r</code>. Both asset fields have nonnegative-real domains, but they remain distinct branch fields.</p>
 <p>This differs from a pair of simultaneous asset holdings. Even where alternatives share a common continuous domain, the branch label remains necessary to distinguish their continuation problems; where every alternative has the same continuation problem, there is no branch, and the chosen alternative is an integer state (§1). A value function on the disjoint union is equivalently a family of value functions, one on each branch. In this example, <code>V_w[&gt;]</code> and <code>V_r[&gt;]</code> are the separately declared value fields representing that family.</p>
 <p>Ordinary brackets select a collection entry: the <code>[d]</code> in §1 selects a tuple component. The <code>[&gt;]</code> in <code>V_w[&gt;]</code> identifies the continuation information set. These uses of brackets have different meanings; see <a href="../appendices/12-equation-parsing-rules/#3-functions-and-collections">Equation parsing rules</a>.</p>
+<p>Each branch may supply several value-type fields. A selection tuple associates a field with the branch of its entry. After this association is established, other equations may also read the field outside the tuple. For example, <code>L = min(L_w[&gt;], L_r[&gt;])</code> can combine the bounds from the two branches. The bounds and other branch fields may have different values. The ordering of a selection tuple follows the declared labels.</p>
+<p>A nonconstant continuation field needs a position in a selection tuple so the package can identify the law of motion that supplies its state. A constant read only outside a tuple can instead be paired by a connector. If several stages could supply it, write the pair explicitly. The spelling of a suffix does not supply a branch association. See <a href="../06-period/#2-connectors">Periods</a>.</p>
 <h2 id="3-choosing-an-alternative">3 Choosing an alternative<a class="headerlink" href="#3-choosing-an-alternative" title="Permanent link">&para;</a></h2>
 <p>The value equation gives the payoff conditional on <code>d</code>. The <code>argmax</code> equation constrains <code>d</code> to an alternative attaining the largest payoff. The block identifiers <code>cntn_to_dcsn</code> and <code>policy</code> are descriptive addresses; the selection and maximization expressions specify the mathematical operations.</p>
 <p>For the two finite, real-valued alternatives in §1, a maximum exists at each state where both values are defined. If the two values coincide, both labels maximize value. A numerical implementation needs a stated tie-breaking rule to return one control. A measurable policy requires measurable branch values and a suitable selection; an arbitrary tie rule is not a substitute for that requirement. If some alternatives are infeasible at a state, the admissible choice set must express that restriction.</p>

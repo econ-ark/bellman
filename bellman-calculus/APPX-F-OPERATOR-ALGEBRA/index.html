@@ -2847,6 +2847,8 @@
       
         
       
+        
+      
     
     
     
@@ -3782,6 +3784,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8308,7 +8338,7 @@ Q=\mathbb E[\mathrm G_\succ(V_\succ,X,A,\eta)\mid\mathcal F_\sim].
 \]</div>
 <p>An optimizing policy must specify its choice on ties, or supply an admissible randomized rule. Ties can occupy a positive-measure region even when states have an atomless law. A fixed tie-breaking rule makes the selected policy definite but does not by itself guarantee convergence of approximate policies. Exogenous routing is supplied by the model's conditional law; fixed-policy simulation can use an externally supplied policy.</p>
 <p>Nonempty feasible sets, attainment and measurable selection are separate assumptions. Empty feasible sets may be assigned value <span class="arithmatex">\(-\infty\)</span> in an extended-real convention, but have no feasible policy; this is not automatically the interpretation of a categorical initial object. <a href="../09-branching/">Branching</a> develops the economic cases.</p>
-<p><strong>Scope.</strong> Stationary distributions and tail behavior of iterated random transitions require invariant-measure and asymptotic analysis. They do not follow from the finite branching representation alone. A stationary distribution is a fixed point of probability propagation; one may introduce an operator that returns such a fixed point under additional assumptions.</p>
+<p><strong>Scope.</strong> Stationary distributions and tail behavior of iterated random transitions require invariant-measure and asymptotic analysis. They do not follow from the finite branching representation alone. A stationary distribution is a fixed point of probability propagation; one may introduce an operator that returns such a fixed point under additional assumptions. A forward pair containing an age that increases by one has no fixed point. A stationary cross-section with several ages requires its own population model; it is not the fixed point of one aging cohort.</p>
 <p><a id="f6-the-graded-realisation-tower"></a></p>
 <h2 id="6-model-interpretation-and-numerical-realization">6. Model interpretation and numerical realization<a class="headerlink" href="#6-model-interpretation-and-numerical-realization" title="Permanent link">&para;</a></h2>
 <p>We distinguish the authored equations, a calibrated mathematical operator, a reference numerical approximation, and the package routine that computes it. These are different assignments, not automatically a chain of categorical functors:</p>
@@ -8318,7 +8348,7 @@ Q=\mathbb E[\mathrm G_\succ(V_\succ,X,A,\eta)\mid\mathcal F_\sim].
 \longrightarrow\text{reference approximation}
 \longrightarrow\text{package computation}.
 \]</div>
-<p>Calibration fixes parameter values in the model, at one point of their admissible set (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4). Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A <strong>reference approximation</strong> is the numerical map defined by that procedure and its settings, independently of one implementation. A <strong>handler</strong> is the package routine intended to compute it. Equations and stages are authored in <code>.bl</code>, and so are the methods, in a methods file that declares the settings they read; the calibration and the values of the settings are YAML, as Bellman-SYM's rules for <a href="../../wiki/methodization/">methodization</a> describe.</p>
+<p>Calibration fixes parameter values in the model, at one point of their admissible set. In a modular model this assignment comes from the declaration’s recorded sources at every occurrence (<a href="../APPX-D-KINDS-AND-SORTS/">Kinds and sorts</a> §4). Method assignment specifies a numerical procedure; settings choose its resolution or tolerances. A <strong>reference approximation</strong> is the numerical map defined by that procedure and its settings, independently of one implementation. A <strong>handler</strong> is the package routine intended to compute it. Equations and stages are authored in <code>.bl</code>, and so are the methods, in a methods file that declares the settings they read; the calibration and the values of the settings are YAML, as Bellman-SYM's rules for <a href="../../wiki/methodization/">methodization</a> describe.</p>
 <h3 id="61-conditions-on-realization">6.1 Conditions on realization<a class="headerlink" href="#61-conditions-on-realization" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>L1 — Types.</strong> A numerical representation must state its own input and output domains and any maps between grid and exact objects. Equal mathematical ranks do not make different numerical representations identical.</li>

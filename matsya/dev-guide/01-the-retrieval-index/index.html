@@ -2845,6 +2845,8 @@
       
         
       
+        
+      
     
     
     
@@ -3581,6 +3583,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8197,7 +8227,7 @@
 </table>
 <p>The installed package declares only <code>matsya-serve</code> under <code>[project.scripts]</code> in <code>packages/matsya/pyproject.toml</code>. Operators run the compiler, index builder and bundle script with Python from their deployment files; these scripts and the source list are maintained separately from the installed package. The scripts use the package's shared retrieval functions. The embedding library, sentence-transformers, is installed only with the optional dependency group <code>retrieval</code>.</p>
 <h2 id="2-the-list-of-indexed-sources">2 The list of indexed sources<a class="headerlink" href="#2-the-list-of-indexed-sources" title="Permanent link">&para;</a></h2>
-<p>The authoritative list is the operator's reviewed <code>source-selection.json</code>, updated on 9 October 2026 and maintained with the deployment files. It has six top-level keys: <code>sources</code>, 814 entries; <code>omissions</code>, 118 files left out with a reason each; <code>review_inputs</code>, the six index and status files that were read when the list was reviewed, among them the literature collection's index and the project's specification status table, whose SHA-256 digests the compiler requires unchanged; <code>expected_counts</code> per collection; <code>schema_version</code>; and <code>selection_date</code>. Each source has the fields <code>corpus</code> (its <a href="../../../wiki/matsya_collection/">collection</a>), <code>source_id</code>, <code>path</code>, <code>authority</code>, <code>access</code> (the access class, <code>public</code>, <code>private</code> or <code>article</code>, which with the collection decides who may read a passage; the repository allows <code>public</code> and <code>private</code>, the literature <code>private</code>, the articles <code>article</code>, HARK and Buffer Stock Theory <code>public</code>) and <code>model_prompt</code>, and may have <code>title</code>, <code>version</code>, <code>source_cluster</code> (a label by which a job leaves a paper's own files out of its search, <a href="../../../asva/">the guide's first page</a> §2), <code>source_root</code> and <code>expected_sha256</code>. Operators keep a readable copy of this reviewed list with the deployment files.</p>
+<p>The authoritative list is the operator's reviewed <code>source-selection.json</code>, updated on 9 October 2026 and maintained with the deployment files. It has six top-level keys: <code>sources</code>, 814 entries; <code>omissions</code>, 118 files left out with a reason each; <code>review_inputs</code>, the six index and status files that were read when the list was reviewed, among them the literature collection's index and the project's specification status table, whose SHA-256 digests the compiler requires unchanged; <code>expected_counts</code> per collection; <code>schema_version</code>; and <code>selection_date</code>. Each source has the fields <code>corpus</code> (its <a href="../../../wiki/matsya_collection/">collection</a>), <code>source_id</code>, <code>path</code>, <code>authority</code>, <code>access</code> (the access class, <code>public</code>, <code>private</code> or <code>article</code>, which with the collection decides who may read a passage; the repository allows <code>public</code> and <code>private</code>, the literature <code>private</code>, the articles <code>article</code>, HARK and Buffer Stock Theory <code>public</code>) and <code>model_prompt</code>, and may have <code>title</code>, <code>version</code>, <code>source_cluster</code> (a label by which a job leaves a paper's own files out of its search, <a href="../../../wiki/">the guide's first page</a> §2), <code>source_root</code> and <code>expected_sha256</code>. Operators keep a readable copy of this reviewed list with the deployment files.</p>
 <p>The 814 sources are 197 files of this repository (150 Markdown pages, 34 stage files, 13 notebooks), 153 Markdown texts of the private literature collection, 230 journal articles (220 Markdown texts read from the literature checkout and 10 PDFs read from this repository), 209 files of HARK (74 Python, 67 notebooks, 37 reStructuredText, 16 Markdown, 15 YAML) and 25 files of Buffer Stock Theory (24 LaTeX, 1 PDF). The mark <code>model_prompt</code> is true for 52 repository files only; it restricts no message, and a job or a turn may place in a language model's message the passages of every collection the user's grants allow, the mark staying recorded in the list and the index. The <code>authority</code> label records the standing of a source in the project, in one of twelve values (<code>primary</code>, <code>secondary</code>, <code>canonical</code>, <code>discovery</code>, <code>implementation</code>, <code>documentation</code>, <code>example</code>, <code>extract</code>, <code>synthesis</code>, <code>synthesis-unreviewed</code>, <code>development</code> and <code>terms</code>); it is stored with every passage and returned with every result, and the ranking does not read it.</p>
 <h2 id="3-the-compiler">3 The compiler<a class="headerlink" href="#3-the-compiler" title="Permanent link">&para;</a></h2>
 <p><code>compile_retrieval_manifest.py</code> reads the list (<code>--selection</code>, by default <code>config/source-selection.json</code> beside <code>scripts/</code>), the checkout of this repository (<code>--repository-root</code>, by default the repository the script is in), the private literature checkout given by <code>--literature-root</code>, and the HARK and Buffer Stock Theory checkouts (<code>--hark-root</code>, <code>--buffer-stock-root</code>) when their files are selected, and writes one JSON manifest to <code>--output</code>. Before reading the list it refuses two roots that are the same folder, an output path inside a source root, and a checkout of this repository with changed or untracked files. It refuses the list when any review input's digest differs from the recorded value, so a changed review input requires the list to be reviewed again. For each entry it refuses an unknown collection, an unsafe path, an access class the collection does not allow, a file of the internal folder outside <code>dev-docs/</code>, a <code>model_prompt</code> mark on a file under <code>tutorials/</code>, on a stage file under <code>applications/</code> or on any file of the literature, articles, HARK and Buffer Stock Theory collections, a missing digest for a file of another checkout, and a missing version for a HARK or Buffer Stock Theory file. It requires that each file exists in its root, that a HARK or Buffer Stock Theory file's version equals the checkout's commit and the file is tracked by Git, that a stage file elaborates without error, and that a file's digest equals <code>expected_sha256</code> where one is recorded. After the entries it checks the omissions and the expected counts, reads each checkout's commit again, and writes the manifest through a temporary file: <code>{schema_version, corpus_revisions, sources, dependencies}</code>, where <code>corpus_revisions</code> records the commit of the checkout for the repository, HARK and Buffer Stock Theory and, for the literature and the articles, a SHA-256 of the collection's selected entries, and <code>dependencies</code> lists the Econometrica PDFs from which the article texts were made, whose presence and digest <code>verify_dependencies</code> of <code>retrieval/manifest.py</code> checks without indexing them. The manifest holds paths, digests and versions, never the text of a source.</p>

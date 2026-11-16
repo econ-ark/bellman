@@ -2954,6 +2954,8 @@
       
         
       
+        
+      
     
     
     
@@ -3690,6 +3692,34 @@
     
   
     Appendix G: Functional programming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bellman-calculus/APPX-H-MODULARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Appendix H: Modularity
   
 
     
@@ -8081,7 +8111,10 @@ Q(m_d,c)=u(c)+H(m_d-c).
 <h2 id="2-equations-definitions-and-dependence">2 Equations, definitions, and dependence<a class="headerlink" href="#2-equations-definitions-and-dependence" title="Permanent link">&para;</a></h2>
 <p>The <code>:=</code> line defines utility as a function of its explicit argument. By contrast, <code>a = m_d - c</code> relates stage fields. When continuation value is represented as <span class="arithmatex">\(H(a)\)</span>, substituting the transition gives <span class="arithmatex">\(H(m_d-c)\)</span>, with consumption still free until the policy block selects it. This substitution uses the state-sufficiency assumptions in <a href="../appendices/14-appendix-c-syntax-to-semantics/">Appendix C</a> R5–R7.</p>
 <p>An <strong>alias</strong> is an explicit intermediate definition that can be substituted at its uses. Substitution preserves every declared output, the domains, and every free or bound dependency. The savings equation must continue to determine the output <code>a</code> even if its right side is substituted into a value calculation. The <a href="../appendices/15-appendix-d-node-tag-and-field-indexing/#4-composition-and-substitution">two-output example in Appendix D</a> shows the same rule when a block promises two outputs: substituting one into the other does not delete either output.</p>
+<p>The package checks each output after substituting the forward transition and taking account of the policy and the shocks bound by expectations. A decision field may use the control in its equation. The <a href="../01-stage/#31-fields-sent-backward">representing function</a> that the backward block computes uses the control at the policy and depends on its own state coordinates. A shock still unbound at the output's perch is refused on either side of a relation.</p>
+<p>An equation may use a formula by cases, such as <code>B = if m &gt; 0 then 1/m else 0</code>. The comparison and both branches contribute dependencies. At a particular point the package requires only the comparison and the branch it selects. For example, the line gives 0 at <code>m = 0</code>.</p>
 <p>The utility definition binds its argument <code>c</code>, a name local to the definition; <a href="../reference/forms/#argmax"><code>argmax_{c}</code></a> binds the control in its objective. A substitution must distinguish these scopes rather than identify variables solely by spelling. An implicit equation supplies a relation between unknowns and cannot be substituted as though it were an explicit alias.</p>
+<p>For a maximization, the objective must match the right side of exactly one decision field after the package aligns the bound candidate with the control. Thus <code>𝑢(cp) + V[&gt;]</code> with candidate <code>cp</code> matches <code>V = 𝑢(c) + V[&gt;]</code> with control <code>c</code>. An absent or ambiguous match is refused under <a href="../reference/refusals/#policy-objective"><code>policy-objective</code></a>. The block <code>cntn_to_dcsn</code> evaluates every other decision field at that same policy. The policy block can also state an explicit formula or an implicit relation.</p>
 <p>A block identifier supplies an address, not a formula. The labels in §1 are descriptive conventions: typed signatures, economic roles, and equations identify what each block defines. Naming a block <code>policy</code> does not make an arbitrary equation an optimality condition.</p>
 <p>A <strong>marginal value</strong> is the derivative of a value in a state coordinate of its perch. It is no field: a header lists value fields and controls alone, and a line reads the derivative where it needs it by the <strong>derivative term</strong> <code>D_{a}V[&gt;]</code>, the operator <code>D</code> applied to the value field written with its perch mark, the subscript naming a state coordinate of the perch at which the value is read, written without its mark; <code>D_{a}D_{a}V[&gt;]</code> is the second derivative. The term has this one spelling. It denotes a function of the value and no second object, so a block that reads it declares nothing about how the derivative is evaluated: that is a property of the value, fixed by the methods file of the stage that writes it (<a href="../04-methodization/">Methodization</a> §5). A <strong>derivative line</strong> is a line of a value builder's block whose left side is a derivative term of the value the builder writes, <code>D_{m_d}V = 𝑑𝑢(c)</code> in §3. It states the author's assertion that the derivative equals the right side, which holds under the envelope conditions, and it defines no new field. Such a line stands in the stage file, as in §3, or in the methods file beside it, in a block that names the value builder's block by its id (<a href="../04-methodization/">Methodization</a> §1). The package never computes a derivative: it differentiates no value function, and a derivative that no line states and no representation evaluates is not part of the stage.</p>
 <h2 id="3-an-implicit-policy-relation">3 An implicit policy relation<a class="headerlink" href="#3-an-implicit-policy-relation" title="Permanent link">&para;</a></h2>
